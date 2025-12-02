@@ -11,7 +11,7 @@ import type { ColumnConfig, DataGridPageProps } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-export function DataGridPage<T extends { id?: string | number }>({
+export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   queryKey,
   columns,
   defaultVisibleColumns,
@@ -21,7 +21,8 @@ export function DataGridPage<T extends { id?: string | number }>({
   getRowId,
   toolbarActions,
   emptyMessage = "No data found",
-}: DataGridPageProps<T>) {
+  context,
+}: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -142,19 +143,9 @@ export function DataGridPage<T extends { id?: string | number }>({
   }
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-9 h-10"
-              data-testid="input-search"
-            />
-          </div>
+    <div className="p-4 md:p-6 h-full flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
           <ColumnSelector
             columns={columns}
             defaultVisibleColumns={defaultVisibleColumns}
@@ -163,11 +154,22 @@ export function DataGridPage<T extends { id?: string | number }>({
             onShowAll={handleShowAll}
             onResetToDefaults={handleResetToDefaults}
           />
+          <div className="relative flex-1 sm:w-48">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={searchPlaceholder}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="pl-9 h-10 "
+              data-testid="input-search"
+            />
+          </div>
+
         </div>
         <div className="flex items-center gap-2">
           {toolbarActions}
           <div className="text-sm text-muted-foreground" data-testid="text-row-count">
-            {filteredData.length} items
+            {filteredData.length} of {data.length}
           </div>
         </div>
       </div>
@@ -185,6 +187,7 @@ export function DataGridPage<T extends { id?: string | number }>({
           suppressCellFocus={true}
           pagination={false}
           domLayout="normal"
+          context={context}
           getRowId={getRowId ? (params) => String(getRowId(params.data as T)) : (params) => String(params.data?.id)}
           overlayNoRowsTemplate={`
             <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">

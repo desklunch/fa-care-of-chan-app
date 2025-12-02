@@ -1,26 +1,193 @@
-import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import {
-  UserPlus,
-  Clock,
-  Copy,
-  Trash2,
-  Mail,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Copy, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
 import { CreateInviteDialog } from "@/components/create-invite-dialog";
+import { DataGridPage } from "@/components/data-grid";
+import { DateCellRenderer, BadgeCellRenderer } from "@/components/data-grid/cell-renderers";
+import type { ColumnConfig } from "@/components/data-grid/types";
 import type { Invite } from "@shared/schema";
+import type { ICellRendererParams } from "ag-grid-community";
+
+type InviteStatus = "used" | "expired" | "pending";
+
+function getInviteStatus(invite: Invite): InviteStatus {
+  if (invite.usedAt) return "used";
+  if (new Date(invite.expiresAt) < new Date()) return "expired";
+  return "pending";
+}
+
+function StatusCellRenderer({ value }: ICellRendererParams<Invite, InviteStatus>) {
+  if (!value) return null;
+  
+  const config: Record<InviteStatus, { label: string; variant: "default" | "destructive" | "secondary"; icon: typeof CheckCircle }> = {
+    used: { label: "Used", variant: "default", icon: CheckCircle },
+    expired: { label: "Expired", variant: "destructive", icon: XCircle },
+    pending: { label: "Pending", variant: "secondary", icon: Clock },
+  };
+  
+  const { label, variant, icon: Icon } = config[value];
+  
+  return (
+    <Badge variant={variant} className="gap-1">
+      <Icon className="h-3 w-3" />
+      {label}
+    </Badge>
+  );
+}
+
+function InviteActionsCellRenderer({ 
+  data, 
+  context 
+}: ICellRendererParams<Invite> & { context: { copyInviteLink: (token: string) => void; revokeInvite: (id: string) => void; isPending: boolean } }) {
+  if (!data) return null;
+  
+  const status = getInviteStatus(data);
+  const isPending = status === "pending";
+  
+  if (!isPending) return null;
+  
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          context.copyInviteLink(data.token);
+        }}
+        data-testid={`button-copy-invite-${data.id}`}
+      >
+        <Copy className="h-4 w-4 mr-2" />
+        Copy Link
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        onClick={(e) => {
+          e.stopPropagation();
+          context.revokeInvite(data.id);
+        }}
+        disabled={context.isPending}
+        data-testid={`button-revoke-invite-${data.id}`}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+const inviteColumns: ColumnConfig<Invite>[] = [
+  {
+    id: "email",
+    headerName: "Email",
+    field: "email",
+    category: "Contact",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+    },
+  },
+  {
+    id: "name",
+    headerName: "Name",
+    category: "Profile",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      valueGetter: (params) => {
+        const first = params.data?.firstName || "";
+        const last = params.data?.lastName || "";
+        return `${first} ${last}`.trim() || "—";
+      },
+    },
+  },
+  {
+    id: "title",
+    headerName: "Title",
+    field: "title",
+    category: "Profile",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      valueFormatter: (params) => params.value || "—",
+    },
+  },
+  {
+    id: "department",
+    headerName: "Department",
+    field: "department",
+    category: "Profile",
+    colDef: {
+      width: 140,
+      cellRenderer: BadgeCellRenderer,
+    },
+  },
+  {
+    id: "status",
+    headerName: "Status",
+    category: "Status",
+    colDef: {
+      width: 120,
+      valueGetter: (params) => params.data ? getInviteStatus(params.data) : null,
+      cellRenderer: StatusCellRenderer,
+    },
+  },
+  {
+    id: "createdAt",
+    headerName: "Created",
+    field: "createdAt",
+    category: "Dates",
+    colDef: {
+      width: 120,
+      cellRenderer: DateCellRenderer,
+    },
+  },
+  {
+    id: "expiresAt",
+    headerName: "Expires",
+    field: "expiresAt",
+    category: "Dates",
+    colDef: {
+      width: 120,
+      cellRenderer: DateCellRenderer,
+    },
+  },
+  {
+    id: "usedAt",
+    headerName: "Used At",
+    field: "usedAt",
+    category: "Dates",
+    hide: true,
+    colDef: {
+      width: 120,
+      cellRenderer: DateCellRenderer,
+    },
+  },
+  {
+    id: "actions",
+    headerName: "Actions",
+    category: "Actions",
+    toggleable: false,
+    colDef: {
+      width: 180,
+      sortable: false,
+      filter: false,
+      cellRenderer: InviteActionsCellRenderer,
+      pinned: "right",
+    },
+  },
+];
+
+const defaultVisibleColumns = ["email", "name", "title", "department", "status", "createdAt", "expiresAt", "actions"];
 
 export default function AdminInvites() {
   const [, setLocation] = useLocation();
@@ -35,14 +202,9 @@ export default function AdminInvites() {
         description: "You don't have permission to access this page.",
         variant: "destructive",
       });
-      setLocation("/directory");
+      setLocation("/team");
     }
   }, [authLoading, isAdmin, setLocation, toast]);
-
-  const { data: invites = [], isLoading } = useQuery<Invite[]>({
-    queryKey: ["/api/invites"],
-    enabled: isAdmin,
-  });
 
   const revokeInviteMutation = useMutation({
     mutationFn: async (inviteId: string) => {
@@ -77,23 +239,23 @@ export default function AdminInvites() {
     },
   });
 
-  const copyInviteLink = (token: string) => {
+  const copyInviteLink = useCallback((token: string) => {
     const link = `${window.location.origin}/invite?token=${token}`;
     navigator.clipboard.writeText(link);
     toast({
       title: "Link Copied",
       description: "Invitation link copied to clipboard.",
     });
-  };
+  }, [toast]);
 
-  const getInviteStatus = (invite: Invite) => {
-    if (invite.usedAt) {
-      return { label: "Used", variant: "default" as const, icon: CheckCircle };
-    }
-    if (new Date(invite.expiresAt) < new Date()) {
-      return { label: "Expired", variant: "destructive" as const, icon: XCircle };
-    }
-    return { label: "Pending", variant: "secondary" as const, icon: Clock };
+  const revokeInvite = useCallback((inviteId: string) => {
+    revokeInviteMutation.mutate(inviteId);
+  }, [revokeInviteMutation]);
+
+  const gridContext = {
+    copyInviteLink,
+    revokeInvite,
+    isPending: revokeInviteMutation.isPending,
   };
 
   if (authLoading) {
@@ -118,111 +280,16 @@ export default function AdminInvites() {
       ]}
       customHeaderAction={<CreateInviteDialog />}
     >
-      <div className="p-4 md:p-6">
-        {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full" />
-            ))}
-          </div>
-        ) : invites.length === 0 ? (
-          <Card className="border-card-border">
-            <CardContent className="py-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-xl font-semibold mb-2">No Invitations</h2>
-              <p className="text-muted-foreground mb-6">
-                Create an invitation to add new employees to the directory.
-              </p>
-              <CreateInviteDialog />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {invites.map((invite) => {
-              const status = getInviteStatus(invite);
-              const StatusIcon = status.icon;
-              const isPending = !invite.usedAt && new Date(invite.expiresAt) >= new Date();
-
-              return (
-                <Card
-                  key={invite.id}
-                  className="border-card-border"
-                  data-testid={`invite-card-${invite.id}`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <UserPlus className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <p className="font-medium" data-testid="invite-email">
-                            {invite.email}
-                          </p>
-                          <Badge variant={status.variant} className="gap-1">
-                            <StatusIcon className="h-3 w-3" />
-                            {status.label}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                          {invite.firstName && (
-                            <span>
-                              {invite.firstName} {invite.lastName}
-                            </span>
-                          )}
-                          {invite.title && <span>{invite.title}</span>}
-                          {invite.department && (
-                            <Badge variant="outline" className="text-xs">
-                              {invite.department}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span>
-                            Created{" "}
-                            {invite.createdAt &&
-                              new Date(invite.createdAt).toLocaleDateString()}
-                          </span>
-                          <span>
-                            {invite.usedAt
-                              ? `Used ${new Date(invite.usedAt).toLocaleDateString()}`
-                              : `Expires ${new Date(invite.expiresAt).toLocaleDateString()}`}
-                          </span>
-                        </div>
-                      </div>
-                      {isPending && (
-                        <div className="flex items-center gap-2 sm:flex-shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyInviteLink(invite.token)}
-                            data-testid={`button-copy-invite-${invite.id}`}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy Link
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => revokeInviteMutation.mutate(invite.id)}
-                            disabled={revokeInviteMutation.isPending}
-                            data-testid={`button-revoke-invite-${invite.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <DataGridPage
+        queryKey="/api/invites"
+        columns={inviteColumns}
+        defaultVisibleColumns={defaultVisibleColumns}
+        searchFields={["email", "firstName", "lastName", "title", "department"]}
+        searchPlaceholder="Search invitations..."
+        emptyMessage="No invitations found. Create one to get started."
+        getRowId={(invite) => invite.id}
+        context={gridContext}
+      />
     </PageLayout>
   );
 }

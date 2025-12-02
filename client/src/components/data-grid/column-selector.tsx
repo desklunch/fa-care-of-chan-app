@@ -47,7 +47,7 @@ export function ColumnSelector<T>({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
+          size="md"
           data-testid="button-column-selector"
           className={menuOpen ? "bg-accent" : ""}
         >

@@ -10,7 +10,7 @@ export interface ColumnConfig<T> {
   colDef: Omit<ColDef<T>, "colId" | "headerName" | "field" | "hide">;
 }
 
-export interface DataGridPageProps<T> {
+export interface DataGridPageProps<T, C = unknown> {
   title?: string;
   queryKey: string;
   columns: ColumnConfig<T>[];
@@ -21,6 +21,7 @@ export interface DataGridPageProps<T> {
   getRowId?: (row: T) => string;
   toolbarActions?: React.ReactNode;
   emptyMessage?: string;
+  context?: C;
 }
 
 export interface ColumnSelectorProps {

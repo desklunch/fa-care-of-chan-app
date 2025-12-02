@@ -30,12 +30,12 @@ const teamColumns: ColumnConfig<User>[] = [
       cellRenderer: (params: { data: User }) => {
         const user = params.data;
         if (!user) return null;
-        const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown";
+        const fullName =
+          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+          "Unknown";
         return (
           <div className="flex items-center h-full">
-            <span className="font-medium text-foreground">
-              {fullName}
-            </span>
+            <span className="text-foreground">{fullName}</span>
           </div>
         );
       },
@@ -52,7 +52,7 @@ const teamColumns: ColumnConfig<User>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 120,
+      minWidth: 150,
     },
   },
   {
@@ -62,7 +62,7 @@ const teamColumns: ColumnConfig<User>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 120,
+      minWidth: 150,
     },
   },
   {
@@ -72,24 +72,30 @@ const teamColumns: ColumnConfig<User>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1.5,
-      minWidth: 200,
+      minWidth: 150,
     },
   },
   {
     id: "profileImageUrl",
-    headerName: "Profile Image",
+    headerName: " Image",
     field: "profileImageUrl",
     category: "Basic Info",
     colDef: {
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: (params: { data: User }) => {
         const user = params.data;
         if (!user?.profileImageUrl) return null;
-        const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U";
+        const initials =
+          `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() ||
+          "U";
         return (
           <div className="flex items-center h-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.profileImageUrl} alt={`${user.firstName} ${user.lastName}`} />
+              <AvatarImage
+                src={user.profileImageUrl}
+                alt={`${user.firstName} ${user.lastName}`}
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                 {initials}
               </AvatarFallback>
@@ -117,16 +123,6 @@ const teamColumns: ColumnConfig<User>[] = [
     colDef: {
       flex: 1,
       minWidth: 150,
-      cellRenderer: (params: { value: string }) => {
-        if (!params.value) return null;
-        return (
-          <div className="flex items-center h-full">
-            <Badge variant="secondary" className="font-normal">
-              {params.value}
-            </Badge>
-          </div>
-        );
-      },
     },
   },
   {
@@ -135,17 +131,18 @@ const teamColumns: ColumnConfig<User>[] = [
     field: "role",
     category: "Work",
     colDef: {
+      flex: 1,
       width: 120,
       cellRenderer: (params: { value: string }) => {
         const isAdmin = params.value === "admin";
-        return (
-          <div className="flex items-center h-full">
-            <Badge variant={isAdmin ? "default" : "outline"} className="font-normal capitalize">
-              {params.value}
-            </Badge>
-          </div>
-        );
-      },
+      return (
+        <div className="flex items-center h-full">
+          <span className="capitalize">
+            {params.value}
+          </span>
+        </div>
+
+      );      },
     },
   },
   {
@@ -175,7 +172,7 @@ const teamColumns: ColumnConfig<User>[] = [
     category: "Details",
     colDef: {
       flex: 2,
-      minWidth: 200,
+      minWidth: 150,
     },
   },
   {
@@ -184,14 +181,16 @@ const teamColumns: ColumnConfig<User>[] = [
     field: "isActive",
     category: "Details",
     colDef: {
+      flex: 1,
       width: 100,
       cellRenderer: (params: { value: boolean }) => {
         return (
           <div className="flex items-center h-full">
-            <Badge variant={params.value ? "default" : "secondary"} className="font-normal">
+            <span className="capitalize">
               {params.value ? "Active" : "Inactive"}
-            </Badge>
+            </span>
           </div>
+
         );
       },
     },
@@ -262,11 +261,7 @@ export default function Team() {
         onRowClick={(user) => setLocation(`/team/${user.id}`)}
         getRowId={(user) => user.id || ""}
         emptyMessage="No team members found"
-        toolbarActions={
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-          </div>
-        }
+        toolbarActions={<></>}
       />
     </PageLayout>
   );
