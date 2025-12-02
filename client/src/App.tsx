@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LayoutProvider } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, Mail, Activity } from "lucide-react";
+import { Users, UserPlus, Activity } from "lucide-react";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import Landing from "@/pages/landing";
@@ -49,7 +49,7 @@ function useLayoutConfig() {
           {
             name: "Invites",
             href: "/admin/invites",
-            icon: Mail,
+            icon: UserPlus,
             allowedRoles: ["admin"],
           },
           {
