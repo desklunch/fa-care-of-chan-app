@@ -45,7 +45,7 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         items: [
           {
-            name: "Invitations",
+            name: "Invites",
             href: "/admin/invites",
             icon: Mail,
             allowedRoles: ["admin"],

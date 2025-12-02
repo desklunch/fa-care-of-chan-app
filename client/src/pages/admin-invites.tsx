@@ -36,10 +36,10 @@ function StatusCellRenderer({ value }: ICellRendererParams<Invite, InviteStatus>
   const { label, variant, icon: Icon } = config[value];
   
   return (
-    <Badge variant={variant} className="gap-1">
+    <span className="flex items-center gap-2">
       <Icon className="h-3 w-3" />
       {label}
-    </Badge>
+    </span>
   );
 }
 
@@ -55,9 +55,9 @@ function InviteActionsCellRenderer({
   if (!isPending) return null;
   
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center h-full gap-2">
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={(e) => {
           e.stopPropagation();
@@ -65,12 +65,12 @@ function InviteActionsCellRenderer({
         }}
         data-testid={`button-copy-invite-${data.id}`}
       >
-        <Copy className="h-4 w-4 mr-2" />
+        <Copy className="h-4 w-4" />
         Copy Link
       </Button>
       <Button
         variant="ghost"
-        size="icon"
+        size="sm"
         className="text-destructive hover:text-destructive hover:bg-destructive/10"
         onClick={(e) => {
           e.stopPropagation();
@@ -80,6 +80,7 @@ function InviteActionsCellRenderer({
         data-testid={`button-revoke-invite-${data.id}`}
       >
         <Trash2 className="h-4 w-4" />
+        Delete
       </Button>
     </div>
   );
@@ -101,7 +102,7 @@ const inviteColumns: ColumnConfig<Invite>[] = [
     headerName: "Name",
     category: "Profile",
     colDef: {
-      flex: 1,
+      flex: 2,
       minWidth: 150,
       valueGetter: (params) => {
         const first = params.data?.firstName || "";
@@ -115,6 +116,8 @@ const inviteColumns: ColumnConfig<Invite>[] = [
     headerName: "Status",
     category: "Status",
     colDef: {
+      flex: 1,
+
       width: 120,
       valueGetter: (params) => params.data ? getInviteStatus(params.data) : null,
       cellRenderer: StatusCellRenderer,
@@ -126,6 +129,7 @@ const inviteColumns: ColumnConfig<Invite>[] = [
     field: "createdAt",
     category: "Dates",
     colDef: {
+      flex: 1,
       width: 120,
       cellRenderer: DateCellRenderer,
     },
@@ -157,16 +161,15 @@ const inviteColumns: ColumnConfig<Invite>[] = [
     category: "Actions",
     toggleable: false,
     colDef: {
-      width: 180,
+      minWidth: 260,
       sortable: false,
       filter: false,
       cellRenderer: InviteActionsCellRenderer,
-      pinned: "right",
     },
   },
 ];
 
-const defaultVisibleColumns = ["email", "name", "status", "createdAt", "expiresAt", "actions"];
+const defaultVisibleColumns = [ "name", "status", "actions"];
 
 export default function AdminInvites() {
   const [, setLocation] = useLocation();
@@ -255,7 +258,7 @@ export default function AdminInvites() {
     <PageLayout
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
-        { label: "Manage Invitations" },
+        { label: "Invites" },
       ]}
       customHeaderAction={<CreateInviteDialog />}
     >

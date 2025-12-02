@@ -10,5 +10,6 @@ export const gridTheme = themeQuartz
     oddRowBackgroundColor: "#00000006",
     rowBorder: false,
     iconColor: "#00000033",
+    borderColor: "hsl(var(--border))",
 
   });
