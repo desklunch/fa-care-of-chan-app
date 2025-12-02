@@ -59,6 +59,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       sortable: true,
       filter: true,
       resizable: true,
+      suppressHeaderFilterButton: true,
     }),
     []
   );

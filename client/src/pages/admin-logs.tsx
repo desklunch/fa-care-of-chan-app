@@ -73,10 +73,9 @@ function ActionCellRenderer({ value }: ICellRendererParams<AuditLogWithName, str
   const colorClass = actionColors[value] || "bg-muted text-muted-foreground";
   
   return (
-    <Badge variant="secondary" className={`${colorClass} capitalize`}>
-      <Icon className="h-3 w-3 mr-1" />
+    <span className={`${colorClass} capitalize font-medium text-xs`}>
       {value.replace("_", " ")}
-    </Badge>
+    </span>
   );
 }
 
@@ -84,9 +83,9 @@ function EntityTypeCellRenderer({ value }: ICellRendererParams<AuditLogWithName,
   if (!value) return null;
   
   return (
-    <Badge variant="outline" className="capitalize">
+    <span  className="capitalize text-xs">
       {entityLabels[value] || value}
-    </Badge>
+    </span>
   );
 }
 
@@ -97,8 +96,7 @@ function StatusCellRenderer({ value }: ICellRendererParams<AuditLogWithName, str
   const Icon = isSuccess ? CheckCircle : XCircle;
   
   return (
-    <span className={`flex items-center gap-1 ${isSuccess ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-      <Icon className="h-3 w-3" />
+    <span className={`flex h-full items-center gap-1 font-medium text-xs ${isSuccess ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
       <span className="capitalize">{value}</span>
     </span>
   );
@@ -109,7 +107,6 @@ function PerformerCellRenderer({ data }: ICellRendererParams<AuditLogWithName>) 
   
   return (
     <span className="flex items-center gap-2">
-      <User className="h-4 w-4 text-muted-foreground" />
       <span>{data.performerName || "System"}</span>
     </span>
   );
@@ -140,7 +137,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "performedAt",
     category: "Time",
     colDef: {
-      width: 180,
+      flex:1,
+      minWidth: 150,
       cellRenderer: DateCellRenderer,
       sort: "desc",
     },
@@ -150,7 +148,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     headerName: "User",
     category: "User",
     colDef: {
-      width: 180,
+      flex:1,
+      minWidth: 150,
       cellRenderer: PerformerCellRenderer,
     },
   },
@@ -160,7 +159,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "action",
     category: "Activity",
     colDef: {
-      width: 140,
+      flex:1,
+      minWidth: 150,
       cellRenderer: ActionCellRenderer,
     },
   },
@@ -170,7 +170,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "entityType",
     category: "Activity",
     colDef: {
-      width: 100,
+      flex:1,
+      minWidth: 100,
       cellRenderer: EntityTypeCellRenderer,
     },
   },
@@ -181,6 +182,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     category: "Activity",
     toggleable: true,
     colDef: {
+      flex:1,
       width: 280,
       cellRenderer: ({ value }: ICellRendererParams<AuditLogWithName, string>) => (
         <span className="font-mono text-xs text-muted-foreground">
@@ -195,7 +197,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "status",
     category: "Activity",
     colDef: {
-      width: 100,
+      flex:1,
+      minWidth: 100,
       cellRenderer: StatusCellRenderer,
     },
   },
@@ -206,7 +209,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     category: "Details",
     toggleable: true,
     colDef: {
-      flex: 1,
+      flex: 2,
       minWidth: 150,
       cellRenderer: ChangesCellRenderer,
     },
@@ -218,6 +221,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     category: "Details",
     toggleable: true,
     colDef: {
+      flex:1,
       width: 140,
       cellRenderer: ({ value }: ICellRendererParams<AuditLogWithName, string>) => (
         <span className="font-mono text-xs">

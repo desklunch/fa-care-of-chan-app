@@ -53,7 +53,7 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
-            name: "Audit Logs",
+            name: "Logs",
             href: "/admin/logs",
             icon: Activity,
             allowedRoles: ["admin"],
