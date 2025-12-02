@@ -202,7 +202,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
 
           {showExpanded && !isMediumScreen && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="h-8 w-8 p-0 hidden lg:flex"
@@ -256,9 +256,9 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                       const isActive = typeof window !== "undefined" && window.location.pathname === item.href;
 
                       const navItemClasses = cn(
-                        "flex items-center gap-3 px-3 py-3 font-medium rounded-lg transition-colors duration-150 relative",
+                        "flex items-center gap-3 px-3 py-3 font-semibold rounded-lg transition-colors duration-150 relative",
                         isEnabled && "hover:bg-sidebar-accent",
-                        isActive && "bg-sidebar-accent font-medium",
+                        isActive && "bg-sidebar-accent font-semibold",
                         !showExpanded && "justify-center",
                         !isEnabled && "opacity-40 cursor-not-allowed pointer-events-none"
                       );
@@ -279,7 +279,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                               {item.badge !== undefined && item.badge !== null && (
                                 <span
                                   className={cn(
-                                    "rounded-full bg-primary text-primary-foreground font-medium flex items-center justify-center",
+                                    "rounded-full bg-primary text-primary-foreground font-semibold flex items-center justify-center",
                                     showExpanded
                                       ? "h-5 min-w-[20px] px-1.5 text-xs"
                                       : "absolute -top-0.5 -right-0.5 h-3 w-3 text-[8px]"
