@@ -232,7 +232,8 @@ export default function Directory() {
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             animateRows={true}
-            rowSelection="single"
+            rowSelection={{ mode: "singleRow" }}
+            theme="legacy"
             onRowClicked={onRowClicked}
             suppressCellFocus={true}
             pagination={true}

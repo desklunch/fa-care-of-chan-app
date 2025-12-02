@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LayoutProvider } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
-import { Home, Users, Shield, UserPlus, Mail } from "lucide-react";
+import { Users, Mail } from "lucide-react";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import Landing from "@/pages/landing";
@@ -13,7 +13,6 @@ import InviteActivation from "@/pages/invite-activation";
 import Directory from "@/pages/directory";
 import EmployeeProfile from "@/pages/employee-profile";
 import ProfileEdit from "@/pages/profile-edit";
-import AdminDashboard from "@/pages/admin-dashboard";
 import AdminInvites from "@/pages/admin-invites";
 import NotFound from "@/pages/not-found";
 
@@ -46,12 +45,6 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         items: [
           {
-            name: "Dashboard",
-            href: "/admin",
-            icon: Shield,
-            allowedRoles: ["admin"],
-          },
-          {
             name: "Invitations",
             href: "/admin/invites",
             icon: Mail,
@@ -78,7 +71,6 @@ function AuthenticatedRoutes() {
         <Route path="/directory" component={Directory} />
         <Route path="/employees/:id" component={EmployeeProfile} />
         <Route path="/profile/edit" component={ProfileEdit} />
-        <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route component={NotFound} />
       </Switch>
