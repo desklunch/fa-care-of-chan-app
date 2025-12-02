@@ -1,4 +1,5 @@
 import { ColDef } from "ag-grid-community";
+import { LucideIcon } from "lucide-react";
 
 export interface ColumnConfig<T> {
   id: string;
@@ -10,8 +11,19 @@ export interface ColumnConfig<T> {
   colDef: Omit<ColDef<T>, "colId" | "headerName" | "field" | "hide">;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface DataGridPageProps<T, C = unknown> {
   title?: string;
+  description?: string;
+  icon?: LucideIcon;
+  breadcrumbs?: Array<{ label: string; href?: string }>;
   queryKey: string;
   columns: ColumnConfig<T>[];
   defaultVisibleColumns: string[];
@@ -20,8 +32,23 @@ export interface DataGridPageProps<T, C = unknown> {
   onRowClick?: (row: T) => void;
   getRowId?: (row: T) => string;
   toolbarActions?: React.ReactNode;
+  headerContent?: React.ReactNode;
   emptyMessage?: string;
+  emptyDescription?: string;
   context?: C;
+  
+  // External data mode (for paginated APIs)
+  externalData?: T[];
+  externalLoading?: boolean;
+  
+  // Pagination props
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  };
 }
 
 export interface ColumnSelectorProps {

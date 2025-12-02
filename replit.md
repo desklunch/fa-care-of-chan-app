@@ -77,6 +77,16 @@ Sessions table:
 - Express session storage for Replit Auth
 - Session ID, data blob, and expiration
 
+Audit Logs table:
+- Action tracking (create, update, delete, login, logout, email_sent, invite_used)
+- Entity type and ID for affected resources (user, invite, session)
+- Performer tracking with user reference
+- Request metadata (IP address, user agent)
+- Status field (success/failure)
+- JSONB changes field for before/after state tracking
+- JSONB metadata for additional context
+- Indexed by performedAt, entityType, and performedBy for efficient queries
+
 **ORM Configuration**
 - Drizzle Kit for schema migrations
 - Type generation from schema definitions

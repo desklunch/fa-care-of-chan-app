@@ -5,8 +5,9 @@ import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } f
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ColumnConfig, DataGridPageProps } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -20,16 +21,28 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   onRowClick,
   getRowId,
   toolbarActions,
+  headerContent,
   emptyMessage = "No data found",
+  emptyDescription,
   context,
+  externalData,
+  externalLoading,
+  pagination,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
 
-  const { data = [], isLoading } = useQuery<T[]>({
+  // Use external data if provided, otherwise fetch via query
+  const useExternalData = externalData !== undefined;
+  
+  const { data: queryData = [], isLoading: queryLoading } = useQuery<T[]>({
     queryKey: [queryKey],
+    enabled: !useExternalData,
   });
+  
+  const data = useExternalData ? externalData : queryData;
+  const isLoading = useExternalData ? (externalLoading ?? false) : queryLoading;
 
   const columnDefs = useMemo(() => {
     return columns.map((col) => ({
@@ -51,6 +64,10 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   );
 
   const filteredData = useMemo(() => {
+    // Disable client-side filtering when using server-side pagination
+    // as the server already handles filtering
+    if (pagination) return data;
+    
     if (!searchText.trim() || searchFields.length === 0) return data;
     const search = searchText.toLowerCase();
 
@@ -66,7 +83,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         return false;
       });
     });
-  }, [data, searchText, searchFields]);
+  }, [data, searchText, searchFields, pagination]);
 
   const onGridReady = useCallback((params: GridReadyEvent<T>) => {
     setGridApi(params.api);
@@ -142,10 +159,18 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     );
   }
 
+  const emptyOverlay = `
+    <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
+      ${defaultEmptyIconHtml}
+      <p>${emptyMessage}</p>
+      ${emptyDescription ? `<p class="text-sm opacity-75 mt-1">${emptyDescription}</p>` : ''}
+    </div>
+  `;
+
   return (
     <div className="p-4 md:p-6 h-full flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4 w-full sm:w-auto flex-wrap">
           <ColumnSelector
             columns={columns}
             defaultVisibleColumns={defaultVisibleColumns}
@@ -154,22 +179,27 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
             onShowAll={handleShowAll}
             onResetToDefaults={handleResetToDefaults}
           />
-          <div className="relative flex-1 sm:w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-9 h-10 "
-              data-testid="input-search"
-            />
-          </div>
-
+          {!pagination && searchFields.length > 0 && (
+            <div className="relative flex-1 sm:w-48">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-9 h-10"
+                data-testid="input-search"
+              />
+            </div>
+          )}
+          {headerContent}
         </div>
         <div className="flex items-center gap-2">
           {toolbarActions}
           <div className="text-sm text-muted-foreground" data-testid="text-row-count">
-            {filteredData.length} of {data.length}
+            {pagination 
+              ? `${pagination.total} total`
+              : `${filteredData.length} of ${data.length}`
+            }
           </div>
         </div>
       </div>
@@ -189,14 +219,39 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           domLayout="normal"
           context={context}
           getRowId={getRowId ? (params) => String(getRowId(params.data as T)) : (params) => String(params.data?.id)}
-          overlayNoRowsTemplate={`
-            <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              ${defaultEmptyIconHtml}
-              <p>${emptyMessage}</p>
-            </div>
-          `}
+          overlayNoRowsTemplate={emptyOverlay}
         />
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between border-t pt-4">
+          <div className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.totalPages}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pagination.page <= 1}
+              onClick={() => pagination.onPageChange(pagination.page - 1)}
+              data-testid="button-prev-page"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pagination.page >= pagination.totalPages}
+              onClick={() => pagination.onPageChange(pagination.page + 1)}
+              data-testid="button-next-page"
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,14 +1,33 @@
 import {
   users,
   invites,
+  auditLogs,
   type User,
   type UpsertUser,
   type Invite,
   type InsertInvite,
+  type AuditLog,
+  type InsertAuditLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, gt, sql } from "drizzle-orm";
+import { eq, desc, and, isNull, gt, sql, asc, gte, lte } from "drizzle-orm";
 import { randomBytes } from "crypto";
+
+export interface AuditLogFilters {
+  entityType?: string;
+  action?: string;
+  performedBy?: string;
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export interface PaginatedAuditLogs {
+  logs: (AuditLog & { performerName?: string })[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 
 export interface IStorage {
   // User operations
@@ -27,6 +46,14 @@ export interface IStorage {
   deleteInvite(id: string): Promise<void>;
   getAllInvites(): Promise<Invite[]>;
   getPendingInvites(): Promise<Invite[]>;
+  
+  // Audit log operations
+  createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogs(
+    page: number,
+    pageSize: number,
+    filters?: AuditLogFilters
+  ): Promise<PaginatedAuditLogs>;
   
   // Stats
   getStats(): Promise<{
@@ -181,6 +208,100 @@ export class DatabaseStorage implements IStorage {
       totalEmployees: Number(employeeCount?.count) || 0,
       activeInvites: Number(inviteCount?.count) || 0,
       recentSignups: Number(recentCount?.count) || 0,
+    };
+  }
+
+  // Audit log operations
+  async createAuditLog(data: InsertAuditLog): Promise<AuditLog> {
+    const [log] = await db.insert(auditLogs).values(data).returning();
+    return log;
+  }
+
+  async getAuditLogs(
+    page: number = 1,
+    pageSize: number = 50,
+    filters?: AuditLogFilters
+  ): Promise<PaginatedAuditLogs> {
+    const offset = (page - 1) * pageSize;
+    
+    // Build filter conditions
+    const conditions: any[] = [];
+    
+    if (filters?.entityType) {
+      conditions.push(eq(auditLogs.entityType, filters.entityType));
+    }
+    if (filters?.action) {
+      conditions.push(eq(auditLogs.action, filters.action));
+    }
+    if (filters?.performedBy) {
+      conditions.push(eq(auditLogs.performedBy, filters.performedBy));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(auditLogs.performedAt, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(auditLogs.performedAt, filters.endDate));
+    }
+    
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    // Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLogs)
+      .where(whereClause);
+    
+    const total = Number(countResult?.count) || 0;
+    
+    // Get paginated logs with performer info
+    const logs = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        entityType: auditLogs.entityType,
+        entityId: auditLogs.entityId,
+        performedBy: auditLogs.performedBy,
+        performedAt: auditLogs.performedAt,
+        ipAddress: auditLogs.ipAddress,
+        userAgent: auditLogs.userAgent,
+        status: auditLogs.status,
+        changes: auditLogs.changes,
+        metadata: auditLogs.metadata,
+        performerFirstName: users.firstName,
+        performerLastName: users.lastName,
+        performerEmail: users.email,
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.performedBy, users.id))
+      .where(whereClause)
+      .orderBy(desc(auditLogs.performedAt))
+      .limit(pageSize)
+      .offset(offset);
+    
+    // Transform to include performerName
+    const logsWithNames = logs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      performedBy: log.performedBy,
+      performedAt: log.performedAt,
+      ipAddress: log.ipAddress,
+      userAgent: log.userAgent,
+      status: log.status,
+      changes: log.changes,
+      metadata: log.metadata,
+      performerName: [log.performerFirstName, log.performerLastName]
+        .filter(Boolean)
+        .join(" ") || log.performerEmail || "System",
+    }));
+    
+    return {
+      logs: logsWithNames,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 }

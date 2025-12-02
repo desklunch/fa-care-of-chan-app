@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LayoutProvider } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, Mail } from "lucide-react";
+import { Users, Mail, Activity } from "lucide-react";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import Landing from "@/pages/landing";
@@ -15,6 +15,7 @@ import TeamProfile from "@/pages/team-profile";
 import Profile from "@/pages/profile";
 import ProfileEdit from "@/pages/profile-edit";
 import AdminInvites from "@/pages/admin-invites";
+import AdminLogs from "@/pages/admin-logs";
 import NotFound from "@/pages/not-found";
 
 function useLayoutConfig() {
@@ -51,6 +52,12 @@ function useLayoutConfig() {
             icon: Mail,
             allowedRoles: ["admin"],
           },
+          {
+            name: "Audit Logs",
+            href: "/admin/logs",
+            icon: Activity,
+            allowedRoles: ["admin"],
+          },
         ],
       },
     ],
@@ -74,6 +81,7 @@ function AuthenticatedRoutes() {
         <Route path="/profile" component={Profile} />
         <Route path="/profile/edit" component={ProfileEdit} />
         <Route path="/admin/invites" component={AdminInvites} />
+        <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />
       </Switch>
     </LayoutProvider>

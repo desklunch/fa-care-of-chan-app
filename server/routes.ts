@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { insertInviteSchema, updateProfileSchema } from "@shared/schema";
 import { sendInvitationEmail } from "./email";
+import { logAuditEvent, getChangedFields } from "./audit";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -64,13 +65,39 @@ export async function registerRoutes(
         });
       }
 
+      // Get user before update for change tracking
+      const userBefore = await storage.getUser(userId);
+      if (!userBefore) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       const updatedUser = await storage.updateUser(userId, result.data);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
+
+      // Log the profile update
+      const changes = getChangedFields(
+        userBefore as unknown as Record<string, unknown>,
+        updatedUser as unknown as Record<string, unknown>
+      );
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "user",
+        entityId: userId,
+        changes,
+      });
+
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating profile:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "user",
+        entityId: req.user?.claims?.sub,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
@@ -173,14 +200,35 @@ export async function registerRoutes(
 
       const userId = req.user.claims.sub;
       const invite = await storage.createInvite(result.data, userId);
+
+      // Log invite creation
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "invite",
+        entityId: invite.id,
+        changes: {
+          after: {
+            email: invite.email,
+            firstName: invite.firstName,
+            lastName: invite.lastName,
+          },
+        },
+      });
+
       res.status(201).json(invite);
     } catch (error) {
       console.error("Error creating invite:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "invite",
+        status: "failure",
+        metadata: { error: String(error), email: req.body?.email },
+      });
       res.status(500).json({ message: "Failed to create invite" });
     }
   });
 
-  app.delete("/api/invites/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/invites/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const invite = await storage.getInviteById(req.params.id);
       if (!invite) {
@@ -188,15 +236,37 @@ export async function registerRoutes(
       }
       
       await storage.deleteInvite(req.params.id);
+
+      // Log invite deletion
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "invite",
+        entityId: req.params.id,
+        changes: {
+          before: {
+            email: invite.email,
+            firstName: invite.firstName,
+            lastName: invite.lastName,
+          },
+        },
+      });
+
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting invite:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "invite",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
       res.status(500).json({ message: "Failed to delete invite" });
     }
   });
 
   // Send invitation email
-  app.post("/api/invites/:id/send-email", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/invites/:id/send-email", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const invite = await storage.getInviteById(req.params.id);
       
@@ -224,10 +294,66 @@ export async function registerRoutes(
         organizationName: 'Team Directory',
       });
 
+      // Log email sent
+      await logAuditEvent(req, {
+        action: "email_sent",
+        entityType: "invite",
+        entityId: invite.id,
+        metadata: { 
+          recipientEmail: invite.email,
+          recipientName: `${invite.firstName} ${invite.lastName}`.trim(),
+        },
+      });
+
       res.json({ message: "Invitation email sent successfully" });
     } catch (error) {
       console.error("Error sending invitation email:", error);
+      await logAuditEvent(req, {
+        action: "email_sent",
+        entityType: "invite",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
       res.status(500).json({ message: "Failed to send invitation email" });
+    }
+  });
+
+  // Admin audit logs endpoint
+  app.get("/api/admin/logs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = Math.min(parseInt(req.query.pageSize as string) || 50, 100);
+      
+      const filters: {
+        entityType?: string;
+        action?: string;
+        performedBy?: string;
+        startDate?: Date;
+        endDate?: Date;
+      } = {};
+
+      if (req.query.entityType) {
+        filters.entityType = req.query.entityType as string;
+      }
+      if (req.query.action) {
+        filters.action = req.query.action as string;
+      }
+      if (req.query.performedBy) {
+        filters.performedBy = req.query.performedBy as string;
+      }
+      if (req.query.startDate) {
+        filters.startDate = new Date(req.query.startDate as string);
+      }
+      if (req.query.endDate) {
+        filters.endDate = new Date(req.query.endDate as string);
+      }
+
+      const result = await storage.getAuditLogs(page, pageSize, filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ message: "Failed to fetch audit logs" });
     }
   });
 

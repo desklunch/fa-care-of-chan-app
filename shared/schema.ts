@@ -53,9 +53,33 @@ export const invites = pgTable("invites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Audit logs for tracking all CRUD operations
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    action: varchar("action", { length: 50 }).notNull(), // 'create' | 'update' | 'delete' | 'login' | 'email_sent'
+    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'user' | 'invite' | 'session'
+    entityId: varchar("entity_id"), // ID of the affected entity
+    performedBy: varchar("performed_by").references(() => users.id), // User who performed the action
+    performedAt: timestamp("performed_at").defaultNow().notNull(),
+    ipAddress: varchar("ip_address", { length: 45 }), // IPv6 compatible
+    userAgent: text("user_agent"),
+    status: varchar("status", { length: 20 }).default("success").notNull(), // 'success' | 'failure'
+    changes: jsonb("changes"), // { before: {...}, after: {...} } for updates
+    metadata: jsonb("metadata"), // Additional context (error messages, etc.)
+  },
+  (table) => [
+    index("idx_audit_logs_performed_at").on(table.performedAt),
+    index("idx_audit_logs_entity_type").on(table.entityType),
+    index("idx_audit_logs_performed_by").on(table.performedBy),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
+  auditLogs: many(auditLogs),
 }));
 
 export const invitesRelations = relations(invites, ({ one }) => ({
@@ -65,11 +89,25 @@ export const invitesRelations = relations(invites, ({ one }) => ({
   }),
 }));
 
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  performer: one(users, {
+    fields: [auditLogs.performedBy],
+    references: [users.id],
+  }),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
 export type Invite = typeof invites.$inferSelect;
 export type InsertInvite = typeof invites.$inferInsert;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+// Audit log action types
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
+export type AuditEntityType = 'user' | 'invite' | 'session';
+export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
 export const upsertUserSchema = createInsertSchema(users).omit({
