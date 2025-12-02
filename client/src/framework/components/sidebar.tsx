@@ -256,7 +256,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                       const isActive = typeof window !== "undefined" && window.location.pathname === item.href;
 
                       const navItemClasses = cn(
-                        "flex items-center gap-3 px-3 py-3 font-semibold rounded-lg transition-colors duration-150 relative",
+                        "flex items-center gap-3 px-3 py-3 font-medium  rounded-lg transition-colors duration-150 relative",
                         isEnabled && "hover:bg-sidebar-accent",
                         isActive && "bg-sidebar-accent font-semibold",
                         !showExpanded && "justify-center",

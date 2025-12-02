@@ -65,12 +65,12 @@ export default function ProfileEdit() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/team"] });
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
       });
-      setLocation(`/employees/${user?.id}`);
+      setLocation(`/team/${user?.id}`);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -119,7 +119,7 @@ export default function ProfileEdit() {
     <PageLayout
       breadcrumbs={[
         { label: "Directory", href: "/directory" },
-        { label: fullName, href: `/users/${user.id}` },
+        { label: fullName, href: `/team/${user.id}` },
         { label: "Edit Profile" },
       ]}
     >
@@ -304,7 +304,7 @@ export default function ProfileEdit() {
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => setLocation(`/employees/${user.id}`)}
+                    onClick={() => setLocation(`/team/${user.id}`)}
                     disabled={updateMutation.isPending}
                     data-testid="button-cancel"
                   >
