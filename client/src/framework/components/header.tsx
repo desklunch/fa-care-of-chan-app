@@ -1,0 +1,145 @@
+import { ChevronRight, MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Logo from "./logo";
+import type { Breadcrumb, ActionButton } from "../types/layout";
+
+interface HeaderProps {
+  isMobileOpen: boolean;
+  onToggle: () => void;
+  breadcrumbs?: Breadcrumb[];
+  actionButton?: ActionButton;
+  customAction?: React.ReactNode;
+}
+
+export default function Header({
+  isMobileOpen,
+  onToggle,
+  breadcrumbs,
+  actionButton,
+  customAction,
+}: HeaderProps) {
+  return (
+    <header
+      className="sticky top-0 shrink-0 h-[56px] md:h-[72px] bg-background border-b border-border px-2 md:px-4 flex items-center justify-between gap-2 z-40"
+      data-testid="header-main"
+    >
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onToggle}
+        className="h-10 w-10 p-0 relative z-[101] md:hidden flex-shrink-0"
+        data-testid="button-mobile-menu"
+        aria-label="Toggle navigation menu"
+      >
+        <Logo width="32" collapsed />
+      </Button>
+
+      {breadcrumbs && breadcrumbs.length > 0 && (
+        <nav
+          className="flex items-center gap-2 flex-1 min-w-0 pl-1"
+          aria-label="Breadcrumb"
+          data-testid="breadcrumb-nav"
+        >
+          {breadcrumbs.map((crumb, index) => (
+            <div key={index} className="flex items-center gap-2 min-w-0">
+              {index > 0 && (
+                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              )}
+              {crumb.href && index < breadcrumbs.length - 1 ? (
+                <a
+                  href={crumb.href}
+                  className={`${index === 0 ? "text-base font-semibold" : "text-sm text-muted-foreground"} hover:text-foreground transition-colors truncate`}
+                  data-testid={`breadcrumb-${index}`}
+                >
+                  {crumb.label}
+                </a>
+              ) : (
+                <span
+                  className={`${index === 0 ? "text-base font-semibold" : "text-sm"} truncate`}
+                  data-testid={`breadcrumb-${index}`}
+                >
+                  {crumb.label}
+                </span>
+              )}
+            </div>
+          ))}
+        </nav>
+      )}
+
+      {(!breadcrumbs || breadcrumbs.length === 0) && <div className="flex-1" />}
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-2">
+          {actionButton && (
+            actionButton.href ? (
+              <a href={actionButton.href}>
+                <Button
+                  variant={actionButton.variant || "default"}
+                  size="sm"
+                  className="h-9"
+                  data-testid="button-header-action"
+                >
+                  {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
+                  {actionButton.label}
+                </Button>
+              </a>
+            ) : (
+              <Button
+                variant={actionButton.variant || "default"}
+                size="sm"
+                onClick={actionButton.onClick}
+                className="h-9"
+                data-testid="button-header-action"
+              >
+                {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
+                {actionButton.label}
+              </Button>
+            )
+          )}
+        </div>
+
+        {actionButton && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0 md:hidden"
+                data-testid="button-actions-menu"
+                aria-label="Actions menu"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" data-testid="dropdown-actions-menu">
+              {actionButton.href ? (
+                <a href={actionButton.href}>
+                  <DropdownMenuItem data-testid="menu-item-action">
+                    {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
+                    {actionButton.label}
+                  </DropdownMenuItem>
+                </a>
+              ) : (
+                <DropdownMenuItem
+                  onClick={actionButton.onClick}
+                  data-testid="menu-item-action"
+                >
+                  {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
+                  {actionButton.label}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
+      {customAction}
+    </header>
+  );
+}
