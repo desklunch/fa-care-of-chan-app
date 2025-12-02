@@ -10,8 +10,8 @@ import type { LayoutConfig } from "@/framework/types/layout";
 
 import Landing from "@/pages/landing";
 import InviteActivation from "@/pages/invite-activation";
-import Directory from "@/pages/directory";
-import EmployeeProfile from "@/pages/employee-profile";
+import UsersPage from "@/pages/users";
+import UserProfile from "@/pages/user-profile";
 import ProfileEdit from "@/pages/profile-edit";
 import AdminInvites from "@/pages/admin-invites";
 import NotFound from "@/pages/not-found";
@@ -34,8 +34,8 @@ function useLayoutConfig() {
       {
         items: [
           {
-            name: "Directory",
-            href: "/directory",
+            name: "Users",
+            href: "/users",
             icon: Users,
           },
         ],
@@ -67,9 +67,9 @@ function AuthenticatedRoutes() {
   return (
     <LayoutProvider config={layoutConfig}>
       <Switch>
-        <Route path="/" component={Directory} />
-        <Route path="/directory" component={Directory} />
-        <Route path="/employees/:id" component={EmployeeProfile} />
+        <Route path="/" component={UsersPage} />
+        <Route path="/users" component={UsersPage} />
+        <Route path="/users/:id" component={UserProfile} />
         <Route path="/profile/edit" component={ProfileEdit} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route component={NotFound} />

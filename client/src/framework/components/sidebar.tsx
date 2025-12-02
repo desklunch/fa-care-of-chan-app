@@ -178,11 +178,11 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
         onMouseLeave={handleMouseLeave}
         data-testid="sidebar-main"
       >
-        <div className="h-[72px] border-b border-sidebar-border flex items-center justify-between p-3">
+        <div className="h-[72px] border-b border-sidebar-border flex items-center justify-between p-3 pl-4">
           <Button
             variant="ghost"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="h-12 p-0 flex items-center gap-2"
+            className="p-0 flex items-center gap-4 transparent"
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -256,7 +256,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                       const isActive = typeof window !== "undefined" && window.location.pathname === item.href;
 
                       const navItemClasses = cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150 relative",
+                        "flex items-center gap-3 px-3 py-3 font-medium rounded-lg transition-colors duration-150 relative",
                         isEnabled && "hover:bg-sidebar-accent",
                         isActive && "bg-sidebar-accent font-medium",
                         !showExpanded && "justify-center",

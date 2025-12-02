@@ -10,13 +10,13 @@ export default function Logo({ className, width = "36", collapsed = false }: Log
   return (
     <div className={`flex items-center gap-2 ${className || ""}`}>
       <div 
-        className="flex items-center justify-center rounded-lg bg-primary text-primary-foreground"
+        className="flex items-center justify-center rounded-md bg-primary text-primary-foreground"
         style={{ width: Number(width), height: Number(width) }}
       >
         <Building2 className="h-5 w-5" />
       </div>
       {!collapsed && (
-        <span className="font-semibold text-lg tracking-tight">Directory</span>
+        <span className="font-semibold text-lg tracking-tight mr-3">Company</span>
       )}
     </div>
   );

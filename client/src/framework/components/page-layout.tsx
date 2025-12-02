@@ -19,21 +19,24 @@ export default function PageLayout({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
-      <Sidebar
-        isMobileOpen={isMobileOpen}
-        onMobileClose={() => setIsMobileOpen(false)}
-      />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header
+    <div className="flex flex-col bg-muted overflow-hidden overscroll-contain w-screen h-screen">
+      <div className="flex flex-1 bg-background rounded-none md:rounded-xl ring ring-[1.5px] ring-black/5 shadow-lg overflow-hidden overscroll-contain  md:m-4 shadow-4xl">
+        <Sidebar
           isMobileOpen={isMobileOpen}
-          onToggle={() => setIsMobileOpen(!isMobileOpen)}
-          breadcrumbs={breadcrumbs}
-          actionButton={actionButton}
-          customAction={customHeaderAction}
+          onMobileClose={() => setIsMobileOpen(false)}
         />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <Header
+            isMobileOpen={isMobileOpen}
+            onToggle={() => setIsMobileOpen(!isMobileOpen)}
+            breadcrumbs={breadcrumbs}
+            actionButton={actionButton}
+            customAction={customHeaderAction}
+          />
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
       </div>
     </div>
+
   );
 }

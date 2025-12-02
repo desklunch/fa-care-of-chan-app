@@ -35,7 +35,7 @@ export default function EmployeeProfile() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Directory", href: "/directory" },
+          { label: "Users", href: "/users" },
           { label: "Loading..." },
         ]}
       >
@@ -73,7 +73,7 @@ export default function EmployeeProfile() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Directory", href: "/directory" },
+          { label: "Users", href: "/users" },
           { label: "Not Found" },
         ]}
       >
@@ -87,9 +87,9 @@ export default function EmployeeProfile() {
               <p className="text-muted-foreground mb-6">
                 The employee you're looking for doesn't exist or has been removed.
               </p>
-              <Button onClick={() => setLocation("/directory")} variant="outline">
+              <Button onClick={() => setLocation("/users")} variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Directory
+                Back to Users
               </Button>
             </CardContent>
           </Card>

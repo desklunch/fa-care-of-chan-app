@@ -78,15 +78,7 @@ export default function Directory() {
 
   const columnDefs: ColDef<User>[] = useMemo(
     () => [
-      {
-        headerName: "",
-        field: "profileImageUrl",
-        width: 60,
-        sortable: false,
-        filter: false,
-        cellRenderer: AvatarCellRenderer,
-        cellClass: "flex items-center",
-      },
+
       {
         headerName: "Name",
         field: "firstName",
@@ -108,31 +100,13 @@ export default function Directory() {
         headerName: "Department",
         field: "department",
         flex: 1,
-        minWidth: 130,
+        minWidth: 150,
         cellRenderer: DepartmentCellRenderer,
-      },
-      {
-        headerName: "Email",
-        field: "email",
-        flex: 1.5,
-        minWidth: 200,
-      },
-      {
-        headerName: "Phone",
-        field: "phone",
-        flex: 1,
-        minWidth: 130,
-      },
-      {
-        headerName: "Location",
-        field: "location",
-        flex: 1,
-        minWidth: 130,
       },
       {
         headerName: "Role",
         field: "role",
-        width: 100,
+        width: 150,
         cellRenderer: RoleCellRenderer,
       },
     ],
@@ -166,7 +140,7 @@ export default function Directory() {
   const onRowClicked = useCallback(
     (event: RowClickedEvent<User>) => {
       if (event.data) {
-        setLocation(`/employees/${event.data.id}`);
+        setLocation(`/users/${event.data.id}`);
       }
     },
     [setLocation]
@@ -174,7 +148,7 @@ export default function Directory() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Employee Directory" }]}>
+      <PageLayout breadcrumbs={[{ label: "Users" }]}>
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <Skeleton className="h-10 w-64" />
@@ -190,7 +164,7 @@ export default function Directory() {
   }
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Employee Directory" }]}>
+    <PageLayout breadcrumbs={[{ label: "Users" }]}>
       <div className="p-4 md:p-6 h-full flex flex-col">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
           <div className="relative w-full sm:w-80">
@@ -210,21 +184,7 @@ export default function Directory() {
         </div>
 
         <div
-          className="ag-theme-alpine flex-1 min-h-[400px] rounded-lg border border-border overflow-hidden"
-          style={{ 
-            "--ag-header-height": "48px",
-            "--ag-row-height": "56px",
-            "--ag-header-background-color": "hsl(var(--card))",
-            "--ag-background-color": "hsl(var(--background))",
-            "--ag-odd-row-background-color": "hsl(var(--card) / 0.5)",
-            "--ag-row-hover-color": "hsl(var(--accent))",
-            "--ag-border-color": "hsl(var(--border))",
-            "--ag-header-foreground-color": "hsl(var(--foreground))",
-            "--ag-foreground-color": "hsl(var(--foreground))",
-            "--ag-secondary-foreground-color": "hsl(var(--muted-foreground))",
-            "--ag-font-family": "var(--font-sans)",
-            "--ag-font-size": "14px",
-          } as React.CSSProperties}
+          className="ag-theme-alpine flex-1 min-h-[400px] overflow-hidden"
           data-testid="grid-employees"
         >
           <AgGridReact
@@ -232,7 +192,6 @@ export default function Directory() {
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             animateRows={true}
-            rowSelection={{ mode: "singleRow" }}
             theme="legacy"
             onRowClicked={onRowClicked}
             suppressCellFocus={true}
