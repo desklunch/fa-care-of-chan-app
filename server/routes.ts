@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { insertInviteSchema, updateProfileSchema } from "@shared/schema";
+import { sendInvitationEmail } from "./email";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -191,6 +192,42 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting invite:", error);
       res.status(500).json({ message: "Failed to delete invite" });
+    }
+  });
+
+  // Send invitation email
+  app.post("/api/invites/:id/send-email", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const invite = await storage.getInviteById(req.params.id);
+      
+      if (!invite) {
+        return res.status(404).json({ message: "Invite not found" });
+      }
+      
+      if (invite.usedAt) {
+        return res.status(400).json({ message: "Cannot send email for an already used invite" });
+      }
+      
+      if (new Date(invite.expiresAt) < new Date()) {
+        return res.status(400).json({ message: "Cannot send email for an expired invite" });
+      }
+
+      // Build the invite link
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      const inviteLink = `${protocol}://${host}/invite?token=${invite.token}`;
+
+      await sendInvitationEmail({
+        recipientEmail: invite.email,
+        recipientName: `${invite.firstName} ${invite.lastName}`.trim() || 'Team Member',
+        inviteLink,
+        organizationName: 'Team Directory',
+      });
+
+      res.json({ message: "Invitation email sent successfully" });
+    } catch (error) {
+      console.error("Error sending invitation email:", error);
+      res.status(500).json({ message: "Failed to send invitation email" });
     }
   });
 

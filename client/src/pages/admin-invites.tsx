@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Copy, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Copy, Trash2, CheckCircle, XCircle, Clock, Mail, Loader2 } from "lucide-react";
 import { CreateInviteDialog } from "@/components/create-invite-dialog";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
@@ -43,19 +43,46 @@ function StatusCellRenderer({ value }: ICellRendererParams<Invite, InviteStatus>
   );
 }
 
+interface InviteActionsContext {
+  copyInviteLink: (token: string) => void;
+  revokeInvite: (id: string) => void;
+  sendInviteEmail: (id: string) => void;
+  isPending: boolean;
+  isSendingEmail: string | null;
+}
+
 function InviteActionsCellRenderer({ 
   data, 
   context 
-}: ICellRendererParams<Invite> & { context: { copyInviteLink: (token: string) => void; revokeInvite: (id: string) => void; isPending: boolean } }) {
+}: ICellRendererParams<Invite> & { context: InviteActionsContext }) {
   if (!data) return null;
   
   const status = getInviteStatus(data);
   const isPending = status === "pending";
   
   if (!isPending) return null;
+
+  const isSending = context.isSendingEmail === data.id;
   
   return (
     <div className="flex items-center h-full gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          context.sendInviteEmail(data.id);
+        }}
+        disabled={isSending}
+        data-testid={`button-send-email-${data.id}`}
+      >
+        {isSending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Mail className="h-4 w-4" />
+        )}
+        {isSending ? "Sending..." : "Send Email"}
+      </Button>
       <Button
         variant="ghost"
         size="sm"
@@ -161,7 +188,7 @@ const inviteColumns: ColumnConfig<Invite>[] = [
     category: "Actions",
     toggleable: false,
     colDef: {
-      minWidth: 260,
+      minWidth: 380,
       sortable: false,
       filter: false,
       cellRenderer: InviteActionsCellRenderer,
@@ -176,6 +203,7 @@ export default function AdminInvites() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -221,6 +249,39 @@ export default function AdminInvites() {
     },
   });
 
+  const sendEmailMutation = useMutation({
+    mutationFn: async (inviteId: string) => {
+      setSendingEmailId(inviteId);
+      return apiRequest("POST", `/api/invites/${inviteId}/send-email`);
+    },
+    onSuccess: () => {
+      setSendingEmailId(null);
+      toast({
+        title: "Email Sent",
+        description: "Invitation email has been sent successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      setSendingEmailId(null);
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send invitation email.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const copyInviteLink = useCallback((token: string) => {
     const link = `${window.location.origin}/invite?token=${token}`;
     navigator.clipboard.writeText(link);
@@ -234,10 +295,16 @@ export default function AdminInvites() {
     revokeInviteMutation.mutate(inviteId);
   }, [revokeInviteMutation]);
 
-  const gridContext = {
+  const sendInviteEmail = useCallback((inviteId: string) => {
+    sendEmailMutation.mutate(inviteId);
+  }, [sendEmailMutation]);
+
+  const gridContext: InviteActionsContext = {
     copyInviteLink,
     revokeInvite,
+    sendInviteEmail,
     isPending: revokeInviteMutation.isPending,
+    isSendingEmail: sendingEmailId,
   };
 
   if (authLoading) {
