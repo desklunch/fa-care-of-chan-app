@@ -21,7 +21,6 @@ export interface DataGridPageProps<T> {
   getRowId?: (row: T) => string;
   toolbarActions?: React.ReactNode;
   emptyMessage?: string;
-  emptyIcon?: React.ReactNode;
 }
 
 export interface ColumnSelectorProps {
