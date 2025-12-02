@@ -8,27 +8,11 @@ import { gridTheme } from "@/lib/ag-grid-theme";
 ModuleRegistry.registerModules([AllCommunityModule]);
 import { PageLayout } from "@/framework";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Users } from "lucide-react";
 import type { User } from "@shared/schema";
 
-function AvatarCellRenderer(params: { value: string; data: User }) {
-  const user = params.data;
-  const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U";
-  
-  return (
-    <div className="flex items-center h-full">
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={user.profileImageUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
-        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-    </div>
-  );
-}
 
 function NameCellRenderer(params: { data: User }) {
   const user = params.data;
@@ -194,7 +178,7 @@ export default function Team() {
             theme={gridTheme}
             onRowClicked={onRowClicked}
             suppressCellFocus={true}
-            pagination={true}
+            pagination={false}
             paginationPageSize={50}
             paginationPageSizeSelector={[25, 50, 100]}
             domLayout="normal"

@@ -5,5 +5,6 @@ export const gridTheme = themeQuartz
   .withParams({
     browserColorScheme: "light",
     headerFontSize: 14,
-    spacing: 12
+    spacing: 12,
+    headerColumnResizeHandleColor: "#F3F3F3",
   });
