@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, RowClickedEvent, ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
+import { AgGridColumnSelector } from "@/components/ag-grid-column-selector";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 import { PageLayout } from "@/framework";
@@ -13,6 +14,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Users } from "lucide-react";
 import type { User } from "@shared/schema";
 
+const DEFAULT_VISIBLE_COLUMNS = ["name", "title", "department", "role"];
+
+const ALL_COLUMNS = [
+  "name",
+  "email",
+  "title",
+  "department",
+  "role",
+  "phone",
+  "location",
+  "bio",
+  "isActive",
+  "createdAt",
+  "updatedAt",
+];
+
+const COLUMN_CATEGORIES: Record<string, string[]> = {
+  "Basic Info": ["name", "email", "title", "department", "role"],
+  "Contact": ["phone", "location"],
+  "Details": ["bio", "isActive", "createdAt", "updatedAt"],
+};
+
+const COLUMN_DISPLAY_NAMES: Record<string, string> = {
+  name: "Name",
+  email: "Email",
+  title: "Title",
+  department: "Department",
+  role: "Role",
+  phone: "Phone",
+  location: "Location",
+  bio: "Bio",
+  isActive: "Active Status",
+  createdAt: "Created At",
+  updatedAt: "Updated At",
+};
 
 function NameCellRenderer(params: { data: User }) {
   const user = params.data;
@@ -51,18 +87,44 @@ function RoleCellRenderer(params: { value: string }) {
   );
 }
 
+function ActiveStatusCellRenderer(params: { value: boolean }) {
+  return (
+    <div className="flex items-center h-full">
+      <Badge variant={params.value ? "default" : "secondary"} className="font-normal">
+        {params.value ? "Active" : "Inactive"}
+      </Badge>
+    </div>
+  );
+}
+
+function DateCellRenderer(params: { value: string | Date | null }) {
+  if (!params.value) return null;
+  
+  const date = new Date(params.value);
+  return (
+    <div className="flex items-center h-full text-muted-foreground">
+      {date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })}
+    </div>
+  );
+}
+
 export default function Team() {
   const [, setLocation] = useLocation();
   const [searchText, setSearchText] = useState("");
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
 
   const { data: team = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/team"],
   });
 
-  const columnDefs: ColDef<User>[] = useMemo(
-    () => [
-
-      {
+  const allColumnDefs: Record<string, ColDef<User>> = useMemo(
+    () => ({
+      name: {
+        colId: "name",
         headerName: "Name",
         field: "firstName",
         flex: 1.5,
@@ -73,28 +135,86 @@ export default function Team() {
           return `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
         },
       },
-      {
+      email: {
+        colId: "email",
+        headerName: "Email",
+        field: "email",
+        flex: 1.5,
+        minWidth: 200,
+      },
+      title: {
+        colId: "title",
         headerName: "Title",
         field: "title",
         flex: 1.2,
         minWidth: 150,
       },
-      {
+      department: {
+        colId: "department",
         headerName: "Department",
         field: "department",
         flex: 1,
         minWidth: 150,
         cellRenderer: DepartmentCellRenderer,
       },
-      {
+      role: {
+        colId: "role",
         headerName: "Role",
         field: "role",
-        width: 150,
+        width: 120,
         cellRenderer: RoleCellRenderer,
       },
-    ],
+      phone: {
+        colId: "phone",
+        headerName: "Phone",
+        field: "phone",
+        flex: 1,
+        minWidth: 140,
+      },
+      location: {
+        colId: "location",
+        headerName: "Location",
+        field: "location",
+        flex: 1,
+        minWidth: 150,
+      },
+      bio: {
+        colId: "bio",
+        headerName: "Bio",
+        field: "bio",
+        flex: 2,
+        minWidth: 200,
+      },
+      isActive: {
+        colId: "isActive",
+        headerName: "Status",
+        field: "isActive",
+        width: 100,
+        cellRenderer: ActiveStatusCellRenderer,
+      },
+      createdAt: {
+        colId: "createdAt",
+        headerName: "Created At",
+        field: "createdAt",
+        width: 130,
+        cellRenderer: DateCellRenderer,
+      },
+      updatedAt: {
+        colId: "updatedAt",
+        headerName: "Updated At",
+        field: "updatedAt",
+        width: 130,
+        cellRenderer: DateCellRenderer,
+      },
+    }),
     []
   );
+
+  const columnDefs: ColDef<User>[] = useMemo(() => {
+    return visibleColumns
+      .filter((colId) => allColumnDefs[colId])
+      .map((colId) => allColumnDefs[colId]);
+  }, [visibleColumns, allColumnDefs]);
 
   const defaultColDef: ColDef = useMemo(
     () => ({
@@ -129,6 +249,25 @@ export default function Team() {
     [setLocation]
   );
 
+  const handleToggleColumn = useCallback((columnId: string) => {
+    setVisibleColumns((prev) => {
+      if (prev.includes(columnId)) {
+        return prev.filter((id) => id !== columnId);
+      } else {
+        const newColumns = [...prev, columnId];
+        return ALL_COLUMNS.filter((col) => newColumns.includes(col));
+      }
+    });
+  }, []);
+
+  const handleShowAll = useCallback(() => {
+    setVisibleColumns(ALL_COLUMNS);
+  }, []);
+
+  const handleResetToDefaults = useCallback(() => {
+    setVisibleColumns(DEFAULT_VISIBLE_COLUMNS);
+  }, []);
+
   if (isLoading) {
     return (
       <PageLayout breadcrumbs={[{ label: "Team" }]}>
@@ -150,14 +289,24 @@ export default function Team() {
     <PageLayout breadcrumbs={[{ label: "Team" }]}>
       <div className="p-4 md:p-6 h-full flex flex-col">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search team..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-9 h-10"
-              data-testid="input-search-team"
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search team..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-9 h-10"
+                data-testid="input-search-team"
+              />
+            </div>
+            <AgGridColumnSelector
+              columnCategories={COLUMN_CATEGORIES}
+              columnDisplayNames={COLUMN_DISPLAY_NAMES}
+              visibleColumns={visibleColumns}
+              onToggleColumn={handleToggleColumn}
+              onShowAll={handleShowAll}
+              onResetToDefaults={handleResetToDefaults}
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
