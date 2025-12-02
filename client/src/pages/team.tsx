@@ -2,17 +2,10 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, RowClickedEvent, ModuleRegistry, AllCommunityModule, themeQuartz, iconSetMaterial } from "ag-grid-community";
+import { ColDef, RowClickedEvent, ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { gridTheme } from "@/lib/ag-grid-theme";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-const gridTheme = themeQuartz
-  .withPart(iconSetMaterial)
-  .withParams({
-    browserColorScheme: "light",
-    headerFontSize: 14,
-    spacing: 12
-  });
 import { PageLayout } from "@/framework";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
