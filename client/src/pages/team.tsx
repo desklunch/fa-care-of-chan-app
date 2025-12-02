@@ -2,11 +2,17 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, RowClickedEvent, ModuleRegistry, AllCommunityModule } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
+import { ColDef, RowClickedEvent, ModuleRegistry, AllCommunityModule, themeQuartz, iconSetMaterial } from "ag-grid-community";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const gridTheme = themeQuartz
+  .withPart(iconSetMaterial)
+  .withParams({
+    browserColorScheme: "light",
+    headerFontSize: 14,
+    spacing: 12
+  });
 import { PageLayout } from "@/framework";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -184,7 +190,7 @@ export default function Team() {
         </div>
 
         <div
-          className="ag-theme-alpine flex-1 min-h-[400px] overflow-hidden"
+          className="flex-1 min-h-[400px] overflow-hidden"
           data-testid="grid-team"
         >
           <AgGridReact
@@ -192,7 +198,7 @@ export default function Team() {
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             animateRows={true}
-            theme="legacy"
+            theme={gridTheme}
             onRowClicked={onRowClicked}
             suppressCellFocus={true}
             pagination={true}
