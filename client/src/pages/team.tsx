@@ -14,11 +14,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Users } from "lucide-react";
 import type { User } from "@shared/schema";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 const DEFAULT_VISIBLE_COLUMNS = ["name", "title", "department", "role"];
 
 const ALL_COLUMNS = [
+  "id",
   "name",
+  "firstName",
+  "lastName",
   "email",
+  "profileImageUrl",
   "title",
   "department",
   "role",
@@ -31,14 +37,19 @@ const ALL_COLUMNS = [
 ];
 
 const COLUMN_CATEGORIES: Record<string, string[]> = {
-  "Basic Info": ["name", "email", "title", "department", "role"],
+  "Basic Info": ["id", "name", "firstName", "lastName", "email", "profileImageUrl"],
+  "Work": ["title", "department", "role"],
   "Contact": ["phone", "location"],
   "Details": ["bio", "isActive", "createdAt", "updatedAt"],
 };
 
 const COLUMN_DISPLAY_NAMES: Record<string, string> = {
+  id: "ID",
   name: "Name",
+  firstName: "First Name",
+  lastName: "Last Name",
   email: "Email",
+  profileImageUrl: "Profile Image",
   title: "Title",
   department: "Department",
   role: "Role",
@@ -123,6 +134,12 @@ export default function Team() {
 
   const allColumnDefs: Record<string, ColDef<User>> = useMemo(
     () => ({
+      id: {
+        colId: "id",
+        headerName: "ID",
+        field: "id",
+        width: 120,
+      },
       name: {
         colId: "name",
         headerName: "Name",
@@ -135,12 +152,47 @@ export default function Team() {
           return `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
         },
       },
+      firstName: {
+        colId: "firstName",
+        headerName: "First Name",
+        field: "firstName",
+        flex: 1,
+        minWidth: 120,
+      },
+      lastName: {
+        colId: "lastName",
+        headerName: "Last Name",
+        field: "lastName",
+        flex: 1,
+        minWidth: 120,
+      },
       email: {
         colId: "email",
         headerName: "Email",
         field: "email",
         flex: 1.5,
         minWidth: 200,
+      },
+      profileImageUrl: {
+        colId: "profileImageUrl",
+        headerName: "Profile Image",
+        field: "profileImageUrl",
+        width: 120,
+        cellRenderer: (params: { data: User }) => {
+          const user = params.data;
+          if (!user?.profileImageUrl) return null;
+          const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U";
+          return (
+            <div className="flex items-center h-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.profileImageUrl} alt={`${user.firstName} ${user.lastName}`} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          );
+        },
       },
       title: {
         colId: "title",
