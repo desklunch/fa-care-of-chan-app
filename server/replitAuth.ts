@@ -74,8 +74,6 @@ async function upsertUser(claims: any, inviteToken?: string) {
     firstName: inviteData?.firstName || claims["first_name"],
     lastName: inviteData?.lastName || claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    title: inviteData?.title || undefined,
-    department: inviteData?.department || undefined,
   });
 }
 

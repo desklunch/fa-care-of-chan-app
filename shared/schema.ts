@@ -47,8 +47,6 @@ export const invites = pgTable("invites", {
   token: varchar("token").notNull().unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
-  title: varchar("title"),
-  department: varchar("department"),
   createdById: varchar("created_by_id").references(() => users.id),
   usedAt: timestamp("used_at"),
   expiresAt: timestamp("expires_at").notNull(),

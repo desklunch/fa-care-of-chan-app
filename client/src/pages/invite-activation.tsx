@@ -109,20 +109,6 @@ export default function InviteActivation() {
                 </span>
               </div>
             )}
-            {invite.title && (
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">Title:</span>
-                <span className="font-medium" data-testid="text-invite-title">{invite.title}</span>
-              </div>
-            )}
-            {invite.department && (
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">Department:</span>
-                <span className="font-medium" data-testid="text-invite-department">{invite.department}</span>
-              </div>
-            )}
           </div>
 
           <p className="text-sm text-muted-foreground text-center">

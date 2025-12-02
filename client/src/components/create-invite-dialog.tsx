@@ -39,8 +39,6 @@ export function CreateInviteDialog() {
       email: "",
       firstName: "",
       lastName: "",
-      title: "",
-      department: "",
     },
   });
 
@@ -217,44 +215,6 @@ export function CreateInviteDialog() {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Job Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Software Engineer"
-                        {...field}
-                        value={field.value || ""}
-                        data-testid="input-invite-title"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Engineering"
-                        {...field}
-                        value={field.value || ""}
-                        data-testid="input-invite-department"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button

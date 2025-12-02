@@ -68,7 +68,7 @@ Users table:
 
 Invites table:
 - Token-based registration system
-- Pre-populated employee details (email, firstName, lastName, title, department)
+- Pre-populated employee details (email, firstName, lastName)
 - Expiration tracking
 - Usage tracking (usedAt timestamp)
 - Creator reference (createdById)

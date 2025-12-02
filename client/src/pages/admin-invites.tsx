@@ -11,7 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Copy, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
 import { CreateInviteDialog } from "@/components/create-invite-dialog";
 import { DataGridPage } from "@/components/data-grid";
-import { DateCellRenderer, BadgeCellRenderer } from "@/components/data-grid/cell-renderers";
+import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import type { Invite } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
@@ -111,27 +111,6 @@ const inviteColumns: ColumnConfig<Invite>[] = [
     },
   },
   {
-    id: "title",
-    headerName: "Title",
-    field: "title",
-    category: "Profile",
-    colDef: {
-      flex: 1,
-      minWidth: 150,
-      valueFormatter: (params) => params.value || "—",
-    },
-  },
-  {
-    id: "department",
-    headerName: "Department",
-    field: "department",
-    category: "Profile",
-    colDef: {
-      width: 140,
-      cellRenderer: BadgeCellRenderer,
-    },
-  },
-  {
     id: "status",
     headerName: "Status",
     category: "Status",
@@ -187,7 +166,7 @@ const inviteColumns: ColumnConfig<Invite>[] = [
   },
 ];
 
-const defaultVisibleColumns = ["email", "name", "title", "department", "status", "createdAt", "expiresAt", "actions"];
+const defaultVisibleColumns = ["email", "name", "status", "createdAt", "expiresAt", "actions"];
 
 export default function AdminInvites() {
   const [, setLocation] = useLocation();
@@ -284,7 +263,7 @@ export default function AdminInvites() {
         queryKey="/api/invites"
         columns={inviteColumns}
         defaultVisibleColumns={defaultVisibleColumns}
-        searchFields={["email", "firstName", "lastName", "title", "department"]}
+        searchFields={["email", "firstName", "lastName"]}
         searchPlaceholder="Search invitations..."
         emptyMessage="No invitations found. Create one to get started."
         getRowId={(invite) => invite.id}
