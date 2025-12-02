@@ -80,7 +80,7 @@ function DepartmentCellRenderer(params: { value: string }) {
   return (
     <div className="flex items-center h-full">
       <Badge variant="secondary" className="font-normal">
-        {params.value}
+
       </Badge>
     </div>
   );
@@ -207,7 +207,6 @@ export default function Team() {
         field: "department",
         flex: 1,
         minWidth: 150,
-        cellRenderer: DepartmentCellRenderer,
       },
       role: {
         colId: "role",
@@ -362,7 +361,6 @@ export default function Team() {
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
             <span data-testid="text-team-count">{filteredTeam.length} members</span>
           </div>
         </div>

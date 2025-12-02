@@ -33,7 +33,7 @@ export function AgGridColumnSelector({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
+          size="md"
           data-testid="button-column-visibility"
           className={columnMenuOpen ? 'bg-accent' : ''}
         >
@@ -43,7 +43,7 @@ export function AgGridColumnSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="mt-1 bg-background border-black/10 w-[100vw] md:w-72 max-h-[600px] overflow-y-auto rounded-none md:rounded-md overflow-y-hidden flex flex-col gap-2"
+        className="mt-1 bg-background border-black/10 w-[100vw] md:w-72 max-h-[600px] overflow-y-auto rounded-none md:rounded-md overflow-y-hidden flex flex-col gap-0"
         data-testid="dropdown-column-visibility"
       >
         <div className="flex gap-2">
