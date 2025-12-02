@@ -7,9 +7,10 @@ export const gridTheme = themeQuartz
     headerFontSize: 14,
     spacing: 12,
     headerColumnResizeHandleColor: "#F3F3F3",
-    oddRowBackgroundColor: "#00000006",
+    oddRowBackgroundColor: "hsl(var(--card))",
     rowBorder: false,
-    iconColor: "#00000033",
-    borderColor: "hsl(var(--border))",
+    iconColor: "hsl(var(--input))",
+    borderColor: "hsl(var(--border))", 
+    chromeBackgroundColor: "hsl(var(--sidebar))",
 
   });

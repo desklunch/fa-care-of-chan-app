@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
@@ -320,25 +321,34 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 !showExpanded && "justify-center"
               )}
             >
-              <Avatar className="h-9 w-9 flex-shrink-0">
-                <AvatarImage
-                  src={user.profileImageUrl}
-                  alt={user.fullName || user.username}
-                />
-                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
-                  {getInitials(user.fullName || user.username)}
-                </AvatarFallback>
-              </Avatar>
-              {showExpanded && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {user.fullName || user.username}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate capitalize">
-                    {user.role}
-                  </p>
-                </div>
-              )}
+              <Link
+                href="/profile"
+                className={cn(
+                  "flex items-center gap-3 hover-elevate rounded-md p-1 -m-1 min-w-0",
+                  showExpanded ? "flex-1" : ""
+                )}
+                data-testid="link-user-profile"
+              >
+                <Avatar className="h-9 w-9 flex-shrink-0">
+                  <AvatarImage
+                    src={user.profileImageUrl}
+                    alt={user.fullName || user.username}
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                    {getInitials(user.fullName || user.username)}
+                  </AvatarFallback>
+                </Avatar>
+                {showExpanded && (
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {user.fullName || user.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate capitalize">
+                      {user.role}
+                    </p>
+                  </div>
+                )}
+              </Link>
               {showExpanded && onSignOut && (
                 <Button
                   variant="ghost"
