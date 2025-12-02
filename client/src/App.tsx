@@ -12,6 +12,7 @@ import Landing from "@/pages/landing";
 import InviteActivation from "@/pages/invite-activation";
 import TeamPage from "@/pages/team";
 import TeamProfile from "@/pages/team-profile";
+import Profile from "@/pages/profile";
 import ProfileEdit from "@/pages/profile-edit";
 import AdminInvites from "@/pages/admin-invites";
 import NotFound from "@/pages/not-found";
@@ -70,6 +71,7 @@ function AuthenticatedRoutes() {
         <Route path="/" component={TeamPage} />
         <Route path="/team" component={TeamPage} />
         <Route path="/team/:id" component={TeamProfile} />
+        <Route path="/profile" component={Profile} />
         <Route path="/profile/edit" component={ProfileEdit} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route component={NotFound} />

@@ -324,7 +324,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
               <Link
                 href="/profile"
                 className={cn(
-                  "flex items-center gap-3 hover-elevate rounded-md p-1 -m-1 min-w-0",
+                  "flex items-center gap-3 hover-elevate p-1 -m-1 min-w-0",
                   showExpanded ? "flex-1" : ""
                 )}
                 data-testid="link-user-profile"
@@ -342,9 +342,6 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {user.fullName || user.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate capitalize">
-                      {user.role}
                     </p>
                   </div>
                 )}
