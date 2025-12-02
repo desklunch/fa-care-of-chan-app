@@ -19,23 +19,23 @@ import {
 } from "lucide-react";
 import type { User } from "@shared/schema";
 
-export default function EmployeeProfile() {
+export default function TeamProfile() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
 
-  const { data: employee, isLoading, error } = useQuery<User>({
-    queryKey: ["/api/employees", id],
+  const { data: member, isLoading, error } = useQuery<User>({
+    queryKey: ["/api/team", id],
     enabled: !!id,
   });
 
-  const isOwnProfile = currentUser?.id === employee?.id;
+  const isOwnProfile = currentUser?.id === member?.id;
 
   if (isLoading) {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Users", href: "/users" },
+          { label: "Team", href: "/team" },
           { label: "Loading..." },
         ]}
       >
@@ -69,11 +69,11 @@ export default function EmployeeProfile() {
     );
   }
 
-  if (error || !employee) {
+  if (error || !member) {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Users", href: "/users" },
+          { label: "Team", href: "/team" },
           { label: "Not Found" },
         ]}
       >
@@ -83,13 +83,13 @@ export default function EmployeeProfile() {
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <Building2 className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="text-xl font-semibold mb-2">Employee Not Found</h2>
+              <h2 className="text-xl font-semibold mb-2">Team Member Not Found</h2>
               <p className="text-muted-foreground mb-6">
-                The employee you're looking for doesn't exist or has been removed.
+                The team member you're looking for doesn't exist or has been removed.
               </p>
-              <Button onClick={() => setLocation("/users")} variant="outline">
+              <Button onClick={() => setLocation("/team")} variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Users
+                Back to Team
               </Button>
             </CardContent>
           </Card>
@@ -99,14 +99,14 @@ export default function EmployeeProfile() {
   }
 
   const fullName =
-    [employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown";
+    [member.firstName, member.lastName].filter(Boolean).join(" ") || "Unknown";
   const initials =
-    `${employee.firstName?.[0] || ""}${employee.lastName?.[0] || ""}`.toUpperCase() || "U";
+    `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase() || "U";
 
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Directory", href: "/directory" },
+        { label: "Team", href: "/team" },
         { label: fullName },
       ]}
       actionButton={
@@ -127,7 +127,7 @@ export default function EmployeeProfile() {
                 <div className="flex flex-col items-center text-center">
                   <Avatar className="h-32 w-32 mb-4">
                     <AvatarImage
-                      src={employee.profileImageUrl || undefined}
+                      src={member.profileImageUrl || undefined}
                       alt={fullName}
                       className="object-cover"
                     />
@@ -137,62 +137,62 @@ export default function EmployeeProfile() {
                   </Avatar>
                   <h1
                     className="text-xl font-semibold mb-1"
-                    data-testid="text-employee-name"
+                    data-testid="text-member-name"
                   >
                     {fullName}
                   </h1>
-                  {employee.title && (
+                  {member.title && (
                     <p
                       className="text-muted-foreground mb-3"
-                      data-testid="text-employee-title"
+                      data-testid="text-member-title"
                     >
-                      {employee.title}
+                      {member.title}
                     </p>
                   )}
                   <div className="flex flex-wrap justify-center gap-2">
-                    {employee.department && (
+                    {member.department && (
                       <Badge variant="secondary" data-testid="badge-department">
-                        {employee.department}
+                        {member.department}
                       </Badge>
                     )}
                     <Badge
-                      variant={employee.role === "admin" ? "default" : "outline"}
+                      variant={member.role === "admin" ? "default" : "outline"}
                       className="capitalize"
                       data-testid="badge-role"
                     >
-                      {employee.role}
+                      {member.role}
                     </Badge>
                   </div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-border space-y-3">
-                  {employee.email && (
+                  {member.email && (
                     <a
-                      href={`mailto:${employee.email}`}
+                      href={`mailto:${member.email}`}
                       className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
                       data-testid="link-email"
                     >
                       <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="truncate">{employee.email}</span>
+                      <span className="truncate">{member.email}</span>
                     </a>
                   )}
-                  {employee.phone && (
+                  {member.phone && (
                     <a
-                      href={`tel:${employee.phone}`}
+                      href={`tel:${member.phone}`}
                       className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
                       data-testid="link-phone"
                     >
                       <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span>{employee.phone}</span>
+                      <span>{member.phone}</span>
                     </a>
                   )}
-                  {employee.location && (
+                  {member.location && (
                     <div
                       className="flex items-center gap-3 text-sm"
                       data-testid="text-location"
                     >
                       <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span>{employee.location}</span>
+                      <span>{member.location}</span>
                     </div>
                   )}
                 </div>
@@ -201,7 +201,7 @@ export default function EmployeeProfile() {
           </div>
 
           <div className="md:col-span-2 space-y-6">
-            {employee.bio && (
+            {member.bio && (
               <Card className="border-card-border">
                 <CardHeader>
                   <CardTitle className="text-lg">About</CardTitle>
@@ -211,7 +211,7 @@ export default function EmployeeProfile() {
                     className="text-muted-foreground whitespace-pre-wrap"
                     data-testid="text-bio"
                   >
-                    {employee.bio}
+                    {member.bio}
                   </p>
                 </CardContent>
               </Card>
@@ -230,7 +230,7 @@ export default function EmployeeProfile() {
                     <div>
                       <p className="text-sm text-muted-foreground">Title</p>
                       <p className="font-medium" data-testid="text-detail-title">
-                        {employee.title || "Not specified"}
+                        {member.title || "Not specified"}
                       </p>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ export default function EmployeeProfile() {
                     <div>
                       <p className="text-sm text-muted-foreground">Department</p>
                       <p className="font-medium" data-testid="text-detail-department">
-                        {employee.department || "Not specified"}
+                        {member.department || "Not specified"}
                       </p>
                     </div>
                   </div>
@@ -252,7 +252,7 @@ export default function EmployeeProfile() {
                     <div>
                       <p className="text-sm text-muted-foreground">Location</p>
                       <p className="font-medium" data-testid="text-detail-location">
-                        {employee.location || "Not specified"}
+                        {member.location || "Not specified"}
                       </p>
                     </div>
                   </div>
@@ -263,8 +263,8 @@ export default function EmployeeProfile() {
                     <div>
                       <p className="text-sm text-muted-foreground">Joined</p>
                       <p className="font-medium" data-testid="text-detail-joined">
-                        {employee.createdAt
-                          ? new Date(employee.createdAt).toLocaleDateString("en-US", {
+                        {member.createdAt
+                          ? new Date(member.createdAt).toLocaleDateString("en-US", {
                               month: "long",
                               year: "numeric",
                             })

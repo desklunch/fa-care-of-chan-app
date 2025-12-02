@@ -26,27 +26,27 @@ export async function registerRoutes(
     }
   });
 
-  // Employee routes
-  app.get("/api/employees", isAuthenticated, async (req, res) => {
+  // Team routes
+  app.get("/api/team", isAuthenticated, async (req, res) => {
     try {
-      const employees = await storage.getAllEmployees();
-      res.json(employees);
+      const team = await storage.getAllEmployees();
+      res.json(team);
     } catch (error) {
-      console.error("Error fetching employees:", error);
-      res.status(500).json({ message: "Failed to fetch employees" });
+      console.error("Error fetching team:", error);
+      res.status(500).json({ message: "Failed to fetch team" });
     }
   });
 
-  app.get("/api/employees/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/team/:id", isAuthenticated, async (req, res) => {
     try {
-      const employee = await storage.getUser(req.params.id);
-      if (!employee) {
-        return res.status(404).json({ message: "Employee not found" });
+      const member = await storage.getUser(req.params.id);
+      if (!member) {
+        return res.status(404).json({ message: "Team member not found" });
       }
-      res.json(employee);
+      res.json(member);
     } catch (error) {
-      console.error("Error fetching employee:", error);
-      res.status(500).json({ message: "Failed to fetch employee" });
+      console.error("Error fetching team member:", error);
+      res.status(500).json({ message: "Failed to fetch team member" });
     }
   });
 

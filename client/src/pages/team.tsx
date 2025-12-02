@@ -68,12 +68,12 @@ function RoleCellRenderer(params: { value: string }) {
   );
 }
 
-export default function Directory() {
+export default function Team() {
   const [, setLocation] = useLocation();
   const [searchText, setSearchText] = useState("");
 
-  const { data: employees = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/employees"],
+  const { data: team = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/team"],
   });
 
   const columnDefs: ColDef<User>[] = useMemo(
@@ -122,25 +122,25 @@ export default function Directory() {
     []
   );
 
-  const filteredEmployees = useMemo(() => {
-    if (!searchText.trim()) return employees;
+  const filteredTeam = useMemo(() => {
+    if (!searchText.trim()) return team;
     const search = searchText.toLowerCase();
-    return employees.filter((emp) => {
-      const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.toLowerCase();
+    return team.filter((member) => {
+      const fullName = `${member.firstName || ""} ${member.lastName || ""}`.toLowerCase();
       return (
         fullName.includes(search) ||
-        emp.email?.toLowerCase().includes(search) ||
-        emp.title?.toLowerCase().includes(search) ||
-        emp.department?.toLowerCase().includes(search) ||
-        emp.location?.toLowerCase().includes(search)
+        member.email?.toLowerCase().includes(search) ||
+        member.title?.toLowerCase().includes(search) ||
+        member.department?.toLowerCase().includes(search) ||
+        member.location?.toLowerCase().includes(search)
       );
     });
-  }, [employees, searchText]);
+  }, [team, searchText]);
 
   const onRowClicked = useCallback(
     (event: RowClickedEvent<User>) => {
       if (event.data) {
-        setLocation(`/users/${event.data.id}`);
+        setLocation(`/team/${event.data.id}`);
       }
     },
     [setLocation]
@@ -148,7 +148,7 @@ export default function Directory() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Users" }]}>
+      <PageLayout breadcrumbs={[{ label: "Team" }]}>
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <Skeleton className="h-10 w-64" />
@@ -164,31 +164,31 @@ export default function Directory() {
   }
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Users" }]}>
+    <PageLayout breadcrumbs={[{ label: "Team" }]}>
       <div className="p-4 md:p-6 h-full flex flex-col">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search employees..."
+              placeholder="Search team..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="pl-9 h-10"
-              data-testid="input-search-employees"
+              data-testid="input-search-team"
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
-            <span data-testid="text-employee-count">{filteredEmployees.length} employees</span>
+            <span data-testid="text-team-count">{filteredTeam.length} members</span>
           </div>
         </div>
 
         <div
           className="ag-theme-alpine flex-1 min-h-[400px] overflow-hidden"
-          data-testid="grid-employees"
+          data-testid="grid-team"
         >
           <AgGridReact
-            rowData={filteredEmployees}
+            rowData={filteredTeam}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             animateRows={true}
@@ -205,7 +205,7 @@ export default function Directory() {
                 <svg class="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <p>No employees found</p>
+                <p>No team members found</p>
               </div>
             `}
           />
