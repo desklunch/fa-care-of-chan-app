@@ -20,6 +20,7 @@ import AppFeatureForm from "@/pages/app-feature-form";
 import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
+import Vendors from "@/pages/vendors";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -30,6 +31,7 @@ import {
   BookOpenCheck,
   Bug,
   Contact,
+  Store,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -61,6 +63,11 @@ function useLayoutConfig() {
             name: "Contacts",
             href: "/contacts",
             icon: Contact,
+          },
+          {
+            name: "Vendors",
+            href: "/vendors",
+            icon: Store,
           },
         ],
       },
@@ -137,6 +144,7 @@ function AuthenticatedRoutes() {
         <Route path="/app/features/:id" component={AppFeatureDetail} />
         <Route path="/contacts" component={Contacts} />
         <Route path="/contacts/:id" component={ContactDetail} />
+        <Route path="/vendors" component={Vendors} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
         <Route path="/admin/logs" component={AdminLogs} />
