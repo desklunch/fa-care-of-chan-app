@@ -242,6 +242,24 @@ export const vendors = pgTable(
   ],
 );
 
+// Vendor services (service categories that vendors can provide)
+export const vendorServices = pgTable(
+  "vendor_services",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 255 }),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    icon: varchar("icon", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_vendor_services_name").on(table.name),
+    index("idx_vendor_services_external_id").on(table.externalId),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -330,6 +348,8 @@ export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
 export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
+export type VendorService = typeof vendorServices.$inferSelect;
+export type InsertVendorService = typeof vendorServices.$inferInsert;
 
 // Keep old type aliases for backward compatibility
 export type ProductFeature = AppFeature;
