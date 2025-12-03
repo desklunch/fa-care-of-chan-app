@@ -6,7 +6,7 @@ export const gridTheme = themeQuartz
     browserColorScheme: "light",
     headerFontSize: 14,
     spacing: 12,
-    headerColumnResizeHandleColor: "#F3F3F3",
+    headerColumnResizeHandleColor: "hsl(var(--border))",
     oddRowBackgroundColor: "hsl(var(--card))",
     rowBorder: false,
     iconColor: "hsl(var(--input))",
