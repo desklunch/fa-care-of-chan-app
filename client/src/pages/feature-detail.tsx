@@ -19,7 +19,7 @@ import { Link } from "wouter";
 import type { ProductFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
 
 const statusLabels: Record<FeatureStatus, string> = {
-  idea: "Idea",
+  proposed: "Proposed",
   under_review: "Under Review",
   planned: "Planned",
   in_progress: "In Progress",
@@ -28,7 +28,7 @@ const statusLabels: Record<FeatureStatus, string> = {
 };
 
 const statusColors: Record<FeatureStatus, string> = {
-  idea: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  proposed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   under_review: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   planned: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   in_progress: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",

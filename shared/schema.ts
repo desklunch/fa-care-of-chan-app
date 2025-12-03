@@ -92,7 +92,7 @@ export const featureCategories = pgTable("feature_categories", {
 
 // Feature status enum values
 export const featureStatuses = [
-  "idea",
+  "proposed",
   "under_review",
   "planned",
   "in_progress",
@@ -120,7 +120,7 @@ export const productFeatures = pgTable(
     categoryId: varchar("category_id")
       .notNull()
       .references(() => featureCategories.id),
-    status: varchar("status", { length: 20 }).default("idea").notNull(),
+    status: varchar("status", { length: 20 }).default("proposed").notNull(),
     priority: varchar("priority", { length: 20 }),
     createdById: varchar("created_by_id")
       .notNull()
