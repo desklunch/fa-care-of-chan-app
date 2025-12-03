@@ -14,6 +14,8 @@ import {
   updateVendorServiceSchema,
   insertContactSchema,
   updateContactSchema,
+  insertVendorSchema,
+  updateVendorSchema,
   featureStatuses,
   type FeatureStatus,
 } from "@shared/schema";
@@ -983,6 +985,195 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting vendor service:", error);
       res.status(500).json({ message: "Failed to delete vendor service" });
+    }
+  });
+
+  // Google Places API routes
+  app.get("/api/places/autocomplete", isAuthenticated, async (req, res) => {
+    try {
+      const { input } = req.query;
+      if (!input || typeof input !== "string") {
+        return res.status(400).json({ message: "Input is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=(cities)&key=${apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching places autocomplete:", error);
+      res.status(500).json({ message: "Failed to fetch place suggestions" });
+    }
+  });
+
+  app.get("/api/places/details", isAuthenticated, async (req, res) => {
+    try {
+      const { place_id } = req.query;
+      if (!place_id || typeof place_id !== "string") {
+        return res.status(400).json({ message: "Place ID is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place_id}&fields=address_components,formatted_address&key=${apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const data = await response.json();
+      
+      // Parse address components
+      const result = data.result;
+      let city = "";
+      let region = "";
+      let regionCode = "";
+      let country = "";
+      let countryCode = "";
+
+      if (result?.address_components) {
+        for (const component of result.address_components) {
+          if (component.types.includes("locality")) {
+            city = component.long_name;
+          } else if (component.types.includes("administrative_area_level_1")) {
+            region = component.long_name;
+            regionCode = component.short_name;
+          } else if (component.types.includes("country")) {
+            country = component.long_name;
+            countryCode = component.short_name;
+          }
+        }
+      }
+
+      res.json({ city, region, regionCode, country, countryCode });
+    } catch (error) {
+      console.error("Error fetching place details:", error);
+      res.status(500).json({ message: "Failed to fetch place details" });
+    }
+  });
+
+  // Vendor CRUD routes
+  app.post("/api/vendors", isAdmin, async (req: any, res) => {
+    try {
+      const parsed = insertVendorSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+
+      const { serviceIds, ...vendorData } = parsed.data;
+      const vendor = await storage.createVendor(vendorData, serviceIds);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor",
+        entityId: vendor.id,
+        status: "success",
+        metadata: { businessName: vendor.businessName },
+      });
+
+      res.status(201).json(vendor);
+    } catch (error) {
+      console.error("Error creating vendor:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to create vendor" });
+    }
+  });
+
+  app.patch("/api/vendors/:id", isAdmin, async (req: any, res) => {
+    try {
+      const existingVendor = await storage.getVendorById(req.params.id);
+      if (!existingVendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+
+      const parsed = updateVendorSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+
+      const { serviceIds, ...vendorData } = parsed.data;
+      const vendor = await storage.updateVendor(req.params.id, vendorData, serviceIds);
+
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+
+      const changes = getChangedFields(
+        existingVendor as unknown as Record<string, unknown>,
+        vendor as unknown as Record<string, unknown>
+      );
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "vendor",
+        entityId: req.params.id,
+        changes,
+        status: "success",
+      });
+
+      res.json(vendor);
+    } catch (error) {
+      console.error("Error updating vendor:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "vendor",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update vendor" });
+    }
+  });
+
+  app.delete("/api/vendors/:id", isAdmin, async (req: any, res) => {
+    try {
+      const existingVendor = await storage.getVendorById(req.params.id);
+      if (!existingVendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+
+      await storage.deleteVendor(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "vendor",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { deletedVendor: existingVendor.businessName },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "vendor",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to delete vendor" });
     }
   });
 

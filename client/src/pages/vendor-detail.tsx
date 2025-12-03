@@ -19,12 +19,16 @@ import {
   Receipt,
   Briefcase,
   Contact,
+  Pencil,
 } from "lucide-react";
 import type { VendorWithRelations } from "@shared/schema";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function VendorDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const { data: vendor, isLoading, error } = useQuery<VendorWithRelations>({
     queryKey: ["/api/vendors", id],
@@ -108,6 +112,12 @@ export default function VendorDetail() {
         { label: "Vendors", href: "/vendors" },
         { label: vendor.businessName },
       ]}
+      actionButton={isAdmin ? {
+        label: "Edit Vendor",
+        href: `/vendors/${id}/edit`,
+        icon: Pencil,
+        variant: "outline",
+      } : undefined}
     >
       <div className="p-4 md:p-6 max-w-5xl mx-auto">
         <div className="grid md:grid-cols-3 gap-6">

@@ -39,6 +39,8 @@ import {
   type ContactWithVendors,
   type CreateVendorService,
   type UpdateVendorService,
+  type CreateVendor,
+  type UpdateVendor,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -134,10 +136,16 @@ export interface IStorage {
   getVendorsWithRelations(): Promise<VendorWithRelations[]>;
   getVendorById(id: string): Promise<Vendor | undefined>;
   getVendorByIdWithRelations(id: string): Promise<VendorWithRelations | undefined>;
+  createVendor(data: Omit<CreateVendor, 'serviceIds'>, serviceIds?: string[]): Promise<Vendor>;
+  updateVendor(id: string, data: Partial<Omit<UpdateVendor, 'serviceIds'>>, serviceIds?: string[]): Promise<Vendor | undefined>;
+  deleteVendor(id: string): Promise<void>;
   
   // Vendor service operations
   getVendorServices(): Promise<VendorService[]>;
   getVendorServiceById(id: string): Promise<VendorService | undefined>;
+  createVendorService(data: CreateVendorService): Promise<VendorService>;
+  updateVendorService(id: string, data: UpdateVendorService): Promise<VendorService | undefined>;
+  deleteVendorService(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -969,6 +977,56 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVendorService(id: string): Promise<void> {
     await db.delete(vendorServices).where(eq(vendorServices.id, id));
+  }
+
+  // Vendor CRUD operations
+  async createVendor(data: Omit<CreateVendor, 'serviceIds'>, serviceIds?: string[]): Promise<Vendor> {
+    const [vendor] = await db
+      .insert(vendors)
+      .values(data)
+      .returning();
+
+    if (serviceIds && serviceIds.length > 0) {
+      await db.insert(vendorServicesVendors).values(
+        serviceIds.map((vendorServiceId) => ({
+          vendorId: vendor.id,
+          vendorServiceId,
+        }))
+      );
+    }
+
+    return vendor;
+  }
+
+  async updateVendor(id: string, data: Partial<Omit<UpdateVendor, 'serviceIds'>>, serviceIds?: string[]): Promise<Vendor | undefined> {
+    const [vendor] = await db
+      .update(vendors)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(vendors.id, id))
+      .returning();
+
+    if (!vendor) return undefined;
+
+    if (serviceIds !== undefined) {
+      await db.delete(vendorServicesVendors).where(eq(vendorServicesVendors.vendorId, id));
+      
+      if (serviceIds.length > 0) {
+        await db.insert(vendorServicesVendors).values(
+          serviceIds.map((vendorServiceId) => ({
+            vendorId: id,
+            vendorServiceId,
+          }))
+        );
+      }
+    }
+
+    return vendor;
+  }
+
+  async deleteVendor(id: string): Promise<void> {
+    await db.delete(vendorServicesVendors).where(eq(vendorServicesVendors.vendorId, id));
+    await db.delete(vendorsContacts).where(eq(vendorsContacts.vendorId, id));
+    await db.delete(vendors).where(eq(vendors.id, id));
   }
 }
 

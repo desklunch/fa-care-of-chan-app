@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { MultiSelect } from "@/components/ui/multi-select";
 import type { VendorWithRelations, VendorService, Contact } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink, User, MapPin, Briefcase } from "lucide-react";
+import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "locations"];
 
@@ -451,7 +451,15 @@ export default function Vendors() {
   );
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Vendors" }]}>
+    <PageLayout 
+      breadcrumbs={[{ label: "Vendors" }]}
+      actionButton={{
+        label: "New Vendor",
+        href: "/vendors/new",
+        icon: CircleFadingPlus,
+        variant: "default",
+      }}
+    >
       <DataGridPage
         queryKey="/api/vendors"
         columns={vendorColumns}
