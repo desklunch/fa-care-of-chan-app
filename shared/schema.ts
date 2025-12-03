@@ -205,6 +205,44 @@ export const contacts = pgTable(
   ],
 );
 
+// Vendors directory
+export const vendors = pgTable(
+  "vendors",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 255 }),
+    businessName: varchar("business_name", { length: 255 }).notNull(),
+    address: text("address"),
+    phone: varchar("phone", { length: 50 }),
+    email: varchar("email", { length: 255 }),
+    website: varchar("website", { length: 500 }),
+    capabilitiesDeck: varchar("capabilities_deck", { length: 500 }),
+    employeeCount: varchar("employee_count", { length: 50 }),
+    diversityInfo: text("diversity_info"),
+    chargesSalesTax: boolean("charges_sales_tax").default(false),
+    salesTaxNotes: text("sales_tax_notes"),
+    isPreferred: boolean("is_preferred").default(false),
+    notes: text("notes"),
+    metroArea: jsonb("metro_area").$type<string[]>(),
+    locations: jsonb("locations").$type<Array<{
+      city: string;
+      region: string;
+      country: string;
+      placeId?: string;
+      regionCode?: string;
+      countryCode?: string;
+      displayName?: string;
+    }>>(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_vendors_business_name").on(table.businessName),
+    index("idx_vendors_external_id").on(table.externalId),
+    index("idx_vendors_is_preferred").on(table.isPreferred),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -291,6 +329,8 @@ export type FeatureComment = typeof appFeatureComments.$inferSelect;
 export type InsertFeatureComment = typeof appFeatureComments.$inferInsert;
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
+export type Vendor = typeof vendors.$inferSelect;
+export type InsertVendor = typeof vendors.$inferInsert;
 
 // Keep old type aliases for backward compatibility
 export type ProductFeature = AppFeature;
