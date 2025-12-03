@@ -565,3 +565,62 @@ export const updateContactSchema = insertContactSchema.partial();
 
 export type CreateContact = z.infer<typeof insertContactSchema>;
 export type UpdateContact = z.infer<typeof updateContactSchema>;
+
+// Location schema for vendors
+export const locationSchema = z.object({
+  city: z.string(),
+  region: z.string(),
+  country: z.string(),
+  placeId: z.string().optional(),
+  regionCode: z.string().optional(),
+  countryCode: z.string().optional(),
+  displayName: z.string().optional(),
+});
+
+export type VendorLocation = z.infer<typeof locationSchema>;
+
+// Vendor schemas with validation
+export const insertVendorSchema = createInsertSchema(vendors).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  businessName: z.string().min(1, "Business name is required").max(255),
+  address: z.string().optional().nullable(),
+  phone: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || /^[\d\s\-\+\(\)\.]+$/.test(val),
+      "Invalid phone number format"
+    ),
+  email: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      "Invalid email format"
+    ),
+  website: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || /^(https?:\/\/)?[\w\-]+(\.[\w\-]+)+[/#?]?.*$/.test(val),
+      "Invalid website URL format"
+    ),
+  capabilitiesDeck: z.string().max(500).optional().nullable(),
+  employeeCount: z.string().max(50).optional().nullable(),
+  diversityInfo: z.string().optional().nullable(),
+  chargesSalesTax: z.boolean().optional().default(false),
+  salesTaxNotes: z.string().optional().nullable(),
+  isPreferred: z.boolean().optional().default(false),
+  notes: z.string().optional().nullable(),
+  locations: z.array(locationSchema).optional().nullable(),
+  externalId: z.string().optional().nullable(),
+  serviceIds: z.array(z.string()).optional(),
+});
+
+export const updateVendorSchema = insertVendorSchema.partial();
+
+export type CreateVendor = z.infer<typeof insertVendorSchema>;
+export type UpdateVendor = z.infer<typeof updateVendorSchema>;
