@@ -104,6 +104,10 @@ export type FeatureStatus = (typeof featureStatuses)[number];
 export const featurePriorities = ["low", "medium", "high", "critical"] as const;
 export type FeaturePriority = (typeof featurePriorities)[number];
 
+// Feature type enum values (idea vs requirement)
+export const featureTypes = ["idea", "requirement"] as const;
+export type FeatureType = (typeof featureTypes)[number];
+
 // Product features / feature requests
 export const productFeatures = pgTable(
   "product_features",
@@ -111,6 +115,7 @@ export const productFeatures = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     title: varchar("title", { length: 200 }).notNull(),
     description: text("description").notNull(),
+    featureType: varchar("feature_type", { length: 20 }).default("idea").notNull(),
     categoryId: varchar("category_id")
       .notNull()
       .references(() => featureCategories.id),
@@ -320,11 +325,13 @@ export const insertProductFeatureSchema = createInsertSchema(productFeatures).om
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
   description: z.string().min(10, "Description must be at least 10 characters"),
   categoryId: z.string().min(1, "Category is required"),
+  featureType: z.enum(featureTypes, { required_error: "Please select Idea or Requirement" }),
 });
 
 export const updateProductFeatureSchema = createInsertSchema(productFeatures).pick({
   title: true,
   description: true,
+  featureType: true,
   categoryId: true,
   status: true,
   priority: true,

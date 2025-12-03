@@ -17,9 +17,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Plus, ThumbsUp, Filter, Lightbulb } from "lucide-react";
 import { Link } from "wouter";
-import type { ProductFeatureWithRelations, FeatureCategory, FeatureStatus } from "@shared/schema";
-import { insertProductFeatureSchema } from "@shared/schema";
+import type { ProductFeatureWithRelations, FeatureCategory, FeatureStatus, FeatureType } from "@shared/schema";
+import { insertProductFeatureSchema, featureTypes } from "@shared/schema";
 import { z } from "zod";
+
+const featureTypeLabels: Record<FeatureType, string> = {
+  idea: "Idea",
+  requirement: "Requirement",
+};
+
+const featureTypeColors: Record<FeatureType, string> = {
+  idea: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
+  requirement: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
+};
 
 const statusLabels: Record<FeatureStatus, string> = {
   idea: "Idea",
@@ -65,6 +75,14 @@ function FeatureCard({
                 {feature.title}
               </CardTitle>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {feature.featureType && (
+                  <Badge 
+                    className={featureTypeColors[feature.featureType as FeatureType]}
+                    data-testid={`badge-type-${feature.id}`}
+                  >
+                    {featureTypeLabels[feature.featureType as FeatureType]}
+                  </Badge>
+                )}
                 <Badge 
                   className={statusColors[feature.status as FeatureStatus]}
                   data-testid={`badge-status-${feature.id}`}
@@ -139,6 +157,7 @@ function CreateFeatureDialog({
       title: "",
       description: "",
       categoryId: "",
+      featureType: undefined,
     },
   });
 
@@ -196,6 +215,30 @@ function CreateFeatureDialog({
                       data-testid="input-feature-title"
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="featureType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-feature-type">
+                        <SelectValue placeholder="Is this an Idea or a Requirement?" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {featureTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {featureTypeLabels[type]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

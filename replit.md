@@ -97,6 +97,7 @@ Feature Categories table:
 
 Product Features table:
 - Title and description for feature requests
+- featureType: "idea" or "requirement" - submitter labels their request
 - Status workflow: idea → under_review → planned → in_progress → completed → archived
 - Required categoryId linking to feature categories
 - createdById and ownerId for user attribution

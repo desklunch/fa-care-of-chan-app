@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThumbsUp, MessageSquare, ArrowLeft, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import type { ProductFeatureWithRelations, FeatureComment, FeatureStatus } from "@shared/schema";
+import type { ProductFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
 
 const statusLabels: Record<FeatureStatus, string> = {
   idea: "Idea",
@@ -34,6 +34,16 @@ const statusColors: Record<FeatureStatus, string> = {
   in_progress: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+};
+
+const featureTypeLabels: Record<FeatureType, string> = {
+  idea: "Idea",
+  requirement: "Requirement",
+};
+
+const featureTypeColors: Record<FeatureType, string> = {
+  idea: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
+  requirement: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
 };
 
 type FeatureCommentWithUser = FeatureComment & {
@@ -246,6 +256,14 @@ export default function FeatureDetail() {
                   {feature.title}
                 </CardTitle>
                 <div className="flex items-center gap-2 flex-wrap">
+                  {feature.featureType && (
+                    <Badge 
+                      className={featureTypeColors[feature.featureType as FeatureType]}
+                      data-testid="badge-feature-type"
+                    >
+                      {featureTypeLabels[feature.featureType as FeatureType]}
+                    </Badge>
+                  )}
                   <Badge 
                     className={statusColors[feature.status as FeatureStatus]}
                     data-testid="badge-feature-status"
