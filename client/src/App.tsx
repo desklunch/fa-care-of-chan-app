@@ -21,7 +21,7 @@ import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
 import Vendors from "@/pages/vendors";
-import VendorServicesAdmin from "@/pages/admin/vendor-services";
+import AdminVendorServices from "@/pages/admin-vendor-services";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -155,7 +155,7 @@ function AuthenticatedRoutes() {
         <Route path="/vendors" component={Vendors} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
-        <Route path="/admin/vendors/services" component={VendorServicesAdmin} />
+        <Route path="/admin/vendors/services" component={AdminVendorServices} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />
       </Switch>
