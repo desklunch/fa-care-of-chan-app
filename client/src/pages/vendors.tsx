@@ -137,23 +137,6 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 180,
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        const items = params.value.split(",").map(s => s.trim()).filter(Boolean);
-        if (items.length === 0) return null;
-        return (
-          <div className="flex items-center gap-1 h-full overflow-hidden">
-            <Badge variant="outline" className="text-xs shrink-0">
-              {items[0]}
-            </Badge>
-            {items.length > 1 && (
-              <Badge variant="outline" className="text-xs shrink-0">
-                +{items.length - 1}
-              </Badge>
-            )}
-          </div>
-        );
-      },
     },
   },
   {
