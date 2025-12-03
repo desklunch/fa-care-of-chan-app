@@ -2,13 +2,13 @@ import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
-import type { Vendor } from "@shared/schema";
+import type { VendorWithServices, VendorService } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Star, ExternalLink } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["businessName", "email", "phone", "website", "isPreferred"];
+const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "email", "phone", "website", "isPreferred"];
 
-const vendorColumns: ColumnConfig<Vendor>[] = [
+const vendorColumns: ColumnConfig<VendorWithServices>[] = [
   {
     id: "id",
     headerName: "ID",
@@ -28,7 +28,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 200,
-      cellRenderer: (params: { data: Vendor }) => {
+      cellRenderer: (params: { data: VendorWithServices }) => {
         const vendor = params.data;
         if (!vendor) return null;
         return (
@@ -37,6 +37,38 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
               <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
             )}
             <span className="text-foreground truncate">{vendor.businessName}</span>
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "services",
+    headerName: "Services",
+    field: "services",
+    category: "Services",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { value: VendorService[] | undefined }) => {
+        const services = params.value;
+        if (!services || services.length === 0) return null;
+        return (
+          <div className="flex items-center gap-1 h-full overflow-hidden">
+            {services.slice(0, 3).map((service) => (
+              <Badge 
+                key={service.id} 
+                variant="secondary" 
+                className="text-xs shrink-0"
+              >
+                {service.name}
+              </Badge>
+            ))}
+            {services.length > 3 && (
+              <Badge variant="outline" className="text-xs shrink-0">
+                +{services.length - 3}
+              </Badge>
+            )}
           </div>
         );
       },
