@@ -5,9 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LayoutProvider } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, UserPlus, SquareTerminal, Lightbulb, Tags } from "lucide-react";
 import type { LayoutConfig } from "@/framework/types/layout";
-
 import Landing from "@/pages/landing";
 import InviteActivation from "@/pages/invite-activation";
 import TeamPage from "@/pages/team";
@@ -20,6 +18,15 @@ import Roadmap from "@/pages/roadmap";
 import FeatureDetail from "@/pages/feature-detail";
 import AdminCategories from "@/pages/admin-categories";
 import NotFound from "@/pages/not-found";
+import {
+  Users,
+  UserPlus,
+  SquareTerminal,
+  Lightbulb,
+  Tags,
+  Book,
+  Bug,
+} from "lucide-react";
 
 function useLayoutConfig() {
   const { user } = useAuth();
@@ -30,7 +37,10 @@ function useLayoutConfig() {
           id: user.id,
           username: user.email || "User",
           email: user.email || "",
-          fullName: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email || "User",
+          fullName:
+            [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+            user.email ||
+            "User",
           role: user.role || "employee",
           profileImageUrl: user.profileImageUrl || undefined,
         }
@@ -43,10 +53,28 @@ function useLayoutConfig() {
             href: "/team",
             icon: Users,
           },
+        ],
+      },
+      {
+        heading: "App",
+        allowedRoles: ["admin"],
+        items: [
           {
-            name: "Roadmap",
+            name: "Guide",
+            href: "/help",
+            icon: Book,
+            active: false,
+          },
+          {
+            name: "Features",
             href: "/roadmap",
             icon: Lightbulb,
+          },
+          {
+            name: "Issues",
+            href: "/issues",
+            icon: Bug,
+            active: false,
           },
         ],
       },

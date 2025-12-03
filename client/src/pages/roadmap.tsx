@@ -318,6 +318,21 @@ export default function Roadmap() {
     return true;
   });
 
+  // Group features by category
+  const featuresByCategory = filteredFeatures.reduce((acc, feature) => {
+    const categoryId = feature.categoryId;
+    if (!acc[categoryId]) {
+      acc[categoryId] = [];
+    }
+    acc[categoryId].push(feature);
+    return acc;
+  }, {} as Record<string, ProductFeatureWithRelations[]>);
+
+  // Get ordered list of categories that have features
+  const categoriesWithFeatures = categories.filter(
+    (cat) => featuresByCategory[cat.id] && featuresByCategory[cat.id].length > 0
+  );
+
   const isLoading = featuresLoading || categoriesLoading;
 
   if (isLoading) {
@@ -388,14 +403,33 @@ export default function Roadmap() {
             </div>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredFeatures.map((feature) => (
-              <FeatureCard 
-                key={feature.id} 
-                feature={feature} 
-                onVote={(id) => voteMutation.mutate(id)}
-                isVoting={voteMutation.isPending}
-              />
+          <div className="space-y-8">
+            {categoriesWithFeatures.map((category) => (
+              <div key={category.id} className="space-y-4" data-testid={`category-section-${category.id}`}>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: category.color || '#6b7280' }}
+                  />
+                  <h2 className="text-lg font-semibold">{category.name}</h2>
+                  <Badge variant="secondary" className="ml-2">
+                    {featuresByCategory[category.id].length}
+                  </Badge>
+                </div>
+                {category.description && (
+                  <p className="text-sm text-muted-foreground">{category.description}</p>
+                )}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {featuresByCategory[category.id].map((feature) => (
+                    <FeatureCard 
+                      key={feature.id} 
+                      feature={feature} 
+                      onVote={(id) => voteMutation.mutate(id)}
+                      isVoting={voteMutation.isPending}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
