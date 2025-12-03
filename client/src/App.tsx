@@ -107,7 +107,7 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
-            name: "Features",
+            name: "Feature Categories",
             href: "/admin/app/features",
             icon: Tags,
             allowedRoles: ["admin"],
