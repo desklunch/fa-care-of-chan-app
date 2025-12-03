@@ -16,6 +16,7 @@ import AdminInvites from "@/pages/admin-invites";
 import AdminLogs from "@/pages/admin-logs";
 import AppFeatures from "@/pages/app-features";
 import AppFeatureDetail from "@/pages/app-feature-detail";
+import AppFeatureForm from "@/pages/app-feature-form";
 import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
@@ -131,6 +132,8 @@ function AuthenticatedRoutes() {
         <Route path="/profile" component={Profile} />
         <Route path="/profile/edit" component={ProfileEdit} />
         <Route path="/app/features" component={AppFeatures} />
+        <Route path="/app/features/new" component={AppFeatureForm} />
+        <Route path="/app/features/:id/edit" component={AppFeatureForm} />
         <Route path="/app/features/:id" component={AppFeatureDetail} />
         <Route path="/contacts" component={Contacts} />
         <Route path="/contacts/:id" component={ContactDetail} />
