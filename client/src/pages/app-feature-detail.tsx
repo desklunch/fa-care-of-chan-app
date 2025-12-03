@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThumbsUp, MessageSquare, ArrowLeft, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import type { ProductFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
 
 const statusLabels: Record<FeatureStatus, string> = {
   proposed: "Proposed",
@@ -108,7 +108,7 @@ export default function AppFeatureDetail() {
   const { toast } = useToast();
   const [commentText, setCommentText] = useState("");
 
-  const { data: feature, isLoading: featureLoading } = useQuery<ProductFeatureWithRelations>({
+  const { data: feature, isLoading: featureLoading } = useQuery<AppFeatureWithRelations>({
     queryKey: ["/api/features", featureId],
     enabled: !!featureId,
   });
@@ -124,9 +124,9 @@ export default function AppFeatureDetail() {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["/api/features", featureId] });
-      const previousFeature = queryClient.getQueryData<ProductFeatureWithRelations>(["/api/features", featureId]);
+      const previousFeature = queryClient.getQueryData<AppFeatureWithRelations>(["/api/features", featureId]);
       if (previousFeature) {
-        queryClient.setQueryData<ProductFeatureWithRelations>(["/api/features", featureId], {
+        queryClient.setQueryData<AppFeatureWithRelations>(["/api/features", featureId], {
           ...previousFeature,
           voteCount: previousFeature.hasVoted ? previousFeature.voteCount - 1 : previousFeature.voteCount + 1,
           hasVoted: !previousFeature.hasVoted,

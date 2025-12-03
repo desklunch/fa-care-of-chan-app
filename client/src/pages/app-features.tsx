@@ -17,8 +17,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CircleFadingPlus, ThumbsUp, Filter, Lightbulb } from "lucide-react";
 import { Link } from "wouter";
-import type { ProductFeatureWithRelations, FeatureCategory, FeatureStatus, FeatureType } from "@shared/schema";
-import { insertProductFeatureSchema, featureTypes } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureCategory, FeatureStatus, FeatureType } from "@shared/schema";
+import { insertAppFeatureSchema, featureTypes } from "@shared/schema";
 import { z } from "zod";
 
 const featureTypeLabels: Record<FeatureType, string> = {
@@ -49,7 +49,7 @@ const statusColors: Record<FeatureStatus, string> = {
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
 };
 
-const formSchema = insertProductFeatureSchema;
+const formSchema = insertAppFeatureSchema;
 type FormData = z.infer<typeof formSchema>;
 
 function FeatureCard({ 
@@ -57,7 +57,7 @@ function FeatureCard({
   onVote,
   isVoting
 }: { 
-  feature: ProductFeatureWithRelations; 
+  feature: AppFeatureWithRelations; 
   onVote: (id: string) => void;
   isVoting: boolean;
 }) {
@@ -308,7 +308,7 @@ export default function AppFeatures() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { toast } = useToast();
 
-  const { data: features = [], isLoading: featuresLoading } = useQuery<ProductFeatureWithRelations[]>({
+  const { data: features = [], isLoading: featuresLoading } = useQuery<AppFeatureWithRelations[]>({
     queryKey: ["/api/features"],
   });
 
@@ -322,9 +322,9 @@ export default function AppFeatures() {
     },
     onMutate: async (featureId: string) => {
       await queryClient.cancelQueries({ queryKey: ["/api/features"] });
-      const previousFeatures = queryClient.getQueryData<ProductFeatureWithRelations[]>(["/api/features"]);
+      const previousFeatures = queryClient.getQueryData<AppFeatureWithRelations[]>(["/api/features"]);
       if (previousFeatures) {
-        queryClient.setQueryData<ProductFeatureWithRelations[]>(["/api/features"], 
+        queryClient.setQueryData<AppFeatureWithRelations[]>(["/api/features"], 
           previousFeatures.map((f) =>
             f.id === featureId
               ? { ...f, voteCount: f.hasVoted ? f.voteCount - 1 : f.voteCount + 1, hasVoted: !f.hasVoted }
@@ -362,7 +362,7 @@ export default function AppFeatures() {
     }
     acc[categoryId].push(feature);
     return acc;
-  }, {} as Record<string, ProductFeatureWithRelations[]>);
+  }, {} as Record<string, AppFeatureWithRelations[]>);
 
   const categoriesWithFeatures = categories.filter(
     (cat) => featuresByCategory[cat.id] && featuresByCategory[cat.id].length > 0

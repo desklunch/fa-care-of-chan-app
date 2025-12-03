@@ -344,7 +344,7 @@ export const updateFeatureCategorySchema = createInsertSchema(appFeatureCategori
 }).partial();
 
 // App feature schemas
-export const insertProductFeatureSchema = createInsertSchema(appFeatures).omit({
+export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   id: true,
   createdById: true,
   voteCount: true,
@@ -357,7 +357,7 @@ export const insertProductFeatureSchema = createInsertSchema(appFeatures).omit({
   featureType: z.enum(featureTypes, { required_error: "Please select Idea or Requirement" }),
 });
 
-export const updateProductFeatureSchema = createInsertSchema(appFeatures).pick({
+export const updateAppFeatureSchema = createInsertSchema(appFeatures).pick({
   title: true,
   description: true,
   featureType: true,
@@ -367,6 +367,10 @@ export const updateProductFeatureSchema = createInsertSchema(appFeatures).pick({
   ownerId: true,
   estimatedDelivery: true,
 }).partial();
+
+// Backward compatibility aliases
+export const insertProductFeatureSchema = insertAppFeatureSchema;
+export const updateProductFeatureSchema = updateAppFeatureSchema;
 
 // Feature comment schemas
 export const insertFeatureCommentSchema = createInsertSchema(appFeatureComments).omit({
@@ -381,19 +385,24 @@ export const insertFeatureCommentSchema = createInsertSchema(appFeatureComments)
 
 export type CreateFeatureCategory = z.infer<typeof insertFeatureCategorySchema>;
 export type UpdateFeatureCategory = z.infer<typeof updateFeatureCategorySchema>;
-export type CreateProductFeature = z.infer<typeof insertProductFeatureSchema>;
-export type UpdateProductFeature = z.infer<typeof updateProductFeatureSchema>;
+export type CreateAppFeature = z.infer<typeof insertAppFeatureSchema>;
+export type UpdateAppFeature = z.infer<typeof updateAppFeatureSchema>;
 export type CreateFeatureComment = z.infer<typeof insertFeatureCommentSchema>;
 
+// Backward compatibility aliases
+export type CreateProductFeature = CreateAppFeature;
+export type UpdateProductFeature = UpdateAppFeature;
+
 // Extended types with relations
-export type ProductFeatureWithRelations = AppFeature & {
+export type AppFeatureWithRelations = AppFeature & {
   category: FeatureCategory;
   createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   hasVoted?: boolean;
 };
 
-export type AppFeatureWithRelations = ProductFeatureWithRelations;
+// Backward compatibility alias
+export type ProductFeatureWithRelations = AppFeatureWithRelations;
 
 export type FeatureCommentWithUser = FeatureComment & {
   user: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;

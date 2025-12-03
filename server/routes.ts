@@ -7,8 +7,8 @@ import {
   updateProfileSchema,
   insertFeatureCategorySchema,
   updateFeatureCategorySchema,
-  insertProductFeatureSchema,
-  updateProductFeatureSchema,
+  insertAppFeatureSchema,
+  updateAppFeatureSchema,
   insertFeatureCommentSchema,
   featureStatuses,
   type FeatureStatus,
@@ -523,7 +523,7 @@ export async function registerRoutes(
 
   app.post("/api/features", isAuthenticated, async (req: any, res) => {
     try {
-      const result = insertProductFeatureSchema.safeParse(req.body);
+      const result = insertAppFeatureSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({
           message: "Invalid data",
@@ -578,7 +578,7 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Not authorized to edit this feature" });
       }
 
-      const result = updateProductFeatureSchema.safeParse(req.body);
+      const result = updateAppFeatureSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({
           message: "Invalid data",
