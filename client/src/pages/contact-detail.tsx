@@ -94,7 +94,6 @@ export default function ContactDetail() {
   }
 
   const fullName = `${contact.firstName} ${contact.lastName}`;
-  const initials = `${contact.firstName[0]}${contact.lastName[0]}`.toUpperCase();
 
   return (
     <PageLayout
@@ -109,11 +108,6 @@ export default function ContactDetail() {
             <Card className="border-card-border">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-32 w-32 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <span className="text-primary text-3xl font-medium">
-                      {initials}
-                    </span>
-                  </div>
                   <h1
                     className="text-xl font-semibold mb-1"
                     data-testid="text-contact-name"

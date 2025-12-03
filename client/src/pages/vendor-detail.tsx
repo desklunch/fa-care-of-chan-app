@@ -102,13 +102,6 @@ export default function VendorDetail() {
     );
   }
 
-  const initials = vendor.businessName
-    .split(" ")
-    .map((word) => word[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
   return (
     <PageLayout
       breadcrumbs={[
@@ -122,11 +115,6 @@ export default function VendorDetail() {
             <Card className="border-card-border">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-20 w-20 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <span className="text-primary text-2xl font-medium">
-                      {initials}
-                    </span>
-                  </div>
                   <div className="flex items-center gap-2 mb-1">
                     <h1
                       className="text-xl font-semibold"
