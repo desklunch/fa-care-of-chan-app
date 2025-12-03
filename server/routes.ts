@@ -765,7 +765,7 @@ export async function registerRoutes(
   // Contacts routes
   app.get("/api/contacts", isAuthenticated, async (req, res) => {
     try {
-      const contacts = await storage.getContacts();
+      const contacts = await storage.getContactsWithVendors();
       res.json(contacts);
     } catch (error) {
       console.error("Error fetching contacts:", error);
@@ -789,7 +789,7 @@ export async function registerRoutes(
   // Vendors routes
   app.get("/api/vendors", isAuthenticated, async (req, res) => {
     try {
-      const vendors = await storage.getVendorsWithServices();
+      const vendors = await storage.getVendorsWithRelations();
       res.json(vendors);
     } catch (error) {
       console.error("Error fetching vendors:", error);
