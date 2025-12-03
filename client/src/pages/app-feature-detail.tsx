@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ThumbsUp, MessageSquare, ArrowLeft, Trash2 } from "lucide-react";
+import { ThumbsUp, MessageSquare, ArrowLeft, Trash2, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
@@ -283,6 +283,17 @@ export default function AppFeatureDetail() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {(isAdmin || user?.id === feature.createdById) && (
+                  <Link href={`/app/features/${feature.id}/edit`}>
+                    <Button
+                      variant="outline"
+                      data-testid="button-edit-feature"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </Link>
+                )}
                 <Button
                   variant={feature.hasVoted ? "default" : "outline"}
                   onClick={() => voteMutation.mutate()}
