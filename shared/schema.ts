@@ -223,7 +223,6 @@ export const vendors = pgTable(
     salesTaxNotes: text("sales_tax_notes"),
     isPreferred: boolean("is_preferred").default(false),
     notes: text("notes"),
-    metroArea: jsonb("metro_area").$type<string[]>(),
     locations: jsonb("locations").$type<Array<{
       city: string;
       region: string;

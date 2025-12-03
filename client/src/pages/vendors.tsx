@@ -6,7 +6,7 @@ import type { Vendor } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Star, ExternalLink } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["businessName", "metroAreas", "email", "phone", "isPreferred"];
+const DEFAULT_VISIBLE_COLUMNS = ["businessName", "email", "phone", "website", "isPreferred"];
 
 const vendorColumns: ColumnConfig<Vendor>[] = [
   {
@@ -37,37 +37,6 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
             <span className="text-foreground truncate">{vendor.businessName}</span>
           </div>
         );
-      },
-    },
-  },
-  {
-    id: "metroAreas",
-    headerName: "Metro Areas",
-    field: "metroArea",
-    category: "Location",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-      cellRenderer: (params: { data: Vendor | undefined }) => {
-        const metroArea = params.data?.metroArea;
-        if (!metroArea || !Array.isArray(metroArea) || metroArea.length === 0) return null;
-        return (
-          <div className="flex items-center gap-1 h-full overflow-hidden">
-            <Badge variant="secondary" className="text-xs shrink-0">
-              {metroArea[0]}
-            </Badge>
-            {metroArea.length > 1 && (
-              <Badge variant="outline" className="text-xs shrink-0">
-                +{metroArea.length - 1}
-              </Badge>
-            )}
-          </div>
-        );
-      },
-      valueGetter: (params: { data: Vendor | undefined }) => {
-        const metroArea = params.data?.metroArea;
-        if (!metroArea || !Array.isArray(metroArea)) return "";
-        return metroArea.join(", ");
       },
     },
   },
@@ -298,11 +267,6 @@ export default function Vendors() {
           "website",
           "address",
           "diversityInfo",
-          (vendor) => {
-            const areas = vendor.metroArea;
-            if (!areas || !Array.isArray(areas)) return "";
-            return areas.join(" ");
-          },
         ]}
         searchPlaceholder="Search vendors..."
         onRowClick={(vendor) => setLocation(`/vendors/${vendor.id}`)}

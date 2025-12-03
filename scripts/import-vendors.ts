@@ -17,7 +17,6 @@ interface CsvVendor {
   sales_tax_notes: string;
   is_preferred: string;
   notes: string;
-  metro_area: string;
   locations: string;
 }
 
@@ -133,7 +132,6 @@ async function importVendors() {
         salesTaxNotes: csvVendor.sales_tax_notes?.trim() || null,
         isPreferred: parseBoolean(csvVendor.is_preferred),
         notes: csvVendor.notes?.trim() || null,
-        metroArea: parseJSON(csvVendor.metro_area),
         locations: parseJSON(csvVendor.locations),
       });
       imported++;
