@@ -10,6 +10,8 @@ import {
   insertAppFeatureSchema,
   updateAppFeatureSchema,
   insertFeatureCommentSchema,
+  insertVendorServiceSchema,
+  updateVendorServiceSchema,
   featureStatuses,
   type FeatureStatus,
 } from "@shared/schema";
@@ -829,6 +831,51 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching vendor service:", error);
       res.status(500).json({ message: "Failed to fetch vendor service" });
+    }
+  });
+
+  app.post("/api/vendor-services", isAdmin, async (req, res) => {
+    try {
+      const parsed = insertVendorServiceSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const service = await storage.createVendorService(parsed.data);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating vendor service:", error);
+      res.status(500).json({ message: "Failed to create vendor service" });
+    }
+  });
+
+  app.patch("/api/vendor-services/:id", isAdmin, async (req, res) => {
+    try {
+      const parsed = updateVendorServiceSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const service = await storage.updateVendorService(req.params.id, parsed.data);
+      if (!service) {
+        return res.status(404).json({ message: "Vendor service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating vendor service:", error);
+      res.status(500).json({ message: "Failed to update vendor service" });
+    }
+  });
+
+  app.delete("/api/vendor-services/:id", isAdmin, async (req, res) => {
+    try {
+      const service = await storage.getVendorServiceById(req.params.id);
+      if (!service) {
+        return res.status(404).json({ message: "Vendor service not found" });
+      }
+      await storage.deleteVendorService(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting vendor service:", error);
+      res.status(500).json({ message: "Failed to delete vendor service" });
     }
   });
 
