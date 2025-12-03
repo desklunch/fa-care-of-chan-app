@@ -787,7 +787,7 @@ export async function registerRoutes(
   // Vendors routes
   app.get("/api/vendors", isAuthenticated, async (req, res) => {
     try {
-      const vendors = await storage.getVendors();
+      const vendors = await storage.getVendorsWithServices();
       res.json(vendors);
     } catch (error) {
       console.error("Error fetching vendors:", error);
