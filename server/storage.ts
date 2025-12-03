@@ -2,10 +2,10 @@ import {
   users,
   invites,
   auditLogs,
-  featureCategories,
-  productFeatures,
-  featureVotes,
-  featureComments,
+  appFeatureCategories,
+  appFeatures,
+  appFeatureVotes,
+  appFeatureComments,
   contacts,
   type User,
   type UpsertUser,
@@ -16,8 +16,8 @@ import {
   type InsertAuditLog,
   type FeatureCategory,
   type InsertFeatureCategory,
-  type ProductFeature,
-  type InsertProductFeature,
+  type AppFeature,
+  type InsertAppFeature,
   type CreateProductFeature,
   type FeatureVote,
   type FeatureComment,
@@ -94,8 +94,8 @@ export interface IStorage {
     userId?: string;
   }): Promise<ProductFeatureWithRelations[]>;
   getFeatureById(id: string, userId?: string): Promise<ProductFeatureWithRelations | undefined>;
-  createFeature(data: CreateProductFeature, createdById: string): Promise<ProductFeature>;
-  updateFeature(id: string, data: Partial<InsertProductFeature>): Promise<ProductFeature | undefined>;
+  createFeature(data: CreateProductFeature, createdById: string): Promise<AppFeature>;
+  updateFeature(id: string, data: Partial<InsertAppFeature>): Promise<AppFeature | undefined>;
   deleteFeature(id: string): Promise<void>;
   
   // Feature vote operations
@@ -357,26 +357,26 @@ export class DatabaseStorage implements IStorage {
   // Feature category operations
   async getCategories(includeInactive: boolean = false): Promise<FeatureCategory[]> {
     if (includeInactive) {
-      return db.select().from(featureCategories).orderBy(featureCategories.sortOrder, featureCategories.name);
+      return db.select().from(appFeatureCategories).orderBy(appFeatureCategories.sortOrder, appFeatureCategories.name);
     }
     return db
       .select()
-      .from(featureCategories)
-      .where(eq(featureCategories.isActive, true))
-      .orderBy(featureCategories.sortOrder, featureCategories.name);
+      .from(appFeatureCategories)
+      .where(eq(appFeatureCategories.isActive, true))
+      .orderBy(appFeatureCategories.sortOrder, appFeatureCategories.name);
   }
 
   async getCategoryById(id: string): Promise<FeatureCategory | undefined> {
     const [category] = await db
       .select()
-      .from(featureCategories)
-      .where(eq(featureCategories.id, id));
+      .from(appFeatureCategories)
+      .where(eq(appFeatureCategories.id, id));
     return category;
   }
 
   async createCategory(data: InsertFeatureCategory): Promise<FeatureCategory> {
     const [category] = await db
-      .insert(featureCategories)
+      .insert(appFeatureCategories)
       .values(data)
       .returning();
     return category;
@@ -387,9 +387,9 @@ export class DatabaseStorage implements IStorage {
     data: Partial<InsertFeatureCategory>
   ): Promise<FeatureCategory | undefined> {
     const [category] = await db
-      .update(featureCategories)
+      .update(appFeatureCategories)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(featureCategories.id, id))
+      .where(eq(appFeatureCategories.id, id))
       .returning();
     return category;
   }
@@ -399,14 +399,14 @@ export class DatabaseStorage implements IStorage {
     await Promise.all(
       orderedIds.map((id, index) =>
         db
-          .update(featureCategories)
+          .update(appFeatureCategories)
           .set({ sortOrder: index, updatedAt: new Date() })
-          .where(eq(featureCategories.id, id))
+          .where(eq(appFeatureCategories.id, id))
       )
     );
   }
 
-  // Product feature operations
+  // App feature operations
   async getFeatures(options?: {
     status?: FeatureStatus[];
     categoryId?: string;
@@ -415,44 +415,45 @@ export class DatabaseStorage implements IStorage {
     const conditions: any[] = [];
 
     if (options?.status && options.status.length > 0) {
-      conditions.push(inArray(productFeatures.status, options.status));
+      conditions.push(inArray(appFeatures.status, options.status));
     }
     if (options?.categoryId) {
-      conditions.push(eq(productFeatures.categoryId, options.categoryId));
+      conditions.push(eq(appFeatures.categoryId, options.categoryId));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const features = await db
       .select({
-        id: productFeatures.id,
-        title: productFeatures.title,
-        description: productFeatures.description,
-        featureType: productFeatures.featureType,
-        categoryId: productFeatures.categoryId,
-        status: productFeatures.status,
-        priority: productFeatures.priority,
-        createdById: productFeatures.createdById,
-        ownerId: productFeatures.ownerId,
-        voteCount: productFeatures.voteCount,
-        estimatedDelivery: productFeatures.estimatedDelivery,
-        createdAt: productFeatures.createdAt,
-        updatedAt: productFeatures.updatedAt,
-        categoryName: featureCategories.name,
-        categoryColor: featureCategories.color,
-        categoryDescription: featureCategories.description,
-        categoryIsActive: featureCategories.isActive,
-        categoryCreatedAt: featureCategories.createdAt,
-        categoryUpdatedAt: featureCategories.updatedAt,
+        id: appFeatures.id,
+        title: appFeatures.title,
+        description: appFeatures.description,
+        featureType: appFeatures.featureType,
+        categoryId: appFeatures.categoryId,
+        status: appFeatures.status,
+        priority: appFeatures.priority,
+        createdById: appFeatures.createdById,
+        ownerId: appFeatures.ownerId,
+        voteCount: appFeatures.voteCount,
+        estimatedDelivery: appFeatures.estimatedDelivery,
+        createdAt: appFeatures.createdAt,
+        updatedAt: appFeatures.updatedAt,
+        categoryName: appFeatureCategories.name,
+        categoryColor: appFeatureCategories.color,
+        categoryDescription: appFeatureCategories.description,
+        categorySortOrder: appFeatureCategories.sortOrder,
+        categoryIsActive: appFeatureCategories.isActive,
+        categoryCreatedAt: appFeatureCategories.createdAt,
+        categoryUpdatedAt: appFeatureCategories.updatedAt,
         createdByFirstName: users.firstName,
         createdByLastName: users.lastName,
         createdByProfileImage: users.profileImageUrl,
       })
-      .from(productFeatures)
-      .innerJoin(featureCategories, eq(productFeatures.categoryId, featureCategories.id))
-      .innerJoin(users, eq(productFeatures.createdById, users.id))
+      .from(appFeatures)
+      .innerJoin(appFeatureCategories, eq(appFeatures.categoryId, appFeatureCategories.id))
+      .innerJoin(users, eq(appFeatures.createdById, users.id))
       .where(whereClause)
-      .orderBy(desc(productFeatures.voteCount), desc(productFeatures.createdAt));
+      .orderBy(desc(appFeatures.voteCount), desc(appFeatures.createdAt));
 
     // Get user votes if userId provided
     let userVotes: string[] = [];
@@ -479,6 +480,7 @@ export class DatabaseStorage implements IStorage {
         name: f.categoryName,
         description: f.categoryDescription,
         color: f.categoryColor,
+        sortOrder: f.categorySortOrder,
         isActive: f.categoryIsActive,
         createdAt: f.categoryCreatedAt,
         updatedAt: f.categoryUpdatedAt,
@@ -499,33 +501,34 @@ export class DatabaseStorage implements IStorage {
   ): Promise<ProductFeatureWithRelations | undefined> {
     const features = await db
       .select({
-        id: productFeatures.id,
-        title: productFeatures.title,
-        description: productFeatures.description,
-        featureType: productFeatures.featureType,
-        categoryId: productFeatures.categoryId,
-        status: productFeatures.status,
-        priority: productFeatures.priority,
-        createdById: productFeatures.createdById,
-        ownerId: productFeatures.ownerId,
-        voteCount: productFeatures.voteCount,
-        estimatedDelivery: productFeatures.estimatedDelivery,
-        createdAt: productFeatures.createdAt,
-        updatedAt: productFeatures.updatedAt,
-        categoryName: featureCategories.name,
-        categoryColor: featureCategories.color,
-        categoryDescription: featureCategories.description,
-        categoryIsActive: featureCategories.isActive,
-        categoryCreatedAt: featureCategories.createdAt,
-        categoryUpdatedAt: featureCategories.updatedAt,
+        id: appFeatures.id,
+        title: appFeatures.title,
+        description: appFeatures.description,
+        featureType: appFeatures.featureType,
+        categoryId: appFeatures.categoryId,
+        status: appFeatures.status,
+        priority: appFeatures.priority,
+        createdById: appFeatures.createdById,
+        ownerId: appFeatures.ownerId,
+        voteCount: appFeatures.voteCount,
+        estimatedDelivery: appFeatures.estimatedDelivery,
+        createdAt: appFeatures.createdAt,
+        updatedAt: appFeatures.updatedAt,
+        categoryName: appFeatureCategories.name,
+        categoryColor: appFeatureCategories.color,
+        categoryDescription: appFeatureCategories.description,
+        categorySortOrder: appFeatureCategories.sortOrder,
+        categoryIsActive: appFeatureCategories.isActive,
+        categoryCreatedAt: appFeatureCategories.createdAt,
+        categoryUpdatedAt: appFeatureCategories.updatedAt,
         createdByFirstName: users.firstName,
         createdByLastName: users.lastName,
         createdByProfileImage: users.profileImageUrl,
       })
-      .from(productFeatures)
-      .innerJoin(featureCategories, eq(productFeatures.categoryId, featureCategories.id))
-      .innerJoin(users, eq(productFeatures.createdById, users.id))
-      .where(eq(productFeatures.id, id));
+      .from(appFeatures)
+      .innerJoin(appFeatureCategories, eq(appFeatures.categoryId, appFeatureCategories.id))
+      .innerJoin(users, eq(appFeatures.createdById, users.id))
+      .where(eq(appFeatures.id, id));
 
     if (features.length === 0) return undefined;
 
@@ -534,8 +537,8 @@ export class DatabaseStorage implements IStorage {
     if (userId) {
       const [vote] = await db
         .select()
-        .from(featureVotes)
-        .where(and(eq(featureVotes.featureId, id), eq(featureVotes.userId, userId)));
+        .from(appFeatureVotes)
+        .where(and(eq(appFeatureVotes.featureId, id), eq(appFeatureVotes.userId, userId)));
       hasVoted = !!vote;
     }
 
@@ -558,6 +561,7 @@ export class DatabaseStorage implements IStorage {
         name: f.categoryName,
         description: f.categoryDescription,
         color: f.categoryColor,
+        sortOrder: f.categorySortOrder,
         isActive: f.categoryIsActive,
         createdAt: f.categoryCreatedAt,
         updatedAt: f.categoryUpdatedAt,
@@ -575,9 +579,9 @@ export class DatabaseStorage implements IStorage {
   async createFeature(
     data: CreateProductFeature,
     createdById: string
-  ): Promise<ProductFeature> {
+  ): Promise<AppFeature> {
     const [feature] = await db
-      .insert(productFeatures)
+      .insert(appFeatures)
       .values({
         ...data,
         createdById,
@@ -588,18 +592,18 @@ export class DatabaseStorage implements IStorage {
 
   async updateFeature(
     id: string,
-    data: Partial<InsertProductFeature>
-  ): Promise<ProductFeature | undefined> {
+    data: Partial<InsertAppFeature>
+  ): Promise<AppFeature | undefined> {
     const [feature] = await db
-      .update(productFeatures)
+      .update(appFeatures)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(productFeatures.id, id))
+      .where(eq(appFeatures.id, id))
       .returning();
     return feature;
   }
 
   async deleteFeature(id: string): Promise<void> {
-    await db.delete(productFeatures).where(eq(productFeatures.id, id));
+    await db.delete(appFeatures).where(eq(appFeatures.id, id));
   }
 
   // Feature vote operations
@@ -610,30 +614,30 @@ export class DatabaseStorage implements IStorage {
     // Check if vote exists
     const [existingVote] = await db
       .select()
-      .from(featureVotes)
-      .where(and(eq(featureVotes.featureId, featureId), eq(featureVotes.userId, userId)));
+      .from(appFeatureVotes)
+      .where(and(eq(appFeatureVotes.featureId, featureId), eq(appFeatureVotes.userId, userId)));
 
     if (existingVote) {
       // Remove vote
       await db
-        .delete(featureVotes)
-        .where(eq(featureVotes.id, existingVote.id));
+        .delete(appFeatureVotes)
+        .where(eq(appFeatureVotes.id, existingVote.id));
       
       // Decrement vote count
       await db
-        .update(productFeatures)
-        .set({ voteCount: sql`${productFeatures.voteCount} - 1` })
-        .where(eq(productFeatures.id, featureId));
+        .update(appFeatures)
+        .set({ voteCount: sql`${appFeatures.voteCount} - 1` })
+        .where(eq(appFeatures.id, featureId));
       
       const [feature] = await db
-        .select({ voteCount: productFeatures.voteCount })
-        .from(productFeatures)
-        .where(eq(productFeatures.id, featureId));
+        .select({ voteCount: appFeatures.voteCount })
+        .from(appFeatures)
+        .where(eq(appFeatures.id, featureId));
       
       return { voted: false, voteCount: feature?.voteCount || 0 };
     } else {
       // Add vote
-      await db.insert(featureVotes).values({
+      await db.insert(appFeatureVotes).values({
         featureId,
         userId,
         value: 1,
@@ -641,14 +645,14 @@ export class DatabaseStorage implements IStorage {
       
       // Increment vote count
       await db
-        .update(productFeatures)
-        .set({ voteCount: sql`${productFeatures.voteCount} + 1` })
-        .where(eq(productFeatures.id, featureId));
+        .update(appFeatures)
+        .set({ voteCount: sql`${appFeatures.voteCount} + 1` })
+        .where(eq(appFeatures.id, featureId));
       
       const [feature] = await db
-        .select({ voteCount: productFeatures.voteCount })
-        .from(productFeatures)
-        .where(eq(productFeatures.id, featureId));
+        .select({ voteCount: appFeatures.voteCount })
+        .from(appFeatures)
+        .where(eq(appFeatures.id, featureId));
       
       return { voted: true, voteCount: feature?.voteCount || 0 };
     }
@@ -656,9 +660,9 @@ export class DatabaseStorage implements IStorage {
 
   async getUserVotes(userId: string): Promise<string[]> {
     const votes = await db
-      .select({ featureId: featureVotes.featureId })
-      .from(featureVotes)
-      .where(eq(featureVotes.userId, userId));
+      .select({ featureId: appFeatureVotes.featureId })
+      .from(appFeatureVotes)
+      .where(eq(appFeatureVotes.userId, userId));
     return votes.map((v) => v.featureId);
   }
 
@@ -666,20 +670,20 @@ export class DatabaseStorage implements IStorage {
   async getComments(featureId: string): Promise<FeatureCommentWithUser[]> {
     const comments = await db
       .select({
-        id: featureComments.id,
-        featureId: featureComments.featureId,
-        userId: featureComments.userId,
-        body: featureComments.body,
-        createdAt: featureComments.createdAt,
-        updatedAt: featureComments.updatedAt,
+        id: appFeatureComments.id,
+        featureId: appFeatureComments.featureId,
+        userId: appFeatureComments.userId,
+        body: appFeatureComments.body,
+        createdAt: appFeatureComments.createdAt,
+        updatedAt: appFeatureComments.updatedAt,
         userFirstName: users.firstName,
         userLastName: users.lastName,
         userProfileImage: users.profileImageUrl,
       })
-      .from(featureComments)
-      .innerJoin(users, eq(featureComments.userId, users.id))
-      .where(eq(featureComments.featureId, featureId))
-      .orderBy(featureComments.createdAt);
+      .from(appFeatureComments)
+      .innerJoin(users, eq(appFeatureComments.userId, users.id))
+      .where(eq(appFeatureComments.featureId, featureId))
+      .orderBy(appFeatureComments.createdAt);
 
     return comments.map((c) => ({
       id: c.id,
@@ -703,7 +707,7 @@ export class DatabaseStorage implements IStorage {
     body: string
   ): Promise<FeatureComment> {
     const [comment] = await db
-      .insert(featureComments)
+      .insert(appFeatureComments)
       .values({
         featureId,
         userId,
@@ -714,7 +718,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteComment(id: string): Promise<void> {
-    await db.delete(featureComments).where(eq(featureComments.id, id));
+    await db.delete(appFeatureComments).where(eq(appFeatureComments.id, id));
   }
 
   // Contact operations
