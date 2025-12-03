@@ -22,50 +22,63 @@ interface CsvVendor {
 }
 
 function parseCSV(content: string): CsvVendor[] {
-  const lines = content.split("\n");
-  const headers = parseCSVLine(lines[0]);
-  const results: CsvVendor[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-
-    const values = parseCSVLine(line);
-    const obj: any = {};
-    headers.forEach((header, index) => {
-      obj[header.trim()] = values[index]?.trim() || "";
-    });
-    results.push(obj as CsvVendor);
-  }
-
-  return results;
-}
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
+  const records: string[][] = [];
+  let currentRecord: string[] = [];
+  let currentField = "";
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    const nextChar = content[i + 1];
 
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
+      if (inQuotes && nextChar === '"') {
+        currentField += '"';
         i++;
       } else {
         inQuotes = !inQuotes;
       }
     } else if (char === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += char;
+      currentRecord.push(currentField);
+      currentField = "";
+    } else if ((char === "\n" || (char === "\r" && nextChar === "\n")) && !inQuotes) {
+      if (char === "\r") i++;
+      currentRecord.push(currentField);
+      if (currentRecord.length > 1 || currentRecord[0] !== "") {
+        records.push(currentRecord);
+      }
+      currentRecord = [];
+      currentField = "";
+    } else if (char !== "\r") {
+      currentField += char;
     }
   }
-  result.push(current);
 
-  return result;
+  if (currentField || currentRecord.length > 0) {
+    currentRecord.push(currentField);
+    if (currentRecord.length > 1 || currentRecord[0] !== "") {
+      records.push(currentRecord);
+    }
+  }
+
+  if (records.length === 0) return [];
+
+  const headers = records[0].map((h) => h.trim());
+  const results: CsvVendor[] = [];
+
+  for (let i = 1; i < records.length; i++) {
+    const values = records[i];
+    const obj: any = {};
+    headers.forEach((header, index) => {
+      obj[header] = values[index]?.trim() || "";
+    });
+
+    if (obj.business_name && !obj.business_name.includes("region:")) {
+      results.push(obj as CsvVendor);
+    }
+  }
+
+  return results;
 }
 
 function parseBoolean(value: string): boolean {
@@ -91,7 +104,7 @@ async function importVendors() {
   const content = fs.readFileSync(csvPath, "utf-8");
   const csvVendors = parseCSV(content);
 
-  console.log(`Found ${csvVendors.length} vendors to import`);
+  console.log(`Found ${csvVendors.length} valid vendors to import`);
 
   let imported = 0;
   let skipped = 0;
@@ -100,6 +113,7 @@ async function importVendors() {
     const businessName = csvVendor.business_name?.trim();
 
     if (!businessName) {
+      console.log("Skipping: empty business name");
       skipped++;
       continue;
     }
