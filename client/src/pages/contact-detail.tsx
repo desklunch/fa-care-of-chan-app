@@ -1,4 +1,4 @@
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,6 +102,11 @@ export default function ContactDetail() {
         { label: "Contacts", href: "/contacts" },
         { label: fullName },
       ]}
+      actionButton={{
+        label: "Edit Contact",
+        href: `/contacts/${id}/edit`,
+        icon: Pencil,
+      }}
     >
       <div className="p-4 md:p-6 max-w-5xl mx-auto">
         <div className="grid md:grid-cols-3 gap-6">
@@ -117,18 +122,12 @@ export default function ContactDetail() {
                   </h1>
                   {contact.jobTitle && (
                     <p
-                      className="text-muted-foreground mb-4"
+                      className="text-muted-foreground"
                       data-testid="text-contact-title"
                     >
                       {contact.jobTitle}
                     </p>
                   )}
-                  <Link href={`/contacts/${id}/edit`}>
-                    <Button variant="outline" size="sm" data-testid="button-edit-contact">
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit Contact
-                    </Button>
-                  </Link>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-border space-y-3">
