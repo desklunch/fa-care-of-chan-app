@@ -5,21 +5,12 @@ import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CircleFadingPlus, ThumbsUp, Filter, Lightbulb } from "lucide-react";
+import { CircleFadingPlus, ThumbsUp, Lightbulb } from "lucide-react";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureCategory, FeatureStatus, FeatureType } from "@shared/schema";
-import { insertAppFeatureSchema, featureTypes } from "@shared/schema";
-import { z } from "zod";
 
 const featureTypeLabels: Record<FeatureType, string> = {
   idea: "Idea",
@@ -48,9 +39,6 @@ const statusColors: Record<FeatureStatus, string> = {
   completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
 };
-
-const formSchema = insertAppFeatureSchema;
-type FormData = z.infer<typeof formSchema>;
 
 function FeatureCard({ 
   feature, 
@@ -132,174 +120,6 @@ function FeatureCard({
         </div>
       </CardFooter>
     </Card>
-  );
-}
-
-function CreateFeatureDialog({ 
-  categories, 
-  onSuccess 
-}: { 
-  categories: FeatureCategory[];
-  onSuccess: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const { toast } = useToast();
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      categoryId: "",
-      featureType: undefined,
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      return apiRequest("POST", "/api/features", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
-      toast({ title: "Feature request submitted!" });
-      form.reset();
-      setOpen(false);
-      onSuccess();
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to submit feature", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const onSubmit = (data: FormData) => {
-    createMutation.mutate(data);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button data-testid="button-new-feature">
-          <CircleFadingPlus className="h-4 w-4 mr-2" />
-          New Feature
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Submit Feature Request</DialogTitle>
-          <DialogDescription>
-            Share your idea for improving the application. Others can vote and comment on it.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Brief summary of your idea" 
-                      {...field} 
-                      data-testid="input-feature-title"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="featureType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-feature-type">
-                        <SelectValue placeholder="Is this an Idea or a Requirement?" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {featureTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {featureTypeLabels[type]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-feature-category">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe your feature request in detail..."
-                      className="min-h-[120px]"
-                      {...field} 
-                      data-testid="textarea-feature-description"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setOpen(false)}
-                data-testid="button-cancel-feature"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={createMutation.isPending}
-                data-testid="button-submit-feature"
-              >
-                {createMutation.isPending ? "Submitting..." : "Submit"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -393,8 +213,12 @@ export default function AppFeatures() {
         
           <div className="flex justify-between">
             <h1 className="text-2xl font-semibold tracking-tight">App Features</h1>
-            <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
-
+            <Link href="/app/features/new">
+              <Button data-testid="button-new-feature">
+                <CircleFadingPlus className="h-4 w-4 mr-2" />
+                New Feature
+              </Button>
+            </Link>
           </div>
   
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -438,7 +262,12 @@ export default function AppFeatures() {
                 <p className="text-muted-foreground mb-4">
                   Be the first to submit an idea for improving the application!
                 </p>
-                <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
+                <Link href="/app/features/new">
+                  <Button data-testid="button-new-feature-empty">
+                    <CircleFadingPlus className="h-4 w-4 mr-2" />
+                    New Feature
+                  </Button>
+                </Link>
               </div>
             </Card>
           ) : (
