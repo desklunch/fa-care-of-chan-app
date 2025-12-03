@@ -626,3 +626,63 @@ export const updateVendorSchema = insertVendorSchema.partial();
 
 export type CreateVendor = z.infer<typeof insertVendorSchema>;
 export type UpdateVendor = z.infer<typeof updateVendorSchema>;
+
+// App settings table for storing theme and other global configuration
+export const appSettings = pgTable("app_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: jsonb("value").notNull(),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type AppSetting = typeof appSettings.$inferSelect;
+export type InsertAppSetting = typeof appSettings.$inferInsert;
+
+// Theme variable schema
+export const themeVariableSchema = z.object({
+  // Core colors (HSL format: "H S% L%")
+  background: z.string(),
+  foreground: z.string(),
+  border: z.string(),
+  card: z.string(),
+  cardForeground: z.string(),
+  cardBorder: z.string(),
+  sidebar: z.string(),
+  sidebarForeground: z.string(),
+  sidebarBorder: z.string(),
+  sidebarPrimary: z.string(),
+  sidebarPrimaryForeground: z.string(),
+  sidebarAccent: z.string(),
+  sidebarAccentForeground: z.string(),
+  sidebarRing: z.string(),
+  popover: z.string(),
+  popoverForeground: z.string(),
+  popoverBorder: z.string(),
+  primary: z.string(),
+  primaryForeground: z.string(),
+  secondary: z.string(),
+  secondaryForeground: z.string(),
+  muted: z.string(),
+  mutedForeground: z.string(),
+  accent: z.string(),
+  accentForeground: z.string(),
+  destructive: z.string(),
+  destructiveForeground: z.string(),
+  input: z.string(),
+  ring: z.string(),
+  chart1: z.string(),
+  chart2: z.string(),
+  chart3: z.string(),
+  chart4: z.string(),
+  chart5: z.string(),
+});
+
+export const themeConfigSchema = z.object({
+  light: themeVariableSchema,
+  dark: themeVariableSchema,
+});
+
+export type ThemeVariables = z.infer<typeof themeVariableSchema>;
+export type ThemeConfig = z.infer<typeof themeConfigSchema>;
