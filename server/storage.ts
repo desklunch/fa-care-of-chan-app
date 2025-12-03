@@ -11,6 +11,7 @@ import {
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
+  appSettings,
   type User,
   type UpsertUser,
   type Invite,
@@ -41,6 +42,8 @@ import {
   type UpdateVendorService,
   type CreateVendor,
   type UpdateVendor,
+  type AppSetting,
+  type ThemeConfig,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -147,6 +150,12 @@ export interface IStorage {
   createVendorService(data: CreateVendorService): Promise<VendorService>;
   updateVendorService(id: string, data: UpdateVendorService): Promise<VendorService | undefined>;
   deleteVendorService(id: string): Promise<void>;
+  
+  // App settings operations
+  getSetting(key: string): Promise<AppSetting | undefined>;
+  setSetting(key: string, value: unknown, updatedBy?: string): Promise<AppSetting>;
+  getTheme(): Promise<ThemeConfig | null>;
+  setTheme(theme: ThemeConfig, updatedBy: string): Promise<AppSetting>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1047,6 +1056,52 @@ export class DatabaseStorage implements IStorage {
     await db.delete(vendorServicesVendors).where(eq(vendorServicesVendors.vendorId, id));
     await db.delete(vendorsContacts).where(eq(vendorsContacts.vendorId, id));
     await db.delete(vendors).where(eq(vendors.id, id));
+  }
+  
+  // App settings operations
+  async getSetting(key: string): Promise<AppSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, key));
+    return setting;
+  }
+  
+  async setSetting(key: string, value: unknown, updatedBy?: string): Promise<AppSetting> {
+    const existing = await this.getSetting(key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(appSettings)
+        .set({
+          value,
+          updatedBy,
+          updatedAt: new Date(),
+        })
+        .where(eq(appSettings.key, key))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(appSettings)
+        .values({
+          key,
+          value,
+          updatedBy,
+        })
+        .returning();
+      return created;
+    }
+  }
+  
+  async getTheme(): Promise<ThemeConfig | null> {
+    const setting = await this.getSetting("theme");
+    if (!setting) return null;
+    return setting.value as ThemeConfig;
+  }
+  
+  async setTheme(theme: ThemeConfig, updatedBy: string): Promise<AppSetting> {
+    return this.setSetting("theme", theme, updatedBy);
   }
 }
 
