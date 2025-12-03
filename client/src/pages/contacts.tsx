@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { Building2, Plus } from "lucide-react";
+import { Building2, CircleFadingPlus } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "emailAddresses", "phoneNumbers"];
 
@@ -261,7 +261,7 @@ export default function Contacts() {
       actionButton={{
         label: "New Contact",
         href: "/contacts/new",
-        icon: Plus,
+        icon: CircleFadingPlus,
       }}
     >
       <DataGridPage

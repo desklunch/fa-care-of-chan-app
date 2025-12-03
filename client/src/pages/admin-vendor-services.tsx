@@ -35,7 +35,7 @@ import type { VendorService, CreateVendorService, UpdateVendorService } from "@s
 import { insertVendorServiceSchema, updateVendorServiceSchema } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import * as LucideIcons from "lucide-react";
-import { Plus, Pencil, Trash2, Save } from "lucide-react";
+import { CircleFadingPlus, Pencil, Trash2, Save } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "description", "icon"];
 
@@ -93,7 +93,7 @@ function CreateServiceDialog() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button data-testid="button-create-service">
-          <Plus className="h-4 w-4 mr-2" />
+          <CircleFadingPlus className="h-4 w-4 mr-2" />
           Add Service
         </Button>
       </DialogTrigger>

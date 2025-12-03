@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Plus, Edit2, Tags, GripVertical } from "lucide-react";
+import { CircleFadingPlus, Edit2, Tags, GripVertical } from "lucide-react";
 import type { FeatureCategory } from "@shared/schema";
 import { insertFeatureCategorySchema, updateFeatureCategorySchema } from "@shared/schema";
 import { z } from "zod";
@@ -156,7 +156,7 @@ function CreateCategoryDialog({ onSuccess }: { onSuccess: () => void }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button data-testid="button-new-category">
-          <Plus className="h-4 w-4 mr-2" />
+          <CircleFadingPlus className="h-4 w-4 mr-2" />
           New Category
         </Button>
       </DialogTrigger>
