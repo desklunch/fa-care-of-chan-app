@@ -20,6 +20,7 @@ interface PlaceAutocompleteProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  clearOnSelect?: boolean;
   "data-testid"?: string;
 }
 
@@ -29,9 +30,10 @@ export function PlaceAutocomplete({
   placeholder = "Search for a location...",
   className,
   disabled,
+  clearOnSelect = false,
   "data-testid": testId,
 }: PlaceAutocompleteProps) {
-  const [query, setQuery] = useState(value?.displayName || "");
+  const [query, setQuery] = useState(clearOnSelect ? "" : (value?.displayName || ""));
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,11 +42,11 @@ export function PlaceAutocomplete({
   const debounceRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    if (value) {
+    if (value && !clearOnSelect) {
       setSelectedLocation(value);
       setQuery(value.displayName || `${value.city}, ${value.region}, ${value.country}`);
     }
-  }, [value]);
+  }, [value, clearOnSelect]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -81,7 +83,7 @@ export function PlaceAutocomplete({
     const newQuery = e.target.value;
     setQuery(newQuery);
     
-    if (selectedLocation) {
+    if (selectedLocation && !clearOnSelect) {
       setSelectedLocation(null);
       onSelect(null);
     }
@@ -98,7 +100,10 @@ export function PlaceAutocomplete({
   const handleSelectPrediction = async (prediction: PlacePrediction) => {
     setIsLoading(true);
     setIsOpen(false);
-    setQuery(prediction.description);
+    
+    if (!clearOnSelect) {
+      setQuery(prediction.description);
+    }
 
     try {
       const response = await fetch(`/api/places/details?place_id=${prediction.place_id}`);
@@ -115,7 +120,13 @@ export function PlaceAutocomplete({
         displayName: prediction.description,
       };
 
-      setSelectedLocation(location);
+      if (clearOnSelect) {
+        setQuery("");
+        setPredictions([]);
+        setSelectedLocation(null);
+      } else {
+        setSelectedLocation(location);
+      }
       onSelect(location);
     } catch (error) {
       console.error("Place details error:", error);
@@ -151,7 +162,7 @@ export function PlaceAutocomplete({
         {isLoading && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
         )}
-        {!isLoading && selectedLocation && (
+        {!isLoading && selectedLocation && !clearOnSelect && (
           <Button
             type="button"
             variant="ghost"

@@ -15,9 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { ArrowLeft, Save, Trash2, Plus, X, Building2, MapPin } from "lucide-react";
+import { ArrowLeft, Save, Trash2, X, Building2, MapPin, Briefcase } from "lucide-react";
 import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
-import { MultiSelect } from "@/components/ui/multi-select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,15 +56,6 @@ export default function VendorForm() {
     queryKey: ["/api/vendor-services"],
   });
 
-  const serviceItems = allServices.map((service) => ({
-    id: service.id,
-    label: service.name,
-  }));
-
-  const serviceLabels = allServices.reduce((acc, service) => {
-    acc[service.id] = service.name;
-    return acc;
-  }, {} as Record<string, string>);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -178,20 +168,28 @@ export default function VendorForm() {
     }
   };
 
-  const addLocation = () => {
-    setLocations([...locations, { city: "", region: "", country: "" }]);
+  const handleLocationSelect = (location: VendorLocation | null) => {
+    if (location && location.city) {
+      const isDuplicate = locations.some(
+        (l) => l.placeId === location.placeId || 
+               (l.city === location.city && l.region === location.region && l.country === location.country)
+      );
+      if (!isDuplicate) {
+        setLocations([...locations, location]);
+      }
+    }
   };
 
   const removeLocation = (index: number) => {
     setLocations(locations.filter((_, i) => i !== index));
   };
 
-  const updateLocation = (index: number, location: VendorLocation | null) => {
-    if (location) {
-      const updated = [...locations];
-      updated[index] = location;
-      setLocations(updated);
-    }
+  const toggleService = (serviceId: string) => {
+    const currentIds = form.getValues("serviceIds") || [];
+    const newIds = currentIds.includes(serviceId)
+      ? currentIds.filter((id) => id !== serviceId)
+      : [...currentIds, serviceId];
+    form.setValue("serviceIds", newIds);
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
@@ -364,60 +362,50 @@ export default function VendorForm() {
                   Service Locations
                 </CardTitle>
                 <CardDescription>
-                  Add the cities or regions where this vendor operates.
+                  Search and select the cities or regions where this vendor operates.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {locations.map((location, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <div className="flex-1">
-                      <PlaceAutocomplete
-                        value={location}
-                        onSelect={(loc) => updateLocation(index, loc)}
-                        placeholder="Search for a city..."
-                        data-testid={`input-location-${index}`}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeLocation(index)}
-                      data-testid={`button-remove-location-${index}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                <PlaceAutocomplete
+                  value={null}
+                  onSelect={handleLocationSelect}
+                  placeholder="Search for a city..."
+                  clearOnSelect
+                  data-testid="input-location-search"
+                />
                 
                 {locations.length > 0 && (
-                  <div className="flex flex-wrap gap-2 py-2">
-                    {locations.filter(l => l.city).map((location, index) => (
-                      <Badge key={index} variant="secondary">
-                        {location.displayName || `${location.city}, ${location.region}, ${location.country}`}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {locations.map((location, index) => (
+                      <Badge 
+                        key={location.placeId || index} 
+                        variant="secondary"
+                        className="flex items-center gap-1 pr-1"
+                      >
+                        <span>{location.displayName || `${location.city}, ${location.region}, ${location.country}`}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(index)}
+                          className="ml-1 rounded-full hover:bg-muted p-0.5"
+                          data-testid={`button-remove-location-${index}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </Badge>
                     ))}
                   </div>
                 )}
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addLocation}
-                  data-testid="button-add-location"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Location
-                </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Services</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Services
+                </CardTitle>
                 <CardDescription>
-                  Select the services this vendor provides.
+                  Click on services to toggle their assignment to this vendor.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -427,17 +415,26 @@ export default function VendorForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <MultiSelect
-                          triggerLabel="Select Services"
-                          placeholder="No services selected"
-                          items={serviceItems}
-                          itemLabels={serviceLabels}
-                          selectedIds={field.value || []}
-                          onSelectionChange={(ids) => field.onChange(ids as string[])}
-                          showSearch
-                          searchPlaceholder="Search services..."
-                          testIdPrefix="services"
-                        />
+                        <div className="flex flex-wrap gap-2">
+                          {allServices.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No services available. Create services in the admin panel.</p>
+                          ) : (
+                            allServices.map((service) => {
+                              const isSelected = (field.value || []).includes(service.id);
+                              return (
+                                <Badge
+                                  key={service.id}
+                                  variant={isSelected ? "default" : "outline"}
+                                  className="cursor-pointer select-none"
+                                  onClick={() => toggleService(service.id)}
+                                  data-testid={`badge-service-${service.id}`}
+                                >
+                                  {service.name}
+                                </Badge>
+                              );
+                            })
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
