@@ -115,6 +115,7 @@ App Feature Comments table (app_feature_comments):
 - Timestamps for audit
 
 Contacts table:
+- externalId for integration with external systems (indexed)
 - firstName and lastName (required varchar fields)
 - phoneNumbers and emailAddresses (text arrays for multiple values)
 - jobTitle for professional role

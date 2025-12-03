@@ -186,6 +186,7 @@ export const contacts = pgTable(
   "contacts",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 255 }),
     firstName: varchar("first_name", { length: 100 }).notNull(),
     lastName: varchar("last_name", { length: 100 }).notNull(),
     phoneNumbers: text("phone_numbers").array(),
@@ -200,6 +201,7 @@ export const contacts = pgTable(
   },
   (table) => [
     index("idx_contacts_name").on(table.firstName, table.lastName),
+    index("idx_contacts_external_id").on(table.externalId),
   ],
 );
 
