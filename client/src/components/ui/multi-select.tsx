@@ -370,25 +370,26 @@ export function MultiSelect({
       variant={buttonVariant}
       size="sm"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName} gap-1`}
+      className={`${appliedButtonClassName} gap-1 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : ""}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>
-      {isDifferentFromDefaults && (
-        <span
-          role="button"
-          className="ml-1 flex h-5 w-5 items-center justify-center rounded-sm bg-primary-foreground/20 hover:bg-primary-foreground/40 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:stroke-[3px]"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            reset();
-          }}
-          data-testid={`button-clear-${testIdPrefix}`}
-        >
-          <X className="text-primary-foreground" />
-        </span>
-      )}
     </Button>
+  );
+
+  const clearButton = isDifferentFromDefaults && (
+    <button
+      type="button"
+      className="inline-flex h-8 items-center justify-center rounded-r-md rounded-l-none bg-primary px-2 text-primary-foreground hover:bg-primary/90 border border-l-0 border-primary"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        reset();
+      }}
+      data-testid={`button-clear-${testIdPrefix}`}
+    >
+      <X className="h-3 w-3 stroke-[3px]" />
+    </button>
   );
 
   const contentProps = {
@@ -434,6 +435,7 @@ export function MultiSelect({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      {clearButton}
     </div>
   );
 }
