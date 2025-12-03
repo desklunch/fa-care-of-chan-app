@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { ArrowLeft, Save, Trash2, X, Building2, MapPin, Briefcase } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
 import {
   AlertDialog,
@@ -35,6 +36,12 @@ import { z } from "zod";
 const formSchema = insertVendorSchema;
 
 type FormData = z.infer<typeof formSchema>;
+
+function getIconComponent(iconName: string | null | undefined) {
+  if (!iconName) return null;
+  const Icon = (LucideIcons as Record<string, any>)[iconName];
+  return Icon ? <Icon className="w-3.5 h-3.5" /> : null;
+}
 
 export default function VendorForm() {
   const [, setLocation] = useLocation();
@@ -423,14 +430,16 @@ export default function VendorForm() {
                           ) : (
                             allServices.map((service) => {
                               const isSelected = (field.value || []).includes(service.id);
+                              const icon = getIconComponent(service.icon);
                               return (
                                 <Badge
                                   key={service.id}
                                   variant={isSelected ? "default" : "outline"}
-                                  className="cursor-pointer select-none"
+                                  className="cursor-pointer select-none gap-1.5"
                                   onClick={() => toggleService(service.id)}
                                   data-testid={`badge-service-${service.id}`}
                                 >
+                                  {icon}
                                   {service.name}
                                 </Badge>
                               );
