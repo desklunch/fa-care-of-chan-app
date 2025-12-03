@@ -112,6 +112,7 @@ export interface IStorage {
   createFeature(data: CreateProductFeature, createdById: string): Promise<AppFeature>;
   updateFeature(id: string, data: Partial<InsertAppFeature>): Promise<AppFeature | undefined>;
   deleteFeature(id: string): Promise<void>;
+  reorderFeatures(updates: { id: string; sortOrder: number; status?: string }[]): Promise<void>;
   
   // Feature vote operations
   toggleVote(featureId: string, userId: string): Promise<{ voted: boolean; voteCount: number }>;
@@ -468,6 +469,7 @@ export class DatabaseStorage implements IStorage {
         categoryId: appFeatures.categoryId,
         status: appFeatures.status,
         priority: appFeatures.priority,
+        sortOrder: appFeatures.sortOrder,
         createdById: appFeatures.createdById,
         ownerId: appFeatures.ownerId,
         voteCount: appFeatures.voteCount,
@@ -489,7 +491,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(appFeatureCategories, eq(appFeatures.categoryId, appFeatureCategories.id))
       .innerJoin(users, eq(appFeatures.createdById, users.id))
       .where(whereClause)
-      .orderBy(desc(appFeatures.voteCount), desc(appFeatures.createdAt));
+      .orderBy(appFeatures.sortOrder, desc(appFeatures.voteCount), desc(appFeatures.createdAt));
 
     // Get user votes if userId provided
     let userVotes: string[] = [];
@@ -505,6 +507,7 @@ export class DatabaseStorage implements IStorage {
       categoryId: f.categoryId,
       status: f.status,
       priority: f.priority,
+      sortOrder: f.sortOrder,
       createdById: f.createdById,
       ownerId: f.ownerId,
       voteCount: f.voteCount,
@@ -544,6 +547,7 @@ export class DatabaseStorage implements IStorage {
         categoryId: appFeatures.categoryId,
         status: appFeatures.status,
         priority: appFeatures.priority,
+        sortOrder: appFeatures.sortOrder,
         createdById: appFeatures.createdById,
         ownerId: appFeatures.ownerId,
         voteCount: appFeatures.voteCount,
@@ -586,6 +590,7 @@ export class DatabaseStorage implements IStorage {
       categoryId: f.categoryId,
       status: f.status,
       priority: f.priority,
+      sortOrder: f.sortOrder,
       createdById: f.createdById,
       ownerId: f.ownerId,
       voteCount: f.voteCount,
@@ -640,6 +645,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFeature(id: string): Promise<void> {
     await db.delete(appFeatures).where(eq(appFeatures.id, id));
+  }
+
+  async reorderFeatures(updates: { id: string; sortOrder: number; status?: string }[]): Promise<void> {
+    await Promise.all(
+      updates.map((update) =>
+        db
+          .update(appFeatures)
+          .set({ 
+            sortOrder: update.sortOrder, 
+            ...(update.status && { status: update.status }),
+            updatedAt: new Date() 
+          })
+          .where(eq(appFeatures.id, update.id))
+      )
+    );
   }
 
   // Feature vote operations

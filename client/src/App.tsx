@@ -25,6 +25,7 @@ import Vendors from "@/pages/vendors";
 import VendorDetail from "@/pages/vendor-detail";
 import VendorForm from "@/pages/vendor-form";
 import AdminVendorServices from "@/pages/admin-vendor-services";
+import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -37,6 +38,7 @@ import {
   Contact,
   Store,
   Briefcase,
+  Map,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -104,6 +106,12 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         items: [
           {
+            name: "Feature Roadmap",
+            href: "/admin/app/roadmap",
+            icon: Map,
+            allowedRoles: ["admin"],
+          },
+          {
             name: "Invites",
             href: "/admin/invites",
             icon: UserPlus,
@@ -163,6 +171,7 @@ function AuthenticatedRoutes() {
         <Route path="/vendors/:id" component={VendorDetail} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
+        <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
         <Route path="/admin/vendors/services" component={AdminVendorServices} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />

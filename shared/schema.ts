@@ -122,6 +122,7 @@ export const appFeatures = pgTable(
       .references(() => appFeatureCategories.id),
     status: varchar("status", { length: 20 }).default("proposed").notNull(),
     priority: varchar("priority", { length: 20 }),
+    sortOrder: integer("sort_order").default(0).notNull(),
     createdById: varchar("created_by_id")
       .notNull()
       .references(() => users.id),
@@ -136,6 +137,7 @@ export const appFeatures = pgTable(
     index("idx_app_features_category").on(table.categoryId),
     index("idx_app_features_created_by").on(table.createdById),
     index("idx_app_features_vote_count").on(table.voteCount),
+    index("idx_app_features_sort_order").on(table.sortOrder),
   ],
 );
 
