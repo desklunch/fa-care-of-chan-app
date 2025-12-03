@@ -78,8 +78,8 @@ export const auditLogs = pgTable(
   ],
 );
 
-// Feature categories for product planning
-export const featureCategories = pgTable("feature_categories", {
+// App feature categories for product planning
+export const appFeatureCategories = pgTable("app_feature_categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 100 }).notNull().unique(),
   description: text("description"),
@@ -109,9 +109,9 @@ export type FeaturePriority = (typeof featurePriorities)[number];
 export const featureTypes = ["idea", "requirement"] as const;
 export type FeatureType = (typeof featureTypes)[number];
 
-// Product features / feature requests
-export const productFeatures = pgTable(
-  "product_features",
+// App features / feature requests
+export const appFeatures = pgTable(
+  "app_features",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     title: varchar("title", { length: 200 }).notNull(),
@@ -119,7 +119,7 @@ export const productFeatures = pgTable(
     featureType: varchar("feature_type", { length: 20 }).default("idea").notNull(),
     categoryId: varchar("category_id")
       .notNull()
-      .references(() => featureCategories.id),
+      .references(() => appFeatureCategories.id),
     status: varchar("status", { length: 20 }).default("proposed").notNull(),
     priority: varchar("priority", { length: 20 }),
     createdById: varchar("created_by_id")
@@ -132,21 +132,21 @@ export const productFeatures = pgTable(
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
-    index("idx_features_status").on(table.status),
-    index("idx_features_category").on(table.categoryId),
-    index("idx_features_created_by").on(table.createdById),
-    index("idx_features_vote_count").on(table.voteCount),
+    index("idx_app_features_status").on(table.status),
+    index("idx_app_features_category").on(table.categoryId),
+    index("idx_app_features_created_by").on(table.createdById),
+    index("idx_app_features_vote_count").on(table.voteCount),
   ],
 );
 
-// Feature votes (one vote per user per feature)
-export const featureVotes = pgTable(
-  "feature_votes",
+// App feature votes (one vote per user per feature)
+export const appFeatureVotes = pgTable(
+  "app_feature_votes",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     featureId: varchar("feature_id")
       .notNull()
-      .references(() => productFeatures.id, { onDelete: "cascade" }),
+      .references(() => appFeatures.id, { onDelete: "cascade" }),
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id),
@@ -154,20 +154,20 @@ export const featureVotes = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [
-    unique("unique_feature_vote").on(table.featureId, table.userId),
-    index("idx_votes_feature").on(table.featureId),
-    index("idx_votes_user").on(table.userId),
+    unique("unique_app_feature_vote").on(table.featureId, table.userId),
+    index("idx_app_feature_votes_feature").on(table.featureId),
+    index("idx_app_feature_votes_user").on(table.userId),
   ],
 );
 
-// Feature comments for discussion
-export const featureComments = pgTable(
-  "feature_comments",
+// App feature comments for discussion
+export const appFeatureComments = pgTable(
+  "app_feature_comments",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     featureId: varchar("feature_id")
       .notNull()
-      .references(() => productFeatures.id, { onDelete: "cascade" }),
+      .references(() => appFeatures.id, { onDelete: "cascade" }),
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id),
@@ -176,8 +176,8 @@ export const featureComments = pgTable(
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
-    index("idx_comments_feature").on(table.featureId),
-    index("idx_comments_user").on(table.userId),
+    index("idx_app_feature_comments_feature").on(table.featureId),
+    index("idx_app_feature_comments_user").on(table.userId),
   ],
 );
 
@@ -207,10 +207,10 @@ export const contacts = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
   auditLogs: many(auditLogs),
-  createdFeatures: many(productFeatures, { relationName: "createdFeatures" }),
-  ownedFeatures: many(productFeatures, { relationName: "ownedFeatures" }),
-  featureVotes: many(featureVotes),
-  featureComments: many(featureComments),
+  createdFeatures: many(appFeatures, { relationName: "createdFeatures" }),
+  ownedFeatures: many(appFeatures, { relationName: "ownedFeatures" }),
+  featureVotes: many(appFeatureVotes),
+  featureComments: many(appFeatureComments),
 }));
 
 export const invitesRelations = relations(invites, ({ one }) => ({
@@ -227,47 +227,47 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   }),
 }));
 
-export const featureCategoriesRelations = relations(featureCategories, ({ many }) => ({
-  features: many(productFeatures),
+export const appFeatureCategoriesRelations = relations(appFeatureCategories, ({ many }) => ({
+  features: many(appFeatures),
 }));
 
-export const productFeaturesRelations = relations(productFeatures, ({ one, many }) => ({
-  category: one(featureCategories, {
-    fields: [productFeatures.categoryId],
-    references: [featureCategories.id],
+export const appFeaturesRelations = relations(appFeatures, ({ one, many }) => ({
+  category: one(appFeatureCategories, {
+    fields: [appFeatures.categoryId],
+    references: [appFeatureCategories.id],
   }),
   createdBy: one(users, {
-    fields: [productFeatures.createdById],
+    fields: [appFeatures.createdById],
     references: [users.id],
     relationName: "createdFeatures",
   }),
   owner: one(users, {
-    fields: [productFeatures.ownerId],
+    fields: [appFeatures.ownerId],
     references: [users.id],
     relationName: "ownedFeatures",
   }),
-  votes: many(featureVotes),
-  comments: many(featureComments),
+  votes: many(appFeatureVotes),
+  comments: many(appFeatureComments),
 }));
 
-export const featureVotesRelations = relations(featureVotes, ({ one }) => ({
-  feature: one(productFeatures, {
-    fields: [featureVotes.featureId],
-    references: [productFeatures.id],
+export const appFeatureVotesRelations = relations(appFeatureVotes, ({ one }) => ({
+  feature: one(appFeatures, {
+    fields: [appFeatureVotes.featureId],
+    references: [appFeatures.id],
   }),
   user: one(users, {
-    fields: [featureVotes.userId],
+    fields: [appFeatureVotes.userId],
     references: [users.id],
   }),
 }));
 
-export const featureCommentsRelations = relations(featureComments, ({ one }) => ({
-  feature: one(productFeatures, {
-    fields: [featureComments.featureId],
-    references: [productFeatures.id],
+export const appFeatureCommentsRelations = relations(appFeatureComments, ({ one }) => ({
+  feature: one(appFeatures, {
+    fields: [appFeatureComments.featureId],
+    references: [appFeatures.id],
   }),
   user: one(users, {
-    fields: [featureComments.userId],
+    fields: [appFeatureComments.userId],
     references: [users.id],
   }),
 }));
@@ -279,16 +279,20 @@ export type Invite = typeof invites.$inferSelect;
 export type InsertInvite = typeof invites.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
-export type FeatureCategory = typeof featureCategories.$inferSelect;
-export type InsertFeatureCategory = typeof featureCategories.$inferInsert;
-export type ProductFeature = typeof productFeatures.$inferSelect;
-export type InsertProductFeature = typeof productFeatures.$inferInsert;
-export type FeatureVote = typeof featureVotes.$inferSelect;
-export type InsertFeatureVote = typeof featureVotes.$inferInsert;
-export type FeatureComment = typeof featureComments.$inferSelect;
-export type InsertFeatureComment = typeof featureComments.$inferInsert;
+export type FeatureCategory = typeof appFeatureCategories.$inferSelect;
+export type InsertFeatureCategory = typeof appFeatureCategories.$inferInsert;
+export type AppFeature = typeof appFeatures.$inferSelect;
+export type InsertAppFeature = typeof appFeatures.$inferInsert;
+export type FeatureVote = typeof appFeatureVotes.$inferSelect;
+export type InsertFeatureVote = typeof appFeatureVotes.$inferInsert;
+export type FeatureComment = typeof appFeatureComments.$inferSelect;
+export type InsertFeatureComment = typeof appFeatureComments.$inferInsert;
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
+
+// Keep old type aliases for backward compatibility
+export type ProductFeature = AppFeature;
+export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
@@ -326,21 +330,21 @@ export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type CreateInvite = z.infer<typeof insertInviteSchema>;
 
 // Feature category schemas
-export const insertFeatureCategorySchema = createInsertSchema(featureCategories).omit({
+export const insertFeatureCategorySchema = createInsertSchema(appFeatureCategories).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export const updateFeatureCategorySchema = createInsertSchema(featureCategories).pick({
+export const updateFeatureCategorySchema = createInsertSchema(appFeatureCategories).pick({
   name: true,
   description: true,
   color: true,
   isActive: true,
 }).partial();
 
-// Product feature schemas
-export const insertProductFeatureSchema = createInsertSchema(productFeatures).omit({
+// App feature schemas
+export const insertProductFeatureSchema = createInsertSchema(appFeatures).omit({
   id: true,
   createdById: true,
   voteCount: true,
@@ -353,7 +357,7 @@ export const insertProductFeatureSchema = createInsertSchema(productFeatures).om
   featureType: z.enum(featureTypes, { required_error: "Please select Idea or Requirement" }),
 });
 
-export const updateProductFeatureSchema = createInsertSchema(productFeatures).pick({
+export const updateProductFeatureSchema = createInsertSchema(appFeatures).pick({
   title: true,
   description: true,
   featureType: true,
@@ -365,7 +369,7 @@ export const updateProductFeatureSchema = createInsertSchema(productFeatures).pi
 }).partial();
 
 // Feature comment schemas
-export const insertFeatureCommentSchema = createInsertSchema(featureComments).omit({
+export const insertFeatureCommentSchema = createInsertSchema(appFeatureComments).omit({
   id: true,
   featureId: true,
   userId: true,
@@ -382,12 +386,14 @@ export type UpdateProductFeature = z.infer<typeof updateProductFeatureSchema>;
 export type CreateFeatureComment = z.infer<typeof insertFeatureCommentSchema>;
 
 // Extended types with relations
-export type ProductFeatureWithRelations = ProductFeature & {
+export type ProductFeatureWithRelations = AppFeature & {
   category: FeatureCategory;
   createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   hasVoted?: boolean;
 };
+
+export type AppFeatureWithRelations = ProductFeatureWithRelations;
 
 export type FeatureCommentWithUser = FeatureComment & {
   user: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;
