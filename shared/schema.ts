@@ -275,6 +275,21 @@ export const vendorServicesVendors = pgTable(
   ],
 );
 
+// Join table for vendors and contacts (many-to-many)
+export const vendorsContacts = pgTable(
+  "vendors_contacts",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    vendorId: varchar("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+    contactId: varchar("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_vendors_contacts_vendor_id").on(table.vendorId),
+    index("idx_vendors_contacts_contact_id").on(table.contactId),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -367,10 +382,21 @@ export type VendorService = typeof vendorServices.$inferSelect;
 export type InsertVendorService = typeof vendorServices.$inferInsert;
 export type VendorServiceVendor = typeof vendorServicesVendors.$inferSelect;
 export type InsertVendorServiceVendor = typeof vendorServicesVendors.$inferInsert;
+export type VendorContact = typeof vendorsContacts.$inferSelect;
+export type InsertVendorContact = typeof vendorsContacts.$inferInsert;
 
-// Vendor with associated services
+// Vendor with associated services and contacts
 export type VendorWithServices = Vendor & {
   services: VendorService[];
+};
+
+export type VendorWithRelations = Vendor & {
+  services: VendorService[];
+  contacts: Contact[];
+};
+
+export type ContactWithVendors = Contact & {
+  vendors: Vendor[];
 };
 
 // Keep old type aliases for backward compatibility
