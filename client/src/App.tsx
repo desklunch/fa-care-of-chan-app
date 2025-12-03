@@ -74,7 +74,7 @@ function useLayoutConfig() {
             active: false,
           },
           {
-            name: "Requests",
+            name: "Features",
             href: "/app/features",
             icon: DraftingCompass,
           },
@@ -97,7 +97,7 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
-            name: "Categories",
+            name: "Features",
             href: "/admin/app/features",
             icon: Tags,
             allowedRoles: ["admin"],

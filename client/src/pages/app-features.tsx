@@ -392,7 +392,7 @@ export default function AppFeatures() {
         <div className="border-b p-4 ">
         
           <div className="flex justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight">New Features</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">App Features</h1>
             <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
 
           </div>
