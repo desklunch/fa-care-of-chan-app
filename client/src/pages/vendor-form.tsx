@@ -59,6 +59,8 @@ export default function VendorForm() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       businessName: "",
       address: "",
