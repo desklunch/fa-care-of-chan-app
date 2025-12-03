@@ -2,13 +2,14 @@ import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
-import type { Contact } from "@shared/schema";
+import type { ContactWithVendors, Vendor } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
+import { Building2 } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "emailAddresses", "phoneNumbers"];
+const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "emailAddresses", "phoneNumbers"];
 
-const contactColumns: ColumnConfig<Contact>[] = [
+const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   {
     id: "id",
     headerName: "ID",
@@ -26,7 +27,7 @@ const contactColumns: ColumnConfig<Contact>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 180,
-      cellRenderer: (params: { data: Contact }) => {
+      cellRenderer: (params: { data: ContactWithVendors }) => {
         const contact = params.data;
         if (!contact) return null;
         const fullName = `${contact.firstName} ${contact.lastName}`;
@@ -36,7 +37,7 @@ const contactColumns: ColumnConfig<Contact>[] = [
           </div>
         );
       },
-      valueGetter: (params: { data: Contact | undefined }) => {
+      valueGetter: (params: { data: ContactWithVendors | undefined }) => {
         const contact = params.data;
         return `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
       },
@@ -73,6 +74,39 @@ const contactColumns: ColumnConfig<Contact>[] = [
     },
   },
   {
+    id: "vendors",
+    headerName: "Vendors",
+    field: "vendors",
+    category: "Work",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { value: Vendor[] | undefined }) => {
+        const vendors = params.value;
+        if (!vendors || vendors.length === 0) return null;
+        return (
+          <div className="flex items-center gap-1 h-full overflow-hidden">
+            {vendors.slice(0, 2).map((vendor) => (
+              <Badge 
+                key={vendor.id} 
+                variant="outline" 
+                className="text-xs shrink-0 flex items-center gap-1"
+              >
+                <Building2 className="w-3 h-3" />
+                {vendor.businessName}
+              </Badge>
+            ))}
+            {vendors.length > 2 && (
+              <Badge variant="outline" className="text-xs shrink-0">
+                +{vendors.length - 2}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+  },
+  {
     id: "emailAddresses",
     headerName: "Email",
     field: "emailAddresses",
@@ -80,7 +114,7 @@ const contactColumns: ColumnConfig<Contact>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 200,
-      cellRenderer: (params: { data: Contact | undefined }) => {
+      cellRenderer: (params: { data: ContactWithVendors | undefined }) => {
         const emails = params.data?.emailAddresses;
         if (!emails || !Array.isArray(emails) || emails.length === 0) return null;
         return (
@@ -104,7 +138,7 @@ const contactColumns: ColumnConfig<Contact>[] = [
     colDef: {
       flex: 1.2,
       minWidth: 150,
-      cellRenderer: (params: { data: Contact | undefined }) => {
+      cellRenderer: (params: { data: ContactWithVendors | undefined }) => {
         const phones = params.data?.phoneNumbers;
         if (!phones || !Array.isArray(phones) || phones.length === 0) return null;
         return (
