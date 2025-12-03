@@ -9,6 +9,7 @@ import {
   contacts,
   vendors,
   vendorServices,
+  vendorServicesVendors,
   type User,
   type UpsertUser,
   type Invite,
@@ -30,6 +31,7 @@ import {
   type Contact,
   type Vendor,
   type VendorService,
+  type VendorWithServices,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -117,6 +119,7 @@ export interface IStorage {
   
   // Vendor operations
   getVendors(): Promise<Vendor[]>;
+  getVendorsWithServices(): Promise<VendorWithServices[]>;
   getVendorById(id: string): Promise<Vendor | undefined>;
   
   // Vendor service operations
@@ -755,6 +758,33 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(vendors)
       .orderBy(vendors.businessName);
+  }
+
+  async getVendorsWithServices(): Promise<VendorWithServices[]> {
+    const allVendors = await db
+      .select()
+      .from(vendors)
+      .orderBy(vendors.businessName);
+
+    const vendorServiceMappings = await db
+      .select({
+        vendorId: vendorServicesVendors.vendorId,
+        service: vendorServices,
+      })
+      .from(vendorServicesVendors)
+      .innerJoin(vendorServices, eq(vendorServicesVendors.vendorServiceId, vendorServices.id));
+
+    const servicesByVendorId = new Map<string, VendorService[]>();
+    for (const mapping of vendorServiceMappings) {
+      const existing = servicesByVendorId.get(mapping.vendorId) || [];
+      existing.push(mapping.service);
+      servicesByVendorId.set(mapping.vendorId, existing);
+    }
+
+    return allVendors.map((vendor) => ({
+      ...vendor,
+      services: servicesByVendorId.get(vendor.id) || [],
+    }));
   }
 
   async getVendorById(id: string): Promise<Vendor | undefined> {
