@@ -13,7 +13,18 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureCategory, FeatureType } from "@shared/schema";
 import { insertAppFeatureSchema, featureTypes } from "@shared/schema";
@@ -103,6 +114,24 @@ export default function AppFeatureForm() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/features/${featureId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+      toast({ title: "Feature deleted successfully!" });
+      setLocation("/app/features");
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to delete feature", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const onSubmit = (data: FormData) => {
     if (isEditMode) {
       updateMutation.mutate(data);
@@ -111,7 +140,7 @@ export default function AppFeatureForm() {
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
   const isLoading = categoriesLoading || (isEditMode && featureLoading);
 
   if (isLoading) {
@@ -257,27 +286,62 @@ export default function AppFeatureForm() {
                   )}
                 />
 
-                <div className="flex gap-3 pt-4">
-                  <Link href={backUrl}>
+                <div className="flex gap-3 pt-4 justify-between">
+                  <div className="flex gap-3">
+                    <Link href={backUrl}>
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        data-testid="button-cancel-feature"
+                      >
+                        Cancel
+                      </Button>
+                    </Link>
                     <Button 
-                      type="button" 
-                      variant="outline"
-                      data-testid="button-cancel-feature"
+                      type="submit" 
+                      disabled={isPending}
+                      data-testid="button-submit-feature"
                     >
-                      Cancel
+                      <Save className="h-4 w-4 mr-2" />
+                      {isPending 
+                        ? (isEditMode ? "Saving..." : "Submitting...") 
+                        : (isEditMode ? "Save Changes" : "Submit Feature")
+                      }
                     </Button>
-                  </Link>
-                  <Button 
-                    type="submit" 
-                    disabled={isPending}
-                    data-testid="button-submit-feature"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {isPending 
-                      ? (isEditMode ? "Saving..." : "Submitting...") 
-                      : (isEditMode ? "Save Changes" : "Submit Feature")
-                    }
-                  </Button>
+                  </div>
+                  {isEditMode && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          type="button" 
+                          variant="destructive"
+                          disabled={isPending}
+                          data-testid="button-delete-feature"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Feature Request</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this feature request? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate()}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            data-testid="button-confirm-delete"
+                          >
+                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </form>
             </Form>
