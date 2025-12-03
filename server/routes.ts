@@ -566,6 +566,42 @@ export async function registerRoutes(
     }
   });
 
+  // Feature Reordering (for roadmap drag and drop) - MUST be before /:id route
+  app.patch("/api/features/reorder", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates must be an array" });
+      }
+      
+      // Validate each update has required fields and status values
+      const validStatuses: FeatureStatus[] = ["proposed", "under_review", "planned", "in_progress", "completed", "archived"];
+      for (const update of updates) {
+        if (!update.id || typeof update.sortOrder !== 'number') {
+          return res.status(400).json({ message: "Each update must have id and sortOrder" });
+        }
+        if (update.status !== undefined && !validStatuses.includes(update.status)) {
+          return res.status(400).json({ message: `Invalid status: ${update.status}` });
+        }
+      }
+      
+      await storage.reorderFeatures(updates);
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature",
+        entityId: "batch",
+        metadata: { reorderedCount: updates.length },
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering features:", error);
+      res.status(500).json({ message: "Failed to reorder features" });
+    }
+  });
+
   app.patch("/api/features/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -656,42 +692,6 @@ export async function registerRoutes(
         metadata: { error: String(error) },
       });
       res.status(500).json({ message: "Failed to delete feature" });
-    }
-  });
-
-  // Feature Reordering (for roadmap drag and drop)
-  app.patch("/api/features/reorder", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const { updates } = req.body;
-      
-      if (!Array.isArray(updates)) {
-        return res.status(400).json({ message: "Updates must be an array" });
-      }
-      
-      // Validate each update has required fields and status values
-      const validStatuses: FeatureStatus[] = ["proposed", "under_review", "planned", "in_progress", "completed", "archived"];
-      for (const update of updates) {
-        if (!update.id || typeof update.sortOrder !== 'number') {
-          return res.status(400).json({ message: "Each update must have id and sortOrder" });
-        }
-        if (update.status !== undefined && !validStatuses.includes(update.status)) {
-          return res.status(400).json({ message: `Invalid status: ${update.status}` });
-        }
-      }
-      
-      await storage.reorderFeatures(updates);
-      
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "feature",
-        entityId: "batch",
-        metadata: { reorderedCount: updates.length },
-      });
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error reordering features:", error);
-      res.status(500).json({ message: "Failed to reorder features" });
     }
   });
 
