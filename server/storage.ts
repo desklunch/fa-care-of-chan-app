@@ -10,6 +10,7 @@ import {
   vendors,
   vendorServices,
   vendorServicesVendors,
+  vendorsContacts,
   type User,
   type UpsertUser,
   type Invite,
@@ -32,6 +33,8 @@ import {
   type Vendor,
   type VendorService,
   type VendorWithServices,
+  type VendorWithRelations,
+  type ContactWithVendors,
   type CreateVendorService,
   type UpdateVendorService,
 } from "@shared/schema";
@@ -117,11 +120,13 @@ export interface IStorage {
   
   // Contact operations
   getContacts(): Promise<Contact[]>;
+  getContactsWithVendors(): Promise<ContactWithVendors[]>;
   getContactById(id: string): Promise<Contact | undefined>;
   
   // Vendor operations
   getVendors(): Promise<Vendor[]>;
   getVendorsWithServices(): Promise<VendorWithServices[]>;
+  getVendorsWithRelations(): Promise<VendorWithRelations[]>;
   getVendorById(id: string): Promise<Vendor | undefined>;
   
   // Vendor service operations
@@ -746,6 +751,33 @@ export class DatabaseStorage implements IStorage {
       .orderBy(contacts.lastName, contacts.firstName);
   }
 
+  async getContactsWithVendors(): Promise<ContactWithVendors[]> {
+    const allContacts = await db
+      .select()
+      .from(contacts)
+      .orderBy(contacts.lastName, contacts.firstName);
+
+    const contactVendorMappings = await db
+      .select({
+        contactId: vendorsContacts.contactId,
+        vendor: vendors,
+      })
+      .from(vendorsContacts)
+      .innerJoin(vendors, eq(vendorsContacts.vendorId, vendors.id));
+
+    const vendorsByContactId = new Map<string, Vendor[]>();
+    for (const mapping of contactVendorMappings) {
+      const existing = vendorsByContactId.get(mapping.contactId) || [];
+      existing.push(mapping.vendor);
+      vendorsByContactId.set(mapping.contactId, existing);
+    }
+
+    return allContacts.map((contact) => ({
+      ...contact,
+      vendors: vendorsByContactId.get(contact.id) || [],
+    }));
+  }
+
   async getContactById(id: string): Promise<Contact | undefined> {
     const [contact] = await db
       .select()
@@ -786,6 +818,49 @@ export class DatabaseStorage implements IStorage {
     return allVendors.map((vendor) => ({
       ...vendor,
       services: servicesByVendorId.get(vendor.id) || [],
+    }));
+  }
+
+  async getVendorsWithRelations(): Promise<VendorWithRelations[]> {
+    const allVendors = await db
+      .select()
+      .from(vendors)
+      .orderBy(vendors.businessName);
+
+    const vendorServiceMappings = await db
+      .select({
+        vendorId: vendorServicesVendors.vendorId,
+        service: vendorServices,
+      })
+      .from(vendorServicesVendors)
+      .innerJoin(vendorServices, eq(vendorServicesVendors.vendorServiceId, vendorServices.id));
+
+    const vendorContactMappings = await db
+      .select({
+        vendorId: vendorsContacts.vendorId,
+        contact: contacts,
+      })
+      .from(vendorsContacts)
+      .innerJoin(contacts, eq(vendorsContacts.contactId, contacts.id));
+
+    const servicesByVendorId = new Map<string, VendorService[]>();
+    for (const mapping of vendorServiceMappings) {
+      const existing = servicesByVendorId.get(mapping.vendorId) || [];
+      existing.push(mapping.service);
+      servicesByVendorId.set(mapping.vendorId, existing);
+    }
+
+    const contactsByVendorId = new Map<string, Contact[]>();
+    for (const mapping of vendorContactMappings) {
+      const existing = contactsByVendorId.get(mapping.vendorId) || [];
+      existing.push(mapping.contact);
+      contactsByVendorId.set(mapping.vendorId, existing);
+    }
+
+    return allVendors.map((vendor) => ({
+      ...vendor,
+      services: servicesByVendorId.get(vendor.id) || [],
+      contacts: contactsByVendorId.get(vendor.id) || [],
     }));
   }
 
