@@ -113,6 +113,15 @@ Feature Comments table:
 - body text field for comment content
 - Timestamps for audit
 
+Contacts table:
+- firstName and lastName (required varchar fields)
+- phoneNumbers and emailAddresses (text arrays for multiple values)
+- jobTitle for professional role
+- dateOfBirth (timestamp)
+- instagramUsername and linkedinUsername for social profiles
+- homeAddress (text field)
+- Timestamps for audit
+
 **Roadmap Frontend Pages**
 - /roadmap - Feature list with cards, status/category filters, voting, and new feature dialog
 - /roadmap/:id - Feature detail view with comments, admin status controls, voting

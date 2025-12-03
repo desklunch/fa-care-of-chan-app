@@ -17,15 +17,18 @@ import AdminLogs from "@/pages/admin-logs";
 import Roadmap from "@/pages/roadmap";
 import FeatureDetail from "@/pages/feature-detail";
 import AdminCategories from "@/pages/admin-categories";
+import Contacts from "@/pages/contacts";
+import ContactDetail from "@/pages/contact-detail";
 import NotFound from "@/pages/not-found";
 import {
   Users,
   UserPlus,
   SquareTerminal,
-  Lightbulb,
+  DraftingCompass,
   Tags,
-  Book,
+  BookOpenCheck,
   Bug,
+  Contact,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -53,6 +56,11 @@ function useLayoutConfig() {
             href: "/team",
             icon: Users,
           },
+          {
+            name: "Contacts",
+            href: "/contacts",
+            icon: Contact,
+          },
         ],
       },
       {
@@ -62,13 +70,13 @@ function useLayoutConfig() {
           {
             name: "Guide",
             href: "/help",
-            icon: Book,
+            icon: BookOpenCheck,
             active: false,
           },
           {
-            name: "Features",
+            name: "Requests",
             href: "/roadmap",
-            icon: Lightbulb,
+            icon: DraftingCompass,
           },
           {
             name: "Issues",
@@ -124,6 +132,8 @@ function AuthenticatedRoutes() {
         <Route path="/profile/edit" component={ProfileEdit} />
         <Route path="/roadmap" component={Roadmap} />
         <Route path="/roadmap/:id" component={FeatureDetail} />
+        <Route path="/contacts" component={Contacts} />
+        <Route path="/contacts/:id" component={ContactDetail} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/categories" component={AdminCategories} />
         <Route path="/admin/logs" component={AdminLogs} />

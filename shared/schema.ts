@@ -180,6 +180,28 @@ export const featureComments = pgTable(
   ],
 );
 
+// Contacts directory
+export const contacts = pgTable(
+  "contacts",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    firstName: varchar("first_name", { length: 100 }).notNull(),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
+    phoneNumbers: text("phone_numbers").array(),
+    emailAddresses: text("email_addresses").array(),
+    jobTitle: varchar("job_title", { length: 150 }),
+    dateOfBirth: timestamp("date_of_birth"),
+    instagramUsername: varchar("instagram_username", { length: 100 }),
+    linkedinUsername: varchar("linkedin_username", { length: 100 }),
+    homeAddress: text("home_address"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_contacts_name").on(table.firstName, table.lastName),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -264,6 +286,8 @@ export type FeatureVote = typeof featureVotes.$inferSelect;
 export type InsertFeatureVote = typeof featureVotes.$inferInsert;
 export type FeatureComment = typeof featureComments.$inferSelect;
 export type InsertFeatureComment = typeof featureComments.$inferInsert;
+export type Contact = typeof contacts.$inferSelect;
+export type InsertContact = typeof contacts.$inferInsert;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';

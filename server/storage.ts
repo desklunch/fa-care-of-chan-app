@@ -6,6 +6,7 @@ import {
   productFeatures,
   featureVotes,
   featureComments,
+  contacts,
   type User,
   type UpsertUser,
   type Invite,
@@ -24,6 +25,7 @@ import {
   type ProductFeatureWithRelations,
   type FeatureCommentWithUser,
   type FeatureStatus,
+  type Contact,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -103,6 +105,10 @@ export interface IStorage {
   getComments(featureId: string): Promise<FeatureCommentWithUser[]>;
   createComment(featureId: string, userId: string, body: string): Promise<FeatureComment>;
   deleteComment(id: string): Promise<void>;
+  
+  // Contact operations
+  getContacts(): Promise<Contact[]>;
+  getContactById(id: string): Promise<Contact | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -696,6 +702,22 @@ export class DatabaseStorage implements IStorage {
 
   async deleteComment(id: string): Promise<void> {
     await db.delete(featureComments).where(eq(featureComments.id, id));
+  }
+
+  // Contact operations
+  async getContacts(): Promise<Contact[]> {
+    return db
+      .select()
+      .from(contacts)
+      .orderBy(contacts.lastName, contacts.firstName);
+  }
+
+  async getContactById(id: string): Promise<Contact | undefined> {
+    const [contact] = await db
+      .select()
+      .from(contacts)
+      .where(eq(contacts.id, id));
+    return contact;
   }
 }
 

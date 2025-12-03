@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, ThumbsUp, Filter, Lightbulb } from "lucide-react";
+import { CircleFadingPlus, ThumbsUp, Filter, Lightbulb } from "lucide-react";
 import { Link } from "wouter";
 import type { ProductFeatureWithRelations, FeatureCategory, FeatureStatus, FeatureType } from "@shared/schema";
 import { insertProductFeatureSchema, featureTypes } from "@shared/schema";
@@ -66,30 +66,43 @@ function FeatureCard({
     .join(" ") || "Unknown";
 
   return (
-    <Card className="hover-elevate" data-testid={`card-feature-${feature.id}`}>
+    <Card className="py-3 space-y-3 hover-elevate" data-testid={`card-feature-${feature.id}`}>
       <Link href={`/roadmap/${feature.id}`}>
-        <CardHeader className="pb-3 cursor-pointer">
+        <CardHeader className="px-3 py-0 cursor-pointer">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg line-clamp-2" data-testid={`text-feature-title-${feature.id}`}>
-                {feature.title}
-              </CardTitle>
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                {feature.featureType && (
-                  <Badge 
-                    className={featureTypeColors[feature.featureType as FeatureType]}
-                    data-testid={`badge-type-${feature.id}`}
-                  >
-                    {featureTypeLabels[feature.featureType as FeatureType]}
-                  </Badge>
-                )}
+              <div className="flex justify-between mb-2">
+
+
                 <Badge 
                   className={statusColors[feature.status as FeatureStatus]}
                   data-testid={`badge-status-${feature.id}`}
                 >
                   {statusLabels[feature.status as FeatureStatus]}
                 </Badge>
-                <Badge 
+                <Button
+                  variant={feature.hasVoted ? "default" : "ghost"}
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onVote(feature.id);
+                  }}
+                  disabled={isVoting}
+                  className="gap-1"
+                  data-testid={`button-vote-${feature.id}`}
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                  <span data-testid={`text-vote-count-${feature.id}`}>{feature.voteCount}</span>
+                </Button>
+              </div>
+
+              <CardTitle className="text-lg line-clamp-2" data-testid={`text-feature-title-${feature.id}`}>
+                {feature.title}
+              </CardTitle>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+
+                {/* <Badge 
                   variant="outline"
                   style={{ 
                     borderColor: feature.category.color || undefined,
@@ -98,43 +111,24 @@ function FeatureCard({
                   data-testid={`badge-category-${feature.id}`}
                 >
                   {feature.category.name}
-                </Badge>
+                </Badge> */}
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pb-3 cursor-pointer">
+        <CardContent className="px-3 py-0 cursor-pointer">
           <CardDescription className="line-clamp-3" data-testid={`text-feature-description-${feature.id}`}>
             {feature.description}
           </CardDescription>
         </CardContent>
       </Link>
-      <CardFooter className="flex items-center justify-between gap-2 pt-0">
+      <CardFooter className="flex items-center justify-between gap-2 px-3 py-0">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={feature.createdBy.profileImageUrl || undefined} />
-            <AvatarFallback className="text-xs">
-              {createdByName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+
           <span className="truncate max-w-[100px]">{createdByName}</span>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant={feature.hasVoted ? "default" : "outline"}
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onVote(feature.id);
-            }}
-            disabled={isVoting}
-            className="gap-1"
-            data-testid={`button-vote-${feature.id}`}
-          >
-            <ThumbsUp className="h-4 w-4" />
-            <span data-testid={`text-vote-count-${feature.id}`}>{feature.voteCount}</span>
-          </Button>
+
         </div>
       </CardFooter>
     </Card>
@@ -189,8 +183,8 @@ function CreateFeatureDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button data-testid="button-new-feature">
-          <Plus className="h-4 w-4 mr-2" />
-          New Feature Request
+          <CircleFadingPlus className="h-4 w-4 mr-2" />
+          New Feature
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -395,87 +389,101 @@ export default function Roadmap() {
 
   return (
     <PageLayout breadcrumbs={[{ label: "Roadmap" }]}>
-      <div className="p-4 md:p-6 space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Product Roadmap</h1>
-          <p className="text-sm text-muted-foreground">
-            Vote and comment on feature requests to shape the future of our application
-          </p>
-        </div>
+      <div className="overflow-hidden flex flex-col h-full">
+        
+        <div className="border-b p-4 ">
+        
+          <div className="flex justify-between">
+            <h1 className="text-2xl font-semibold tracking-tight">New Features</h1>
+            <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]" data-testid="select-status-filter">
-                  <SelectValue placeholder="Status" />
+          </div>
+  
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[150px]" data-testid="select-status-filter">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {Object.entries(statusLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[150px]" data-testid="select-category-filter">
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {Object.entries(statusLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[150px]" data-testid="select-category-filter">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
-          <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
+          
         </div>
 
-        {filteredFeatures.length === 0 ? (
-          <Card className="p-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <Lightbulb className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No feature requests yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Be the first to submit an idea for improving the application!
-              </p>
-              <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-8">
-            {categoriesWithFeatures.map((category) => (
-              <div key={category.id} className="space-y-4" data-testid={`category-section-${category.id}`}>
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: category.color || '#6b7280' }}
-                  />
-                  <h2 className="text-lg font-semibold">{category.name}</h2>
-                  <Badge variant="secondary" className="ml-2">
-                    {featuresByCategory[category.id].length}
-                  </Badge>
-                </div>
-                {category.description && (
-                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                )}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {featuresByCategory[category.id].map((feature) => (
-                    <FeatureCard 
-                      key={feature.id} 
-                      feature={feature} 
-                      onVote={(id) => voteMutation.mutate(id)}
-                      isVoting={voteMutation.isPending}
-                    />
-                  ))}
-                </div>
+
+        <div className="overflow-y-scroll">
+          {filteredFeatures.length === 0 ? (
+            <Card className="p-12">
+              <div className="flex flex-col items-center justify-center text-center">
+                <Lightbulb className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No feature requests yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Be the first to submit an idea for improving the application!
+                </p>
+                <CreateFeatureDialog categories={categories} onSuccess={() => {}} />
               </div>
-            ))}
-          </div>
-        )}
+            </Card>
+          ) : (
+            <div className="space-y-8 p-6">
+              {categoriesWithFeatures.map((category) => (
+                <div key={category.id} className="space-y-4 " data-testid={`category-section-${category.id}`}>
+                  <div>
+                    <div className="flex items-center justify-between ">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: category.color || '#6b7280' }}
+                        />
+                        <h2 className="text-lg font-semibold">{category.name}</h2>
+                      </div>
+
+                      <Badge variant="outline" className="ml-2">
+                        {featuresByCategory[category.id].length}
+                      </Badge>
+
+                    </div>
+                    {category.description && (
+                      <p className="text-sm text-muted-foreground">{category.description}</p>
+                    )}
+                  </div>
+                 
+
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {featuresByCategory[category.id].map((feature) => (
+                      <FeatureCard 
+                        key={feature.id} 
+                        feature={feature} 
+                        onVote={(id) => voteMutation.mutate(id)}
+                        isVoting={voteMutation.isPending}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </PageLayout>
   );
