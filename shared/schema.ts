@@ -260,6 +260,21 @@ export const vendorServices = pgTable(
   ],
 );
 
+// Join table for vendors and vendor services (many-to-many)
+export const vendorServicesVendors = pgTable(
+  "vendor_services_vendors",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    vendorId: varchar("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+    vendorServiceId: varchar("vendor_service_id").notNull().references(() => vendorServices.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_vendor_services_vendors_vendor_id").on(table.vendorId),
+    index("idx_vendor_services_vendors_service_id").on(table.vendorServiceId),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -350,6 +365,13 @@ export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
 export type VendorService = typeof vendorServices.$inferSelect;
 export type InsertVendorService = typeof vendorServices.$inferInsert;
+export type VendorServiceVendor = typeof vendorServicesVendors.$inferSelect;
+export type InsertVendorServiceVendor = typeof vendorServicesVendors.$inferInsert;
+
+// Vendor with associated services
+export type VendorWithServices = Vendor & {
+  services: VendorService[];
+};
 
 // Keep old type aliases for backward compatibility
 export type ProductFeature = AppFeature;
