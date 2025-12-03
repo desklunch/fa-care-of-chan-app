@@ -2,13 +2,13 @@ import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
-import type { VendorWithServices, VendorService } from "@shared/schema";
+import type { VendorWithRelations, VendorService, Contact } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink } from "lucide-react";
+import { Star, ExternalLink, User } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "email", "phone", "website", "isPreferred"];
+const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "email", "phone", "website", "isPreferred"];
 
-const vendorColumns: ColumnConfig<VendorWithServices>[] = [
+const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
   {
     id: "id",
     headerName: "ID",
@@ -28,7 +28,7 @@ const vendorColumns: ColumnConfig<VendorWithServices>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 200,
-      cellRenderer: (params: { data: VendorWithServices }) => {
+      cellRenderer: (params: { data: VendorWithRelations }) => {
         const vendor = params.data;
         if (!vendor) return null;
         return (
@@ -67,6 +67,39 @@ const vendorColumns: ColumnConfig<VendorWithServices>[] = [
             {services.length > 3 && (
               <Badge variant="outline" className="text-xs shrink-0">
                 +{services.length - 3}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "contacts",
+    headerName: "Contacts",
+    field: "contacts",
+    category: "Contacts",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { value: Contact[] | undefined }) => {
+        const contacts = params.value;
+        if (!contacts || contacts.length === 0) return null;
+        return (
+          <div className="flex items-center gap-1 h-full overflow-hidden">
+            {contacts.slice(0, 2).map((contact) => (
+              <Badge 
+                key={contact.id} 
+                variant="outline" 
+                className="text-xs shrink-0 flex items-center gap-1"
+              >
+                <User className="w-3 h-3" />
+                {contact.firstName} {contact.lastName}
+              </Badge>
+            ))}
+            {contacts.length > 2 && (
+              <Badge variant="outline" className="text-xs shrink-0">
+                +{contacts.length - 2}
               </Badge>
             )}
           </div>
