@@ -85,6 +85,7 @@ export interface IStorage {
   getCategoryById(id: string): Promise<FeatureCategory | undefined>;
   createCategory(data: InsertFeatureCategory): Promise<FeatureCategory>;
   updateCategory(id: string, data: Partial<InsertFeatureCategory>): Promise<FeatureCategory | undefined>;
+  updateCategoryOrder(orderedIds: string[]): Promise<void>;
   
   // Product feature operations
   getFeatures(options?: {
@@ -356,13 +357,13 @@ export class DatabaseStorage implements IStorage {
   // Feature category operations
   async getCategories(includeInactive: boolean = false): Promise<FeatureCategory[]> {
     if (includeInactive) {
-      return db.select().from(featureCategories).orderBy(featureCategories.name);
+      return db.select().from(featureCategories).orderBy(featureCategories.sortOrder, featureCategories.name);
     }
     return db
       .select()
       .from(featureCategories)
       .where(eq(featureCategories.isActive, true))
-      .orderBy(featureCategories.name);
+      .orderBy(featureCategories.sortOrder, featureCategories.name);
   }
 
   async getCategoryById(id: string): Promise<FeatureCategory | undefined> {
@@ -391,6 +392,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(featureCategories.id, id))
       .returning();
     return category;
+  }
+
+  async updateCategoryOrder(orderedIds: string[]): Promise<void> {
+    // Update each category's sortOrder based on its position in the array
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        db
+          .update(featureCategories)
+          .set({ sortOrder: index, updatedAt: new Date() })
+          .where(eq(featureCategories.id, id))
+      )
+    );
   }
 
   // Product feature operations

@@ -84,6 +84,7 @@ export const featureCategories = pgTable("feature_categories", {
   name: varchar("name", { length: 100 }).notNull().unique(),
   description: text("description"),
   color: varchar("color", { length: 7 }), // hex color for badges
+  sortOrder: integer("sort_order").default(0).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

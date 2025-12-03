@@ -455,6 +455,37 @@ export async function registerRoutes(
     }
   });
 
+  // Update category order (for drag-and-drop reordering)
+  app.put("/api/admin/categories/order", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) {
+        return res.status(400).json({ message: "orderedIds must be an array" });
+      }
+
+      await storage.updateCategoryOrder(orderedIds);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: "order",
+        metadata: { orderedIds },
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating category order:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: "order",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update category order" });
+    }
+  });
+
   // Product Features
   app.get("/api/features", isAuthenticated, async (req: any, res) => {
     try {
