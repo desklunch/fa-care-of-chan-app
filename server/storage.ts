@@ -128,6 +128,7 @@ export interface IStorage {
   getVendorsWithServices(): Promise<VendorWithServices[]>;
   getVendorsWithRelations(): Promise<VendorWithRelations[]>;
   getVendorById(id: string): Promise<Vendor | undefined>;
+  getVendorByIdWithRelations(id: string): Promise<VendorWithRelations | undefined>;
   
   // Vendor service operations
   getVendorServices(): Promise<VendorService[]>;
@@ -870,6 +871,37 @@ export class DatabaseStorage implements IStorage {
       .from(vendors)
       .where(eq(vendors.id, id));
     return vendor;
+  }
+
+  async getVendorByIdWithRelations(id: string): Promise<VendorWithRelations | undefined> {
+    const [vendor] = await db
+      .select()
+      .from(vendors)
+      .where(eq(vendors.id, id));
+    
+    if (!vendor) return undefined;
+
+    const vendorServiceMappings = await db
+      .select({
+        service: vendorServices,
+      })
+      .from(vendorServicesVendors)
+      .innerJoin(vendorServices, eq(vendorServicesVendors.vendorServiceId, vendorServices.id))
+      .where(eq(vendorServicesVendors.vendorId, id));
+
+    const vendorContactMappings = await db
+      .select({
+        contact: contacts,
+      })
+      .from(vendorsContacts)
+      .innerJoin(contacts, eq(vendorsContacts.contactId, contacts.id))
+      .where(eq(vendorsContacts.vendorId, id));
+
+    return {
+      ...vendor,
+      services: vendorServiceMappings.map((m) => m.service),
+      contacts: vendorContactMappings.map((m) => m.contact),
+    };
   }
 
   // Vendor service operations

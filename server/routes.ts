@@ -799,7 +799,7 @@ export async function registerRoutes(
 
   app.get("/api/vendors/:id", isAuthenticated, async (req, res) => {
     try {
-      const vendor = await storage.getVendorById(req.params.id);
+      const vendor = await storage.getVendorByIdWithRelations(req.params.id);
       if (!vendor) {
         return res.status(404).json({ message: "Vendor not found" });
       }

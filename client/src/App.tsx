@@ -21,6 +21,7 @@ import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
 import Vendors from "@/pages/vendors";
+import VendorDetail from "@/pages/vendor-detail";
 import AdminVendorServices from "@/pages/admin-vendor-services";
 import NotFound from "@/pages/not-found";
 import {
@@ -153,6 +154,7 @@ function AuthenticatedRoutes() {
         <Route path="/contacts" component={Contacts} />
         <Route path="/contacts/:id" component={ContactDetail} />
         <Route path="/vendors" component={Vendors} />
+        <Route path="/vendors/:id" component={VendorDetail} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
         <Route path="/admin/vendors/services" component={AdminVendorServices} />
