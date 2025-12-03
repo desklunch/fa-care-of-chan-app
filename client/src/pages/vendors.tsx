@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
@@ -91,14 +91,20 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
         return (
           <div className="flex items-center gap-1 h-full overflow-hidden">
             {contacts.slice(0, 2).map((contact) => (
-              <Badge 
+              <Link 
                 key={contact.id} 
-                variant="outline" 
-                className="text-xs shrink-0 flex items-center gap-1"
+                href={`/contacts/${contact.id}`}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                <User className="w-3 h-3" />
-                {contact.firstName} {contact.lastName}
-              </Badge>
+                <Badge 
+                  variant="outline" 
+                  className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
+                  data-testid={`badge-contact-${contact.id}`}
+                >
+                  <User className="w-3 h-3" />
+                  {contact.firstName} {contact.lastName}
+                </Badge>
+              </Link>
             ))}
             {contacts.length > 2 && (
               <Badge variant="outline" className="text-xs shrink-0">

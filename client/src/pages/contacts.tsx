@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
@@ -87,14 +87,20 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
         return (
           <div className="flex items-center gap-1 h-full overflow-hidden">
             {vendors.slice(0, 2).map((vendor) => (
-              <Badge 
+              <Link 
                 key={vendor.id} 
-                variant="outline" 
-                className="text-xs shrink-0 flex items-center gap-1"
+                href={`/vendors/${vendor.id}`}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                <Building2 className="w-3 h-3" />
-                {vendor.businessName}
-              </Badge>
+                <Badge 
+                  variant="outline" 
+                  className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
+                  data-testid={`badge-vendor-${vendor.id}`}
+                >
+                  <Building2 className="w-3 h-3" />
+                  {vendor.businessName}
+                </Badge>
+              </Link>
             ))}
             {vendors.length > 2 && (
               <Badge variant="outline" className="text-xs shrink-0">
