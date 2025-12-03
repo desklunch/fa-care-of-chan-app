@@ -101,8 +101,8 @@ function CommentCard({
   );
 }
 
-export default function FeatureDetail() {
-  const [, params] = useRoute<{ id: string }>("/roadmap/:id");
+export default function AppFeatureDetail() {
+  const [, params] = useRoute<{ id: string }>("/app/features/:id");
   const featureId = params?.id;
   const { user } = useAuth();
   const { toast } = useToast();
@@ -208,7 +208,7 @@ export default function FeatureDetail() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Roadmap", href: "/roadmap" }, { label: "Loading..." }]}>
+      <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: "Loading..." }]}>
         <div className="p-6 space-y-6 max-w-4xl mx-auto">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-32 w-full" />
@@ -220,13 +220,13 @@ export default function FeatureDetail() {
 
   if (!feature) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Roadmap", href: "/roadmap" }, { label: "Not Found" }]}>
+      <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: "Not Found" }]}>
         <div className="p-6 text-center">
           <h2 className="text-xl font-semibold">Feature not found</h2>
-          <Link href="/roadmap">
+          <Link href="/app/features">
             <Button variant="outline" className="mt-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Roadmap
+              Back to App Features
             </Button>
           </Link>
         </div>
@@ -239,12 +239,12 @@ export default function FeatureDetail() {
     .join(" ") || "Unknown";
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Roadmap", href: "/roadmap" }, { label: feature.title }]}>
+    <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: feature.title }]}>
       <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
-        <Link href="/roadmap">
-          <Button variant="ghost" size="sm" data-testid="button-back-to-roadmap">
+        <Link href="/app/features">
+          <Button variant="ghost" size="sm" data-testid="button-back-to-features">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Roadmap
+            Back to App Features
           </Button>
         </Link>
 

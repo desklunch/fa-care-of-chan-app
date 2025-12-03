@@ -440,7 +440,7 @@ function EditCategoryDialog({
   );
 }
 
-export default function AdminCategories() {
+export default function AdminAppFeatures() {
   const [editingCategory, setEditingCategory] = useState<FeatureCategory | null>(null);
   const { toast } = useToast();
 
@@ -466,7 +466,6 @@ export default function AdminCategories() {
         description: error.message,
         variant: "destructive" 
       });
-      // Refetch to reset to server state
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
     },
   });
@@ -492,17 +491,15 @@ export default function AdminCategories() {
       const newOrder = arrayMove(categories, oldIndex, newIndex);
       const orderedIds = newOrder.map((cat) => cat.id);
       
-      // Optimistically update the cache
       queryClient.setQueryData(["/api/categories"], newOrder);
       
-      // Send the new order to the server
       reorderMutation.mutate(orderedIds);
     }
   }
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Categories" }]}>
+      <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "App Features" }]}>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="space-y-3 max-w-2xl">
@@ -516,12 +513,12 @@ export default function AdminCategories() {
   }
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Categories" }]}>
+    <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "App Features" }]}>
       <div className="p-4 md:p-6 space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">Feature Categories</h1>
           <p className="text-sm text-muted-foreground">
-            Drag and drop to reorder categories. This order will be used on the roadmap.
+            Drag and drop to reorder categories. This order will be used on the features page.
           </p>
         </div>
 

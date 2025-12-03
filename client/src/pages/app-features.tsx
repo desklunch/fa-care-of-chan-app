@@ -67,7 +67,7 @@ function FeatureCard({
 
   return (
     <Card className="py-3 space-y-3 hover-elevate" data-testid={`card-feature-${feature.id}`}>
-      <Link href={`/roadmap/${feature.id}`}>
+      <Link href={`/app/features/${feature.id}`}>
         <CardHeader className="px-3 py-0 cursor-pointer">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
@@ -303,7 +303,7 @@ function CreateFeatureDialog({
   );
 }
 
-export default function Roadmap() {
+export default function AppFeatures() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { toast } = useToast();
@@ -355,7 +355,6 @@ export default function Roadmap() {
     return true;
   });
 
-  // Group features by category
   const featuresByCategory = filteredFeatures.reduce((acc, feature) => {
     const categoryId = feature.categoryId;
     if (!acc[categoryId]) {
@@ -365,7 +364,6 @@ export default function Roadmap() {
     return acc;
   }, {} as Record<string, ProductFeatureWithRelations[]>);
 
-  // Get ordered list of categories that have features
   const categoriesWithFeatures = categories.filter(
     (cat) => featuresByCategory[cat.id] && featuresByCategory[cat.id].length > 0
   );
@@ -374,7 +372,7 @@ export default function Roadmap() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Roadmap" }]}>
+      <PageLayout breadcrumbs={[{ label: "App Features" }]}>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -388,7 +386,7 @@ export default function Roadmap() {
   }
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Roadmap" }]}>
+    <PageLayout breadcrumbs={[{ label: "App Features" }]}>
       <div className="overflow-hidden flex flex-col h-full">
         
         <div className="border-b p-4 ">
