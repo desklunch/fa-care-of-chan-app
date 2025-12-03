@@ -18,6 +18,7 @@ import {
   updateVendorSchema,
   featureStatuses,
   type FeatureStatus,
+  themeConfigSchema,
 } from "@shared/schema";
 import { sendInvitationEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -1210,6 +1211,51 @@ export async function registerRoutes(
         metadata: { error: String(error) },
       });
       res.status(500).json({ message: "Failed to delete vendor" });
+    }
+  });
+
+  // Theme settings routes
+  // GET /api/settings/theme - get current theme (public for app theming)
+  app.get("/api/settings/theme", async (req, res) => {
+    try {
+      const theme = await storage.getTheme();
+      res.json(theme);
+    } catch (error) {
+      console.error("Error fetching theme:", error);
+      res.status(500).json({ message: "Failed to fetch theme" });
+    }
+  });
+  
+  // PATCH /api/settings/theme - update theme (admin only)
+  app.patch("/api/settings/theme", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const result = themeConfigSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid theme data", errors: result.error.errors });
+      }
+      
+      const userId = req.user.claims.sub;
+      const setting = await storage.setTheme(result.data, userId);
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_setting",
+        entityId: "theme",
+        status: "success",
+        metadata: { key: "theme" },
+      });
+      
+      res.json(setting.value);
+    } catch (error) {
+      console.error("Error updating theme:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_setting",
+        entityId: "theme",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update theme" });
     }
   });
 
