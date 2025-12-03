@@ -2,7 +2,6 @@ import { useLocation, Link } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { ContactWithVendors, Vendor } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
@@ -257,7 +256,14 @@ export default function Contacts() {
   const [, setLocation] = useLocation();
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Contacts" }]}>
+    <PageLayout
+      breadcrumbs={[{ label: "Contacts" }]}
+      actionButton={{
+        label: "New Contact",
+        href: "/contacts/new",
+        icon: Plus,
+      }}
+    >
       <DataGridPage
         queryKey="/api/contacts"
         columns={contactColumns}
@@ -275,14 +281,6 @@ export default function Contacts() {
         getRowId={(contact) => contact.id || ""}
         emptyMessage="No contacts found"
         emptyDescription="Your contacts directory is empty."
-        toolbarActions={
-          <Link href="/contacts/new">
-            <Button data-testid="button-new-contact">
-              <Plus className="h-4 w-4 mr-2" />
-              New Contact
-            </Button>
-          </Link>
-        }
       />
     </PageLayout>
   );
