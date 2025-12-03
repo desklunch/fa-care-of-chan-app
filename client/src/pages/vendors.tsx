@@ -17,6 +17,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     colDef: {
       flex: 1,
       width: 120,
+      minWidth: 100,
     },
   },
   {
@@ -129,6 +130,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     colDef: {
       flex: 1,
       width: 110,
+      minWidth: 100,
     },
   },
   {
@@ -149,6 +151,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     colDef: {
       flex: 1,
       width: 100,
+      minWidth: 100,
       cellRenderer: (params: { value: boolean | null }) => {
         if (!params.value) return null;
         return (
@@ -169,6 +172,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     colDef: {
       flex: 1,
       width: 100,
+      minWidth: 100,
       cellRenderer: (params: { value: boolean | null }) => {
         return (
           <div className="flex items-center h-full">
