@@ -378,9 +378,11 @@ export function MultiSelect({
   );
 
   const clearButton = isDifferentFromDefaults && (
-    <button
+    <Button
       type="button"
-      className="inline-flex h-8 items-center justify-center rounded-r-md rounded-l-none bg-primary px-2 text-primary-foreground hover:bg-primary/90 border border-l-0 border-primary"
+      variant="default"
+      size="sm"
+      className="rounded-l-none border-l-0 px-2"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -389,7 +391,7 @@ export function MultiSelect({
       data-testid={`button-clear-${testIdPrefix}`}
     >
       <X className="h-3 w-3 stroke-[3px]" />
-    </button>
+    </Button>
   );
 
   const contentProps = {

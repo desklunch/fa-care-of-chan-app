@@ -187,7 +187,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
                 placeholder={searchPlaceholder}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-9 h-10"
+                className="pl-9 h-9"
                 data-testid="input-search"
               />
             </div>
