@@ -15,6 +15,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     field: "id",
     category: "System",
     colDef: {
+      flex: 1,
       width: 120,
     },
   },
@@ -126,6 +127,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     field: "employeeCount",
     category: "Details",
     colDef: {
+      flex: 1,
       width: 110,
     },
   },
@@ -145,6 +147,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     field: "isPreferred",
     category: "Status",
     colDef: {
+      flex: 1,
       width: 100,
       cellRenderer: (params: { value: boolean | null }) => {
         if (!params.value) return null;
@@ -164,6 +167,7 @@ const vendorColumns: ColumnConfig<Vendor>[] = [
     field: "chargesSalesTax",
     category: "Financial",
     colDef: {
+      flex: 1,
       width: 100,
       cellRenderer: (params: { value: boolean | null }) => {
         return (
