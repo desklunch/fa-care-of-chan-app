@@ -12,6 +12,8 @@ import {
   insertFeatureCommentSchema,
   insertVendorServiceSchema,
   updateVendorServiceSchema,
+  insertContactSchema,
+  updateContactSchema,
   featureStatuses,
   type FeatureStatus,
 } from "@shared/schema";
@@ -783,6 +785,111 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching contact:", error);
       res.status(500).json({ message: "Failed to fetch contact" });
+    }
+  });
+
+  app.post("/api/contacts", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = insertContactSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const contact = await storage.createContact(result.data);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "contact",
+        entityId: contact.id,
+        status: "success",
+        metadata: { contact: `${result.data.firstName} ${result.data.lastName}` },
+      });
+
+      res.status(201).json(contact);
+    } catch (error) {
+      console.error("Error creating contact:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "contact",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to create contact" });
+    }
+  });
+
+  app.patch("/api/contacts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = updateContactSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const existingContact = await storage.getContactById(req.params.id);
+      if (!existingContact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+
+      const contact = await storage.updateContact(req.params.id, result.data);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "contact",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(existingContact, result.data),
+      });
+
+      res.json(contact);
+    } catch (error) {
+      console.error("Error updating contact:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "contact",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update contact" });
+    }
+  });
+
+  app.delete("/api/contacts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingContact = await storage.getContactById(req.params.id);
+      if (!existingContact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+
+      await storage.deleteContact(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "contact",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { 
+          deletedContact: `${existingContact.firstName} ${existingContact.lastName}` 
+        },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "contact",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to delete contact" });
     }
   });
 

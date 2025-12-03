@@ -30,6 +30,8 @@ import {
   type FeatureCommentWithUser,
   type FeatureStatus,
   type Contact,
+  type CreateContact,
+  type UpdateContact,
   type Vendor,
   type VendorService,
   type VendorWithServices,
@@ -122,6 +124,9 @@ export interface IStorage {
   getContacts(): Promise<Contact[]>;
   getContactsWithVendors(): Promise<ContactWithVendors[]>;
   getContactById(id: string): Promise<Contact | undefined>;
+  createContact(data: CreateContact): Promise<Contact>;
+  updateContact(id: string, data: UpdateContact): Promise<Contact | undefined>;
+  deleteContact(id: string): Promise<void>;
   
   // Vendor operations
   getVendors(): Promise<Vendor[]>;
@@ -785,6 +790,31 @@ export class DatabaseStorage implements IStorage {
       .from(contacts)
       .where(eq(contacts.id, id));
     return contact;
+  }
+
+  async createContact(data: CreateContact): Promise<Contact> {
+    const [contact] = await db
+      .insert(contacts)
+      .values(data)
+      .returning();
+    return contact;
+  }
+
+  async updateContact(id: string, data: UpdateContact): Promise<Contact | undefined> {
+    const [contact] = await db
+      .update(contacts)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(contacts.id, id))
+      .returning();
+    return contact;
+  }
+
+  async deleteContact(id: string): Promise<void> {
+    await db.delete(vendorsContacts).where(eq(vendorsContacts.contactId, id));
+    await db.delete(contacts).where(eq(contacts.id, id));
   }
 
   // Vendor operations

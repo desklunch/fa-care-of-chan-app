@@ -405,7 +405,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -542,3 +542,26 @@ export const updateVendorServiceSchema = createInsertSchema(vendorServices).pick
 
 export type CreateVendorService = z.infer<typeof insertVendorServiceSchema>;
 export type UpdateVendorService = z.infer<typeof updateVendorServiceSchema>;
+
+// Contact schemas
+export const insertContactSchema = createInsertSchema(contacts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  phoneNumbers: z.array(z.string()).optional().nullable(),
+  emailAddresses: z.array(z.string().email("Invalid email address")).optional().nullable(),
+  jobTitle: z.string().max(150).optional().nullable(),
+  dateOfBirth: z.coerce.date().optional().nullable(),
+  instagramUsername: z.string().max(100).optional().nullable(),
+  linkedinUsername: z.string().max(100).optional().nullable(),
+  homeAddress: z.string().optional().nullable(),
+  externalId: z.string().optional().nullable(),
+});
+
+export const updateContactSchema = insertContactSchema.partial();
+
+export type CreateContact = z.infer<typeof insertContactSchema>;
+export type UpdateContact = z.infer<typeof updateContactSchema>;

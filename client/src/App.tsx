@@ -20,6 +20,7 @@ import AppFeatureForm from "@/pages/app-feature-form";
 import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
+import ContactForm from "@/pages/contact-form";
 import Vendors from "@/pages/vendors";
 import VendorDetail from "@/pages/vendor-detail";
 import AdminVendorServices from "@/pages/admin-vendor-services";
@@ -152,6 +153,8 @@ function AuthenticatedRoutes() {
         <Route path="/app/features/:id/edit" component={AppFeatureForm} />
         <Route path="/app/features/:id" component={AppFeatureDetail} />
         <Route path="/contacts" component={Contacts} />
+        <Route path="/contacts/new" component={ContactForm} />
+        <Route path="/contacts/:id/edit" component={ContactForm} />
         <Route path="/contacts/:id" component={ContactDetail} />
         <Route path="/vendors" component={Vendors} />
         <Route path="/vendors/:id" component={VendorDetail} />
