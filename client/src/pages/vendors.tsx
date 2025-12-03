@@ -9,7 +9,7 @@ import type { VendorWithRelations, VendorService, Contact } from "@shared/schema
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Star, ExternalLink, User, MapPin, Briefcase } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "email", "phone", "website", "isPreferred"];
+const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "locations"];
 
 const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
   {
