@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LayoutProvider } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, UserPlus, Activity } from "lucide-react";
+import { Users, UserPlus, SquareTerminal, Lightbulb, Tags } from "lucide-react";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import Landing from "@/pages/landing";
@@ -16,6 +16,8 @@ import Profile from "@/pages/profile";
 import ProfileEdit from "@/pages/profile-edit";
 import AdminInvites from "@/pages/admin-invites";
 import AdminLogs from "@/pages/admin-logs";
+import Roadmap from "@/pages/roadmap";
+import AdminCategories from "@/pages/admin-categories";
 import NotFound from "@/pages/not-found";
 
 function useLayoutConfig() {
@@ -40,6 +42,11 @@ function useLayoutConfig() {
             href: "/team",
             icon: Users,
           },
+          {
+            name: "Roadmap",
+            href: "/roadmap",
+            icon: Lightbulb,
+          },
         ],
       },
       {
@@ -53,9 +60,15 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
+            name: "Categories",
+            href: "/admin/categories",
+            icon: Tags,
+            allowedRoles: ["admin"],
+          },
+          {
             name: "Logs",
             href: "/admin/logs",
-            icon: Activity,
+            icon: SquareTerminal,
             allowedRoles: ["admin"],
           },
         ],
@@ -80,7 +93,9 @@ function AuthenticatedRoutes() {
         <Route path="/team/:id" component={TeamProfile} />
         <Route path="/profile" component={Profile} />
         <Route path="/profile/edit" component={ProfileEdit} />
+        <Route path="/roadmap" component={Roadmap} />
         <Route path="/admin/invites" component={AdminInvites} />
+        <Route path="/admin/categories" component={AdminCategories} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />
       </Switch>

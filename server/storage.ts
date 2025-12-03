@@ -2,15 +2,31 @@ import {
   users,
   invites,
   auditLogs,
+  featureCategories,
+  productFeatures,
+  featureVotes,
+  featureComments,
   type User,
   type UpsertUser,
   type Invite,
   type InsertInvite,
+  type CreateInvite,
   type AuditLog,
   type InsertAuditLog,
+  type FeatureCategory,
+  type InsertFeatureCategory,
+  type ProductFeature,
+  type InsertProductFeature,
+  type CreateProductFeature,
+  type FeatureVote,
+  type FeatureComment,
+  type InsertFeatureComment,
+  type ProductFeatureWithRelations,
+  type FeatureCommentWithUser,
+  type FeatureStatus,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, gt, sql, asc, gte, lte } from "drizzle-orm";
+import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 export interface AuditLogFilters {
@@ -39,7 +55,7 @@ export interface IStorage {
   getRecentEmployees(limit?: number): Promise<User[]>;
   
   // Invite operations
-  createInvite(data: InsertInvite, createdById: string): Promise<Invite>;
+  createInvite(data: CreateInvite, createdById: string): Promise<Invite>;
   getInviteByToken(token: string): Promise<Invite | undefined>;
   getInviteById(id: string): Promise<Invite | undefined>;
   markInviteUsed(id: string): Promise<void>;
@@ -61,6 +77,32 @@ export interface IStorage {
     activeInvites: number;
     recentSignups: number;
   }>;
+
+  // Feature category operations
+  getCategories(includeInactive?: boolean): Promise<FeatureCategory[]>;
+  getCategoryById(id: string): Promise<FeatureCategory | undefined>;
+  createCategory(data: InsertFeatureCategory): Promise<FeatureCategory>;
+  updateCategory(id: string, data: Partial<InsertFeatureCategory>): Promise<FeatureCategory | undefined>;
+  
+  // Product feature operations
+  getFeatures(options?: {
+    status?: FeatureStatus[];
+    categoryId?: string;
+    userId?: string;
+  }): Promise<ProductFeatureWithRelations[]>;
+  getFeatureById(id: string, userId?: string): Promise<ProductFeatureWithRelations | undefined>;
+  createFeature(data: CreateProductFeature, createdById: string): Promise<ProductFeature>;
+  updateFeature(id: string, data: Partial<InsertProductFeature>): Promise<ProductFeature | undefined>;
+  deleteFeature(id: string): Promise<void>;
+  
+  // Feature vote operations
+  toggleVote(featureId: string, userId: string): Promise<{ voted: boolean; voteCount: number }>;
+  getUserVotes(userId: string): Promise<string[]>;
+  
+  // Feature comment operations
+  getComments(featureId: string): Promise<FeatureCommentWithUser[]>;
+  createComment(featureId: string, userId: string, body: string): Promise<FeatureComment>;
+  deleteComment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -125,7 +167,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invite operations
-  async createInvite(data: InsertInvite, createdById: string): Promise<Invite> {
+  async createInvite(data: CreateInvite, createdById: string): Promise<Invite> {
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
@@ -303,6 +345,353 @@ export class DatabaseStorage implements IStorage {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     };
+  }
+
+  // Feature category operations
+  async getCategories(includeInactive: boolean = false): Promise<FeatureCategory[]> {
+    if (includeInactive) {
+      return db.select().from(featureCategories).orderBy(featureCategories.name);
+    }
+    return db
+      .select()
+      .from(featureCategories)
+      .where(eq(featureCategories.isActive, true))
+      .orderBy(featureCategories.name);
+  }
+
+  async getCategoryById(id: string): Promise<FeatureCategory | undefined> {
+    const [category] = await db
+      .select()
+      .from(featureCategories)
+      .where(eq(featureCategories.id, id));
+    return category;
+  }
+
+  async createCategory(data: InsertFeatureCategory): Promise<FeatureCategory> {
+    const [category] = await db
+      .insert(featureCategories)
+      .values(data)
+      .returning();
+    return category;
+  }
+
+  async updateCategory(
+    id: string,
+    data: Partial<InsertFeatureCategory>
+  ): Promise<FeatureCategory | undefined> {
+    const [category] = await db
+      .update(featureCategories)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(featureCategories.id, id))
+      .returning();
+    return category;
+  }
+
+  // Product feature operations
+  async getFeatures(options?: {
+    status?: FeatureStatus[];
+    categoryId?: string;
+    userId?: string;
+  }): Promise<ProductFeatureWithRelations[]> {
+    const conditions: any[] = [];
+
+    if (options?.status && options.status.length > 0) {
+      conditions.push(inArray(productFeatures.status, options.status));
+    }
+    if (options?.categoryId) {
+      conditions.push(eq(productFeatures.categoryId, options.categoryId));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const features = await db
+      .select({
+        id: productFeatures.id,
+        title: productFeatures.title,
+        description: productFeatures.description,
+        categoryId: productFeatures.categoryId,
+        status: productFeatures.status,
+        priority: productFeatures.priority,
+        createdById: productFeatures.createdById,
+        ownerId: productFeatures.ownerId,
+        voteCount: productFeatures.voteCount,
+        estimatedDelivery: productFeatures.estimatedDelivery,
+        createdAt: productFeatures.createdAt,
+        updatedAt: productFeatures.updatedAt,
+        categoryName: featureCategories.name,
+        categoryColor: featureCategories.color,
+        categoryDescription: featureCategories.description,
+        categoryIsActive: featureCategories.isActive,
+        categoryCreatedAt: featureCategories.createdAt,
+        categoryUpdatedAt: featureCategories.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
+      })
+      .from(productFeatures)
+      .innerJoin(featureCategories, eq(productFeatures.categoryId, featureCategories.id))
+      .innerJoin(users, eq(productFeatures.createdById, users.id))
+      .where(whereClause)
+      .orderBy(desc(productFeatures.voteCount), desc(productFeatures.createdAt));
+
+    // Get user votes if userId provided
+    let userVotes: string[] = [];
+    if (options?.userId) {
+      userVotes = await this.getUserVotes(options.userId);
+    }
+
+    return features.map((f) => ({
+      id: f.id,
+      title: f.title,
+      description: f.description,
+      categoryId: f.categoryId,
+      status: f.status,
+      priority: f.priority,
+      createdById: f.createdById,
+      ownerId: f.ownerId,
+      voteCount: f.voteCount,
+      estimatedDelivery: f.estimatedDelivery,
+      createdAt: f.createdAt,
+      updatedAt: f.updatedAt,
+      category: {
+        id: f.categoryId,
+        name: f.categoryName,
+        description: f.categoryDescription,
+        color: f.categoryColor,
+        isActive: f.categoryIsActive,
+        createdAt: f.categoryCreatedAt,
+        updatedAt: f.categoryUpdatedAt,
+      },
+      createdBy: {
+        id: f.createdById,
+        firstName: f.createdByFirstName,
+        lastName: f.createdByLastName,
+        profileImageUrl: f.createdByProfileImage,
+      },
+      hasVoted: userVotes.includes(f.id),
+    }));
+  }
+
+  async getFeatureById(
+    id: string,
+    userId?: string
+  ): Promise<ProductFeatureWithRelations | undefined> {
+    const features = await db
+      .select({
+        id: productFeatures.id,
+        title: productFeatures.title,
+        description: productFeatures.description,
+        categoryId: productFeatures.categoryId,
+        status: productFeatures.status,
+        priority: productFeatures.priority,
+        createdById: productFeatures.createdById,
+        ownerId: productFeatures.ownerId,
+        voteCount: productFeatures.voteCount,
+        estimatedDelivery: productFeatures.estimatedDelivery,
+        createdAt: productFeatures.createdAt,
+        updatedAt: productFeatures.updatedAt,
+        categoryName: featureCategories.name,
+        categoryColor: featureCategories.color,
+        categoryDescription: featureCategories.description,
+        categoryIsActive: featureCategories.isActive,
+        categoryCreatedAt: featureCategories.createdAt,
+        categoryUpdatedAt: featureCategories.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
+      })
+      .from(productFeatures)
+      .innerJoin(featureCategories, eq(productFeatures.categoryId, featureCategories.id))
+      .innerJoin(users, eq(productFeatures.createdById, users.id))
+      .where(eq(productFeatures.id, id));
+
+    if (features.length === 0) return undefined;
+
+    const f = features[0];
+    let hasVoted = false;
+    if (userId) {
+      const [vote] = await db
+        .select()
+        .from(featureVotes)
+        .where(and(eq(featureVotes.featureId, id), eq(featureVotes.userId, userId)));
+      hasVoted = !!vote;
+    }
+
+    return {
+      id: f.id,
+      title: f.title,
+      description: f.description,
+      categoryId: f.categoryId,
+      status: f.status,
+      priority: f.priority,
+      createdById: f.createdById,
+      ownerId: f.ownerId,
+      voteCount: f.voteCount,
+      estimatedDelivery: f.estimatedDelivery,
+      createdAt: f.createdAt,
+      updatedAt: f.updatedAt,
+      category: {
+        id: f.categoryId,
+        name: f.categoryName,
+        description: f.categoryDescription,
+        color: f.categoryColor,
+        isActive: f.categoryIsActive,
+        createdAt: f.categoryCreatedAt,
+        updatedAt: f.categoryUpdatedAt,
+      },
+      createdBy: {
+        id: f.createdById,
+        firstName: f.createdByFirstName,
+        lastName: f.createdByLastName,
+        profileImageUrl: f.createdByProfileImage,
+      },
+      hasVoted,
+    };
+  }
+
+  async createFeature(
+    data: CreateProductFeature,
+    createdById: string
+  ): Promise<ProductFeature> {
+    const [feature] = await db
+      .insert(productFeatures)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return feature;
+  }
+
+  async updateFeature(
+    id: string,
+    data: Partial<InsertProductFeature>
+  ): Promise<ProductFeature | undefined> {
+    const [feature] = await db
+      .update(productFeatures)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(productFeatures.id, id))
+      .returning();
+    return feature;
+  }
+
+  async deleteFeature(id: string): Promise<void> {
+    await db.delete(productFeatures).where(eq(productFeatures.id, id));
+  }
+
+  // Feature vote operations
+  async toggleVote(
+    featureId: string,
+    userId: string
+  ): Promise<{ voted: boolean; voteCount: number }> {
+    // Check if vote exists
+    const [existingVote] = await db
+      .select()
+      .from(featureVotes)
+      .where(and(eq(featureVotes.featureId, featureId), eq(featureVotes.userId, userId)));
+
+    if (existingVote) {
+      // Remove vote
+      await db
+        .delete(featureVotes)
+        .where(eq(featureVotes.id, existingVote.id));
+      
+      // Decrement vote count
+      await db
+        .update(productFeatures)
+        .set({ voteCount: sql`${productFeatures.voteCount} - 1` })
+        .where(eq(productFeatures.id, featureId));
+      
+      const [feature] = await db
+        .select({ voteCount: productFeatures.voteCount })
+        .from(productFeatures)
+        .where(eq(productFeatures.id, featureId));
+      
+      return { voted: false, voteCount: feature?.voteCount || 0 };
+    } else {
+      // Add vote
+      await db.insert(featureVotes).values({
+        featureId,
+        userId,
+        value: 1,
+      });
+      
+      // Increment vote count
+      await db
+        .update(productFeatures)
+        .set({ voteCount: sql`${productFeatures.voteCount} + 1` })
+        .where(eq(productFeatures.id, featureId));
+      
+      const [feature] = await db
+        .select({ voteCount: productFeatures.voteCount })
+        .from(productFeatures)
+        .where(eq(productFeatures.id, featureId));
+      
+      return { voted: true, voteCount: feature?.voteCount || 0 };
+    }
+  }
+
+  async getUserVotes(userId: string): Promise<string[]> {
+    const votes = await db
+      .select({ featureId: featureVotes.featureId })
+      .from(featureVotes)
+      .where(eq(featureVotes.userId, userId));
+    return votes.map((v) => v.featureId);
+  }
+
+  // Feature comment operations
+  async getComments(featureId: string): Promise<FeatureCommentWithUser[]> {
+    const comments = await db
+      .select({
+        id: featureComments.id,
+        featureId: featureComments.featureId,
+        userId: featureComments.userId,
+        body: featureComments.body,
+        createdAt: featureComments.createdAt,
+        updatedAt: featureComments.updatedAt,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+        userProfileImage: users.profileImageUrl,
+      })
+      .from(featureComments)
+      .innerJoin(users, eq(featureComments.userId, users.id))
+      .where(eq(featureComments.featureId, featureId))
+      .orderBy(featureComments.createdAt);
+
+    return comments.map((c) => ({
+      id: c.id,
+      featureId: c.featureId,
+      userId: c.userId,
+      body: c.body,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      user: {
+        id: c.userId,
+        firstName: c.userFirstName,
+        lastName: c.userLastName,
+        profileImageUrl: c.userProfileImage,
+      },
+    }));
+  }
+
+  async createComment(
+    featureId: string,
+    userId: string,
+    body: string
+  ): Promise<FeatureComment> {
+    const [comment] = await db
+      .insert(featureComments)
+      .values({
+        featureId,
+        userId,
+        body,
+      })
+      .returning();
+    return comment;
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    await db.delete(featureComments).where(eq(featureComments.id, id));
   }
 }
 

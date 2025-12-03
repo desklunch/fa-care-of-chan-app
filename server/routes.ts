@@ -2,7 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
-import { insertInviteSchema, updateProfileSchema } from "@shared/schema";
+import { 
+  insertInviteSchema, 
+  updateProfileSchema,
+  insertFeatureCategorySchema,
+  updateFeatureCategorySchema,
+  insertProductFeatureSchema,
+  updateProductFeatureSchema,
+  insertFeatureCommentSchema,
+  featureStatuses,
+  type FeatureStatus,
+} from "@shared/schema";
 import { sendInvitationEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
 
@@ -354,6 +364,368 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching audit logs:", error);
       res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  // ====== PRODUCT PLANNING ROUTES ======
+
+  // Feature Categories (admin only for create/update)
+  app.get("/api/categories", isAuthenticated, async (req, res) => {
+    try {
+      const includeInactive = req.query.includeInactive === "true";
+      const categories = await storage.getCategories(includeInactive);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post("/api/admin/categories", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const result = insertFeatureCategorySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const category = await storage.createCategory(result.data);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature_category",
+        entityId: category.id,
+        changes: { after: result.data as Record<string, unknown> },
+      });
+
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature_category",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.patch("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const result = updateFeatureCategorySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const before = await storage.getCategoryById(req.params.id);
+      if (!before) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const category = await storage.updateCategory(req.params.id, result.data);
+
+      const changes = getChangedFields(
+        before as unknown as Record<string, unknown>,
+        category as unknown as Record<string, unknown>
+      );
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: req.params.id,
+        changes,
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // Product Features
+  app.get("/api/features", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const statusFilter = req.query.status
+        ? (req.query.status as string).split(",") as FeatureStatus[]
+        : undefined;
+      const categoryId = req.query.categoryId as string | undefined;
+
+      const features = await storage.getFeatures({
+        status: statusFilter,
+        categoryId,
+        userId,
+      });
+      res.json(features);
+    } catch (error) {
+      console.error("Error fetching features:", error);
+      res.status(500).json({ message: "Failed to fetch features" });
+    }
+  });
+
+  app.get("/api/features/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const feature = await storage.getFeatureById(req.params.id, userId);
+      if (!feature) {
+        return res.status(404).json({ message: "Feature not found" });
+      }
+      res.json(feature);
+    } catch (error) {
+      console.error("Error fetching feature:", error);
+      res.status(500).json({ message: "Failed to fetch feature" });
+    }
+  });
+
+  app.post("/api/features", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = insertProductFeatureSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      // Verify category exists
+      const category = await storage.getCategoryById(result.data.categoryId);
+      if (!category || !category.isActive) {
+        return res.status(400).json({ message: "Invalid category" });
+      }
+
+      const userId = req.user.claims.sub;
+      const feature = await storage.createFeature(result.data, userId);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature",
+        entityId: feature.id,
+        changes: { after: result.data as Record<string, unknown> },
+      });
+
+      res.status(201).json(feature);
+    } catch (error) {
+      console.error("Error creating feature:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to create feature" });
+    }
+  });
+
+  app.patch("/api/features/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const feature = await storage.getFeatureById(req.params.id);
+
+      if (!feature) {
+        return res.status(404).json({ message: "Feature not found" });
+      }
+
+      // Non-admin users can only edit their own features and only title/description
+      const isOwner = feature.createdById === userId;
+      const isAdminUser = user?.role === "admin";
+
+      if (!isOwner && !isAdminUser) {
+        return res.status(403).json({ message: "Not authorized to edit this feature" });
+      }
+
+      const result = updateProductFeatureSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      // Non-admin can only update title, description, categoryId
+      let updateData = result.data;
+      if (!isAdminUser) {
+        updateData = {
+          title: result.data.title,
+          description: result.data.description,
+          categoryId: result.data.categoryId,
+        };
+      }
+
+      const updated = await storage.updateFeature(req.params.id, updateData);
+
+      const changes = getChangedFields(
+        feature as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>
+      );
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature",
+        entityId: req.params.id,
+        changes,
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating feature:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update feature" });
+    }
+  });
+
+  app.delete("/api/features/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const feature = await storage.getFeatureById(req.params.id);
+      if (!feature) {
+        return res.status(404).json({ message: "Feature not found" });
+      }
+
+      await storage.deleteFeature(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "feature",
+        entityId: req.params.id,
+        changes: { before: { title: feature.title } },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting feature:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "feature",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to delete feature" });
+    }
+  });
+
+  // Feature Voting
+  app.post("/api/features/:id/vote", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const featureId = req.params.id;
+
+      const feature = await storage.getFeatureById(featureId);
+      if (!feature) {
+        return res.status(404).json({ message: "Feature not found" });
+      }
+
+      const result = await storage.toggleVote(featureId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling vote:", error);
+      res.status(500).json({ message: "Failed to toggle vote" });
+    }
+  });
+
+  // Feature Comments
+  app.get("/api/features/:id/comments", isAuthenticated, async (req, res) => {
+    try {
+      const comments = await storage.getComments(req.params.id);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/features/:id/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = insertFeatureCommentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const feature = await storage.getFeatureById(req.params.id);
+      if (!feature) {
+        return res.status(404).json({ message: "Feature not found" });
+      }
+
+      const userId = req.user.claims.sub;
+      const comment = await storage.createComment(req.params.id, userId, result.data.body);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature_comment",
+        entityId: comment.id,
+        metadata: { featureId: req.params.id },
+      });
+
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature_comment",
+        status: "failure",
+        metadata: { error: String(error), featureId: req.params.id },
+      });
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/features/:featureId/comments/:commentId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const comments = await storage.getComments(req.params.featureId);
+      const comment = comments.find((c) => c.id === req.params.commentId);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      // Only comment author or admin can delete
+      if (comment.userId !== userId && user?.role !== "admin") {
+        return res.status(403).json({ message: "Not authorized to delete this comment" });
+      }
+
+      await storage.deleteComment(req.params.commentId);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "feature_comment",
+        entityId: req.params.commentId,
+        metadata: { featureId: req.params.featureId },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "feature_comment",
+        entityId: req.params.commentId,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to delete comment" });
     }
   });
 
