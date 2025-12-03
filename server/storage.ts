@@ -32,6 +32,8 @@ import {
   type Vendor,
   type VendorService,
   type VendorWithServices,
+  type CreateVendorService,
+  type UpdateVendorService,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -809,6 +811,27 @@ export class DatabaseStorage implements IStorage {
       .from(vendorServices)
       .where(eq(vendorServices.id, id));
     return service;
+  }
+
+  async createVendorService(data: CreateVendorService): Promise<VendorService> {
+    const [service] = await db
+      .insert(vendorServices)
+      .values(data)
+      .returning();
+    return service;
+  }
+
+  async updateVendorService(id: string, data: UpdateVendorService): Promise<VendorService | undefined> {
+    const [service] = await db
+      .update(vendorServices)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(vendorServices.id, id))
+      .returning();
+    return service;
+  }
+
+  async deleteVendorService(id: string): Promise<void> {
+    await db.delete(vendorServices).where(eq(vendorServices.id, id));
   }
 }
 

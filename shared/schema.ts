@@ -490,3 +490,25 @@ export type ProductFeatureWithRelations = AppFeatureWithRelations;
 export type FeatureCommentWithUser = FeatureComment & {
   user: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;
 };
+
+// Vendor service schemas
+export const insertVendorServiceSchema = createInsertSchema(vendorServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(2, "Name must be at least 2 characters").max(255),
+  description: z.string().optional().nullable(),
+  icon: z.string().optional().nullable(),
+  externalId: z.string().optional().nullable(),
+});
+
+export const updateVendorServiceSchema = createInsertSchema(vendorServices).pick({
+  name: true,
+  description: true,
+  icon: true,
+  externalId: true,
+}).partial();
+
+export type CreateVendorService = z.infer<typeof insertVendorServiceSchema>;
+export type UpdateVendorService = z.infer<typeof updateVendorServiceSchema>;
