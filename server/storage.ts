@@ -8,6 +8,7 @@ import {
   appFeatureComments,
   contacts,
   vendors,
+  vendorServices,
   type User,
   type UpsertUser,
   type Invite,
@@ -28,6 +29,7 @@ import {
   type FeatureStatus,
   type Contact,
   type Vendor,
+  type VendorService,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -116,6 +118,10 @@ export interface IStorage {
   // Vendor operations
   getVendors(): Promise<Vendor[]>;
   getVendorById(id: string): Promise<Vendor | undefined>;
+  
+  // Vendor service operations
+  getVendorServices(): Promise<VendorService[]>;
+  getVendorServiceById(id: string): Promise<VendorService | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -757,6 +763,22 @@ export class DatabaseStorage implements IStorage {
       .from(vendors)
       .where(eq(vendors.id, id));
     return vendor;
+  }
+
+  // Vendor service operations
+  async getVendorServices(): Promise<VendorService[]> {
+    return db
+      .select()
+      .from(vendorServices)
+      .orderBy(vendorServices.name);
+  }
+
+  async getVendorServiceById(id: string): Promise<VendorService | undefined> {
+    const [service] = await db
+      .select()
+      .from(vendorServices)
+      .where(eq(vendorServices.id, id));
+    return service;
   }
 }
 
