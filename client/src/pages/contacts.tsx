@@ -80,9 +80,9 @@ const contactColumns: ColumnConfig<Contact>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 200,
-      cellRenderer: (params: { value: string[] | null }) => {
-        const emails = params.value;
-        if (!emails || emails.length === 0) return null;
+      cellRenderer: (params: { data: Contact | undefined }) => {
+        const emails = params.data?.emailAddresses;
+        if (!emails || !Array.isArray(emails) || emails.length === 0) return null;
         return (
           <div className="flex items-center gap-1 h-full overflow-hidden">
             <span className="truncate">{emails[0]}</span>
@@ -94,9 +94,6 @@ const contactColumns: ColumnConfig<Contact>[] = [
           </div>
         );
       },
-      valueGetter: (params: { data: Contact | undefined }) => {
-        return params.data?.emailAddresses?.join(", ") || "";
-      },
     },
   },
   {
@@ -107,9 +104,9 @@ const contactColumns: ColumnConfig<Contact>[] = [
     colDef: {
       flex: 1.2,
       minWidth: 150,
-      cellRenderer: (params: { value: string[] | null }) => {
-        const phones = params.value;
-        if (!phones || phones.length === 0) return null;
+      cellRenderer: (params: { data: Contact | undefined }) => {
+        const phones = params.data?.phoneNumbers;
+        if (!phones || !Array.isArray(phones) || phones.length === 0) return null;
         return (
           <div className="flex items-center gap-1 h-full overflow-hidden">
             <span className="truncate">{phones[0]}</span>
@@ -120,9 +117,6 @@ const contactColumns: ColumnConfig<Contact>[] = [
             )}
           </div>
         );
-      },
-      valueGetter: (params: { data: Contact | undefined }) => {
-        return params.data?.phoneNumbers?.join(", ") || "";
       },
     },
   },
