@@ -370,10 +370,24 @@ export function MultiSelect({
       variant={buttonVariant}
       size="sm"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName} ${isDifferentFromDefaults ? "pr-10" : ""}`}
+      className={`${appliedButtonClassName} gap-1`}
     >
       {triggerIcon}
-      {displayLabel}
+      <span>{displayLabel}</span>
+      {isDifferentFromDefaults && (
+        <span
+          role="button"
+          className="ml-1 flex h-5 w-5 items-center justify-center rounded-sm bg-primary-foreground/20 hover:bg-primary-foreground/40 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:stroke-[3px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            reset();
+          }}
+          data-testid={`button-clear-${testIdPrefix}`}
+        >
+          <X className="text-primary-foreground" />
+        </span>
+      )}
     </Button>
   );
 
@@ -397,7 +411,7 @@ export function MultiSelect({
   };
 
   return (
-    <div className="relative inline-flex items-center">
+    <div className="inline-flex items-center">
       {isMobile ? (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>
@@ -419,21 +433,6 @@ export function MultiSelect({
             <MultiSelectContent {...contentProps} isDropdown={true} />
           </DropdownMenuContent>
         </DropdownMenu>
-      )}
-
-      {isDifferentFromDefaults && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="bg-primary-foreground/20 text-primary-foreground absolute right-2 h-5 w-5 p-0 rounded-sm hover:bg-primary-foreground/40 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:stroke-[3px]"
-          onClick={(e) => {
-            e.stopPropagation();
-            reset();
-          }}
-          data-testid={`button-clear-${testIdPrefix}`}
-        >
-          <X className="h-[2px] w-[2px]" />
-        </Button>
       )}
     </div>
   );
