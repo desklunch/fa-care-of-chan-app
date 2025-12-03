@@ -808,5 +808,29 @@ export async function registerRoutes(
     }
   });
 
+  // Vendor services routes
+  app.get("/api/vendor-services", isAuthenticated, async (req, res) => {
+    try {
+      const services = await storage.getVendorServices();
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching vendor services:", error);
+      res.status(500).json({ message: "Failed to fetch vendor services" });
+    }
+  });
+
+  app.get("/api/vendor-services/:id", isAuthenticated, async (req, res) => {
+    try {
+      const service = await storage.getVendorServiceById(req.params.id);
+      if (!service) {
+        return res.status(404).json({ message: "Vendor service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error fetching vendor service:", error);
+      res.status(500).json({ message: "Failed to fetch vendor service" });
+    }
+  });
+
   return httpServer;
 }
