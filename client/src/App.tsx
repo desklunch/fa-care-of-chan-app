@@ -21,6 +21,7 @@ import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
 import Vendors from "@/pages/vendors";
+import VendorServicesAdmin from "@/pages/admin/vendor-services";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -32,6 +33,7 @@ import {
   Bug,
   Contact,
   Store,
+  Briefcase,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -111,6 +113,12 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
+            name: "Vendor Services",
+            href: "/admin/vendors/services",
+            icon: Briefcase,
+            allowedRoles: ["admin"],
+          },
+          {
             name: "Logs",
             href: "/admin/logs",
             icon: SquareTerminal,
@@ -147,6 +155,7 @@ function AuthenticatedRoutes() {
         <Route path="/vendors" component={Vendors} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
+        <Route path="/admin/vendors/services" component={VendorServicesAdmin} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />
       </Switch>
