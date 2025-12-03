@@ -457,6 +457,10 @@ export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   id: true,
   createdById: true,
   voteCount: true,
+  status: true,
+  priority: true,
+  ownerId: true,
+  estimatedDelivery: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
