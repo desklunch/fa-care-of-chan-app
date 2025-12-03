@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,10 +14,28 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Plus, Edit2, Tags } from "lucide-react";
+import { Plus, Edit2, Tags, GripVertical } from "lucide-react";
 import type { FeatureCategory } from "@shared/schema";
 import { insertFeatureCategorySchema, updateFeatureCategorySchema } from "@shared/schema";
 import { z } from "zod";
+
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const createFormSchema = insertFeatureCategorySchema;
 type CreateFormData = z.infer<typeof createFormSchema>;
@@ -25,30 +43,62 @@ type CreateFormData = z.infer<typeof createFormSchema>;
 const editFormSchema = updateFeatureCategorySchema;
 type EditFormData = z.infer<typeof editFormSchema>;
 
-function CategoryCard({ 
+function SortableCategoryItem({ 
   category, 
   onEdit 
 }: { 
   category: FeatureCategory; 
   onEdit: (category: FeatureCategory) => void;
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
-    <Card className="hover-elevate" data-testid={`card-category-${category.id}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
+    <div ref={setNodeRef} style={style} data-testid={`sortable-category-${category.id}`}>
+      <Card 
+        className={`${isDragging ? 'shadow-lg ring-2 ring-primary' : 'hover-elevate'}`}
+      >
+        <CardContent className="p-4">
           <div className="flex items-center gap-3">
+            <button
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded"
+              data-testid={`drag-handle-${category.id}`}
+            >
+              <GripVertical className="h-5 w-5 text-muted-foreground" />
+            </button>
             <div 
-              className="w-4 h-4 rounded-full" 
+              className="w-4 h-4 rounded-full shrink-0" 
               style={{ backgroundColor: category.color || '#6B7280' }}
             />
-            <CardTitle className="text-lg" data-testid={`text-category-name-${category.id}`}>
-              {category.name}
-            </CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {!category.isActive && (
-              <Badge variant="secondary">Inactive</Badge>
-            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-medium truncate" data-testid={`text-category-name-${category.id}`}>
+                  {category.name}
+                </span>
+                {!category.isActive && (
+                  <Badge variant="secondary" className="shrink-0">Inactive</Badge>
+                )}
+              </div>
+              {category.description && (
+                <p className="text-sm text-muted-foreground truncate mt-0.5" data-testid={`text-category-description-${category.id}`}>
+                  {category.description}
+                </p>
+              )}
+            </div>
             <Button 
               variant="ghost" 
               size="icon"
@@ -58,16 +108,9 @@ function CategoryCard({
               <Edit2 className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      </CardHeader>
-      {category.description && (
-        <CardContent>
-          <p className="text-sm text-muted-foreground" data-testid={`text-category-description-${category.id}`}>
-            {category.description}
-          </p>
         </CardContent>
-      )}
-    </Card>
+      </Card>
+    </div>
   );
 }
 
@@ -192,7 +235,7 @@ function CreateCategoryDialog({ onSuccess }: { onSuccess: () => void }) {
               control={form.control}
               name="isActive"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex items-center justify-between gap-2 rounded-lg border p-3">
                   <div className="space-y-0.5">
                     <FormLabel>Active</FormLabel>
                     <FormDescription className="text-sm">
@@ -356,7 +399,7 @@ function EditCategoryDialog({
               control={form.control}
               name="isActive"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex items-center justify-between gap-2 rounded-lg border p-3">
                   <div className="space-y-0.5">
                     <FormLabel>Active</FormLabel>
                     <FormDescription className="text-sm">
@@ -399,6 +442,7 @@ function EditCategoryDialog({
 
 export default function AdminCategories() {
   const [editingCategory, setEditingCategory] = useState<FeatureCategory | null>(null);
+  const { toast } = useToast();
 
   const { data: categories = [], isLoading } = useQuery<FeatureCategory[]>({
     queryKey: ["/api/categories"],
@@ -409,14 +453,61 @@ export default function AdminCategories() {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      return apiRequest("PUT", "/api/admin/categories/order", { orderedIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to update order", 
+        description: error.message,
+        variant: "destructive" 
+      });
+      // Refetch to reset to server state
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+    },
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = categories.findIndex((cat) => cat.id === active.id);
+      const newIndex = categories.findIndex((cat) => cat.id === over.id);
+      
+      const newOrder = arrayMove(categories, oldIndex, newIndex);
+      const orderedIds = newOrder.map((cat) => cat.id);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(["/api/categories"], newOrder);
+      
+      // Send the new order to the server
+      reorderMutation.mutate(orderedIds);
+    }
+  }
+
   if (isLoading) {
     return (
       <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Categories" }]}>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-64" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-3 max-w-2xl">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full" />
+              <Skeleton key={i} className="h-20 w-full" />
             ))}
           </div>
         </div>
@@ -430,7 +521,7 @@ export default function AdminCategories() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">Feature Categories</h1>
           <p className="text-sm text-muted-foreground">
-            Manage categories for organizing feature requests
+            Drag and drop to reorder categories. This order will be used on the roadmap.
           </p>
         </div>
 
@@ -450,14 +541,25 @@ export default function AdminCategories() {
             </div>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <CategoryCard 
-                key={category.id} 
-                category={category} 
-                onEdit={setEditingCategory}
-              />
-            ))}
+          <div className="max-w-2xl space-y-3" data-testid="category-list">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={categories.map((cat) => cat.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {categories.map((category) => (
+                  <SortableCategoryItem 
+                    key={category.id} 
+                    category={category} 
+                    onEdit={setEditingCategory}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
         )}
 
