@@ -79,13 +79,50 @@ Sessions table:
 
 Audit Logs table:
 - Action tracking (create, update, delete, login, logout, email_sent, invite_used)
-- Entity type and ID for affected resources (user, invite, session)
+- Entity type and ID for affected resources (user, invite, session, feature, feature_category, feature_comment)
 - Performer tracking with user reference
 - Request metadata (IP address, user agent)
 - Status field (success/failure)
 - JSONB changes field for before/after state tracking
 - JSONB metadata for additional context
 - Indexed by performedAt, entityType, and performedBy for efficient queries
+
+### Product Roadmap Feature
+
+Feature Categories table:
+- Unique category name with optional description
+- Color for visual identification
+- Active flag to control visibility
+- Timestamps for audit
+
+Product Features table:
+- Title and description for feature requests
+- Status workflow: idea → under_review → planned → in_progress → completed → archived
+- Required categoryId linking to feature categories
+- createdById and ownerId for user attribution
+- voteCount cached for performance
+- Timestamps for tracking
+
+Feature Votes table:
+- Unique constraint on featureId + userId (one vote per user per feature)
+- Value field for vote weight (default 1)
+
+Feature Comments table:
+- featureId and userId references
+- body text field for comment content
+- Timestamps for audit
+
+**Roadmap Frontend Pages**
+- /roadmap - Feature list with cards, status/category filters, voting, and new feature dialog
+- /roadmap/:id - Feature detail view with comments, admin status controls, voting
+- /admin/categories - Category management (admin only) with create/edit dialogs
+
+**Key Implementation Details**
+- Optimistic voting updates via TanStack Query's setQueryData in onMutate/onError
+- Vote buttons disabled during pending mutations to prevent double-clicks
+- Feature cards link to detail view, vote buttons stop propagation
+- Comments use "body" field name (not "content")
+- Admin status dropdown only visible to admin users
 
 **ORM Configuration**
 - Drizzle Kit for schema migrations

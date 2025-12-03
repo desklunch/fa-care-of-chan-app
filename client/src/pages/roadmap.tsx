@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Plus, ThumbsUp, Filter, Lightbulb } from "lucide-react";
+import { Link } from "wouter";
 import type { ProductFeatureWithRelations, FeatureCategory, FeatureStatus } from "@shared/schema";
 import { insertProductFeatureSchema } from "@shared/schema";
 import { z } from "zod";
@@ -43,10 +44,12 @@ type FormData = z.infer<typeof formSchema>;
 
 function FeatureCard({ 
   feature, 
-  onVote 
+  onVote,
+  isVoting
 }: { 
   feature: ProductFeatureWithRelations; 
   onVote: (id: string) => void;
+  isVoting: boolean;
 }) {
   const createdByName = [feature.createdBy.firstName, feature.createdBy.lastName]
     .filter(Boolean)
@@ -54,38 +57,40 @@ function FeatureCard({
 
   return (
     <Card className="hover-elevate" data-testid={`card-feature-${feature.id}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg line-clamp-2" data-testid={`text-feature-title-${feature.id}`}>
-              {feature.title}
-            </CardTitle>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <Badge 
-                className={statusColors[feature.status as FeatureStatus]}
-                data-testid={`badge-status-${feature.id}`}
-              >
-                {statusLabels[feature.status as FeatureStatus]}
-              </Badge>
-              <Badge 
-                variant="outline"
-                style={{ 
-                  borderColor: feature.category.color || undefined,
-                  color: feature.category.color || undefined 
-                }}
-                data-testid={`badge-category-${feature.id}`}
-              >
-                {feature.category.name}
-              </Badge>
+      <Link href={`/roadmap/${feature.id}`}>
+        <CardHeader className="pb-3 cursor-pointer">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg line-clamp-2" data-testid={`text-feature-title-${feature.id}`}>
+                {feature.title}
+              </CardTitle>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <Badge 
+                  className={statusColors[feature.status as FeatureStatus]}
+                  data-testid={`badge-status-${feature.id}`}
+                >
+                  {statusLabels[feature.status as FeatureStatus]}
+                </Badge>
+                <Badge 
+                  variant="outline"
+                  style={{ 
+                    borderColor: feature.category.color || undefined,
+                    color: feature.category.color || undefined 
+                  }}
+                  data-testid={`badge-category-${feature.id}`}
+                >
+                  {feature.category.name}
+                </Badge>
+              </div>
             </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-3">
-        <CardDescription className="line-clamp-3" data-testid={`text-feature-description-${feature.id}`}>
-          {feature.description}
-        </CardDescription>
-      </CardContent>
+        </CardHeader>
+        <CardContent className="pb-3 cursor-pointer">
+          <CardDescription className="line-clamp-3" data-testid={`text-feature-description-${feature.id}`}>
+            {feature.description}
+          </CardDescription>
+        </CardContent>
+      </Link>
       <CardFooter className="flex items-center justify-between gap-2 pt-0">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Avatar className="h-6 w-6">
@@ -100,7 +105,12 @@ function FeatureCard({
           <Button
             variant={feature.hasVoted ? "default" : "outline"}
             size="sm"
-            onClick={() => onVote(feature.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onVote(feature.id);
+            }}
+            disabled={isVoting}
             className="gap-1"
             data-testid={`button-vote-${feature.id}`}
           >
@@ -273,15 +283,32 @@ export default function Roadmap() {
     mutationFn: async (featureId: string) => {
       return apiRequest("POST", `/api/features/${featureId}/vote`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+    onMutate: async (featureId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/features"] });
+      const previousFeatures = queryClient.getQueryData<ProductFeatureWithRelations[]>(["/api/features"]);
+      if (previousFeatures) {
+        queryClient.setQueryData<ProductFeatureWithRelations[]>(["/api/features"], 
+          previousFeatures.map((f) =>
+            f.id === featureId
+              ? { ...f, voteCount: f.hasVoted ? f.voteCount - 1 : f.voteCount + 1, hasVoted: !f.hasVoted }
+              : f
+          )
+        );
+      }
+      return { previousFeatures };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context) => {
+      if (context?.previousFeatures) {
+        queryClient.setQueryData(["/api/features"], context.previousFeatures);
+      }
       toast({ 
         title: "Failed to vote", 
         description: error.message,
         variant: "destructive" 
       });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
     },
   });
 
@@ -367,6 +394,7 @@ export default function Roadmap() {
                 key={feature.id} 
                 feature={feature} 
                 onVote={(id) => voteMutation.mutate(id)}
+                isVoting={voteMutation.isPending}
               />
             ))}
           </div>

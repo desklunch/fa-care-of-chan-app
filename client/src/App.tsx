@@ -17,6 +17,7 @@ import ProfileEdit from "@/pages/profile-edit";
 import AdminInvites from "@/pages/admin-invites";
 import AdminLogs from "@/pages/admin-logs";
 import Roadmap from "@/pages/roadmap";
+import FeatureDetail from "@/pages/feature-detail";
 import AdminCategories from "@/pages/admin-categories";
 import NotFound from "@/pages/not-found";
 
@@ -94,6 +95,7 @@ function AuthenticatedRoutes() {
         <Route path="/profile" component={Profile} />
         <Route path="/profile/edit" component={ProfileEdit} />
         <Route path="/roadmap" component={Roadmap} />
+        <Route path="/roadmap/:id" component={FeatureDetail} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/categories" component={AdminCategories} />
         <Route path="/admin/logs" component={AdminLogs} />
