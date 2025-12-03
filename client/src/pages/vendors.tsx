@@ -1,10 +1,13 @@
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
+import { MultiSelect } from "@/components/ui/multi-select";
 import type { VendorWithRelations, VendorService, Contact } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink, User } from "lucide-react";
+import { Star, ExternalLink, User, MapPin, Briefcase } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "email", "phone", "website", "isPreferred"];
 
@@ -100,6 +103,39 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
             {contacts.length > 2 && (
               <Badge variant="outline" className="text-xs shrink-0">
                 +{contacts.length - 2}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "locations",
+    headerName: "Locations",
+    field: "locations",
+    category: "Location",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { value: VendorWithRelations["locations"] }) => {
+        const locations = params.value;
+        if (!locations || locations.length === 0) return null;
+        return (
+          <div className="flex items-center gap-1 h-full overflow-hidden">
+            {locations.slice(0, 2).map((loc, idx) => (
+              <Badge 
+                key={idx} 
+                variant="outline" 
+                className="text-xs shrink-0 flex items-center gap-1"
+              >
+                <MapPin className="w-3 h-3" />
+                {loc.displayName || `${loc.city}, ${loc.region}`}
+              </Badge>
+            ))}
+            {locations.length > 2 && (
+              <Badge variant="outline" className="text-xs shrink-0">
+                +{locations.length - 2}
               </Badge>
             )}
           </div>
@@ -309,6 +345,104 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
 
 export default function Vendors() {
   const [, setLocation] = useLocation();
+  const [selectedLocations, setSelectedLocations] = useState<(string | number)[]>([]);
+  const [selectedServices, setSelectedServices] = useState<(string | number)[]>([]);
+
+  const { data: vendors = [], isLoading } = useQuery<VendorWithRelations[]>({
+    queryKey: ["/api/vendors"],
+  });
+
+  const { locationItems, locationLabels, serviceItems, serviceLabels } = useMemo(() => {
+    const locationMap = new Map<string, string>();
+    const serviceMap = new Map<string, string>();
+
+    vendors.forEach((vendor) => {
+      if (vendor.locations) {
+        vendor.locations.forEach((loc) => {
+          const key = `${loc.city}|${loc.region}|${loc.country}`;
+          const label = loc.displayName || `${loc.city}, ${loc.region}`;
+          locationMap.set(key, label);
+        });
+      }
+
+      if (vendor.services) {
+        vendor.services.forEach((service) => {
+          serviceMap.set(service.id, service.name);
+        });
+      }
+    });
+
+    const sortedLocations = Array.from(locationMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]));
+    
+    const sortedServices = Array.from(serviceMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]));
+
+    return {
+      locationItems: sortedLocations.map(([id, label]) => ({ id, label })),
+      locationLabels: Object.fromEntries(sortedLocations),
+      serviceItems: sortedServices.map(([id, label]) => ({ id, label })),
+      serviceLabels: Object.fromEntries(sortedServices),
+    };
+  }, [vendors]);
+
+  const filteredVendors = useMemo(() => {
+    let result = vendors;
+
+    if (selectedLocations.length > 0) {
+      result = result.filter((vendor) => {
+        if (!vendor.locations || vendor.locations.length === 0) return false;
+        return vendor.locations.some((loc) => {
+          const key = `${loc.city}|${loc.region}|${loc.country}`;
+          return selectedLocations.includes(key);
+        });
+      });
+    }
+
+    if (selectedServices.length > 0) {
+      result = result.filter((vendor) => {
+        if (!vendor.services || vendor.services.length === 0) return false;
+        return vendor.services.some((service) => 
+          selectedServices.includes(service.id)
+        );
+      });
+    }
+
+    return result;
+  }, [vendors, selectedLocations, selectedServices]);
+
+  const filterControls = (
+    <>
+      <MultiSelect
+        triggerLabel="Locations"
+        triggerIcon={<MapPin className="w-4 h-4 mr-1" />}
+        items={locationItems}
+        itemLabels={locationLabels}
+        selectedIds={selectedLocations}
+        onSelectionChange={setSelectedLocations}
+        showSelectAll={true}
+        showReset={true}
+        defaultSelectedIds={[]}
+        testIdPrefix="filter-locations"
+        searchPlaceholder="Search locations..."
+        align="start"
+      />
+      <MultiSelect
+        triggerLabel="Services"
+        triggerIcon={<Briefcase className="w-4 h-4 mr-1" />}
+        items={serviceItems}
+        itemLabels={serviceLabels}
+        selectedIds={selectedServices}
+        onSelectionChange={setSelectedServices}
+        showSelectAll={true}
+        showReset={true}
+        defaultSelectedIds={[]}
+        testIdPrefix="filter-services"
+        searchPlaceholder="Search services..."
+        align="start"
+      />
+    </>
+  );
 
   return (
     <PageLayout breadcrumbs={[{ label: "Vendors" }]}>
@@ -329,6 +463,9 @@ export default function Vendors() {
         getRowId={(vendor) => vendor.id || ""}
         emptyMessage="No vendors found"
         emptyDescription="Your vendor directory is empty."
+        headerContent={filterControls}
+        externalData={filteredVendors}
+        externalLoading={isLoading}
         toolbarActions={<></>}
       />
     </PageLayout>
