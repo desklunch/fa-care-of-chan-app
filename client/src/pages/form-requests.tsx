@@ -1,18 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,12 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -50,18 +35,9 @@ import {
   Trash2,
   Users,
   CheckCircle,
-  Building,
-  User,
-  Mail,
   Clock,
 } from "lucide-react";
-import type {
-  FormRequest,
-  Vendor,
-  Contact,
-  OutreachToken,
-  RecipientType,
-} from "@shared/schema";
+import type { FormRequest } from "@shared/schema";
 import { format } from "date-fns";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -71,7 +47,6 @@ interface GridContext {
   onEdit: (request: FormRequest) => void;
   onDelete: (request: FormRequest) => void;
   onSend: (request: FormRequest) => void;
-  onManageRecipients: (request: FormRequest) => void;
 }
 
 const statusConfig: Record<RequestStatus, { label: string; variant: "default" | "secondary" | "outline" }> = {
@@ -252,193 +227,12 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
 
 const defaultVisibleColumns = ["title", "status", "recipients", "dueDate", "createdAt"];
 
-function RecipientSelectorDialog({
-  request,
-  open,
-  onOpenChange,
-  onSave,
-  isPending,
-}: {
-  request: FormRequest | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (recipients: Array<{ type: RecipientType; id: string }>) => void;
-  isPending: boolean;
-}) {
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-
-  const { data: vendors = [] } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
-  });
-
-  const { data: contacts = [] } = useQuery<Contact[]>({
-    queryKey: ["/api/contacts"],
-  });
-
-  const existingTokens = (request as FormRequest & { tokens?: OutreachToken[] })?.tokens || [];
-  const existingVendorIds = existingTokens
-    .filter((t) => t.recipientType === "vendor" && t.recipientId)
-    .map((t) => t.recipientId);
-  const existingContactIds = existingTokens
-    .filter((t) => t.recipientType === "contact" && t.recipientId)
-    .map((t) => t.recipientId);
-
-  const availableVendors = vendors.filter((v) => !existingVendorIds.includes(v.id));
-  const availableContacts = contacts.filter((c) => !existingContactIds.includes(c.id));
-
-  const handleSave = () => {
-    const recipients: Array<{ type: RecipientType; id: string }> = [
-      ...selectedVendors.map((id) => ({ type: "vendor" as RecipientType, id })),
-      ...selectedContacts.map((id) => ({ type: "contact" as RecipientType, id })),
-    ];
-    onSave(recipients);
-  };
-
-  const toggleVendor = (id: string) => {
-    setSelectedVendors((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
-    );
-  };
-
-  const toggleContact = (id: string) => {
-    setSelectedContacts((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
-
-  useEffect(() => {
-    if (open) {
-      setSelectedVendors([]);
-      setSelectedContacts([]);
-    }
-  }, [open]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add Recipients</DialogTitle>
-          <DialogDescription>
-            Select vendors and/or contacts to receive this form request.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Tabs defaultValue="vendors" className="py-4">
-          <TabsList className="w-full">
-            <TabsTrigger value="vendors" className="flex-1">
-              <Building className="h-4 w-4 mr-2" />
-              Vendors ({availableVendors.length})
-            </TabsTrigger>
-            <TabsTrigger value="contacts" className="flex-1">
-              <User className="h-4 w-4 mr-2" />
-              Contacts ({availableContacts.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="vendors">
-            <ScrollArea className="h-64 border rounded-md p-4">
-              {availableVendors.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No available vendors to add.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {availableVendors.map((vendor) => (
-                    <div
-                      key={vendor.id}
-                      className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer"
-                      onClick={() => toggleVendor(vendor.id)}
-                      data-testid={`recipient-vendor-${vendor.id}`}
-                    >
-                      <Checkbox
-                        checked={selectedVendors.includes(vendor.id)}
-                        onCheckedChange={() => toggleVendor(vendor.id)}
-                      />
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{vendor.businessName}</p>
-                        {vendor.email && (
-                          <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {vendor.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="contacts">
-            <ScrollArea className="h-64 border rounded-md p-4">
-              {availableContacts.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No available contacts to add.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {availableContacts.map((contact) => (
-                    <div
-                      key={contact.id}
-                      className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer"
-                      onClick={() => toggleContact(contact.id)}
-                      data-testid={`recipient-contact-${contact.id}`}
-                    >
-                      <Checkbox
-                        checked={selectedContacts.includes(contact.id)}
-                        onCheckedChange={() => toggleContact(contact.id)}
-                      />
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {contact.firstName} {contact.lastName}
-                        </p>
-                        {contact.emailAddresses?.[0] && (
-                          <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {contact.emailAddresses[0]}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex items-center justify-between border-t pt-4">
-          <p className="text-sm text-muted-foreground">
-            {selectedVendors.length + selectedContacts.length} recipient(s) selected
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={selectedVendors.length + selectedContacts.length === 0 || isPending}
-            >
-              {isPending ? "Adding..." : "Add Recipients"}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export default function AdminFormRequestsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
   const [deleteRequest, setDeleteRequest] = useState<FormRequest | null>(null);
-  const [recipientRequest, setRecipientRequest] = useState<FormRequest | null>(null);
   const [sendRequest, setSendRequest] = useState<FormRequest | null>(null);
 
   const deleteMutation = useMutation({
@@ -456,26 +250,6 @@ export default function AdminFormRequestsPage() {
         navigate("/");
       } else {
         toast({ variant: "destructive", title: "Error", description: "Failed to delete request." });
-      }
-    },
-  });
-
-  const addRecipientsMutation = useMutation({
-    mutationFn: async ({ id, recipients }: { id: string; recipients: Array<{ type: RecipientType; id: string }> }) => {
-      const res = await apiRequest("POST", `/api/form-requests/${id}/recipients`, { recipients });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-requests"] });
-      setRecipientRequest(null);
-      toast({ title: "Recipients added", description: "Recipients have been added to the request." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to add recipients." });
       }
     },
   });
@@ -503,12 +277,6 @@ export default function AdminFormRequestsPage() {
     },
   });
 
-  const handleAddRecipients = (recipients: Array<{ type: RecipientType; id: string }>) => {
-    if (recipientRequest) {
-      addRecipientsMutation.mutate({ id: recipientRequest.id, recipients });
-    }
-  };
-
   const handleEdit = useCallback((request: FormRequest) => {
     navigate(`/forms/requests/${request.id}/edit`);
   }, [navigate]);
@@ -521,10 +289,6 @@ export default function AdminFormRequestsPage() {
     setSendRequest(request);
   }, []);
 
-  const handleManageRecipients = useCallback((request: FormRequest) => {
-    setRecipientRequest(request);
-  }, []);
-
   const handleRowClick = useCallback((request: FormRequest) => {
     navigate(`/forms/requests/${request.id}`);
   }, [navigate]);
@@ -533,7 +297,6 @@ export default function AdminFormRequestsPage() {
     onEdit: handleEdit,
     onDelete: handleDelete,
     onSend: handleSend,
-    onManageRecipients: handleManageRecipients,
   };
 
   if (isAuthLoading) {
@@ -575,14 +338,6 @@ export default function AdminFormRequestsPage() {
         context={gridContext}
         emptyMessage="No form requests yet"
         emptyDescription="Create a request to start collecting information from vendors or contacts."
-      />
-
-      <RecipientSelectorDialog
-        request={recipientRequest}
-        open={!!recipientRequest}
-        onOpenChange={(open) => !open && setRecipientRequest(null)}
-        onSave={handleAddRecipients}
-        isPending={addRecipientsMutation.isPending}
       />
 
       <AlertDialog open={!!deleteRequest} onOpenChange={(open) => !open && setDeleteRequest(null)}>
