@@ -138,9 +138,10 @@ export default function AdminFormRequestFormPage() {
       onClick={handleSave}
       disabled={!title.trim() || isPending}
       data-testid="button-save-request"
+      size="sm"
     >
-      <Save className="h-4 w-4 mr-2" />
-      {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Request"}
+      <Save className="h-4 w-4" />
+      {isPending ? "Saving..." : isEditing ? "Save" : "Create"}
     </Button>
   );
 
@@ -186,16 +187,25 @@ export default function AdminFormRequestFormPage() {
     );
   }
 
-  return (
-    <PageLayout
-      breadcrumbs={[
+  const breadcrumbs = isEditing && existingRequest
+    ? [
         { label: "Forms" },
         { label: "Requests", href: "/forms/requests" },
-        { label: isEditing ? "Edit Request" : "New Request" },
-      ]}
+        { label: existingRequest.title, href: `/forms/requests/${params.id}` },
+        { label: "Edit" },
+      ]
+    : [
+        { label: "Forms" },
+        { label: "Requests", href: "/forms/requests" },
+        { label: "New Request" },
+      ];
+
+  return (
+    <PageLayout
+      breadcrumbs={breadcrumbs}
       customHeaderAction={headerAction}
     >
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div className="p-6 max-w-4xl  space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Request Details</CardTitle>

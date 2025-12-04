@@ -594,21 +594,23 @@ export default function AdminFormRequestDetailPage() {
 
   const headerAction = (
     <div className="flex items-center gap-2">
-      <Button variant="outline" onClick={handlePreview} data-testid="button-preview-form">
-        <Eye className="h-4 w-4 mr-2" />
+      <Button size="sm" variant="outline" onClick={handlePreview} data-testid="button-preview-form">
+        <Eye className="h-4 w-4" />
         Preview
-        <ExternalLink className="h-3 w-3 ml-1" />
       </Button>
-      {request.status === "draft" && pendingCount > 0 && (
-        <Button onClick={() => setSendDialogOpen(true)} data-testid="button-send-request">
-          <Send className="h-4 w-4 mr-2" />
-          Send to Recipients
-        </Button>
-      )}
-      <Button variant="outline" onClick={() => navigate(`/forms/requests/${id}/edit`)} data-testid="button-edit-request">
-        <SquarePen className="h-4 w-4 mr-2" />
+
+      {request.status === "draft" && (
+      <Button size="sm" variant="outline" onClick={() => navigate(`/forms/requests/${id}/edit`)} data-testid="button-edit-request">
+        <SquarePen className="h-4 w-4" />
         Edit
       </Button>
+      )}
+      {request.status === "draft" && pendingCount > 0 && (
+        <Button size="sm" onClick={() => setSendDialogOpen(true)} data-testid="button-send-request">
+          <Send className="h-4 w-4" />
+          Send
+        </Button>
+      )}
     </div>
   );
 
@@ -621,9 +623,9 @@ export default function AdminFormRequestDetailPage() {
       ]}
       customHeaderAction={headerAction}
     >
-      <div className="p-6 space-y-6">
+      <div className="">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
+          <TabsList className="px-6 pt-6 border-b">
             <TabsTrigger value="overview" data-testid="tab-overview">
               <FileText className="h-4 w-4 mr-2" />
               Overview
@@ -644,7 +646,7 @@ export default function AdminFormRequestDetailPage() {
             )}
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6 p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="md:col-span-2">
                 <CardHeader>
@@ -710,7 +712,7 @@ export default function AdminFormRequestDetailPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="form" className="space-y-4">
+          <TabsContent value="form" className="space-y-4 p-6">
             <div className="space-y-4">
               {request.status === "draft" ? (
                 <div className="flex items-center justify-between">

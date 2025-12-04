@@ -130,7 +130,7 @@ export default function AppIssues() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Bug Reports" }]}>
+      <PageLayout breadcrumbs={[{ label: "App Issues" }]}>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -145,7 +145,7 @@ export default function AppIssues() {
 
   return (
     <PageLayout 
-      breadcrumbs={[{ label: "Bug Reports" }]}
+      breadcrumbs={[{ label: "App Issues" }]}
       actionButton={{
         label: "Report Issue",
         href: "/app/issues/new",

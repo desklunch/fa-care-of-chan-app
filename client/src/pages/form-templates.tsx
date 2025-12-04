@@ -27,7 +27,7 @@ import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import {
-  Plus,
+  CircleFadingPlus,
   MoreVertical,
   SquarePen,
   Trash2,
@@ -272,10 +272,10 @@ export default function AdminFormTemplatesPage() {
     <PageLayout
       breadcrumbs={[{ label: "Forms" }, { label: "Templates" }]}
       actionButton={{
-        label: "Create Template",
+        label: "New Template",
         href: "/forms/templates/new",
-        icon: Plus,
-        variant: "default",
+        icon: CircleFadingPlus,
+        variant: "outline",
       }}
     >
       <DataGridPage

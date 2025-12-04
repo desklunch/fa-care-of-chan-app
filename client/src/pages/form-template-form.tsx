@@ -107,9 +107,10 @@ export default function AdminFormTemplateFormPage() {
       onClick={handleSave}
       disabled={!name.trim() || isPending}
       data-testid="button-save-template"
+      size="sm"
     >
-      <Save className="h-4 w-4 mr-2" />
-      {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Template"}
+      <Save className="h-4 w-4 " />
+      {isPending ? "Saving..." : isEditing ? "Save " : "Create "}
     </Button>
   );
 

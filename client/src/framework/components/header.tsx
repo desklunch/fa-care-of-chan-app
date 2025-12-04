@@ -80,24 +80,22 @@ export default function Header({
             actionButton.href ? (
               <a href={actionButton.href}>
                 <Button
-                  variant={actionButton.variant || "default"}
+                  variant="outline"
                   size="sm"
-                  className="h-9"
                   data-testid="button-header-action"
                 >
-                  {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
+                  {actionButton.icon && <actionButton.icon className="h-4 w-4" />}
                   {actionButton.label}
                 </Button>
               </a>
             ) : (
               <Button
-                variant={actionButton.variant || "default"}
+                variant="outline"
                 size="sm"
                 onClick={actionButton.onClick}
-                className="h-9"
                 data-testid="button-header-action"
               >
-                {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
+                {actionButton.icon && <actionButton.icon className="h-4 w-4" />}
                 {actionButton.label}
               </Button>
             )

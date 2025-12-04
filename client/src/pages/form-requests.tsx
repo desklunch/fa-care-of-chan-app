@@ -43,7 +43,7 @@ import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import {
-  Plus,
+  CircleFadingPlus,
   Send,
   MoreVertical,
   SquarePen,
@@ -568,9 +568,9 @@ export default function AdminFormRequestsPage() {
     <PageLayout
       breadcrumbs={[{ label: "Forms" }, { label: "Requests" }]}
       actionButton={{
-        label: "Create Request",
+        label: "New Request",
         href: "/forms/requests/new",
-        icon: Plus,
+        icon: CircleFadingPlus,
         variant: "default",
       }}
     >

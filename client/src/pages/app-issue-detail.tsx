@@ -106,7 +106,7 @@ export default function AppIssueDetail() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "Bug Reports", href: "/app/issues" },
+          { label: "App Issues", href: "/app/issues" },
           { label: "Loading..." },
         ]}
       >
@@ -147,7 +147,7 @@ export default function AppIssueDetail() {
   return (
     <PageLayout 
       breadcrumbs={[
-        { label: "Bug Reports", href: "/app/issues" },
+        { label: "App Issues", href: "/app/issues" },
         { label: issue.title },
       ]}
     >
