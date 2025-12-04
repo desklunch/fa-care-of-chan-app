@@ -33,8 +33,9 @@ import {
   Trash2,
   Copy,
   Layers,
+  User,
 } from "lucide-react";
-import type { FormTemplate, FormSection, InsertFormTemplate } from "@shared/schema";
+import type { FormTemplate, FormTemplateWithRelations, FormSection, InsertFormTemplate } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
 interface GridContext {
@@ -70,6 +71,16 @@ function FieldCountCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
     0
   ) || 0;
   return <span className="text-muted-foreground">{fieldCount}</span>;
+}
+
+function CreatedByCellRenderer({ data }: ICellRendererParams<FormTemplateWithRelations>) {
+  if (!data?.createdBy) return <span className="text-muted-foreground">—</span>;
+  return (
+    <span className="flex items-center gap-1">
+      <User className="h-3 w-3 text-muted-foreground" />
+      {data.createdBy.firstName} {data.createdBy.lastName}
+    </span>
+  );
 }
 
 function ActionsCellRenderer({ data, context }: ICellRendererParams<FormTemplate, unknown, GridContext>) {
@@ -152,6 +163,20 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
     },
   },
   {
+    id: "createdBy",
+    headerName: "Created By",
+    category: "Info",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      cellRenderer: CreatedByCellRenderer,
+      valueGetter: (params) => {
+        const data = params.data as FormTemplateWithRelations;
+        return data?.createdBy ? `${data.createdBy.firstName} ${data.createdBy.lastName}` : "";
+      },
+    },
+  },
+  {
     id: "createdAt",
     headerName: "Created",
     field: "createdAt",
@@ -177,7 +202,7 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
   },
 ];
 
-const defaultVisibleColumns = ["name", "description", "sections", "fields", "createdAt", "actions"];
+const defaultVisibleColumns = ["name", "description", "sections", "fields", "createdBy", "createdAt", "actions"];
 
 export default function AdminFormTemplatesPage() {
   const [, navigate] = useLocation();
