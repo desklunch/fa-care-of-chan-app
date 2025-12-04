@@ -1,10 +1,19 @@
+import { useState } from "react";
 import { useParams, useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   Building2,
@@ -20,20 +29,70 @@ import {
   Briefcase,
   Contact,
   Pencil,
+  LinkIcon,
+  Copy,
+  Check,
+  Loader2,
 } from "lucide-react";
 import type { VendorWithRelations } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function VendorDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const isAdmin = user?.role === "admin";
+  
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const { data: vendor, isLoading, error } = useQuery<VendorWithRelations>({
     queryKey: ["/api/vendors", id],
     enabled: !!id,
   });
+  
+  const generateLinkMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/vendors/${id}/generate-update-link`);
+      return response.json();
+    },
+    onSuccess: (data: { url: string; expiresAt: string }) => {
+      setGeneratedUrl(data.url);
+      setExpiresAt(data.expiresAt);
+      setShowLinkDialog(true);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to generate update link",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleCopyLink = async () => {
+    if (generatedUrl) {
+      await navigator.clipboard.writeText(generatedUrl);
+      setCopied(true);
+      toast({
+        title: "Copied",
+        description: "Link copied to clipboard",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  
+  const handleCloseDialog = () => {
+    setShowLinkDialog(false);
+    setGeneratedUrl(null);
+    setExpiresAt(null);
+    setCopied(false);
+  };
 
   if (isLoading) {
     return (
@@ -107,6 +166,7 @@ export default function VendorDetail() {
   }
 
   return (
+    <>
     <PageLayout
       breadcrumbs={[
         { label: "Vendors", href: "/vendors" },
@@ -118,6 +178,22 @@ export default function VendorDetail() {
         icon: Pencil,
         variant: "outline",
       } : undefined}
+      customHeaderAction={isAdmin ? (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => generateLinkMutation.mutate()}
+          disabled={generateLinkMutation.isPending}
+          data-testid="button-generate-update-link"
+        >
+          {generateLinkMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <LinkIcon className="mr-2 h-4 w-4" />
+          )}
+          Generate Update Link
+        </Button>
+      ) : undefined}
     >
       <div className="p-4 md:p-6 max-w-5xl mx-auto">
         <div className="grid md:grid-cols-3 gap-6">
@@ -363,5 +439,49 @@ export default function VendorDetail() {
         </div>
       </div>
     </PageLayout>
+    
+    <Dialog open={showLinkDialog} onOpenChange={handleCloseDialog}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Vendor Update Link Generated</DialogTitle>
+          <DialogDescription>
+            Share this link with the vendor so they can update their information. 
+            The link is single-use and will expire in 30 days.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              value={generatedUrl || ""}
+              readOnly
+              className="font-mono text-sm"
+              data-testid="input-update-link"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCopyLink}
+              data-testid="button-copy-link"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          {expiresAt && (
+            <p className="text-sm text-muted-foreground">
+              Expires: {new Date(expiresAt).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
