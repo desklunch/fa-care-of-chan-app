@@ -30,6 +30,9 @@ import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import AdminThemeEditor from "@/pages/admin-theme-editor";
 import AdminVendorTokens from "@/pages/admin-vendor-tokens";
 import VendorUpdateForm from "@/pages/vendor-update-form";
+import AppIssues from "@/pages/app-issues";
+import AppIssueForm from "@/pages/app-issue-form";
+import AppIssueDetail from "@/pages/app-issue-detail";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -101,9 +104,8 @@ function useLayoutConfig() {
           },
           {
             name: "Issues",
-            href: "/issues",
+            href: "/app/issues",
             icon: Bug,
-            active: false,
           },
         ],
       },
@@ -179,6 +181,10 @@ function AuthenticatedRoutes() {
         <Route path="/app/features/new" component={AppFeatureForm} />
         <Route path="/app/features/:id/edit" component={AppFeatureForm} />
         <Route path="/app/features/:id" component={AppFeatureDetail} />
+        <Route path="/app/issues" component={AppIssues} />
+        <Route path="/app/issues/new" component={AppIssueForm} />
+        <Route path="/app/issues/:id/edit" component={AppIssueForm} />
+        <Route path="/app/issues/:id" component={AppIssueDetail} />
         <Route path="/contacts" component={Contacts} />
         <Route path="/contacts/new" component={ContactForm} />
         <Route path="/contacts/:id/edit" component={ContactForm} />

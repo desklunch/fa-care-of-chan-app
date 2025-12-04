@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, useParams } from "wouter";
 import { format } from "date-fns";
 import { Pencil, Trash2, AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 import type { AppIssueWithRelations, IssueSeverity, IssueStatus } from "@shared/schema";
 
 const severityLabels: Record<IssueSeverity, string> = {
