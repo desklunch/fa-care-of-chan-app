@@ -33,11 +33,11 @@ import VendorUpdateForm from "@/pages/vendor-update-form";
 import AppIssues from "@/pages/app-issues";
 import AppIssueForm from "@/pages/app-issue-form";
 import AppIssueDetail from "@/pages/app-issue-detail";
-import AdminFormTemplates from "@/pages/admin-form-templates";
-import AdminFormTemplateForm from "@/pages/admin-form-template-form";
-import AdminFormRequests from "@/pages/admin-form-requests";
-import AdminFormRequestForm from "@/pages/admin-form-request-form";
-import AdminFormRequestDetail from "@/pages/admin-form-request-detail";
+import FormTemplates from "@/pages/form-templates";
+import FormTemplateForm from "@/pages/form-template-form";
+import FormRequests from "@/pages/form-requests";
+import FormRequestForm from "@/pages/form-request-form";
+import FormRequestDetail from "@/pages/form-request-detail";
 import PublicForm from "@/pages/public-form";
 import FormPreview from "@/pages/form-preview";
 import NotFound from "@/pages/not-found";
@@ -119,6 +119,21 @@ function useLayoutConfig() {
         ],
       },
       {
+        heading: "Forms",
+        items: [
+          {
+            name: "Templates",
+            href: "/forms/templates",
+            icon: FileText,
+          },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: Send,
+          },
+        ],
+      },
+      {
         heading: "Admin",
         allowedRoles: ["admin"],
         items: [
@@ -150,18 +165,6 @@ function useLayoutConfig() {
             name: "Vendor Tokens",
             href: "/admin/vendors/tokens",
             icon: Link2,
-            allowedRoles: ["admin"],
-          },
-          {
-            name: "Form Templates",
-            href: "/admin/forms/templates",
-            icon: FileText,
-            allowedRoles: ["admin"],
-          },
-          {
-            name: "Form Requests",
-            href: "/admin/forms/requests",
-            icon: Send,
             allowedRoles: ["admin"],
           },
           {
@@ -219,13 +222,13 @@ function AuthenticatedRoutes() {
         <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
         <Route path="/admin/vendors/services" component={AdminVendorServices} />
         <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
-        <Route path="/admin/forms/templates" component={AdminFormTemplates} />
-        <Route path="/admin/forms/templates/new" component={AdminFormTemplateForm} />
-        <Route path="/admin/forms/templates/:id/edit" component={AdminFormTemplateForm} />
-        <Route path="/admin/forms/requests" component={AdminFormRequests} />
-        <Route path="/admin/forms/requests/new" component={AdminFormRequestForm} />
-        <Route path="/admin/forms/requests/:id/edit" component={AdminFormRequestForm} />
-        <Route path="/admin/forms/requests/:id" component={AdminFormRequestDetail} />
+        <Route path="/forms/templates" component={FormTemplates} />
+        <Route path="/forms/templates/new" component={FormTemplateForm} />
+        <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
+        <Route path="/forms/requests" component={FormRequests} />
+        <Route path="/forms/requests/new" component={FormRequestForm} />
+        <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
+        <Route path="/forms/requests/:id" component={FormRequestDetail} />
         <Route path="/admin/theme" component={AdminThemeEditor} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />
