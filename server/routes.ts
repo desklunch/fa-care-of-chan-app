@@ -20,6 +20,10 @@ import {
   featureStatuses,
   type FeatureStatus,
   themeConfigSchema,
+  insertAppIssueSchema,
+  updateAppIssueSchema,
+  issueStatuses,
+  type IssueStatus,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -1499,6 +1503,170 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating vendor via token:", error);
       res.status(500).json({ message: "Failed to update vendor information" });
+    }
+  });
+
+  // ===== APP ISSUES / BUG REPORTING ROUTES =====
+  
+  // Get all issues
+  app.get("/api/app-issues", isAuthenticated, async (req: any, res) => {
+    try {
+      const statusFilter = req.query.status
+        ? (req.query.status as string).split(",") as IssueStatus[]
+        : undefined;
+      const severity = req.query.severity as string | undefined;
+
+      const issues = await storage.getIssues({
+        status: statusFilter,
+        severity,
+      });
+      res.json(issues);
+    } catch (error) {
+      console.error("Error fetching issues:", error);
+      res.status(500).json({ message: "Failed to fetch issues" });
+    }
+  });
+
+  // Get single issue
+  app.get("/api/app-issues/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const issue = await storage.getIssueById(req.params.id);
+      if (!issue) {
+        return res.status(404).json({ message: "Issue not found" });
+      }
+      res.json(issue);
+    } catch (error) {
+      console.error("Error fetching issue:", error);
+      res.status(500).json({ message: "Failed to fetch issue" });
+    }
+  });
+
+  // Create new issue
+  app.post("/api/app-issues", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = insertAppIssueSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const userId = req.user.claims.sub;
+      const issue = await storage.createIssue(result.data, userId);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "app_issue",
+        entityId: issue.id,
+        changes: { after: result.data as Record<string, unknown> },
+      });
+
+      res.status(201).json(issue);
+    } catch (error) {
+      console.error("Error creating issue:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "app_issue",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to create issue" });
+    }
+  });
+
+  // Update issue
+  app.patch("/api/app-issues/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const issue = await storage.getIssueById(req.params.id);
+
+      if (!issue) {
+        return res.status(404).json({ message: "Issue not found" });
+      }
+
+      // Non-admin users can only edit their own issues and only title/description/severity
+      const isOwner = issue.createdById === userId;
+      const isAdminUser = user?.role === "admin";
+
+      if (!isOwner && !isAdminUser) {
+        return res.status(403).json({ message: "Not authorized to edit this issue" });
+      }
+
+      const result = updateAppIssueSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      // Non-admin can only update title, description, severity
+      let updateData = result.data;
+      if (!isAdminUser) {
+        updateData = {
+          title: result.data.title,
+          description: result.data.description,
+          severity: result.data.severity,
+        };
+      }
+
+      const updated = await storage.updateIssue(req.params.id, updateData);
+
+      const changes = getChangedFields(
+        issue as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>
+      );
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_issue",
+        entityId: req.params.id,
+        changes,
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating issue:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_issue",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update issue" });
+    }
+  });
+
+  // Delete issue (admin only)
+  app.delete("/api/app-issues/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const issue = await storage.getIssueById(req.params.id);
+      if (!issue) {
+        return res.status(404).json({ message: "Issue not found" });
+      }
+
+      await storage.deleteIssue(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "app_issue",
+        entityId: req.params.id,
+        changes: { before: { title: issue.title } },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting issue:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "app_issue",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to delete issue" });
     }
   });
 
