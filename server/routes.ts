@@ -1539,6 +1539,69 @@ export async function registerRoutes(
     }
   });
 
+  // ===== AMENITIES ROUTES =====
+
+  // Get all amenities
+  app.get("/api/amenities", isAuthenticated, async (req, res) => {
+    try {
+      const amenities = await storage.getAmenities();
+      res.json(amenities);
+    } catch (error) {
+      console.error("Error fetching amenities:", error);
+      res.status(500).json({ message: "Failed to fetch amenities" });
+    }
+  });
+
+  // Get single amenity
+  app.get("/api/amenities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const amenity = await storage.getAmenityById(req.params.id);
+      if (!amenity) {
+        return res.status(404).json({ message: "Amenity not found" });
+      }
+      res.json(amenity);
+    } catch (error) {
+      console.error("Error fetching amenity:", error);
+      res.status(500).json({ message: "Failed to fetch amenity" });
+    }
+  });
+
+  // Create new amenity (admin only)
+  app.post("/api/amenities", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const amenity = await storage.createAmenity(req.body);
+      res.status(201).json(amenity);
+    } catch (error) {
+      console.error("Error creating amenity:", error);
+      res.status(500).json({ message: "Failed to create amenity" });
+    }
+  });
+
+  // Update amenity (admin only)
+  app.patch("/api/amenities/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const amenity = await storage.updateAmenity(req.params.id, req.body);
+      if (!amenity) {
+        return res.status(404).json({ message: "Amenity not found" });
+      }
+      res.json(amenity);
+    } catch (error) {
+      console.error("Error updating amenity:", error);
+      res.status(500).json({ message: "Failed to update amenity" });
+    }
+  });
+
+  // Delete amenity (admin only)
+  app.delete("/api/amenities/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      await storage.deleteAmenity(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting amenity:", error);
+      res.status(500).json({ message: "Failed to delete amenity" });
+    }
+  });
+
   // ===== APP ISSUES / BUG REPORTING ROUTES =====
   
   // Get all issues
