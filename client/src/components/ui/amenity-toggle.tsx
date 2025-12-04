@@ -1,41 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { 
-  Wifi, 
-  Car, 
-  Music, 
-  Accessibility, 
-  UtensilsCrossed, 
-  Wine, 
-  Flower2,
-  TreePalm,
-  Flame,
-  Presentation,
-  ParkingCircle,
-  Users,
-  Baby,
-  Camera,
-  LucideIcon
-} from "lucide-react";
+import { icons, HelpCircle, type LucideIcon } from "lucide-react";
 import type { Amenity } from "@shared/schema";
 
-const iconMap: Record<string, LucideIcon> = {
-  Wifi,
-  Car,
-  Music,
-  Accessibility,
-  UtensilsCrossed,
-  Wine,
-  Flower2,
-  TreePalm,
-  Flame,
-  Presentation,
-  ParkingCircle,
-  Users,
-  Baby,
-  Camera,
-};
+function getIconComponent(iconName: string): LucideIcon {
+  const icon = icons[iconName as keyof typeof icons];
+  return (icon || HelpCircle) as LucideIcon;
+}
 
 interface AmenityToggleProps {
   selectedAmenityIds: string[];
@@ -79,7 +51,7 @@ export function AmenityToggle({
     <div className="flex flex-wrap gap-2">
       {amenities.map((amenity) => {
         const isSelected = selectedAmenityIds.includes(amenity.id);
-        const IconComponent = iconMap[amenity.icon] || Wifi;
+        const IconComponent = getIconComponent(amenity.icon);
 
         return (
           <Badge
@@ -119,7 +91,7 @@ export function AmenityDisplay({ amenities, className }: AmenityDisplayProps) {
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
       {amenities.map((amenity) => {
-        const IconComponent = iconMap[amenity.icon] || Wifi;
+        const IconComponent = getIconComponent(amenity.icon);
 
         return (
           <Badge

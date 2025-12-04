@@ -258,10 +258,15 @@ const venueColumns: ColumnConfig<Venue>[] = [
 
 export default function VenuesPage() {
   const [, navigate] = useLocation();
-  const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const handleRowClick = useCallback((venue: Venue) => {
-    navigate(`/venues/${venue.id}`);
+    navigate(`/admin/venues/${venue.id}`);
+  }, [navigate]);
+
+  const handleCreate = useCallback(() => {
+    navigate("/admin/venues/new");
   }, [navigate]);
 
   if (isAuthLoading) {
@@ -295,7 +300,13 @@ export default function VenuesPage() {
   };
 
   return (
-    <PageLayout breadcrumbs={[{ label: "Venues" }]}>
+    <PageLayout
+      breadcrumbs={[{ label: "Venues" }]}
+      actionButton={isAdmin ? {
+        label: "Add Venue",
+        onClick: handleCreate,
+      } : undefined}
+    >
       <DataGridPage {...dataGridProps} />
     </PageLayout>
   );
