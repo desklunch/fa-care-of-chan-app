@@ -307,6 +307,37 @@ export const venueAmenities = pgTable(
   ],
 );
 
+// Tags for categorizing venues
+export const tags = pgTable(
+  "tags",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    category: varchar("category", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_tags_name").on(table.name),
+    index("idx_tags_category").on(table.category),
+  ],
+);
+
+// Join table for venues and tags (many-to-many)
+export const venueTags = pgTable(
+  "venue_tags",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+    tagId: varchar("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_venue_tags_venue_id").on(table.venueId),
+    index("idx_venue_tags_tag_id").on(table.tagId),
+  ],
+);
+
 // Vendor services (service categories that vendors can provide)
 export const vendorServices = pgTable(
   "vendor_services",
@@ -478,6 +509,10 @@ export type Amenity = typeof amenities.$inferSelect;
 export type InsertAmenity = typeof amenities.$inferInsert;
 export type VenueAmenity = typeof venueAmenities.$inferSelect;
 export type InsertVenueAmenity = typeof venueAmenities.$inferInsert;
+export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
+export type VenueTag = typeof venueTags.$inferSelect;
+export type InsertVenueTag = typeof venueTags.$inferInsert;
 export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
 export type VendorService = typeof vendorServices.$inferSelect;
@@ -718,6 +753,18 @@ export const updateAmenitySchema = insertAmenitySchema.partial();
 
 export type CreateAmenity = z.infer<typeof insertAmenitySchema>;
 export type UpdateAmenity = z.infer<typeof updateAmenitySchema>;
+
+// Tag insert/update schemas
+export const insertTagSchema = createInsertSchema(tags).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateTagSchema = insertTagSchema.partial();
+
+export type CreateTag = z.infer<typeof insertTagSchema>;
+export type UpdateTag = z.infer<typeof updateTagSchema>;
 
 // Location schema for vendors
 export const locationSchema = z.object({
