@@ -116,14 +116,14 @@ export function AddressAutocomplete({
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <div className="relative">
-        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="relative flex items-center">
+        <Building2 className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
         <Input
           value={query}
           onChange={handleInputChange}
           placeholder={placeholder}
           disabled={disabled}
-          className="pl-9 pr-10"
+          className="pl-9 pr-10 w-full"
           data-testid={testId}
           onFocus={() => {
             if (predictions.length > 0) {
@@ -132,14 +132,14 @@ export function AddressAutocomplete({
           }}
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          <Loader2 className="absolute right-3 h-4 w-4 animate-spin text-muted-foreground pointer-events-none" />
         )}
         {!isLoading && query && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+            className="absolute right-1 h-7 w-7"
             onClick={clearSelection}
             data-testid={`${testId}-clear`}
           >
