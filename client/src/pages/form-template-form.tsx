@@ -30,7 +30,7 @@ export default function AdminFormTemplateFormPage() {
 
   const { data: template, isLoading: isTemplateLoading } = useQuery<FormTemplate>({
     queryKey: ["/api/form-templates", id],
-    enabled: isAuthenticated && user?.role === "admin" && isEditing,
+    enabled: isAuthenticated && isEditing,
   });
 
   useEffect(() => {

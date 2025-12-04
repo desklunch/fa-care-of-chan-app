@@ -1725,8 +1725,8 @@ export async function registerRoutes(
   // FORM OUTREACH / RFI ROUTES
   // ==========================================
 
-  // Form Template Routes (admin only)
-  app.get("/api/form-templates", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Form Template Routes
+  app.get("/api/form-templates", isAuthenticated, async (req: any, res) => {
     try {
       const templates = await storage.getFormTemplates();
       res.json(templates);
@@ -1736,7 +1736,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/form-templates/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get("/api/form-templates/:id", isAuthenticated, async (req: any, res) => {
     try {
       const template = await storage.getFormTemplateById(req.params.id);
       if (!template) {
@@ -1749,7 +1749,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/form-templates", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/form-templates", isAuthenticated, async (req: any, res) => {
     try {
       const result = insertFormTemplateSchema.safeParse(req.body);
       if (!result.success) {
@@ -1780,7 +1780,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/form-templates/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch("/api/form-templates/:id", isAuthenticated, async (req: any, res) => {
     try {
       const result = updateFormTemplateSchema.safeParse(req.body);
       if (!result.success) {
@@ -1813,7 +1813,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/form-templates/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/form-templates/:id", isAuthenticated, async (req: any, res) => {
     try {
       const template = await storage.getFormTemplateById(req.params.id);
       if (!template) {
@@ -1844,8 +1844,8 @@ export async function registerRoutes(
     }
   });
 
-  // Form Request Routes (admin only)
-  app.get("/api/form-requests", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Form Request Routes
+  app.get("/api/form-requests", isAuthenticated, async (req: any, res) => {
     try {
       const requests = await storage.getFormRequests();
       res.json(requests);
@@ -1855,7 +1855,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/form-requests/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get("/api/form-requests/:id", isAuthenticated, async (req: any, res) => {
     try {
       const request = await storage.getFormRequestById(req.params.id);
       if (!request) {
@@ -1868,7 +1868,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/form-requests", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/form-requests", isAuthenticated, async (req: any, res) => {
     try {
       const result = insertFormRequestSchema.safeParse(req.body);
       if (!result.success) {
@@ -1899,7 +1899,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/form-requests/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch("/api/form-requests/:id", isAuthenticated, async (req: any, res) => {
     try {
       const result = updateFormRequestSchema.safeParse(req.body);
       if (!result.success) {
@@ -1943,7 +1943,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/form-requests/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/form-requests/:id", isAuthenticated, async (req: any, res) => {
     try {
       const request = await storage.getFormRequestById(req.params.id);
       if (!request) {
@@ -1975,7 +1975,7 @@ export async function registerRoutes(
   });
 
   // Add recipients to a form request
-  app.post("/api/form-requests/:id/recipients", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/form-requests/:id/recipients", isAuthenticated, async (req: any, res) => {
     try {
       const { recipients } = req.body as {
         recipients: Array<{ type: RecipientType; id: string }>;
@@ -2009,7 +2009,7 @@ export async function registerRoutes(
   });
 
   // Send form request to all pending recipients
-  app.post("/api/form-requests/:id/send", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/form-requests/:id/send", isAuthenticated, async (req: any, res) => {
     try {
       const request = await storage.getFormRequestById(req.params.id);
       if (!request) {
@@ -2091,8 +2091,8 @@ export async function registerRoutes(
     }
   });
 
-  // Preview form request (admin only) - returns form data with dummy recipient for preview
-  app.get("/api/form-requests/:id/preview", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Preview form request - returns form data with dummy recipient for preview
+  app.get("/api/form-requests/:id/preview", isAuthenticated, async (req: any, res) => {
     try {
       const request = await storage.getFormRequestById(req.params.id);
       if (!request) {

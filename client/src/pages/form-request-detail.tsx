@@ -305,7 +305,7 @@ export default function AdminFormRequestDetailPage() {
 
   const { data: request, isLoading } = useQuery<FormRequestWithTokens>({
     queryKey: ["/api/form-requests", id],
-    enabled: !!id && isAuthenticated && user?.role === "admin",
+    enabled: !!id && isAuthenticated,
   });
 
   const updateMutation = useMutation({
