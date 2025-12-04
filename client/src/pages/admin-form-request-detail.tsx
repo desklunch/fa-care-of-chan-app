@@ -390,7 +390,8 @@ export default function AdminFormRequestDetailPage() {
     {
       headerName: "Type",
       field: "type",
-      width: 120,
+      flex: 1,
+      minWidth: 100,
       cellRenderer: RecipientTypeCellRenderer,
     },
     {
@@ -410,13 +411,15 @@ export default function AdminFormRequestDetailPage() {
     {
       headerName: "Status",
       field: "status",
-      width: 120,
+      flex: 1,
+      minWidth: 100,
       cellRenderer: RecipientStatusCellRenderer,
     },
     {
       headerName: "Sent",
       field: "sentAt",
-      width: 140,
+      flex: 1,
+      minWidth: 100,
       cellRenderer: (params: ICellRendererParams<RecipientRow>) => (
         <DateCellRenderer value={params.value} />
       ),
@@ -424,14 +427,16 @@ export default function AdminFormRequestDetailPage() {
     {
       headerName: "Responded",
       field: "respondedAt",
-      width: 140,
+      flex: 1,
+      minWidth: 100,
       cellRenderer: (params: ICellRendererParams<RecipientRow>) => (
         <DateCellRenderer value={params.value} />
       ),
     },
     {
       headerName: "",
-      width: 60,
+      flex: 1,
+      minWidth: 100,
       sortable: false,
       filter: false,
       cellRenderer: RecipientActionsCellRenderer,
@@ -498,7 +503,8 @@ export default function AdminFormRequestDetailPage() {
     {
       headerName: "Recipient",
       field: "recipientName",
-      width: 200,
+      flex: 1,
+      minWidth: 200,
       pinned: "left",
       cellRenderer: (params: ICellRendererParams<ResponseRow>) => {
         if (!params.data) return null;
@@ -517,7 +523,8 @@ export default function AdminFormRequestDetailPage() {
     {
       headerName: "Sent At",
       field: "sentAt",
-      width: 160,
+      flex: 1,
+      minWidth: 160,
       cellRenderer: (params: ICellRendererParams<ResponseRow>) => {
         if (!params.value) return <span className="text-muted-foreground">—</span>;
         return <span>{format(new Date(params.value), "MMM d, yyyy h:mm a")}</span>;
@@ -526,7 +533,8 @@ export default function AdminFormRequestDetailPage() {
     {
       headerName: "Submitted At",
       field: "submittedAt",
-      width: 160,
+      flex: 1,
+      minWidth: 160,
       cellRenderer: (params: ICellRendererParams<ResponseRow>) => {
         if (!params.value) return <span className="text-muted-foreground">—</span>;
         return <span>{format(new Date(params.value), "MMM d, yyyy h:mm a")}</span>;
