@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityToggle } from "@/components/ui/amenity-toggle";
 import { TagAssignment } from "@/components/ui/tag-assignment";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Image } from "lucide-react";
 import type { VenueWithRelations } from "@shared/schema";
 import { insertVenueSchema } from "@shared/schema";
 
@@ -32,6 +32,9 @@ const venueFormSchema = insertVenueSchema.extend({
   amenityIds: z.array(z.string()).default([]),
   cuisineTagIds: z.array(z.string()).default([]),
   styleTagIds: z.array(z.string()).default([]),
+  photoUrlItems: z.array(z.object({
+    url: z.string().url("Please enter a valid URL").or(z.literal("")),
+  })).default([]),
 });
 
 type VenueFormValues = z.infer<typeof venueFormSchema>;
@@ -67,11 +70,18 @@ export default function VenueFormPage() {
       amenityIds: [],
       cuisineTagIds: [],
       styleTagIds: [],
+      photoUrlItems: [],
     },
+  });
+
+  const { fields: photoUrlFields, append: appendPhotoUrl, remove: removePhotoUrl } = useFieldArray({
+    control: form.control,
+    name: "photoUrlItems",
   });
 
   useEffect(() => {
     if (venue) {
+      const photoUrlItems = (venue.photoUrls || []).map(url => ({ url }));
       form.reset({
         name: venue.name || "",
         shortDescription: venue.shortDescription || "",
@@ -90,13 +100,18 @@ export default function VenueFormPage() {
         amenityIds: venue.amenities?.map((a) => a.id) || [],
         cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
         styleTagIds: venue.styleTags?.map((t) => t.id) || [],
+        photoUrlItems,
       });
     }
   }, [venue, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: VenueFormValues) => {
-      const response = await apiRequest("POST", "/api/venues", data);
+      const { photoUrlItems, ...rest } = data;
+      const photoUrls = photoUrlItems
+        .map(item => item.url)
+        .filter(url => url && url.trim() !== "");
+      const response = await apiRequest("POST", "/api/venues", { ...rest, photoUrls });
       return response.json();
     },
     onSuccess: (newVenue) => {
@@ -118,7 +133,11 @@ export default function VenueFormPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: VenueFormValues) => {
-      const response = await apiRequest("PATCH", `/api/venues/${id}`, data);
+      const { photoUrlItems, ...rest } = data;
+      const photoUrls = photoUrlItems
+        .map(item => item.url)
+        .filter(url => url && url.trim() !== "");
+      const response = await apiRequest("PATCH", `/api/venues/${id}`, { ...rest, photoUrls });
       return response.json();
     },
     onSuccess: () => {
@@ -464,7 +483,7 @@ export default function VenueFormPage() {
                   name="primaryPhotoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Photo URL</FormLabel>
+                      <FormLabel>Primary Photo URL</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -475,12 +494,73 @@ export default function VenueFormPage() {
                         />
                       </FormControl>
                       <FormDescription>
-                        URL to the venue's main photo
+                        URL to the venue's main/hero photo
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Photo Gallery</CardTitle>
+                <CardDescription>
+                  Add additional photos for this venue
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {photoUrlFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <FormField
+                        control={form.control}
+                        name={`photoUrlItems.${index}.url`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <div className="flex gap-2 items-center">
+                                <Image className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <Input
+                                  {...field}
+                                  type="url"
+                                  placeholder="https://example.com/photo.jpg"
+                                  data-testid={`input-photo-url-${index}`}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePhotoUrl(index)}
+                      data-testid={`button-remove-photo-${index}`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => appendPhotoUrl({ url: "" })}
+                  data-testid="button-add-photo-url"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Photo URL
+                </Button>
+                {photoUrlFields.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No additional photos added yet. Click "Add Photo URL" to add gallery images.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
