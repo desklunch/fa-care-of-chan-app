@@ -33,6 +33,9 @@ import VendorUpdateForm from "@/pages/vendor-update-form";
 import AppIssues from "@/pages/app-issues";
 import AppIssueForm from "@/pages/app-issue-form";
 import AppIssueDetail from "@/pages/app-issue-detail";
+import AdminFormTemplates from "@/pages/admin-form-templates";
+import AdminFormRequests from "@/pages/admin-form-requests";
+import PublicForm from "@/pages/public-form";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -48,6 +51,8 @@ import {
   Map,
   Palette,
   Link2,
+  FileText,
+  Send,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -144,6 +149,18 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
+            name: "Form Templates",
+            href: "/admin/forms/templates",
+            icon: FileText,
+            allowedRoles: ["admin"],
+          },
+          {
+            name: "Form Requests",
+            href: "/admin/forms/requests",
+            icon: Send,
+            allowedRoles: ["admin"],
+          },
+          {
             name: "Theme Editor",
             href: "/admin/theme",
             icon: Palette,
@@ -198,6 +215,8 @@ function AuthenticatedRoutes() {
         <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
         <Route path="/admin/vendors/services" component={AdminVendorServices} />
         <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
+        <Route path="/admin/forms/templates" component={AdminFormTemplates} />
+        <Route path="/admin/forms/requests" component={AdminFormRequests} />
         <Route path="/admin/theme" component={AdminThemeEditor} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />
@@ -224,6 +243,7 @@ function Router() {
     <Switch>
       <Route path="/invite" component={InviteActivation} />
       <Route path="/vendor-update/:token" component={VendorUpdateForm} />
+      <Route path="/form/:token" component={PublicForm} />
       {isAuthenticated ? (
         <Route>
           <AuthenticatedRoutes />
