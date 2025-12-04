@@ -835,3 +835,290 @@ export const updateAppIssueSchema = createInsertSchema(appIssues).pick({
 
 export type CreateAppIssue = z.infer<typeof insertAppIssueSchema>;
 export type UpdateAppIssue = z.infer<typeof updateAppIssueSchema>;
+
+// ==========================================
+// FORM OUTREACH / RFI SYSTEM
+// ==========================================
+
+// Form field types for dynamic forms
+export const formFieldTypes = [
+  "text",
+  "textarea",
+  "number",
+  "date",
+  "select",
+  "checkbox",
+  "toggle",
+  "array",
+  "url",
+  "email",
+  "phone",
+] as const;
+export type FormFieldType = (typeof formFieldTypes)[number];
+
+// Form request status enum
+export const formRequestStatuses = ["draft", "sent", "closed"] as const;
+export type FormRequestStatus = (typeof formRequestStatuses)[number];
+
+// Outreach recipient types (polymorphic)
+export const recipientTypes = ["vendor", "contact"] as const;
+export type RecipientType = (typeof recipientTypes)[number];
+
+// Outreach token status
+export const outreachTokenStatuses = ["pending", "responded", "expired"] as const;
+export type OutreachTokenStatus = (typeof outreachTokenStatuses)[number];
+
+// Form field interface (for JSONB storage)
+export interface FormField {
+  id: string;
+  name: string;
+  type: FormFieldType;
+  placeholder?: string;
+  description?: string;
+  options?: string[];
+  required?: boolean;
+}
+
+// Form section interface (for JSONB storage)
+export interface FormSection {
+  id: string;
+  title: string;
+  description?: string;
+  fields: FormField[];
+}
+
+// Form templates - reusable form definitions
+export const formTemplates = pgTable(
+  "form_templates",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
+    createdById: varchar("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_form_templates_name").on(table.name),
+    index("idx_form_templates_created_by").on(table.createdById),
+  ],
+);
+
+// Form requests - individual outreach campaigns
+export const formRequests = pgTable(
+  "form_requests",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    templateId: varchar("template_id").references(() => formTemplates.id, { onDelete: "set null" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    dueDate: timestamp("due_date"),
+    sentAt: timestamp("sent_at"),
+    createdById: varchar("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_form_requests_template").on(table.templateId),
+    index("idx_form_requests_status").on(table.status),
+    index("idx_form_requests_created_by").on(table.createdById),
+  ],
+);
+
+// Outreach tokens - polymorphic recipients (vendors or contacts)
+export const outreachTokens = pgTable(
+  "outreach_tokens",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    requestId: varchar("request_id").notNull().references(() => formRequests.id, { onDelete: "cascade" }),
+    recipientType: varchar("recipient_type", { length: 20 }).notNull(), // 'vendor' | 'contact'
+    recipientId: varchar("recipient_id").notNull(), // ID of vendor or contact
+    token: varchar("token", { length: 255 }).notNull().unique(),
+    status: varchar("status", { length: 20 }).default("pending").notNull(),
+    sentAt: timestamp("sent_at"),
+    respondedAt: timestamp("responded_at"),
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_outreach_tokens_request").on(table.requestId),
+    index("idx_outreach_tokens_token").on(table.token),
+    index("idx_outreach_tokens_recipient").on(table.recipientType, table.recipientId),
+    index("idx_outreach_tokens_status").on(table.status),
+  ],
+);
+
+// Form responses - submitted form data
+export const formResponses = pgTable(
+  "form_responses",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tokenId: varchar("token_id").notNull().references(() => outreachTokens.id, { onDelete: "cascade" }).unique(),
+    responseData: jsonb("response_data").$type<Record<string, unknown>>().notNull().default({}),
+    submittedAt: timestamp("submitted_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_form_responses_token").on(table.tokenId),
+  ],
+);
+
+// Form outreach relations
+export const formTemplatesRelations = relations(formTemplates, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [formTemplates.createdById],
+    references: [users.id],
+  }),
+  requests: many(formRequests),
+}));
+
+export const formRequestsRelations = relations(formRequests, ({ one, many }) => ({
+  template: one(formTemplates, {
+    fields: [formRequests.templateId],
+    references: [formTemplates.id],
+  }),
+  createdBy: one(users, {
+    fields: [formRequests.createdById],
+    references: [users.id],
+  }),
+  tokens: many(outreachTokens),
+}));
+
+export const outreachTokensRelations = relations(outreachTokens, ({ one }) => ({
+  request: one(formRequests, {
+    fields: [outreachTokens.requestId],
+    references: [formRequests.id],
+  }),
+  response: one(formResponses),
+}));
+
+export const formResponsesRelations = relations(formResponses, ({ one }) => ({
+  token: one(outreachTokens, {
+    fields: [formResponses.tokenId],
+    references: [outreachTokens.id],
+  }),
+}));
+
+// Form outreach types
+export type FormTemplate = typeof formTemplates.$inferSelect;
+export type InsertFormTemplate = typeof formTemplates.$inferInsert;
+export type FormRequest = typeof formRequests.$inferSelect;
+export type InsertFormRequest = typeof formRequests.$inferInsert;
+export type OutreachToken = typeof outreachTokens.$inferSelect;
+export type InsertOutreachToken = typeof outreachTokens.$inferInsert;
+export type FormResponse = typeof formResponses.$inferSelect;
+export type InsertFormResponse = typeof formResponses.$inferInsert;
+
+// Extended types with relations
+export type FormTemplateWithRelations = FormTemplate & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName"> | null;
+};
+
+export type OutreachTokenWithRecipient = OutreachToken & {
+  vendor?: Vendor | null;
+  contact?: Contact | null;
+  response?: FormResponse | null;
+};
+
+export type FormRequestWithRelations = FormRequest & {
+  template?: FormTemplate | null;
+  createdBy: Pick<User, "id" | "firstName" | "lastName"> | null;
+  tokens?: OutreachTokenWithRecipient[];
+  recipientCount?: number;
+  respondedCount?: number;
+};
+
+// Public form response data (what vendor/contact sees)
+export type PublicFormData = {
+  request: {
+    id: string;
+    title: string;
+    description: string | null;
+    formSchema: FormSection[];
+    dueDate: Date | null;
+  };
+  recipient: {
+    id: string;
+    type: RecipientType;
+    name: string;
+    email: string | null;
+  };
+  existingResponse: Record<string, unknown> | null;
+};
+
+// Form template schemas
+export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
+  id: true,
+  createdById: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(255),
+  formSchema: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    fields: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(formFieldTypes),
+      placeholder: z.string().optional(),
+      description: z.string().optional(),
+      options: z.array(z.string()).optional(),
+      required: z.boolean().optional(),
+    })),
+  })).default([]),
+});
+
+export const updateFormTemplateSchema = insertFormTemplateSchema.partial();
+
+export type CreateFormTemplate = z.infer<typeof insertFormTemplateSchema>;
+export type UpdateFormTemplate = z.infer<typeof updateFormTemplateSchema>;
+
+// Form request schemas
+export const insertFormRequestSchema = createInsertSchema(formRequests).omit({
+  id: true,
+  createdById: true,
+  status: true,
+  sentAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "Title is required").max(255),
+  templateId: z.string().optional().nullable(),
+  formSchema: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    fields: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(formFieldTypes),
+      placeholder: z.string().optional(),
+      description: z.string().optional(),
+      options: z.array(z.string()).optional(),
+      required: z.boolean().optional(),
+    })),
+  })).default([]),
+  dueDate: z.string().optional().nullable(),
+});
+
+export const updateFormRequestSchema = createInsertSchema(formRequests).pick({
+  title: true,
+  description: true,
+  formSchema: true,
+  dueDate: true,
+}).partial();
+
+export type CreateFormRequest = z.infer<typeof insertFormRequestSchema>;
+export type UpdateFormRequest = z.infer<typeof updateFormRequestSchema>;
+
+// Form response schema (for public submission)
+export const insertFormResponseSchema = z.object({
+  responseData: z.record(z.unknown()),
+});
+
+export type CreateFormResponse = z.infer<typeof insertFormResponseSchema>;
