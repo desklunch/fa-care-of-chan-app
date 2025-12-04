@@ -120,7 +120,7 @@ export default function VenueFormPage() {
         title: "Venue created",
         description: "The venue has been created successfully.",
       });
-      setLocation(`/admin/venues/${newVenue.id}`);
+      setLocation(`/venues/${newVenue.id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -147,7 +147,7 @@ export default function VenueFormPage() {
         title: "Venue updated",
         description: "The venue has been updated successfully.",
       });
-      setLocation(`/admin/venues/${id}`);
+      setLocation(`/venues/${id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -169,8 +169,7 @@ export default function VenueFormPage() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   const breadcrumbs = [
-    { label: "Admin", href: "/admin" },
-    { label: "Venues", href: "/admin/venues" },
+    { label: "Venues", href: "/venues" },
     { label: isEditing ? "Edit Venue" : "New Venue" },
   ];
 
@@ -648,7 +647,7 @@ export default function VenueFormPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setLocation("/admin/venues")}
+                onClick={() => setLocation("/venues")}
                 data-testid="button-cancel-venue"
               >
                 Cancel

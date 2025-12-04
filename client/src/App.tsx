@@ -241,10 +241,9 @@ function AuthenticatedRoutes() {
         <Route path="/vendors/:id/edit" component={VendorForm} />
         <Route path="/vendors/:id" component={VendorDetail} />
         <Route path="/venues" component={Venues} />
-        <Route path="/admin/venues" component={Venues} />
-        <Route path="/admin/venues/new" component={VenueForm} />
-        <Route path="/admin/venues/:id/edit" component={VenueForm} />
-        <Route path="/admin/venues/:id" component={VenueDetail} />
+        <Route path="/venues/new" component={VenueForm} />
+        <Route path="/venues/:id/edit" component={VenueForm} />
+        <Route path="/venues/:id" component={VenueDetail} />
         <Route path="/amenities" component={Amenities} />
         <Route path="/tags" component={TagsPage} />
         <Route path="/admin/invites" component={AdminInvites} />

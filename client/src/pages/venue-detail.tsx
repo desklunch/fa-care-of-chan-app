@@ -57,7 +57,7 @@ export default function VenueDetailPage() {
         title: "Venue deleted",
         description: "The venue has been deleted successfully.",
       });
-      setLocation("/admin/venues");
+      setLocation("/venues");
     },
     onError: (error: Error) => {
       toast({
@@ -69,8 +69,7 @@ export default function VenueDetailPage() {
   });
 
   const breadcrumbs = [
-    { label: "Admin", href: "/admin" },
-    { label: "Venues", href: "/admin/venues" },
+    { label: "Venues", href: "/venues" },
     { label: venue?.name || "Loading..." },
   ];
 
@@ -95,7 +94,7 @@ export default function VenueDetailPage() {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={() => setLocation("/admin/venues")}
+                onClick={() => setLocation("/venues")}
                 data-testid="button-back-to-venues"
               >
                 Back to Venues
@@ -115,7 +114,7 @@ export default function VenueDetailPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => setLocation(`/admin/venues/${id}/edit`)}
+              onClick={() => setLocation(`/venues/${id}/edit`)}
               data-testid="button-edit-venue"
             >
               <Edit className="mr-2 h-4 w-4" />

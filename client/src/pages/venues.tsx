@@ -376,11 +376,11 @@ export default function VenuesPage() {
   const isAdmin = user?.role === "admin";
 
   const handleRowClick = useCallback((venue: VenueWithRelations) => {
-    navigate(`/admin/venues/${venue.id}`);
+    navigate(`/venues/${venue.id}`);
   }, [navigate]);
 
   const handleCreate = useCallback(() => {
-    navigate("/admin/venues/new");
+    navigate("/venues/new");
   }, [navigate]);
 
   if (isAuthLoading) {
