@@ -59,6 +59,8 @@ import {
   CheckCircle,
   AlertCircle,
   Trash2,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -496,8 +498,17 @@ export default function AdminFormRequestDetailPage() {
 
   const statusInfo = statusConfig[request.status as RequestStatus] || statusConfig.draft;
 
+  const handlePreview = () => {
+    window.open(`/form/preview/${id}`, "_blank", "noopener,noreferrer");
+  };
+
   const headerAction = (
     <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={handlePreview} data-testid="button-preview-form">
+        <Eye className="h-4 w-4 mr-2" />
+        Preview
+        <ExternalLink className="h-3 w-3 ml-1" />
+      </Button>
       {request.status === "draft" && pendingCount > 0 && (
         <Button onClick={() => setSendDialogOpen(true)} data-testid="button-send-request">
           <Send className="h-4 w-4 mr-2" />
