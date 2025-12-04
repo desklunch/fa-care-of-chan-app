@@ -52,6 +52,7 @@ import {
   type Venue,
   type CreateVenue,
   type UpdateVenue,
+  type VenueWithRelations,
   type Amenity,
   type CreateAmenity,
   type UpdateAmenity,
@@ -201,9 +202,19 @@ export interface IStorage {
   // Venue operations
   getVenues(): Promise<Venue[]>;
   getVenueById(id: string): Promise<Venue | undefined>;
+  getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined>;
   createVenue(data: CreateVenue): Promise<Venue>;
   updateVenue(id: string, data: UpdateVenue): Promise<Venue | undefined>;
   deleteVenue(id: string): Promise<void>;
+  
+  // Venue-Amenity relationship operations
+  getVenueAmenities(venueId: string): Promise<Amenity[]>;
+  setVenueAmenities(venueId: string, amenityIds: string[]): Promise<void>;
+  
+  // Venue-Tag relationship operations
+  getVenueTags(venueId: string): Promise<Tag[]>;
+  setVenueTags(venueId: string, tagIds: string[]): Promise<void>;
+  getTagsByCategory(category: string): Promise<Tag[]>;
   
   // Amenity operations
   getAmenities(): Promise<Amenity[]>;
@@ -1200,6 +1211,71 @@ export class DatabaseStorage implements IStorage {
   
   async deleteVenue(id: string): Promise<void> {
     await db.delete(venues).where(eq(venues.id, id));
+  }
+  
+  async getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined> {
+    const [venue] = await db.select().from(venues).where(eq(venues.id, id));
+    if (!venue) return undefined;
+    
+    const venueAmenitiesList = await this.getVenueAmenities(id);
+    const venueTags = await this.getVenueTags(id);
+    
+    return {
+      ...venue,
+      amenities: venueAmenitiesList,
+      cuisineTags: venueTags.filter(t => t.category === 'Cuisine'),
+      styleTags: venueTags.filter(t => t.category === 'Style'),
+    };
+  }
+  
+  // Venue-Amenity relationship operations
+  async getVenueAmenities(venueId: string): Promise<Amenity[]> {
+    const results = await db
+      .select({ amenity: amenities })
+      .from(venueAmenities)
+      .innerJoin(amenities, eq(venueAmenities.amenityId, amenities.id))
+      .where(eq(venueAmenities.venueId, venueId));
+    return results.map(r => r.amenity);
+  }
+  
+  async setVenueAmenities(venueId: string, amenityIds: string[]): Promise<void> {
+    await db.delete(venueAmenities).where(eq(venueAmenities.venueId, venueId));
+    
+    if (amenityIds.length > 0) {
+      await db.insert(venueAmenities).values(
+        amenityIds.map(amenityId => ({
+          venueId,
+          amenityId,
+        }))
+      );
+    }
+  }
+  
+  // Venue-Tag relationship operations
+  async getVenueTags(venueId: string): Promise<Tag[]> {
+    const results = await db
+      .select({ tag: tags })
+      .from(venueTags)
+      .innerJoin(tags, eq(venueTags.tagId, tags.id))
+      .where(eq(venueTags.venueId, venueId));
+    return results.map(r => r.tag);
+  }
+  
+  async setVenueTags(venueId: string, tagIds: string[]): Promise<void> {
+    await db.delete(venueTags).where(eq(venueTags.venueId, venueId));
+    
+    if (tagIds.length > 0) {
+      await db.insert(venueTags).values(
+        tagIds.map(tagId => ({
+          venueId,
+          tagId,
+        }))
+      );
+    }
+  }
+  
+  async getTagsByCategory(category: string): Promise<Tag[]> {
+    return db.select().from(tags).where(eq(tags.category, category)).orderBy(tags.name);
   }
   
   // Amenity operations
