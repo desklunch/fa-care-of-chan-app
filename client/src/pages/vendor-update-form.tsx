@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, useLocation, Link } from "wouter";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { PageLayout } from "@/framework";
+import { useRoute } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,29 +13,16 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { ArrowLeft, Save, Trash2, X, Building2, MapPin, Briefcase } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Building2, MapPin, Briefcase, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import type { VendorWithRelations, VendorService, VendorLocation } from "@shared/schema";
-import { insertVendorSchema } from "@shared/schema";
+import type { VendorWithServices, VendorService, VendorLocation } from "@shared/schema";
+import { publicVendorUpdateSchema } from "@shared/schema";
 import { z } from "zod";
 
-const formSchema = insertVendorSchema;
-
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof publicVendorUpdateSchema>;
 
 function getIconComponent(iconName: string | null | undefined) {
   if (!iconName) return null;
@@ -44,29 +30,24 @@ function getIconComponent(iconName: string | null | undefined) {
   return Icon ? <Icon className="" /> : null;
 }
 
-export default function VendorForm() {
-  const [, setLocation] = useLocation();
-  const [matchNew] = useRoute("/vendors/new");
-  const [matchEdit, editParams] = useRoute<{ id: string }>("/vendors/:id/edit");
-  
-  const isEditMode = !!matchEdit;
-  const vendorId = editParams?.id;
+export default function VendorUpdateForm() {
+  const [match, params] = useRoute<{ token: string }>("/vendor-update/:token");
+  const token = params?.token;
   const { toast } = useToast();
-
+  const [isSuccess, setIsSuccess] = useState(false);
   const [locations, setLocations] = useState<VendorLocation[]>([]);
 
-  const { data: existingVendor, isLoading: vendorLoading } = useQuery<VendorWithRelations>({
-    queryKey: ["/api/vendors", vendorId],
-    enabled: isEditMode && !!vendorId,
+  const { data: vendor, isLoading, error } = useQuery<VendorWithServices>({
+    queryKey: ["/api/vendor-update", token],
+    enabled: !!token,
   });
 
   const { data: allServices = [] } = useQuery<VendorService[]>({
     queryKey: ["/api/vendor-services"],
   });
 
-
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(publicVendorUpdateSchema),
     mode: "onBlur",
     reValidateMode: "onChange",
     defaultValues: {
@@ -80,85 +61,43 @@ export default function VendorForm() {
       diversityInfo: "",
       chargesSalesTax: false,
       salesTaxNotes: "",
-      isPreferred: false,
-      notes: "",
       locations: [],
       serviceIds: [],
     },
   });
 
   useEffect(() => {
-    if (isEditMode && existingVendor) {
-      const serviceIds = existingVendor.services?.map((s) => s.id) || [];
+    if (vendor) {
+      const serviceIds = vendor.services?.map((s) => s.id) || [];
       form.reset({
-        businessName: existingVendor.businessName,
-        address: existingVendor.address || "",
-        phone: existingVendor.phone || "",
-        email: existingVendor.email || "",
-        website: existingVendor.website || "",
-        capabilitiesDeck: existingVendor.capabilitiesDeck || "",
-        employeeCount: existingVendor.employeeCount || "",
-        diversityInfo: existingVendor.diversityInfo || "",
-        chargesSalesTax: existingVendor.chargesSalesTax || false,
-        salesTaxNotes: existingVendor.salesTaxNotes || "",
-        isPreferred: existingVendor.isPreferred || false,
-        notes: existingVendor.notes || "",
-        locations: existingVendor.locations || [],
+        businessName: vendor.businessName,
+        address: vendor.address || "",
+        phone: vendor.phone || "",
+        email: vendor.email || "",
+        website: vendor.website || "",
+        capabilitiesDeck: vendor.capabilitiesDeck || "",
+        employeeCount: vendor.employeeCount || "",
+        diversityInfo: vendor.diversityInfo || "",
+        chargesSalesTax: vendor.chargesSalesTax || false,
+        salesTaxNotes: vendor.salesTaxNotes || "",
+        locations: vendor.locations || [],
         serviceIds,
       });
-      setLocations((existingVendor.locations as VendorLocation[]) || []);
+      setLocations((vendor.locations as VendorLocation[]) || []);
     }
-  }, [isEditMode, existingVendor, form]);
-
-  const createMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      return apiRequest("POST", "/api/vendors", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      toast({ title: "Vendor created successfully!" });
-      setLocation("/vendors");
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to create vendor", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
+  }, [vendor, form]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest("PATCH", `/api/vendors/${vendorId}`, data);
+      return apiRequest("POST", `/api/vendor-update/${token}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors", vendorId] });
-      toast({ title: "Vendor updated successfully!" });
-      setLocation(`/vendors/${vendorId}`);
+      setIsSuccess(true);
+      toast({ title: "Information updated successfully!" });
     },
     onError: (error: Error) => {
       toast({ 
-        title: "Failed to update vendor", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("DELETE", `/api/vendors/${vendorId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      toast({ title: "Vendor deleted successfully!" });
-      setLocation("/vendors");
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to delete vendor", 
+        title: "Failed to update information", 
         description: error.message,
         variant: "destructive" 
       });
@@ -170,12 +109,7 @@ export default function VendorForm() {
       ...data,
       locations: locations.length > 0 ? locations : null,
     };
-    
-    if (isEditMode) {
-      updateMutation.mutate(submitData);
-    } else {
-      createMutation.mutate(submitData);
-    }
+    updateMutation.mutate(submitData as FormData);
   };
 
   const handleLocationSelect = (location: VendorLocation | null) => {
@@ -202,57 +136,76 @@ export default function VendorForm() {
     form.setValue("serviceIds", newIds);
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
-  const isLoading = isEditMode && vendorLoading;
-
   if (isLoading) {
     return (
-      <PageLayout 
-        breadcrumbs={[
-          { label: "Vendors", href: "/vendors" },
-          { label: isEditMode ? "Edit Vendor" : "New Vendor" }
-        ]}
-      >
-        <div className="p-6 max-w-3xl mx-auto">
-          <Skeleton className="h-10 w-64 mb-6" />
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-      </PageLayout>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-muted-foreground">Loading your information...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  const backUrl = isEditMode && vendorId ? `/vendors/${vendorId}` : "/vendors";
+  if (error || !vendor) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Link Invalid or Expired</h2>
+            <p className="text-muted-foreground mb-4">
+              This update link is no longer valid. It may have expired or already been used.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please contact the team to request a new update link.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Information Updated</h2>
+            <p className="text-muted-foreground">
+              Thank you! Your vendor information has been successfully updated.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <PageLayout 
-      breadcrumbs={[
-        { label: "Vendors", href: "/vendors" },
-        ...(isEditMode && existingVendor ? [{ label: existingVendor.businessName, href: `/vendors/${vendorId}` }] : []),
-        { label: isEditMode ? "Edit" : "New Vendor" }
-      ]}
-    >
-      <div className="p-6 max-w-3xl">
-
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold mb-2">Update Your Vendor Information</h1>
+          <p className="text-muted-foreground">
+            Please review and update your business details below.
+          </p>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  {isEditMode ? "Edit Vendor" : "Add New Vendor"}
+                  <Building2 className="h-5 w-5" />
+                  Business Information
                 </CardTitle>
                 <CardDescription>
-                  {isEditMode 
-                    ? "Update the vendor's information."
-                    : "Enter the details for the new vendor."
-                  }
+                  Your primary business contact details.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -264,7 +217,7 @@ export default function VendorForm() {
                       <FormLabel>Business Name *</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Acme Corporation" 
+                          placeholder="Your Business Name" 
                           {...field} 
                           data-testid="input-business-name"
                         />
@@ -303,7 +256,7 @@ export default function VendorForm() {
                       <FormControl>
                         <Input 
                           type="email"
-                          placeholder="contact@acme.com" 
+                          placeholder="contact@yourbusiness.com" 
                           {...field} 
                           value={field.value || ""}
                           data-testid="input-email"
@@ -322,7 +275,7 @@ export default function VendorForm() {
                       <FormLabel>Website</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="https://www.acme.com" 
+                          placeholder="https://www.yourbusiness.com" 
                           {...field} 
                           value={field.value || ""}
                           data-testid="input-website"
@@ -357,10 +310,11 @@ export default function VendorForm() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
                   Service Locations
                 </CardTitle>
                 <CardDescription>
-                  Search and select the cities or regions where this vendor operates.
+                  Search and select the cities or regions where you provide services.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -399,10 +353,11 @@ export default function VendorForm() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  Services
+                  <Briefcase className="h-5 w-5" />
+                  Services *
                 </CardTitle>
                 <CardDescription>
-                  Click on services to toggle their assignment to this vendor.
+                  Select all services you provide. At least one is required.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -414,7 +369,7 @@ export default function VendorForm() {
                       <FormControl>
                         <div className="flex flex-wrap gap-4">
                           {allServices.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No services available. Create services in the admin panel.</p>
+                            <p className="text-sm text-muted-foreground">Loading services...</p>
                           ) : (
                             allServices.map((service) => {
                               const isSelected = (field.value || []).includes(service.id);
@@ -446,6 +401,9 @@ export default function VendorForm() {
             <Card>
               <CardHeader>
                 <CardTitle>Business Details</CardTitle>
+                <CardDescription>
+                  Additional information about your business.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <FormField
@@ -475,7 +433,7 @@ export default function VendorForm() {
                       <FormLabel>Capabilities Deck URL</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Link to capabilities deck" 
+                          placeholder="Link to your capabilities presentation" 
                           {...field} 
                           value={field.value || ""}
                           data-testid="input-capabilities-deck"
@@ -520,7 +478,7 @@ export default function VendorForm() {
                               data-testid="switch-sales-tax"
                             />
                           </FormControl>
-                          <Label htmlFor="chargesSalesTax">Charges Sales Tax</Label>
+                          <Label>Charges Sales Tax</Label>
                         </FormItem>
                       )}
                     />
@@ -547,108 +505,29 @@ export default function VendorForm() {
                     />
                   )}
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <FormField
-                    control={form.control}
-                    name="isPreferred"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="switch-preferred"
-                          />
-                        </FormControl>
-                        <Label htmlFor="isPreferred">Preferred Vendor</Label>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Additional notes about this vendor..."
-                          className="min-h-[100px]"
-                          {...field} 
-                          value={field.value || ""}
-                          data-testid="textarea-notes"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
 
-            <div className="flex gap-3 justify-between">
-              <div className="flex gap-3">
-                <Link href={backUrl}>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                </Link>
-                <Button 
-                  type="submit" 
-                  disabled={isPending}
-                  data-testid="button-save"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isPending 
-                    ? (isEditMode ? "Saving..." : "Creating...") 
-                    : (isEditMode ? "Save Changes" : "Create Vendor")
-                  }
-                </Button>
-              </div>
-              {isEditMode && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      type="button" 
-                      variant="destructive"
-                      disabled={isPending}
-                      data-testid="button-delete"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this vendor? This action cannot be undone and will remove all associations with services and contacts.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteMutation.mutate()}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        data-testid="button-confirm-delete"
-                      >
-                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
+            <div className="flex justify-center pt-4">
+              <Button 
+                type="submit" 
+                size="lg"
+                disabled={updateMutation.isPending}
+                data-testid="button-submit"
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
             </div>
           </form>
         </Form>
       </div>
-    </PageLayout>
+    </div>
   );
 }

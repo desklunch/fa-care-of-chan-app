@@ -16,6 +16,7 @@ import {
   updateContactSchema,
   insertVendorSchema,
   updateVendorSchema,
+  publicVendorUpdateSchema,
   featureStatuses,
   type FeatureStatus,
   themeConfigSchema,
@@ -1273,6 +1274,122 @@ export async function registerRoutes(
         metadata: { error: String(error) },
       });
       res.status(500).json({ message: "Failed to delete vendor" });
+    }
+  });
+
+  // Generate vendor update link (admin only)
+  app.post("/api/vendors/:id/generate-update-link", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const vendorId = req.params.id;
+      const vendor = await storage.getVendorById(vendorId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      const expiresInHours = req.body.expiresInHours || 720; // Default 30 days
+      const { token, expiresAt } = await storage.createVendorUpdateToken(vendorId, expiresInHours);
+      
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      const url = `${protocol}://${host}/vendor-update/${token}`;
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_update_token",
+        entityId: vendorId,
+        status: "success",
+        metadata: { vendorName: vendor.businessName, expiresAt: expiresAt.toISOString() },
+      });
+      
+      res.json({ url, token, expiresAt: expiresAt.toISOString() });
+    } catch (error) {
+      console.error("Error generating vendor update link:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_update_token",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to generate update link" });
+    }
+  });
+
+  // ===== PUBLIC VENDOR UPDATE ROUTES (no auth required) =====
+  
+  // Get vendor data for update form (public - token validates access)
+  app.get("/api/vendor-update/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const vendor = await storage.getVendorByToken(token);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Invalid or expired link" });
+      }
+      
+      // Return vendor data without internal fields
+      const { isPreferred, notes, ...publicVendorData } = vendor;
+      
+      res.json(publicVendorData);
+    } catch (error) {
+      console.error("Error fetching vendor by token:", error);
+      res.status(500).json({ message: "Failed to load vendor data" });
+    }
+  });
+  
+  // Submit vendor updates (public - token validates access)
+  app.post("/api/vendor-update/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const vendor = await storage.getVendorByToken(token);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Invalid or expired link" });
+      }
+      
+      // Validate the update data
+      const result = publicVendorUpdateSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid data", 
+          errors: result.error.errors 
+        });
+      }
+      
+      const { serviceIds, ...vendorData } = result.data;
+      
+      // Normalize URLs if present
+      if (vendorData.website) {
+        try {
+          const url = new URL(vendorData.website.startsWith('http') ? vendorData.website : `https://${vendorData.website}`);
+          vendorData.website = url.toString();
+        } catch {
+          // Keep as-is if URL parsing fails
+        }
+      }
+      if (vendorData.capabilitiesDeck) {
+        try {
+          const url = new URL(vendorData.capabilitiesDeck.startsWith('http') ? vendorData.capabilitiesDeck : `https://${vendorData.capabilitiesDeck}`);
+          vendorData.capabilitiesDeck = url.toString();
+        } catch {
+          // Keep as-is if URL parsing fails
+        }
+      }
+      
+      // Update the vendor (preserving internal fields)
+      const updatedVendor = await storage.updateVendor(vendor.id, vendorData, serviceIds);
+      
+      // Mark token as used
+      await storage.markTokenAsUsed(token);
+      
+      res.json({ 
+        success: true, 
+        message: "Your information has been updated successfully" 
+      });
+    } catch (error) {
+      console.error("Error updating vendor via token:", error);
+      res.status(500).json({ message: "Failed to update vendor information" });
     }
   });
 

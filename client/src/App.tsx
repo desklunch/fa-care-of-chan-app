@@ -28,6 +28,7 @@ import VendorForm from "@/pages/vendor-form";
 import AdminVendorServices from "@/pages/admin-vendor-services";
 import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import AdminThemeEditor from "@/pages/admin-theme-editor";
+import VendorUpdateForm from "@/pages/vendor-update-form";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -207,6 +208,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/invite" component={InviteActivation} />
+      <Route path="/vendor-update/:token" component={VendorUpdateForm} />
       {isAuthenticated ? (
         <Route>
           <AuthenticatedRoutes />

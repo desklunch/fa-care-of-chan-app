@@ -11,6 +11,7 @@ import {
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
+  vendorUpdateTokens,
   appSettings,
   type User,
   type UpsertUser,
@@ -42,6 +43,7 @@ import {
   type UpdateVendorService,
   type CreateVendor,
   type UpdateVendor,
+  type VendorUpdateToken,
   type AppSetting,
   type ThemeConfig,
 } from "@shared/schema";
@@ -156,6 +158,11 @@ export interface IStorage {
   setSetting(key: string, value: unknown, updatedBy?: string): Promise<AppSetting>;
   getTheme(): Promise<ThemeConfig | null>;
   setTheme(theme: ThemeConfig, updatedBy: string): Promise<AppSetting>;
+  
+  // Vendor update token operations
+  createVendorUpdateToken(vendorId: string, expiresInHours?: number): Promise<{ token: string; expiresAt: Date }>;
+  getVendorByToken(token: string): Promise<VendorWithServices | undefined>;
+  markTokenAsUsed(token: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1102,6 +1109,54 @@ export class DatabaseStorage implements IStorage {
   
   async setTheme(theme: ThemeConfig, updatedBy: string): Promise<AppSetting> {
     return this.setSetting("theme", theme, updatedBy);
+  }
+  
+  // Vendor update token operations
+  async createVendorUpdateToken(vendorId: string, expiresInHours: number = 720): Promise<{ token: string; expiresAt: Date }> {
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
+    
+    await db.insert(vendorUpdateTokens).values({
+      vendorId,
+      token,
+      expiresAt,
+    });
+    
+    return { token, expiresAt };
+  }
+  
+  async getVendorByToken(token: string): Promise<VendorWithServices | undefined> {
+    const [tokenRecord] = await db
+      .select()
+      .from(vendorUpdateTokens)
+      .where(
+        and(
+          eq(vendorUpdateTokens.token, token),
+          eq(vendorUpdateTokens.used, false),
+          gt(vendorUpdateTokens.expiresAt, new Date())
+        )
+      );
+    
+    if (!tokenRecord) {
+      return undefined;
+    }
+    
+    const vendor = await this.getVendorByIdWithRelations(tokenRecord.vendorId);
+    if (!vendor) {
+      return undefined;
+    }
+    
+    return {
+      ...vendor,
+      services: vendor.services || [],
+    };
+  }
+  
+  async markTokenAsUsed(token: string): Promise<void> {
+    await db
+      .update(vendorUpdateTokens)
+      .set({ used: true })
+      .where(eq(vendorUpdateTokens.token, token));
   }
 }
 

@@ -292,6 +292,23 @@ export const vendorsContacts = pgTable(
   ],
 );
 
+// Vendor update tokens for self-service profile updates
+export const vendorUpdateTokens = pgTable(
+  "vendor_update_tokens",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    vendorId: varchar("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+    token: varchar("token", { length: 255 }).notNull().unique(),
+    used: boolean("used").notNull().default(false),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_vendor_update_tokens_token").on(table.token),
+    index("idx_vendor_update_tokens_vendor_id").on(table.vendorId),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -386,6 +403,8 @@ export type VendorServiceVendor = typeof vendorServicesVendors.$inferSelect;
 export type InsertVendorServiceVendor = typeof vendorServicesVendors.$inferInsert;
 export type VendorContact = typeof vendorsContacts.$inferSelect;
 export type InsertVendorContact = typeof vendorsContacts.$inferInsert;
+export type VendorUpdateToken = typeof vendorUpdateTokens.$inferSelect;
+export type InsertVendorUpdateToken = typeof vendorUpdateTokens.$inferInsert;
 
 // Vendor with associated services and contacts
 export type VendorWithServices = Vendor & {
@@ -407,7 +426,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'vendor_update_token' | 'app_setting';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -624,8 +643,43 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
 
 export const updateVendorSchema = insertVendorSchema.partial();
 
+// Public vendor update schema (excludes internal fields: isPreferred, notes)
+export const publicVendorUpdateSchema = z.object({
+  businessName: z.string().min(1, "Business name is required").max(255),
+  address: z.string().optional().nullable(),
+  phone: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || /^[\d\s\-\+\(\)\.]+$/.test(val),
+      "Invalid phone number format"
+    ),
+  email: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      "Invalid email format"
+    ),
+  website: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || /^(https?:\/\/)?[\w\-]+(\.[\w\-]+)+[/#?]?.*$/.test(val),
+      "Invalid website URL format"
+    ),
+  capabilitiesDeck: z.string().max(500).optional().nullable(),
+  employeeCount: z.string().max(50).optional().nullable(),
+  diversityInfo: z.string().optional().nullable(),
+  chargesSalesTax: z.boolean().optional().default(false),
+  salesTaxNotes: z.string().optional().nullable(),
+  locations: z.array(locationSchema).optional().nullable(),
+  serviceIds: z.array(z.string()).min(1, "At least one service is required"),
+});
+
 export type CreateVendor = z.infer<typeof insertVendorSchema>;
 export type UpdateVendor = z.infer<typeof updateVendorSchema>;
+export type PublicVendorUpdate = z.infer<typeof publicVendorUpdateSchema>;
 
 // App settings table for storing theme and other global configuration
 export const appSettings = pgTable("app_settings", {
