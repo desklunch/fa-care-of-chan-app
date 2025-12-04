@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Form,
@@ -20,14 +19,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityToggle } from "@/components/ui/amenity-toggle";
 import { TagAssignment } from "@/components/ui/tag-assignment";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import type { VenueWithRelations, CreateVenue } from "@shared/schema";
+import { Save, Loader2 } from "lucide-react";
+import type { VenueWithRelations } from "@shared/schema";
 import { insertVenueSchema } from "@shared/schema";
 
 const venueFormSchema = insertVenueSchema.extend({
@@ -64,8 +62,7 @@ export default function VenueFormPage() {
       email: "",
       website: "",
       instagramAccount: "",
-      googlePlaceId: "",
-      imageUrl: "",
+      primaryPhotoUrl: "",
       isActive: true,
       amenityIds: [],
       cuisineTagIds: [],
@@ -88,8 +85,7 @@ export default function VenueFormPage() {
         email: venue.email || "",
         website: venue.website || "",
         instagramAccount: venue.instagramAccount || "",
-        googlePlaceId: venue.googlePlaceId || "",
-        imageUrl: venue.imageUrl || "",
+        primaryPhotoUrl: venue.primaryPhotoUrl || "",
         isActive: venue.isActive ?? true,
         amenityIds: venue.amenities?.map((a) => a.id) || [],
         cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
@@ -153,9 +149,15 @@ export default function VenueFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const breadcrumbs = [
+    { label: "Admin", href: "/admin" },
+    { label: "Venues", href: "/admin/venues" },
+    { label: isEditing ? "Edit Venue" : "New Venue" },
+  ];
+
   if (isEditing && isLoadingVenue) {
     return (
-      <PageLayout title="Loading..." backUrl="/admin/venues">
+      <PageLayout breadcrumbs={breadcrumbs}>
         <div className="space-y-6 max-w-4xl mx-auto">
           <Skeleton className="h-[400px] w-full" />
         </div>
@@ -164,10 +166,7 @@ export default function VenueFormPage() {
   }
 
   return (
-    <PageLayout
-      title={isEditing ? "Edit Venue" : "New Venue"}
-      backUrl="/admin/venues"
-    >
+    <PageLayout breadcrumbs={breadcrumbs}>
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -462,17 +461,17 @@ export default function VenueFormPage() {
 
                 <FormField
                   control={form.control}
-                  name="imageUrl"
+                  name="primaryPhotoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Photo URL</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           value={field.value || ""}
                           type="url"
                           placeholder="https://example.com/image.jpg"
-                          data-testid="input-venue-image-url"
+                          data-testid="input-venue-photo-url"
                         />
                       </FormControl>
                       <FormDescription>
