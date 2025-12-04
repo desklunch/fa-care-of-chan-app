@@ -191,7 +191,7 @@ export default function AdminVendorTokens() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout breadcrumbs={[{ label: "Vendor Tokens" }]}>
       <DataGridPage
         queryKey="/api/vendor-update-tokens"
         columns={tokenColumns}
