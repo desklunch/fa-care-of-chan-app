@@ -368,7 +368,7 @@ export function MultiSelect({
   const triggerButton = (
     <Button
       variant={buttonVariant}
-      size="default"
+      size="md"
       data-testid={`button-${testIdPrefix}`}
       className={`${appliedButtonClassName} gap-1 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : ""}`}
     >
@@ -381,7 +381,7 @@ export function MultiSelect({
     <Button
       type="button"
       variant="default"
-      size="default"
+      size="md"
       className="rounded-l-none border-l-0 px-2"
       onClick={(e) => {
         e.stopPropagation();
