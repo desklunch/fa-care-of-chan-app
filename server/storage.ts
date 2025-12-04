@@ -201,6 +201,7 @@ export interface IStorage {
   
   // Venue operations
   getVenues(): Promise<Venue[]>;
+  getVenuesWithRelations(): Promise<VenueWithRelations[]>;
   getVenueById(id: string): Promise<Venue | undefined>;
   getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined>;
   createVenue(data: CreateVenue): Promise<Venue>;
@@ -1190,6 +1191,54 @@ export class DatabaseStorage implements IStorage {
   async getVenueById(id: string): Promise<Venue | undefined> {
     const [venue] = await db.select().from(venues).where(eq(venues.id, id));
     return venue;
+  }
+  
+  async getVenuesWithRelations(): Promise<VenueWithRelations[]> {
+    const allVenues = await db.select().from(venues).orderBy(venues.name);
+    
+    const allVenueAmenities = await db
+      .select({
+        venueId: venueAmenities.venueId,
+        amenity: amenities,
+      })
+      .from(venueAmenities)
+      .innerJoin(amenities, eq(venueAmenities.amenityId, amenities.id));
+    
+    const allVenueTags = await db
+      .select({
+        venueId: venueTags.venueId,
+        tag: tags,
+      })
+      .from(venueTags)
+      .innerJoin(tags, eq(venueTags.tagId, tags.id));
+    
+    const amenitiesByVenue = new Map<string, Amenity[]>();
+    for (const va of allVenueAmenities) {
+      if (!amenitiesByVenue.has(va.venueId)) {
+        amenitiesByVenue.set(va.venueId, []);
+      }
+      amenitiesByVenue.get(va.venueId)!.push(va.amenity);
+    }
+    
+    const tagsByVenue = new Map<string, Tag[]>();
+    for (const vt of allVenueTags) {
+      if (!tagsByVenue.has(vt.venueId)) {
+        tagsByVenue.set(vt.venueId, []);
+      }
+      tagsByVenue.get(vt.venueId)!.push(vt.tag);
+    }
+    
+    return allVenues.map(venue => {
+      const venueAmenitiesList = amenitiesByVenue.get(venue.id) || [];
+      const venueTagsList = tagsByVenue.get(venue.id) || [];
+      
+      return {
+        ...venue,
+        amenities: venueAmenitiesList,
+        cuisineTags: venueTagsList.filter(t => t.category === 'Cuisine'),
+        styleTags: venueTagsList.filter(t => t.category === 'Style'),
+      };
+    });
   }
   
   async createVenue(data: CreateVenue): Promise<Venue> {

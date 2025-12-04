@@ -1514,10 +1514,10 @@ export async function registerRoutes(
 
   // ===== VENUES ROUTES =====
 
-  // Get all venues
+  // Get all venues with relationships
   app.get("/api/venues", isAuthenticated, async (req, res) => {
     try {
-      const venues = await storage.getVenues();
+      const venues = await storage.getVenuesWithRelations();
       res.json(venues);
     } catch (error) {
       console.error("Error fetching venues:", error);
