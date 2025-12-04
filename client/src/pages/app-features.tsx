@@ -192,7 +192,7 @@ export default function AppFeatures() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "App Features" }]}>
+      <PageLayout breadcrumbs={[{ label: "App" }, { label: "Features" }]}>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -207,7 +207,7 @@ export default function AppFeatures() {
 
   return (
     <PageLayout 
-      breadcrumbs={[{ label: "App Features" }]}
+      breadcrumbs={[{ label: "App" }, { label: "Features" }]}
       actionButton={{
         label: "New Feature",
         href: "/app/features/new",
