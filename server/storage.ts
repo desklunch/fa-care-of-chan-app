@@ -13,6 +13,7 @@ import {
   vendorsContacts,
   vendorUpdateTokens,
   appSettings,
+  appIssues,
   type User,
   type UpsertUser,
   type Invite,
@@ -47,6 +48,12 @@ import {
   type VendorUpdateTokenWithRelations,
   type AppSetting,
   type ThemeConfig,
+  type AppIssue,
+  type InsertAppIssue,
+  type CreateAppIssue,
+  type UpdateAppIssue,
+  type AppIssueWithRelations,
+  type IssueStatus,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -165,6 +172,13 @@ export interface IStorage {
   getVendorByToken(token: string): Promise<VendorWithServices | undefined>;
   markTokenAsUsed(token: string): Promise<void>;
   getAllVendorUpdateTokens(): Promise<VendorUpdateTokenWithRelations[]>;
+  
+  // App issue operations
+  getIssues(options?: { status?: IssueStatus[]; severity?: string }): Promise<AppIssueWithRelations[]>;
+  getIssueById(id: string): Promise<AppIssueWithRelations | undefined>;
+  createIssue(data: CreateAppIssue, createdById: string): Promise<AppIssue>;
+  updateIssue(id: string, data: UpdateAppIssue): Promise<AppIssue | undefined>;
+  deleteIssue(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1201,6 +1215,120 @@ export class DatabaseStorage implements IStorage {
         lastName: t.createdByLastName,
       } as any : null,
     }));
+  }
+  
+  // App issue operations
+  async getIssues(options?: { status?: IssueStatus[]; severity?: string }): Promise<AppIssueWithRelations[]> {
+    const conditions: any[] = [];
+
+    if (options?.status && options.status.length > 0) {
+      conditions.push(inArray(appIssues.status, options.status));
+    }
+    if (options?.severity) {
+      conditions.push(eq(appIssues.severity, options.severity));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const issues = await db
+      .select({
+        id: appIssues.id,
+        title: appIssues.title,
+        description: appIssues.description,
+        severity: appIssues.severity,
+        status: appIssues.status,
+        createdById: appIssues.createdById,
+        createdAt: appIssues.createdAt,
+        updatedAt: appIssues.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
+      })
+      .from(appIssues)
+      .innerJoin(users, eq(appIssues.createdById, users.id))
+      .where(whereClause)
+      .orderBy(desc(appIssues.createdAt));
+
+    return issues.map((i) => ({
+      id: i.id,
+      title: i.title,
+      description: i.description,
+      severity: i.severity,
+      status: i.status,
+      createdById: i.createdById,
+      createdAt: i.createdAt,
+      updatedAt: i.updatedAt,
+      createdBy: {
+        id: i.createdById,
+        firstName: i.createdByFirstName,
+        lastName: i.createdByLastName,
+        profileImageUrl: i.createdByProfileImage,
+      },
+    }));
+  }
+
+  async getIssueById(id: string): Promise<AppIssueWithRelations | undefined> {
+    const issues = await db
+      .select({
+        id: appIssues.id,
+        title: appIssues.title,
+        description: appIssues.description,
+        severity: appIssues.severity,
+        status: appIssues.status,
+        createdById: appIssues.createdById,
+        createdAt: appIssues.createdAt,
+        updatedAt: appIssues.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
+      })
+      .from(appIssues)
+      .innerJoin(users, eq(appIssues.createdById, users.id))
+      .where(eq(appIssues.id, id));
+
+    if (issues.length === 0) return undefined;
+
+    const i = issues[0];
+    return {
+      id: i.id,
+      title: i.title,
+      description: i.description,
+      severity: i.severity,
+      status: i.status,
+      createdById: i.createdById,
+      createdAt: i.createdAt,
+      updatedAt: i.updatedAt,
+      createdBy: {
+        id: i.createdById,
+        firstName: i.createdByFirstName,
+        lastName: i.createdByLastName,
+        profileImageUrl: i.createdByProfileImage,
+      },
+    };
+  }
+
+  async createIssue(data: CreateAppIssue, createdById: string): Promise<AppIssue> {
+    const [issue] = await db
+      .insert(appIssues)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return issue;
+  }
+
+  async updateIssue(id: string, data: UpdateAppIssue): Promise<AppIssue | undefined> {
+    const [issue] = await db
+      .update(appIssues)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(appIssues.id, id))
+      .returning();
+    return issue;
+  }
+
+  async deleteIssue(id: string): Promise<void> {
+    await db.delete(appIssues).where(eq(appIssues.id, id));
   }
 }
 

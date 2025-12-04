@@ -758,3 +758,80 @@ export const themeConfigSchema = z.object({
 
 export type ThemeVariables = z.infer<typeof themeVariableSchema>;
 export type ThemeConfig = z.infer<typeof themeConfigSchema>;
+
+// App issue severity enum values
+export const issueSeverities = ["high", "medium", "low"] as const;
+export type IssueSeverity = (typeof issueSeverities)[number];
+
+// App issue status enum values
+export const issueStatuses = [
+  "reported",
+  "under_review",
+  "in_progress",
+  "fixed",
+  "closed",
+  "duplicate",
+] as const;
+export type IssueStatus = (typeof issueStatuses)[number];
+
+// App issues / bug reports
+export const appIssues = pgTable(
+  "app_issues",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description").notNull(),
+    severity: varchar("severity", { length: 20 }).notNull(),
+    status: varchar("status", { length: 20 }).default("reported").notNull(),
+    createdById: varchar("created_by_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_app_issues_status").on(table.status),
+    index("idx_app_issues_severity").on(table.severity),
+    index("idx_app_issues_created_by").on(table.createdById),
+  ],
+);
+
+// App issues relations
+export const appIssuesRelations = relations(appIssues, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [appIssues.createdById],
+    references: [users.id],
+  }),
+}));
+
+// App issue types
+export type AppIssue = typeof appIssues.$inferSelect;
+export type InsertAppIssue = typeof appIssues.$inferInsert;
+
+// App issue with relations
+export type AppIssueWithRelations = AppIssue & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;
+};
+
+// App issue schemas
+export const insertAppIssueSchema = createInsertSchema(appIssues).omit({
+  id: true,
+  createdById: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(3, "Title must be at least 3 characters").max(200),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  severity: z.enum(issueSeverities, { required_error: "Please select a severity level" }),
+});
+
+export const updateAppIssueSchema = createInsertSchema(appIssues).pick({
+  title: true,
+  description: true,
+  severity: true,
+  status: true,
+}).partial();
+
+export type CreateAppIssue = z.infer<typeof insertAppIssueSchema>;
+export type UpdateAppIssue = z.infer<typeof updateAppIssueSchema>;
