@@ -283,10 +283,10 @@ export default function VenuesPage() {
   }
 
   const dataGridProps = {
-    queryKey: ["/api/venues"],
+    queryKey: "/api/venues",
     columns: venueColumns,
     defaultVisibleColumns: DEFAULT_VISIBLE_COLUMNS,
-    searchFields: ["name", "city", "state", "shortDescription"] as const,
+    searchFields: ["name", "city", "state", "shortDescription"] as (keyof Venue)[],
     searchPlaceholder: "Search venues...",
     onRowClick: handleRowClick,
     getRowId: (venue: Venue) => venue.id,
