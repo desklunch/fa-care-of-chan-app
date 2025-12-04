@@ -263,7 +263,7 @@ export const venues = pgTable(
     website: varchar("website", { length: 500 }),
     instagramAccount: varchar("instagram_account", { length: 100 }),
     primaryPhotoUrl: varchar("primary_photo_url", { length: 1000 }),
-    photoUrls: text("photo_urls").array(),
+    photoUrls: jsonb("photo_urls").$type<string[]>().default([]),
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
