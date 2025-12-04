@@ -2091,6 +2091,36 @@ export async function registerRoutes(
     }
   });
 
+  // Preview form request (admin only) - returns form data with dummy recipient for preview
+  app.get("/api/form-requests/:id/preview", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const request = await storage.getFormRequestById(req.params.id);
+      if (!request) {
+        return res.status(404).json({ message: "Form request not found" });
+      }
+
+      // Return preview data with dummy recipient info
+      res.json({
+        request: {
+          title: request.title,
+          description: request.description,
+          formSchema: request.formSchema,
+          dueDate: request.dueDate,
+        },
+        recipient: {
+          name: "Preview Recipient",
+          type: "vendor",
+          email: "preview@example.com",
+        },
+        isPreview: true,
+        existingResponse: null,
+      });
+    } catch (error) {
+      console.error("Error fetching form preview:", error);
+      res.status(500).json({ message: "Failed to fetch form preview" });
+    }
+  });
+
   // Public Form Routes (no authentication required)
   // GET /api/form/:token - get form for submission
   app.get("/api/form/:token", async (req, res) => {
