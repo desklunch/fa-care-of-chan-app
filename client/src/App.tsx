@@ -27,6 +27,7 @@ import VendorDetail from "@/pages/vendor-detail";
 import VendorForm from "@/pages/vendor-form";
 import Venues from "@/pages/venues";
 import Amenities from "@/pages/amenities";
+import TagsPage from "@/pages/tags";
 import AdminVendorServices from "@/pages/admin-vendor-services";
 import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import AdminThemeEditor from "@/pages/admin-theme-editor";
@@ -61,6 +62,7 @@ import {
   FileText,
   Send,
   MapPin,
+  Tag,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -107,6 +109,11 @@ function useLayoutConfig() {
             name: "Amenities",
             href: "/amenities",
             icon: Tags,
+          },
+          {
+            name: "Tags",
+            href: "/tags",
+            icon: Tag,
           },
         ],
       },
@@ -233,6 +240,7 @@ function AuthenticatedRoutes() {
         <Route path="/vendors/:id" component={VendorDetail} />
         <Route path="/venues" component={Venues} />
         <Route path="/amenities" component={Amenities} />
+        <Route path="/tags" component={TagsPage} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
         <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
