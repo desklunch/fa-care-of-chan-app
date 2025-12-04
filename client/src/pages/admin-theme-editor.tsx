@@ -74,6 +74,13 @@ interface ColorFieldProps {
 function ColorField({ label, value, onChange, description }: ColorFieldProps) {
   const hexValue = hslToHex(value);
   
+  const handleHexInput = (inputValue: string) => {
+    const cleanHex = inputValue.startsWith("#") ? inputValue : `#${inputValue}`;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+      onChange(hexToHsl(cleanHex));
+    }
+  };
+  
   return (
     <div className="flex items-center gap-3 py-2">
       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -92,11 +99,11 @@ function ColorField({ label, value, onChange, description }: ColorFieldProps) {
         </div>
       </div>
       <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-40 text-xs font-mono flex-shrink-0"
-        placeholder="H S% L%"
-        data-testid={`input-hsl-${label.toLowerCase().replace(/\s+/g, "-")}`}
+        value={hexValue}
+        onChange={(e) => handleHexInput(e.target.value)}
+        className="w-24 text-xs font-mono flex-shrink-0"
+        placeholder="#000000"
+        data-testid={`input-hex-${label.toLowerCase().replace(/\s+/g, "-")}`}
       />
     </div>
   );
