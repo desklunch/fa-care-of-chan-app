@@ -99,16 +99,21 @@ function StatusCellRenderer({ data }: ICellRendererParams<FormRequest>) {
   );
 }
 
-function RecipientsCellRenderer({ data }: ICellRendererParams<FormRequest>) {
+interface FormRequestWithCounts extends FormRequest {
+  recipientCount?: number;
+  respondedCount?: number;
+}
+
+function RecipientsCellRenderer({ data }: ICellRendererParams<FormRequestWithCounts>) {
   if (!data) return null;
-  const tokens = (data as FormRequest & { tokens?: OutreachToken[] }).tokens || [];
-  const respondedCount = tokens.filter((t) => t.status === "responded").length;
+  const recipientCount = data.recipientCount ?? 0;
+  const respondedCount = data.respondedCount ?? 0;
   
   return (
     <div className="flex items-center gap-2">
       <span className="flex items-center gap-1 text-muted-foreground">
         <Users className="h-3 w-3" />
-        {tokens.length}
+        {recipientCount}
       </span>
       {respondedCount > 0 && (
         <span className="flex items-center gap-1 text-green-600">
@@ -130,11 +135,12 @@ function DueDateCellRenderer({ data }: ICellRendererParams<FormRequest>) {
   );
 }
 
-function ActionsCellRenderer({ data, context }: ICellRendererParams<FormRequest, unknown, GridContext>) {
+function ActionsCellRenderer({ data, context }: ICellRendererParams<FormRequestWithCounts, unknown, GridContext>) {
   if (!data || !context) return null;
   
-  const tokens = (data as FormRequest & { tokens?: OutreachToken[] }).tokens || [];
-  const pendingCount = tokens.filter((t) => t.status === "pending").length;
+  const recipientCount = data.recipientCount ?? 0;
+  const respondedCount = data.respondedCount ?? 0;
+  const pendingCount = recipientCount - respondedCount;
   
   return (
     <DropdownMenu>
@@ -211,8 +217,7 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
       width: 120,
       cellRenderer: RecipientsCellRenderer,
       valueGetter: (params) => {
-        const tokens = (params.data as FormRequest & { tokens?: OutreachToken[] })?.tokens || [];
-        return tokens.length;
+        return (params.data as FormRequestWithCounts)?.recipientCount ?? 0;
       },
     },
   },
@@ -612,8 +617,10 @@ export default function AdminFormRequestsPage() {
             <AlertDialogTitle>Send Form Request</AlertDialogTitle>
             <AlertDialogDescription>
               {(() => {
-                const tokens = (sendRequest as FormRequest & { tokens?: OutreachToken[] })?.tokens || [];
-                const pendingCount = tokens.filter((t) => t.status === "pending").length;
+                const req = sendRequest as FormRequestWithCounts;
+                const recipientCount = req?.recipientCount ?? 0;
+                const respondedCount = req?.respondedCount ?? 0;
+                const pendingCount = recipientCount - respondedCount;
                 return `Send this form request to ${pendingCount} pending recipient(s)? Each will receive an email with a unique link to complete the form.`;
               })()}
             </AlertDialogDescription>
