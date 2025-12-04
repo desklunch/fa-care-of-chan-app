@@ -1112,6 +1112,12 @@ export const updateFormRequestSchema = createInsertSchema(formRequests).pick({
   formSchema: true,
   status: true,
   dueDate: true,
+}).extend({
+  dueDate: z.union([z.string(), z.date()]).optional().nullable().transform((val) => {
+    if (!val) return null;
+    if (val instanceof Date) return val;
+    return new Date(val);
+  }),
 }).partial();
 
 export type CreateFormRequest = z.infer<typeof insertFormRequestSchema>;
