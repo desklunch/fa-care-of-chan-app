@@ -276,6 +276,37 @@ export const venues = pgTable(
   ],
 );
 
+// Amenities that can be assigned to venues
+export const amenities = pgTable(
+  "amenities",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    icon: varchar("icon", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_amenities_name").on(table.name),
+  ],
+);
+
+// Join table for venues and amenities (many-to-many)
+export const venueAmenities = pgTable(
+  "venue_amenities",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+    amenityId: varchar("amenity_id").notNull().references(() => amenities.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_venue_amenities_venue_id").on(table.venueId),
+    index("idx_venue_amenities_amenity_id").on(table.amenityId),
+  ],
+);
+
 // Vendor services (service categories that vendors can provide)
 export const vendorServices = pgTable(
   "vendor_services",
@@ -443,6 +474,10 @@ export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
 export type Venue = typeof venues.$inferSelect;
 export type InsertVenue = typeof venues.$inferInsert;
+export type Amenity = typeof amenities.$inferSelect;
+export type InsertAmenity = typeof amenities.$inferInsert;
+export type VenueAmenity = typeof venueAmenities.$inferSelect;
+export type InsertVenueAmenity = typeof venueAmenities.$inferInsert;
 export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
 export type VendorService = typeof vendorServices.$inferSelect;
@@ -667,6 +702,22 @@ export const updateVenueSchema = insertVenueSchema.partial();
 
 export type CreateVenue = z.infer<typeof insertVenueSchema>;
 export type UpdateVenue = z.infer<typeof updateVenueSchema>;
+
+// Amenity schemas
+export const insertAmenitySchema = createInsertSchema(amenities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(255),
+  description: z.string().optional().nullable(),
+  icon: z.string().min(1, "Icon is required").max(100),
+});
+
+export const updateAmenitySchema = insertAmenitySchema.partial();
+
+export type CreateAmenity = z.infer<typeof insertAmenitySchema>;
+export type UpdateAmenity = z.infer<typeof updateAmenitySchema>;
 
 // Location schema for vendors
 export const locationSchema = z.object({

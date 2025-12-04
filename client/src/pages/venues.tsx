@@ -14,17 +14,7 @@ function NameCellRenderer({ data }: { data: Venue }) {
   if (!data) return null;
   return (
     <div className="flex items-center gap-2 h-full">
-      {data.primaryPhotoUrl ? (
-        <img 
-          src={data.primaryPhotoUrl} 
-          alt={data.name}
-          className="w-8 h-8 rounded object-cover shrink-0"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0">
-          <Image className="w-4 h-4 text-muted-foreground" />
-        </div>
-      )}
+
       <span className="font-medium truncate" data-testid={`text-venue-name-${data.id}`}>
         {data.name}
       </span>
@@ -95,15 +85,9 @@ function InstagramCellRenderer({ data }: { data: Venue }) {
 function StatusCellRenderer({ data }: { data: Venue }) {
   if (!data) return null;
   return data.isActive ? (
-    <Badge variant="default" className="text-xs" data-testid={`badge-venue-active-${data.id}`}>
-      <Check className="w-3 h-3 mr-1" />
-      Active
-    </Badge>
+    <span>Active</span>
   ) : (
-    <Badge variant="secondary" className="text-xs" data-testid={`badge-venue-inactive-${data.id}`}>
-      <X className="w-3 h-3 mr-1" />
-      Inactive
-    </Badge>
+    <span>Inactive</span>
   );
 }
 
