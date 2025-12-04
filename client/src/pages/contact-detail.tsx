@@ -12,7 +12,7 @@ import {
   MapPin,
   Mail,
   Phone,
-  Pencil,
+  SquarePen,
   User,
 } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
@@ -105,7 +105,7 @@ export default function ContactDetail() {
       actionButton={{
         label: "Edit Contact",
         href: `/contacts/${id}/edit`,
-        icon: Pencil,
+        icon: SquarePen,
       }}
     >
       <div className="p-4 md:p-6 max-w-5xl mx-auto">

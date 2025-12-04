@@ -29,7 +29,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import {
   Plus,
   MoreVertical,
-  Pencil,
+  SquarePen,
   Trash2,
   Copy,
   Layers,
@@ -84,7 +84,7 @@ function ActionsCellRenderer({ data, context }: ICellRendererParams<FormTemplate
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onEdit(data); }}>
-          <Pencil className="h-4 w-4 mr-2" />
+          <SquarePen className="h-4 w-4 mr-2" />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onDuplicate(data); }}>

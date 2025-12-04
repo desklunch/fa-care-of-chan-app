@@ -28,7 +28,7 @@ import {
   Receipt,
   Briefcase,
   Contact,
-  Pencil,
+  SquarePen,
   LinkIcon,
   Copy,
   Check,
@@ -175,7 +175,7 @@ export default function VendorDetail() {
       actionButton={isAdmin ? {
         label: "Edit Vendor",
         href: `/vendors/${id}/edit`,
-        icon: Pencil,
+        icon: SquarePen,
         variant: "outline",
       } : undefined}
       customHeaderAction={isAdmin ? (

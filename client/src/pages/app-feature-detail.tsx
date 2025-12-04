@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ThumbsUp, MessageSquare, Trash2, Pencil } from "lucide-react";
+import { ThumbsUp, MessageSquare, Trash2, SquarePen } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
@@ -241,7 +241,7 @@ export default function AppFeatureDetail() {
             variant="outline"
             data-testid="button-edit-feature"
           >
-            <Pencil className="h-4 w-4 mr-2" />
+            <SquarePen className="h-4 w-4 mr-2" />
             Edit
           </Button>
         </Link>

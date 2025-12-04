@@ -46,7 +46,7 @@ import {
   Plus,
   Send,
   MoreVertical,
-  Pencil,
+  SquarePen,
   Trash2,
   Users,
   CheckCircle,
@@ -151,7 +151,7 @@ function ActionsCellRenderer({ data, context }: ICellRendererParams<FormRequestW
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onEdit(data); }}>
-          <Pencil className="h-4 w-4 mr-2" />
+          <SquarePen className="h-4 w-4 mr-2" />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onManageRecipients(data); }}>

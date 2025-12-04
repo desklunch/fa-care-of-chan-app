@@ -45,7 +45,7 @@ import { ModuleRegistry, AllCommunityModule, ColDef, ICellRendererParams } from 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 import {
-  Pencil,
+  SquarePen,
   Send,
   MoreVertical,
   Calendar,
@@ -606,7 +606,7 @@ export default function AdminFormRequestDetailPage() {
         </Button>
       )}
       <Button variant="outline" onClick={() => navigate(`/forms/requests/${id}/edit`)} data-testid="button-edit-request">
-        <Pencil className="h-4 w-4 mr-2" />
+        <SquarePen className="h-4 w-4 mr-2" />
         Edit
       </Button>
     </div>
@@ -721,7 +721,7 @@ export default function AdminFormRequestDetailPage() {
                     onClick={() => navigate(`/forms/requests/${id}/edit`)}
                     data-testid="button-edit-form"
                   >
-                    <Pencil className="h-4 w-4 mr-2" />
+                    <SquarePen className="h-4 w-4 mr-2" />
                     Edit Form
                   </Button>
                 </div>

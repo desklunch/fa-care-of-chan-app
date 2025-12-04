@@ -35,7 +35,7 @@ import type { VendorService, CreateVendorService, UpdateVendorService } from "@s
 import { insertVendorServiceSchema, updateVendorServiceSchema } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import * as LucideIcons from "lucide-react";
-import { CircleFadingPlus, Pencil, Trash2, Save } from "lucide-react";
+import { CircleFadingPlus, SquarePen, Trash2, Save } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "description", "icon"];
 
@@ -498,7 +498,7 @@ export default function AdminVendorServices() {
                 }}
                 data-testid={`button-edit-service-${service.id}`}
               >
-                <Pencil className="h-4 w-4" />
+                <SquarePen className="h-4 w-4" />
               </Button>
             </div>
           );

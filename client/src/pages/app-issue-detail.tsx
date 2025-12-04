@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useParams } from "wouter";
 import { format } from "date-fns";
-import { Pencil, Trash2, AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
+import { SquarePen, Trash2, AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { AppIssueWithRelations, IssueSeverity, IssueStatus } from "@shared/schema";
 
@@ -183,7 +183,7 @@ export default function AppIssueDetail() {
                 onClick={() => navigate(`/app/issues/${id}/edit`)}
                 data-testid="button-edit-issue"
               >
-                <Pencil className="h-4 w-4 mr-1" />
+                <SquarePen className="h-4 w-4 mr-1" />
                 Edit
               </Button>
               {isAdmin && (
