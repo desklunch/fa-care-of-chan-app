@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -194,50 +195,47 @@ export default function AdminThemeEditor() {
   
   const currentVars = localTheme[activeMode];
   
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        onClick={resetToDefaults}
+        data-testid="button-reset-all"
+      >
+        <RotateCcw className="h-4 w-4 mr-2" />
+        Reset All
+      </Button>
+      <Button
+        onClick={() => saveMutation.mutate(localTheme)}
+        disabled={!hasChanges || saveMutation.isPending}
+        data-testid="button-save-theme"
+      >
+        <Save className="h-4 w-4 mr-2" />
+        {saveMutation.isPending ? "Saving..." : "Save Theme"}
+      </Button>
+    </div>
+  );
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
+      <PageLayout 
+        breadcrumbs={[{ label: "Admin" }, { label: "Theme Editor" }]}
+        customHeaderAction={headerActions}
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+        </div>
+      </PageLayout>
     );
   }
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Palette className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold" data-testid="text-page-title">Theme Editor</h1>
-            <p className="text-sm text-muted-foreground">
-              Customize the application colors for light and dark modes
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetToDefaults}
-            data-testid="button-reset-all"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset All
-          </Button>
-          <Button
-            onClick={() => saveMutation.mutate(localTheme)}
-            disabled={!hasChanges || saveMutation.isPending}
-            data-testid="button-save-theme"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {saveMutation.isPending ? "Saving..." : "Save Theme"}
-          </Button>
-        </div>
-      </div>
-      
-      <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "light" | "dark")} data-testid="tabs-theme-mode">
+    <PageLayout 
+      breadcrumbs={[{ label: "Admin" }, { label: "Theme Editor" }]}
+      customHeaderAction={headerActions}
+    >
+      <div className="p-6 space-y-6">
+        <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "light" | "dark")} data-testid="tabs-theme-mode">
         <div className="flex items-center justify-between mb-4">
           <TabsList data-testid="tabs-list-theme-mode">
             <TabsTrigger value="light" className="gap-2" data-testid="tab-light-mode">
@@ -289,7 +287,8 @@ export default function AdminThemeEditor() {
           <ThemePreview vars={currentVars} mode={activeMode} />
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageLayout>
   );
 }
 
