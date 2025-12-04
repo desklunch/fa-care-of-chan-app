@@ -9,9 +9,24 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { VendorWithRelations, VendorService, Contact } from "@shared/schema";
+import type { VendorWithRelations, VendorService, Contact, FormRequest } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle } from "lucide-react";
+import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["checkbox", "businessName", "services", "contacts", "locations"];
 
@@ -383,12 +398,21 @@ export default function Vendors() {
   const [selectedServices, setSelectedServices] = useState<(string | number)[]>([]);
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [assignFormDialogOpen, setAssignFormDialogOpen] = useState(false);
+  const [selectedFormRequestId, setSelectedFormRequestId] = useState<string>("");
+  const [vendorsToAssign, setVendorsToAssign] = useState<VendorWithRelations[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const isAuthenticated = !!user;
 
   const { data: vendors = [], isLoading } = useQuery<VendorWithRelations[]>({
     queryKey: ["/api/vendors"],
+  });
+
+  const { data: formRequests = [] } = useQuery<FormRequest[]>({
+    queryKey: ["/api/form-requests"],
+    enabled: isAuthenticated,
   });
 
   const batchMutation = useMutation({
@@ -452,6 +476,42 @@ export default function Vendors() {
       });
     },
   });
+
+  const assignToFormMutation = useMutation({
+    mutationFn: async ({ formRequestId, vendorIds }: { formRequestId: string; vendorIds: string[] }) => {
+      const recipients = vendorIds.map(id => ({ type: "vendor" as const, id }));
+      const res = await apiRequest("POST", `/api/form-requests/${formRequestId}/recipients`, { recipients });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/form-requests", selectedFormRequestId] });
+      setAssignFormDialogOpen(false);
+      setSelectedFormRequestId("");
+      setVendorsToAssign([]);
+      toast({
+        title: "Vendors assigned",
+        description: `Successfully added ${data.count} vendor${data.count !== 1 ? "s" : ""} to the form request.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: String(error),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAssignToFormRequest = (selectedVendors: VendorWithRelations[]) => {
+    setVendorsToAssign(selectedVendors);
+    setAssignFormDialogOpen(true);
+  };
+
+  const handleConfirmAssign = () => {
+    if (!selectedFormRequestId || vendorsToAssign.length === 0) return;
+    const vendorIds = vendorsToAssign.map(v => v.id);
+    assignToFormMutation.mutate({ formRequestId: selectedFormRequestId, vendorIds });
+  };
 
   const { locationItems, locationLabels, serviceItems, serviceLabels } = useMemo(() => {
     const locationMap = new Map<string, string>();
@@ -562,6 +622,17 @@ export default function Vendors() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {isAuthenticated && formRequests.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleAssignToFormRequest(selectedVendors)}
+              data-testid="button-assign-to-form"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Assign to Form Request
+            </Button>
+          )}
           {isAdmin && (
             <Button
               size="sm"
@@ -602,6 +673,8 @@ export default function Vendors() {
     );
   };
 
+  const draftFormRequests = formRequests.filter(fr => fr.status === "draft");
+
   return (
     <PageLayout 
       breadcrumbs={[{ label: "Vendors" }]}
@@ -636,6 +709,62 @@ export default function Vendors() {
         enableRowSelection={isAdmin}
         selectionToolbar={selectionToolbar}
       />
+
+      <Dialog open={assignFormDialogOpen} onOpenChange={setAssignFormDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Vendors to Form Request</DialogTitle>
+            <DialogDescription>
+              Select a form request to add {vendorsToAssign.length} vendor{vendorsToAssign.length !== 1 ? "s" : ""} as recipients.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Select value={selectedFormRequestId} onValueChange={setSelectedFormRequestId}>
+              <SelectTrigger data-testid="select-form-request">
+                <SelectValue placeholder="Select a form request" />
+              </SelectTrigger>
+              <SelectContent>
+                {draftFormRequests.length === 0 ? (
+                  <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                    No draft form requests available
+                  </div>
+                ) : (
+                  draftFormRequests.map((fr) => (
+                    <SelectItem key={fr.id} value={fr.id} data-testid={`select-form-request-${fr.id}`}>
+                      {fr.title}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAssignFormDialogOpen(false);
+                setSelectedFormRequestId("");
+                setVendorsToAssign([]);
+              }}
+              data-testid="button-cancel-assign"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmAssign}
+              disabled={!selectedFormRequestId || assignToFormMutation.isPending}
+              data-testid="button-confirm-assign"
+            >
+              {assignToFormMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Assign Vendors
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 }
