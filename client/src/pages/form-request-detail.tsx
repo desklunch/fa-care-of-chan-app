@@ -38,7 +38,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { FormBuilder } from "@/components/form-builder";
 import { AgGridReact } from "ag-grid-react";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ModuleRegistry, AllCommunityModule, ColDef, ICellRendererParams } from "ag-grid-community";
@@ -299,36 +298,12 @@ export default function AdminFormRequestDetailPage() {
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [formSchema, setFormSchema] = useState<FormSection[]>([]);
   const [removeRecipient, setRemoveRecipient] = useState<RecipientRow | null>(null);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
 
   const { data: request, isLoading } = useQuery<FormRequestWithTokens>({
     queryKey: ["/api/form-requests", id],
     enabled: !!id && isAuthenticated,
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: { formSchema: FormSection[] }) => {
-      const res = await apiRequest("PATCH", `/api/form-requests/${id}`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-requests", id] });
-      toast({ title: "Form saved", description: "Form structure has been updated." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        const errorMessage = error instanceof Error && error.message.includes("non-draft") 
-          ? "Cannot edit form after it has been sent"
-          : "Failed to save form.";
-        toast({ variant: "destructive", title: "Error", description: errorMessage });
-        queryClient.invalidateQueries({ queryKey: ["/api/form-requests", id] });
-      }
-    },
   });
 
   const removeRecipientMutation = useMutation({
@@ -373,10 +348,6 @@ export default function AdminFormRequestDetailPage() {
       }
     },
   });
-
-  const handleSaveForm = useCallback(() => {
-    updateMutation.mutate({ formSchema });
-  }, [formSchema, updateMutation]);
 
   const handleRemoveRecipient = useCallback((row: RecipientRow) => {
     setRemoveRecipient(row);
@@ -740,35 +711,27 @@ export default function AdminFormRequestDetailPage() {
           </TabsContent>
 
           <TabsContent value="form" className="space-y-4">
-            {request.status === "draft" ? (
-              <div className="space-y-4">
+            <div className="space-y-4">
+              {request.status === "draft" ? (
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
-                    Edit the form structure below. Changes will be saved automatically.
+                    This form is still in draft mode and can be edited.
                   </p>
                   <Button 
-                    onClick={handleSaveForm} 
-                    disabled={updateMutation.isPending}
-                    data-testid="button-save-form"
+                    onClick={() => navigate(`/forms/requests/${id}/edit`)}
+                    data-testid="button-edit-form"
                   >
-                    {updateMutation.isPending ? "Saving..." : "Save Form"}
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Form
                   </Button>
                 </div>
-                <Card className="p-6">
-                  <FormBuilder 
-                    value={formSchema.length > 0 ? formSchema : (request.formSchema as FormSection[]) || []} 
-                    onChange={(schema) => setFormSchema(schema)}
-                  />
-                </Card>
-              </div>
-            ) : (
-              <div className="space-y-4">
+              ) : (
                 <p className="text-sm text-muted-foreground">
                   This form has been sent and can no longer be edited.
                 </p>
-                <ReadOnlyFormRenderer schema={(request.formSchema as FormSection[]) || []} />
-              </div>
-            )}
+              )}
+              <ReadOnlyFormRenderer schema={(request.formSchema as FormSection[]) || []} />
+            </div>
           </TabsContent>
 
           <TabsContent value="recipients">
