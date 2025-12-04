@@ -1067,7 +1067,7 @@ export async function registerRoutes(
       }
 
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=establishment|address&key=${apiKey}`
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${apiKey}`
       );
       
       if (!response.ok) {
