@@ -41,7 +41,7 @@ type FormData = z.infer<typeof formSchema>;
 function getIconComponent(iconName: string | null | undefined) {
   if (!iconName) return null;
   const Icon = (LucideIcons as Record<string, any>)[iconName];
-  return Icon ? <Icon className="w-3.5 h-3.5" /> : null;
+  return Icon ? <Icon className="" /> : null;
 }
 
 export default function VendorForm() {
@@ -282,47 +282,45 @@ export default function VendorForm() {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="tel"
-                            placeholder="+1 (555) 123-4567" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-phone"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="tel"
+                          placeholder="+1 (555) 123-4567" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-phone"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email"
-                            placeholder="contact@acme.com" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="contact@acme.com" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -424,7 +422,7 @@ export default function VendorForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-4">
                           {allServices.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No services available. Create services in the admin panel.</p>
                           ) : (
@@ -435,7 +433,8 @@ export default function VendorForm() {
                                 <Badge
                                   key={service.id}
                                   variant={isSelected ? "default" : "outline"}
-                                  className="cursor-pointer select-none gap-1.5"
+                                  size="lg"
+                                  className="cursor-pointer select-none"
                                   onClick={() => toggleService(service.id)}
                                   data-testid={`badge-service-${service.id}`}
                                 >
@@ -459,45 +458,43 @@ export default function VendorForm() {
                 <CardTitle>Business Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="employeeCount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Employee Count</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="e.g., 50-100" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-employee-count"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="employeeCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Employee Count</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., 50-100" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-employee-count"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="capabilitiesDeck"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Capabilities Deck URL</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Link to capabilities deck" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-capabilities-deck"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="capabilitiesDeck"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Capabilities Deck URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Link to capabilities deck" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-capabilities-deck"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
