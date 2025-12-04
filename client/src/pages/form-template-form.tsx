@@ -13,7 +13,18 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { PageLayout } from "@/framework";
 import { FormBuilder } from "@/components/form-builder";
-import { Save } from "lucide-react";
+import { Save, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { FormTemplate, InsertFormTemplate, FormSection } from "@shared/schema";
 
 export default function AdminFormTemplateFormPage() {
@@ -81,6 +92,25 @@ export default function AdminFormTemplateFormPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      await apiRequest("DELETE", `/api/form-templates/${templateId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      toast({ title: "Template deleted", description: "Form template has been deleted successfully." });
+      navigate("/forms/templates");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
+        navigate("/");
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Failed to delete template." });
+      }
+    },
+  });
+
   const handleSave = () => {
     if (!name.trim()) {
       toast({ variant: "destructive", title: "Validation error", description: "Template name is required." });
@@ -100,18 +130,52 @@ export default function AdminFormTemplateFormPage() {
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const headerAction = (
-    <Button
-      onClick={handleSave}
-      disabled={!name.trim() || isPending}
-      data-testid="button-save-template"
-      size="sm"
-    >
-      <Save className="h-4 w-4 " />
-      {isPending ? "Saving..." : isEditing ? "Save " : "Create "}
-    </Button>
+    <div className="flex items-center gap-2">
+      {isEditing && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isPending}
+              data-testid="button-delete-template"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Form Template</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this form template? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => id && deleteMutation.mutate(id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      <Button
+        onClick={handleSave}
+        disabled={!name.trim() || isPending}
+        data-testid="button-save-template"
+        size="sm"
+      >
+        <Save className="h-4 w-4" />
+        {isPending ? "Saving..." : isEditing ? "Save" : "Create"}
+      </Button>
+    </div>
   );
 
   if (isAuthLoading) {
