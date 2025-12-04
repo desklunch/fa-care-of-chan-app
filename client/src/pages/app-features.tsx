@@ -206,21 +206,18 @@ export default function AppFeatures() {
   }
 
   return (
-    <PageLayout breadcrumbs={[{ label: "App Features" }]}>
+    <PageLayout 
+      breadcrumbs={[{ label: "App Features" }]}
+      actionButton={{
+        label: "New Feature",
+        href: "/app/features/new",
+        icon: CircleFadingPlus,
+        variant: "default",
+      }}
+    >
       <div className="overflow-hidden flex flex-col h-full">
         
-        <div className="border-b p-4 ">
-        
-          <div className="flex justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight">App Features</h1>
-            <Link href="/app/features/new">
-              <Button data-testid="button-new-feature">
-                <CircleFadingPlus className="h-4 w-4 mr-2" />
-                New Feature
-              </Button>
-            </Link>
-          </div>
-  
+        <div className="border-b p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
@@ -249,7 +246,6 @@ export default function AppFeatures() {
               </Select>
             </div>
           </div>
-          
         </div>
 
 
