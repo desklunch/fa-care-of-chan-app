@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { PageLayout } from "@/framework";
 import { FormBuilder } from "@/components/form-builder";
-import { ArrowLeft } from "lucide-react";
+import { Save } from "lucide-react";
 import type { FormTemplate, InsertFormTemplate, FormSection } from "@shared/schema";
 
 export default function AdminFormTemplateFormPage() {
@@ -82,7 +82,10 @@ export default function AdminFormTemplateFormPage() {
   });
 
   const handleSave = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      toast({ variant: "destructive", title: "Validation error", description: "Template name is required." });
+      return;
+    }
     
     const data = {
       name: name.trim(),
@@ -98,6 +101,17 @@ export default function AdminFormTemplateFormPage() {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const headerAction = (
+    <Button
+      onClick={handleSave}
+      disabled={!name.trim() || isPending}
+      data-testid="button-save-template"
+    >
+      <Save className="h-4 w-4 mr-2" />
+      {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Template"}
+    </Button>
+  );
 
   if (isAuthLoading) {
     return (
@@ -135,34 +149,18 @@ export default function AdminFormTemplateFormPage() {
         { label: "Form Templates", href: "/admin/forms/templates" },
         { label: isEditing ? "Edit Template" : "New Template" },
       ]}
+      customHeaderAction={headerAction}
     >
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/admin/forms/templates")}
-            data-testid="button-back"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold">
-              {isEditing ? "Edit Template" : "Create Template"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {isEditing
-                ? "Update your form template details and structure."
-                : "Create a new form template with custom sections and fields."}
-            </p>
-          </div>
-        </div>
-
-        <Card className="p-6">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Template Details</CardTitle>
+            <CardDescription>Basic information about this form template.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="template-name">Template Name</Label>
+                <Label htmlFor="template-name">Template Name *</Label>
                 <Input
                   id="template-name"
                   value={name}
@@ -184,12 +182,19 @@ export default function AdminFormTemplateFormPage() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
-              <Label>Form Structure</Label>
-              <FormBuilder value={formSchema} onChange={setFormSchema} />
-            </div>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Form Structure</CardTitle>
+            <CardDescription>
+              Design the form by adding sections and fields. Drag to reorder.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormBuilder value={formSchema} onChange={setFormSchema} />
+          </CardContent>
         </Card>
 
         <div className="flex items-center justify-end gap-3">
@@ -204,8 +209,9 @@ export default function AdminFormTemplateFormPage() {
           <Button
             onClick={handleSave}
             disabled={!name.trim() || isPending}
-            data-testid="button-save-template"
+            data-testid="button-save-template-bottom"
           >
+            <Save className="h-4 w-4 mr-2" />
             {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Template"}
           </Button>
         </div>

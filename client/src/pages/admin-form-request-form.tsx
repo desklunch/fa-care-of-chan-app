@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { FormBuilder } from "@/components/form-builder";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save } from "lucide-react";
 import type {
   FormRequest,
   FormTemplate,
@@ -133,6 +133,17 @@ export default function AdminFormRequestFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const headerAction = (
+    <Button
+      onClick={handleSave}
+      disabled={!title.trim() || isPending}
+      data-testid="button-save-request"
+    >
+      <Save className="h-4 w-4 mr-2" />
+      {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Request"}
+    </Button>
+  );
+
   if (isAuthLoading) {
     return (
       <PageLayout
@@ -182,39 +193,9 @@ export default function AdminFormRequestFormPage() {
         { label: "Form Requests", href: "/admin/forms/requests" },
         { label: isEditing ? "Edit Request" : "New Request" },
       ]}
+      customHeaderAction={headerAction}
     >
       <div className="p-6 max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/admin/forms/requests")}
-              data-testid="button-back"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">
-                {isEditing ? "Edit Form Request" : "Create Form Request"}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {isEditing
-                  ? "Update your form request details and structure."
-                  : "Create a new form request to send to vendors or contacts."}
-              </p>
-            </div>
-          </div>
-          <Button
-            onClick={handleSave}
-            disabled={!title.trim() || isPending}
-            data-testid="button-save-request"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Request"}
-          </Button>
-        </div>
-
         <Card>
           <CardHeader>
             <CardTitle>Request Details</CardTitle>
