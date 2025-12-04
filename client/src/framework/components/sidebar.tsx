@@ -7,10 +7,13 @@ import {
   X,
   ChevronUp,
   LogOut,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLayout } from "../hooks/layout-context";
+import { useTheme } from "@/lib/theme-provider";
 import Logo from "./logo";
 import type { NavItem, NavSection } from "../types/layout";
 
@@ -21,6 +24,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
   const { user, navigation, onSignOut } = useLayout();
+  const { resolvedTheme, setTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(false);
@@ -312,6 +316,25 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
             );
           })}
         </nav>
+
+        <div className="border-t border-sidebar-border p-3">
+          <div className={cn("flex", !showExpanded && "justify-center")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              className="h-9 w-9"
+              data-testid="button-theme-toggle"
+              aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {resolvedTheme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        </div>
 
         {user && (
           <div className="border-t border-sidebar-border p-3">
