@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ThumbsUp, MessageSquare, ArrowLeft, Trash2, Pencil } from "lucide-react";
+import { ThumbsUp, MessageSquare, Trash2, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
@@ -223,12 +223,7 @@ export default function AppFeatureDetail() {
       <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: "Not Found" }]}>
         <div className="p-6 text-center">
           <h2 className="text-xl font-semibold">Feature not found</h2>
-          <Link href="/app/features">
-            <Button variant="outline" className="mt-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to App Features
-            </Button>
-          </Link>
+          <p className="text-muted-foreground mt-2">The feature you're looking for doesn't exist or has been removed.</p>
         </div>
       </PageLayout>
     );
@@ -238,20 +233,42 @@ export default function AppFeatureDetail() {
     .filter(Boolean)
     .join(" ") || "Unknown";
 
-  return (
-    <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: feature.title }]}>
-      <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
-        <Link href="/app/features">
-          <Button variant="ghost" size="sm" data-testid="button-back-to-features">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to App Features
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      {(isAdmin || user?.id === feature.createdById) && (
+        <Link href={`/app/features/${feature.id}/edit`}>
+          <Button
+            variant="outline"
+            data-testid="button-edit-feature"
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
           </Button>
         </Link>
+      )}
+    </div>
+  );
 
+  return (
+    <PageLayout 
+      breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: feature.title }]}
+      customHeaderAction={headerActions}
+    >
+      <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="space-y-2">
+                <Badge 
+                  variant="outline"
+                  style={{ 
+                    borderColor: feature.category.color || undefined,
+                    color: feature.category.color || undefined 
+                  }}
+                  data-testid="badge-feature-category"
+                >
+                  {feature.category.name}
+                </Badge>
                 <CardTitle className="text-2xl" data-testid="text-feature-title">
                   {feature.title}
                 </CardTitle>
@@ -270,30 +287,9 @@ export default function AppFeatureDetail() {
                   >
                     {statusLabels[feature.status as FeatureStatus]}
                   </Badge>
-                  <Badge 
-                    variant="outline"
-                    style={{ 
-                      borderColor: feature.category.color || undefined,
-                      color: feature.category.color || undefined 
-                    }}
-                    data-testid="badge-feature-category"
-                  >
-                    {feature.category.name}
-                  </Badge>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {(isAdmin || user?.id === feature.createdById) && (
-                  <Link href={`/app/features/${feature.id}/edit`}>
-                    <Button
-                      variant="outline"
-                      data-testid="button-edit-feature"
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                  </Link>
-                )}
                 <Button
                   variant={feature.hasVoted ? "default" : "outline"}
                   onClick={() => voteMutation.mutate()}
