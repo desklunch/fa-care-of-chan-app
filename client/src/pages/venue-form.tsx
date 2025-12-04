@@ -1,0 +1,600 @@
+import { useState, useEffect } from "react";
+import { useParams, useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { PageLayout } from "@/framework";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { AmenityToggle } from "@/components/ui/amenity-toggle";
+import { TagAssignment } from "@/components/ui/tag-assignment";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import type { VenueWithRelations, CreateVenue } from "@shared/schema";
+import { insertVenueSchema } from "@shared/schema";
+
+const venueFormSchema = insertVenueSchema.extend({
+  amenityIds: z.array(z.string()).default([]),
+  cuisineTagIds: z.array(z.string()).default([]),
+  styleTagIds: z.array(z.string()).default([]),
+});
+
+type VenueFormValues = z.infer<typeof venueFormSchema>;
+
+export default function VenueFormPage() {
+  const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const isEditing = !!id;
+
+  const { data: venue, isLoading: isLoadingVenue } = useQuery<VenueWithRelations>({
+    queryKey: ["/api/venues", id, "full"],
+    enabled: isEditing,
+  });
+
+  const form = useForm<VenueFormValues>({
+    resolver: zodResolver(venueFormSchema),
+    defaultValues: {
+      name: "",
+      shortDescription: "",
+      longDescription: "",
+      streetAddress1: "",
+      streetAddress2: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      phone: "",
+      email: "",
+      website: "",
+      instagramAccount: "",
+      googlePlaceId: "",
+      imageUrl: "",
+      isActive: true,
+      amenityIds: [],
+      cuisineTagIds: [],
+      styleTagIds: [],
+    },
+  });
+
+  useEffect(() => {
+    if (venue) {
+      form.reset({
+        name: venue.name || "",
+        shortDescription: venue.shortDescription || "",
+        longDescription: venue.longDescription || "",
+        streetAddress1: venue.streetAddress1 || "",
+        streetAddress2: venue.streetAddress2 || "",
+        city: venue.city || "",
+        state: venue.state || "",
+        zipCode: venue.zipCode || "",
+        phone: venue.phone || "",
+        email: venue.email || "",
+        website: venue.website || "",
+        instagramAccount: venue.instagramAccount || "",
+        googlePlaceId: venue.googlePlaceId || "",
+        imageUrl: venue.imageUrl || "",
+        isActive: venue.isActive ?? true,
+        amenityIds: venue.amenities?.map((a) => a.id) || [],
+        cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
+        styleTagIds: venue.styleTags?.map((t) => t.id) || [],
+      });
+    }
+  }, [venue, form]);
+
+  const createMutation = useMutation({
+    mutationFn: async (data: VenueFormValues) => {
+      const response = await apiRequest("POST", "/api/venues", data);
+      return response.json();
+    },
+    onSuccess: (newVenue) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      toast({
+        title: "Venue created",
+        description: "The venue has been created successfully.",
+      });
+      setLocation(`/admin/venues/${newVenue.id}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create venue",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: VenueFormValues) => {
+      const response = await apiRequest("PATCH", `/api/venues/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Venue updated",
+        description: "The venue has been updated successfully.",
+      });
+      setLocation(`/admin/venues/${id}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update venue",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: VenueFormValues) => {
+    if (isEditing) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
+  if (isEditing && isLoadingVenue) {
+    return (
+      <PageLayout title="Loading..." backUrl="/admin/venues">
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <Skeleton className="h-[400px] w-full" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  return (
+    <PageLayout
+      title={isEditing ? "Edit Venue" : "New Venue"}
+      backUrl="/admin/venues"
+    >
+      <div className="max-w-4xl mx-auto">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>
+                  Enter the venue name and description
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Venue Name <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter venue name"
+                          data-testid="input-venue-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="shortDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Short Description</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="Brief description for listings"
+                          data-testid="input-venue-short-description"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        A brief one-line description shown in venue listings
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="longDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="Detailed venue description..."
+                          rows={4}
+                          data-testid="input-venue-long-description"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Active</FormLabel>
+                        <FormDescription>
+                          Show this venue in the directory
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value ?? true}
+                          onCheckedChange={field.onChange}
+                          data-testid="switch-venue-active"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+                <CardDescription>
+                  Address and contact information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="streetAddress1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Street Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="123 Main Street"
+                          data-testid="input-venue-street-address1"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="streetAddress2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Street Address 2</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="Suite 100"
+                          data-testid="input-venue-street-address2"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="City"
+                            data-testid="input-venue-city"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="State"
+                            data-testid="input-venue-state"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ZIP Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="12345"
+                            data-testid="input-venue-zip-code"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="(555) 123-4567"
+                            data-testid="input-venue-phone"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            type="email"
+                            placeholder="venue@example.com"
+                            data-testid="input-venue-email"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Online Presence</CardTitle>
+                <CardDescription>
+                  Website and social media links
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          type="url"
+                          placeholder="https://www.venue.com"
+                          data-testid="input-venue-website"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="instagramAccount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram Handle</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="@venuehandle"
+                          data-testid="input-venue-instagram"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          type="url"
+                          placeholder="https://example.com/image.jpg"
+                          data-testid="input-venue-image-url"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        URL to the venue's main photo
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Amenities</CardTitle>
+                <CardDescription>
+                  Select the amenities available at this venue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="amenityIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <AmenityToggle
+                          selectedAmenityIds={field.value}
+                          onAmenitiesChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Cuisine Tags</CardTitle>
+                <CardDescription>
+                  Select or create cuisine type tags for this venue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="cuisineTagIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <TagAssignment
+                          category="Cuisine"
+                          selectedTagIds={field.value}
+                          onTagsChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Style Tags</CardTitle>
+                <CardDescription>
+                  Select or create style/ambiance tags for this venue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="styleTagIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <TagAssignment
+                          category="Style"
+                          selectedTagIds={field.value}
+                          onTagsChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation("/admin/venues")}
+                data-testid="button-cancel-venue"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-save-venue"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isEditing ? "Save Changes" : "Create Venue"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </PageLayout>
+  );
+}
