@@ -9,6 +9,8 @@ import {
   contacts,
   vendors,
   venues,
+  amenities,
+  venueAmenities,
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
@@ -48,6 +50,9 @@ import {
   type Venue,
   type CreateVenue,
   type UpdateVenue,
+  type Amenity,
+  type CreateAmenity,
+  type UpdateAmenity,
   type CreateVendorService,
   type UpdateVendorService,
   type CreateVendor,
@@ -194,6 +199,13 @@ export interface IStorage {
   createVenue(data: CreateVenue): Promise<Venue>;
   updateVenue(id: string, data: UpdateVenue): Promise<Venue | undefined>;
   deleteVenue(id: string): Promise<void>;
+  
+  // Amenity operations
+  getAmenities(): Promise<Amenity[]>;
+  getAmenityById(id: string): Promise<Amenity | undefined>;
+  createAmenity(data: CreateAmenity): Promise<Amenity>;
+  updateAmenity(id: string, data: UpdateAmenity): Promise<Amenity | undefined>;
+  deleteAmenity(id: string): Promise<void>;
   
   // App settings operations
   getSetting(key: string): Promise<AppSetting | undefined>;
@@ -1176,6 +1188,44 @@ export class DatabaseStorage implements IStorage {
   
   async deleteVenue(id: string): Promise<void> {
     await db.delete(venues).where(eq(venues.id, id));
+  }
+  
+  // Amenity operations
+  async getAmenities(): Promise<Amenity[]> {
+    return db.select().from(amenities).orderBy(amenities.name);
+  }
+  
+  async getAmenityById(id: string): Promise<Amenity | undefined> {
+    const [amenity] = await db.select().from(amenities).where(eq(amenities.id, id));
+    return amenity;
+  }
+  
+  async createAmenity(data: CreateAmenity): Promise<Amenity> {
+    const [amenity] = await db
+      .insert(amenities)
+      .values({
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+      })
+      .returning();
+    return amenity;
+  }
+  
+  async updateAmenity(id: string, data: UpdateAmenity): Promise<Amenity | undefined> {
+    const [amenity] = await db
+      .update(amenities)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(amenities.id, id))
+      .returning();
+    return amenity;
+  }
+  
+  async deleteAmenity(id: string): Promise<void> {
+    await db.delete(amenities).where(eq(amenities.id, id));
   }
   
   // App settings operations
