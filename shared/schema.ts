@@ -1110,6 +1110,7 @@ export const updateFormRequestSchema = createInsertSchema(formRequests).pick({
   title: true,
   description: true,
   formSchema: true,
+  status: true,
   dueDate: true,
 }).partial();
 

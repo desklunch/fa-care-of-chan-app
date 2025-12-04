@@ -1628,6 +1628,7 @@ export class DatabaseStorage implements IStorage {
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.formSchema !== undefined) updateData.formSchema = data.formSchema;
+    if (data.status !== undefined) updateData.status = data.status;
     if (data.dueDate !== undefined) {
       updateData.dueDate = data.dueDate ? new Date(data.dueDate as unknown as string) : null;
     }
