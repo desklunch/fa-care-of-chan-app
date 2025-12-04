@@ -49,7 +49,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template created", description: "Form template has been created successfully." });
-      navigate("/admin/forms/templates");
+      navigate("/forms/templates");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -69,7 +69,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template updated", description: "Form template has been updated successfully." });
-      navigate("/admin/forms/templates");
+      navigate("/forms/templates");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -115,7 +115,7 @@ export default function AdminFormTemplateFormPage() {
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Form Templates" }, { label: isEditing ? "Edit" : "New" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates", href: "/forms/templates" }, { label: isEditing ? "Edit" : "New" }]}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -125,14 +125,14 @@ export default function AdminFormTemplateFormPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated) {
     navigate("/");
     return null;
   }
 
   if (isEditing && isTemplateLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Form Templates" }, { label: "Edit" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates", href: "/forms/templates" }, { label: "Edit" }]}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -145,8 +145,8 @@ export default function AdminFormTemplateFormPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Admin" },
-        { label: "Form Templates", href: "/admin/forms/templates" },
+        { label: "Forms" },
+        { label: "Templates", href: "/forms/templates" },
         { label: isEditing ? "Edit Template" : "New Template" },
       ]}
       customHeaderAction={headerAction}
@@ -200,7 +200,7 @@ export default function AdminFormTemplateFormPage() {
         <div className="flex items-center justify-end gap-3">
           <Button
             variant="outline"
-            onClick={() => navigate("/admin/forms/templates")}
+            onClick={() => navigate("/forms/templates")}
             disabled={isPending}
             data-testid="button-cancel-template"
           >

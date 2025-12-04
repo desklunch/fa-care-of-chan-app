@@ -575,8 +575,8 @@ export default function AdminFormRequestDetailPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Admin" },
-          { label: "Form Requests", href: "/admin/forms/requests" },
+          { label: "Forms" },
+          { label: "Requests", href: "/forms/requests" },
           { label: "Loading..." },
         ]}
       >
@@ -589,7 +589,7 @@ export default function AdminFormRequestDetailPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated) {
     navigate("/");
     return null;
   }
@@ -598,8 +598,8 @@ export default function AdminFormRequestDetailPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Admin" },
-          { label: "Form Requests", href: "/admin/forms/requests" },
+          { label: "Forms" },
+          { label: "Requests", href: "/forms/requests" },
           { label: "Not Found" },
         ]}
       >
@@ -607,7 +607,7 @@ export default function AdminFormRequestDetailPage() {
           <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-xl font-semibold mb-2">Request Not Found</h2>
           <p className="text-muted-foreground mb-4">The form request you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate("/admin/forms/requests")}>
+          <Button onClick={() => navigate("/forms/requests")}>
             Back to Requests
           </Button>
         </div>
@@ -634,7 +634,7 @@ export default function AdminFormRequestDetailPage() {
           Send to Recipients
         </Button>
       )}
-      <Button variant="outline" onClick={() => navigate(`/admin/forms/requests/${id}/edit`)} data-testid="button-edit-request">
+      <Button variant="outline" onClick={() => navigate(`/forms/requests/${id}/edit`)} data-testid="button-edit-request">
         <Pencil className="h-4 w-4 mr-2" />
         Edit
       </Button>
@@ -644,8 +644,8 @@ export default function AdminFormRequestDetailPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Admin" },
-        { label: "Form Requests", href: "/admin/forms/requests" },
+        { label: "Forms" },
+        { label: "Requests", href: "/forms/requests" },
         { label: request.title },
       ]}
       customHeaderAction={headerAction}

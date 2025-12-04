@@ -70,7 +70,7 @@ export default function AdminFormRequestFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-requests"] });
       toast({ title: "Request created", description: "Form request has been created successfully." });
-      navigate("/admin/forms/requests");
+      navigate("/forms/requests");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -91,7 +91,7 @@ export default function AdminFormRequestFormPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/form-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/form-requests", params.id] });
       toast({ title: "Request updated", description: "Form request has been updated successfully." });
-      navigate("/admin/forms/requests");
+      navigate("/forms/requests");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -148,8 +148,8 @@ export default function AdminFormRequestFormPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Admin" },
-          { label: "Form Requests", href: "/admin/forms/requests" },
+          { label: "Forms" },
+          { label: "Requests", href: "/forms/requests" },
           { label: isEditing ? "Edit" : "New" },
         ]}
       >
@@ -163,7 +163,7 @@ export default function AdminFormRequestFormPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated) {
     navigate("/");
     return null;
   }
@@ -172,8 +172,8 @@ export default function AdminFormRequestFormPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Admin" },
-          { label: "Form Requests", href: "/admin/forms/requests" },
+          { label: "Forms" },
+          { label: "Requests", href: "/forms/requests" },
           { label: "Edit" },
         ]}
       >
@@ -189,8 +189,8 @@ export default function AdminFormRequestFormPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Admin" },
-        { label: "Form Requests", href: "/admin/forms/requests" },
+        { label: "Forms" },
+        { label: "Requests", href: "/forms/requests" },
         { label: isEditing ? "Edit Request" : "New Request" },
       ]}
       customHeaderAction={headerAction}
@@ -280,7 +280,7 @@ export default function AdminFormRequestFormPage() {
         <div className="flex justify-end gap-4">
           <Button
             variant="outline"
-            onClick={() => navigate("/admin/forms/requests")}
+            onClick={() => navigate("/forms/requests")}
             disabled={isPending}
             data-testid="button-cancel"
           >

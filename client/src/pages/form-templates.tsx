@@ -229,7 +229,7 @@ export default function AdminFormTemplatesPage() {
   }, [createMutation]);
 
   const handleEdit = useCallback((template: FormTemplate) => {
-    navigate(`/admin/forms/templates/${template.id}/edit`);
+    navigate(`/forms/templates/${template.id}/edit`);
   }, [navigate]);
 
   const handleDelete = useCallback((template: FormTemplate) => {
@@ -237,7 +237,7 @@ export default function AdminFormTemplatesPage() {
   }, []);
 
   const handleRowClick = useCallback((template: FormTemplate) => {
-    navigate(`/admin/forms/templates/${template.id}/edit`);
+    navigate(`/forms/templates/${template.id}/edit`);
   }, [navigate]);
 
   const gridContext: GridContext = {
@@ -248,7 +248,7 @@ export default function AdminFormTemplatesPage() {
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Form Templates" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates" }]}>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-10 bg-muted rounded w-64" />
@@ -259,17 +259,17 @@ export default function AdminFormTemplatesPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated) {
     navigate("/");
     return null;
   }
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Admin" }, { label: "Form Templates" }]}
+      breadcrumbs={[{ label: "Forms" }, { label: "Templates" }]}
       actionButton={{
         label: "Create Template",
-        href: "/admin/forms/templates/new",
+        href: "/forms/templates/new",
         icon: Plus,
         variant: "default",
       }}

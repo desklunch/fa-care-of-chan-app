@@ -515,7 +515,7 @@ export default function AdminFormRequestsPage() {
   };
 
   const handleEdit = useCallback((request: FormRequest) => {
-    navigate(`/admin/forms/requests/${request.id}/edit`);
+    navigate(`/forms/requests/${request.id}/edit`);
   }, [navigate]);
 
   const handleDelete = useCallback((request: FormRequest) => {
@@ -531,7 +531,7 @@ export default function AdminFormRequestsPage() {
   }, []);
 
   const handleRowClick = useCallback((request: FormRequest) => {
-    navigate(`/admin/forms/requests/${request.id}`);
+    navigate(`/forms/requests/${request.id}`);
   }, [navigate]);
 
   const gridContext: GridContext = {
@@ -543,7 +543,7 @@ export default function AdminFormRequestsPage() {
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Form Requests" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Requests" }]}>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-10 bg-muted rounded w-64" />
@@ -554,17 +554,17 @@ export default function AdminFormRequestsPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated) {
     navigate("/");
     return null;
   }
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Admin" }, { label: "Form Requests" }]}
+      breadcrumbs={[{ label: "Forms" }, { label: "Requests" }]}
       actionButton={{
         label: "Create Request",
-        href: "/admin/forms/requests/new",
+        href: "/forms/requests/new",
         icon: Plus,
         variant: "default",
       }}
