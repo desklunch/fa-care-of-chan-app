@@ -8,6 +8,7 @@ import {
   appFeatureComments,
   contacts,
   vendors,
+  venues,
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
@@ -44,6 +45,9 @@ import {
   type VendorWithServices,
   type VendorWithRelations,
   type ContactWithVendors,
+  type Venue,
+  type CreateVenue,
+  type UpdateVenue,
   type CreateVendorService,
   type UpdateVendorService,
   type CreateVendor,
@@ -183,6 +187,13 @@ export interface IStorage {
   createVendorService(data: CreateVendorService): Promise<VendorService>;
   updateVendorService(id: string, data: UpdateVendorService): Promise<VendorService | undefined>;
   deleteVendorService(id: string): Promise<void>;
+  
+  // Venue operations
+  getVenues(): Promise<Venue[]>;
+  getVenueById(id: string): Promise<Venue | undefined>;
+  createVenue(data: CreateVenue): Promise<Venue>;
+  updateVenue(id: string, data: UpdateVenue): Promise<Venue | undefined>;
+  deleteVenue(id: string): Promise<void>;
   
   // App settings operations
   getSetting(key: string): Promise<AppSetting | undefined>;
@@ -1134,6 +1145,37 @@ export class DatabaseStorage implements IStorage {
     await db.delete(vendorServicesVendors).where(eq(vendorServicesVendors.vendorId, id));
     await db.delete(vendorsContacts).where(eq(vendorsContacts.vendorId, id));
     await db.delete(vendors).where(eq(vendors.id, id));
+  }
+  
+  // Venue CRUD operations
+  async getVenues(): Promise<Venue[]> {
+    return db.select().from(venues).orderBy(venues.name);
+  }
+  
+  async getVenueById(id: string): Promise<Venue | undefined> {
+    const [venue] = await db.select().from(venues).where(eq(venues.id, id));
+    return venue;
+  }
+  
+  async createVenue(data: CreateVenue): Promise<Venue> {
+    const [venue] = await db
+      .insert(venues)
+      .values(data)
+      .returning();
+    return venue;
+  }
+  
+  async updateVenue(id: string, data: UpdateVenue): Promise<Venue | undefined> {
+    const [venue] = await db
+      .update(venues)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(venues.id, id))
+      .returning();
+    return venue;
+  }
+  
+  async deleteVenue(id: string): Promise<void> {
+    await db.delete(venues).where(eq(venues.id, id));
   }
   
   // App settings operations

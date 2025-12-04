@@ -25,6 +25,7 @@ import ContactForm from "@/pages/contact-form";
 import Vendors from "@/pages/vendors";
 import VendorDetail from "@/pages/vendor-detail";
 import VendorForm from "@/pages/vendor-form";
+import Venues from "@/pages/venues";
 import AdminVendorServices from "@/pages/admin-vendor-services";
 import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import AdminThemeEditor from "@/pages/admin-theme-editor";
@@ -58,6 +59,7 @@ import {
   Link2,
   FileText,
   Send,
+  MapPin,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -94,6 +96,11 @@ function useLayoutConfig() {
             name: "Vendors",
             href: "/vendors",
             icon: Store,
+          },
+          {
+            name: "Venues",
+            href: "/venues",
+            icon: MapPin,
           },
         ],
       },
@@ -218,6 +225,7 @@ function AuthenticatedRoutes() {
         <Route path="/vendors/new" component={VendorForm} />
         <Route path="/vendors/:id/edit" component={VendorForm} />
         <Route path="/vendors/:id" component={VendorDetail} />
+        <Route path="/venues" component={Venues} />
         <Route path="/admin/invites" component={AdminInvites} />
         <Route path="/admin/app/features" component={AdminAppFeatures} />
         <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />

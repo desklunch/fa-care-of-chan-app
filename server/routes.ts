@@ -1512,6 +1512,33 @@ export async function registerRoutes(
     }
   });
 
+  // ===== VENUES ROUTES =====
+
+  // Get all venues
+  app.get("/api/venues", isAuthenticated, async (req, res) => {
+    try {
+      const venues = await storage.getVenues();
+      res.json(venues);
+    } catch (error) {
+      console.error("Error fetching venues:", error);
+      res.status(500).json({ message: "Failed to fetch venues" });
+    }
+  });
+
+  // Get single venue
+  app.get("/api/venues/:id", isAuthenticated, async (req, res) => {
+    try {
+      const venue = await storage.getVenueById(req.params.id);
+      if (!venue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      res.json(venue);
+    } catch (error) {
+      console.error("Error fetching venue:", error);
+      res.status(500).json({ message: "Failed to fetch venue" });
+    }
+  });
+
   // ===== APP ISSUES / BUG REPORTING ROUTES =====
   
   // Get all issues

@@ -244,6 +244,38 @@ export const vendors = pgTable(
   ],
 );
 
+// Venues directory
+export const venues = pgTable(
+  "venues",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 255 }),
+    name: varchar("name", { length: 255 }).notNull(),
+    shortDescription: text("short_description"),
+    longDescription: text("long_description"),
+    streetAddress1: varchar("street_address_1", { length: 255 }),
+    streetAddress2: varchar("street_address_2", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 50 }),
+    zipCode: varchar("zip_code", { length: 20 }),
+    phone: varchar("phone", { length: 50 }),
+    email: varchar("email", { length: 255 }),
+    website: varchar("website", { length: 500 }),
+    instagramAccount: varchar("instagram_account", { length: 100 }),
+    primaryPhotoUrl: varchar("primary_photo_url", { length: 1000 }),
+    photoUrls: text("photo_urls").array(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_venues_name").on(table.name),
+    index("idx_venues_external_id").on(table.externalId),
+    index("idx_venues_city_state").on(table.city, table.state),
+    index("idx_venues_is_active").on(table.isActive),
+  ],
+);
+
 // Vendor services (service categories that vendors can provide)
 export const vendorServices = pgTable(
   "vendor_services",
@@ -409,6 +441,8 @@ export type FeatureComment = typeof appFeatureComments.$inferSelect;
 export type InsertFeatureComment = typeof appFeatureComments.$inferInsert;
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
+export type Venue = typeof venues.$inferSelect;
+export type InsertVenue = typeof venues.$inferInsert;
 export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
 export type VendorService = typeof vendorServices.$inferSelect;
@@ -444,7 +478,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -604,6 +638,35 @@ export const updateContactSchema = insertContactSchema.partial();
 
 export type CreateContact = z.infer<typeof insertContactSchema>;
 export type UpdateContact = z.infer<typeof updateContactSchema>;
+
+// Venue schemas with validation
+export const insertVenueSchema = createInsertSchema(venues).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  externalId: z.string().optional().nullable(),
+  name: z.string().min(1, "Name is required").max(255),
+  shortDescription: z.string().optional().nullable(),
+  longDescription: z.string().optional().nullable(),
+  streetAddress1: z.string().max(255).optional().nullable(),
+  streetAddress2: z.string().max(255).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  state: z.string().max(50).optional().nullable(),
+  zipCode: z.string().max(20).optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  email: z.string().email("Invalid email address").optional().nullable().or(z.literal("")),
+  website: z.string().url("Invalid URL").max(500).optional().nullable().or(z.literal("")),
+  instagramAccount: z.string().max(100).optional().nullable(),
+  primaryPhotoUrl: z.string().max(1000).optional().nullable(),
+  photoUrls: z.array(z.string()).optional().nullable(),
+  isActive: z.boolean().default(true),
+});
+
+export const updateVenueSchema = insertVenueSchema.partial();
+
+export type CreateVenue = z.infer<typeof insertVenueSchema>;
+export type UpdateVenue = z.infer<typeof updateVenueSchema>;
 
 // Location schema for vendors
 export const locationSchema = z.object({
