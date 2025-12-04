@@ -4,23 +4,12 @@ import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -52,7 +41,6 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
-import { FormBuilder } from "@/components/form-builder";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import {
   Plus,
@@ -69,9 +57,6 @@ import {
 } from "lucide-react";
 import type {
   FormRequest,
-  FormTemplate,
-  FormSection,
-  InsertFormRequest,
   Vendor,
   Contact,
   OutreachToken,
@@ -267,166 +252,6 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
 
 const defaultVisibleColumns = ["title", "status", "recipients", "dueDate", "createdAt", "actions"];
 
-interface RequestFormData {
-  title: string;
-  description: string;
-  formSchema: FormSection[];
-  dueDate: string | null;
-}
-
-function RequestEditorDialog({
-  request,
-  templates,
-  open,
-  onOpenChange,
-  onSave,
-  isPending,
-}: {
-  request: FormRequest | null;
-  templates: FormTemplate[];
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (data: RequestFormData) => void;
-  isPending: boolean;
-}) {
-  const [title, setTitle] = useState(request?.title || "");
-  const [description, setDescription] = useState(request?.description || "");
-  const [formSchema, setFormSchema] = useState<FormSection[]>(
-    (request?.formSchema as FormSection[]) || []
-  );
-  const [dueDate, setDueDate] = useState(
-    request?.dueDate ? format(new Date(request.dueDate), "yyyy-MM-dd") : ""
-  );
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-
-  const handleSave = () => {
-    if (!title.trim()) return;
-    onSave({
-      title: title.trim(),
-      description: description.trim(),
-      formSchema,
-      dueDate: dueDate || null,
-    });
-  };
-
-  const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find((t) => t.id === templateId);
-    if (template) {
-      setFormSchema((template.formSchema as FormSection[]) || []);
-      setSelectedTemplateId(templateId);
-    }
-  };
-
-  useEffect(() => {
-    if (request) {
-      setTitle(request.title);
-      setDescription(request.description || "");
-      setFormSchema((request.formSchema as FormSection[]) || []);
-      setDueDate(request.dueDate ? format(new Date(request.dueDate), "yyyy-MM-dd") : "");
-    } else {
-      setTitle("");
-      setDescription("");
-      setFormSchema([]);
-      setDueDate("");
-      setSelectedTemplateId("");
-    }
-  }, [request, open]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{request ? "Edit Request" : "Create Form Request"}</DialogTitle>
-          <DialogDescription>
-            {request
-              ? "Update your form request details and structure."
-              : "Create a new form request to send to vendors or contacts."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="request-title">Request Title</Label>
-              <Input
-                id="request-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter request title"
-                data-testid="input-request-title"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="request-due-date">Due Date (Optional)</Label>
-              <Input
-                id="request-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                data-testid="input-request-due-date"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="request-description">Description (Optional)</Label>
-            <Textarea
-              id="request-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the purpose of this request"
-              className="resize-none"
-              rows={3}
-              data-testid="textarea-request-description"
-            />
-          </div>
-
-          {!request && templates.length > 0 && (
-            <div className="space-y-2">
-              <Label>Start from Template (Optional)</Label>
-              <Select value={selectedTemplateId} onValueChange={handleTemplateSelect}>
-                <SelectTrigger data-testid="select-template">
-                  <SelectValue placeholder="Choose a template..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Form Structure</Label>
-            <FormBuilder value={formSchema} onChange={setFormSchema} />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-            data-testid="button-cancel-request"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!title.trim() || isPending}
-            data-testid="button-save-request"
-          >
-            {isPending ? "Saving..." : request ? "Save Changes" : "Create Request"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function RecipientSelectorDialog({
   request,
   open,
@@ -612,57 +437,9 @@ export default function AdminFormRequestsPage() {
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingRequest, setEditingRequest] = useState<FormRequest | null>(null);
   const [deleteRequest, setDeleteRequest] = useState<FormRequest | null>(null);
   const [recipientRequest, setRecipientRequest] = useState<FormRequest | null>(null);
   const [sendRequest, setSendRequest] = useState<FormRequest | null>(null);
-
-  const { data: templates = [] } = useQuery<FormTemplate[]>({
-    queryKey: ["/api/form-templates"],
-    enabled: isAuthenticated && user?.role === "admin",
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertFormRequest) => {
-      const res = await apiRequest("POST", "/api/form-requests", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-requests"] });
-      setIsEditorOpen(false);
-      toast({ title: "Request created", description: "Form request has been created successfully." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to create request." });
-      }
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertFormRequest> }) => {
-      const res = await apiRequest("PATCH", `/api/form-requests/${id}`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-requests"] });
-      setIsEditorOpen(false);
-      setEditingRequest(null);
-      toast({ title: "Request updated", description: "Form request has been updated successfully." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update request." });
-      }
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -726,14 +503,6 @@ export default function AdminFormRequestsPage() {
     },
   });
 
-  const handleSave = (data: RequestFormData) => {
-    if (editingRequest) {
-      updateMutation.mutate({ id: editingRequest.id, data });
-    } else {
-      createMutation.mutate(data as InsertFormRequest);
-    }
-  };
-
   const handleAddRecipients = (recipients: Array<{ type: RecipientType; id: string }>) => {
     if (recipientRequest) {
       addRecipientsMutation.mutate({ id: recipientRequest.id, recipients });
@@ -741,9 +510,8 @@ export default function AdminFormRequestsPage() {
   };
 
   const handleEdit = useCallback((request: FormRequest) => {
-    setEditingRequest(request);
-    setIsEditorOpen(true);
-  }, []);
+    navigate(`/admin/forms/requests/${request.id}/edit`);
+  }, [navigate]);
 
   const handleDelete = useCallback((request: FormRequest) => {
     setDeleteRequest(request);
@@ -758,14 +526,8 @@ export default function AdminFormRequestsPage() {
   }, []);
 
   const handleRowClick = useCallback((request: FormRequest) => {
-    setEditingRequest(request);
-    setIsEditorOpen(true);
-  }, []);
-
-  const handleCreateNew = () => {
-    setEditingRequest(null);
-    setIsEditorOpen(true);
-  };
+    navigate(`/admin/forms/requests/${request.id}/edit`);
+  }, [navigate]);
 
   const gridContext: GridContext = {
     onEdit: handleEdit,
@@ -797,7 +559,7 @@ export default function AdminFormRequestsPage() {
       breadcrumbs={[{ label: "Admin" }, { label: "Form Requests" }]}
       actionButton={{
         label: "Create Request",
-        onClick: handleCreateNew,
+        href: "/admin/forms/requests/new",
         icon: Plus,
         variant: "default",
       }}
@@ -813,18 +575,6 @@ export default function AdminFormRequestsPage() {
         context={gridContext}
         emptyMessage="No form requests yet"
         emptyDescription="Create a request to start collecting information from vendors or contacts."
-      />
-
-      <RequestEditorDialog
-        request={editingRequest}
-        templates={templates}
-        open={isEditorOpen}
-        onOpenChange={(open) => {
-          setIsEditorOpen(open);
-          if (!open) setEditingRequest(null);
-        }}
-        onSave={handleSave}
-        isPending={createMutation.isPending || updateMutation.isPending}
       />
 
       <RecipientSelectorDialog
