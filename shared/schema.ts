@@ -301,11 +301,13 @@ export const vendorUpdateTokens = pgTable(
     token: varchar("token", { length: 255 }).notNull().unique(),
     used: boolean("used").notNull().default(false),
     expiresAt: timestamp("expires_at").notNull(),
+    createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [
     index("idx_vendor_update_tokens_token").on(table.token),
     index("idx_vendor_update_tokens_vendor_id").on(table.vendorId),
+    index("idx_vendor_update_tokens_created_by").on(table.createdById),
   ],
 );
 
@@ -317,6 +319,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   ownedFeatures: many(appFeatures, { relationName: "ownedFeatures" }),
   featureVotes: many(appFeatureVotes),
   featureComments: many(appFeatureComments),
+  createdVendorTokens: many(vendorUpdateTokens),
 }));
 
 export const invitesRelations = relations(invites, ({ one }) => ({
@@ -329,6 +332,17 @@ export const invitesRelations = relations(invites, ({ one }) => ({
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   performer: one(users, {
     fields: [auditLogs.performedBy],
+    references: [users.id],
+  }),
+}));
+
+export const vendorUpdateTokensRelations = relations(vendorUpdateTokens, ({ one }) => ({
+  vendor: one(vendors, {
+    fields: [vendorUpdateTokens.vendorId],
+    references: [vendors.id],
+  }),
+  createdBy: one(users, {
+    fields: [vendorUpdateTokens.createdById],
     references: [users.id],
   }),
 }));
@@ -405,6 +419,10 @@ export type VendorContact = typeof vendorsContacts.$inferSelect;
 export type InsertVendorContact = typeof vendorsContacts.$inferInsert;
 export type VendorUpdateToken = typeof vendorUpdateTokens.$inferSelect;
 export type InsertVendorUpdateToken = typeof vendorUpdateTokens.$inferInsert;
+export type VendorUpdateTokenWithRelations = VendorUpdateToken & {
+  vendor: Vendor;
+  createdBy: User | null;
+};
 
 // Vendor with associated services and contacts
 export type VendorWithServices = Vendor & {

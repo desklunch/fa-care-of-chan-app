@@ -28,6 +28,7 @@ import VendorForm from "@/pages/vendor-form";
 import AdminVendorServices from "@/pages/admin-vendor-services";
 import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import AdminThemeEditor from "@/pages/admin-theme-editor";
+import AdminVendorTokens from "@/pages/admin-vendor-tokens";
 import VendorUpdateForm from "@/pages/vendor-update-form";
 import NotFound from "@/pages/not-found";
 import {
@@ -43,6 +44,7 @@ import {
   Briefcase,
   Map,
   Palette,
+  Link2,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -134,6 +136,12 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
+            name: "Vendor Tokens",
+            href: "/admin/vendors/tokens",
+            icon: Link2,
+            allowedRoles: ["admin"],
+          },
+          {
             name: "Theme Editor",
             href: "/admin/theme",
             icon: Palette,
@@ -183,6 +191,7 @@ function AuthenticatedRoutes() {
         <Route path="/admin/app/features" component={AdminAppFeatures} />
         <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
         <Route path="/admin/vendors/services" component={AdminVendorServices} />
+        <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
         <Route path="/admin/theme" component={AdminThemeEditor} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route component={NotFound} />

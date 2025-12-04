@@ -1,17 +1,37 @@
 import { useState, useMemo } from "react";
 import { useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { VendorWithRelations, VendorService, Contact } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus } from "lucide-react";
+import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "locations"];
+const DEFAULT_VISIBLE_COLUMNS = ["checkbox", "businessName", "services", "contacts", "locations"];
 
 const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
+  {
+    id: "checkbox",
+    headerName: "",
+    category: "Selection",
+    toggleable: false,
+    colDef: {
+      width: 50,
+      maxWidth: 50,
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      resizable: false,
+      sortable: false,
+      filter: false,
+      suppressHeaderFilterButton: true,
+    },
+  },
   {
     id: "id",
     headerName: "ID",
@@ -349,13 +369,88 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
   },
 ];
 
+interface BatchResult {
+  vendorId: string;
+  vendorName: string;
+  success: boolean;
+  error?: string;
+  updateUrl?: string;
+}
+
 export default function Vendors() {
   const [, setLocation] = useLocation();
   const [selectedLocations, setSelectedLocations] = useState<(string | number)[]>([]);
   const [selectedServices, setSelectedServices] = useState<(string | number)[]>([]);
+  const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const { data: vendors = [], isLoading } = useQuery<VendorWithRelations[]>({
     queryKey: ["/api/vendors"],
+  });
+
+  const batchMutation = useMutation({
+    mutationFn: async (vendorIds: string[]) => {
+      const results: BatchResult[] = [];
+      
+      for (const vendorId of vendorIds) {
+        const vendor = vendors.find(v => v.id === vendorId);
+        try {
+          const response = await apiRequest("POST", `/api/vendors/batch-update-links`, {
+            vendorIds: [vendorId],
+            sendEmail: true,
+          });
+          const data = response as { results: Array<{ vendorId: string; success: boolean; error?: string; updateUrl?: string }> };
+          const result = data.results[0];
+          results.push({
+            vendorId,
+            vendorName: vendor?.businessName || "Unknown",
+            success: result.success,
+            error: result.error,
+            updateUrl: result.updateUrl,
+          });
+        } catch (error) {
+          results.push({
+            vendorId,
+            vendorName: vendor?.businessName || "Unknown",
+            success: false,
+            error: String(error),
+          });
+        }
+      }
+      
+      return results;
+    },
+    onSuccess: (results) => {
+      setBatchResults(results);
+      setShowResults(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/vendor-update-tokens"] });
+      
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      if (failCount === 0) {
+        toast({
+          title: "Update links sent",
+          description: `Successfully sent ${successCount} update link${successCount !== 1 ? "s" : ""} via email.`,
+        });
+      } else {
+        toast({
+          title: "Partial success",
+          description: `Sent ${successCount} emails, ${failCount} failed.`,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: String(error),
+        variant: "destructive",
+      });
+    },
   });
 
   const { locationItems, locationLabels, serviceItems, serviceLabels } = useMemo(() => {
@@ -450,6 +545,63 @@ export default function Vendors() {
     </>
   );
 
+  const selectionToolbar = (selectedVendors: VendorWithRelations[], clearSelection: () => void) => {
+    const vendorsWithEmail = selectedVendors.filter(v => v.email);
+    const vendorsWithoutEmail = selectedVendors.filter(v => !v.email);
+    
+    return (
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium" data-testid="text-selection-count">
+            {selectedVendors.length} vendor{selectedVendors.length !== 1 ? "s" : ""} selected
+          </span>
+          {vendorsWithoutEmail.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              ({vendorsWithoutEmail.length} without email)
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={() => {
+                const vendorIds = vendorsWithEmail.map(v => v.id);
+                if (vendorIds.length === 0) {
+                  toast({
+                    title: "No valid vendors",
+                    description: "Selected vendors don't have email addresses.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                batchMutation.mutate(vendorIds);
+              }}
+              disabled={batchMutation.isPending || vendorsWithEmail.length === 0}
+              data-testid="button-send-update-links"
+            >
+              {batchMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Mail className="w-4 h-4 mr-2" />
+              )}
+              Send Update Links ({vendorsWithEmail.length})
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearSelection}
+            data-testid="button-clear-selection"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Clear
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <PageLayout 
       breadcrumbs={[{ label: "Vendors" }]}
@@ -481,6 +633,8 @@ export default function Vendors() {
         externalData={filteredVendors}
         externalLoading={isLoading}
         toolbarActions={<></>}
+        enableRowSelection={isAdmin}
+        selectionToolbar={selectionToolbar}
       />
     </PageLayout>
   );

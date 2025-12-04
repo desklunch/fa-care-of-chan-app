@@ -21,7 +21,7 @@ import {
   type FeatureStatus,
   themeConfigSchema,
 } from "@shared/schema";
-import { sendInvitationEmail } from "./email";
+import { sendInvitationEmail, sendVendorUpdateEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
 
 export async function registerRoutes(
@@ -1281,6 +1281,7 @@ export async function registerRoutes(
   app.post("/api/vendors/:id/generate-update-link", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const vendorId = req.params.id;
+      const userId = req.user.id;
       const vendor = await storage.getVendorById(vendorId);
       
       if (!vendor) {
@@ -1288,7 +1289,7 @@ export async function registerRoutes(
       }
       
       const expiresInHours = req.body.expiresInHours || 720; // Default 30 days
-      const { token, expiresAt } = await storage.createVendorUpdateToken(vendorId, expiresInHours);
+      const { token, expiresAt } = await storage.createVendorUpdateToken(vendorId, userId, expiresInHours);
       
       const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
       const host = req.headers['x-forwarded-host'] || req.headers.host;
@@ -1313,6 +1314,114 @@ export async function registerRoutes(
         metadata: { error: String(error) },
       });
       res.status(500).json({ message: "Failed to generate update link" });
+    }
+  });
+  
+  // Batch generate vendor update links and send emails (admin only)
+  app.post("/api/vendors/batch-update-links", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { vendorIds, sendEmail = true, expiresInHours = 720 } = req.body;
+      const userId = req.user.id;
+      
+      if (!Array.isArray(vendorIds) || vendorIds.length === 0) {
+        return res.status(400).json({ message: "vendorIds must be a non-empty array" });
+      }
+      
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      
+      const results = [];
+      
+      for (const vendorId of vendorIds) {
+        try {
+          const vendor = await storage.getVendorById(vendorId);
+          
+          if (!vendor) {
+            results.push({ vendorId, success: false, error: "Vendor not found" });
+            continue;
+          }
+          
+          if (!vendor.email) {
+            results.push({ vendorId, success: false, error: "Vendor has no email address" });
+            continue;
+          }
+          
+          // Generate token
+          const { token, expiresAt } = await storage.createVendorUpdateToken(vendorId, userId, expiresInHours);
+          const updateUrl = `${protocol}://${host}/vendor-update/${token}`;
+          
+          // Send email if requested
+          if (sendEmail) {
+            try {
+              const emailResult = await sendVendorUpdateEmail(vendor.email, vendor.businessName, updateUrl);
+              
+              if (emailResult.success) {
+                await logAuditEvent(req, {
+                  action: "email_sent",
+                  entityType: "vendor_update_token",
+                  entityId: vendorId,
+                  status: "success",
+                  metadata: { 
+                    vendorName: vendor.businessName, 
+                    email: vendor.email,
+                    expiresAt: expiresAt.toISOString(),
+                    batch: true,
+                  },
+                });
+                results.push({ vendorId, success: true, updateUrl });
+              } else {
+                await logAuditEvent(req, {
+                  action: "email_sent",
+                  entityType: "vendor_update_token",
+                  entityId: vendorId,
+                  status: "failure",
+                  metadata: { 
+                    vendorName: vendor.businessName, 
+                    email: vendor.email,
+                    error: emailResult.error,
+                    batch: true,
+                  },
+                });
+                results.push({ vendorId, success: false, error: emailResult.error, updateUrl });
+              }
+            } catch (emailError) {
+              results.push({ vendorId, success: false, error: String(emailError), updateUrl });
+            }
+          } else {
+            results.push({ vendorId, success: true, updateUrl });
+          }
+        } catch (vendorError) {
+          results.push({ vendorId, success: false, error: String(vendorError) });
+        }
+      }
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_update_token",
+        entityId: "batch",
+        status: "success",
+        metadata: { 
+          totalVendors: vendorIds.length,
+          successful: results.filter(r => r.success).length,
+          failed: results.filter(r => !r.success).length,
+        },
+      });
+      
+      res.json({ results });
+    } catch (error) {
+      console.error("Error in batch update links:", error);
+      res.status(500).json({ message: "Failed to process batch update links" });
+    }
+  });
+
+  // Get all vendor update tokens (admin only)
+  app.get("/api/vendor-update-tokens", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const tokens = await storage.getAllVendorUpdateTokens();
+      res.json(tokens);
+    } catch (error) {
+      console.error("Error fetching vendor update tokens:", error);
+      res.status(500).json({ message: "Failed to fetch vendor update tokens" });
     }
   });
 

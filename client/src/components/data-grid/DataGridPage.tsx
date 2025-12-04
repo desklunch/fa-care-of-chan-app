@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { Input } from "@/components/ui/input";
@@ -28,10 +28,14 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   externalData,
   externalLoading,
   pagination,
+  enableRowSelection,
+  onSelectionChanged,
+  selectionToolbar,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [selectedRows, setSelectedRows] = useState<T[]>([]);
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
@@ -130,6 +134,21 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     gridApi.setColumnsVisible(allColumnIds, true);
   }, [gridApi, columns]);
 
+  const handleSelectionChanged = useCallback((event: SelectionChangedEvent<T>) => {
+    const selected = event.api.getSelectedRows();
+    setSelectedRows(selected);
+    if (onSelectionChanged) {
+      onSelectionChanged(selected);
+    }
+  }, [onSelectionChanged]);
+
+  const clearSelection = useCallback(() => {
+    if (gridApi) {
+      gridApi.deselectAll();
+      setSelectedRows([]);
+    }
+  }, [gridApi]);
+
   const handleResetToDefaults = useCallback(() => {
     if (!gridApi) return;
     const allColumnIds = columns.map((col) => col.id);
@@ -205,6 +224,12 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         </div>
       </div>
 
+      {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
+        <div className="bg-muted/50 border rounded-lg p-3 mb-4" data-testid="selection-toolbar">
+          {selectionToolbar(selectedRows, clearSelection)}
+        </div>
+      )}
+
       <div className="flex-1 min-h-[400px] overflow-hidden" data-testid="data-grid">
         <AgGridReact
           ref={gridRef}
@@ -221,6 +246,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           context={context}
           getRowId={getRowId ? (params) => String(getRowId(params.data as T)) : (params) => String(params.data?.id)}
           overlayNoRowsTemplate={emptyOverlay}
+          rowSelection={enableRowSelection ? "multiple" : undefined}
+          onSelectionChanged={enableRowSelection ? handleSelectionChanged : undefined}
+          suppressRowClickSelection={enableRowSelection}
         />
       </div>
 

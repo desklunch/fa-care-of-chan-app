@@ -49,6 +49,11 @@ export interface DataGridPageProps<T, C = unknown> {
     totalPages: number;
     onPageChange: (page: number) => void;
   };
+  
+  // Row selection props
+  enableRowSelection?: boolean;
+  onSelectionChanged?: (selectedRows: T[]) => void;
+  selectionToolbar?: (selectedRows: T[], clearSelection: () => void) => React.ReactNode;
 }
 
 export interface ColumnSelectorProps {

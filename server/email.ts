@@ -135,3 +135,106 @@ If you didn't expect this invitation, you can safely ignore this email.
     throw error;
   }
 }
+
+interface VendorUpdateEmailResult {
+  success: boolean;
+  error?: string;
+}
+
+export async function sendVendorUpdateEmail(
+  recipientEmail: string, 
+  vendorName: string, 
+  updateLink: string
+): Promise<VendorUpdateEmailResult> {
+  try {
+    const { client, fromEmail } = await getUncachableSendGridClient();
+    
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 8px 8px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Update Your Vendor Profile</h1>
+  </div>
+  
+  <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="font-size: 16px; margin-bottom: 20px;">Hello,</p>
+    
+    <p style="font-size: 16px; margin-bottom: 20px;">
+      We'd like to make sure our records for <strong>${vendorName}</strong> are up to date. 
+      Please use the secure link below to review and update your business information.
+    </p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${updateLink}" 
+         style="display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+        Update Your Profile
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #6b7280; margin-bottom: 10px;">
+      <strong>You can update:</strong>
+    </p>
+    <ul style="font-size: 14px; color: #6b7280; padding-left: 20px; margin-bottom: 20px;">
+      <li>Contact information and email</li>
+      <li>Business address and locations</li>
+      <li>Services offered</li>
+      <li>Website and social links</li>
+      <li>Diversity certifications</li>
+    </ul>
+    
+    <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">
+      This link is unique to your business and will expire in 30 days.
+    </p>
+    
+    <p style="font-size: 12px; color: #9ca3af; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      If you didn't expect this email or have questions, please contact us.
+      <br><br>
+      If the button above doesn't work, copy and paste this link into your browser:<br>
+      <a href="${updateLink}" style="color: #10b981; word-break: break-all;">${updateLink}</a>
+    </p>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    const textContent = `
+Hello,
+
+We'd like to make sure our records for ${vendorName} are up to date.
+
+Please use the secure link below to review and update your business information:
+${updateLink}
+
+You can update:
+- Contact information and email
+- Business address and locations
+- Services offered
+- Website and social links
+- Diversity certifications
+
+This link is unique to your business and will expire in 30 days.
+
+If you didn't expect this email or have questions, please contact us.
+    `.trim();
+
+    const msg = {
+      to: recipientEmail,
+      from: fromEmail,
+      subject: `Update your vendor profile - ${vendorName}`,
+      text: textContent,
+      html: htmlContent,
+    };
+
+    await client.send(msg);
+    console.log(`Vendor update email sent successfully to ${recipientEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send vendor update email:', error);
+    return { success: false, error: String(error) };
+  }
+}

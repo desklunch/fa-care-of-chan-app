@@ -44,6 +44,7 @@ import {
   type CreateVendor,
   type UpdateVendor,
   type VendorUpdateToken,
+  type VendorUpdateTokenWithRelations,
   type AppSetting,
   type ThemeConfig,
 } from "@shared/schema";
@@ -160,9 +161,10 @@ export interface IStorage {
   setTheme(theme: ThemeConfig, updatedBy: string): Promise<AppSetting>;
   
   // Vendor update token operations
-  createVendorUpdateToken(vendorId: string, expiresInHours?: number): Promise<{ token: string; expiresAt: Date }>;
+  createVendorUpdateToken(vendorId: string, createdById: string, expiresInHours?: number): Promise<{ token: string; expiresAt: Date }>;
   getVendorByToken(token: string): Promise<VendorWithServices | undefined>;
   markTokenAsUsed(token: string): Promise<void>;
+  getAllVendorUpdateTokens(): Promise<VendorUpdateTokenWithRelations[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1112,7 +1114,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Vendor update token operations
-  async createVendorUpdateToken(vendorId: string, expiresInHours: number = 720): Promise<{ token: string; expiresAt: Date }> {
+  async createVendorUpdateToken(vendorId: string, createdById: string, expiresInHours: number = 720): Promise<{ token: string; expiresAt: Date }> {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
     
@@ -1120,6 +1122,7 @@ export class DatabaseStorage implements IStorage {
       vendorId,
       token,
       expiresAt,
+      createdById,
     });
     
     return { token, expiresAt };
@@ -1157,6 +1160,47 @@ export class DatabaseStorage implements IStorage {
       .update(vendorUpdateTokens)
       .set({ used: true })
       .where(eq(vendorUpdateTokens.token, token));
+  }
+  
+  async getAllVendorUpdateTokens(): Promise<VendorUpdateTokenWithRelations[]> {
+    const tokens = await db
+      .select({
+        id: vendorUpdateTokens.id,
+        vendorId: vendorUpdateTokens.vendorId,
+        token: vendorUpdateTokens.token,
+        used: vendorUpdateTokens.used,
+        expiresAt: vendorUpdateTokens.expiresAt,
+        createdById: vendorUpdateTokens.createdById,
+        createdAt: vendorUpdateTokens.createdAt,
+        vendorBusinessName: vendors.businessName,
+        vendorEmail: vendors.email,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+      })
+      .from(vendorUpdateTokens)
+      .leftJoin(vendors, eq(vendorUpdateTokens.vendorId, vendors.id))
+      .leftJoin(users, eq(vendorUpdateTokens.createdById, users.id))
+      .orderBy(desc(vendorUpdateTokens.createdAt));
+    
+    return tokens.map((t) => ({
+      id: t.id,
+      vendorId: t.vendorId,
+      token: t.token,
+      used: t.used,
+      expiresAt: t.expiresAt,
+      createdById: t.createdById,
+      createdAt: t.createdAt,
+      vendor: {
+        id: t.vendorId,
+        businessName: t.vendorBusinessName || '',
+        email: t.vendorEmail,
+      } as any,
+      createdBy: t.createdById ? {
+        id: t.createdById,
+        firstName: t.createdByFirstName,
+        lastName: t.createdByLastName,
+      } as any : null,
+    }));
   }
 }
 
