@@ -32,6 +32,157 @@ interface SingleFieldRendererProps {
   form: UseFormReturn<Record<string, unknown>>;
 }
 
+function renderFieldInput(
+  fieldDef: FormFieldType,
+  formField: { value: unknown; onChange: (value: unknown) => void; onBlur: () => void; name: string; ref: React.Ref<never> }
+) {
+  const { ref: _ref, ...fieldProps } = formField;
+  switch (fieldDef.type) {
+    case "text":
+      return (
+        <Input
+          {...fieldProps}
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+    case "email":
+      return (
+        <Input
+          {...fieldProps}
+          type="email"
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+    case "phone":
+      return (
+        <Input
+          {...fieldProps}
+          type="tel"
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+    case "url":
+      return (
+        <Input
+          {...fieldProps}
+          type="url"
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+    case "number":
+      return (
+        <Input
+          {...fieldProps}
+          type="number"
+          value={fieldProps.value as number || ""}
+          onChange={(e) => fieldProps.onChange(e.target.value ? Number(e.target.value) : "")}
+          placeholder={fieldDef.placeholder}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+    case "date":
+      return (
+        <Input
+          {...fieldProps}
+          type="date"
+          value={fieldProps.value as string || ""}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+    case "textarea":
+      return (
+        <Textarea
+          {...fieldProps}
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder}
+          className="resize-none"
+          rows={4}
+          data-testid={`textarea-${fieldDef.id}`}
+        />
+      );
+    case "select":
+      return (
+        <Select
+          value={fieldProps.value as string || ""}
+          onValueChange={fieldProps.onChange}
+        >
+          <SelectTrigger data-testid={`select-${fieldDef.id}`}>
+            <SelectValue placeholder={fieldDef.placeholder || "Select an option"} />
+          </SelectTrigger>
+          <SelectContent>
+            {fieldDef.options?.map((option) => (
+              <SelectItem
+                key={option}
+                value={option}
+                data-testid={`option-${fieldDef.id}-${option}`}
+              >
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    case "checkbox":
+      return (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={!!fieldProps.value}
+            onCheckedChange={fieldProps.onChange}
+            data-testid={`checkbox-${fieldDef.id}`}
+          />
+          {fieldDef.placeholder && (
+            <Label className="font-normal text-muted-foreground">
+              {fieldDef.placeholder}
+            </Label>
+          )}
+        </div>
+      );
+    case "toggle":
+      return (
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={!!fieldProps.value}
+            onCheckedChange={fieldProps.onChange}
+            data-testid={`toggle-${fieldDef.id}`}
+          />
+          {fieldDef.placeholder && (
+            <Label className="font-normal text-muted-foreground">
+              {fieldDef.placeholder}
+            </Label>
+          )}
+        </div>
+      );
+    case "array":
+      return (
+        <Textarea
+          {...fieldProps}
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder || "Enter items, one per line"}
+          className="resize-none"
+          rows={4}
+          data-testid={`array-${fieldDef.id}`}
+        />
+      );
+    default:
+      return (
+        <Input
+          {...fieldProps}
+          value={fieldProps.value as string || ""}
+          placeholder={fieldDef.placeholder}
+          data-testid={`input-${fieldDef.id}`}
+        />
+      );
+  }
+}
+
 function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
   return (
     <FormField
@@ -43,128 +194,7 @@ function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
             {field.name}
           </FormLabel>
           <FormControl>
-            {field.type === "text" && (
-              <Input
-                {...formField}
-                value={formField.value as string || ""}
-                placeholder={field.placeholder}
-                data-testid={`input-${field.id}`}
-              />
-            )}
-            {field.type === "email" && (
-              <Input
-                {...formField}
-                type="email"
-                value={formField.value as string || ""}
-                placeholder={field.placeholder}
-                data-testid={`input-${field.id}`}
-              />
-            )}
-            {field.type === "phone" && (
-              <Input
-                {...formField}
-                type="tel"
-                value={formField.value as string || ""}
-                placeholder={field.placeholder}
-                data-testid={`input-${field.id}`}
-              />
-            )}
-            {field.type === "url" && (
-              <Input
-                {...formField}
-                type="url"
-                value={formField.value as string || ""}
-                placeholder={field.placeholder}
-                data-testid={`input-${field.id}`}
-              />
-            )}
-            {field.type === "number" && (
-              <Input
-                {...formField}
-                type="number"
-                value={formField.value as number || ""}
-                onChange={(e) => formField.onChange(e.target.value ? Number(e.target.value) : "")}
-                placeholder={field.placeholder}
-                data-testid={`input-${field.id}`}
-              />
-            )}
-            {field.type === "date" && (
-              <Input
-                {...formField}
-                type="date"
-                value={formField.value as string || ""}
-                data-testid={`input-${field.id}`}
-              />
-            )}
-            {field.type === "textarea" && (
-              <Textarea
-                {...formField}
-                value={formField.value as string || ""}
-                placeholder={field.placeholder}
-                className="resize-none"
-                rows={4}
-                data-testid={`textarea-${field.id}`}
-              />
-            )}
-            {field.type === "select" && (
-              <Select
-                value={formField.value as string || ""}
-                onValueChange={formField.onChange}
-              >
-                <SelectTrigger data-testid={`select-${field.id}`}>
-                  <SelectValue placeholder={field.placeholder || "Select an option"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {field.options?.map((option) => (
-                    <SelectItem
-                      key={option}
-                      value={option}
-                      data-testid={`option-${field.id}-${option}`}
-                    >
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {field.type === "checkbox" && (
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={!!formField.value}
-                  onCheckedChange={formField.onChange}
-                  data-testid={`checkbox-${field.id}`}
-                />
-                {field.placeholder && (
-                  <Label className="font-normal text-muted-foreground">
-                    {field.placeholder}
-                  </Label>
-                )}
-              </div>
-            )}
-            {field.type === "toggle" && (
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={!!formField.value}
-                  onCheckedChange={formField.onChange}
-                  data-testid={`toggle-${field.id}`}
-                />
-                {field.placeholder && (
-                  <Label className="font-normal text-muted-foreground">
-                    {field.placeholder}
-                  </Label>
-                )}
-              </div>
-            )}
-            {field.type === "array" && (
-              <Textarea
-                {...formField}
-                value={formField.value as string || ""}
-                placeholder={field.placeholder || "Enter items, one per line"}
-                className="resize-none"
-                rows={4}
-                data-testid={`array-${field.id}`}
-              />
-            )}
+            {renderFieldInput(field, formField)}
           </FormControl>
           {field.description && (
             <FormDescription>{field.description}</FormDescription>

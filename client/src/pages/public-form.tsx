@@ -64,7 +64,18 @@ export default function PublicFormPage() {
       if (!res.ok) {
         throw new Error("Form not found");
       }
-      return res.json();
+      const data = await res.json();
+      // Transform nested API response to flat PublicFormData structure
+      return {
+        title: data.request.title,
+        description: data.request.description,
+        formSchema: data.request.formSchema,
+        dueDate: data.request.dueDate,
+        recipientName: data.recipient.name,
+        recipientType: data.recipient.type,
+        hasResponded: !!data.existingResponse,
+        existingResponse: data.existingResponse,
+      };
     },
   });
 
