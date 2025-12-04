@@ -531,7 +531,7 @@ export default function AdminFormRequestsPage() {
   }, []);
 
   const handleRowClick = useCallback((request: FormRequest) => {
-    navigate(`/admin/forms/requests/${request.id}/edit`);
+    navigate(`/admin/forms/requests/${request.id}`);
   }, [navigate]);
 
   const gridContext: GridContext = {

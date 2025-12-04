@@ -1906,6 +1906,17 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
+      // Check if request exists and if it's editable (only drafts can be edited)
+      const existingRequest = await storage.getFormRequestById(req.params.id);
+      if (!existingRequest) {
+        return res.status(404).json({ message: "Form request not found" });
+      }
+      
+      // Only allow formSchema changes on draft requests
+      if (existingRequest.status !== "draft" && result.data.formSchema !== undefined) {
+        return res.status(400).json({ message: "Cannot modify form schema of non-draft requests" });
+      }
+
       const request = await storage.updateFormRequest(req.params.id, result.data);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
