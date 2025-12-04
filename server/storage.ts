@@ -11,6 +11,8 @@ import {
   venues,
   amenities,
   venueAmenities,
+  tags,
+  venueTags,
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
@@ -53,6 +55,9 @@ import {
   type Amenity,
   type CreateAmenity,
   type UpdateAmenity,
+  type Tag,
+  type CreateTag,
+  type UpdateTag,
   type CreateVendorService,
   type UpdateVendorService,
   type CreateVendor,
@@ -206,6 +211,13 @@ export interface IStorage {
   createAmenity(data: CreateAmenity): Promise<Amenity>;
   updateAmenity(id: string, data: UpdateAmenity): Promise<Amenity | undefined>;
   deleteAmenity(id: string): Promise<void>;
+  
+  // Tag operations
+  getTags(): Promise<Tag[]>;
+  getTagById(id: string): Promise<Tag | undefined>;
+  createTag(data: CreateTag): Promise<Tag>;
+  updateTag(id: string, data: UpdateTag): Promise<Tag | undefined>;
+  deleteTag(id: string): Promise<void>;
   
   // App settings operations
   getSetting(key: string): Promise<AppSetting | undefined>;
@@ -1226,6 +1238,43 @@ export class DatabaseStorage implements IStorage {
   
   async deleteAmenity(id: string): Promise<void> {
     await db.delete(amenities).where(eq(amenities.id, id));
+  }
+  
+  // Tag operations
+  async getTags(): Promise<Tag[]> {
+    return db.select().from(tags).orderBy(tags.category, tags.name);
+  }
+  
+  async getTagById(id: string): Promise<Tag | undefined> {
+    const [tag] = await db.select().from(tags).where(eq(tags.id, id));
+    return tag;
+  }
+  
+  async createTag(data: CreateTag): Promise<Tag> {
+    const [tag] = await db
+      .insert(tags)
+      .values({
+        name: data.name,
+        category: data.category,
+      })
+      .returning();
+    return tag;
+  }
+  
+  async updateTag(id: string, data: UpdateTag): Promise<Tag | undefined> {
+    const [tag] = await db
+      .update(tags)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(tags.id, id))
+      .returning();
+    return tag;
+  }
+  
+  async deleteTag(id: string): Promise<void> {
+    await db.delete(tags).where(eq(tags.id, id));
   }
   
   // App settings operations
