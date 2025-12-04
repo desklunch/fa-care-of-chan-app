@@ -39,6 +39,7 @@ import AdminFormRequests from "@/pages/admin-form-requests";
 import AdminFormRequestForm from "@/pages/admin-form-request-form";
 import AdminFormRequestDetail from "@/pages/admin-form-request-detail";
 import PublicForm from "@/pages/public-form";
+import FormPreview from "@/pages/form-preview";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -252,6 +253,7 @@ function Router() {
       <Route path="/invite" component={InviteActivation} />
       <Route path="/vendor-update/:token" component={VendorUpdateForm} />
       <Route path="/form/:token" component={PublicForm} />
+      <Route path="/form/preview/:requestId" component={FormPreview} />
       {isAuthenticated ? (
         <Route>
           <AuthenticatedRoutes />
