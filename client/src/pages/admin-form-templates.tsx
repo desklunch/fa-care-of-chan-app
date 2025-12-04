@@ -1,16 +1,8 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,99 +13,167 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { DataGridPage } from "@/components/data-grid";
+import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
+import type { ColumnConfig } from "@/components/data-grid/types";
 import {
   Plus,
-  FileText,
   MoreVertical,
   Pencil,
   Trash2,
   Copy,
-  Calendar,
   Layers,
 } from "lucide-react";
 import type { FormTemplate, FormSection, InsertFormTemplate } from "@shared/schema";
-import { format } from "date-fns";
+import type { ICellRendererParams } from "ag-grid-community";
 
-function TemplateCard({
-  template,
-  onEdit,
-  onDuplicate,
-  onDelete,
-}: {
-  template: FormTemplate;
-  onEdit: () => void;
-  onDuplicate: () => void;
-  onDelete: () => void;
-}) {
-  const fieldCount = (template.formSchema as FormSection[]).reduce(
-    (acc, section) => acc + section.fields.length,
-    0
-  );
-  const sectionCount = (template.formSchema as FormSection[]).length;
+interface GridContext {
+  onEdit: (template: FormTemplate) => void;
+  onDuplicate: (template: FormTemplate) => void;
+  onDelete: (template: FormTemplate) => void;
+}
 
+function NameCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
+  if (!data) return null;
   return (
-    <Card
-      className="p-4 hover-elevate cursor-pointer transition-shadow"
-      onClick={onEdit}
-      data-testid={`card-template-${template.id}`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <h3 className="font-semibold truncate">{template.name}</h3>
-          </div>
-          {template.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-              {template.description}
-            </p>
-          )}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Layers className="h-3 w-3" />
-              {sectionCount} section{sectionCount !== 1 ? "s" : ""}
-            </span>
-            <span>{fieldCount} field{fieldCount !== 1 ? "s" : ""}</span>
-            {template.createdAt && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {format(new Date(template.createdAt), "MMM d, yyyy")}
-              </span>
-            )}
-          </div>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="icon" data-testid={`button-template-menu-${template.id}`}>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(); }}>
-              <Copy className="h-4 w-4 mr-2" />
-              Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </Card>
+    <span className="font-medium" data-testid={`text-template-name-${data.id}`}>
+      {data.name}
+    </span>
   );
 }
+
+function SectionCountCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
+  if (!data) return null;
+  const sectionCount = (data.formSchema as FormSection[])?.length || 0;
+  return (
+    <span className="flex items-center gap-1 text-muted-foreground">
+      <Layers className="h-3 w-3" />
+      {sectionCount}
+    </span>
+  );
+}
+
+function FieldCountCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
+  if (!data) return null;
+  const fieldCount = (data.formSchema as FormSection[])?.reduce(
+    (acc, section) => acc + section.fields.length,
+    0
+  ) || 0;
+  return <span className="text-muted-foreground">{fieldCount}</span>;
+}
+
+function ActionsCellRenderer({ data, context }: ICellRendererParams<FormTemplate, unknown, GridContext>) {
+  if (!data || !context) return null;
+  
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <Button variant="ghost" size="icon" data-testid={`button-template-menu-${data.id}`}>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onEdit(data); }}>
+          <Pencil className="h-4 w-4 mr-2" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onDuplicate(data); }}>
+          <Copy className="h-4 w-4 mr-2" />
+          Duplicate
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={(e) => { e.stopPropagation(); context.onDelete(data); }}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+const templateColumns: ColumnConfig<FormTemplate>[] = [
+  {
+    id: "name",
+    headerName: "Template Name",
+    field: "name",
+    category: "Info",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: NameCellRenderer,
+    },
+  },
+  {
+    id: "description",
+    headerName: "Description",
+    field: "description",
+    category: "Info",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      valueFormatter: (params) => params.value || "—",
+    },
+  },
+  {
+    id: "sections",
+    headerName: "Sections",
+    category: "Structure",
+    colDef: {
+      width: 100,
+      cellRenderer: SectionCountCellRenderer,
+      valueGetter: (params) => (params.data?.formSchema as FormSection[])?.length || 0,
+    },
+  },
+  {
+    id: "fields",
+    headerName: "Fields",
+    category: "Structure",
+    colDef: {
+      width: 80,
+      cellRenderer: FieldCountCellRenderer,
+      valueGetter: (params) => 
+        (params.data?.formSchema as FormSection[])?.reduce(
+          (acc, section) => acc + section.fields.length, 0
+        ) || 0,
+    },
+  },
+  {
+    id: "createdAt",
+    headerName: "Created",
+    field: "createdAt",
+    category: "Dates",
+    colDef: {
+      width: 120,
+      cellRenderer: DateCellRenderer,
+    },
+  },
+  {
+    id: "actions",
+    headerName: "",
+    category: "Actions",
+    toggleable: false,
+    colDef: {
+      width: 60,
+      sortable: false,
+      filter: false,
+      cellRenderer: ActionsCellRenderer,
+    },
+  },
+];
+
+const defaultVisibleColumns = ["name", "description", "sections", "fields", "createdAt", "actions"];
 
 export default function AdminFormTemplatesPage() {
   const [, navigate] = useLocation();
@@ -121,11 +181,6 @@ export default function AdminFormTemplatesPage() {
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
   const [deleteTemplate, setDeleteTemplate] = useState<FormTemplate | null>(null);
-
-  const { data: templates = [], isLoading } = useQuery<FormTemplate[]>({
-    queryKey: ["/api/form-templates"],
-    enabled: isAuthenticated && user?.role === "admin",
-  });
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertFormTemplate) => {
@@ -165,29 +220,40 @@ export default function AdminFormTemplatesPage() {
     },
   });
 
-  const handleDuplicate = (template: FormTemplate) => {
+  const handleDuplicate = useCallback((template: FormTemplate) => {
     createMutation.mutate({
       name: `${template.name} (Copy)`,
       description: template.description,
       formSchema: template.formSchema,
     } as InsertFormTemplate);
-  };
+  }, [createMutation]);
 
-  const handleEdit = (template: FormTemplate) => {
+  const handleEdit = useCallback((template: FormTemplate) => {
     navigate(`/admin/forms/templates/${template.id}/edit`);
-  };
+  }, [navigate]);
 
-  const handleCreate = () => {
-    navigate("/admin/forms/templates/new");
+  const handleDelete = useCallback((template: FormTemplate) => {
+    setDeleteTemplate(template);
+  }, []);
+
+  const handleRowClick = useCallback((template: FormTemplate) => {
+    navigate(`/admin/forms/templates/${template.id}/edit`);
+  }, [navigate]);
+
+  const gridContext: GridContext = {
+    onEdit: handleEdit,
+    onDuplicate: handleDuplicate,
+    onDelete: handleDelete,
   };
 
   if (isAuthLoading) {
     return (
       <PageLayout breadcrumbs={[{ label: "Admin" }, { label: "Form Templates" }]}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
+        <div className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-10 bg-muted rounded w-64" />
+            <div className="h-64 bg-muted rounded" />
+          </div>
         </div>
       </PageLayout>
     );
@@ -208,37 +274,18 @@ export default function AdminFormTemplatesPage() {
         variant: "default",
       }}
     >
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
-      ) : templates.length === 0 ? (
-        <Card className="p-12 flex flex-col items-center justify-center">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="font-semibold mb-2">No form templates yet</h3>
-          <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
-            Form templates let you create reusable form structures for collecting information from vendors and contacts.
-          </p>
-          <Button onClick={handleCreate} data-testid="button-create-first-template">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Your First Template
-          </Button>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              onEdit={() => handleEdit(template)}
-              onDuplicate={() => handleDuplicate(template)}
-              onDelete={() => setDeleteTemplate(template)}
-            />
-          ))}
-        </div>
-      )}
+      <DataGridPage
+        queryKey="/api/form-templates"
+        columns={templateColumns}
+        defaultVisibleColumns={defaultVisibleColumns}
+        searchFields={["name", "description"]}
+        searchPlaceholder="Search templates..."
+        onRowClick={handleRowClick}
+        getRowId={(template: FormTemplate) => template.id}
+        context={gridContext}
+        emptyMessage="No form templates yet"
+        emptyDescription="Create a template to get started with custom forms."
+      />
 
       <AlertDialog open={!!deleteTemplate} onOpenChange={(open) => !open && setDeleteTemplate(null)}>
         <AlertDialogContent>
