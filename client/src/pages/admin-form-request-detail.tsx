@@ -61,6 +61,7 @@ import {
   Trash2,
   Eye,
   ExternalLink,
+  ClipboardList,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -70,16 +71,20 @@ import type {
   OutreachToken,
   Vendor,
   Contact,
+  FormResponse,
 } from "@shared/schema";
 
 type RequestStatus = "draft" | "sent" | "completed";
 type TokenStatus = "pending" | "sent" | "responded" | "expired";
 
+interface TokenWithResponse extends OutreachToken {
+  vendor?: Vendor | null;
+  contact?: Contact | null;
+  response?: FormResponse | null;
+}
+
 interface FormRequestWithTokens extends FormRequest {
-  tokens?: Array<OutreachToken & {
-    vendor?: Vendor | null;
-    contact?: Contact | null;
-  }>;
+  tokens?: TokenWithResponse[];
   recipientCount?: number;
   respondedCount?: number;
   createdBy?: { id: string; firstName: string; lastName: string };
@@ -94,6 +99,15 @@ interface RecipientRow {
   sentAt: Date | null;
   respondedAt: Date | null;
   token: OutreachToken;
+}
+
+interface ResponseRow {
+  id: string;
+  recipientName: string;
+  recipientType: "vendor" | "contact";
+  sentAt: Date | null;
+  submittedAt: Date | null;
+  responseData: Record<string, unknown>;
 }
 
 const statusConfig: Record<RequestStatus, { label: string; variant: "default" | "secondary" | "outline"; icon: typeof Clock }> = {
@@ -447,6 +461,103 @@ export default function AdminFormRequestDetailPage() {
     };
   });
 
+  // Build response rows from tokens that have responses
+  const responseRows: ResponseRow[] = (request?.tokens || [])
+    .filter((token) => token.response !== null && token.response !== undefined)
+    .map((token) => {
+      const isVendor = token.recipientType === "vendor";
+      const vendor = token.vendor;
+      const contact = token.contact;
+
+      return {
+        id: token.id,
+        recipientName: isVendor && vendor 
+          ? vendor.businessName 
+          : contact 
+            ? `${contact.firstName} ${contact.lastName}` 
+            : "Unknown",
+        recipientType: token.recipientType as "vendor" | "contact",
+        sentAt: token.sentAt,
+        submittedAt: token.response?.submittedAt || null,
+        responseData: token.response?.responseData || {},
+      };
+    });
+
+  // Build dynamic column definitions for responses based on form schema
+  const getFormFieldLabel = (fieldId: string): string => {
+    const schema = request?.formSchema as FormSection[] | undefined;
+    if (!schema) return fieldId;
+    for (const section of schema) {
+      const field = section.fields.find((f) => f.id === fieldId);
+      if (field) return field.name;
+    }
+    return fieldId;
+  };
+
+  const responseColumnDefs: ColDef<ResponseRow>[] = [
+    {
+      headerName: "Recipient",
+      field: "recipientName",
+      width: 200,
+      pinned: "left",
+      cellRenderer: (params: ICellRendererParams<ResponseRow>) => {
+        if (!params.data) return null;
+        return (
+          <div className="flex items-center gap-2">
+            {params.data.recipientType === "vendor" ? (
+              <Building className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <User className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="font-medium">{params.data.recipientName}</span>
+          </div>
+        );
+      },
+    },
+    {
+      headerName: "Sent At",
+      field: "sentAt",
+      width: 160,
+      cellRenderer: (params: ICellRendererParams<ResponseRow>) => {
+        if (!params.value) return <span className="text-muted-foreground">—</span>;
+        return <span>{format(new Date(params.value), "MMM d, yyyy h:mm a")}</span>;
+      },
+    },
+    {
+      headerName: "Submitted At",
+      field: "submittedAt",
+      width: 160,
+      cellRenderer: (params: ICellRendererParams<ResponseRow>) => {
+        if (!params.value) return <span className="text-muted-foreground">—</span>;
+        return <span>{format(new Date(params.value), "MMM d, yyyy h:mm a")}</span>;
+      },
+    },
+    // Dynamically add columns for each form field
+    ...(() => {
+      const schema = request?.formSchema as FormSection[] | undefined;
+      if (!schema) return [];
+      const fieldColumns: ColDef<ResponseRow>[] = [];
+      for (const section of schema) {
+        for (const field of section.fields) {
+          fieldColumns.push({
+            headerName: field.name,
+            field: `responseData.${field.id}` as keyof ResponseRow,
+            flex: 1,
+            minWidth: 150,
+            valueGetter: (params) => {
+              const data = params.data?.responseData?.[field.id];
+              if (data === undefined || data === null) return "";
+              if (typeof data === "boolean") return data ? "Yes" : "No";
+              if (Array.isArray(data)) return data.join(", ");
+              return String(data);
+            },
+          });
+        }
+      }
+      return fieldColumns;
+    })(),
+  ];
+
   // Use server-provided counts to avoid UI flicker during refetch
   const totalRecipients = request?.recipientCount ?? recipientRows.length;
   const serverRespondedCount = request?.respondedCount ?? recipientRows.filter((r) => r.status === "responded").length;
@@ -546,6 +657,12 @@ export default function AdminFormRequestDetailPage() {
               <Users className="h-4 w-4 mr-2" />
               Recipients ({recipientRows.length})
             </TabsTrigger>
+            {(request.status === "sent" || request.status === "completed") && (
+              <TabsTrigger value="responses" data-testid="tab-responses">
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Responses ({responseRows.length})
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -674,6 +791,36 @@ export default function AdminFormRequestDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {(request.status === "sent" || request.status === "completed") && (
+            <TabsContent value="responses">
+              <Card>
+                <CardContent className="p-0">
+                  {responseRows.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <ClipboardList className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-lg font-medium">No responses yet</p>
+                      <p className="text-sm text-muted-foreground">Responses will appear here as recipients submit their forms.</p>
+                    </div>
+                  ) : (
+                    <div className="h-[400px]">
+                      <AgGridReact
+                        theme={gridTheme}
+                        rowData={responseRows}
+                        columnDefs={responseColumnDefs}
+                        getRowId={(params) => params.data?.id || ""}
+                        defaultColDef={{
+                          sortable: true,
+                          filter: true,
+                          resizable: true,
+                        }}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
