@@ -34,6 +34,7 @@ import AppIssues from "@/pages/app-issues";
 import AppIssueForm from "@/pages/app-issue-form";
 import AppIssueDetail from "@/pages/app-issue-detail";
 import AdminFormTemplates from "@/pages/admin-form-templates";
+import AdminFormTemplateForm from "@/pages/admin-form-template-form";
 import AdminFormRequests from "@/pages/admin-form-requests";
 import PublicForm from "@/pages/public-form";
 import NotFound from "@/pages/not-found";
@@ -216,6 +217,8 @@ function AuthenticatedRoutes() {
         <Route path="/admin/vendors/services" component={AdminVendorServices} />
         <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
         <Route path="/admin/forms/templates" component={AdminFormTemplates} />
+        <Route path="/admin/forms/templates/new" component={AdminFormTemplateForm} />
+        <Route path="/admin/forms/templates/:id/edit" component={AdminFormTemplateForm} />
         <Route path="/admin/forms/requests" component={AdminFormRequests} />
         <Route path="/admin/theme" component={AdminThemeEditor} />
         <Route path="/admin/logs" component={AdminLogs} />

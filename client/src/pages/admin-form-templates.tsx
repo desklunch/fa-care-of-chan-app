@@ -4,19 +4,7 @@ import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +25,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { FormBuilder } from "@/components/form-builder";
 import {
   Plus,
   FileText,
@@ -128,116 +115,11 @@ function TemplateCard({
   );
 }
 
-interface TemplateFormData {
-  name: string;
-  description: string;
-  formSchema: FormSection[];
-}
-
-function TemplateEditorDialog({
-  template,
-  open,
-  onOpenChange,
-  onSave,
-  isPending,
-}: {
-  template: FormTemplate | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (data: TemplateFormData) => void;
-  isPending: boolean;
-}) {
-  const [name, setName] = useState(template?.name || "");
-  const [description, setDescription] = useState(template?.description || "");
-  const [formSchema, setFormSchema] = useState<FormSection[]>(
-    (template?.formSchema as FormSection[]) || []
-  );
-
-  const handleSave = () => {
-    if (!name.trim()) return;
-    onSave({ name: name.trim(), description: description.trim(), formSchema });
-  };
-
-  if (template && (!name && !formSchema.length)) {
-    setName(template.name);
-    setDescription(template.description || "");
-    setFormSchema((template.formSchema as FormSection[]) || []);
-    return null;
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{template ? "Edit Template" : "Create Template"}</DialogTitle>
-          <DialogDescription>
-            {template
-              ? "Update your form template details and structure."
-              : "Create a new form template with custom sections and fields."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="template-name">Template Name</Label>
-              <Input
-                id="template-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter template name"
-                data-testid="input-template-name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="template-description">Description (Optional)</Label>
-              <Textarea
-                id="template-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe the purpose of this template"
-                className="resize-none"
-                rows={3}
-                data-testid="textarea-template-description"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Form Structure</Label>
-            <FormBuilder value={formSchema} onChange={setFormSchema} />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-            data-testid="button-cancel-template"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!name.trim() || isPending}
-            data-testid="button-save-template"
-          >
-            {isPending ? "Saving..." : template ? "Save Changes" : "Create Template"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export default function AdminFormTemplatesPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<FormTemplate | null>(null);
   const [deleteTemplate, setDeleteTemplate] = useState<FormTemplate | null>(null);
 
   const { data: templates = [], isLoading } = useQuery<FormTemplate[]>({
@@ -252,36 +134,14 @@ export default function AdminFormTemplatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      setIsEditorOpen(false);
-      toast({ title: "Template created", description: "Form template has been created successfully." });
+      toast({ title: "Template duplicated", description: "Form template has been duplicated successfully." });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
         navigate("/");
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to create template." });
-      }
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertFormTemplate> }) => {
-      const res = await apiRequest("PATCH", `/api/form-templates/${id}`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      setIsEditorOpen(false);
-      setEditingTemplate(null);
-      toast({ title: "Template updated", description: "Form template has been updated successfully." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update template." });
+        toast({ variant: "destructive", title: "Error", description: "Failed to duplicate template." });
       }
     },
   });
@@ -305,14 +165,6 @@ export default function AdminFormTemplatesPage() {
     },
   });
 
-  const handleSave = (data: TemplateFormData) => {
-    if (editingTemplate) {
-      updateMutation.mutate({ id: editingTemplate.id, data });
-    } else {
-      createMutation.mutate(data as InsertFormTemplate);
-    }
-  };
-
   const handleDuplicate = (template: FormTemplate) => {
     createMutation.mutate({
       name: `${template.name} (Copy)`,
@@ -322,13 +174,11 @@ export default function AdminFormTemplatesPage() {
   };
 
   const handleEdit = (template: FormTemplate) => {
-    setEditingTemplate(template);
-    setIsEditorOpen(true);
+    navigate(`/admin/forms/templates/${template.id}/edit`);
   };
 
   const handleCreate = () => {
-    setEditingTemplate(null);
-    setIsEditorOpen(true);
+    navigate("/admin/forms/templates/new");
   };
 
   if (isAuthLoading) {
@@ -353,7 +203,7 @@ export default function AdminFormTemplatesPage() {
       breadcrumbs={[{ label: "Admin" }, { label: "Form Templates" }]}
       actionButton={{
         label: "Create Template",
-        onClick: handleCreate,
+        href: "/admin/forms/templates/new",
         icon: Plus,
         variant: "default",
       }}
@@ -389,17 +239,6 @@ export default function AdminFormTemplatesPage() {
           ))}
         </div>
       )}
-
-      <TemplateEditorDialog
-        template={editingTemplate}
-        open={isEditorOpen}
-        onOpenChange={(open) => {
-          setIsEditorOpen(open);
-          if (!open) setEditingTemplate(null);
-        }}
-        onSave={handleSave}
-        isPending={createMutation.isPending || updateMutation.isPending}
-      />
 
       <AlertDialog open={!!deleteTemplate} onOpenChange={(open) => !open && setDeleteTemplate(null)}>
         <AlertDialogContent>
