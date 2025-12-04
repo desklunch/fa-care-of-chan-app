@@ -237,9 +237,9 @@ export default function AdminThemeEditor() {
         </div>
       </div>
       
-      <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "light" | "dark")}>
+      <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "light" | "dark")} data-testid="tabs-theme-mode">
         <div className="flex items-center justify-between mb-4">
-          <TabsList>
+          <TabsList data-testid="tabs-list-theme-mode">
             <TabsTrigger value="light" className="gap-2" data-testid="tab-light-mode">
               <Sun className="h-4 w-4" />
               Light Mode
@@ -532,6 +532,7 @@ function ThemePreview({ vars, mode }: ThemePreviewProps) {
         color: `hsl(${vars.foreground})`,
         borderColor: `hsl(${vars.border})`,
       }}
+      data-testid="preview-container"
     >
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -541,6 +542,7 @@ function ThemePreview({ vars, mode }: ThemePreviewProps) {
               backgroundColor: `hsl(${vars.primary})`,
               color: `hsl(${vars.primaryForeground})`,
             }}
+            data-testid="preview-primary-button"
           >
             Primary Button
           </div>
@@ -551,6 +553,7 @@ function ThemePreview({ vars, mode }: ThemePreviewProps) {
               color: `hsl(${vars.secondaryForeground})`,
               borderColor: `hsl(${vars.border})`,
             }}
+            data-testid="preview-secondary-button"
           >
             Secondary
           </div>
@@ -560,6 +563,7 @@ function ThemePreview({ vars, mode }: ThemePreviewProps) {
               backgroundColor: `hsl(${vars.destructive})`,
               color: `hsl(${vars.destructiveForeground})`,
             }}
+            data-testid="preview-destructive-button"
           >
             Destructive
           </div>
@@ -571,21 +575,23 @@ function ThemePreview({ vars, mode }: ThemePreviewProps) {
             backgroundColor: `hsl(${vars.card})`,
             borderColor: `hsl(${vars.cardBorder})`,
           }}
+          data-testid="preview-card"
         >
           <h3 className="font-semibold mb-2" style={{ color: `hsl(${vars.cardForeground})` }}>
             Card Example
           </h3>
-          <p style={{ color: `hsl(${vars.mutedForeground})` }}>
+          <p style={{ color: `hsl(${vars.mutedForeground})` }} data-testid="preview-muted-text">
             This is muted text inside a card component.
           </p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2" data-testid="preview-chart-colors">
           {[vars.chart1, vars.chart2, vars.chart3, vars.chart4, vars.chart5].map((color, i) => (
             <div
               key={i}
               className="h-8 flex-1 rounded"
               style={{ backgroundColor: `hsl(${color})` }}
+              data-testid={`preview-chart-${i + 1}`}
             />
           ))}
         </div>
@@ -596,6 +602,7 @@ function ThemePreview({ vars, mode }: ThemePreviewProps) {
             backgroundColor: `hsl(${vars.accent})`,
             color: `hsl(${vars.accentForeground})`,
           }}
+          data-testid="preview-accent"
         >
           Accent background with accent foreground text
         </div>
