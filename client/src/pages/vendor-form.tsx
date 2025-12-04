@@ -18,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { ArrowLeft, Save, Trash2, X, Building2, MapPin, Briefcase } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -349,12 +350,11 @@ export default function VendorForm() {
                     <FormItem>
                       <FormLabel>Business Address</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="123 Business Street, Suite 100, City, State 12345"
-                          className="min-h-[80px]"
-                          {...field} 
+                        <AddressAutocomplete
                           value={field.value || ""}
-                          data-testid="textarea-address"
+                          onChange={field.onChange}
+                          placeholder="Search for business address..."
+                          data-testid="input-address"
                         />
                       </FormControl>
                       <FormMessage />

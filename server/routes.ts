@@ -1054,6 +1054,68 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/places/address-autocomplete", isAuthenticated, async (req, res) => {
+    try {
+      const { input } = req.query;
+      if (!input || typeof input !== "string") {
+        return res.status(400).json({ message: "Input is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=establishment|address&key=${apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching address autocomplete:", error);
+      res.status(500).json({ message: "Failed to fetch address suggestions" });
+    }
+  });
+
+  app.get("/api/places/address-details", isAuthenticated, async (req, res) => {
+    try {
+      const { place_id } = req.query;
+      if (!place_id || typeof place_id !== "string") {
+        return res.status(400).json({ message: "Place ID is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place_id}&fields=formatted_address,name,address_components&key=${apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const data = await response.json();
+      const result = data.result;
+      
+      res.json({
+        formattedAddress: result?.formatted_address || "",
+        name: result?.name || "",
+        addressComponents: result?.address_components || [],
+      });
+    } catch (error) {
+      console.error("Error fetching address details:", error);
+      res.status(500).json({ message: "Failed to fetch address details" });
+    }
+  });
+
   app.get("/api/places/details", isAuthenticated, async (req, res) => {
     try {
       const { place_id } = req.query;
