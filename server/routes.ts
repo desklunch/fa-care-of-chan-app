@@ -1539,6 +1539,113 @@ export async function registerRoutes(
     }
   });
 
+  // Get single venue with all relationships (amenities and tags)
+  app.get("/api/venues/:id/full", isAuthenticated, async (req, res) => {
+    try {
+      const venue = await storage.getVenueByIdWithRelations(req.params.id);
+      if (!venue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      res.json(venue);
+    } catch (error) {
+      console.error("Error fetching venue with relations:", error);
+      res.status(500).json({ message: "Failed to fetch venue" });
+    }
+  });
+
+  // Create new venue (admin only)
+  app.post("/api/venues", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { amenityIds, cuisineTagIds, styleTagIds, ...venueData } = req.body;
+      const venue = await storage.createVenue(venueData);
+      
+      if (amenityIds && amenityIds.length > 0) {
+        await storage.setVenueAmenities(venue.id, amenityIds);
+      }
+      
+      const allTagIds = [...(cuisineTagIds || []), ...(styleTagIds || [])];
+      if (allTagIds.length > 0) {
+        await storage.setVenueTags(venue.id, allTagIds);
+      }
+      
+      const fullVenue = await storage.getVenueByIdWithRelations(venue.id);
+      res.status(201).json(fullVenue);
+    } catch (error) {
+      console.error("Error creating venue:", error);
+      res.status(500).json({ message: "Failed to create venue" });
+    }
+  });
+
+  // Update venue (admin only)
+  app.patch("/api/venues/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { amenityIds, cuisineTagIds, styleTagIds, ...venueData } = req.body;
+      const venue = await storage.updateVenue(req.params.id, venueData);
+      if (!venue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      
+      if (amenityIds !== undefined) {
+        await storage.setVenueAmenities(venue.id, amenityIds || []);
+      }
+      
+      if (cuisineTagIds !== undefined || styleTagIds !== undefined) {
+        const allTagIds = [...(cuisineTagIds || []), ...(styleTagIds || [])];
+        await storage.setVenueTags(venue.id, allTagIds);
+      }
+      
+      const fullVenue = await storage.getVenueByIdWithRelations(venue.id);
+      res.json(fullVenue);
+    } catch (error) {
+      console.error("Error updating venue:", error);
+      res.status(500).json({ message: "Failed to update venue" });
+    }
+  });
+
+  // Delete venue (admin only)
+  app.delete("/api/venues/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      await storage.deleteVenue(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting venue:", error);
+      res.status(500).json({ message: "Failed to delete venue" });
+    }
+  });
+
+  // Get venue amenities
+  app.get("/api/venues/:id/amenities", isAuthenticated, async (req, res) => {
+    try {
+      const amenities = await storage.getVenueAmenities(req.params.id);
+      res.json(amenities);
+    } catch (error) {
+      console.error("Error fetching venue amenities:", error);
+      res.status(500).json({ message: "Failed to fetch venue amenities" });
+    }
+  });
+
+  // Get venue tags
+  app.get("/api/venues/:id/tags", isAuthenticated, async (req, res) => {
+    try {
+      const tags = await storage.getVenueTags(req.params.id);
+      res.json(tags);
+    } catch (error) {
+      console.error("Error fetching venue tags:", error);
+      res.status(500).json({ message: "Failed to fetch venue tags" });
+    }
+  });
+
+  // Get tags by category
+  app.get("/api/tags/category/:category", isAuthenticated, async (req, res) => {
+    try {
+      const tags = await storage.getTagsByCategory(req.params.category);
+      res.json(tags);
+    } catch (error) {
+      console.error("Error fetching tags by category:", error);
+      res.status(500).json({ message: "Failed to fetch tags" });
+    }
+  });
+
   // ===== AMENITIES ROUTES =====
 
   // Get all amenities
