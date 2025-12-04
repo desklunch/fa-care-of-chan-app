@@ -35,6 +35,7 @@ import AppIssueForm from "@/pages/app-issue-form";
 import AppIssueDetail from "@/pages/app-issue-detail";
 import FormTemplates from "@/pages/form-templates";
 import FormTemplateForm from "@/pages/form-template-form";
+import FormTemplateDetail from "@/pages/form-template-detail";
 import FormRequests from "@/pages/form-requests";
 import FormRequestForm from "@/pages/form-request-form";
 import FormRequestDetail from "@/pages/form-request-detail";
@@ -225,6 +226,7 @@ function AuthenticatedRoutes() {
         <Route path="/forms/templates" component={FormTemplates} />
         <Route path="/forms/templates/new" component={FormTemplateForm} />
         <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
+        <Route path="/forms/templates/:id" component={FormTemplateDetail} />
         <Route path="/forms/requests" component={FormRequests} />
         <Route path="/forms/requests/new" component={FormRequestForm} />
         <Route path="/forms/requests/:id/edit" component={FormRequestForm} />

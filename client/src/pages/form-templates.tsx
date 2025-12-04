@@ -241,7 +241,7 @@ export default function AdminFormTemplatesPage() {
   }, []);
 
   const handleRowClick = useCallback((template: FormTemplate) => {
-    navigate(`/forms/templates/${template.id}/edit`);
+    navigate(`/forms/templates/${template.id}`);
   }, [navigate]);
 
   const gridContext: GridContext = {
