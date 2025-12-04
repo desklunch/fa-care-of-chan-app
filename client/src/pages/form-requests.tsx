@@ -93,9 +93,12 @@ function StatusCellRenderer({ data }: ICellRendererParams<FormRequest>) {
   if (!data) return null;
   const config = statusConfig[data.status as RequestStatus] || { label: data.status, variant: "secondary" };
   return (
-    <Badge variant={config.variant}>
-      {config.label}
-    </Badge>
+    <div className="h-full flex items-center">
+      <Badge variant={config.variant}>
+        {config.label}
+      </Badge>
+    </div>
+
   );
 }
 
@@ -111,7 +114,7 @@ function RecipientsCellRenderer({ data }: ICellRendererParams<FormRequestWithCou
   
   return (
     <div className="flex items-center gap-2">
-      <span className="flex items-center gap-1 text-muted-foreground">
+      <span className="flex items-center gap-1">
         <Users className="h-3 w-3" />
         {recipientCount}
       </span>
@@ -126,9 +129,9 @@ function RecipientsCellRenderer({ data }: ICellRendererParams<FormRequestWithCou
 }
 
 function DueDateCellRenderer({ data }: ICellRendererParams<FormRequest>) {
-  if (!data?.dueDate) return <span className="text-muted-foreground">—</span>;
+  if (!data?.dueDate) return <span className="">—</span>;
   return (
-    <span className="flex items-center gap-1 text-muted-foreground">
+    <span className="flex items-center gap-1">
       <Clock className="h-3 w-3" />
       {format(new Date(data.dueDate), "MMM d, yyyy")}
     </span>
@@ -245,22 +248,9 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
       cellRenderer: DateCellRenderer,
     },
   },
-  {
-    id: "actions",
-    headerName: "",
-    category: "Actions",
-    toggleable: false,
-    colDef: {
-      flex: 1,
-      minWidth: 60,
-      sortable: false,
-      filter: false,
-      cellRenderer: ActionsCellRenderer,
-    },
-  },
 ];
 
-const defaultVisibleColumns = ["title", "status", "recipients", "dueDate", "createdAt", "actions"];
+const defaultVisibleColumns = ["title", "status", "recipients", "dueDate", "createdAt"];
 
 function RecipientSelectorDialog({
   request,
