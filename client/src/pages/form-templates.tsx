@@ -131,7 +131,8 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
     headerName: "Sections",
     category: "Structure",
     colDef: {
-      width: 100,
+      flex: 1,
+      minWidth: 100,
       cellRenderer: SectionCountCellRenderer,
       valueGetter: (params) => (params.data?.formSchema as FormSection[])?.length || 0,
     },
@@ -141,7 +142,8 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
     headerName: "Fields",
     category: "Structure",
     colDef: {
-      width: 80,
+      flex: 1,
+      minWidth: 80,
       cellRenderer: FieldCountCellRenderer,
       valueGetter: (params) => 
         (params.data?.formSchema as FormSection[])?.reduce(
@@ -155,7 +157,8 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
     field: "createdAt",
     category: "Dates",
     colDef: {
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: DateCellRenderer,
     },
   },
@@ -165,7 +168,8 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
     category: "Actions",
     toggleable: false,
     colDef: {
-      width: 60,
+      flex: 1,
+      minWidth: 60,
       sortable: false,
       filter: false,
       cellRenderer: ActionsCellRenderer,

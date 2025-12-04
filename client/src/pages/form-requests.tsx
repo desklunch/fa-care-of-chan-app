@@ -205,7 +205,8 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
     field: "status",
     category: "Status",
     colDef: {
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: StatusCellRenderer,
     },
   },
@@ -214,7 +215,8 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
     headerName: "Recipients",
     category: "Recipients",
     colDef: {
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: RecipientsCellRenderer,
       valueGetter: (params) => {
         return (params.data as FormRequestWithCounts)?.recipientCount ?? 0;
@@ -227,7 +229,8 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
     field: "dueDate",
     category: "Dates",
     colDef: {
-      width: 140,
+      flex: 1,
+      minWidth: 140,
       cellRenderer: DueDateCellRenderer,
     },
   },
@@ -237,7 +240,8 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
     field: "createdAt",
     category: "Dates",
     colDef: {
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: DateCellRenderer,
     },
   },
@@ -247,7 +251,8 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
     category: "Actions",
     toggleable: false,
     colDef: {
-      width: 60,
+      flex: 1,
+      minWidth: 60,
       sortable: false,
       filter: false,
       cellRenderer: ActionsCellRenderer,
