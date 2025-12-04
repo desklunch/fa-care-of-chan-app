@@ -225,6 +225,7 @@ export interface IStorage {
   ): Promise<OutreachToken[]>;
   getOutreachTokensByRequestId(requestId: string): Promise<OutreachTokenWithRecipient[]>;
   getOutreachTokenByToken(token: string): Promise<OutreachTokenWithRecipient | undefined>;
+  markOutreachTokenSent(token: string): Promise<void>;
   markOutreachTokenResponded(token: string): Promise<void>;
   
   // Form response operations
@@ -1752,6 +1753,13 @@ export class DatabaseStorage implements IStorage {
       contact,
       response,
     };
+  }
+
+  async markOutreachTokenSent(token: string): Promise<void> {
+    await db
+      .update(outreachTokens)
+      .set({ status: "sent", sentAt: new Date() })
+      .where(eq(outreachTokens.token, token));
   }
 
   async markOutreachTokenResponded(token: string): Promise<void> {

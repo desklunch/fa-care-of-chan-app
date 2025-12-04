@@ -2058,7 +2058,7 @@ export async function registerRoutes(
           );
 
           // Mark token as sent
-          await storage.markOutreachTokenResponded(tokenRecord.token);
+          await storage.markOutreachTokenSent(tokenRecord.token);
           sentCount++;
         } catch (emailError) {
           console.error(`Failed to send email to ${recipientEmail}:`, emailError);
