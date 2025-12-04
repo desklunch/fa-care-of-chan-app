@@ -1602,6 +1602,69 @@ export async function registerRoutes(
     }
   });
 
+  // ===== TAG ROUTES =====
+  
+  // Get all tags
+  app.get("/api/tags", isAuthenticated, async (req, res) => {
+    try {
+      const tags = await storage.getTags();
+      res.json(tags);
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+      res.status(500).json({ message: "Failed to fetch tags" });
+    }
+  });
+
+  // Get single tag
+  app.get("/api/tags/:id", isAuthenticated, async (req, res) => {
+    try {
+      const tag = await storage.getTagById(req.params.id);
+      if (!tag) {
+        return res.status(404).json({ message: "Tag not found" });
+      }
+      res.json(tag);
+    } catch (error) {
+      console.error("Error fetching tag:", error);
+      res.status(500).json({ message: "Failed to fetch tag" });
+    }
+  });
+
+  // Create new tag (admin only)
+  app.post("/api/tags", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const tag = await storage.createTag(req.body);
+      res.status(201).json(tag);
+    } catch (error) {
+      console.error("Error creating tag:", error);
+      res.status(500).json({ message: "Failed to create tag" });
+    }
+  });
+
+  // Update tag (admin only)
+  app.patch("/api/tags/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const tag = await storage.updateTag(req.params.id, req.body);
+      if (!tag) {
+        return res.status(404).json({ message: "Tag not found" });
+      }
+      res.json(tag);
+    } catch (error) {
+      console.error("Error updating tag:", error);
+      res.status(500).json({ message: "Failed to update tag" });
+    }
+  });
+
+  // Delete tag (admin only)
+  app.delete("/api/tags/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      await storage.deleteTag(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting tag:", error);
+      res.status(500).json({ message: "Failed to delete tag" });
+    }
+  });
+
   // ===== APP ISSUES / BUG REPORTING ROUTES =====
   
   // Get all issues
