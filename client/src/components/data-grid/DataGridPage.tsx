@@ -49,14 +49,39 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const isLoading = useExternalData ? (externalLoading ?? false) : queryLoading;
 
   const columnDefs = useMemo(() => {
-    return columns.map((col) => ({
-      colId: col.id,
-      headerName: col.headerName,
-      field: col.field,
-      hide: col.hide ?? !defaultVisibleColumns.includes(col.id),
-      ...col.colDef,
-    } as ColDef<T>));
-  }, [columns, defaultVisibleColumns]);
+    const cols: ColDef<T>[] = [];
+    
+    // Add checkbox selection column if row selection is enabled
+    if (enableRowSelection) {
+      cols.push({
+        colId: "_selection",
+        headerName: "",
+        width: 50,
+        maxWidth: 50,
+        minWidth: 50,
+        headerCheckboxSelection: true,
+        checkboxSelection: true,
+        suppressHeaderFilterButton: true,
+        sortable: false,
+        filter: false,
+        resizable: false,
+        pinned: "left",
+      });
+    }
+    
+    // Add data columns
+    columns.forEach((col) => {
+      cols.push({
+        colId: col.id,
+        headerName: col.headerName,
+        field: col.field,
+        hide: col.hide ?? !defaultVisibleColumns.includes(col.id),
+        ...col.colDef,
+      } as ColDef<T>);
+    });
+    
+    return cols;
+  }, [columns, defaultVisibleColumns, enableRowSelection]);
 
   const defaultColDef: ColDef = useMemo(
     () => ({
