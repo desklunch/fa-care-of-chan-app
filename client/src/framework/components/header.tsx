@@ -18,12 +18,12 @@ interface HeaderProps {
   additionalActions?: ActionButton[];
 }
 
-function renderActionButton(action: ActionButton, testId: string) {
+function renderPrimaryActionButton(action: ActionButton, testId: string) {
   if (action.href) {
     return (
       <a href={action.href}>
         <Button
-          variant={action.variant || "outline"}
+          variant="ghost"
           size="sm"
           data-testid={testId}
         >
@@ -35,7 +35,7 @@ function renderActionButton(action: ActionButton, testId: string) {
   }
   return (
     <Button
-      variant={action.variant || "outline"}
+      variant="ghost"
       size="sm"
       onClick={action.onClick}
       data-testid={testId}
@@ -141,7 +141,7 @@ export default function Header({
       <div className="flex items-center gap-2 flex-shrink-0">
         {primaryAction && (
           <div className="hidden md:flex items-center gap-2">
-            {renderActionButton(primaryAction, "button-primary-action")}
+            {renderPrimaryActionButton(primaryAction, "button-primary-action")}
           </div>
         )}
 
