@@ -1191,6 +1191,62 @@ export async function registerRoutes(
         return res.status(500).json({ message: "Google Places API key not configured" });
       }
 
+      // Request comprehensive field mask for full PlaceDetails display
+      const fieldMask = [
+        "places.id",
+        "places.displayName",
+        "places.formattedAddress",
+        "places.addressComponents",
+        "places.nationalPhoneNumber",
+        "places.internationalPhoneNumber",
+        "places.websiteUri",
+        "places.googleMapsUri",
+        "places.location",
+        "places.types",
+        "places.businessStatus",
+        "places.priceLevel",
+        "places.rating",
+        "places.userRatingCount",
+        "places.regularOpeningHours",
+        "places.currentOpeningHours",
+        "places.primaryType",
+        "places.primaryTypeDisplayName",
+        "places.editorialSummary",
+        "places.reviews",
+        "places.photos",
+        "places.paymentOptions",
+        "places.parkingOptions",
+        "places.accessibilityOptions",
+        "places.dineIn",
+        "places.takeout",
+        "places.delivery",
+        "places.curbsidePickup",
+        "places.reservable",
+        "places.servesBreakfast",
+        "places.servesLunch",
+        "places.servesDinner",
+        "places.servesBeer",
+        "places.servesWine",
+        "places.servesBrunch",
+        "places.servesVegetarianFood",
+        "places.outdoorSeating",
+        "places.liveMusic",
+        "places.menuForChildren",
+        "places.servesCocktails",
+        "places.servesDessert",
+        "places.servesCoffee",
+        "places.goodForChildren",
+        "places.allowsDogs",
+        "places.restroom",
+        "places.goodForGroups",
+        "places.goodForWatchingSports",
+        "places.utcOffsetMinutes",
+        "places.adrFormatAddress",
+        "places.iconMaskBaseUri",
+        "places.iconBackgroundColor",
+        "places.shortFormattedAddress",
+      ].join(",");
+
       const response = await fetch(
         "https://places.googleapis.com/v1/places:searchText",
         {
@@ -1198,7 +1254,7 @@ export async function registerRoutes(
           headers: {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": apiKey,
-            "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.location",
+            "X-Goog-FieldMask": fieldMask,
           },
           body: JSON.stringify({
             textQuery: query,
@@ -1268,6 +1324,8 @@ export async function registerRoutes(
           website: place.websiteUri || "",
           googleMapsUrl: place.googleMapsUri || "",
           location: place.location || null,
+          // Include raw Google Places API response for debugging/display
+          rawPlaceDetails: place,
         };
       });
 

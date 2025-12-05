@@ -1,8 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, MapPin, X } from "lucide-react";
+import { Search, Loader2, MapPin, X, ChevronDown, ChevronUp } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export interface PlaceResult {
   placeId: string;
@@ -22,6 +27,7 @@ export interface PlaceResult {
     latitude: number;
     longitude: number;
   } | null;
+  rawPlaceDetails?: Record<string, unknown>;
 }
 
 interface GooglePlaceSearchProps {
@@ -40,6 +46,8 @@ export function GooglePlaceSearch({
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -92,12 +100,16 @@ export function GooglePlaceSearch({
     setQuery(place.name);
     setIsOpen(false);
     setResults([]);
+    setSelectedPlace(place);
+    setIsDetailsOpen(false);
   };
 
   const handleClear = () => {
     setQuery("");
     setResults([]);
     setIsOpen(false);
+    setSelectedPlace(null);
+    setIsDetailsOpen(false);
     inputRef.current?.focus();
   };
 
@@ -181,6 +193,40 @@ export function GooglePlaceSearch({
         <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg p-3 text-center text-muted-foreground">
           No places found
         </div>
+      )}
+
+      {selectedPlace?.rawPlaceDetails && (
+        <Collapsible
+          open={isDetailsOpen}
+          onOpenChange={setIsDetailsOpen}
+          className="mt-3"
+        >
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full justify-between gap-2"
+              data-testid={`${testId}-details-toggle`}
+            >
+              <span className="text-sm font-medium">
+                Google Places API Response
+              </span>
+              {isDetailsOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="rounded-md border bg-muted/50 p-3 overflow-x-auto">
+              <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                {JSON.stringify(selectedPlace.rawPlaceDetails, null, 2)}
+              </pre>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
     </div>
   );
