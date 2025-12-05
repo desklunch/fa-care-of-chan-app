@@ -1433,6 +1433,38 @@ export async function registerRoutes(
     }
   });
 
+  // Google Maps Embed API - Generate embed URL for venue map
+  app.get("/api/maps/embed", async (req, res) => {
+    try {
+      const { placeId, address } = req.query;
+      
+      if (!placeId && !address) {
+        return res.status(400).json({ message: "Either placeId or address is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Maps API key not configured" });
+      }
+
+      // Build the embed URL based on available data
+      let embedUrl: string;
+      
+      if (placeId) {
+        // Use Place mode for Google Place IDs
+        embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=place_id:${placeId}`;
+      } else {
+        // Use Place mode with address query
+        embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(address as string)}`;
+      }
+
+      res.json({ embedUrl });
+    } catch (error) {
+      console.error("Error generating map embed URL:", error);
+      res.status(500).json({ message: "Failed to generate map embed URL" });
+    }
+  });
+
   // Photo Upload and Object Storage Routes
   const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
