@@ -1511,7 +1511,7 @@ export default function VenueFormPage() {
                 <CardHeader>
                   <CardTitle>Floorplans</CardTitle>
                   <CardDescription>
-                    Upload floorplan images or PDFs with optional titles and captions
+                    Upload floorplan images with optional titles and captions
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">

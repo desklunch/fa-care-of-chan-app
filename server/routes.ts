@@ -2156,7 +2156,7 @@ export async function registerRoutes(
   // Get all floorplans for a venue
   app.get("/api/venues/:venueId/floorplans", isAuthenticated, async (req, res) => {
     try {
-      const floorplans = await storage.getVenueFloorplans(req.params.venueId);
+      const floorplans = await storage.getVenueFiles(req.params.venueId, 'floorplan');
       res.json(floorplans);
     } catch (error) {
       console.error("Error fetching venue floorplans:", error);
@@ -2167,7 +2167,7 @@ export async function registerRoutes(
   // Get a single floorplan by ID
   app.get("/api/floorplans/:id", isAuthenticated, async (req, res) => {
     try {
-      const floorplan = await storage.getVenueFloorplanById(req.params.id);
+      const floorplan = await storage.getVenueFileById(req.params.id);
       if (!floorplan) {
         return res.status(404).json({ message: "Floorplan not found" });
       }
@@ -2191,14 +2191,16 @@ export async function registerRoutes(
         return res.status(400).json({ message: "fileType must be 'image' or 'pdf'" });
       }
       
-      const floorplan = await storage.createVenueFloorplan({
+      const floorplan = await storage.createVenueFile({
         venueId: req.params.venueId,
+        category: 'floorplan',
         fileUrl,
         thumbnailUrl,
         fileType,
         title,
         caption,
         sortOrder: sortOrder ?? 0,
+        uploadedById: req.user?.id,
       });
       res.status(201).json(floorplan);
     } catch (error) {
@@ -2212,7 +2214,7 @@ export async function registerRoutes(
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
-      const floorplan = await storage.updateVenueFloorplan(req.params.id, {
+      const floorplan = await storage.updateVenueFile(req.params.id, {
         title,
         caption,
         sortOrder,
@@ -2232,7 +2234,7 @@ export async function registerRoutes(
   // Delete a floorplan (admin only)
   app.delete("/api/floorplans/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const floorplan = await storage.getVenueFloorplanById(req.params.id);
+      const floorplan = await storage.getVenueFileById(req.params.id);
       if (!floorplan) {
         return res.status(404).json({ message: "Floorplan not found" });
       }
@@ -2257,7 +2259,7 @@ export async function registerRoutes(
         }
       }
       
-      await storage.deleteVenueFloorplan(req.params.id);
+      await storage.deleteVenueFile(req.params.id);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting floorplan:", error);
@@ -2334,7 +2336,7 @@ export async function registerRoutes(
       const objectPath = `venues/${venueId}/${category}s/${timestamp}-${randomId}-${sanitizedFilename}`;
       
       // Upload file
-      await storageService.uploadBuffer(objectPath, buffer, mimeType);
+      await storageService.uploadBuffer(buffer, objectPath, mimeType);
       const fileUrl = `/objects/${objectPath}`;
       
       // Generate thumbnail for images
@@ -2348,7 +2350,7 @@ export async function registerRoutes(
             .toBuffer();
           
           const thumbnailPath = objectPath.replace(/\.[^.]+$/, "_thumb.webp");
-          await storageService.uploadBuffer(thumbnailPath, thumbnailBuffer, "image/webp");
+          await storageService.uploadBuffer(thumbnailBuffer, thumbnailPath, "image/webp");
           thumbnailUrl = `/objects/${thumbnailPath}`;
         } catch (thumbErr) {
           console.error("Failed to generate thumbnail:", thumbErr);
@@ -2365,6 +2367,7 @@ export async function registerRoutes(
         mimeType,
         title,
         caption,
+        sortOrder: 0,
         uploadedById: req.user?.id,
       });
       
