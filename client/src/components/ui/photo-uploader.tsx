@@ -189,6 +189,69 @@ export function PhotoUploader({
 
   return (
     <div className={`space-y-3 ${className}`} data-testid={testId}>
+
+      {/* <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowUrlInput(!showUrlInput)}
+          disabled={disabled || isUploading}
+          data-testid={`${testId}-url-toggle`}
+          className="w-full"
+        >
+          <LinkIcon className="h-4 w-4 mr-2" />
+        </Button>
+      </div> */}
+      <div className="space-y-3 border border-input p-3 rounded-lg" data-testid={`${testId}-url-section`}>
+        <div className="flex text-sm items-center gap-2">
+          <LinkIcon className="h-4 w-4 " />
+          Import from URL
+        </div>
+        <div className="flex-1 flex gap-2">
+          <Input
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            disabled={disabled || isUploading}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                uploadFromUrl();
+              }
+            }}
+            data-testid={`${testId}-url-input`}
+          />
+          <Button
+            type="button"
+            size="icon"
+
+            onClick={uploadFromUrl}
+            disabled={disabled || isUploading || !urlInput.trim()}
+            data-testid={`${testId}-url-submit`}
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+
+        {/* <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            setShowUrlInput(false);
+            setUrlInput("");
+          }}
+          disabled={isUploading}
+          data-testid={`${testId}-url-cancel`}
+        >
+          <X className="h-4 w-4" />
+        </Button> */}
+      </div>
       <input
         ref={fileInputRef}
         type="file"
@@ -243,65 +306,8 @@ export function PhotoUploader({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowUrlInput(!showUrlInput)}
-          disabled={disabled || isUploading}
-          data-testid={`${testId}-url-toggle`}
-        >
-          <LinkIcon className="h-4 w-4 mr-2" />
-          Import from URL
-        </Button>
-      </div>
 
-      {showUrlInput && (
-        <div className="flex gap-2" data-testid={`${testId}-url-section`}>
-          <div className="flex-1">
-            <Input
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              disabled={disabled || isUploading}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  uploadFromUrl();
-                }
-              }}
-              data-testid={`${testId}-url-input`}
-            />
-          </div>
-          <Button
-            type="button"
-            onClick={uploadFromUrl}
-            disabled={disabled || isUploading || !urlInput.trim()}
-            data-testid={`${testId}-url-submit`}
-          >
-            {isUploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setShowUrlInput(false);
-              setUrlInput("");
-            }}
-            disabled={isUploading}
-            data-testid={`${testId}-url-cancel`}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+
     </div>
   );
 }
