@@ -262,6 +262,7 @@ export const venues = pgTable(
     email: varchar("email", { length: 255 }),
     website: varchar("website", { length: 500 }),
     instagramAccount: varchar("instagram_account", { length: 100 }),
+    googlePlaceId: varchar("google_place_id", { length: 255 }),
     primaryPhotoUrl: varchar("primary_photo_url", { length: 1000 }),
     photoUrls: jsonb("photo_urls").$type<string[]>().default([]),
     isActive: boolean("is_active").default(true).notNull(),
