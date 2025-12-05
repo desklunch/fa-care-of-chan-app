@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -32,12 +34,15 @@ import {
   ExternalLink,
   Image,
   Check,
-  X,
+  X as XIcon,
   FileText,
   Layout,
   Download,
   Copy,
   Paperclip,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { formatDistanceToNow } from "date-fns";
@@ -49,6 +54,9 @@ export default function VenueDetailPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const { data: venue, isLoading, error } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
@@ -185,12 +193,25 @@ export default function VenueDetailPage() {
           <>
             <Card>
               <CardContent className="p-0">
-                <img
-                  src={venue.photoUrls[0]}
-                  alt={venue.name}
-                  className="w-full h-64 object-cover rounded-lg"
-                  data-testid="img-venue-photo"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxIndex(0);
+                    setLightboxOpen(true);
+                  }}
+                  className="w-full relative group cursor-pointer"
+                  data-testid="button-hero-photo"
+                >
+                  <img
+                    src={venue.photoUrls[0]}
+                    alt={venue.name}
+                    className="w-full h-64 object-cover rounded-lg"
+                    data-testid="img-venue-photo"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 rounded-lg flex items-center justify-center">
+                    <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </div>
+                </button>
               </CardContent>
             </Card>
 
@@ -208,13 +229,15 @@ export default function VenueDetailPage() {
                 <CardContent>
                   <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {venue.photoUrls.slice(1).map((url, index) => (
-                      <a
+                      <button
                         key={index}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative aspect-square overflow-hidden rounded-lg group"
-                        data-testid={`link-gallery-photo-${index}`}
+                        type="button"
+                        onClick={() => {
+                          setLightboxIndex(index + 1);
+                          setLightboxOpen(true);
+                        }}
+                        className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
+                        data-testid={`button-gallery-photo-${index}`}
                       >
                         <img
                           src={url}
@@ -223,14 +246,54 @@ export default function VenueDetailPage() {
                           data-testid={`img-gallery-photo-${index}`}
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
-                          <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                          <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                         </div>
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </CardContent>
               </Card>
             )}
+
+            <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+              <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-black/95 overflow-hidden">
+                <div className="relative flex items-center justify-center w-full h-full min-h-[50vh]">
+                  <img
+                    src={venue.photoUrls[lightboxIndex]}
+                    alt={`${venue.name} photo ${lightboxIndex + 1}`}
+                    className="max-w-full max-h-[85vh] object-contain"
+                    data-testid="img-lightbox-photo"
+                  />
+                  
+                  {venue.photoUrls.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        onClick={() => setLightboxIndex((prev) => (prev === 0 ? venue.photoUrls!.length - 1 : prev - 1))}
+                        data-testid="button-lightbox-prev"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        onClick={() => setLightboxIndex((prev) => (prev === venue.photoUrls!.length - 1 ? 0 : prev + 1))}
+                        data-testid="button-lightbox-next"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </Button>
+                    </>
+                  )}
+                  
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/60 text-white text-sm">
+                    {lightboxIndex + 1} / {venue.photoUrls.length}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </>
         )}
 
