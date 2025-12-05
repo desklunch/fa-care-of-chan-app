@@ -195,7 +195,7 @@ Contacts table:
 
 **Photo Upload API Endpoints**
 - POST /api/photos/upload - Upload base64-encoded image data
-  - Validates file size (10MB max) and MIME type (jpg, png, webp, gif only)
+  - Validates file size (10MB max) and MIME type (jpg, png, webp, gif, avif)
   - Automatically generates WebP thumbnail using Sharp
   - Returns photoUrl and thumbnailUrl paths
 - POST /api/photos/from-url - Fetch and upload image from external URL

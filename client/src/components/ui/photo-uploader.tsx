@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 interface PhotoUploadResult {
@@ -57,7 +57,7 @@ export function PhotoUploader({
 
   const validateFile = useCallback((file: File): boolean => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      handleError("Invalid file type. Allowed: JPG, PNG, WebP, GIF");
+      handleError("Invalid file type. Allowed: JPG, PNG, WebP, GIF, AVIF");
       return false;
     }
     if (file.size > MAX_FILE_SIZE) {

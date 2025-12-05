@@ -1434,7 +1434,7 @@ export async function registerRoutes(
   });
 
   // Photo Upload and Object Storage Routes
-  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const THUMBNAIL_SIZE = 300;
 
@@ -1521,7 +1521,7 @@ export async function registerRoutes(
 
       const contentType = response.headers.get("content-type") || "image/jpeg";
       if (!ALLOWED_IMAGE_TYPES.some(t => contentType.startsWith(t.split("/")[0] + "/" + t.split("/")[1]))) {
-        return res.status(400).json({ message: "Invalid image type. Allowed: jpg, png, webp, gif" });
+        return res.status(400).json({ message: "Invalid image type. Allowed: jpg, png, webp, gif, avif" });
       }
 
       const arrayBuffer = await response.arrayBuffer();
@@ -1575,7 +1575,7 @@ export async function registerRoutes(
       }
 
       if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
-        return res.status(400).json({ message: "Invalid image type. Allowed: jpg, png, webp, gif" });
+        return res.status(400).json({ message: "Invalid image type. Allowed: jpg, png, webp, gif, avif" });
       }
 
       // Decode base64
