@@ -1648,6 +1648,52 @@ export async function registerRoutes(
     }
   });
 
+  // Upload PDF floorplan (no thumbnail generation)
+  app.post("/api/floorplans/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const { data, filename, contentType, venueId } = req.body;
+      
+      if (!data || !contentType) {
+        return res.status(400).json({ message: "Data and content type are required" });
+      }
+
+      if (contentType !== "application/pdf") {
+        return res.status(400).json({ message: "This endpoint only accepts PDF files" });
+      }
+
+      // Decode base64
+      const base64Data = data.replace(/^data:application\/pdf;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      if (buffer.length > MAX_FILE_SIZE) {
+        return res.status(400).json({ message: "File too large. Maximum size is 10MB" });
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const sanitizedFilename = filename?.replace(/[^a-zA-Z0-9.-]/g, "_") || "floorplan";
+      const filePath = venueId 
+        ? `venues/${venueId}/floorplans/${timestamp}-${randomId}-${sanitizedFilename}`
+        : `floorplans/${timestamp}-${randomId}-${sanitizedFilename}`;
+
+      const objectStorageService = new ObjectStorageService();
+
+      // Upload PDF
+      const fileObjectPath = await objectStorageService.uploadBuffer(buffer, filePath, contentType);
+
+      res.json({
+        fileUrl: fileObjectPath,
+        filename,
+        size: buffer.length,
+        contentType,
+      });
+    } catch (error) {
+      console.error("Error uploading floorplan:", error);
+      res.status(500).json({ message: "Failed to upload floorplan" });
+    }
+  });
+
   // Vendor CRUD routes
   app.post("/api/vendors", isAdmin, async (req: any, res) => {
     try {
