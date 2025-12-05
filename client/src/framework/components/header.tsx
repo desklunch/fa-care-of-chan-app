@@ -108,7 +108,7 @@ export default function Header({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 w-9 p-0 md:hidden"
+                className="h-9 w-9 p-0"
                 data-testid="button-actions-menu"
                 aria-label="Actions menu"
               >

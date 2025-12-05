@@ -52,6 +52,6 @@ export interface LayoutConfig {
 export interface PageLayoutProps {
   children: ReactNode;
   breadcrumbs?: Breadcrumb[];
-  actionButton?: ActionButton;
-  customHeaderAction?: ReactNode;
+  primaryAction?: ActionButton;
+  additionalActions?: ActionButton[];
 }
