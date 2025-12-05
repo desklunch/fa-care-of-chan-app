@@ -47,8 +47,10 @@ import { GooglePlaceSearch, PlaceResult } from "@/components/ui/google-place-sea
 import { GooglePlacePhotoPicker } from "@/components/ui/google-place-photo-picker";
 import { PhotoUploader } from "@/components/ui/photo-uploader";
 import { FloorplanUploader } from "@/components/ui/floorplan-uploader";
-import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check } from "lucide-react";
-import type { VenueWithRelations, VenueFloorplan } from "@shared/schema";
+import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader";
+import { FileTypeIcon } from "@/components/ui/file-type-icon";
+import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive } from "lucide-react";
+import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { insertVenueSchema } from "@shared/schema";
 
@@ -325,6 +327,207 @@ function FloorplanItem({ floorplan, onEdit, onDelete, isDeleting }: FloorplanIte
   );
 }
 
+interface AttachmentItemProps {
+  file: VenueFileWithUploader;
+  onEdit: (id: string, updates: { title?: string; caption?: string }) => void;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+}
+
+function AttachmentItem({ file, onEdit, onDelete, isDeleting }: AttachmentItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(file.title || "");
+  const [editCaption, setEditCaption] = useState(file.caption || "");
+  const { toast } = useToast();
+
+  const handleSave = () => {
+    onEdit(file.id, { 
+      title: editTitle.trim() || undefined, 
+      caption: editCaption.trim() || undefined 
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditTitle(file.title || "");
+    setEditCaption(file.caption || "");
+    setIsEditing(false);
+  };
+
+  const handleCopyLink = () => {
+    const fullUrl = `${window.location.origin}${file.fileUrl}`;
+    navigator.clipboard.writeText(fullUrl);
+    toast({
+      title: "Link copied",
+      description: "Download link copied to clipboard",
+    });
+  };
+
+  const handleDownload = () => {
+    const link = document.createElement("a");
+    link.href = file.fileUrl;
+    link.download = file.originalFilename || file.title || "download";
+    link.click();
+  };
+
+  const uploadedAgo = file.uploadedAt 
+    ? formatDistanceToNow(new Date(file.uploadedAt), { addSuffix: true })
+    : "";
+  
+  const uploaderName = file.uploadedBy 
+    ? `${file.uploadedBy.firstName || ""} ${file.uploadedBy.lastName || ""}`.trim() || "Unknown"
+    : null;
+
+  return (
+    <div 
+      className="border rounded-lg p-4 space-y-3"
+      data-testid={`attachment-item-${file.id}`}
+    >
+      <div className="flex gap-4">
+        <div className="shrink-0 w-16 h-16 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+          {file.fileType === "image" && file.thumbnailUrl ? (
+            <img 
+              src={file.thumbnailUrl} 
+              alt={file.title || file.originalFilename || "Attachment"} 
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => window.open(file.fileUrl, "_blank")}
+            />
+          ) : (
+            <FileTypeIcon 
+              filename={file.originalFilename || ""} 
+              mimeType={file.mimeType || undefined}
+              size="lg"
+              showExtension={true}
+            />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-1">
+          {isEditing ? (
+            <div className="space-y-2">
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Title (optional)"
+                className="h-8"
+                data-testid={`input-attachment-title-${file.id}`}
+              />
+              <Textarea
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                placeholder="Description (optional)"
+                className="resize-none text-sm"
+                rows={2}
+                data-testid={`input-attachment-caption-${file.id}`}
+              />
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  onClick={handleSave}
+                  data-testid={`button-save-attachment-${file.id}`}
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Save
+                </Button>
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleCancel}
+                  data-testid={`button-cancel-attachment-${file.id}`}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">
+                    {file.title || file.originalFilename || "Untitled Attachment"}
+                  </p>
+                  {file.caption && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {file.caption}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleDownload}
+                    title="Download file"
+                    data-testid={`button-download-attachment-${file.id}`}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCopyLink}
+                    title="Copy download link"
+                    data-testid={`button-copy-link-attachment-${file.id}`}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsEditing(true)}
+                    title="Edit details"
+                    data-testid={`button-edit-attachment-${file.id}`}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(file.id)}
+                    disabled={isDeleting}
+                    title="Delete attachment"
+                    data-testid={`button-delete-attachment-${file.id}`}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                {file.originalFilename && (
+                  <span className="truncate max-w-[200px]">{file.originalFilename}</span>
+                )}
+                {uploadedAgo && (
+                  <>
+                    <span>•</span>
+                    <span>{uploadedAgo}</span>
+                  </>
+                )}
+                {uploaderName && (
+                  <>
+                    <span>•</span>
+                    <span>by {uploaderName}</span>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function VenueFormPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -335,6 +538,7 @@ export default function VenueFormPage() {
   const [selectedPlaceName, setSelectedPlaceName] = useState<string>("");
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
   const [deletingFloorplanId, setDeletingFloorplanId] = useState<string | null>(null);
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
 
   const { data: venue, isLoading: isLoadingVenue } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
@@ -576,6 +780,110 @@ export default function VenueFormPage() {
   const handleFloorplanDelete = (floorplanId: string) => {
     setDeletingFloorplanId(floorplanId);
     deleteFloorplanMutation.mutate(floorplanId);
+  };
+
+  // Attachment mutations
+  const createAttachmentMutation = useMutation({
+    mutationFn: async (data: { 
+      fileUrl: string; 
+      thumbnailUrl?: string; 
+      fileType: string; 
+      originalFilename?: string;
+      mimeType?: string;
+      title?: string; 
+      caption?: string; 
+    }) => {
+      const response = await apiRequest("POST", `/api/venues/${id}/files`, {
+        category: "attachment",
+        ...data,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Attachment uploaded",
+        description: "The file has been added successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload attachment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateAttachmentMutation = useMutation({
+    mutationFn: async ({ attachmentId, ...data }: { 
+      attachmentId: string; 
+      title?: string; 
+      caption?: string; 
+    }) => {
+      const response = await apiRequest("PATCH", `/api/venue-files/${attachmentId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Attachment updated",
+        description: "The attachment details have been saved.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update attachment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteAttachmentMutation = useMutation({
+    mutationFn: async (attachmentId: string) => {
+      await apiRequest("DELETE", `/api/venue-files/${attachmentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Attachment deleted",
+        description: "The attachment has been removed.",
+      });
+      setDeletingAttachmentId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete attachment",
+        variant: "destructive",
+      });
+      setDeletingAttachmentId(null);
+    },
+  });
+
+  const handleAttachmentUploaded = (
+    result: { fileUrl: string; thumbnailUrl?: string; fileType: FileType; filename: string; contentType: string },
+    metadata: { title?: string; caption?: string }
+  ) => {
+    createAttachmentMutation.mutate({
+      fileUrl: result.fileUrl,
+      thumbnailUrl: result.thumbnailUrl,
+      fileType: result.fileType,
+      originalFilename: result.filename,
+      mimeType: result.contentType,
+      title: metadata.title,
+      caption: metadata.caption,
+    });
+  };
+
+  const handleAttachmentEdit = (attachmentId: string, updates: { title?: string; caption?: string }) => {
+    updateAttachmentMutation.mutate({ attachmentId, ...updates });
+  };
+
+  const handleAttachmentDelete = (attachmentId: string) => {
+    setDeletingAttachmentId(attachmentId);
+    deleteAttachmentMutation.mutate(attachmentId);
   };
 
   const onSubmit = (data: VenueFormValues) => {
@@ -1214,6 +1522,60 @@ export default function VenueFormPage() {
                   {(!venue?.floorplans || venue.floorplans.length === 0) && (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No floorplans added yet. Upload images or PDFs using the uploader above.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {isEditingVenue && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Attachments</CardTitle>
+                  <CardDescription>
+                    Upload documents, contracts, or other files related to this venue
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <VenueFileUploader
+                    venueId={id!}
+                    category="attachment"
+                    onFileUploaded={handleAttachmentUploaded}
+                    onError={(error) => {
+                      toast({
+                        title: "Upload failed",
+                        description: error,
+                        variant: "destructive",
+                      });
+                    }}
+                    disabled={createAttachmentMutation.isPending}
+                    data-testid="attachment-uploader"
+                  />
+
+                  {venue?.attachments && venue.attachments.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">
+                        Uploaded Attachments ({venue.attachments.length})
+                      </Label>
+                      <div className="space-y-3">
+                        {venue.attachments
+                          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                          .map((attachment) => (
+                            <AttachmentItem
+                              key={attachment.id}
+                              file={attachment}
+                              onEdit={handleAttachmentEdit}
+                              onDelete={handleAttachmentDelete}
+                              isDeleting={deletingAttachmentId === attachment.id}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(!venue?.attachments || venue.attachments.length === 0) && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No attachments added yet. Upload PDFs, documents, or other files using the uploader above.
                     </p>
                   )}
                 </CardContent>
