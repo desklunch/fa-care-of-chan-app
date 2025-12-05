@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, ExternalLink } from "lucide-react";
@@ -11,57 +11,29 @@ interface VenueMapProps {
 }
 
 export function VenueMap({ googlePlaceId, address, venueName, className }: VenueMapProps) {
-  const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    async function fetchEmbedUrl() {
-      if (!googlePlaceId && !address) {
-        setIsLoading(false);
-        setError("No location information available");
-        return;
-      }
+  if (!googlePlaceId && !address) {
+    return null;
+  }
 
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const params = new URLSearchParams();
-        if (googlePlaceId) {
-          params.set("placeId", googlePlaceId);
-        } else if (address) {
-          params.set("address", address);
-        }
+  const params = new URLSearchParams();
+  if (googlePlaceId) {
+    params.set("placeId", googlePlaceId);
+  } else if (address) {
+    params.set("address", address);
+  }
+  params.set("width", "800");
+  params.set("height", "300");
 
-        const response = await fetch(`/api/maps/embed?${params.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to load map");
-        }
-
-        const data = await response.json();
-        setEmbedUrl(data.embedUrl);
-      } catch (err) {
-        console.error("Error fetching map embed URL:", err);
-        setError("Unable to load map");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchEmbedUrl();
-  }, [googlePlaceId, address]);
+  const staticMapUrl = `/api/maps/static?${params.toString()}`;
 
   const googleMapsUrl = googlePlaceId
     ? `https://www.google.com/maps/place/?q=place_id:${googlePlaceId}`
     : address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
     : null;
-
-  if (!googlePlaceId && !address) {
-    return null;
-  }
 
   return (
     <Card className={className}>
@@ -86,33 +58,34 @@ export function VenueMap({ googlePlaceId, address, venueName, className }: Venue
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        {isLoading ? (
-          <Skeleton className="w-full h-64 rounded-lg" data-testid="skeleton-map" />
-        ) : error ? (
-          <div 
-            className="w-full h-64 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"
-            data-testid="map-error"
-          >
-            <div className="text-center">
-              <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">{error}</p>
+        <div className="relative w-full h-64 rounded-lg overflow-hidden bg-muted">
+          {isLoading && (
+            <Skeleton className="absolute inset-0" data-testid="skeleton-map" />
+          )}
+          {error ? (
+            <div 
+              className="absolute inset-0 flex items-center justify-center text-muted-foreground"
+              data-testid="map-error"
+            >
+              <div className="text-center">
+                <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Unable to load map</p>
+              </div>
             </div>
-          </div>
-        ) : embedUrl ? (
-          <div className="w-full h-64 rounded-lg overflow-hidden">
-            <iframe
-              src={embedUrl}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title={`Map of ${venueName || "venue"}`}
-              data-testid="iframe-map"
+          ) : (
+            <img
+              src={staticMapUrl}
+              alt={`Map of ${venueName || "venue location"}`}
+              className="w-full h-full object-cover"
+              onLoad={() => setIsLoading(false)}
+              onError={() => {
+                setIsLoading(false);
+                setError(true);
+              }}
+              data-testid="img-static-map"
             />
-          </div>
-        ) : null}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

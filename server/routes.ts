@@ -1433,10 +1433,10 @@ export async function registerRoutes(
     }
   });
 
-  // Google Maps Embed API - Generate embed URL for venue map
-  app.get("/api/maps/embed", async (req, res) => {
+  // Google Maps Static API - Serve static map image for venue
+  app.get("/api/maps/static", async (req, res) => {
     try {
-      const { placeId, address } = req.query;
+      const { placeId, address, width, height } = req.query;
       
       if (!placeId && !address) {
         return res.status(400).json({ message: "Either placeId or address is required" });
@@ -1447,21 +1447,42 @@ export async function registerRoutes(
         return res.status(500).json({ message: "Google Maps API key not configured" });
       }
 
-      // Build the embed URL based on available data
-      let embedUrl: string;
+      const mapWidth = parseInt(width as string) || 600;
+      const mapHeight = parseInt(height as string) || 300;
       
+      // Build the static map URL
+      let location: string;
       if (placeId) {
-        // Use Place mode for Google Place IDs
-        embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=place_id:${placeId}`;
+        location = `place_id:${placeId}`;
       } else {
-        // Use Place mode with address query
-        embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(address as string)}`;
+        location = address as string;
       }
 
-      res.json({ embedUrl });
+      const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+        `center=${encodeURIComponent(location)}` +
+        `&zoom=15` +
+        `&size=${mapWidth}x${mapHeight}` +
+        `&scale=2` +
+        `&maptype=roadmap` +
+        `&markers=color:red%7C${encodeURIComponent(location)}` +
+        `&key=${apiKey}`;
+
+      // Fetch the static map image and proxy it
+      const response = await fetch(staticMapUrl);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch static map");
+      }
+
+      const contentType = response.headers.get("content-type") || "image/png";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+
+      const arrayBuffer = await response.arrayBuffer();
+      res.send(Buffer.from(arrayBuffer));
     } catch (error) {
-      console.error("Error generating map embed URL:", error);
-      res.status(500).json({ message: "Failed to generate map embed URL" });
+      console.error("Error generating static map:", error);
+      res.status(500).json({ message: "Failed to generate static map" });
     }
   });
 
