@@ -163,3 +163,24 @@ Contacts table:
 - nanoid for unique ID generation
 - zod for runtime type validation
 - class-variance-authority for component variant management
+
+### Google Places Integration
+
+**Text Search API**
+- POST /api/places/text-search - Search for places by name using Google Places API v1
+- Returns parsed address components (street, city, state abbreviation, zip)
+- Extracts phone, website, and Google Place ID
+
+**Photo Integration**
+- GET /api/places/:placeId/photos - Fetch photo metadata for a place
+- GET /api/places/photos/:photoName - Public proxy endpoint for serving Google Place photos
+- Photos cached for 7 days to reduce API calls
+- GooglePlacePhotoPicker component for selecting photos to import
+
+**Venue Form Integration**
+- GooglePlaceSearch component for searching venues by name
+- Auto-populates name, address, phone, website, googlePlaceId
+- "Import Photos" button appears after selecting a place
+- Photo picker allows multi-select for gallery and single-select for primary photo
+- Photos stored as proxy URLs (/api/places/photos/...) to avoid exposing API key
+- Deduplication prevents adding the same photo twice
