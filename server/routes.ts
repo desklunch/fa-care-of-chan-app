@@ -1278,6 +1278,101 @@ export async function registerRoutes(
     }
   });
 
+  // Google Places Photos API - Fetch photos for a place
+  app.get("/api/places/:placeId/photos", isAuthenticated, async (req, res) => {
+    try {
+      const { placeId } = req.params;
+      if (!placeId) {
+        return res.status(400).json({ message: "Place ID is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      // Use Places API v1 to get place details with photos
+      const response = await fetch(
+        `https://places.googleapis.com/v1/places/${placeId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": "photos",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Google Places API error:", errorData);
+        throw new Error("Failed to fetch place photos");
+      }
+
+      const data = await response.json();
+      
+      // Transform photos to include the photo reference for proxying
+      const photos = (data.photos || []).map((photo: any, index: number) => ({
+        name: photo.name, // e.g., "places/ChIJ.../photos/..."
+        widthPx: photo.widthPx,
+        heightPx: photo.heightPx,
+        authorAttributions: photo.authorAttributions || [],
+        // Create a proxy URL for the photo
+        photoUrl: `/api/places/photos/${encodeURIComponent(photo.name)}`,
+      }));
+
+      res.json({ photos });
+    } catch (error) {
+      console.error("Error fetching place photos:", error);
+      res.status(500).json({ message: "Failed to fetch place photos" });
+    }
+  });
+
+  // Google Places Photo Proxy - Fetch the actual photo binary (public endpoint since Google photos are public)
+  app.get("/api/places/photos/:photoName(*)", async (req, res) => {
+    try {
+      const { photoName } = req.params;
+      if (!photoName) {
+        return res.status(400).json({ message: "Photo name is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      // Get optional size parameters
+      const maxWidthPx = parseInt(req.query.maxWidthPx as string) || 800;
+      const maxHeightPx = parseInt(req.query.maxHeightPx as string) || 600;
+
+      // Use Places API v1 to get the photo media
+      const photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=${maxWidthPx}&maxHeightPx=${maxHeightPx}&key=${apiKey}`;
+      
+      const response = await fetch(photoUrl, {
+        redirect: 'follow',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Google Places Photo API error:", errorData);
+        throw new Error("Failed to fetch photo");
+      }
+
+      // Get the content type and pass it through
+      const contentType = response.headers.get("content-type") || "image/jpeg";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=604800"); // Cache for 7 days
+
+      // Stream the image response
+      const arrayBuffer = await response.arrayBuffer();
+      res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+      console.error("Error proxying photo:", error);
+      res.status(500).json({ message: "Failed to fetch photo" });
+    }
+  });
+
   // Vendor CRUD routes
   app.post("/api/vendors", isAdmin, async (req: any, res) => {
     try {

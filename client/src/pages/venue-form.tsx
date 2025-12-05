@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +26,8 @@ import { AmenityToggle } from "@/components/ui/amenity-toggle";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { VenueAddressAutocomplete, ParsedAddress } from "@/components/ui/venue-address-autocomplete";
 import { GooglePlaceSearch, PlaceResult } from "@/components/ui/google-place-search";
-import { Save, Loader2, Plus, Trash2, Image } from "lucide-react";
+import { GooglePlacePhotoPicker } from "@/components/ui/google-place-photo-picker";
+import { Save, Loader2, Plus, Trash2, Image, ImagePlus } from "lucide-react";
 import type { VenueWithRelations } from "@shared/schema";
 import { insertVenueSchema } from "@shared/schema";
 
@@ -35,7 +36,10 @@ const venueFormSchema = insertVenueSchema.extend({
   cuisineTagIds: z.array(z.string()).default([]),
   styleTagIds: z.array(z.string()).default([]),
   photoUrlItems: z.array(z.object({
-    url: z.string().url("Please enter a valid URL").or(z.literal("")),
+    url: z.string().refine(
+      (val) => val === "" || val.startsWith("/api/") || val.startsWith("http://") || val.startsWith("https://"),
+      "Please enter a valid URL or leave empty"
+    ),
   })).default([]),
 });
 
@@ -46,6 +50,10 @@ export default function VenueFormPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const isEditing = !!id;
+
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const [selectedPlaceName, setSelectedPlaceName] = useState<string>("");
+  const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
 
   const { data: venue, isLoading: isLoadingVenue } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
@@ -106,6 +114,12 @@ export default function VenueFormPage() {
         styleTagIds: venue.styleTags?.map((t) => t.id) || [],
         photoUrlItems,
       });
+      
+      // If venue has a googlePlaceId, enable photo import
+      if (venue.googlePlaceId) {
+        setSelectedPlaceId(venue.googlePlaceId);
+        setSelectedPlaceName(venue.name || "");
+      }
     }
   }, [venue, form]);
 
@@ -224,9 +238,48 @@ export default function VenueFormPage() {
     form.setValue("website", place.website);
     form.setValue("googlePlaceId", place.placeId);
     
+    // Store place info for photo picker
+    setSelectedPlaceId(place.placeId);
+    setSelectedPlaceName(place.name);
+    
     toast({
       title: "Place imported",
-      description: `Filled in details for "${place.name}"`,
+      description: `Filled in details for "${place.name}". You can now import photos from Google.`,
+    });
+  };
+
+  const handlePhotosSelected = (result: { galleryPhotos: string[]; primaryPhoto: string | null }) => {
+    // Get existing photo URLs to prevent duplicates
+    const existingUrls = new Set(
+      form.getValues("photoUrlItems").map(item => item.url.split("?")[0])
+    );
+    
+    // Sanitize URLs by removing query parameters (the proxy will add them back)
+    const sanitizeUrl = (url: string) => url.split("?")[0];
+    
+    // Add selected photos to the gallery (deduplicated)
+    let addedCount = 0;
+    for (const photoUrl of result.galleryPhotos) {
+      const cleanUrl = sanitizeUrl(photoUrl);
+      if (!existingUrls.has(cleanUrl)) {
+        appendPhotoUrl({ url: cleanUrl });
+        existingUrls.add(cleanUrl);
+        addedCount++;
+      }
+    }
+    
+    // Set primary photo if selected (also sanitized)
+    if (result.primaryPhoto) {
+      form.setValue("primaryPhotoUrl", sanitizeUrl(result.primaryPhoto));
+    }
+    
+    toast({
+      title: "Photos added",
+      description: addedCount > 0 
+        ? `Added ${addedCount} photo${addedCount !== 1 ? "s" : ""} to the gallery${result.primaryPhoto ? " and set primary photo" : ""}.`
+        : result.primaryPhoto 
+          ? "Set primary photo."
+          : "No new photos added (already in gallery).",
     });
   };
 
@@ -257,14 +310,42 @@ export default function VenueFormPage() {
                   Search for a venue to auto-fill details from Google Places
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <GooglePlaceSearch
                   onPlaceSelect={handlePlaceSelect}
                   placeholder="Search for venue by name (e.g., 'Albadawi NYC')"
                   data-testid="input-venue-google-search"
                 />
+                
+                {selectedPlaceId && (
+                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{selectedPlaceName}</p>
+                      <p className="text-xs text-muted-foreground">Import photos from Google Places</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPhotoPickerOpen(true)}
+                      data-testid="button-import-google-photos"
+                    >
+                      <ImagePlus className="h-4 w-4 mr-2" />
+                      Import Photos
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            <GooglePlacePhotoPicker
+              placeId={selectedPlaceId}
+              placeName={selectedPlaceName}
+              open={photoPickerOpen}
+              onOpenChange={setPhotoPickerOpen}
+              onPhotosSelected={handlePhotosSelected}
+            />
 
             <Card>
               <CardHeader>
@@ -584,8 +665,8 @@ export default function VenueFormPage() {
                         <Input
                           {...field}
                           value={field.value || ""}
-                          type="url"
-                          placeholder="https://example.com/image.jpg"
+                          type="text"
+                          placeholder="https://example.com/image.jpg or import from Google"
                           data-testid="input-venue-photo-url"
                         />
                       </FormControl>
@@ -620,7 +701,7 @@ export default function VenueFormPage() {
                                 <Image className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <Input
                                   {...field}
-                                  type="url"
+                                  type="text"
                                   placeholder="https://example.com/photo.jpg"
                                   data-testid={`input-photo-url-${index}`}
                                 />
