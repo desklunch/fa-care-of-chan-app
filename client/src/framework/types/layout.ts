@@ -34,7 +34,7 @@ export interface ActionButton {
   onClick?: () => void;
   href?: string;
   icon?: any;
-  variant?: "default" | "outline" | "ghost";
+  variant?: "default" | "outline" | "ghost" | "destructive";
 }
 
 export interface LayoutConfig {

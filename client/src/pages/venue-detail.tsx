@@ -57,6 +57,7 @@ export default function VenueDetailPage() {
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: venue, isLoading, error } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
@@ -124,9 +125,19 @@ export default function VenueDetailPage() {
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
+      actionButton={
+        isAdmin
+          ? {
+              label: "Delete",
+              icon: Trash2,
+              variant: "destructive",
+              onClick: () => setDeleteDialogOpen(true),
+            }
+          : undefined
+      }
       customHeaderAction={
         isAdmin ? (
-          <div className="flex gap-2">
+          <>
             <Button
               variant="outline"
               onClick={() => setLocation(`/venues/${id}/edit`)}
@@ -135,13 +146,7 @@ export default function VenueDetailPage() {
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" data-testid="button-delete-venue">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Venue</AlertDialogTitle>
@@ -164,7 +169,7 @@ export default function VenueDetailPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
+          </>
         ) : null
       }
     >

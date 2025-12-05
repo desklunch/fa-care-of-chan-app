@@ -80,7 +80,7 @@ export default function Header({
             actionButton.href ? (
               <a href={actionButton.href}>
                 <Button
-                  variant="outline"
+                  variant={actionButton.variant || "outline"}
                   size="sm"
                   data-testid="button-header-action"
                 >
@@ -90,7 +90,7 @@ export default function Header({
               </a>
             ) : (
               <Button
-                variant="outline"
+                variant={actionButton.variant || "outline"}
                 size="sm"
                 onClick={actionButton.onClick}
                 data-testid="button-header-action"
