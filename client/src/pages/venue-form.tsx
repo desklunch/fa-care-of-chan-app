@@ -1058,10 +1058,42 @@ export default function VenueFormPage() {
   }
 
   return (
-    <PageLayout breadcrumbs={breadcrumbs}>
+    <PageLayout 
+      breadcrumbs={breadcrumbs}
+      customHeaderAction={
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setLocation("/venues")}
+            data-testid="button-cancel-venue"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="venue-form"
+            disabled={isPending}
+            data-testid="button-save-venue"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                {isEditingVenue ? "Save Changes" : "Create Venue"}
+              </>
+            )}
+          </Button>
+        </div>
+      }
+    >
       <div className="max-w-4xl p-4 md:p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form id="venue-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Find on Google</CardTitle>
@@ -1693,33 +1725,6 @@ export default function VenueFormPage() {
               </CardContent>
             </Card>
 
-            <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setLocation("/venues")}
-                data-testid="button-cancel-venue"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                data-testid="button-save-venue"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isEditingVenue ? "Save Changes" : "Create Venue"}
-                  </>
-                )}
-              </Button>
-            </div>
           </form>
         </Form>
       </div>
