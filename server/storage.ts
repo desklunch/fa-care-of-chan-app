@@ -13,6 +13,7 @@ import {
   venueAmenities,
   tags,
   venueTags,
+  venueFloorplans,
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
@@ -53,6 +54,9 @@ import {
   type CreateVenue,
   type UpdateVenue,
   type VenueWithRelations,
+  type VenueFloorplan,
+  type CreateVenueFloorplan,
+  type UpdateVenueFloorplan,
   type Amenity,
   type CreateAmenity,
   type UpdateAmenity,
@@ -214,6 +218,13 @@ export interface IStorage {
   
   // Venue-Tag relationship operations
   getVenueTags(venueId: string): Promise<Tag[]>;
+  
+  // Venue Floorplan operations
+  getVenueFloorplans(venueId: string): Promise<VenueFloorplan[]>;
+  getVenueFloorplanById(id: string): Promise<VenueFloorplan | undefined>;
+  createVenueFloorplan(data: CreateVenueFloorplan): Promise<VenueFloorplan>;
+  updateVenueFloorplan(id: string, data: UpdateVenueFloorplan): Promise<VenueFloorplan | undefined>;
+  deleteVenueFloorplan(id: string): Promise<void>;
   setVenueTags(venueId: string, tagIds: string[]): Promise<void>;
   getTagsByCategory(category: string): Promise<Tag[]>;
   
@@ -1212,6 +1223,11 @@ export class DatabaseStorage implements IStorage {
       .from(venueTags)
       .innerJoin(tags, eq(venueTags.tagId, tags.id));
     
+    const allFloorplans = await db
+      .select()
+      .from(venueFloorplans)
+      .orderBy(venueFloorplans.sortOrder, venueFloorplans.uploadedAt);
+    
     const amenitiesByVenue = new Map<string, Amenity[]>();
     for (const va of allVenueAmenities) {
       if (!amenitiesByVenue.has(va.venueId)) {
@@ -1228,15 +1244,25 @@ export class DatabaseStorage implements IStorage {
       tagsByVenue.get(vt.venueId)!.push(vt.tag);
     }
     
+    const floorplansByVenue = new Map<string, VenueFloorplan[]>();
+    for (const fp of allFloorplans) {
+      if (!floorplansByVenue.has(fp.venueId)) {
+        floorplansByVenue.set(fp.venueId, []);
+      }
+      floorplansByVenue.get(fp.venueId)!.push(fp);
+    }
+    
     return allVenues.map(venue => {
       const venueAmenitiesList = amenitiesByVenue.get(venue.id) || [];
       const venueTagsList = tagsByVenue.get(venue.id) || [];
+      const venueFloorplansList = floorplansByVenue.get(venue.id) || [];
       
       return {
         ...venue,
         amenities: venueAmenitiesList,
         cuisineTags: venueTagsList.filter(t => t.category === 'Cuisine'),
         styleTags: venueTagsList.filter(t => t.category === 'Style'),
+        floorplans: venueFloorplansList,
       };
     });
   }
@@ -1267,13 +1293,15 @@ export class DatabaseStorage implements IStorage {
     if (!venue) return undefined;
     
     const venueAmenitiesList = await this.getVenueAmenities(id);
-    const venueTags = await this.getVenueTags(id);
+    const venueTagsList = await this.getVenueTags(id);
+    const venueFloorplansList = await this.getVenueFloorplans(id);
     
     return {
       ...venue,
       amenities: venueAmenitiesList,
-      cuisineTags: venueTags.filter(t => t.category === 'Cuisine'),
-      styleTags: venueTags.filter(t => t.category === 'Style'),
+      cuisineTags: venueTagsList.filter(t => t.category === 'Cuisine'),
+      styleTags: venueTagsList.filter(t => t.category === 'Style'),
+      floorplans: venueFloorplansList,
     };
   }
   
@@ -1321,6 +1349,52 @@ export class DatabaseStorage implements IStorage {
         }))
       );
     }
+  }
+  
+  // Venue Floorplan operations
+  async getVenueFloorplans(venueId: string): Promise<VenueFloorplan[]> {
+    return db
+      .select()
+      .from(venueFloorplans)
+      .where(eq(venueFloorplans.venueId, venueId))
+      .orderBy(venueFloorplans.sortOrder, venueFloorplans.uploadedAt);
+  }
+  
+  async getVenueFloorplanById(id: string): Promise<VenueFloorplan | undefined> {
+    const [floorplan] = await db
+      .select()
+      .from(venueFloorplans)
+      .where(eq(venueFloorplans.id, id));
+    return floorplan;
+  }
+  
+  async createVenueFloorplan(data: CreateVenueFloorplan): Promise<VenueFloorplan> {
+    const [floorplan] = await db
+      .insert(venueFloorplans)
+      .values({
+        venueId: data.venueId,
+        fileUrl: data.fileUrl,
+        thumbnailUrl: data.thumbnailUrl,
+        fileType: data.fileType,
+        title: data.title,
+        caption: data.caption,
+        sortOrder: data.sortOrder ?? 0,
+      })
+      .returning();
+    return floorplan;
+  }
+  
+  async updateVenueFloorplan(id: string, data: UpdateVenueFloorplan): Promise<VenueFloorplan | undefined> {
+    const [floorplan] = await db
+      .update(venueFloorplans)
+      .set(data)
+      .where(eq(venueFloorplans.id, id))
+      .returning();
+    return floorplan;
+  }
+  
+  async deleteVenueFloorplan(id: string): Promise<void> {
+    await db.delete(venueFloorplans).where(eq(venueFloorplans.id, id));
   }
   
   async getTagsByCategory(category: string): Promise<Tag[]> {

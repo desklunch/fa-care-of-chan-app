@@ -2105,6 +2105,120 @@ export async function registerRoutes(
     }
   });
 
+  // ===== VENUE FLOORPLAN ROUTES =====
+
+  // Get all floorplans for a venue
+  app.get("/api/venues/:venueId/floorplans", isAuthenticated, async (req, res) => {
+    try {
+      const floorplans = await storage.getVenueFloorplans(req.params.venueId);
+      res.json(floorplans);
+    } catch (error) {
+      console.error("Error fetching venue floorplans:", error);
+      res.status(500).json({ message: "Failed to fetch venue floorplans" });
+    }
+  });
+
+  // Get a single floorplan by ID
+  app.get("/api/floorplans/:id", isAuthenticated, async (req, res) => {
+    try {
+      const floorplan = await storage.getVenueFloorplanById(req.params.id);
+      if (!floorplan) {
+        return res.status(404).json({ message: "Floorplan not found" });
+      }
+      res.json(floorplan);
+    } catch (error) {
+      console.error("Error fetching floorplan:", error);
+      res.status(500).json({ message: "Failed to fetch floorplan" });
+    }
+  });
+
+  // Create a new floorplan (admin only)
+  app.post("/api/venues/:venueId/floorplans", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { fileUrl, thumbnailUrl, fileType, title, caption, sortOrder } = req.body;
+      
+      if (!fileUrl || !fileType) {
+        return res.status(400).json({ message: "fileUrl and fileType are required" });
+      }
+      
+      if (!["image", "pdf"].includes(fileType)) {
+        return res.status(400).json({ message: "fileType must be 'image' or 'pdf'" });
+      }
+      
+      const floorplan = await storage.createVenueFloorplan({
+        venueId: req.params.venueId,
+        fileUrl,
+        thumbnailUrl,
+        fileType,
+        title,
+        caption,
+        sortOrder: sortOrder ?? 0,
+      });
+      res.status(201).json(floorplan);
+    } catch (error) {
+      console.error("Error creating floorplan:", error);
+      res.status(500).json({ message: "Failed to create floorplan" });
+    }
+  });
+
+  // Update a floorplan (admin only)
+  app.patch("/api/floorplans/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { title, caption, sortOrder, thumbnailUrl } = req.body;
+      
+      const floorplan = await storage.updateVenueFloorplan(req.params.id, {
+        title,
+        caption,
+        sortOrder,
+        thumbnailUrl,
+      });
+      
+      if (!floorplan) {
+        return res.status(404).json({ message: "Floorplan not found" });
+      }
+      res.json(floorplan);
+    } catch (error) {
+      console.error("Error updating floorplan:", error);
+      res.status(500).json({ message: "Failed to update floorplan" });
+    }
+  });
+
+  // Delete a floorplan (admin only)
+  app.delete("/api/floorplans/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const floorplan = await storage.getVenueFloorplanById(req.params.id);
+      if (!floorplan) {
+        return res.status(404).json({ message: "Floorplan not found" });
+      }
+      
+      const storageService = new ObjectStorageService();
+      
+      // Delete the file from object storage if it's stored there
+      if (floorplan.fileUrl.startsWith("/objects/")) {
+        try {
+          await storageService.deleteObject(floorplan.fileUrl.replace("/objects/", ""));
+        } catch (err) {
+          console.error("Failed to delete floorplan file from storage:", err);
+        }
+      }
+      
+      // Delete thumbnail if it exists
+      if (floorplan.thumbnailUrl?.startsWith("/objects/")) {
+        try {
+          await storageService.deleteObject(floorplan.thumbnailUrl.replace("/objects/", ""));
+        } catch (err) {
+          console.error("Failed to delete floorplan thumbnail from storage:", err);
+        }
+      }
+      
+      await storage.deleteVenueFloorplan(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting floorplan:", error);
+      res.status(500).json({ message: "Failed to delete floorplan" });
+    }
+  });
+
   // Get tags by category
   app.get("/api/tags/category/:category", isAuthenticated, async (req, res) => {
     try {

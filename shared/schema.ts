@@ -338,6 +338,26 @@ export const venueTags = pgTable(
   ],
 );
 
+// Venue floorplans (images and PDFs)
+export const venueFloorplans = pgTable(
+  "venue_floorplans",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+    fileUrl: varchar("file_url", { length: 500 }).notNull(),
+    thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+    fileType: varchar("file_type", { length: 20 }).notNull(), // 'image' | 'pdf'
+    title: varchar("title", { length: 255 }),
+    caption: text("caption"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_venue_floorplans_venue_id").on(table.venueId),
+    index("idx_venue_floorplans_uploaded_at").on(table.uploadedAt),
+  ],
+);
+
 // Vendor services (service categories that vendors can provide)
 export const vendorServices = pgTable(
   "vendor_services",
@@ -513,6 +533,8 @@ export type Tag = typeof tags.$inferSelect;
 export type InsertTag = typeof tags.$inferInsert;
 export type VenueTag = typeof venueTags.$inferSelect;
 export type InsertVenueTag = typeof venueTags.$inferInsert;
+export type VenueFloorplan = typeof venueFloorplans.$inferSelect;
+export type InsertVenueFloorplan = typeof venueFloorplans.$inferInsert;
 export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
 export type VendorService = typeof vendorServices.$inferSelect;
@@ -542,11 +564,12 @@ export type ContactWithVendors = Contact & {
   vendors: Vendor[];
 };
 
-// Venue with associated amenities and tags
+// Venue with associated amenities, tags, and floorplans
 export type VenueWithRelations = Venue & {
   amenities: Amenity[];
   cuisineTags: Tag[];
   styleTags: Tag[];
+  floorplans: VenueFloorplan[];
 };
 
 // Keep old type aliases for backward compatibility
@@ -743,6 +766,29 @@ export const updateVenueSchema = insertVenueSchema.partial();
 
 export type CreateVenue = z.infer<typeof insertVenueSchema>;
 export type UpdateVenue = z.infer<typeof updateVenueSchema>;
+
+// Venue floorplan schemas
+export const insertVenueFloorplanSchema = createInsertSchema(venueFloorplans).omit({
+  id: true,
+  uploadedAt: true,
+}).extend({
+  venueId: z.string().min(1, "Venue ID is required"),
+  fileUrl: z.string().min(1, "File URL is required").max(500),
+  thumbnailUrl: z.string().max(500).optional().nullable(),
+  fileType: z.enum(["image", "pdf"]),
+  title: z.string().max(255).optional().nullable(),
+  caption: z.string().optional().nullable(),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateVenueFloorplanSchema = insertVenueFloorplanSchema.omit({
+  venueId: true,
+  fileUrl: true,
+  fileType: true,
+}).partial();
+
+export type CreateVenueFloorplan = z.infer<typeof insertVenueFloorplanSchema>;
+export type UpdateVenueFloorplan = z.infer<typeof updateVenueFloorplanSchema>;
 
 // Amenity schemas
 export const insertAmenitySchema = createInsertSchema(amenities).omit({
