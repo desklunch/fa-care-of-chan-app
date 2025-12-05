@@ -68,6 +68,7 @@ import {
   ScrollText,
   MapPin,
   Tag,
+  FolderOpen,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -108,7 +109,11 @@ function useLayoutConfig() {
             href: "/venues",
             icon: MapPin,
           },
- 
+          {
+            name: "Collections",
+            href: "/venues/collections",
+            icon: FolderOpen,
+          },
           {
             name: "Amenities",
             href: "/amenities",

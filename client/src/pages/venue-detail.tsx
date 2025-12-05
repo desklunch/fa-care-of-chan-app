@@ -183,27 +183,6 @@ export default function VenueDetailPage() {
           </div>
         </div>
 
-        {venueCollections.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-muted-foreground">In collections:</span>
-            {venueCollections.map((collection) => (
-              <Link 
-                key={collection.id} 
-                href={`/venues/collections/${collection.id}`}
-              >
-                <Badge 
-                  variant="secondary" 
-                  className="cursor-pointer"
-                  data-testid={`badge-collection-${collection.id}`}
-                >
-                  <FolderPlus className="h-3 w-3 mr-1" />
-                  {collection.name}
-                </Badge>
-              </Link>
-            ))}
-          </div>
-        )}
-
         {venue.photoUrls && venue.photoUrls.length > 0 && (
           <>
             <Card>
@@ -734,6 +713,38 @@ export default function VenueDetailPage() {
                       </div>
                     );
                   })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {venueCollections.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FolderPlus className="h-5 w-5" />
+                Collections
+              </CardTitle>
+              <CardDescription>
+                This venue is part of {venueCollections.length} collection{venueCollections.length !== 1 ? "s" : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {venueCollections.map((collection) => (
+                  <Link 
+                    key={collection.id} 
+                    href={`/venues/collections/${collection.id}`}
+                  >
+                    <Badge 
+                      variant="secondary" 
+                      className="cursor-pointer text-sm py-1.5 px-3"
+                      data-testid={`badge-collection-${collection.id}`}
+                    >
+                      {collection.name}
+                    </Badge>
+                  </Link>
+                ))}
               </div>
             </CardContent>
           </Card>
