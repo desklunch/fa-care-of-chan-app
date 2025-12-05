@@ -45,6 +45,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
+import { VenueMap } from "@/components/ui/venue-map";
 import { formatDistanceToNow } from "date-fns";
 import type { VenueWithRelations } from "@shared/schema";
 
@@ -394,6 +395,14 @@ export default function VenueDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        {(venue.googlePlaceId || venue.streetAddress1 || venue.city) && (
+          <VenueMap
+            googlePlaceId={venue.googlePlaceId}
+            address={[venue.streetAddress1, venue.city, venue.state, venue.zipCode].filter(Boolean).join(", ")}
+            venueName={venue.name}
+          />
+        )}
 
         {venue.longDescription && (
           <Card>
