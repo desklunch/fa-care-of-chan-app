@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Logo from "./logo";
@@ -13,17 +14,80 @@ interface HeaderProps {
   isMobileOpen: boolean;
   onToggle: () => void;
   breadcrumbs?: Breadcrumb[];
-  actionButton?: ActionButton;
-  customAction?: React.ReactNode;
+  primaryAction?: ActionButton;
+  additionalActions?: ActionButton[];
+}
+
+function renderActionButton(action: ActionButton, testId: string) {
+  if (action.href) {
+    return (
+      <a href={action.href}>
+        <Button
+          variant={action.variant || "outline"}
+          size="sm"
+          data-testid={testId}
+        >
+          {action.icon && <action.icon className="h-4 w-4" />}
+          {action.label}
+        </Button>
+      </a>
+    );
+  }
+  return (
+    <Button
+      variant={action.variant || "outline"}
+      size="sm"
+      onClick={action.onClick}
+      data-testid={testId}
+    >
+      {action.icon && <action.icon className="h-4 w-4" />}
+      {action.label}
+    </Button>
+  );
+}
+
+function renderDropdownItem(action: ActionButton, index: number) {
+  const isDestructive = action.variant === "destructive";
+  
+  if (action.href) {
+    return (
+      <a href={action.href} key={index}>
+        <DropdownMenuItem 
+          className={isDestructive ? "text-destructive focus:text-destructive" : ""}
+          data-testid={`menu-item-action-${index}`}
+        >
+          {action.icon && <action.icon className="h-4 w-4 mr-2" />}
+          {action.label}
+        </DropdownMenuItem>
+      </a>
+    );
+  }
+  return (
+    <DropdownMenuItem
+      key={index}
+      onClick={action.onClick}
+      className={isDestructive ? "text-destructive focus:text-destructive" : ""}
+      data-testid={`menu-item-action-${index}`}
+    >
+      {action.icon && <action.icon className="h-4 w-4 mr-2" />}
+      {action.label}
+    </DropdownMenuItem>
+  );
 }
 
 export default function Header({
   isMobileOpen,
   onToggle,
   breadcrumbs,
-  actionButton,
-  customAction,
+  primaryAction,
+  additionalActions,
 }: HeaderProps) {
+  const hasActions = primaryAction || (additionalActions && additionalActions.length > 0);
+  const allDropdownActions = [
+    ...(primaryAction ? [primaryAction] : []),
+    ...(additionalActions || []),
+  ];
+
   return (
     <header
       className="sticky top-0 shrink-0 h-[56px] md:h-[72px] bg-background border-b border-border px-2 md:px-4 flex items-center justify-between gap-2 z-40"
@@ -75,34 +139,13 @@ export default function Header({
       {(!breadcrumbs || breadcrumbs.length === 0) && <div className="flex-1" />}
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <div className="hidden md:flex items-center gap-2">
-          {actionButton && (
-            actionButton.href ? (
-              <a href={actionButton.href}>
-                <Button
-                  variant={actionButton.variant || "outline"}
-                  size="sm"
-                  data-testid="button-header-action"
-                >
-                  {actionButton.icon && <actionButton.icon className="h-4 w-4" />}
-                  {actionButton.label}
-                </Button>
-              </a>
-            ) : (
-              <Button
-                variant={actionButton.variant || "outline"}
-                size="sm"
-                onClick={actionButton.onClick}
-                data-testid="button-header-action"
-              >
-                {actionButton.icon && <actionButton.icon className="h-4 w-4" />}
-                {actionButton.label}
-              </Button>
-            )
-          )}
-        </div>
+        {primaryAction && (
+          <div className="hidden md:flex items-center gap-2">
+            {renderActionButton(primaryAction, "button-primary-action")}
+          </div>
+        )}
 
-        {actionButton && (
+        {hasActions && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -116,28 +159,11 @@ export default function Header({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" data-testid="dropdown-actions-menu">
-              {actionButton.href ? (
-                <a href={actionButton.href}>
-                  <DropdownMenuItem data-testid="menu-item-action">
-                    {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
-                    {actionButton.label}
-                  </DropdownMenuItem>
-                </a>
-              ) : (
-                <DropdownMenuItem
-                  onClick={actionButton.onClick}
-                  data-testid="menu-item-action"
-                >
-                  {actionButton.icon && <actionButton.icon className="h-4 w-4 mr-2" />}
-                  {actionButton.label}
-                </DropdownMenuItem>
-              )}
+              {allDropdownActions.map((action, index) => renderDropdownItem(action, index))}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
-
-      {customAction}
     </header>
   );
 }
