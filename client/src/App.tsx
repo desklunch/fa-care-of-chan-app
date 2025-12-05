@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
-import { LayoutProvider } from "@/framework";
+import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import type { LayoutConfig } from "@/framework/types/layout";
 import Landing from "@/pages/landing";
@@ -227,51 +227,53 @@ function AuthenticatedRoutes() {
 
   return (
     <LayoutProvider config={layoutConfig}>
-      <Switch>
-        <Route path="/" component={TeamPage} />
-        <Route path="/team" component={TeamPage} />
-        <Route path="/team/:id" component={TeamProfile} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/profile/edit" component={ProfileEdit} />
-        <Route path="/app/features" component={AppFeatures} />
-        <Route path="/app/features/new" component={AppFeatureForm} />
-        <Route path="/app/features/:id/edit" component={AppFeatureForm} />
-        <Route path="/app/features/:id" component={AppFeatureDetail} />
-        <Route path="/app/issues" component={AppIssues} />
-        <Route path="/app/issues/new" component={AppIssueForm} />
-        <Route path="/app/issues/:id/edit" component={AppIssueForm} />
-        <Route path="/app/issues/:id" component={AppIssueDetail} />
-        <Route path="/contacts" component={Contacts} />
-        <Route path="/contacts/new" component={ContactForm} />
-        <Route path="/contacts/:id/edit" component={ContactForm} />
-        <Route path="/contacts/:id" component={ContactDetail} />
-        <Route path="/vendors" component={Vendors} />
-        <Route path="/vendors/new" component={VendorForm} />
-        <Route path="/vendors/:id/edit" component={VendorForm} />
-        <Route path="/vendors/:id" component={VendorDetail} />
-        <Route path="/venues" component={Venues} />
-        <Route path="/venues/new" component={VenueForm} />
-        <Route path="/venues/:id/edit" component={VenueForm} />
-        <Route path="/venues/:id" component={VenueDetail} />
-        <Route path="/amenities" component={Amenities} />
-        <Route path="/tags" component={TagsPage} />
-        <Route path="/admin/invites" component={AdminInvites} />
-        <Route path="/admin/app/features" component={AdminAppFeatures} />
-        <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
-        <Route path="/admin/vendors/services" component={AdminVendorServices} />
-        <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
-        <Route path="/forms/templates" component={FormTemplates} />
-        <Route path="/forms/templates/new" component={FormTemplateForm} />
-        <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
-        <Route path="/forms/templates/:id" component={FormTemplateDetail} />
-        <Route path="/forms/requests" component={FormRequests} />
-        <Route path="/forms/requests/new" component={FormRequestForm} />
-        <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
-        <Route path="/forms/requests/:id" component={FormRequestDetail} />
-        <Route path="/admin/theme" component={AdminThemeEditor} />
-        <Route path="/admin/logs" component={AdminLogs} />
-        <Route component={NotFound} />
-      </Switch>
+      <AppShell>
+        <Switch>
+          <Route path="/" component={TeamPage} />
+          <Route path="/team" component={TeamPage} />
+          <Route path="/team/:id" component={TeamProfile} />
+          <Route path="/profile" component={Profile} />
+          <Route path="/profile/edit" component={ProfileEdit} />
+          <Route path="/app/features" component={AppFeatures} />
+          <Route path="/app/features/new" component={AppFeatureForm} />
+          <Route path="/app/features/:id/edit" component={AppFeatureForm} />
+          <Route path="/app/features/:id" component={AppFeatureDetail} />
+          <Route path="/app/issues" component={AppIssues} />
+          <Route path="/app/issues/new" component={AppIssueForm} />
+          <Route path="/app/issues/:id/edit" component={AppIssueForm} />
+          <Route path="/app/issues/:id" component={AppIssueDetail} />
+          <Route path="/contacts" component={Contacts} />
+          <Route path="/contacts/new" component={ContactForm} />
+          <Route path="/contacts/:id/edit" component={ContactForm} />
+          <Route path="/contacts/:id" component={ContactDetail} />
+          <Route path="/vendors" component={Vendors} />
+          <Route path="/vendors/new" component={VendorForm} />
+          <Route path="/vendors/:id/edit" component={VendorForm} />
+          <Route path="/vendors/:id" component={VendorDetail} />
+          <Route path="/venues" component={Venues} />
+          <Route path="/venues/new" component={VenueForm} />
+          <Route path="/venues/:id/edit" component={VenueForm} />
+          <Route path="/venues/:id" component={VenueDetail} />
+          <Route path="/amenities" component={Amenities} />
+          <Route path="/tags" component={TagsPage} />
+          <Route path="/admin/invites" component={AdminInvites} />
+          <Route path="/admin/app/features" component={AdminAppFeatures} />
+          <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
+          <Route path="/admin/vendors/services" component={AdminVendorServices} />
+          <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
+          <Route path="/forms/templates" component={FormTemplates} />
+          <Route path="/forms/templates/new" component={FormTemplateForm} />
+          <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
+          <Route path="/forms/templates/:id" component={FormTemplateDetail} />
+          <Route path="/forms/requests" component={FormRequests} />
+          <Route path="/forms/requests/new" component={FormRequestForm} />
+          <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
+          <Route path="/forms/requests/:id" component={FormRequestDetail} />
+          <Route path="/admin/theme" component={AdminThemeEditor} />
+          <Route path="/admin/logs" component={AdminLogs} />
+          <Route component={NotFound} />
+        </Switch>
+      </AppShell>
     </LayoutProvider>
   );
 }
