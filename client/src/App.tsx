@@ -28,6 +28,9 @@ import VendorForm from "@/pages/vendor-form";
 import Venues from "@/pages/venues";
 import VenueForm from "@/pages/venue-form";
 import VenueDetail from "@/pages/venue-detail";
+import VenueCollections from "@/pages/venue-collections";
+import VenueCollectionForm from "@/pages/venue-collection-form";
+import VenueCollectionDetail from "@/pages/venue-collection-detail";
 import Amenities from "@/pages/amenities";
 import TagsPage from "@/pages/tags";
 import AdminVendorServices from "@/pages/admin-vendor-services";
@@ -252,6 +255,10 @@ function AuthenticatedRoutes() {
           <Route path="/vendors/:id" component={VendorDetail} />
           <Route path="/venues" component={Venues} />
           <Route path="/venues/new" component={VenueForm} />
+          <Route path="/venues/collections" component={VenueCollections} />
+          <Route path="/venues/collections/new" component={VenueCollectionForm} />
+          <Route path="/venues/collections/:id/edit" component={VenueCollectionForm} />
+          <Route path="/venues/collections/:id" component={VenueCollectionDetail} />
           <Route path="/venues/:id/edit" component={VenueForm} />
           <Route path="/venues/:id" component={VenueDetail} />
           <Route path="/amenities" component={Amenities} />

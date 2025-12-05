@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityDisplay } from "@/components/ui/amenity-toggle";
+import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,11 +44,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ZoomIn,
+  FolderPlus,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
 import { formatDistanceToNow } from "date-fns";
-import type { VenueWithRelations } from "@shared/schema";
+import { Link } from "wouter";
+import type { VenueWithRelations, VenueCollectionWithCreator } from "@shared/schema";
 
 export default function VenueDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,9 +62,15 @@ export default function VenueDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
 
   const { data: venue, isLoading, error } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
+  });
+
+  const { data: venueCollections = [] } = useQuery<VenueCollectionWithCreator[]>({
+    queryKey: ["/api/venues", id, "collections"],
+    enabled: !!id,
   });
 
   const deleteMutation = useMutation({
@@ -136,18 +145,23 @@ export default function VenueDetailPage() {
             }
           : undefined
       }
-      additionalActions={
-        isAdmin
+      additionalActions={[
+        {
+          label: "Add to Collection",
+          icon: FolderPlus,
+          onClick: () => setCollectionDialogOpen(true),
+        },
+        ...(isAdmin
           ? [
               {
                 label: "Delete",
                 icon: Trash2,
-                variant: "destructive",
+                variant: "destructive" as const,
                 onClick: () => setDeleteDialogOpen(true),
               },
             ]
-          : undefined
-      }
+          : []),
+      ]}
     >
       <div className="max-w-4xl p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
@@ -167,8 +181,28 @@ export default function VenueDetailPage() {
               </p>
             )}
           </div>
- 
         </div>
+
+        {venueCollections.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">In collections:</span>
+            {venueCollections.map((collection) => (
+              <Link 
+                key={collection.id} 
+                href={`/venues/collections/${collection.id}`}
+              >
+                <Badge 
+                  variant="secondary" 
+                  className="cursor-pointer"
+                  data-testid={`badge-collection-${collection.id}`}
+                >
+                  <FolderPlus className="h-3 w-3 mr-1" />
+                  {collection.name}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {venue.photoUrls && venue.photoUrls.length > 0 && (
           <>
@@ -729,6 +763,12 @@ export default function VenueDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddToCollectionDialog
+        open={collectionDialogOpen}
+        onOpenChange={setCollectionDialogOpen}
+        venueIds={id ? [id] : []}
+      />
     </PageLayout>
   );
 }

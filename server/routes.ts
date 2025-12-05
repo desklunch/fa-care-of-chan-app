@@ -32,6 +32,9 @@ import {
   updateFormRequestSchema,
   insertFormResponseSchema,
   type RecipientType,
+  insertVenueCollectionSchema,
+  updateVenueCollectionSchema,
+  addVenuesToCollectionSchema,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -2202,6 +2205,144 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching venue tags:", error);
       res.status(500).json({ message: "Failed to fetch venue tags" });
+    }
+  });
+
+  // Get collections that a venue belongs to
+  app.get("/api/venues/:id/collections", isAuthenticated, async (req, res) => {
+    try {
+      const collections = await storage.getCollectionsForVenue(req.params.id);
+      res.json(collections);
+    } catch (error) {
+      console.error("Error fetching venue collections:", error);
+      res.status(500).json({ message: "Failed to fetch venue collections" });
+    }
+  });
+
+  // ===== VENUE COLLECTION ROUTES =====
+
+  // Get all venue collections
+  app.get("/api/venue-collections", isAuthenticated, async (req, res) => {
+    try {
+      const collections = await storage.getVenueCollections();
+      res.json(collections);
+    } catch (error) {
+      console.error("Error fetching venue collections:", error);
+      res.status(500).json({ message: "Failed to fetch venue collections" });
+    }
+  });
+
+  // Get a single venue collection by ID
+  app.get("/api/venue-collections/:id", isAuthenticated, async (req, res) => {
+    try {
+      const collection = await storage.getVenueCollectionById(req.params.id);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      res.json(collection);
+    } catch (error) {
+      console.error("Error fetching venue collection:", error);
+      res.status(500).json({ message: "Failed to fetch venue collection" });
+    }
+  });
+
+  // Create a new venue collection
+  app.post("/api/venue-collections", isAuthenticated, async (req: any, res) => {
+    try {
+      const parsed = insertVenueCollectionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request body",
+          errors: parsed.error.flatten() 
+        });
+      }
+      
+      const collection = await storage.createVenueCollection(
+        parsed.data,
+        req.user.claims.sub
+      );
+      res.status(201).json(collection);
+    } catch (error) {
+      console.error("Error creating venue collection:", error);
+      res.status(500).json({ message: "Failed to create venue collection" });
+    }
+  });
+
+  // Update a venue collection
+  app.patch("/api/venue-collections/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const parsed = updateVenueCollectionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request body",
+          errors: parsed.error.flatten() 
+        });
+      }
+      
+      const collection = await storage.updateVenueCollection(
+        req.params.id,
+        parsed.data
+      );
+      
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      
+      res.json(collection);
+    } catch (error) {
+      console.error("Error updating venue collection:", error);
+      res.status(500).json({ message: "Failed to update venue collection" });
+    }
+  });
+
+  // Delete a venue collection
+  app.delete("/api/venue-collections/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteVenueCollection(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting venue collection:", error);
+      res.status(500).json({ message: "Failed to delete venue collection" });
+    }
+  });
+
+  // Add venues to a collection
+  app.post("/api/venue-collections/:id/venues", isAuthenticated, async (req: any, res) => {
+    try {
+      const parsed = addVenuesToCollectionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request body",
+          errors: parsed.error.flatten() 
+        });
+      }
+      
+      await storage.addVenuesToCollection(
+        req.params.id,
+        parsed.data.venueIds,
+        req.user.claims.sub
+      );
+      
+      // Return the updated collection
+      const collection = await storage.getVenueCollectionById(req.params.id);
+      res.json(collection);
+    } catch (error) {
+      console.error("Error adding venues to collection:", error);
+      res.status(500).json({ message: "Failed to add venues to collection" });
+    }
+  });
+
+  // Remove a venue from a collection
+  app.delete("/api/venue-collections/:collectionId/venues/:venueId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.removeVenueFromCollection(
+        req.params.collectionId,
+        req.params.venueId
+      );
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing venue from collection:", error);
+      res.status(500).json({ message: "Failed to remove venue from collection" });
     }
   });
 

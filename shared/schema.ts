@@ -386,6 +386,40 @@ export const venueFloorplans = pgTable(
   ],
 );
 
+// Venue collections - allow users to organize venues into named groups
+export const venueCollections = pgTable(
+  "venue_collections",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_venue_collections_name").on(table.name),
+    index("idx_venue_collections_created_by").on(table.createdById),
+  ],
+);
+
+// Junction table for venues in collections (many-to-many)
+export const venueCollectionVenues = pgTable(
+  "venue_collection_venues",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    collectionId: varchar("collection_id").notNull().references(() => venueCollections.id, { onDelete: "cascade" }),
+    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+    addedById: varchar("added_by_id").references(() => users.id),
+    addedAt: timestamp("added_at").defaultNow(),
+  },
+  (table) => [
+    unique("unique_venue_collection_venue").on(table.collectionId, table.venueId),
+    index("idx_venue_collection_venues_collection").on(table.collectionId),
+    index("idx_venue_collection_venues_venue").on(table.venueId),
+  ],
+);
+
 // Vendor services (service categories that vendors can provide)
 export const vendorServices = pgTable(
   "vendor_services",
@@ -608,6 +642,22 @@ export type VenueWithRelations = Venue & {
   attachments: VenueFileWithUploader[];
 };
 
+// Venue collection types
+export type VenueCollection = typeof venueCollections.$inferSelect;
+export type InsertVenueCollection = typeof venueCollections.$inferInsert;
+export type VenueCollectionVenue = typeof venueCollectionVenues.$inferSelect;
+export type InsertVenueCollectionVenue = typeof venueCollectionVenues.$inferInsert;
+
+export type VenueCollectionWithCreator = VenueCollection & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  venueCount: number;
+};
+
+export type VenueCollectionWithVenues = VenueCollection & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  venues: (Venue & { addedBy: Pick<User, "id" | "firstName" | "lastName"> | null; addedAt: Date | null })[];
+};
+
 // Keep old type aliases for backward compatibility
 export type ProductFeature = AppFeature;
 export type InsertProductFeature = InsertAppFeature;
@@ -802,6 +852,29 @@ export const updateVenueSchema = insertVenueSchema.partial();
 
 export type CreateVenue = z.infer<typeof insertVenueSchema>;
 export type UpdateVenue = z.infer<typeof updateVenueSchema>;
+
+// Venue collection schemas
+export const insertVenueCollectionSchema = createInsertSchema(venueCollections).omit({
+  id: true,
+  createdById: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(255),
+  description: z.string().optional().nullable(),
+});
+
+export const updateVenueCollectionSchema = insertVenueCollectionSchema.partial();
+
+export type CreateVenueCollection = z.infer<typeof insertVenueCollectionSchema>;
+export type UpdateVenueCollection = z.infer<typeof updateVenueCollectionSchema>;
+
+// Schema for adding venues to a collection
+export const addVenuesToCollectionSchema = z.object({
+  venueIds: z.array(z.string()).min(1, "At least one venue is required"),
+});
+
+export type AddVenuesToCollection = z.infer<typeof addVenuesToCollectionSchema>;
 
 // Venue floorplan schemas
 // New unified venue file schema

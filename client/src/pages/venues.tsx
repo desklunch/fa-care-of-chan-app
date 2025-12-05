@@ -4,11 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations, Amenity, Tag } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, type LucideIcon } from "lucide-react";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, X, type LucideIcon } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "cuisineTags", "styleTags", "location"];
 
@@ -383,6 +385,11 @@ export default function VenuesPage() {
   const [selectedCuisine, setSelectedCuisine] = useState<(string | number)[]>([]);
   const [selectedStyle, setSelectedStyle] = useState<(string | number)[]>([]);
 
+  // Collection dialog state
+  const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
+  const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
+  const [clearSelectionFn, setClearSelectionFn] = useState<(() => void) | null>(null);
+
   // Fetch venues data
   const { data: venues = [], isLoading: isVenuesLoading } = useQuery<VenueWithRelations[]>({
     queryKey: ["/api/venues"],
@@ -512,6 +519,47 @@ export default function VenuesPage() {
     navigate("/venues/new");
   }, [navigate]);
 
+  const handleAddToCollection = useCallback((venues: VenueWithRelations[], clearSelection: () => void) => {
+    setSelectedVenueIds(venues.map(v => v.id));
+    setClearSelectionFn(() => clearSelection);
+    setCollectionDialogOpen(true);
+  }, []);
+
+  const handleCollectionSuccess = useCallback(() => {
+    clearSelectionFn?.();
+    setSelectedVenueIds([]);
+  }, [clearSelectionFn]);
+
+  const selectionToolbar = useCallback((selectedRows: VenueWithRelations[], clearSelection: () => void) => {
+    if (selectedRows.length === 0) return null;
+    
+    return (
+      <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 border-b">
+        <span className="text-sm text-muted-foreground">
+          {selectedRows.length} venue{selectedRows.length !== 1 ? "s" : ""} selected
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleAddToCollection(selectedRows, clearSelection)}
+          data-testid="button-add-selected-to-collection"
+        >
+          <FolderPlus className="h-4 w-4 mr-2" />
+          Add to Collection
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearSelection}
+          data-testid="button-clear-selection"
+        >
+          <X className="h-4 w-4 mr-1" />
+          Clear
+        </Button>
+      </div>
+    );
+  }, [handleAddToCollection]);
+
   if (isAuthLoading) {
     return (
       <PageLayout breadcrumbs={[{ label: "Venues" }]}>
@@ -592,18 +640,29 @@ export default function VenuesPage() {
     externalData: filteredVenues,
     externalLoading: isVenuesLoading,
     headerContent: filterBar,
+    enableRowSelection: true,
+    selectionToolbar: selectionToolbar,
   };
 
   return (
-    <PageLayout
-      breadcrumbs={[{ label: "Venues" }]}
-      primaryAction={isAdmin ? {
-        label: "Add Venue",
-        icon: CircleFadingPlus,
-        onClick: handleCreate,
-      } : undefined}
-    >
-      <DataGridPage {...dataGridProps} />
-    </PageLayout>
+    <>
+      <PageLayout
+        breadcrumbs={[{ label: "Venues" }]}
+        primaryAction={isAdmin ? {
+          label: "Add Venue",
+          icon: CircleFadingPlus,
+          onClick: handleCreate,
+        } : undefined}
+      >
+        <DataGridPage {...dataGridProps} />
+      </PageLayout>
+      
+      <AddToCollectionDialog
+        open={collectionDialogOpen}
+        onOpenChange={setCollectionDialogOpen}
+        venueIds={selectedVenueIds}
+        onSuccess={handleCollectionSuccess}
+      />
+    </>
   );
 }

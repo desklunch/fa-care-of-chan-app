@@ -15,6 +15,8 @@ import {
   venueTags,
   venueFloorplans,
   venueFiles,
+  venueCollections,
+  venueCollectionVenues,
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
@@ -101,6 +103,11 @@ import {
   type RecipientType,
   type PublicFormData,
   type FormSection,
+  type VenueCollection,
+  type CreateVenueCollection,
+  type UpdateVenueCollection,
+  type VenueCollectionWithCreator,
+  type VenueCollectionWithVenues,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -240,6 +247,16 @@ export interface IStorage {
   
   setVenueTags(venueId: string, tagIds: string[]): Promise<void>;
   getTagsByCategory(category: string): Promise<Tag[]>;
+  
+  // Venue Collection operations
+  getVenueCollections(): Promise<VenueCollectionWithCreator[]>;
+  getVenueCollectionById(id: string): Promise<VenueCollectionWithVenues | undefined>;
+  createVenueCollection(data: CreateVenueCollection, createdById: string): Promise<VenueCollection>;
+  updateVenueCollection(id: string, data: UpdateVenueCollection): Promise<VenueCollection | undefined>;
+  deleteVenueCollection(id: string): Promise<void>;
+  addVenuesToCollection(collectionId: string, venueIds: string[], addedById?: string): Promise<void>;
+  removeVenueFromCollection(collectionId: string, venueId: string): Promise<void>;
+  getCollectionsForVenue(venueId: string): Promise<VenueCollectionWithCreator[]>;
   
   // Amenity operations
   getAmenities(): Promise<Amenity[]>;
@@ -1516,6 +1533,178 @@ export class DatabaseStorage implements IStorage {
   
   async getTagsByCategory(category: string): Promise<Tag[]> {
     return db.select().from(tags).where(eq(tags.category, category)).orderBy(tags.name);
+  }
+  
+  // Venue Collection operations
+  async getVenueCollections(): Promise<VenueCollectionWithCreator[]> {
+    const collections = await db
+      .select({
+        collection: venueCollections,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(venueCollections)
+      .leftJoin(users, eq(venueCollections.createdById, users.id))
+      .orderBy(desc(venueCollections.createdAt));
+    
+    // Get venue counts for each collection
+    const counts = await db
+      .select({
+        collectionId: venueCollectionVenues.collectionId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(venueCollectionVenues)
+      .groupBy(venueCollectionVenues.collectionId);
+    
+    const countMap = new Map(counts.map(c => [c.collectionId, c.count]));
+    
+    return collections.map(({ collection, createdBy }) => ({
+      ...collection,
+      createdBy,
+      venueCount: countMap.get(collection.id) || 0,
+    }));
+  }
+  
+  async getVenueCollectionById(id: string): Promise<VenueCollectionWithVenues | undefined> {
+    const [result] = await db
+      .select({
+        collection: venueCollections,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(venueCollections)
+      .leftJoin(users, eq(venueCollections.createdById, users.id))
+      .where(eq(venueCollections.id, id));
+    
+    if (!result) return undefined;
+    
+    // Get venues in this collection
+    const collectionVenues = await db
+      .select({
+        venue: venues,
+        addedBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+        addedAt: venueCollectionVenues.addedAt,
+      })
+      .from(venueCollectionVenues)
+      .innerJoin(venues, eq(venueCollectionVenues.venueId, venues.id))
+      .leftJoin(users, eq(venueCollectionVenues.addedById, users.id))
+      .where(eq(venueCollectionVenues.collectionId, id))
+      .orderBy(desc(venueCollectionVenues.addedAt));
+    
+    return {
+      ...result.collection,
+      createdBy: result.createdBy,
+      venues: collectionVenues.map(cv => ({
+        ...cv.venue,
+        addedBy: cv.addedBy,
+        addedAt: cv.addedAt,
+      })),
+    };
+  }
+  
+  async createVenueCollection(data: CreateVenueCollection, createdById: string): Promise<VenueCollection> {
+    const [collection] = await db
+      .insert(venueCollections)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return collection;
+  }
+  
+  async updateVenueCollection(id: string, data: UpdateVenueCollection): Promise<VenueCollection | undefined> {
+    const [collection] = await db
+      .update(venueCollections)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(venueCollections.id, id))
+      .returning();
+    return collection;
+  }
+  
+  async deleteVenueCollection(id: string): Promise<void> {
+    await db.delete(venueCollections).where(eq(venueCollections.id, id));
+  }
+  
+  async addVenuesToCollection(collectionId: string, venueIds: string[], addedById?: string): Promise<void> {
+    if (venueIds.length === 0) return;
+    
+    // Use upsert to avoid duplicates
+    await db
+      .insert(venueCollectionVenues)
+      .values(
+        venueIds.map(venueId => ({
+          collectionId,
+          venueId,
+          addedById,
+        }))
+      )
+      .onConflictDoNothing();
+  }
+  
+  async removeVenueFromCollection(collectionId: string, venueId: string): Promise<void> {
+    await db
+      .delete(venueCollectionVenues)
+      .where(
+        and(
+          eq(venueCollectionVenues.collectionId, collectionId),
+          eq(venueCollectionVenues.venueId, venueId)
+        )
+      );
+  }
+  
+  async getCollectionsForVenue(venueId: string): Promise<VenueCollectionWithCreator[]> {
+    const results = await db
+      .select({
+        collection: venueCollections,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(venueCollectionVenues)
+      .innerJoin(venueCollections, eq(venueCollectionVenues.collectionId, venueCollections.id))
+      .leftJoin(users, eq(venueCollections.createdById, users.id))
+      .where(eq(venueCollectionVenues.venueId, venueId))
+      .orderBy(venueCollections.name);
+    
+    // Get venue counts for each collection
+    const collectionIds = results.map(r => r.collection.id);
+    if (collectionIds.length === 0) return [];
+    
+    const counts = await db
+      .select({
+        collectionId: venueCollectionVenues.collectionId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(venueCollectionVenues)
+      .where(inArray(venueCollectionVenues.collectionId, collectionIds))
+      .groupBy(venueCollectionVenues.collectionId);
+    
+    const countMap = new Map(counts.map(c => [c.collectionId, c.count]));
+    
+    return results.map(({ collection, createdBy }) => ({
+      ...collection,
+      createdBy,
+      venueCount: countMap.get(collection.id) || 0,
+    }));
   }
   
   // Amenity operations
