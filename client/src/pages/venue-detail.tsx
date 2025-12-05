@@ -261,7 +261,10 @@ export default function VenueDetailPage() {
             )}
 
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-              <DialogContent className="w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-w-none p-0 border-0 bg-black/95 overflow-hidden flex flex-col">
+              <DialogContent 
+                className="w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-w-none p-0 border-0 bg-black/95 overflow-hidden flex flex-col cursor-pointer"
+                onClick={() => setLightboxOpen(false)}
+              >
                 <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
                   <img
                     src={venue.photoUrls[lightboxIndex]}
@@ -271,7 +274,10 @@ export default function VenueDetailPage() {
                   />
                 </div>
                 
-                <div className="shrink-0 flex items-center justify-center gap-4 py-4 px-6 bg-black/80 border-t border-white/10">
+                <div 
+                  className="shrink-0 flex items-center justify-center gap-4 py-4 px-6 bg-black/80 border-t border-white/10"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Button
                     variant="ghost"
                     size="icon"
