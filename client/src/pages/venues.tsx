@@ -10,7 +10,7 @@ import type { VenueWithRelations, Amenity, Tag } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, type LucideIcon } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["name", "city", "state", "cuisineTags", "styleTags", "amenities"];
+const DEFAULT_VISIBLE_COLUMNS = ["name", "cuisineTags", "styleTags", "location"];
 
 function getIconComponent(iconName: string): LucideIcon {
   const icon = icons[iconName as keyof typeof icons];
