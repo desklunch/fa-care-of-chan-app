@@ -182,5 +182,54 @@ Contacts table:
 - Auto-populates name, address, phone, website, googlePlaceId
 - "Import Photos" button appears after selecting a place
 - Photo picker allows multi-select for gallery and single-select for primary photo
-- Photos stored as proxy URLs (/api/places/photos/...) to avoid exposing API key
+- Photos uploaded to App Storage (not just proxy URLs)
 - Deduplication prevents adding the same photo twice
+
+### Photo Management System
+
+**App Storage Integration**
+- Photos stored in Replit App Storage (object storage bucket)
+- ObjectStorageService class wraps @google-cloud/storage operations
+- Storage paths: `/objects/venues/{venueId}/photos/` for photos, `/objects/venues/{venueId}/thumbnails/` for thumbnails
+- Environment variables: DEFAULT_OBJECT_STORAGE_BUCKET_ID, PUBLIC_OBJECT_SEARCH_PATHS, PRIVATE_OBJECT_DIR
+
+**Photo Upload API Endpoints**
+- POST /api/photos/upload - Upload base64-encoded image data
+  - Validates file size (10MB max) and MIME type (jpg, png, webp, gif only)
+  - Automatically generates WebP thumbnail using Sharp
+  - Returns photoUrl and thumbnailUrl paths
+- POST /api/photos/from-url - Fetch and upload image from external URL
+  - Handles Google Places proxy URLs internally
+  - Same validation and thumbnail generation as direct upload
+- DELETE /api/photos - Delete photo and thumbnail from storage
+- GET /objects/:objectPath(*) - Serve photos from storage with 7-day cache
+
+**Frontend Components**
+- PhotoUploader component (client/src/components/ui/photo-uploader.tsx)
+  - File input for direct upload
+  - Drag-drop zone with visual feedback
+  - URL import field for external images
+  - Progress indicator during upload
+  - Error handling with toast notifications
+- GooglePlacePhotoPicker (client/src/components/ui/google-place-photo-picker.tsx)
+  - Fetches available photos from Google Places API
+  - Multi-select for gallery photos, single-select for primary photo
+  - Uploads selected photos to App Storage (not just copying URLs)
+  - Progress tracking with per-photo status
+- SortablePhotoItem component (client/src/pages/venue-form.tsx)
+  - Always-visible drag handle for accessibility
+  - Uses dnd-kit for drag-and-drop reordering
+  - View full-size in new window
+  - Delete functionality with storage cleanup
+
+**Drag-Drop Reordering**
+- Uses @dnd-kit/core and @dnd-kit/sortable
+- PointerSensor and KeyboardSensor for mouse/keyboard support
+- rectSortingStrategy for grid layout
+- Immediate visual feedback during drag with transform and shadow
+
+**Migration Script**
+- scripts/migrate-venue-photos.ts
+- Migrates existing external URLs and Google Places proxy URLs to App Storage
+- Run with: `npx tsx scripts/migrate-venue-photos.ts`
+- Dry run mode: `npx tsx scripts/migrate-venue-photos.ts --dry-run`
