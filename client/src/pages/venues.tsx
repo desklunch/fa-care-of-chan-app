@@ -34,7 +34,7 @@ function LocationCellRenderer({ data }: { data: VenueWithRelations }) {
   if (parts.length === 0) return null;
   return (
     <div className="flex items-center gap-1 h-full">
-      <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+      {/* <MapPin className="w-3 h-3 text-muted-foreground shrink-0" /> */}
       <span className="truncate">{parts.join(", ")}</span>
     </div>
   );
@@ -140,7 +140,7 @@ function CuisineTagsCellRenderer({ data }: { data: VenueWithRelations }) {
       {data.cuisineTags.map((tag) => (
         <Badge
           key={tag.id}
-          variant="default"
+          variant="outline"
           className="px-2 py-0.5 text-xs shrink-0"
           data-testid={`badge-cuisine-${tag.id}`}
         >
