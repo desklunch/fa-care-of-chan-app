@@ -271,7 +271,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                       return (
                         <li key={item.name}>
                           {isEnabled ? (
-                            <a
+                            <Link
                               href={item.href}
                               className={navItemClasses}
                               aria-label={showExpanded ? undefined : item.name}
@@ -298,7 +298,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                                     : ""}
                                 </span>
                               )}
-                            </a>
+                            </Link>
                           ) : (
                             <div className={navItemClasses}>
                               <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />

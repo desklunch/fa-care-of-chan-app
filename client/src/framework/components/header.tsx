@@ -1,4 +1,5 @@
 import { ChevronRight, MoreVertical } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,7 +22,7 @@ interface HeaderProps {
 function renderPrimaryActionButton(action: ActionButton, testId: string) {
   if (action.href) {
     return (
-      <a href={action.href}>
+      <Link href={action.href}>
         <Button
           variant="ghost"
           size="sm"
@@ -30,7 +31,7 @@ function renderPrimaryActionButton(action: ActionButton, testId: string) {
           {action.icon && <action.icon className="h-4 w-4" />}
           {action.label}
         </Button>
-      </a>
+      </Link>
     );
   }
   return (
@@ -51,7 +52,7 @@ function renderDropdownItem(action: ActionButton, index: number) {
   
   if (action.href) {
     return (
-      <a href={action.href} key={index}>
+      <Link href={action.href} key={index}>
         <DropdownMenuItem 
           className={isDestructive ? "text-destructive focus:text-destructive" : ""}
           data-testid={`menu-item-action-${index}`}
@@ -59,7 +60,7 @@ function renderDropdownItem(action: ActionButton, index: number) {
           {action.icon && <action.icon className="h-4 w-4 mr-2" />}
           {action.label}
         </DropdownMenuItem>
-      </a>
+      </Link>
     );
   }
   return (
@@ -116,13 +117,13 @@ export default function Header({
                 <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               )}
               {crumb.href && index < breadcrumbs.length - 1 ? (
-                <a
+                <Link
                   href={crumb.href}
                   className={`${index === 0 ? "text-base font-semibold" : "text-sm text-muted-foreground"} hover:text-foreground transition-colors truncate`}
                   data-testid={`breadcrumb-${index}`}
                 >
                   {crumb.label}
-                </a>
+                </Link>
               ) : (
                 <span
                   className={`${index === 0 ? "text-base font-semibold" : "text-sm"} truncate`}
