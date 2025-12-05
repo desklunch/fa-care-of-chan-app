@@ -250,6 +250,22 @@ export default function VenueDetailPage() {
                 <p className="text-muted-foreground text-sm">No address provided</p>
               )}
 
+              {venue.googlePlaceId && (
+                <div className="pt-2">
+                  <a
+                    href={`https://www.google.com/maps/place/?q=place_id:${venue.googlePlaceId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                    data-testid="link-venue-google-maps"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    View on Google Maps
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+
               {venue.phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />

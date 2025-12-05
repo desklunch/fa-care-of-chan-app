@@ -25,6 +25,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityToggle } from "@/components/ui/amenity-toggle";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { VenueAddressAutocomplete, ParsedAddress } from "@/components/ui/venue-address-autocomplete";
+import { GooglePlaceSearch, PlaceResult } from "@/components/ui/google-place-search";
 import { Save, Loader2, Plus, Trash2, Image } from "lucide-react";
 import type { VenueWithRelations } from "@shared/schema";
 import { insertVenueSchema } from "@shared/schema";
@@ -66,6 +67,7 @@ export default function VenueFormPage() {
       email: "",
       website: "",
       instagramAccount: "",
+      googlePlaceId: "",
       primaryPhotoUrl: "",
       isActive: true,
       amenityIds: [],
@@ -96,6 +98,7 @@ export default function VenueFormPage() {
         email: venue.email || "",
         website: venue.website || "",
         instagramAccount: venue.instagramAccount || "",
+        googlePlaceId: venue.googlePlaceId || "",
         primaryPhotoUrl: venue.primaryPhotoUrl || "",
         isActive: venue.isActive ?? true,
         amenityIds: venue.amenities?.map((a) => a.id) || [],
@@ -209,6 +212,24 @@ export default function VenueFormPage() {
     }
   };
 
+  const handlePlaceSelect = (place: PlaceResult) => {
+    form.setValue("name", place.name);
+    form.setValue("streetAddress1", place.streetAddress1);
+    form.setValue("streetAddress2", "");
+    form.setValue("city", place.city);
+    // Use state code (abbreviation) instead of full state name
+    form.setValue("state", place.stateCode || place.state);
+    form.setValue("zipCode", place.zipCode);
+    form.setValue("phone", place.phone);
+    form.setValue("website", place.website);
+    form.setValue("googlePlaceId", place.placeId);
+    
+    toast({
+      title: "Place imported",
+      description: `Filled in details for "${place.name}"`,
+    });
+  };
+
   const breadcrumbs = [
     { label: "Venues", href: "/venues" },
     { label: isEditing ? "Edit Venue" : "New Venue" },
@@ -229,6 +250,22 @@ export default function VenueFormPage() {
       <div className="max-w-4xl p-4 md:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Find on Google</CardTitle>
+                <CardDescription>
+                  Search for a venue to auto-fill details from Google Places
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GooglePlaceSearch
+                  onPlaceSelect={handlePlaceSelect}
+                  placeholder="Search for venue by name (e.g., 'Albadawi NYC')"
+                  data-testid="input-venue-google-search"
+                />
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>

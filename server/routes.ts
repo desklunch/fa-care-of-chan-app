@@ -1178,6 +1178,106 @@ export async function registerRoutes(
     }
   });
 
+  // Google Places Text Search API (New Places API v1)
+  app.post("/api/places/text-search", isAuthenticated, async (req, res) => {
+    try {
+      const { query } = req.body;
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ message: "Query is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.location",
+          },
+          body: JSON.stringify({
+            textQuery: query,
+            languageCode: "en",
+            pageSize: 10,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Google Places API error:", errorData);
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const data = await response.json();
+      
+      // Transform the response to a simpler format
+      const places = (data.places || []).map((place: any) => {
+        // Parse address components
+        let streetNumber = "";
+        let route = "";
+        let city = "";
+        let state = "";
+        let stateCode = "";
+        let zipCode = "";
+        let country = "";
+        let countryCode = "";
+
+        if (place.addressComponents) {
+          for (const component of place.addressComponents) {
+            const types = component.types || [];
+            if (types.includes("street_number")) {
+              streetNumber = component.longText || "";
+            } else if (types.includes("route")) {
+              route = component.longText || "";
+            } else if (types.includes("locality")) {
+              city = component.longText || "";
+            } else if (types.includes("sublocality_level_1") && !city) {
+              city = component.longText || "";
+            } else if (types.includes("administrative_area_level_1")) {
+              state = component.longText || "";
+              stateCode = component.shortText || "";
+            } else if (types.includes("postal_code")) {
+              zipCode = component.longText || "";
+            } else if (types.includes("country")) {
+              country = component.longText || "";
+              countryCode = component.shortText || "";
+            }
+          }
+        }
+
+        const streetAddress1 = [streetNumber, route].filter(Boolean).join(" ");
+
+        return {
+          placeId: place.id || "",
+          name: place.displayName?.text || "",
+          formattedAddress: place.formattedAddress || "",
+          streetAddress1,
+          city,
+          state,
+          stateCode,
+          zipCode,
+          country,
+          countryCode,
+          phone: place.nationalPhoneNumber || place.internationalPhoneNumber || "",
+          website: place.websiteUri || "",
+          googleMapsUrl: place.googleMapsUri || "",
+          location: place.location || null,
+        };
+      });
+
+      res.json({ places });
+    } catch (error) {
+      console.error("Error in text search:", error);
+      res.status(500).json({ message: "Failed to search places" });
+    }
+  });
+
   // Vendor CRUD routes
   app.post("/api/vendors", isAdmin, async (req: any, res) => {
     try {
