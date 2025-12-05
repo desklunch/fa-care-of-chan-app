@@ -50,7 +50,7 @@ const ALL_ALLOWED_TYPES = [
   "application/octet-stream",
 ];
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
 export type FileType = "image" | "pdf" | "document" | "archive" | "other";
 export type FileCategory = "floorplan" | "attachment";
@@ -77,6 +77,11 @@ interface VenueFileUploaderProps {
 function getFileExtension(filename: string): string {
   const parts = filename.split(".");
   return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : "";
+}
+
+function getFilenameWithoutExtension(filename: string): string {
+  const lastDotIndex = filename.lastIndexOf(".");
+  return lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
 }
 
 function getFileType(mimeType: string): FileType {
@@ -131,11 +136,11 @@ export function VenueFileUploader({
 
   const validateFile = useCallback((file: File): boolean => {
     if (file.size > MAX_FILE_SIZE) {
-      handleError("File too large. Maximum size is 50MB");
+      handleError("File too large. Maximum size is 25MB");
       return false;
     }
-    if (isFloorplan && !ALLOWED_IMAGE_TYPES.includes(file.type) && file.type !== ALLOWED_PDF_TYPE) {
-      handleError("Invalid file type. Floorplans must be images (JPG, PNG, WebP) or PDF");
+    if (isFloorplan && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      handleError("Invalid file type. Floorplans must be images (JPG, PNG, WebP, GIF)");
       return false;
     }
     return true;
@@ -226,14 +231,18 @@ export function VenueFileUploader({
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      setPendingFile(files[0]);
+      const file = files[0];
+      setPendingFile(file);
+      setTitle(getFilenameWithoutExtension(file.name));
     }
   }, [disabled, isUploading]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      setPendingFile(files[0]);
+      const file = files[0];
+      setPendingFile(file);
+      setTitle(getFilenameWithoutExtension(file.name));
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -260,7 +269,7 @@ export function VenueFileUploader({
   const pendingFileExt = pendingFile ? getFileExtension(pendingFile.name) : "";
 
   const acceptTypes = isFloorplan 
-    ? [...ALLOWED_IMAGE_TYPES, ALLOWED_PDF_TYPE].join(",")
+    ? ALLOWED_IMAGE_TYPES.join(",")
     : ALL_ALLOWED_TYPES.join(",");
 
   return (
@@ -302,10 +311,7 @@ export function VenueFileUploader({
             <div className="flex flex-col items-center gap-2">
               <div className="flex gap-2">
                 {isFloorplan ? (
-                  <>
-                    <FileImage className="h-6 w-6 text-muted-foreground" />
-                    <FileText className="h-6 w-6 text-muted-foreground" />
-                  </>
+                  <FileImage className="h-6 w-6 text-muted-foreground" />
                 ) : (
                   <>
                     <File className="h-6 w-6 text-muted-foreground" />
@@ -319,8 +325,8 @@ export function VenueFileUploader({
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {isFloorplan 
-                    ? "Images (JPG, PNG, WebP) or PDF up to 50MB"
-                    : "Any file type up to 50MB (PDF, Word, Excel, ZIP, etc.)"
+                    ? "Images only (JPG, PNG, WebP, GIF) up to 25MB"
+                    : "Any file type up to 25MB (PDF, Word, Excel, ZIP, etc.)"
                   }
                 </p>
               </div>
