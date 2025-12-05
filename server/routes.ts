@@ -2265,6 +2265,211 @@ export async function registerRoutes(
     }
   });
 
+  // ===== VENUE FILES ROUTES (unified for floorplans and attachments) =====
+
+  // Get all files for a venue with optional category filter
+  app.get("/api/venues/:venueId/files", isAuthenticated, async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const files = await storage.getVenueFiles(req.params.venueId, category);
+      res.json(files);
+    } catch (error) {
+      console.error("Error fetching venue files:", error);
+      res.status(500).json({ message: "Failed to fetch venue files" });
+    }
+  });
+
+  // Get a single file by ID
+  app.get("/api/venue-files/:id", isAuthenticated, async (req, res) => {
+    try {
+      const file = await storage.getVenueFileById(req.params.id);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      res.json(file);
+    } catch (error) {
+      console.error("Error fetching venue file:", error);
+      res.status(500).json({ message: "Failed to fetch venue file" });
+    }
+  });
+
+  // Upload a file to object storage and create venue file record
+  app.post("/api/venue-files/upload", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { venueId, category, fileData, filename, mimeType, title, caption } = req.body;
+      
+      if (!venueId || !fileData || !filename) {
+        return res.status(400).json({ message: "venueId, fileData, and filename are required" });
+      }
+      
+      if (!category || !["floorplan", "attachment"].includes(category)) {
+        return res.status(400).json({ message: "category must be 'floorplan' or 'attachment'" });
+      }
+      
+      // Determine file type from mime type
+      const getFileType = (mime: string): "image" | "pdf" | "document" | "archive" | "other" => {
+        if (mime.startsWith("image/")) return "image";
+        if (mime === "application/pdf") return "pdf";
+        if (mime.includes("word") || mime.includes("document") || mime.includes("spreadsheet") || 
+            mime.includes("presentation") || mime === "text/plain" || mime === "text/csv") return "document";
+        if (mime.includes("zip") || mime.includes("rar") || mime.includes("tar") || 
+            mime.includes("gzip") || mime.includes("7z")) return "archive";
+        return "other";
+      };
+      
+      const fileType = getFileType(mimeType || "application/octet-stream");
+      
+      // Validate file size (max 50MB for attachments)
+      const base64Data = fileData.replace(/^data:[^;]+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (buffer.length > maxSize) {
+        return res.status(400).json({ message: "File size exceeds maximum limit of 50MB" });
+      }
+      
+      const storageService = new ObjectStorageService();
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const objectPath = `venues/${venueId}/${category}s/${timestamp}-${randomId}-${sanitizedFilename}`;
+      
+      // Upload file
+      await storageService.uploadBuffer(objectPath, buffer, mimeType);
+      const fileUrl = `/objects/${objectPath}`;
+      
+      // Generate thumbnail for images
+      let thumbnailUrl: string | undefined;
+      if (fileType === "image") {
+        try {
+          const sharp = (await import("sharp")).default;
+          const thumbnailBuffer = await sharp(buffer)
+            .resize(400, 400, { fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 80 })
+            .toBuffer();
+          
+          const thumbnailPath = objectPath.replace(/\.[^.]+$/, "_thumb.webp");
+          await storageService.uploadBuffer(thumbnailPath, thumbnailBuffer, "image/webp");
+          thumbnailUrl = `/objects/${thumbnailPath}`;
+        } catch (thumbErr) {
+          console.error("Failed to generate thumbnail:", thumbErr);
+        }
+      }
+      
+      const file = await storage.createVenueFile({
+        venueId,
+        category,
+        fileUrl,
+        thumbnailUrl,
+        fileType,
+        originalFilename: filename,
+        mimeType,
+        title,
+        caption,
+        uploadedById: req.user?.id,
+      });
+      
+      res.status(201).json(file);
+    } catch (error) {
+      console.error("Error uploading venue file:", error);
+      res.status(500).json({ message: "Failed to upload venue file" });
+    }
+  });
+
+  // Create a venue file record (for files already uploaded)
+  app.post("/api/venues/:venueId/files", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { category, fileUrl, thumbnailUrl, fileType, originalFilename, mimeType, title, caption, sortOrder } = req.body;
+      
+      if (!fileUrl || !fileType || !category) {
+        return res.status(400).json({ message: "fileUrl, fileType, and category are required" });
+      }
+      
+      if (!["floorplan", "attachment"].includes(category)) {
+        return res.status(400).json({ message: "category must be 'floorplan' or 'attachment'" });
+      }
+      
+      if (!["image", "pdf", "document", "archive", "other"].includes(fileType)) {
+        return res.status(400).json({ message: "fileType must be 'image', 'pdf', 'document', 'archive', or 'other'" });
+      }
+      
+      const file = await storage.createVenueFile({
+        venueId: req.params.venueId,
+        category,
+        fileUrl,
+        thumbnailUrl,
+        fileType,
+        originalFilename,
+        mimeType,
+        title,
+        caption,
+        sortOrder: sortOrder ?? 0,
+        uploadedById: req.user?.id,
+      });
+      res.status(201).json(file);
+    } catch (error) {
+      console.error("Error creating venue file:", error);
+      res.status(500).json({ message: "Failed to create venue file" });
+    }
+  });
+
+  // Update a venue file (admin only)
+  app.patch("/api/venue-files/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { title, caption, sortOrder, thumbnailUrl } = req.body;
+      
+      const file = await storage.updateVenueFile(req.params.id, {
+        title,
+        caption,
+        sortOrder,
+        thumbnailUrl,
+      });
+      
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      res.json(file);
+    } catch (error) {
+      console.error("Error updating venue file:", error);
+      res.status(500).json({ message: "Failed to update venue file" });
+    }
+  });
+
+  // Delete a venue file (admin only)
+  app.delete("/api/venue-files/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const file = await storage.getVenueFileById(req.params.id);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      const storageService = new ObjectStorageService();
+      
+      // Delete the file from object storage if it's stored there
+      if (file.fileUrl.startsWith("/objects/")) {
+        try {
+          await storageService.deleteObject(file.fileUrl.replace("/objects/", ""));
+        } catch (err) {
+          console.error("Failed to delete file from storage:", err);
+        }
+      }
+      
+      // Delete thumbnail if it exists
+      if (file.thumbnailUrl?.startsWith("/objects/")) {
+        try {
+          await storageService.deleteObject(file.thumbnailUrl.replace("/objects/", ""));
+        } catch (err) {
+          console.error("Failed to delete thumbnail from storage:", err);
+        }
+      }
+      
+      await storage.deleteVenueFile(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting venue file:", error);
+      res.status(500).json({ message: "Failed to delete venue file" });
+    }
+  });
+
   // Get tags by category
   app.get("/api/tags/category/:category", isAuthenticated, async (req, res) => {
     try {

@@ -14,6 +14,7 @@ import {
   tags,
   venueTags,
   venueFloorplans,
+  venueFiles,
   vendorServices,
   vendorServicesVendors,
   vendorsContacts,
@@ -57,6 +58,10 @@ import {
   type VenueFloorplan,
   type CreateVenueFloorplan,
   type UpdateVenueFloorplan,
+  type VenueFile,
+  type VenueFileWithUploader,
+  type CreateVenueFile,
+  type UpdateVenueFile,
   type Amenity,
   type CreateAmenity,
   type UpdateAmenity,
@@ -219,12 +224,20 @@ export interface IStorage {
   // Venue-Tag relationship operations
   getVenueTags(venueId: string): Promise<Tag[]>;
   
-  // Venue Floorplan operations
+  // Venue Floorplan operations (deprecated - use Venue File operations)
   getVenueFloorplans(venueId: string): Promise<VenueFloorplan[]>;
   getVenueFloorplanById(id: string): Promise<VenueFloorplan | undefined>;
   createVenueFloorplan(data: CreateVenueFloorplan): Promise<VenueFloorplan>;
   updateVenueFloorplan(id: string, data: UpdateVenueFloorplan): Promise<VenueFloorplan | undefined>;
   deleteVenueFloorplan(id: string): Promise<void>;
+  
+  // Venue File operations (unified for floorplans and attachments)
+  getVenueFiles(venueId: string, category?: string): Promise<VenueFileWithUploader[]>;
+  getVenueFileById(id: string): Promise<VenueFileWithUploader | undefined>;
+  createVenueFile(data: CreateVenueFile): Promise<VenueFile>;
+  updateVenueFile(id: string, data: UpdateVenueFile): Promise<VenueFile | undefined>;
+  deleteVenueFile(id: string): Promise<void>;
+  
   setVenueTags(venueId: string, tagIds: string[]): Promise<void>;
   getTagsByCategory(category: string): Promise<Tag[]>;
   
@@ -1223,10 +1236,19 @@ export class DatabaseStorage implements IStorage {
       .from(venueTags)
       .innerJoin(tags, eq(venueTags.tagId, tags.id));
     
-    const allFloorplans = await db
-      .select()
-      .from(venueFloorplans)
-      .orderBy(venueFloorplans.sortOrder, venueFloorplans.uploadedAt);
+    // Fetch all venue files with uploader info
+    const allVenueFiles = await db
+      .select({
+        file: venueFiles,
+        uploadedBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(venueFiles)
+      .leftJoin(users, eq(venueFiles.uploadedById, users.id))
+      .orderBy(venueFiles.sortOrder, venueFiles.uploadedAt);
     
     const amenitiesByVenue = new Map<string, Amenity[]>();
     for (const va of allVenueAmenities) {
@@ -1244,18 +1266,31 @@ export class DatabaseStorage implements IStorage {
       tagsByVenue.get(vt.venueId)!.push(vt.tag);
     }
     
-    const floorplansByVenue = new Map<string, VenueFloorplan[]>();
-    for (const fp of allFloorplans) {
-      if (!floorplansByVenue.has(fp.venueId)) {
-        floorplansByVenue.set(fp.venueId, []);
+    const floorplansByVenue = new Map<string, VenueFileWithUploader[]>();
+    const attachmentsByVenue = new Map<string, VenueFileWithUploader[]>();
+    for (const vf of allVenueFiles) {
+      const fileWithUploader: VenueFileWithUploader = {
+        ...vf.file,
+        uploadedBy: vf.uploadedBy,
+      };
+      if (vf.file.category === 'floorplan') {
+        if (!floorplansByVenue.has(vf.file.venueId)) {
+          floorplansByVenue.set(vf.file.venueId, []);
+        }
+        floorplansByVenue.get(vf.file.venueId)!.push(fileWithUploader);
+      } else {
+        if (!attachmentsByVenue.has(vf.file.venueId)) {
+          attachmentsByVenue.set(vf.file.venueId, []);
+        }
+        attachmentsByVenue.get(vf.file.venueId)!.push(fileWithUploader);
       }
-      floorplansByVenue.get(fp.venueId)!.push(fp);
     }
     
     return allVenues.map(venue => {
       const venueAmenitiesList = amenitiesByVenue.get(venue.id) || [];
       const venueTagsList = tagsByVenue.get(venue.id) || [];
       const venueFloorplansList = floorplansByVenue.get(venue.id) || [];
+      const venueAttachmentsList = attachmentsByVenue.get(venue.id) || [];
       
       return {
         ...venue,
@@ -1263,6 +1298,7 @@ export class DatabaseStorage implements IStorage {
         cuisineTags: venueTagsList.filter(t => t.category === 'Cuisine'),
         styleTags: venueTagsList.filter(t => t.category === 'Style'),
         floorplans: venueFloorplansList,
+        attachments: venueAttachmentsList,
       };
     });
   }
@@ -1294,14 +1330,15 @@ export class DatabaseStorage implements IStorage {
     
     const venueAmenitiesList = await this.getVenueAmenities(id);
     const venueTagsList = await this.getVenueTags(id);
-    const venueFloorplansList = await this.getVenueFloorplans(id);
+    const venueFilesList = await this.getVenueFiles(id);
     
     return {
       ...venue,
       amenities: venueAmenitiesList,
       cuisineTags: venueTagsList.filter(t => t.category === 'Cuisine'),
       styleTags: venueTagsList.filter(t => t.category === 'Style'),
-      floorplans: venueFloorplansList,
+      floorplans: venueFilesList.filter(f => f.category === 'floorplan'),
+      attachments: venueFilesList.filter(f => f.category === 'attachment'),
     };
   }
   
@@ -1395,6 +1432,86 @@ export class DatabaseStorage implements IStorage {
   
   async deleteVenueFloorplan(id: string): Promise<void> {
     await db.delete(venueFloorplans).where(eq(venueFloorplans.id, id));
+  }
+  
+  // Venue File operations (unified for floorplans and attachments)
+  async getVenueFiles(venueId: string, category?: string): Promise<VenueFileWithUploader[]> {
+    const whereCondition = category
+      ? and(eq(venueFiles.venueId, venueId), eq(venueFiles.category, category))
+      : eq(venueFiles.venueId, venueId);
+    
+    const results = await db
+      .select({
+        file: venueFiles,
+        uploadedBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(venueFiles)
+      .leftJoin(users, eq(venueFiles.uploadedById, users.id))
+      .where(whereCondition)
+      .orderBy(venueFiles.sortOrder, venueFiles.uploadedAt);
+    
+    return results.map(r => ({
+      ...r.file,
+      uploadedBy: r.uploadedBy,
+    }));
+  }
+  
+  async getVenueFileById(id: string): Promise<VenueFileWithUploader | undefined> {
+    const [result] = await db
+      .select({
+        file: venueFiles,
+        uploadedBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(venueFiles)
+      .leftJoin(users, eq(venueFiles.uploadedById, users.id))
+      .where(eq(venueFiles.id, id));
+    
+    if (!result) return undefined;
+    return {
+      ...result.file,
+      uploadedBy: result.uploadedBy,
+    };
+  }
+  
+  async createVenueFile(data: CreateVenueFile): Promise<VenueFile> {
+    const [file] = await db
+      .insert(venueFiles)
+      .values({
+        venueId: data.venueId,
+        category: data.category,
+        fileUrl: data.fileUrl,
+        thumbnailUrl: data.thumbnailUrl,
+        fileType: data.fileType,
+        originalFilename: data.originalFilename,
+        mimeType: data.mimeType,
+        title: data.title,
+        caption: data.caption,
+        sortOrder: data.sortOrder ?? 0,
+        uploadedById: data.uploadedById,
+      })
+      .returning();
+    return file;
+  }
+  
+  async updateVenueFile(id: string, data: UpdateVenueFile): Promise<VenueFile | undefined> {
+    const [file] = await db
+      .update(venueFiles)
+      .set(data)
+      .where(eq(venueFiles.id, id))
+      .returning();
+    return file;
+  }
+  
+  async deleteVenueFile(id: string): Promise<void> {
+    await db.delete(venueFiles).where(eq(venueFiles.id, id));
   }
   
   async getTagsByCategory(category: string): Promise<Tag[]> {
