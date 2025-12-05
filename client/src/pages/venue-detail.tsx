@@ -256,17 +256,17 @@ export default function VenueDetailPage() {
             )}
 
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-              <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-black/95 overflow-hidden flex flex-col">
-                <div className="flex-1 flex items-center justify-center min-h-[50vh] p-4">
+              <DialogContent className="w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-w-none p-0 border-0 bg-black/95 overflow-hidden flex flex-col">
+                <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
                   <img
                     src={venue.photoUrls[lightboxIndex]}
                     alt={`${venue.name} photo ${lightboxIndex + 1}`}
-                    className="max-w-full max-h-[75vh] object-contain"
+                    className="max-w-full max-h-full object-contain"
                     data-testid="img-lightbox-photo"
                   />
                 </div>
                 
-                <div className="flex items-center justify-center gap-4 py-4 px-6 bg-black/80 border-t border-white/10">
+                <div className="shrink-0 flex items-center justify-center gap-4 py-4 px-6 bg-black/80 border-t border-white/10">
                   <Button
                     variant="ghost"
                     size="icon"
