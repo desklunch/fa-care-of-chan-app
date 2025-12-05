@@ -234,6 +234,190 @@ export default function VenueDetailPage() {
           </>
         )}
 
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Location</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(venue.streetAddress1 || venue.city || venue.state) ? (
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                  <div data-testid="text-venue-address">
+                    {venue.streetAddress1 && <div>{venue.streetAddress1}</div>}
+                    {venue.streetAddress2 && <div>{venue.streetAddress2}</div>}
+                    {(venue.city || venue.state || venue.zipCode) && (
+                      <div>
+                        {[venue.city, venue.state, venue.zipCode]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No address provided</p>
+              )}
+
+              {venue.googlePlaceId && (
+                <div className="pt-2">
+                  <a
+                    href={`https://www.google.com/maps/place/?q=place_id:${venue.googlePlaceId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                    data-testid="link-venue-google-maps"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    View on Google Maps
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+
+              {venue.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <a
+                    href={`tel:${venue.phone}`}
+                    className="text-primary hover:underline"
+                    data-testid="link-venue-phone"
+                  >
+                    {venue.phone}
+                  </a>
+                </div>
+              )}
+
+              {venue.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <a
+                    href={`mailto:${venue.email}`}
+                    className="text-primary hover:underline"
+                    data-testid="link-venue-email"
+                  >
+                    {venue.email}
+                  </a>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Online</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {venue.website ? (
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <a
+                    href={venue.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1"
+                    data-testid="link-venue-website"
+                  >
+                    Visit Website
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No website</p>
+              )}
+
+              {venue.instagramAccount && (
+                <div className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4 text-pink-600" />
+                  <a
+                    href={`https://instagram.com/${venue.instagramAccount.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-pink-600 hover:underline flex items-center gap-1"
+                    data-testid="link-venue-instagram"
+                  >
+                    @{venue.instagramAccount.replace(/^@/, "")}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {venue.longDescription && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">About</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p
+                className="whitespace-pre-wrap"
+                data-testid="text-venue-long-description"
+              >
+                {venue.longDescription}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Amenities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AmenityDisplay amenities={venue.amenities || []} />
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Cuisine</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {venue.cuisineTags && venue.cuisineTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {venue.cuisineTags.map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      variant="secondary"
+                      data-testid={`badge-cuisine-tag-${tag.id}`}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No cuisine tags</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Style</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {venue.styleTags && venue.styleTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {venue.styleTags.map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      variant="outline"
+                      data-testid={`badge-style-tag-${tag.id}`}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No style tags</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {venue.floorplans && venue.floorplans.length > 0 && (
           <Card>
             <CardHeader>
@@ -461,190 +645,6 @@ export default function VenueDetailPage() {
             </CardContent>
           </Card>
         )}
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Location</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(venue.streetAddress1 || venue.city || venue.state) ? (
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
-                  <div data-testid="text-venue-address">
-                    {venue.streetAddress1 && <div>{venue.streetAddress1}</div>}
-                    {venue.streetAddress2 && <div>{venue.streetAddress2}</div>}
-                    {(venue.city || venue.state || venue.zipCode) && (
-                      <div>
-                        {[venue.city, venue.state, venue.zipCode]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">No address provided</p>
-              )}
-
-              {venue.googlePlaceId && (
-                <div className="pt-2">
-                  <a
-                    href={`https://www.google.com/maps/place/?q=place_id:${venue.googlePlaceId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                    data-testid="link-venue-google-maps"
-                  >
-                    <MapPin className="h-4 w-4" />
-                    View on Google Maps
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              )}
-
-              {venue.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={`tel:${venue.phone}`}
-                    className="text-primary hover:underline"
-                    data-testid="link-venue-phone"
-                  >
-                    {venue.phone}
-                  </a>
-                </div>
-              )}
-
-              {venue.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={`mailto:${venue.email}`}
-                    className="text-primary hover:underline"
-                    data-testid="link-venue-email"
-                  >
-                    {venue.email}
-                  </a>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Online</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {venue.website ? (
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={venue.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1"
-                    data-testid="link-venue-website"
-                  >
-                    Visit Website
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">No website</p>
-              )}
-
-              {venue.instagramAccount && (
-                <div className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4 text-pink-600" />
-                  <a
-                    href={`https://instagram.com/${venue.instagramAccount.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-pink-600 hover:underline flex items-center gap-1"
-                    data-testid="link-venue-instagram"
-                  >
-                    @{venue.instagramAccount.replace(/^@/, "")}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {venue.longDescription && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p
-                className="whitespace-pre-wrap"
-                data-testid="text-venue-long-description"
-              >
-                {venue.longDescription}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Amenities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AmenityDisplay amenities={venue.amenities || []} />
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Cuisine</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {venue.cuisineTags && venue.cuisineTags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {venue.cuisineTags.map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      variant="secondary"
-                      data-testid={`badge-cuisine-tag-${tag.id}`}
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">No cuisine tags</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Style</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {venue.styleTags && venue.styleTags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {venue.styleTags.map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      variant="outline"
-                      data-testid={`badge-style-tag-${tag.id}`}
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">No style tags</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </PageLayout>
   );
