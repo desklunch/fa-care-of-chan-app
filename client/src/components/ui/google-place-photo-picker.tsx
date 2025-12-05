@@ -12,8 +12,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, ImageIcon, Check, Star } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Loader2, ImageIcon, Check, Star, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PlacePhoto {
   name: string;
@@ -26,23 +28,36 @@ interface PlacePhoto {
   }>;
 }
 
+interface UploadedPhoto {
+  photoUrl: string;
+  thumbnailUrl: string;
+  originalUrl: string;
+}
+
 interface GooglePlacePhotoPickerProps {
   placeId: string | null;
   placeName?: string;
+  venueId?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPhotosSelected: (photos: { galleryPhotos: string[]; primaryPhoto: string | null }) => void;
+  onPhotosSelected: (photos: { galleryPhotos: UploadedPhoto[]; primaryPhoto: UploadedPhoto | null }) => void;
+  onUploadProgress?: (current: number, total: number) => void;
 }
 
 export function GooglePlacePhotoPicker({
   placeId,
   placeName,
+  venueId,
   open,
   onOpenChange,
   onPhotosSelected,
+  onUploadProgress,
 }: GooglePlacePhotoPickerProps) {
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [primaryPhoto, setPrimaryPhoto] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery<{ photos: PlacePhoto[] }>({
     queryKey: ["/api/places", placeId, "photos"],
@@ -55,6 +70,9 @@ export function GooglePlacePhotoPicker({
     if (!open) {
       setSelectedPhotos(new Set());
       setPrimaryPhoto(null);
+      setIsUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
+      setUploadError(null);
     }
   }, [open]);
 
@@ -88,12 +106,57 @@ export function GooglePlacePhotoPicker({
     }
   };
 
-  const handleConfirm = () => {
-    onPhotosSelected({
-      galleryPhotos: Array.from(selectedPhotos),
-      primaryPhoto,
-    });
-    onOpenChange(false);
+  const handleConfirm = async () => {
+    const photosToUpload = Array.from(selectedPhotos);
+    if (photosToUpload.length === 0) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadProgress({ current: 0, total: photosToUpload.length });
+
+    const uploadedPhotos: UploadedPhoto[] = [];
+    let primaryUploadedPhoto: UploadedPhoto | null = null;
+
+    try {
+      for (let i = 0; i < photosToUpload.length; i++) {
+        const photoUrl = photosToUpload[i];
+        setUploadProgress({ current: i + 1, total: photosToUpload.length });
+        onUploadProgress?.(i + 1, photosToUpload.length);
+
+        const response = await apiRequest("POST", "/api/photos/from-url", {
+          url: photoUrl,
+          venueId,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to upload photo");
+        }
+
+        const result = await response.json();
+        const uploadedPhoto: UploadedPhoto = {
+          photoUrl: result.photoUrl,
+          thumbnailUrl: result.thumbnailUrl,
+          originalUrl: photoUrl,
+        };
+
+        uploadedPhotos.push(uploadedPhoto);
+
+        if (photoUrl === primaryPhoto) {
+          primaryUploadedPhoto = uploadedPhoto;
+        }
+      }
+
+      onPhotosSelected({
+        galleryPhotos: uploadedPhotos,
+        primaryPhoto: primaryUploadedPhoto,
+      });
+      onOpenChange(false);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload photos");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getPhotoUrl = (photoUrl: string, size: number = 400) => {
@@ -225,28 +288,63 @@ export function GooglePlacePhotoPicker({
         </div>
 
         <DialogFooter className="flex-shrink-0 border-t pt-4">
-          <div className="flex items-center justify-between w-full">
-            <p className="text-sm text-muted-foreground">
-              {selectedPhotos.size} photo{selectedPhotos.size !== 1 ? "s" : ""} selected
-              {primaryPhoto && " (1 primary)"}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                data-testid="button-cancel-photo-picker"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleConfirm}
-                disabled={selectedPhotos.size === 0}
-                data-testid="button-confirm-photo-selection"
-              >
-                Add {selectedPhotos.size} Photo{selectedPhotos.size !== 1 ? "s" : ""}
-              </Button>
+          <div className="w-full space-y-3">
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground flex items-center gap-2">
+                    <Upload className="h-4 w-4 animate-pulse" />
+                    Uploading photos to storage...
+                  </span>
+                  <span className="font-medium">
+                    {uploadProgress.current} / {uploadProgress.total}
+                  </span>
+                </div>
+                <Progress 
+                  value={(uploadProgress.current / uploadProgress.total) * 100} 
+                  className="h-2"
+                />
+              </div>
+            )}
+
+            {uploadError && (
+              <p className="text-sm text-destructive">{uploadError}</p>
+            )}
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {selectedPhotos.size} photo{selectedPhotos.size !== 1 ? "s" : ""} selected
+                {primaryPhoto && " (1 primary)"}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isUploading}
+                  data-testid="button-cancel-photo-picker"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={selectedPhotos.size === 0 || isUploading}
+                  data-testid="button-confirm-photo-selection"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import {selectedPhotos.size} Photo{selectedPhotos.size !== 1 ? "s" : ""}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogFooter>

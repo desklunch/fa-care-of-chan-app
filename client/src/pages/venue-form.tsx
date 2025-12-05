@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Form,
   FormControl,
@@ -27,7 +45,8 @@ import { TagAssignment } from "@/components/ui/tag-assignment";
 import { VenueAddressAutocomplete, ParsedAddress } from "@/components/ui/venue-address-autocomplete";
 import { GooglePlaceSearch, PlaceResult } from "@/components/ui/google-place-search";
 import { GooglePlacePhotoPicker } from "@/components/ui/google-place-photo-picker";
-import { Save, Loader2, Plus, Trash2, Image, ImagePlus } from "lucide-react";
+import { PhotoUploader } from "@/components/ui/photo-uploader";
+import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical } from "lucide-react";
 import type { VenueWithRelations } from "@shared/schema";
 import { insertVenueSchema } from "@shared/schema";
 
@@ -37,13 +56,111 @@ const venueFormSchema = insertVenueSchema.extend({
   styleTagIds: z.array(z.string()).default([]),
   photoUrlItems: z.array(z.object({
     url: z.string().refine(
-      (val) => val === "" || val.startsWith("/api/") || val.startsWith("http://") || val.startsWith("https://"),
+      (val) => val === "" || val.startsWith("/objects/") || val.startsWith("/api/") || val.startsWith("http://") || val.startsWith("https://"),
       "Please enter a valid URL or leave empty"
     ),
+    thumbnailUrl: z.string().optional(),
   })).default([]),
 });
 
 type VenueFormValues = z.infer<typeof venueFormSchema>;
+
+interface SortablePhotoItemProps {
+  id: string;
+  index: number;
+  photoUrl: string;
+  thumbnailUrl?: string;
+  onView: () => void;
+  onDelete: () => void;
+}
+
+function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, onView, onDelete }: SortablePhotoItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  const displayUrl = thumbnailUrl || photoUrl;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group aspect-square bg-muted rounded-lg overflow-visible border ${isDragging ? "ring-2 ring-primary shadow-lg" : ""}`}
+      data-testid={`photo-item-${index}`}
+    >
+      <div className="w-full h-full overflow-hidden rounded-lg">
+        {displayUrl ? (
+          <img
+            src={displayUrl}
+            alt={`Gallery photo ${index + 1}`}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Image className="h-8 w-8 text-muted-foreground" />
+          </div>
+        )}
+      </div>
+      
+      <button
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        type="button"
+        className="absolute top-1 right-1 h-7 w-7 bg-black/70 hover:bg-black/90 rounded flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        title="Drag to reorder"
+        data-testid={`button-drag-photo-${index}`}
+      >
+        <GripVertical className="h-4 w-4 text-white" />
+      </button>
+
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 rounded-lg pointer-events-none">
+        <div className="pointer-events-auto flex items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onView}
+            title="View full size"
+            data-testid={`button-view-photo-${index}`}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onDelete}
+            title="Delete photo"
+            data-testid={`button-remove-photo-${index}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+        {index + 1}
+      </div>
+    </div>
+  );
+}
 
 export default function VenueFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -85,10 +202,36 @@ export default function VenueFormPage() {
     },
   });
 
-  const { fields: photoUrlFields, append: appendPhotoUrl, remove: removePhotoUrl } = useFieldArray({
+  const { fields: photoUrlFields, append: appendPhotoUrl, remove: removePhotoUrl, replace: replacePhotoUrls } = useFieldArray({
     control: form.control,
     name: "photoUrlItems",
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = photoUrlFields.findIndex((field) => field.id === active.id);
+      const newIndex = photoUrlFields.findIndex((field) => field.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const currentItems = form.getValues("photoUrlItems");
+        const newItems = arrayMove(currentItems, oldIndex, newIndex);
+        replacePhotoUrls(newItems);
+      }
+    }
+  }, [photoUrlFields, form, replacePhotoUrls]);
 
   useEffect(() => {
     if (venue) {
@@ -248,35 +391,37 @@ export default function VenueFormPage() {
     });
   };
 
-  const handlePhotosSelected = (result: { galleryPhotos: string[]; primaryPhoto: string | null }) => {
+  const handlePhotosSelected = (result: { 
+    galleryPhotos: Array<{ photoUrl: string; thumbnailUrl: string; originalUrl: string }>; 
+    primaryPhoto: { photoUrl: string; thumbnailUrl: string; originalUrl: string } | null 
+  }) => {
     // Get existing photo URLs to prevent duplicates
     const existingUrls = new Set(
-      form.getValues("photoUrlItems").map(item => item.url.split("?")[0])
+      form.getValues("photoUrlItems").map(item => item.url)
     );
     
-    // Sanitize URLs by removing query parameters (the proxy will add them back)
-    const sanitizeUrl = (url: string) => url.split("?")[0];
-    
-    // Add selected photos to the gallery (deduplicated)
+    // Add uploaded photos to the gallery (deduplicated)
     let addedCount = 0;
-    for (const photoUrl of result.galleryPhotos) {
-      const cleanUrl = sanitizeUrl(photoUrl);
-      if (!existingUrls.has(cleanUrl)) {
-        appendPhotoUrl({ url: cleanUrl });
-        existingUrls.add(cleanUrl);
+    for (const photo of result.galleryPhotos) {
+      if (!existingUrls.has(photo.photoUrl)) {
+        appendPhotoUrl({ 
+          url: photo.photoUrl, 
+          thumbnailUrl: photo.thumbnailUrl 
+        });
+        existingUrls.add(photo.photoUrl);
         addedCount++;
       }
     }
     
-    // Set primary photo if selected (also sanitized)
+    // Set primary photo if selected
     if (result.primaryPhoto) {
-      form.setValue("primaryPhotoUrl", sanitizeUrl(result.primaryPhoto));
+      form.setValue("primaryPhotoUrl", result.primaryPhoto.photoUrl);
     }
     
     toast({
-      title: "Photos added",
+      title: "Photos imported",
       description: addedCount > 0 
-        ? `Added ${addedCount} photo${addedCount !== 1 ? "s" : ""} to the gallery${result.primaryPhoto ? " and set primary photo" : ""}.`
+        ? `Imported ${addedCount} photo${addedCount !== 1 ? "s" : ""} to App Storage${result.primaryPhoto ? " and set primary photo" : ""}.`
         : result.primaryPhoto 
           ? "Set primary photo."
           : "No new photos added (already in gallery).",
@@ -342,6 +487,7 @@ export default function VenueFormPage() {
             <GooglePlacePhotoPicker
               placeId={selectedPlaceId}
               placeName={selectedPlaceName}
+              venueId={isEditing ? parseInt(id!) : undefined}
               open={photoPickerOpen}
               onOpenChange={setPhotoPickerOpen}
               onPhotosSelected={handlePhotosSelected}
@@ -684,58 +830,87 @@ export default function VenueFormPage() {
               <CardHeader>
                 <CardTitle>Photo Gallery</CardTitle>
                 <CardDescription>
-                  Add additional photos for this venue
+                  Upload photos or import from URLs. Drag to reorder.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {photoUrlFields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2 items-start">
-                    <div className="flex-1">
-                      <FormField
-                        control={form.control}
-                        name={`photoUrlItems.${index}.url`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <div className="flex gap-2 items-center">
-                                <Image className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <Input
-                                  {...field}
-                                  type="text"
-                                  placeholder="https://example.com/photo.jpg"
-                                  data-testid={`input-photo-url-${index}`}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removePhotoUrl(index)}
-                      data-testid={`button-remove-photo-${index}`}
+              <CardContent className="space-y-6">
+                <PhotoUploader
+                  venueId={isEditing ? parseInt(id!) : undefined}
+                  onPhotoUploaded={(result) => {
+                    appendPhotoUrl({ 
+                      url: result.photoUrl, 
+                      thumbnailUrl: result.thumbnailUrl 
+                    });
+                    toast({
+                      title: "Photo uploaded",
+                      description: "The photo has been added to the gallery.",
+                    });
+                  }}
+                  onError={(error) => {
+                    toast({
+                      title: "Upload failed",
+                      description: error,
+                      variant: "destructive",
+                    });
+                  }}
+                  data-testid="photo-uploader"
+                />
+
+                {photoUrlFields.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Gallery Photos ({photoUrlFields.length})</Label>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                      <SortableContext
+                        items={photoUrlFields.map(f => f.id)}
+                        strategy={rectSortingStrategy}
+                      >
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {photoUrlFields.map((field, index) => {
+                            const photoUrl = form.watch(`photoUrlItems.${index}.url`);
+                            const thumbnailUrl = form.watch(`photoUrlItems.${index}.thumbnailUrl`);
+                            
+                            return (
+                              <SortablePhotoItem
+                                key={field.id}
+                                id={field.id}
+                                index={index}
+                                photoUrl={photoUrl}
+                                thumbnailUrl={thumbnailUrl}
+                                onView={() => {
+                                  if (photoUrl) {
+                                    window.open(photoUrl, "_blank");
+                                  }
+                                }}
+                                onDelete={async () => {
+                                  const photoData = form.getValues(`photoUrlItems.${index}`);
+                                  if (photoData.url.startsWith("/objects/")) {
+                                    try {
+                                      await apiRequest("DELETE", "/api/photos", {
+                                        photoUrl: photoData.url,
+                                        thumbnailUrl: photoData.thumbnailUrl,
+                                      });
+                                    } catch (err) {
+                                      console.error("Failed to delete from storage:", err);
+                                    }
+                                  }
+                                  removePhotoUrl(index);
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
                   </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => appendPhotoUrl({ url: "" })}
-                  data-testid="button-add-photo-url"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Photo URL
-                </Button>
+                )}
+
                 {photoUrlFields.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No additional photos added yet. Click "Add Photo URL" to add gallery images.
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No photos added yet. Use the uploader above to add gallery images.
                   </p>
                 )}
               </CardContent>
