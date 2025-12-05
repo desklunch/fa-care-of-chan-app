@@ -91,31 +91,7 @@ function MultiSelectContent({
   return (
     <>
       <div className="grid grid-cols-2 gap-4 md:gap-2 p-4 md:p-2">
-        {showSelectAll && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={selectAll}
-            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm [&_svg]:h-4 [&_svg]:w-4 [&_svg]:stroke-[2px]"
-            data-testid={`button-select-all-${testIdPrefix}`}
-          >
-            <ListChecks />
-            Select All
-          </Button>
-        )}
 
-        {showReset && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={reset}
-            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm [&_svg]:h-4 [&_svg]:w-4 [&_svg]:stroke-[2px]"
-            data-testid={`button-reset-${testIdPrefix}`}
-          >
-            <ListRestart />
-            Reset
-          </Button>
-        )}
 
         {showSearch && (
           <div className="col-span-2 relative">
@@ -243,6 +219,31 @@ function MultiSelectContent({
       <div className="h-px bg-border mx-1 mt-1" />
 
       <div className="p-4 md:p-2">
+        {showSelectAll && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={selectAll}
+            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm [&_svg]:h-4 [&_svg]:w-4 [&_svg]:stroke-[2px]"
+            data-testid={`button-select-all-${testIdPrefix}`}
+          >
+            <ListChecks />
+            Select All
+          </Button>
+        )}
+
+        {showReset && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={reset}
+            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm [&_svg]:h-4 [&_svg]:w-4 [&_svg]:stroke-[2px]"
+            data-testid={`button-reset-${testIdPrefix}`}
+          >
+            <ListRestart />
+            Reset
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
