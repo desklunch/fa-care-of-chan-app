@@ -416,7 +416,7 @@ export default function VenuesPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Venues" }]}
-      actionButton={isAdmin ? {
+      primaryAction={isAdmin ? {
         label: "Add Venue",
         onClick: handleCreate,
       } : undefined}

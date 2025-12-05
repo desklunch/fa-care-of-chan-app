@@ -208,7 +208,7 @@ export default function AppFeatures() {
   return (
     <PageLayout 
       breadcrumbs={[{ label: "App" }, { label: "Features" }]}
-      actionButton={{
+      primaryAction={{
         label: "New Feature",
         href: "/app/features/new",
         icon: CircleFadingPlus,

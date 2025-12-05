@@ -172,28 +172,19 @@ export default function VendorDetail() {
         { label: "Vendors", href: "/vendors" },
         { label: vendor.businessName },
       ]}
-      actionButton={isAdmin ? {
+      primaryAction={isAdmin ? {
         label: "Edit Vendor",
         href: `/vendors/${id}/edit`,
         icon: SquarePen,
         variant: "outline",
       } : undefined}
-      customHeaderAction={isAdmin ? (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => generateLinkMutation.mutate()}
-          disabled={generateLinkMutation.isPending}
-          data-testid="button-generate-update-link"
-        >
-          {generateLinkMutation.isPending ? (
-            <Loader2 className=" h-4 w-4 animate-spin" />
-          ) : (
-            <LinkIcon className=" h-4 w-4" />
-          )}
-          Generate Update Link
-        </Button>
-      ) : undefined}
+      additionalActions={isAdmin ? [
+        {
+          label: "Generate Update Link",
+          icon: LinkIcon,
+          onClick: () => generateLinkMutation.mutate(),
+        },
+      ] : undefined}
     >
       <div className="p-4 md:p-6 max-w-5xl ">
         <div className="grid md:grid-cols-3 gap-6">

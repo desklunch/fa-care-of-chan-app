@@ -202,32 +202,28 @@ export default function AdminThemeEditor() {
   
   const currentVars = localTheme[activeMode];
   
-  const headerActions = (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        onClick={resetToDefaults}
-        data-testid="button-reset-all"
-      >
-        <RotateCcw className="h-4 w-4 mr-2" />
-        Reset All
-      </Button>
-      <Button
-        onClick={() => saveMutation.mutate(localTheme)}
-        disabled={!hasChanges || saveMutation.isPending}
-        data-testid="button-save-theme"
-      >
-        <Save className="h-4 w-4 mr-2" />
-        {saveMutation.isPending ? "Saving..." : "Save Theme"}
-      </Button>
-    </div>
-  );
+  const primaryAction = {
+    label: saveMutation.isPending ? "Saving..." : "Save Theme",
+    icon: Save,
+    variant: "default" as const,
+    onClick: () => saveMutation.mutate(localTheme),
+  };
+
+  const additionalActions = [
+    {
+      label: "Reset All",
+      icon: RotateCcw,
+      variant: "outline" as const,
+      onClick: resetToDefaults,
+    },
+  ];
 
   if (isLoading) {
     return (
       <PageLayout 
         breadcrumbs={[{ label: "Admin" }, { label: "Theme Editor" }]}
-        customHeaderAction={headerActions}
+        primaryAction={primaryAction}
+        additionalActions={additionalActions}
       >
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
@@ -239,7 +235,8 @@ export default function AdminThemeEditor() {
   return (
     <PageLayout 
       breadcrumbs={[{ label: "Admin" }, { label: "Theme Editor" }]}
-      customHeaderAction={headerActions}
+      primaryAction={primaryAction}
+      additionalActions={additionalActions}
     >
       <div className="p-6 space-y-6">
         <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "light" | "dark")} data-testid="tabs-theme-mode">

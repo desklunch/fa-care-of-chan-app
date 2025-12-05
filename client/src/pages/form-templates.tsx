@@ -296,11 +296,11 @@ export default function AdminFormTemplatesPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Forms" }, { label: "Templates" }]}
-      actionButton={{
+      primaryAction={{
         label: "New Template",
         href: "/forms/templates/new",
         icon: CircleFadingPlus,
-        variant: "outline",
+        variant: "default",
       }}
     >
       <DataGridPage

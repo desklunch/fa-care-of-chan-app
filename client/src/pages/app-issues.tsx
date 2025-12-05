@@ -146,7 +146,7 @@ export default function AppIssues() {
   return (
     <PageLayout 
       breadcrumbs={[{ label: "App" }, { label: "Issues" }]}
-      actionButton={{
+      primaryAction={{
         label: "Report Issue",
         href: "/app/issues/new",
         icon: CircleFadingPlus,

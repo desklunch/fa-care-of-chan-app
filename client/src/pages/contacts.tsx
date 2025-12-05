@@ -258,7 +258,7 @@ export default function Contacts() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Contacts" }]}
-      actionButton={{
+      primaryAction={{
         label: "New Contact",
         href: "/contacts/new",
         icon: CircleFadingPlus,

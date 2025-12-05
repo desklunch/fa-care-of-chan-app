@@ -320,7 +320,7 @@ export default function AdminFormRequestsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Forms" }, { label: "Requests" }]}
-      actionButton={{
+      primaryAction={{
         label: "New Request",
         href: "/forms/requests/new",
         icon: CircleFadingPlus,

@@ -109,7 +109,7 @@ export default function TeamProfile() {
         { label: "Team", href: "/team" },
         { label: fullName },
       ]}
-      actionButton={
+      primaryAction={
         isOwnProfile
           ? {
               label: "Edit Profile",

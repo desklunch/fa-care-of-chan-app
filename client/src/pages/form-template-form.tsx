@@ -131,52 +131,23 @@ export default function AdminFormTemplateFormPage() {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const headerAction = (
-    <div className="flex items-center gap-2">
-      {isEditing && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isPending}
-              data-testid="button-delete-template"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Form Template</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this form template? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => id && deleteMutation.mutate(id)}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-      <Button
-        onClick={handleSave}
-        disabled={!name.trim() || isPending}
-        data-testid="button-save-template"
-        size="sm"
-      >
-        <Save className="h-4 w-4" />
-        {isPending ? "Saving..." : isEditing ? "Save" : "Create"}
-      </Button>
-    </div>
-  );
+  const primaryAction = {
+    label: isPending ? "Saving..." : isEditing ? "Save" : "Create",
+    icon: Save,
+    variant: "default" as const,
+    onClick: handleSave,
+  };
+
+  const additionalActions = isEditing ? [
+    {
+      label: "Delete",
+      icon: Trash2,
+      variant: "destructive" as const,
+      onClick: () => setDeleteDialogOpen(true),
+    },
+  ] : undefined;
 
   if (isAuthLoading) {
     return (
@@ -214,7 +185,8 @@ export default function AdminFormTemplateFormPage() {
         { label: "Templates", href: "/forms/templates" },
         { label: isEditing ? "Edit Template" : "New Template" },
       ]}
-      customHeaderAction={headerAction}
+      primaryAction={primaryAction}
+      additionalActions={additionalActions}
     >
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <Card>
@@ -281,6 +253,26 @@ export default function AdminFormTemplateFormPage() {
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Form Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this form template? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => id && deleteMutation.mutate(id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }

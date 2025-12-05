@@ -233,26 +233,15 @@ export default function AppFeatureDetail() {
     .filter(Boolean)
     .join(" ") || "Unknown";
 
-  const headerActions = (
-    <div className="flex items-center gap-2">
-      {(isAdmin || user?.id === feature.createdById) && (
-        <Link href={`/app/features/${feature.id}/edit`}>
-          <Button
-            variant="outline"
-            data-testid="button-edit-feature"
-          >
-            <SquarePen className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        </Link>
-      )}
-    </div>
-  );
-
   return (
     <PageLayout 
       breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: feature.title }]}
-      customHeaderAction={headerActions}
+      primaryAction={(isAdmin || user?.id === feature.createdById) ? {
+        label: "Edit",
+        href: `/app/features/${feature.id}/edit`,
+        icon: SquarePen,
+        variant: "outline",
+      } : undefined}
     >
       <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
         <Card>

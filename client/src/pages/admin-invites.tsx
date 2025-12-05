@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Copy, Trash2, CheckCircle, XCircle, Clock, Mail, Loader2 } from "lucide-react";
+import { Copy, Trash2, CheckCircle, XCircle, Clock, Mail, Loader2, CircleFadingPlus } from "lucide-react";
 import { CreateInviteDialog } from "@/components/create-invite-dialog";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
@@ -327,7 +327,12 @@ export default function AdminInvites() {
         { label: "Admin", href: "/admin" },
         { label: "Invites" },
       ]}
-      customHeaderAction={<CreateInviteDialog />}
+      primaryAction={{
+        label: "New Invite",
+        onClick: () => document.getElementById("create-invite-trigger")?.click(),
+        icon: CircleFadingPlus,
+        variant: "default",
+      }}
     >
       <DataGridPage
         queryKey="/api/invites"

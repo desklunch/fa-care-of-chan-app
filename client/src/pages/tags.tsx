@@ -303,7 +303,7 @@ export default function TagsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Tags" }]}
-      actionButton={
+      primaryAction={
         isAdmin
           ? {
               label: "New Tag",

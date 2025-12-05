@@ -513,7 +513,12 @@ export default function AdminVendorServices() {
         { label: "Admin", href: "/admin" }, 
         { label: "Vendor Services" }
       ]}
-      customHeaderAction={<CreateServiceDialog />}
+      primaryAction={{
+        label: "New Service",
+        onClick: () => document.getElementById("create-service-trigger")?.click(),
+        icon: CircleFadingPlus,
+        variant: "default",
+      }}
     >
       <DataGridPage
         queryKey="/api/vendor-services"

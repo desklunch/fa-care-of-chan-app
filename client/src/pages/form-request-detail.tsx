@@ -592,27 +592,20 @@ export default function AdminFormRequestDetailPage() {
     window.open(`/form/preview/${id}`, "_blank", "noopener,noreferrer");
   };
 
-  const headerAction = (
-    <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" onClick={handlePreview} data-testid="button-preview-form">
-        <Eye className="h-4 w-4" />
-        Preview
-      </Button>
-
-      {request.status === "draft" && (
-      <Button size="sm" variant="outline" onClick={() => navigate(`/forms/requests/${id}/edit`)} data-testid="button-edit-request">
-        <SquarePen className="h-4 w-4" />
-        Edit
-      </Button>
-      )}
-      {request.status === "draft" && pendingCount > 0 && (
-        <Button size="sm" onClick={() => setSendDialogOpen(true)} data-testid="button-send-request">
-          <Send className="h-4 w-4" />
-          Send
-        </Button>
-      )}
-    </div>
-  );
+  const additionalActions = [
+    {
+      label: "Preview",
+      icon: Eye,
+      variant: "outline" as const,
+      onClick: handlePreview,
+    },
+    ...(request.status === "draft" ? [{
+      label: "Edit",
+      icon: SquarePen,
+      variant: "outline" as const,
+      onClick: () => navigate(`/forms/requests/${id}/edit`),
+    }] : []),
+  ];
 
   return (
     <PageLayout
@@ -621,7 +614,13 @@ export default function AdminFormRequestDetailPage() {
         { label: "Requests", href: "/forms/requests" },
         { label: request.title },
       ]}
-      customHeaderAction={headerAction}
+      primaryAction={request.status === "draft" && pendingCount > 0 ? {
+        label: "Send",
+        icon: Send,
+        variant: "default",
+        onClick: () => setSendDialogOpen(true),
+      } : undefined}
+      additionalActions={additionalActions}
     >
       <div className="">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

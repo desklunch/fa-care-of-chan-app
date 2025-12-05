@@ -364,7 +364,7 @@ export default function AmenitiesPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Amenities" }]}
-      actionButton={
+      primaryAction={
         isAdmin
           ? {
               label: "New Amenity",

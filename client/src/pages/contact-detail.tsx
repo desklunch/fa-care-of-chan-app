@@ -102,7 +102,7 @@ export default function ContactDetail() {
         { label: "Contacts", href: "/contacts" },
         { label: fullName },
       ]}
-      actionButton={{
+      primaryAction={{
         label: "Edit Contact",
         href: `/contacts/${id}/edit`,
         icon: SquarePen,

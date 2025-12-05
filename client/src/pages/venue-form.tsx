@@ -1060,40 +1060,24 @@ export default function VenueFormPage() {
   return (
     <PageLayout 
       breadcrumbs={breadcrumbs}
-      customHeaderAction={
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setLocation("/venues")}
-            data-testid="button-cancel-venue"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="venue-form"
-            disabled={isPending}
-            data-testid="button-save-venue"
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                {isEditingVenue ? "Save Changes" : "Create Venue"}
-              </>
-            )}
-          </Button>
-        </div>
-      }
+      primaryAction={{
+        label: isPending ? "Saving..." : (isEditingVenue ? "Save Changes" : "Create Venue"),
+        icon: isPending ? Loader2 : Save,
+        variant: "default",
+        onClick: () => document.getElementById("venue-form-submit")?.click(),
+      }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          variant: "outline",
+          onClick: () => setLocation("/venues"),
+        },
+      ]}
     >
       <div className="max-w-4xl p-4 md:p-6">
         <Form {...form}>
           <form id="venue-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <button type="submit" id="venue-form-submit" className="hidden" />
             <Card>
               <CardHeader>
                 <CardTitle>Find on Google</CardTitle>

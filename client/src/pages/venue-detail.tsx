@@ -125,52 +125,27 @@ export default function VenueDetailPage() {
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      actionButton={
+      primaryAction={
         isAdmin
           ? {
-              label: "Delete",
-              icon: Trash2,
-              variant: "destructive",
-              onClick: () => setDeleteDialogOpen(true),
+              label: "Edit",
+              icon: Edit,
+              variant: "outline",
+              onClick: () => setLocation(`/venues/${id}/edit`),
             }
           : undefined
       }
-      customHeaderAction={
-        isAdmin ? (
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setLocation(`/venues/${id}/edit`)}
-              data-testid="button-edit-venue"
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Venue</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{venue.name}"? This action
-                    cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel data-testid="button-cancel-delete">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteMutation.mutate()}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    data-testid="button-confirm-delete"
-                  >
-                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
-        ) : null
+      additionalActions={
+        isAdmin
+          ? [
+              {
+                label: "Delete",
+                icon: Trash2,
+                variant: "destructive",
+                onClick: () => setDeleteDialogOpen(true),
+              },
+            ]
+          : undefined
       }
     >
       <div className="max-w-4xl p-4 md:p-6 space-y-6">
@@ -721,6 +696,30 @@ export default function VenueDetailPage() {
           </Card>
         )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Venue</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{venue.name}"? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }

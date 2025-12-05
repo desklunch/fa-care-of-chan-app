@@ -186,17 +186,6 @@ export default function FormTemplateDetailPage() {
   const sectionCount = formSchema.length;
   const fieldCount = formSchema.reduce((acc, section) => acc + section.fields.length, 0);
 
-  const headerAction = (
-    <Button
-      onClick={() => navigate(`/forms/templates/${id}/edit`)}
-      data-testid="button-edit-template"
-      size="sm"
-    >
-      <SquarePen className="h-4 w-4" />
-      Edit
-    </Button>
-  );
-
   return (
     <PageLayout
       breadcrumbs={[
@@ -204,7 +193,12 @@ export default function FormTemplateDetailPage() {
         { label: "Templates", href: "/forms/templates" },
         { label: template.name },
       ]}
-      customHeaderAction={headerAction}
+      primaryAction={{
+        label: "Edit",
+        href: `/forms/templates/${id}/edit`,
+        icon: SquarePen,
+        variant: "default",
+      }}
     >
       <div className="p-6 space-y-6 max-w-4xl">
         <Card>

@@ -678,7 +678,7 @@ export default function Vendors() {
   return (
     <PageLayout 
       breadcrumbs={[{ label: "Vendors" }]}
-      actionButton={{
+      primaryAction={{
         label: "New Vendor",
         href: "/vendors/new",
         icon: CircleFadingPlus,

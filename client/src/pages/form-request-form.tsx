@@ -162,52 +162,23 @@ export default function AdminFormRequestFormPage() {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const headerAction = (
-    <div className="flex items-center gap-2">
-      {isEditing && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isPending}
-              data-testid="button-delete-request"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Form Request</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this form request? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => params.id && deleteMutation.mutate(params.id)}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-      <Button
-        onClick={handleSave}
-        disabled={!title.trim() || isPending}
-        data-testid="button-save-request"
-        size="sm"
-      >
-        <Save className="h-4 w-4" />
-        {isPending ? "Saving..." : isEditing ? "Save" : "Create"}
-      </Button>
-    </div>
-  );
+  const primaryAction = {
+    label: isPending ? "Saving..." : isEditing ? "Save" : "Create",
+    icon: Save,
+    variant: "default" as const,
+    onClick: handleSave,
+  };
+
+  const additionalActions = isEditing ? [
+    {
+      label: "Delete",
+      icon: Trash2,
+      variant: "destructive" as const,
+      onClick: () => setDeleteDialogOpen(true),
+    },
+  ] : undefined;
 
   if (isAuthLoading) {
     return (
@@ -267,7 +238,8 @@ export default function AdminFormRequestFormPage() {
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      customHeaderAction={headerAction}
+      primaryAction={primaryAction}
+      additionalActions={additionalActions}
     >
       <div className="p-6 max-w-4xl  space-y-6">
         <Card>
@@ -370,6 +342,26 @@ export default function AdminFormRequestFormPage() {
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Form Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this form request? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => params.id && deleteMutation.mutate(params.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }
