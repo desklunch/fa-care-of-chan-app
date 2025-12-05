@@ -177,6 +177,38 @@ export default function VenueFormPage() {
     form.setValue("zipCode", address.zipCode);
   };
 
+  const parseInstagramUsername = (input: string): string => {
+    if (!input) return "";
+    let value = input.trim();
+    
+    // Remove @ prefix if present
+    if (value.startsWith("@")) {
+      value = value.substring(1);
+    }
+    
+    // Handle full URLs like https://www.instagram.com/username/?hl=en
+    // or instagram.com/username
+    const urlPatterns = [
+      /(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/i,
+    ];
+    
+    for (const pattern of urlPatterns) {
+      const match = value.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    return value;
+  };
+
+  const handleInstagramBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const parsed = parseInstagramUsername(e.target.value);
+    if (parsed !== e.target.value) {
+      form.setValue("instagramAccount", parsed);
+    }
+  };
+
   const breadcrumbs = [
     { label: "Venues", href: "/venues" },
     { label: isEditing ? "Edit Venue" : "New Venue" },
@@ -489,10 +521,17 @@ export default function VenueFormPage() {
                         <Input
                           {...field}
                           value={field.value || ""}
-                          placeholder="@venuehandle"
+                          placeholder="@venuehandle or paste profile URL"
+                          onBlur={(e) => {
+                            field.onBlur();
+                            handleInstagramBlur(e);
+                          }}
                           data-testid="input-venue-instagram"
                         />
                       </FormControl>
+                      <FormDescription>
+                        Paste a profile URL or @handle - it will be converted automatically
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
