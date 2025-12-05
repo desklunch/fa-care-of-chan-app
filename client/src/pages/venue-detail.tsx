@@ -35,7 +35,11 @@ import {
   X,
   FileText,
   Layout,
+  Download,
+  Copy,
+  Paperclip,
 } from "lucide-react";
+import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { formatDistanceToNow } from "date-fns";
 import type { VenueWithRelations } from "@shared/schema";
 
@@ -291,6 +295,168 @@ export default function VenueDetailPage() {
                       </div>
                     </a>
                   ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {venue.attachments && venue.attachments.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                Attachments
+              </CardTitle>
+              <CardDescription>
+                {venue.attachments.length} attachment{venue.attachments.length !== 1 ? "s" : ""} available
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {venue.attachments
+                  .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                  .map((attachment) => {
+                    const uploadedAgo = attachment.uploadedAt 
+                      ? formatDistanceToNow(new Date(attachment.uploadedAt), { addSuffix: true })
+                      : "";
+                    const uploaderName = attachment.uploadedBy 
+                      ? `${attachment.uploadedBy.firstName || ""} ${attachment.uploadedBy.lastName || ""}`.trim() || "Unknown"
+                      : null;
+                    
+                    const handleDownload = async () => {
+                      try {
+                        const response = await fetch(attachment.fileUrl);
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = attachment.originalFilename || attachment.title || "download";
+                        link.click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        window.open(attachment.fileUrl, "_blank");
+                      }
+                    };
+
+                    const handleCopyLink = async () => {
+                      const fullUrl = `${window.location.origin}${attachment.fileUrl}`;
+                      try {
+                        if (navigator?.clipboard?.writeText) {
+                          await navigator.clipboard.writeText(fullUrl);
+                          toast({
+                            title: "Link copied",
+                            description: "Download link copied to clipboard",
+                          });
+                        } else {
+                          const textArea = document.createElement("textarea");
+                          textArea.value = fullUrl;
+                          textArea.style.position = "fixed";
+                          textArea.style.left = "-999999px";
+                          document.body.appendChild(textArea);
+                          textArea.select();
+                          document.execCommand("copy");
+                          textArea.remove();
+                          toast({
+                            title: "Link copied",
+                            description: "Download link copied to clipboard",
+                          });
+                        }
+                      } catch {
+                        toast({
+                          title: "Copy failed",
+                          description: "Please copy the link manually",
+                          variant: "destructive",
+                        });
+                      }
+                    };
+
+                    return (
+                      <div 
+                        key={attachment.id}
+                        className="flex items-center gap-4 rounded-lg border p-3 hover-elevate"
+                        data-testid={`attachment-item-${attachment.id}`}
+                      >
+                        <div className="shrink-0 w-12 h-12 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                          {attachment.fileType === "image" && attachment.thumbnailUrl ? (
+                            <a 
+                              href={attachment.fileUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="w-full h-full"
+                            >
+                              <img 
+                                src={attachment.thumbnailUrl} 
+                                alt={attachment.title || attachment.originalFilename || "Attachment"} 
+                                className="w-full h-full object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <FileTypeIcon 
+                              filename={attachment.originalFilename || ""} 
+                              mimeType={attachment.mimeType || undefined}
+                              size="md"
+                              showExtension={true}
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate" data-testid={`text-attachment-title-${attachment.id}`}>
+                            {attachment.title || attachment.originalFilename || "Untitled Attachment"}
+                          </p>
+                          {attachment.caption && (
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {attachment.caption}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                            {uploadedAgo && <span>{uploadedAgo}</span>}
+                            {uploaderName && (
+                              <>
+                                <span>by {uploaderName}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleDownload}
+                            title="Download file"
+                            data-testid={`button-download-attachment-${attachment.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCopyLink}
+                            title="Copy download link"
+                            data-testid={`button-copy-link-attachment-${attachment.id}`}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                          >
+                            <a 
+                              href={attachment.fileUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              title="Open in new tab"
+                              data-testid={`link-view-attachment-${attachment.id}`}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>

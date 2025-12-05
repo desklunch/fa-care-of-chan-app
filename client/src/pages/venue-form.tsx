@@ -354,20 +354,51 @@ function AttachmentItem({ file, onEdit, onDelete, isDeleting }: AttachmentItemPr
     setIsEditing(false);
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const fullUrl = `${window.location.origin}${file.fileUrl}`;
-    navigator.clipboard.writeText(fullUrl);
-    toast({
-      title: "Link copied",
-      description: "Download link copied to clipboard",
-    });
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(fullUrl);
+        toast({
+          title: "Link copied",
+          description: "Download link copied to clipboard",
+        });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = fullUrl;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+        toast({
+          title: "Link copied",
+          description: "Download link copied to clipboard",
+        });
+      }
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Please copy the link manually",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = file.fileUrl;
-    link.download = file.originalFilename || file.title || "download";
-    link.click();
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(file.fileUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.originalFilename || file.title || "download";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(file.fileUrl, "_blank");
+    }
   };
 
   const uploadedAgo = file.uploadedAt 
