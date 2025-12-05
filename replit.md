@@ -238,3 +238,43 @@ Contacts table:
 - Migrates existing external URLs and Google Places proxy URLs to App Storage
 - Run with: `npx tsx scripts/migrate-venue-photos.ts`
 - Dry run mode: `npx tsx scripts/migrate-venue-photos.ts --dry-run`
+
+### Venue File Management System
+
+**Database Schema (venue_files table)**
+- Unified table for both floorplans and attachments with category field
+- category: 'floorplan' | 'attachment' - distinguishes file purpose
+- Fields: id, venueId, fileUrl, thumbnailUrl, title, caption, fileType, mimeType, originalFilename
+- uploadedById: references users table for tracking who uploaded the file
+- sortOrder: integer for custom ordering within category
+- uploadedAt: timestamp for display of relative upload age
+
+**VenueFileWithUploader Type**
+- Includes uploader user details (firstName, lastName) via join query
+- Used by frontend to display "uploaded by [name] [time ago]"
+
+**API Routes**
+- GET /api/venues/:venueId/files?category=floorplan|attachment - List files with optional filtering
+- POST /api/venues/:venueId/files - Create new file record (returns VenueFileWithUploader)
+- PUT /api/venue-files/:id - Update file metadata (title, caption, sortOrder)
+- DELETE /api/venue-files/:id - Delete file record (storage cleanup handled separately)
+
+**Frontend Components**
+- VenueFileUploader (client/src/components/ui/venue-file-uploader.tsx)
+  - Supports both floorplans and attachments via category prop
+  - Accepts wide range of file types: images, PDFs, Office docs, archives, design files
+  - Uploads files to App Storage and creates database records
+  - Displays progress during upload with toast notifications
+- FileTypeIcon (client/src/components/ui/file-type-icon.tsx)
+  - Displays appropriate icon based on file extension/MIME type
+  - Shows file extension label below icon
+  - Supports: PDF, Word, Excel, PowerPoint, ZIP/archives, Photoshop, Illustrator, images
+- AttachmentItem component (in venue-form.tsx)
+  - Inline editing of title and caption
+  - Copy link and download actions with SSR-safe handlers
+  - Displays uploader name and relative upload age
+
+**Venue Detail Display**
+- Floorplans card: Grid layout with thumbnail images, links to full-size PDFs
+- Attachments card: List layout with file icons, download/copy/view buttons
+- Both sections show uploader name and relative upload timestamp
