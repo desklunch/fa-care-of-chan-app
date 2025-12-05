@@ -204,6 +204,11 @@ Contacts table:
 - DELETE /api/photos - Delete photo and thumbnail from storage
 - GET /objects/:objectPath(*) - Serve photos from storage with 7-day cache
 
+**Photo Organization**
+- The first photo in photoUrls array serves as the venue's hero image
+- Drag-drop reordering allows easy hero image selection
+- No separate primaryPhotoUrl field - simplifies the data model
+
 **Frontend Components**
 - PhotoUploader component (client/src/components/ui/photo-uploader.tsx)
   - File input for direct upload

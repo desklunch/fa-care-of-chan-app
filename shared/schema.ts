@@ -263,7 +263,6 @@ export const venues = pgTable(
     website: varchar("website", { length: 500 }),
     instagramAccount: varchar("instagram_account", { length: 100 }),
     googlePlaceId: varchar("google_place_id", { length: 255 }),
-    primaryPhotoUrl: varchar("primary_photo_url", { length: 1000 }),
     photoUrls: jsonb("photo_urls").$type<string[]>().default([]),
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
@@ -736,7 +735,6 @@ export const insertVenueSchema = createInsertSchema(venues).omit({
   email: z.string().email("Invalid email address").optional().nullable().or(z.literal("")),
   website: z.string().url("Invalid URL").max(500).optional().nullable().or(z.literal("")),
   instagramAccount: z.string().max(100).optional().nullable(),
-  primaryPhotoUrl: z.string().max(1000).optional().nullable(),
   photoUrls: z.array(z.string()).optional().nullable(),
   isActive: z.boolean().default(true),
 });

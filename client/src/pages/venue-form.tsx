@@ -193,7 +193,6 @@ export default function VenueFormPage() {
       website: "",
       instagramAccount: "",
       googlePlaceId: "",
-      primaryPhotoUrl: "",
       isActive: true,
       amenityIds: [],
       cuisineTagIds: [],
@@ -250,7 +249,6 @@ export default function VenueFormPage() {
         website: venue.website || "",
         instagramAccount: venue.instagramAccount || "",
         googlePlaceId: venue.googlePlaceId || "",
-        primaryPhotoUrl: venue.primaryPhotoUrl || "",
         isActive: venue.isActive ?? true,
         amenityIds: venue.amenities?.map((a) => a.id) || [],
         cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
@@ -395,35 +393,51 @@ export default function VenueFormPage() {
     galleryPhotos: Array<{ photoUrl: string; thumbnailUrl: string; originalUrl: string }>; 
     primaryPhoto: { photoUrl: string; thumbnailUrl: string; originalUrl: string } | null 
   }) => {
-    // Get existing photo URLs to prevent duplicates
-    const existingUrls = new Set(
-      form.getValues("photoUrlItems").map(item => item.url)
-    );
+    const currentItems = form.getValues("photoUrlItems");
+    const existingUrls = new Set(currentItems.map(item => item.url));
     
-    // Add uploaded photos to the gallery (deduplicated)
-    let addedCount = 0;
+    const newPhotos: Array<{ url: string; thumbnailUrl?: string }> = [];
+    
+    // Add non-primary photos first
     for (const photo of result.galleryPhotos) {
-      if (!existingUrls.has(photo.photoUrl)) {
-        appendPhotoUrl({ 
+      if (!existingUrls.has(photo.photoUrl) && photo.photoUrl !== result.primaryPhoto?.photoUrl) {
+        newPhotos.push({ 
           url: photo.photoUrl, 
           thumbnailUrl: photo.thumbnailUrl 
         });
         existingUrls.add(photo.photoUrl);
-        addedCount++;
       }
     }
     
-    // Set primary photo if selected
-    if (result.primaryPhoto) {
-      form.setValue("primaryPhotoUrl", result.primaryPhoto.photoUrl);
+    // If a primary photo is selected, put it first
+    if (result.primaryPhoto && !existingUrls.has(result.primaryPhoto.photoUrl)) {
+      const primaryItem = { 
+        url: result.primaryPhoto.photoUrl, 
+        thumbnailUrl: result.primaryPhoto.thumbnailUrl 
+      };
+      // Prepend primary photo to the beginning
+      replacePhotoUrls([primaryItem, ...currentItems, ...newPhotos]);
+    } else if (result.primaryPhoto) {
+      // Primary photo already exists, move it to the front
+      const filteredItems = currentItems.filter(item => item.url !== result.primaryPhoto!.photoUrl);
+      const primaryItem = currentItems.find(item => item.url === result.primaryPhoto!.photoUrl) || 
+        { url: result.primaryPhoto.photoUrl, thumbnailUrl: result.primaryPhoto.thumbnailUrl };
+      replacePhotoUrls([primaryItem, ...filteredItems, ...newPhotos]);
+    } else {
+      // No primary photo, just append new photos
+      for (const photo of newPhotos) {
+        appendPhotoUrl(photo);
+      }
     }
+    
+    const addedCount = newPhotos.length + (result.primaryPhoto && !currentItems.some(i => i.url === result.primaryPhoto?.photoUrl) ? 1 : 0);
     
     toast({
       title: "Photos imported",
       description: addedCount > 0 
-        ? `Imported ${addedCount} photo${addedCount !== 1 ? "s" : ""} to App Storage${result.primaryPhoto ? " and set primary photo" : ""}.`
+        ? `Imported ${addedCount} photo${addedCount !== 1 ? "s" : ""} to App Storage${result.primaryPhoto ? " (hero photo set)" : ""}.`
         : result.primaryPhoto 
-          ? "Set primary photo."
+          ? "Hero photo set (moved to first position)."
           : "No new photos added (already in gallery).",
     });
   };
@@ -801,28 +815,6 @@ export default function VenueFormPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="primaryPhotoUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Primary Photo URL</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || ""}
-                          type="text"
-                          placeholder="https://example.com/image.jpg or import from Google"
-                          data-testid="input-venue-photo-url"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        URL to the venue's main/hero photo
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
 
@@ -830,7 +822,7 @@ export default function VenueFormPage() {
               <CardHeader>
                 <CardTitle>Photo Gallery</CardTitle>
                 <CardDescription>
-                  Upload photos or import from URLs. Drag to reorder.
+                  Upload photos or import from URLs. Drag to reorder. The first photo will be used as the hero image.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
