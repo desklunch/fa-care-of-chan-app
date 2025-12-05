@@ -33,7 +33,10 @@ import {
   Image,
   Check,
   X,
+  FileText,
+  Layout,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import type { VenueWithRelations } from "@shared/schema";
 
 export default function VenueDetailPage() {
@@ -225,6 +228,72 @@ export default function VenueDetailPage() {
               </Card>
             )}
           </>
+        )}
+
+        {venue.floorplans && venue.floorplans.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Layout className="h-5 w-5" />
+                Floorplans
+              </CardTitle>
+              <CardDescription>
+                {venue.floorplans.length} floorplan{venue.floorplans.length !== 1 ? "s" : ""} available
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {venue.floorplans
+                  .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                  .map((floorplan) => (
+                    <a
+                      key={floorplan.id}
+                      href={floorplan.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group rounded-lg border overflow-hidden hover-elevate"
+                      data-testid={`link-floorplan-${floorplan.id}`}
+                    >
+                      <div className="aspect-[4/3] bg-muted relative">
+                        {floorplan.fileType === "pdf" ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                            <FileText className="h-12 w-12 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">PDF Document</span>
+                          </div>
+                        ) : (
+                          <img
+                            src={floorplan.thumbnailUrl || floorplan.fileUrl}
+                            alt={floorplan.title || "Floorplan"}
+                            className="w-full h-full object-cover"
+                            data-testid={`img-floorplan-${floorplan.id}`}
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+                          <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-1">
+                        {floorplan.title && (
+                          <p className="font-medium text-sm truncate" data-testid={`text-floorplan-title-${floorplan.id}`}>
+                            {floorplan.title}
+                          </p>
+                        )}
+                        {floorplan.caption && (
+                          <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-floorplan-caption-${floorplan.id}`}>
+                            {floorplan.caption}
+                          </p>
+                        )}
+                        {floorplan.uploadedAt && (
+                          <p className="text-xs text-muted-foreground" data-testid={`text-floorplan-date-${floorplan.id}`}>
+                            Uploaded {formatDistanceToNow(new Date(floorplan.uploadedAt), { addSuffix: true })}
+                          </p>
+                        )}
+                      </div>
+                    </a>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         <div className="grid gap-6 md:grid-cols-2">
