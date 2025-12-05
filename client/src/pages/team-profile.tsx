@@ -14,7 +14,7 @@ import {
   Building2,
   Briefcase,
   Calendar,
-  Edit,
+  SquarePen,
   ArrowLeft,
 } from "lucide-react";
 import type { User } from "@shared/schema";
@@ -113,7 +113,7 @@ export default function TeamProfile() {
         isOwnProfile
           ? {
               label: "Edit Profile",
-              icon: Edit,
+              icon: SquarePen,
               href: "/profile/edit",
             }
           : undefined

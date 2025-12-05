@@ -1069,6 +1069,7 @@ export default function VenueFormPage() {
       additionalActions={[
         {
           label: "Cancel",
+          icon: X,
           variant: "outline",
           onClick: () => setLocation("/venues"),
         },

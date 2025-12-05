@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, type LucideIcon } from "lucide-react";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, type LucideIcon } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "city", "state", "cuisineTags", "styleTags", "amenities"];
 
@@ -418,6 +418,7 @@ export default function VenuesPage() {
       breadcrumbs={[{ label: "Venues" }]}
       primaryAction={isAdmin ? {
         label: "Add Venue",
+        icon: CircleFadingPlus,
         onClick: handleCreate,
       } : undefined}
     >

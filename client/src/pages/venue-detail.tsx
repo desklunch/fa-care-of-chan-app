@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Edit,
+  SquarePen,
   Trash2,
   MapPin,
   Phone,
@@ -129,7 +129,7 @@ export default function VenueDetailPage() {
         isAdmin
           ? {
               label: "Edit",
-              icon: Edit,
+              icon: SquarePen,
               variant: "outline",
               onClick: () => setLocation(`/venues/${id}/edit`),
             }
