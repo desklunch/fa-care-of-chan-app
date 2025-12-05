@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityToggle } from "@/components/ui/amenity-toggle";
 import { TagAssignment } from "@/components/ui/tag-assignment";
+import { VenueAddressAutocomplete, ParsedAddress } from "@/components/ui/venue-address-autocomplete";
 import { Save, Loader2, Plus, Trash2, Image } from "lucide-react";
 import type { VenueWithRelations } from "@shared/schema";
 import { insertVenueSchema } from "@shared/schema";
@@ -168,6 +169,14 @@ export default function VenueFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const handleAddressSelect = (address: ParsedAddress) => {
+    form.setValue("streetAddress1", address.streetAddress1);
+    form.setValue("streetAddress2", address.streetAddress2);
+    form.setValue("city", address.city);
+    form.setValue("state", address.state);
+    form.setValue("zipCode", address.zipCode);
+  };
+
   const breadcrumbs = [
     { label: "Venues", href: "/venues" },
     { label: isEditing ? "Edit Venue" : "New Venue" },
@@ -286,10 +295,22 @@ export default function VenueFormPage() {
               <CardHeader>
                 <CardTitle>Location</CardTitle>
                 <CardDescription>
-                  Address and contact information
+                  Search for an address or enter manually
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Search Address</FormLabel>
+                  <VenueAddressAutocomplete
+                    onAddressSelect={handleAddressSelect}
+                    placeholder="Search for venue address..."
+                    data-testid="input-venue-address-search"
+                  />
+                  <FormDescription>
+                    Start typing to search, or enter address manually below
+                  </FormDescription>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="streetAddress1"
