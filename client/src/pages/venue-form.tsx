@@ -475,26 +475,6 @@ export default function VenueFormPage() {
                   placeholder="Search for venue by name (e.g., 'Albadawi NYC')"
                   data-testid="input-venue-google-search"
                 />
-                
-                {selectedPlaceId && (
-                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{selectedPlaceName}</p>
-                      <p className="text-xs text-muted-foreground">Import photos from Google Places</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPhotoPickerOpen(true)}
-                      data-testid="button-import-google-photos"
-                    >
-                      <ImagePlus className="h-4 w-4 mr-2" />
-                      Import Photos
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -826,27 +806,43 @@ export default function VenueFormPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <PhotoUploader
-                  venueId={isEditing ? parseInt(id!) : undefined}
-                  onPhotoUploaded={(result) => {
-                    appendPhotoUrl({ 
-                      url: result.photoUrl, 
-                      thumbnailUrl: result.thumbnailUrl 
-                    });
-                    toast({
-                      title: "Photo uploaded",
-                      description: "The photo has been added to the gallery.",
-                    });
-                  }}
-                  onError={(error) => {
-                    toast({
-                      title: "Upload failed",
-                      description: error,
-                      variant: "destructive",
-                    });
-                  }}
-                  data-testid="photo-uploader"
-                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <PhotoUploader
+                      venueId={isEditing ? parseInt(id!) : undefined}
+                      onPhotoUploaded={(result) => {
+                        appendPhotoUrl({ 
+                          url: result.photoUrl, 
+                          thumbnailUrl: result.thumbnailUrl 
+                        });
+                        toast({
+                          title: "Photo uploaded",
+                          description: "The photo has been added to the gallery.",
+                        });
+                      }}
+                      onError={(error) => {
+                        toast({
+                          title: "Upload failed",
+                          description: error,
+                          variant: "destructive",
+                        });
+                      }}
+                      data-testid="photo-uploader"
+                    />
+                  </div>
+                  {selectedPlaceId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setPhotoPickerOpen(true)}
+                      className="whitespace-nowrap"
+                      data-testid="button-import-google-photos"
+                    >
+                      <ImagePlus className="h-4 w-4 mr-2" />
+                      Import from Google
+                    </Button>
+                  )}
+                </div>
 
                 {photoUrlFields.length > 0 && (
                   <div className="space-y-3">
