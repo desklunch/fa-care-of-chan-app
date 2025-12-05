@@ -338,7 +338,35 @@ export const venueTags = pgTable(
   ],
 );
 
-// Venue floorplans (images and PDFs)
+// Venue files (floorplans, attachments, and other documents)
+export const venueFileCategories = ["floorplan", "attachment"] as const;
+export type VenueFileCategory = (typeof venueFileCategories)[number];
+
+export const venueFiles = pgTable(
+  "venue_files",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+    category: varchar("category", { length: 50 }).notNull().default("floorplan"), // 'floorplan' | 'attachment'
+    fileUrl: varchar("file_url", { length: 500 }).notNull(),
+    thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+    fileType: varchar("file_type", { length: 20 }).notNull(), // 'image' | 'pdf' | 'document' | 'archive' | 'other'
+    originalFilename: varchar("original_filename", { length: 255 }),
+    mimeType: varchar("mime_type", { length: 100 }),
+    title: varchar("title", { length: 255 }),
+    caption: text("caption"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    uploadedById: varchar("uploaded_by_id").references(() => users.id),
+    uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_venue_files_venue_id").on(table.venueId),
+    index("idx_venue_files_category").on(table.category),
+    index("idx_venue_files_uploaded_at").on(table.uploadedAt),
+  ],
+);
+
+// Keep venueFloorplans for backward compatibility (deprecated - use venueFiles instead)
 export const venueFloorplans = pgTable(
   "venue_floorplans",
   {
@@ -533,8 +561,15 @@ export type Tag = typeof tags.$inferSelect;
 export type InsertTag = typeof tags.$inferInsert;
 export type VenueTag = typeof venueTags.$inferSelect;
 export type InsertVenueTag = typeof venueTags.$inferInsert;
+export type VenueFile = typeof venueFiles.$inferSelect;
+export type InsertVenueFile = typeof venueFiles.$inferInsert;
 export type VenueFloorplan = typeof venueFloorplans.$inferSelect;
 export type InsertVenueFloorplan = typeof venueFloorplans.$inferInsert;
+
+// VenueFile with uploader info
+export type VenueFileWithUploader = VenueFile & {
+  uploadedBy: Pick<User, 'id' | 'firstName' | 'lastName'> | null;
+};
 export type Vendor = typeof vendors.$inferSelect;
 export type InsertVendor = typeof vendors.$inferInsert;
 export type VendorService = typeof vendorServices.$inferSelect;
@@ -569,7 +604,8 @@ export type VenueWithRelations = Venue & {
   amenities: Amenity[];
   cuisineTags: Tag[];
   styleTags: Tag[];
-  floorplans: VenueFloorplan[];
+  floorplans: VenueFileWithUploader[];
+  attachments: VenueFileWithUploader[];
 };
 
 // Keep old type aliases for backward compatibility
@@ -768,6 +804,38 @@ export type CreateVenue = z.infer<typeof insertVenueSchema>;
 export type UpdateVenue = z.infer<typeof updateVenueSchema>;
 
 // Venue floorplan schemas
+// New unified venue file schema
+export const insertVenueFileSchema = createInsertSchema(venueFiles).omit({
+  id: true,
+  uploadedAt: true,
+}).extend({
+  venueId: z.string().min(1, "Venue ID is required"),
+  category: z.enum(["floorplan", "attachment"]).default("floorplan"),
+  fileUrl: z.string().min(1, "File URL is required").max(500),
+  thumbnailUrl: z.string().max(500).optional().nullable(),
+  fileType: z.enum(["image", "pdf", "document", "archive", "other"]),
+  originalFilename: z.string().max(255).optional().nullable(),
+  mimeType: z.string().max(100).optional().nullable(),
+  title: z.string().max(255).optional().nullable(),
+  caption: z.string().optional().nullable(),
+  sortOrder: z.number().int().default(0),
+  uploadedById: z.string().optional().nullable(),
+});
+
+export const updateVenueFileSchema = insertVenueFileSchema.omit({
+  venueId: true,
+  category: true,
+  fileUrl: true,
+  fileType: true,
+  originalFilename: true,
+  mimeType: true,
+  uploadedById: true,
+}).partial();
+
+export type CreateVenueFile = z.infer<typeof insertVenueFileSchema>;
+export type UpdateVenueFile = z.infer<typeof updateVenueFileSchema>;
+
+// Legacy floorplan schemas (deprecated - use venueFile schemas)
 export const insertVenueFloorplanSchema = createInsertSchema(venueFloorplans).omit({
   id: true,
   uploadedAt: true,
