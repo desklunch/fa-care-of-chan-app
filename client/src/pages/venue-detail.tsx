@@ -256,41 +256,42 @@ export default function VenueDetailPage() {
             )}
 
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-              <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-black/95 overflow-hidden">
-                <div className="relative flex items-center justify-center w-full h-full min-h-[50vh]">
+              <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-black/95 overflow-hidden flex flex-col">
+                <div className="flex-1 flex items-center justify-center min-h-[50vh] p-4">
                   <img
                     src={venue.photoUrls[lightboxIndex]}
                     alt={`${venue.name} photo ${lightboxIndex + 1}`}
-                    className="max-w-full max-h-[85vh] object-contain"
+                    className="max-w-full max-h-[75vh] object-contain"
                     data-testid="img-lightbox-photo"
                   />
+                </div>
+                
+                <div className="flex items-center justify-center gap-4 py-4 px-6 bg-black/80 border-t border-white/10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20"
+                    onClick={() => setLightboxIndex((prev) => (prev === 0 ? venue.photoUrls!.length - 1 : prev - 1))}
+                    disabled={venue.photoUrls.length <= 1}
+                    data-testid="button-lightbox-prev"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
                   
-                  {venue.photoUrls.length > 1 && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
-                        onClick={() => setLightboxIndex((prev) => (prev === 0 ? venue.photoUrls!.length - 1 : prev - 1))}
-                        data-testid="button-lightbox-prev"
-                      >
-                        <ChevronLeft className="h-6 w-6" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
-                        onClick={() => setLightboxIndex((prev) => (prev === venue.photoUrls!.length - 1 ? 0 : prev + 1))}
-                        data-testid="button-lightbox-next"
-                      >
-                        <ChevronRight className="h-6 w-6" />
-                      </Button>
-                    </>
-                  )}
-                  
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/60 text-white text-sm">
+                  <span className="text-white text-sm min-w-[60px] text-center">
                     {lightboxIndex + 1} / {venue.photoUrls.length}
-                  </div>
+                  </span>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20"
+                    onClick={() => setLightboxIndex((prev) => (prev === venue.photoUrls!.length - 1 ? 0 : prev + 1))}
+                    disabled={venue.photoUrls.length <= 1}
+                    data-testid="button-lightbox-next"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
