@@ -979,6 +979,11 @@ export default function VenueFormPage() {
     form.setValue("website", place.website);
     form.setValue("googlePlaceId", place.placeId);
     
+    // Populate short description from Google Places editorial summary
+    if (place.editorialSummary) {
+      form.setValue("shortDescription", place.editorialSummary);
+    }
+    
     // Store place info for photo picker
     setSelectedPlaceId(place.placeId);
     setSelectedPlaceName(place.name);

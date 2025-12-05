@@ -27,6 +27,7 @@ export interface PlaceResult {
     latitude: number;
     longitude: number;
   } | null;
+  editorialSummary?: string;
   rawPlaceDetails?: Record<string, unknown>;
 }
 

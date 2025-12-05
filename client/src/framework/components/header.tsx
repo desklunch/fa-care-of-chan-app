@@ -24,7 +24,7 @@ function renderPrimaryActionButton(action: ActionButton, testId: string) {
     return (
       <Link href={action.href}>
         <Button
-          variant="ghost"
+          variant="default"
           size="sm"
           data-testid={testId}
         >
@@ -36,7 +36,7 @@ function renderPrimaryActionButton(action: ActionButton, testId: string) {
   }
   return (
     <Button
-      variant="ghost"
+      variant="default"
       size="sm"
       onClick={action.onClick}
       data-testid={testId}

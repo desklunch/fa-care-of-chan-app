@@ -1326,6 +1326,7 @@ export async function registerRoutes(
           website: place.websiteUri || "",
           googleMapsUrl: place.googleMapsUri || "",
           location: place.location || null,
+          editorialSummary: place.editorialSummary?.text || "",
           // Include raw Google Places API response for debugging/display
           rawPlaceDetails: place,
         };
