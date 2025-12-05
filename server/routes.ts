@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import sharp from "sharp";
 import { 
   insertInviteSchema, 
   updateProfileSchema,
@@ -1428,6 +1430,221 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error proxying photo:", error);
       res.status(500).json({ message: "Failed to fetch photo" });
+    }
+  });
+
+  // Photo Upload and Object Storage Routes
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const THUMBNAIL_SIZE = 300;
+
+  // Helper function to generate thumbnails
+  async function generateThumbnail(buffer: Buffer, contentType: string): Promise<Buffer> {
+    let sharpInstance = sharp(buffer);
+    
+    if (contentType === "image/gif") {
+      // For GIFs, just resize without animation
+      sharpInstance = sharpInstance.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
+        fit: "cover",
+        position: "center",
+      });
+    } else {
+      sharpInstance = sharpInstance.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
+        fit: "cover",
+        position: "center",
+      });
+    }
+    
+    // Convert to WebP for smaller thumbnails (except GIFs)
+    if (contentType !== "image/gif") {
+      return sharpInstance.webp({ quality: 80 }).toBuffer();
+    }
+    return sharpInstance.toBuffer();
+  }
+
+  // Get upload URL for client-side upload
+  app.post("/api/photos/upload-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const { uploadURL, objectPath } = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL, objectPath });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ message: "Failed to get upload URL" });
+    }
+  });
+
+  // Serve objects from storage (public for venues)
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = `/objects/${req.params.objectPath}`;
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+      objectStorageService.downloadObject(objectFile, res, 604800); // 7 day cache
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ message: "Object not found" });
+      }
+      console.error("Error serving object:", error);
+      res.status(500).json({ message: "Failed to serve object" });
+    }
+  });
+
+  // Upload photo from URL (fetch and save to storage)
+  app.post("/api/photos/from-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const { url, venueId } = req.body;
+      if (!url) {
+        return res.status(400).json({ message: "URL is required" });
+      }
+
+      // Fetch the image from URL
+      let fetchUrl = url;
+      
+      // Handle internal proxy URLs (Google Places photos)
+      if (url.startsWith("/api/places/photos/")) {
+        const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+        const host = req.headers.host;
+        fetchUrl = `${protocol}://${host}${url}`;
+      }
+
+      const response = await fetch(fetchUrl, {
+        redirect: "follow",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; VenuePhotoFetcher/1.0)",
+        },
+      });
+
+      if (!response.ok) {
+        return res.status(400).json({ message: "Failed to fetch image from URL" });
+      }
+
+      const contentType = response.headers.get("content-type") || "image/jpeg";
+      if (!ALLOWED_IMAGE_TYPES.some(t => contentType.startsWith(t.split("/")[0] + "/" + t.split("/")[1]))) {
+        return res.status(400).json({ message: "Invalid image type. Allowed: jpg, png, webp, gif" });
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      if (buffer.length > MAX_FILE_SIZE) {
+        return res.status(400).json({ message: "Image too large. Maximum size is 10MB" });
+      }
+
+      // Generate unique filename
+      const ext = contentType.split("/")[1] === "jpeg" ? "jpg" : contentType.split("/")[1];
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const photoPath = venueId 
+        ? `venues/${venueId}/photos/${timestamp}-${randomId}.${ext}`
+        : `photos/${timestamp}-${randomId}.${ext}`;
+      const thumbPath = venueId 
+        ? `venues/${venueId}/thumbnails/${timestamp}-${randomId}.webp`
+        : `thumbnails/${timestamp}-${randomId}.webp`;
+
+      const objectStorageService = new ObjectStorageService();
+
+      // Upload original
+      const photoObjectPath = await objectStorageService.uploadBuffer(buffer, photoPath, contentType);
+
+      // Generate and upload thumbnail
+      const thumbnailBuffer = await generateThumbnail(buffer, contentType);
+      const thumbnailContentType = contentType === "image/gif" ? "image/gif" : "image/webp";
+      const thumbObjectPath = await objectStorageService.uploadBuffer(thumbnailBuffer, thumbPath, thumbnailContentType);
+
+      res.json({
+        photoUrl: photoObjectPath,
+        thumbnailUrl: thumbObjectPath,
+        originalUrl: url,
+        size: buffer.length,
+        contentType,
+      });
+    } catch (error) {
+      console.error("Error uploading photo from URL:", error);
+      res.status(500).json({ message: "Failed to upload photo from URL" });
+    }
+  });
+
+  // Upload photo from base64 data
+  app.post("/api/photos/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const { data, filename, contentType, venueId } = req.body;
+      
+      if (!data || !contentType) {
+        return res.status(400).json({ message: "Data and content type are required" });
+      }
+
+      if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+        return res.status(400).json({ message: "Invalid image type. Allowed: jpg, png, webp, gif" });
+      }
+
+      // Decode base64
+      const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      if (buffer.length > MAX_FILE_SIZE) {
+        return res.status(400).json({ message: "Image too large. Maximum size is 10MB" });
+      }
+
+      // Generate unique filename
+      const ext = contentType.split("/")[1] === "jpeg" ? "jpg" : contentType.split("/")[1];
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const photoPath = venueId 
+        ? `venues/${venueId}/photos/${timestamp}-${randomId}.${ext}`
+        : `photos/${timestamp}-${randomId}.${ext}`;
+      const thumbPath = venueId 
+        ? `venues/${venueId}/thumbnails/${timestamp}-${randomId}.webp`
+        : `thumbnails/${timestamp}-${randomId}.webp`;
+
+      const objectStorageService = new ObjectStorageService();
+
+      // Upload original
+      const photoObjectPath = await objectStorageService.uploadBuffer(buffer, photoPath, contentType);
+
+      // Generate and upload thumbnail
+      const thumbnailBuffer = await generateThumbnail(buffer, contentType);
+      const thumbnailContentType = contentType === "image/gif" ? "image/gif" : "image/webp";
+      const thumbObjectPath = await objectStorageService.uploadBuffer(thumbnailBuffer, thumbPath, thumbnailContentType);
+
+      res.json({
+        photoUrl: photoObjectPath,
+        thumbnailUrl: thumbObjectPath,
+        filename,
+        size: buffer.length,
+        contentType,
+      });
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      res.status(500).json({ message: "Failed to upload photo" });
+    }
+  });
+
+  // Delete photo from storage
+  app.delete("/api/photos", isAuthenticated, async (req: any, res) => {
+    try {
+      const { photoUrl, thumbnailUrl } = req.body;
+      
+      if (!photoUrl) {
+        return res.status(400).json({ message: "Photo URL is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+
+      // Delete the main photo
+      if (photoUrl.startsWith("/objects/")) {
+        await objectStorageService.deleteObject(photoUrl);
+      }
+
+      // Delete the thumbnail if provided
+      if (thumbnailUrl && thumbnailUrl.startsWith("/objects/")) {
+        await objectStorageService.deleteObject(thumbnailUrl);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting photo:", error);
+      res.status(500).json({ message: "Failed to delete photo" });
     }
   });
 
