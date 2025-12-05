@@ -123,8 +123,13 @@ export function GooglePlacePhotoPicker({
         setUploadProgress({ current: i + 1, total: photosToUpload.length });
         onUploadProgress?.(i + 1, photosToUpload.length);
 
+        const photo = photos.find(p => p.photoUrl === photoUrl);
+        const maxWidth = photo?.widthPx || 4800;
+        const maxHeight = photo?.heightPx || 4800;
+        const fullResUrl = `${photoUrl}?maxWidthPx=${maxWidth}&maxHeightPx=${maxHeight}`;
+
         const response = await apiRequest("POST", "/api/photos/from-url", {
-          url: photoUrl,
+          url: fullResUrl,
           venueId,
         });
 
