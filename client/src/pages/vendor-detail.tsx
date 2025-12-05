@@ -187,15 +187,15 @@ export default function VendorDetail() {
           data-testid="button-generate-update-link"
         >
           {generateLinkMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className=" h-4 w-4 animate-spin" />
           ) : (
-            <LinkIcon className="mr-2 h-4 w-4" />
+            <LinkIcon className=" h-4 w-4" />
           )}
           Generate Update Link
         </Button>
       ) : undefined}
     >
-      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6 max-w-5xl ">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-6">
             <Card className="border-card-border">

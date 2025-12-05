@@ -62,7 +62,7 @@ import {
   Palette,
   Link2,
   FileText,
-  Send,
+  ScrollText,
   MapPin,
   Tag,
 } from "lucide-react";
@@ -92,21 +92,20 @@ function useLayoutConfig() {
             href: "/team",
             icon: Users,
           },
-          {
-            name: "Contacts",
-            href: "/contacts",
-            icon: Contact,
-          },
-          {
-            name: "Vendors",
-            href: "/vendors",
-            icon: Store,
-          },
+
+
+          
+        ],
+      },
+      {
+        heading: "Venues",
+        items: [
           {
             name: "Venues",
             href: "/venues",
             icon: MapPin,
           },
+ 
           {
             name: "Amenities",
             href: "/amenities",
@@ -120,6 +119,31 @@ function useLayoutConfig() {
         ],
       },
       {
+        heading: "Vendors",
+        items: [
+          {
+            name: "Vendors",
+            href: "/vendors",
+            icon: Store,
+          },
+          {
+            name: "Contacts",
+            href: "/contacts",
+            icon: Contact,
+          },
+          {
+            name: "Forms",
+            href: "/forms/templates",
+            icon: FileText,
+          },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: ScrollText,
+          },
+        ],
+      },
+            {
         heading: "App",
         allowedRoles: ["admin"],
         items: [
@@ -138,21 +162,6 @@ function useLayoutConfig() {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
-          },
-        ],
-      },
-      {
-        heading: "Forms",
-        items: [
-          {
-            name: "Templates",
-            href: "/forms/templates",
-            icon: FileText,
-          },
-          {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: Send,
           },
         ],
       },

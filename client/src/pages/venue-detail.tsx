@@ -153,7 +153,7 @@ export default function VenueDetailPage() {
         ) : null
       }
     >
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1
@@ -171,22 +171,7 @@ export default function VenueDetailPage() {
               </p>
             )}
           </div>
-          <Badge
-            variant={venue.isActive ? "default" : "secondary"}
-            data-testid="badge-venue-status"
-          >
-            {venue.isActive ? (
-              <>
-                <Check className="mr-1 h-3 w-3" />
-                Active
-              </>
-            ) : (
-              <>
-                <X className="mr-1 h-3 w-3" />
-                Inactive
-              </>
-            )}
-          </Badge>
+ 
         </div>
 
         {venue.primaryPhotoUrl && (
