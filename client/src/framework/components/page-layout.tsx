@@ -6,15 +6,15 @@ import type { Breadcrumb, ActionButton } from "../types/layout";
 interface PageLayoutProps {
   children: ReactNode;
   breadcrumbs?: Breadcrumb[];
-  actionButton?: ActionButton;
-  customHeaderAction?: ReactNode;
+  primaryAction?: ActionButton;
+  additionalActions?: ActionButton[];
 }
 
 export default function PageLayout({
   children,
   breadcrumbs,
-  actionButton,
-  customHeaderAction,
+  primaryAction,
+  additionalActions,
 }: PageLayoutProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -30,8 +30,8 @@ export default function PageLayout({
             isMobileOpen={isMobileOpen}
             onToggle={() => setIsMobileOpen(!isMobileOpen)}
             breadcrumbs={breadcrumbs}
-            actionButton={actionButton}
-            customAction={customHeaderAction}
+            primaryAction={primaryAction}
+            additionalActions={additionalActions}
           />
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
