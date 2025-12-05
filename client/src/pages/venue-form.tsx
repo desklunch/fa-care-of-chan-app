@@ -46,8 +46,10 @@ import { VenueAddressAutocomplete, ParsedAddress } from "@/components/ui/venue-a
 import { GooglePlaceSearch, PlaceResult } from "@/components/ui/google-place-search";
 import { GooglePlacePhotoPicker } from "@/components/ui/google-place-photo-picker";
 import { PhotoUploader } from "@/components/ui/photo-uploader";
-import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical } from "lucide-react";
-import type { VenueWithRelations } from "@shared/schema";
+import { FloorplanUploader } from "@/components/ui/floorplan-uploader";
+import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check } from "lucide-react";
+import type { VenueWithRelations, VenueFloorplan } from "@shared/schema";
+import { formatDistanceToNow } from "date-fns";
 import { insertVenueSchema } from "@shared/schema";
 
 const venueFormSchema = insertVenueSchema.extend({
@@ -162,19 +164,181 @@ function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, onView, onDelete
   );
 }
 
+interface FloorplanItemProps {
+  floorplan: VenueFloorplan;
+  onEdit: (id: string, updates: { title?: string; caption?: string }) => void;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+}
+
+function FloorplanItem({ floorplan, onEdit, onDelete, isDeleting }: FloorplanItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(floorplan.title || "");
+  const [editCaption, setEditCaption] = useState(floorplan.caption || "");
+
+  const handleSave = () => {
+    onEdit(floorplan.id, { 
+      title: editTitle.trim() || undefined, 
+      caption: editCaption.trim() || undefined 
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditTitle(floorplan.title || "");
+    setEditCaption(floorplan.caption || "");
+    setIsEditing(false);
+  };
+
+  const isPdf = floorplan.fileType === "pdf";
+  const displayUrl = floorplan.thumbnailUrl || floorplan.fileUrl;
+  const uploadedAgo = floorplan.uploadedAt 
+    ? formatDistanceToNow(new Date(floorplan.uploadedAt), { addSuffix: true })
+    : "";
+
+  return (
+    <div 
+      className="border rounded-lg p-4 space-y-3"
+      data-testid={`floorplan-item-${floorplan.id}`}
+    >
+      <div className="flex gap-4">
+        <div className="shrink-0 w-24 h-24 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+          {isPdf ? (
+            <FileText className="h-12 w-12 text-red-500" />
+          ) : displayUrl ? (
+            <img 
+              src={displayUrl} 
+              alt={floorplan.title || "Floorplan"} 
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => window.open(floorplan.fileUrl, "_blank")}
+            />
+          ) : (
+            <FileImage className="h-12 w-12 text-blue-500" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-1">
+          {isEditing ? (
+            <div className="space-y-2">
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Title (optional)"
+                className="h-8"
+                data-testid={`input-floorplan-title-${floorplan.id}`}
+              />
+              <Textarea
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                placeholder="Caption (optional)"
+                className="resize-none text-sm"
+                rows={2}
+                data-testid={`input-floorplan-caption-${floorplan.id}`}
+              />
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  onClick={handleSave}
+                  data-testid={`button-save-floorplan-${floorplan.id}`}
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Save
+                </Button>
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleCancel}
+                  data-testid={`button-cancel-floorplan-${floorplan.id}`}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">
+                    {floorplan.title || "Untitled Floorplan"}
+                  </p>
+                  {floorplan.caption && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {floorplan.caption}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.open(floorplan.fileUrl, "_blank")}
+                    title="View full size"
+                    data-testid={`button-view-floorplan-${floorplan.id}`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsEditing(true)}
+                    title="Edit details"
+                    data-testid={`button-edit-floorplan-${floorplan.id}`}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(floorplan.id)}
+                    disabled={isDeleting}
+                    title="Delete floorplan"
+                    data-testid={`button-delete-floorplan-${floorplan.id}`}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{isPdf ? "PDF" : "Image"}</span>
+                {uploadedAgo && (
+                  <>
+                    <span>•</span>
+                    <span>Uploaded {uploadedAgo}</span>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function VenueFormPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const isEditing = !!id;
+  const isEditingVenue = !!id;
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [selectedPlaceName, setSelectedPlaceName] = useState<string>("");
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
+  const [deletingFloorplanId, setDeletingFloorplanId] = useState<string | null>(null);
 
   const { data: venue, isLoading: isLoadingVenue } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
-    enabled: isEditing,
+    enabled: isEditingVenue,
   });
 
   const form = useForm<VenueFormValues>({
@@ -317,8 +481,105 @@ export default function VenueFormPage() {
     },
   });
 
+  // Floorplan mutations
+  const createFloorplanMutation = useMutation({
+    mutationFn: async (data: { 
+      fileUrl: string; 
+      thumbnailUrl?: string; 
+      fileType: "image" | "pdf"; 
+      title?: string; 
+      caption?: string; 
+    }) => {
+      const response = await apiRequest("POST", `/api/venues/${id}/floorplans`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Floorplan uploaded",
+        description: "The floorplan has been added successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload floorplan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateFloorplanMutation = useMutation({
+    mutationFn: async ({ floorplanId, ...data }: { 
+      floorplanId: string; 
+      title?: string; 
+      caption?: string; 
+    }) => {
+      const response = await apiRequest("PATCH", `/api/floorplans/${floorplanId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Floorplan updated",
+        description: "The floorplan details have been saved.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update floorplan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteFloorplanMutation = useMutation({
+    mutationFn: async (floorplanId: string) => {
+      await apiRequest("DELETE", `/api/floorplans/${floorplanId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+      toast({
+        title: "Floorplan deleted",
+        description: "The floorplan has been removed.",
+      });
+      setDeletingFloorplanId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete floorplan",
+        variant: "destructive",
+      });
+      setDeletingFloorplanId(null);
+    },
+  });
+
+  const handleFloorplanUploaded = (
+    result: { fileUrl: string; thumbnailUrl?: string; fileType: "image" | "pdf" },
+    metadata: { title?: string; caption?: string }
+  ) => {
+    createFloorplanMutation.mutate({
+      fileUrl: result.fileUrl,
+      thumbnailUrl: result.thumbnailUrl,
+      fileType: result.fileType,
+      title: metadata.title,
+      caption: metadata.caption,
+    });
+  };
+
+  const handleFloorplanEdit = (floorplanId: string, updates: { title?: string; caption?: string }) => {
+    updateFloorplanMutation.mutate({ floorplanId, ...updates });
+  };
+
+  const handleFloorplanDelete = (floorplanId: string) => {
+    setDeletingFloorplanId(floorplanId);
+    deleteFloorplanMutation.mutate(floorplanId);
+  };
+
   const onSubmit = (data: VenueFormValues) => {
-    if (isEditing) {
+    if (isEditingVenue) {
       updateMutation.mutate(data);
     } else {
       createMutation.mutate(data);
@@ -444,10 +705,10 @@ export default function VenueFormPage() {
 
   const breadcrumbs = [
     { label: "Venues", href: "/venues" },
-    { label: isEditing ? "Edit Venue" : "New Venue" },
+    { label: isEditingVenue ? "Edit Venue" : "New Venue" },
   ];
 
-  if (isEditing && isLoadingVenue) {
+  if (isEditingVenue && isLoadingVenue) {
     return (
       <PageLayout breadcrumbs={breadcrumbs}>
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -481,7 +742,7 @@ export default function VenueFormPage() {
             <GooglePlacePhotoPicker
               placeId={selectedPlaceId}
               placeName={selectedPlaceName}
-              venueId={isEditing ? parseInt(id!) : undefined}
+              venueId={isEditingVenue ? parseInt(id!) : undefined}
               open={photoPickerOpen}
               onOpenChange={setPhotoPickerOpen}
               onPhotosSelected={handlePhotosSelected}
@@ -822,7 +1083,7 @@ export default function VenueFormPage() {
                   <div className="flex-1">
         
                     <PhotoUploader
-                      venueId={isEditing ? parseInt(id!) : undefined}
+                      venueId={isEditingVenue ? parseInt(id!) : undefined}
                       onPhotoUploaded={(result) => {
                         appendPhotoUrl({ 
                           url: result.photoUrl, 
@@ -905,6 +1166,59 @@ export default function VenueFormPage() {
                 )}
               </CardContent>
             </Card>
+
+            {isEditingVenue && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Floorplans</CardTitle>
+                  <CardDescription>
+                    Upload floorplan images or PDFs with optional titles and captions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FloorplanUploader
+                    venueId={id!}
+                    onFloorplanUploaded={handleFloorplanUploaded}
+                    onError={(error) => {
+                      toast({
+                        title: "Upload failed",
+                        description: error,
+                        variant: "destructive",
+                      });
+                    }}
+                    disabled={createFloorplanMutation.isPending}
+                    data-testid="floorplan-uploader"
+                  />
+
+                  {venue?.floorplans && venue.floorplans.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">
+                        Uploaded Floorplans ({venue.floorplans.length})
+                      </Label>
+                      <div className="space-y-3">
+                        {venue.floorplans
+                          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                          .map((floorplan) => (
+                            <FloorplanItem
+                              key={floorplan.id}
+                              floorplan={floorplan}
+                              onEdit={handleFloorplanEdit}
+                              onDelete={handleFloorplanDelete}
+                              isDeleting={deletingFloorplanId === floorplan.id}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(!venue?.floorplans || venue.floorplans.length === 0) && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No floorplans added yet. Upload images or PDFs using the uploader above.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -1008,7 +1322,7 @@ export default function VenueFormPage() {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    {isEditing ? "Save Changes" : "Create Venue"}
+                    {isEditingVenue ? "Save Changes" : "Create Venue"}
                   </>
                 )}
               </Button>
