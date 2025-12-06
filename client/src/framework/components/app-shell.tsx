@@ -26,7 +26,7 @@ function AppShellContent({ children }: AppShellProps) {
             primaryAction={headerState.primaryAction}
             additionalActions={headerState.additionalActions}
           />
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 flex flex-col overflow-hidden border-4 border-green-500">{children}</main>
         </div>
       </div>
     </div>

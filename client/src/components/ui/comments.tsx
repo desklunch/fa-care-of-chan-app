@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CommentWithAuthor, User } from "@shared/schema";
-import { MessageSquare, Reply, Pencil, Trash2, X, Check, CornerDownRight, MoreVertical } from "lucide-react";
+import { MessageSquare, Pencil, Trash2, X, Check, CornerDownRight, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +33,7 @@ export function CommentForm({
   parentId, 
   onCancel,
   onSuccess,
-  placeholder = "Write a comment...",
+  placeholder = "Leave a comment…",
   autoFocus = false,
 }: CommentFormProps) {
   const [body, setBody] = useState("");
@@ -70,12 +70,12 @@ export function CommentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2" data-testid={parentId ? "form-reply" : "form-comment"}>
+    <form onSubmit={handleSubmit} className="flex items-start gap-2" data-testid={parentId ? "form-reply" : "form-comment"}>
       <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder={placeholder}
-        className="min-h-[80px] resize-none"
+        className="min-h-10 h-10 resize-y"
         autoFocus={autoFocus}
         data-testid={parentId ? "input-reply" : "input-comment"}
       />
@@ -96,8 +96,10 @@ export function CommentForm({
           size="sm" 
           disabled={!body.trim() || createMutation.isPending}
           data-testid="button-submit-comment"
+          className="h-10"
         >
-          {createMutation.isPending ? "Posting..." : (parentId ? "Reply" : "Comment")}
+          <MessageSquare className="h-3 w-3 " />
+          {createMutation.isPending ? "Posting..." : (parentId ? "Reply" : "Post")}
         </Button>
       </div>
     </form>
@@ -212,30 +214,29 @@ export function CommentItem({
   }
 
   return (
-    <div className={`space-y-2 ${isReply ? "pl-10" : ""}`} data-testid={`comment-${comment.id}`}>
-      <div className="flex gap-3">
+    <div className={`    ${isReply ? "space-y-4 border-none pt-0 pl-0" : "border-t pt-8  "}`} data-testid={`comment-${comment.id}`}>
+      <div className="flex gap-3 items-cen">
         {isReply && <CornerDownRight className="h-4 w-4 text-muted-foreground shrink-0 mt-3" />}
-        <Link href={`/team/${comment.createdById}`}>
-          <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
-            <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName()} />
-            <AvatarFallback className="text-xs">{getAuthorInitials()}</AvatarFallback>
-          </Avatar>
-        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Link 
               href={`/team/${comment.createdById}`}
-              className="font-medium text-sm hover:underline"
+              className="font-medium text-sm hover:underline flex gap-2 items-center"
               data-testid={`link-author-${comment.id}`}
             >
+              <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
+                <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName()} />
+                <AvatarFallback className="text-xs">{getAuthorInitials()}</AvatarFallback>
+              </Avatar>
               {getAuthorName()}
+              <span className="text-xs text-muted-foreground">
+                {formatTimeAgo(new Date(comment.createdAt))}
+              </span>
             </Link>
 
             {!isEditing && (
               <div className="flex   items-center justify-end gap-1 mt-2">
-                <span className="text-xs text-muted-foreground">
-                  {formatTimeAgo(new Date(comment.createdAt))}
-                </span>
+
                 {canReply && (
                   <Button
                     variant="ghost"
@@ -244,7 +245,7 @@ export function CommentItem({
                     onClick={() => setIsReplying(!isReplying)}
                     data-testid={`button-reply-${comment.id}`}
                   >
-                    <Reply className="h-3 w-3 mr-1" />
+                    <MessageSquare className="h-3 w-3 " />
                     Reply
                   </Button>
                 )}
@@ -403,8 +404,11 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
   const isAdmin = currentUser?.role === "admin";
 
   return (
-    <div className="space-y-6" data-testid="comment-list">
-      <CommentForm entityType={entityType} entityId={entityId} />
+    <div className="space-y-6 flex-1 bg-black" data-testid="comment-list">
+      <div className="bg-muted">
+        <CommentForm entityType={entityType} entityId={entityId} />
+
+      </div>
       
       {!comments || comments.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
@@ -412,7 +416,7 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
           <p>No comments yet. Be the first to comment!</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-8 flex-1 overflow-scroll border-4">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}

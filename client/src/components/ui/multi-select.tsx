@@ -422,6 +422,7 @@ export function MultiSelect({
           <DialogContent
             className="!p-0 !inset-2 !w-[calc(100vw-2rem)] !h-[calc(100dvh-2rem)] !max-w-none !flex !flex-col !overflow-hidden !translate-x-0 !translate-y-0 !left-[1rem] !top-[1rem] !right-[1rem] !bottom-[1rem] gap-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:zoom-in-50 data-[state=closed]:zoom-out-50 duration-500 rounded-xl"
             data-testid={`dialog-${testIdPrefix}`}
+            onOpenAutoFocus={(e) => e.preventDefault()}
           >
             <MultiSelectContent {...contentProps} isDropdown={false} />
           </DialogContent>

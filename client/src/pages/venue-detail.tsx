@@ -165,7 +165,7 @@ export default function VenueDetailPage() {
           : []),
       ]}
     >
-      <div className=" space-y-4`">
+      <div className=" space-y-4 overflow-hidden ">
         <div className="flex items-center justify-between p-4 md:px-6 pb-2">
           <div>
             <h1
@@ -191,12 +191,12 @@ export default function VenueDetailPage() {
             <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="max-w-4xl space-y-4">
+          <TabsContent value="overview" className="max-w-4xl space-y-4 border-4 border-red-500">
 
         {venue.photoUrls && venue.photoUrls.length > 0 && (
           <> 
             <Card>
-              <CardContent className="p-0 space-y-0 h-64">
+              <CardContent className="p-0 space-y-0 h-64 ">
                 <button
                   type="button"
                   onClick={() => {
@@ -762,17 +762,12 @@ export default function VenueDetailPage() {
 
           </TabsContent>
 
-          <TabsContent value="comments" className="max-w-4xl ">
-            <Card>
-
-              <CardContent className="p-4">
-                <CommentList
-                  entityType="venue"
-                  entityId={id!}
-                  currentUser={user || undefined}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="comments" className="flex h-full flex-col">
+            <CommentList
+              entityType="venue"
+              entityId={id!}
+              currentUser={user || undefined}
+            />
           </TabsContent>
         </Tabs>
       </div>
