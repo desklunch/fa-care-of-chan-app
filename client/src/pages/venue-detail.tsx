@@ -165,8 +165,8 @@ export default function VenueDetailPage() {
           : []),
       ]}
     >
-      <div className="max-w-4xl p-4 md:p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className=" space-y-4`">
+        <div className="flex items-center justify-between p-4 md:px-6 pb-2">
           <div>
             <h1
               className="text-2xl font-bold"
@@ -186,17 +186,17 @@ export default function VenueDetailPage() {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList data-testid="tabs-venue">
+          <TabsList data-testid="tabs-venue" className="px-4 md:px-6">
             <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
             <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6 mt-6">
+          <TabsContent value="overview" className="max-w-4xl space-y-4">
 
         {venue.photoUrls && venue.photoUrls.length > 0 && (
-          <>
+          <> 
             <Card>
-              <CardContent className="p-0">
+              <CardContent className="p-0 space-y-0 h-64">
                 <button
                   type="button"
                   onClick={() => {
@@ -762,15 +762,10 @@ export default function VenueDetailPage() {
 
           </TabsContent>
 
-          <TabsContent value="comments" className="mt-6">
+          <TabsContent value="comments" className="max-w-4xl ">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Comments</CardTitle>
-                <CardDescription>
-                  Share your thoughts about this venue
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+
+              <CardContent className="p-4">
                 <CommentList
                   entityType="venue"
                   entityId={id!}

@@ -9,7 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CommentWithAuthor, User } from "@shared/schema";
-import { MessageSquare, Reply, Pencil, Trash2, X, Check, CornerDownRight } from "lucide-react";
+import { MessageSquare, Reply, Pencil, Trash2, X, Check, CornerDownRight, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface CommentFormProps {
   entityType: string;
@@ -283,30 +289,41 @@ export function CommentItem({
                   Reply
                 </Button>
               )}
-              {canEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setIsEditing(true)}
-                  data-testid={`button-edit-${comment.id}`}
-                >
-                  <Pencil className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
-              )}
-              {canDelete && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                  onClick={() => deleteMutation.mutate()}
-                  disabled={deleteMutation.isPending}
-                  data-testid={`button-delete-${comment.id}`}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                </Button>
+              {(canEdit || canDelete) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                      data-testid={`button-comment-menu-${comment.id}`}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {canEdit && (
+                      <DropdownMenuItem
+                        onClick={() => setIsEditing(true)}
+                        data-testid={`button-edit-${comment.id}`}
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete && (
+                      <DropdownMenuItem
+                        onClick={() => deleteMutation.mutate()}
+                        disabled={deleteMutation.isPending}
+                        className="text-destructive focus:text-destructive"
+                        data-testid={`button-delete-${comment.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           )}
