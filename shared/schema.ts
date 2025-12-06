@@ -487,6 +487,37 @@ export const vendorUpdateTokens = pgTable(
   ],
 );
 
+// Entity types that can have comments
+export const commentEntityTypes = [
+  "venue",
+  "vendor",
+  "contact",
+  "venue_collection",
+] as const;
+export type CommentEntityType = (typeof commentEntityTypes)[number];
+
+// Unified comments system
+export const comments = pgTable(
+  "comments",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    body: text("body").notNull(),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    parentId: varchar("parent_id"),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    index("idx_comments_entity").on(table.entityType, table.entityId),
+    index("idx_comments_parent").on(table.parentId),
+    index("idx_comments_created_by").on(table.createdById),
+    index("idx_comments_created_at").on(table.createdAt),
+  ],
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdInvites: many(invites),
@@ -1356,6 +1387,13 @@ export const formResponsesRelations = relations(formResponses, ({ one }) => ({
   }),
 }));
 
+export const commentsRelations = relations(comments, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [comments.createdById],
+    references: [users.id],
+  }),
+}));
+
 // Form outreach types
 export type FormTemplate = typeof formTemplates.$inferSelect;
 export type InsertFormTemplate = typeof formTemplates.$inferInsert;
@@ -1483,3 +1521,32 @@ export const insertFormResponseSchema = z.object({
 });
 
 export type CreateFormResponse = z.infer<typeof insertFormResponseSchema>;
+
+// Comment types
+export type Comment = typeof comments.$inferSelect;
+export type InsertComment = typeof comments.$inferInsert;
+
+export type CommentWithAuthor = Comment & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  replies?: CommentWithAuthor[];
+};
+
+export const insertCommentSchema = createInsertSchema(comments).omit({
+  id: true,
+  createdById: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+}).extend({
+  body: z.string().min(1, "Comment cannot be empty"),
+  entityType: z.enum(commentEntityTypes),
+  entityId: z.string().min(1),
+  parentId: z.string().optional().nullable(),
+});
+
+export const updateCommentSchema = z.object({
+  body: z.string().min(1, "Comment cannot be empty"),
+});
+
+export type CreateComment = z.infer<typeof insertCommentSchema>;
+export type UpdateComment = z.infer<typeof updateCommentSchema>;
