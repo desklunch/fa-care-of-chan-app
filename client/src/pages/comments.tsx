@@ -22,10 +22,17 @@ const entityTypeLabels: Record<string, { label: string; icon: typeof Building2; 
 export default function CommentsPage() {
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>("all");
 
-  const queryParams = entityTypeFilter !== "all" ? `?entityType=${entityTypeFilter}` : "";
+  const queryUrl = entityTypeFilter !== "all" 
+    ? `/api/comments?entityType=${entityTypeFilter}` 
+    : "/api/comments";
   
   const { data: comments, isLoading, error } = useQuery<CommentWithAuthor[]>({
     queryKey: ["/api/comments", entityTypeFilter],
+    queryFn: async () => {
+      const res = await fetch(queryUrl, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch comments");
+      return res.json();
+    },
   });
 
   const breadcrumbs = [{ label: "Comments" }];
