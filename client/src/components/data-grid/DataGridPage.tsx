@@ -65,7 +65,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         sortable: false,
         filter: false,
         resizable: false,
-        pinned: "left",
+      
       });
     }
     

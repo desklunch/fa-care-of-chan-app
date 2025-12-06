@@ -534,28 +534,30 @@ export default function VenuesPage() {
     if (selectedRows.length === 0) return null;
     
     return (
-      <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 border-b">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-primary ml-2">
           {selectedRows.length} venue{selectedRows.length !== 1 ? "s" : ""} selected
         </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleAddToCollection(selectedRows, clearSelection)}
-          data-testid="button-add-selected-to-collection"
-        >
-          <FolderPlus className="h-4 w-4 mr-2" />
-          Add to Collection
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearSelection}
-          data-testid="button-clear-selection"
-        >
-          <X className="h-4 w-4 mr-1" />
-          Clear
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleAddToCollection(selectedRows, clearSelection)}
+            data-testid="button-add-selected-to-collection"
+          >
+            <FolderPlus className="h-4 w-4" />
+            Add to Collection
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearSelection}
+            data-testid="button-clear-selection"
+          >
+            Clear
+          </Button>
+        </div>
+ 
       </div>
     );
   }, [handleAddToCollection]);

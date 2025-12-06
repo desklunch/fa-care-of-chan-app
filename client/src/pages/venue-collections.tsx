@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,7 +99,7 @@ export default function VenueCollectionsPage() {
                 onClick={() => handleCollectionClick(collection.id)}
                 data-testid={`card-collection-${collection.id}`}
               >
-                <CardHeader className="pb-3">
+                <CardHeader className="p-4 pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg truncate" data-testid={`text-collection-name-${collection.id}`}>
@@ -117,21 +117,20 @@ export default function VenueCollectionsPage() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CardContent className="p-4 pt-0">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {collection.createdBy ? (
-                      <>
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={collection.createdBy.profileImageUrl || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {collection.createdBy.firstName?.[0] || "?"}
-                            {collection.createdBy.lastName?.[0] || ""}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>
-                          Created by {collection.createdBy.firstName} {collection.createdBy.lastName}
-                        </span>
-                      </>
+                      <span>
+                        Created by{" "}
+                        <Link 
+                          href={`/team/${collection.createdBy.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:underline text-foreground"
+                          data-testid={`link-creator-${collection.createdBy.id}`}
+                        >
+                          {collection.createdBy.firstName}
+                        </Link>
+                      </span>
                     ) : (
                       <span>Created by unknown user</span>
                     )}

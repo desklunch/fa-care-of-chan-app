@@ -89,15 +89,53 @@ function VenueCard({
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
         >
+        </div>
+      </div>
+      
+      <CardHeader className="pb-2 space-y-0 p-">
+        <CardTitle className="text-base line-clamp-1" data-testid={`text-venue-name-${venue.id}`}>
+          {venue.name}
+        </CardTitle>
+        {location && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="truncate">{location}</span>
+          </div>
+        )}
+        {venue.shortDescription && (
+          <CardDescription className="line-clamp-2">
+            {venue.shortDescription}
+          </CardDescription>
+        )}
+      </CardHeader>
+      
+      <CardContent className="pt-0 pb-2 px-4 space-y-2">
+
+        
+
+        <div className="flex w-full justify-between items-center">
+          {venue.addedBy && venue.addedAt && (
+            <div className="text-xs text-muted-foreground">
+              Added by{" "}
+              <Link 
+                href={`/team/${venue.addedBy.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="hover:underline text-foreground"
+                data-testid={`link-added-by-${venue.addedBy.id}`}
+              >
+                {venue.addedBy.firstName}
+              </Link>{" "}
+              {formatDistanceToNow(new Date(venue.addedAt), { addSuffix: true })}
+            </div>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button 
-                variant="secondary" 
+                variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                className=""
                 data-testid={`button-venue-menu-${venue.id}`}
               >
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -118,66 +156,7 @@ function VenueCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-      
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base line-clamp-1" data-testid={`text-venue-name-${venue.id}`}>
-          {venue.name}
-        </CardTitle>
-        {venue.shortDescription && (
-          <CardDescription className="line-clamp-2">
-            {venue.shortDescription}
-          </CardDescription>
-        )}
-      </CardHeader>
-      
-      <CardContent className="pt-0 space-y-2">
-        {location && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{location}</span>
-          </div>
-        )}
-        
-        <div className="flex items-center gap-3 flex-wrap">
-          {venue.phone && (
-            <a 
-              href={`tel:${venue.phone}`}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Phone className="h-3.5 w-3.5" />
-            </a>
-          )}
-          {venue.website && (
-            <a 
-              href={venue.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Globe className="h-3.5 w-3.5" />
-            </a>
-          )}
-          {venue.instagramAccount && (
-            <a 
-              href={`https://instagram.com/${venue.instagramAccount.replace(/^@/, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-500"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Instagram className="h-3.5 w-3.5" />
-            </a>
-          )}
-        </div>
 
-        {venue.addedBy && venue.addedAt && (
-          <div className="text-xs text-muted-foreground pt-1 border-t">
-            Added by {venue.addedBy.firstName} {venue.addedBy.lastName} {formatDistanceToNow(new Date(venue.addedAt), { addSuffix: true })}
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -307,15 +286,15 @@ export default function VenueCollectionDetail() {
           
           {collection.createdBy && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Avatar className="h-5 w-5">
-                <AvatarImage src={collection.createdBy.profileImageUrl || undefined} />
-                <AvatarFallback className="text-xs">
-                  {collection.createdBy.firstName?.[0] || "?"}
-                  {collection.createdBy.lastName?.[0] || ""}
-                </AvatarFallback>
-              </Avatar>
               <span>
-                Created by {collection.createdBy.firstName} {collection.createdBy.lastName}
+                Created by{" "}
+                <Link 
+                  href={`/team/${collection.createdBy.id}`}
+                  className="hover:underline text-foreground"
+                  data-testid={`link-creator-${collection.createdBy.id}`}
+                >
+                  {collection.createdBy.firstName}
+                </Link>
               </span>
             </div>
           )}

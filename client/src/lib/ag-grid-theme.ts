@@ -12,5 +12,5 @@ export const gridTheme = themeQuartz
     iconColor: "hsl(var(--input))",
     borderColor: "hsl(var(--border))", 
     chromeBackgroundColor: "hsl(var(--sidebar))",
-
+    pinnedColumnBorder: false
   });
