@@ -35,6 +35,9 @@ import {
   insertVenueCollectionSchema,
   updateVenueCollectionSchema,
   addVenuesToCollectionSchema,
+  insertCommentSchema,
+  updateCommentSchema,
+  commentEntityTypes,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -3457,6 +3460,151 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error submitting form response:", error);
       res.status(500).json({ message: "Failed to submit response" });
+    }
+  });
+
+  // ===== COMMENTS ROUTES =====
+
+  // GET /api/comments - get all comments with optional entity type filter
+  app.get("/api/comments", isAuthenticated, async (req, res) => {
+    try {
+      const entityType = req.query.entityType as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      // Validate entityType if provided
+      if (entityType && !commentEntityTypes.includes(entityType as any)) {
+        return res.status(400).json({ message: "Invalid entity type" });
+      }
+      
+      const comments = await storage.getAllComments({ entityType, limit });
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // GET /api/comments/:entityType/:entityId - get comments for a specific entity
+  app.get("/api/comments/:entityType/:entityId", isAuthenticated, async (req, res) => {
+    try {
+      const { entityType, entityId } = req.params;
+      
+      // Validate entityType
+      if (!commentEntityTypes.includes(entityType as any)) {
+        return res.status(400).json({ message: "Invalid entity type" });
+      }
+      
+      const comments = await storage.getCommentsByEntity(entityType, entityId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // POST /api/comments - create a new comment
+  app.post("/api/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const result = insertCommentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      // If this is a reply, verify parent exists and get its entityType/entityId
+      if (result.data.parentId) {
+        const parentComment = await storage.getCommentById(result.data.parentId);
+        if (!parentComment) {
+          return res.status(404).json({ message: "Parent comment not found" });
+        }
+        // Don't allow replying to replies (single level only)
+        if (parentComment.parentId) {
+          return res.status(400).json({ message: "Cannot reply to a reply. Only single-level replies are supported." });
+        }
+      }
+
+      const comment = await storage.createComment(result.data, userId);
+      
+      // Fetch the comment with author info to return
+      const commentWithAuthor = await storage.getCommentById(comment.id);
+      
+      res.status(201).json(commentWithAuthor);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // PATCH /api/comments/:id - update a comment (only author can update)
+  app.patch("/api/comments/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commentId = req.params.id;
+      
+      const existingComment = await storage.getCommentById(commentId);
+      if (!existingComment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      // Check if deleted
+      if (existingComment.deletedAt) {
+        return res.status(400).json({ message: "Cannot edit a deleted comment" });
+      }
+
+      // Only author can edit
+      if (existingComment.createdById !== userId) {
+        return res.status(403).json({ message: "You can only edit your own comments" });
+      }
+
+      const result = updateCommentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const updatedComment = await storage.updateComment(commentId, result.data.body);
+      
+      // Fetch updated comment with author info
+      const commentWithAuthor = await storage.getCommentById(commentId);
+      
+      res.json(commentWithAuthor);
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      res.status(500).json({ message: "Failed to update comment" });
+    }
+  });
+
+  // DELETE /api/comments/:id - soft delete a comment (author or admin only)
+  app.delete("/api/comments/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commentId = req.params.id;
+      
+      const existingComment = await storage.getCommentById(commentId);
+      if (!existingComment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      // Check if already deleted
+      if (existingComment.deletedAt) {
+        return res.status(400).json({ message: "Comment already deleted" });
+      }
+
+      // Get user to check if admin
+      const user = await storage.getUser(userId);
+      const isAdminUser = user?.role === "admin";
+
+      // Only author or admin can delete
+      if (existingComment.createdById !== userId && !isAdminUser) {
+        return res.status(403).json({ message: "You can only delete your own comments" });
+      }
+
+      await storage.softDeleteComment(commentId);
+      
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
     }
   });
 

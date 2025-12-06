@@ -27,6 +27,7 @@ import {
   formRequests,
   outreachTokens,
   formResponses,
+  comments,
   type User,
   type UpsertUser,
   type Invite,
@@ -108,6 +109,12 @@ import {
   type UpdateVenueCollection,
   type VenueCollectionWithCreator,
   type VenueCollectionWithVenues,
+  type Comment,
+  type InsertComment,
+  type CommentWithAuthor,
+  type CreateComment,
+  type UpdateComment,
+  commentEntityTypes,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -322,6 +329,14 @@ export interface IStorage {
   
   // Public form data (for unauthenticated access)
   getPublicFormData(token: string): Promise<PublicFormData | undefined>;
+  
+  // Comment operations
+  getCommentsByEntity(entityType: string, entityId: string): Promise<CommentWithAuthor[]>;
+  getAllComments(options?: { entityType?: string; limit?: number }): Promise<CommentWithAuthor[]>;
+  getCommentById(id: string): Promise<CommentWithAuthor | undefined>;
+  createComment(data: CreateComment, createdById: string): Promise<Comment>;
+  updateComment(id: string, body: string): Promise<Comment | undefined>;
+  softDeleteComment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2492,6 +2507,135 @@ export class DatabaseStorage implements IStorage {
       },
       existingResponse: existingResponse as Record<string, unknown> | null,
     };
+  }
+
+  // Comment operations
+  async getCommentsByEntity(entityType: string, entityId: string): Promise<CommentWithAuthor[]> {
+    const allComments = await db
+      .select({
+        id: comments.id,
+        body: comments.body,
+        entityType: comments.entityType,
+        entityId: comments.entityId,
+        parentId: comments.parentId,
+        createdById: comments.createdById,
+        createdAt: comments.createdAt,
+        updatedAt: comments.updatedAt,
+        deletedAt: comments.deletedAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.createdById, users.id))
+      .where(
+        and(
+          eq(comments.entityType, entityType),
+          eq(comments.entityId, entityId)
+        )
+      )
+      .orderBy(desc(comments.createdAt));
+
+    // Group comments with replies (single level only)
+    const topLevelComments = allComments.filter(c => !c.parentId);
+    const replies = allComments.filter(c => c.parentId);
+
+    return topLevelComments.map(comment => ({
+      ...comment,
+      replies: replies
+        .filter(r => r.parentId === comment.id)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    }));
+  }
+
+  async getAllComments(options?: { entityType?: string; limit?: number }): Promise<CommentWithAuthor[]> {
+    let query = db
+      .select({
+        id: comments.id,
+        body: comments.body,
+        entityType: comments.entityType,
+        entityId: comments.entityId,
+        parentId: comments.parentId,
+        createdById: comments.createdById,
+        createdAt: comments.createdAt,
+        updatedAt: comments.updatedAt,
+        deletedAt: comments.deletedAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.createdById, users.id))
+      .orderBy(desc(comments.createdAt));
+
+    if (options?.entityType) {
+      query = query.where(eq(comments.entityType, options.entityType)) as typeof query;
+    }
+
+    if (options?.limit) {
+      query = query.limit(options.limit) as typeof query;
+    }
+
+    return await query;
+  }
+
+  async getCommentById(id: string): Promise<CommentWithAuthor | undefined> {
+    const [comment] = await db
+      .select({
+        id: comments.id,
+        body: comments.body,
+        entityType: comments.entityType,
+        entityId: comments.entityId,
+        parentId: comments.parentId,
+        createdById: comments.createdById,
+        createdAt: comments.createdAt,
+        updatedAt: comments.updatedAt,
+        deletedAt: comments.deletedAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.createdById, users.id))
+      .where(eq(comments.id, id));
+
+    return comment || undefined;
+  }
+
+  async createComment(data: CreateComment, createdById: string): Promise<Comment> {
+    const [comment] = await db
+      .insert(comments)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return comment;
+  }
+
+  async updateComment(id: string, body: string): Promise<Comment | undefined> {
+    const [comment] = await db
+      .update(comments)
+      .set({ body, updatedAt: new Date() })
+      .where(eq(comments.id, id))
+      .returning();
+    return comment || undefined;
+  }
+
+  async softDeleteComment(id: string): Promise<void> {
+    await db
+      .update(comments)
+      .set({ deletedAt: new Date(), body: "" })
+      .where(eq(comments.id, id));
   }
 }
 
