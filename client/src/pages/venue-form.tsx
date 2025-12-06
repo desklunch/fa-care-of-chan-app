@@ -51,7 +51,7 @@ import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive } from "lucide-react";
 import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader } from "@shared/schema";
-import { formatDistanceToNow } from "date-fns";
+import { formatTimeAgo } from "@/lib/format-time";
 import { insertVenueSchema } from "@shared/schema";
 
 const venueFormSchema = insertVenueSchema.extend({
@@ -195,7 +195,7 @@ function FloorplanItem({ floorplan, onEdit, onDelete, isDeleting }: FloorplanIte
   const isPdf = floorplan.fileType === "pdf";
   const displayUrl = floorplan.thumbnailUrl || floorplan.fileUrl;
   const uploadedAgo = floorplan.uploadedAt 
-    ? formatDistanceToNow(new Date(floorplan.uploadedAt), { addSuffix: true })
+    ? formatTimeAgo(new Date(floorplan.uploadedAt))
     : "";
 
   return (
@@ -402,7 +402,7 @@ function AttachmentItem({ file, onEdit, onDelete, isDeleting }: AttachmentItemPr
   };
 
   const uploadedAgo = file.uploadedAt 
-    ? formatDistanceToNow(new Date(file.uploadedAt), { addSuffix: true })
+    ? formatTimeAgo(new Date(file.uploadedAt))
     : "";
   
   const uploaderName = file.uploadedBy 

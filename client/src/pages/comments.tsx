@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { formatDistanceToNow } from "date-fns";
+import { formatTimeAgo } from "@/lib/format-time";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -159,7 +159,7 @@ export default function CommentsPage() {
                             {getAuthorName(comment)}
                           </Link>
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                            {formatTimeAgo(new Date(comment.createdAt))}
                           </span>
                           {isEdited && !isDeleted && (
                             <span className="text-xs text-muted-foreground italic">(edited)</span>

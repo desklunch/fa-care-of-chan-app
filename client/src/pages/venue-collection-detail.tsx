@@ -29,7 +29,7 @@ import {
   FolderOpen,
   ImageOff
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatTimeAgo } from "@/lib/format-time";
 
 type VenueInCollection = Venue & { 
   addedBy: { id: string; firstName: string | null; lastName: string | null } | null; 
@@ -124,7 +124,7 @@ function VenueCard({
               >
                 {venue.addedBy.firstName}
               </Link>{" "}
-              {formatDistanceToNow(new Date(venue.addedAt), { addSuffix: true })}
+              {formatTimeAgo(new Date(venue.addedAt))}
             </div>
           )}
           <DropdownMenu>

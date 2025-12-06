@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
-import { formatDistanceToNow } from "date-fns";
+import { formatTimeAgo } from "@/lib/format-time";
 import { Link } from "wouter";
 import type { VenueWithRelations, VenueCollectionWithCreator } from "@shared/schema";
 
@@ -555,7 +555,7 @@ export default function VenueDetailPage() {
                         )}
                         {floorplan.uploadedAt && (
                           <p className="text-xs text-muted-foreground" data-testid={`text-floorplan-date-${floorplan.id}`}>
-                            Uploaded {formatDistanceToNow(new Date(floorplan.uploadedAt), { addSuffix: true })}
+                            Uploaded {formatTimeAgo(new Date(floorplan.uploadedAt))}
                           </p>
                         )}
                       </div>
@@ -583,7 +583,7 @@ export default function VenueDetailPage() {
                   .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
                   .map((attachment) => {
                     const uploadedAgo = attachment.uploadedAt 
-                      ? formatDistanceToNow(new Date(attachment.uploadedAt), { addSuffix: true })
+                      ? formatTimeAgo(new Date(attachment.uploadedAt))
                       : "";
                     const uploaderName = attachment.uploadedBy 
                       ? `${attachment.uploadedBy.firstName || ""} ${attachment.uploadedBy.lastName || ""}`.trim() || "Unknown"
