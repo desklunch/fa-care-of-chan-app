@@ -273,6 +273,34 @@ export default function VenueDetailPage() {
           </>
         )}
 
+            {venue.longDescription && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-lg">About</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(venue.longDescription || "");
+                        toast({ title: "Copied to clipboard" });
+                      }}
+                      data-testid="button-copy-description"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p
+                    className="whitespace-pre-wrap"
+                    data-testid="text-venue-long-description"
+                  >
+                    {venue.longDescription}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -423,28 +451,7 @@ export default function VenueDetailPage() {
 
               </>
             )}
-        {(venue.streetAddress1 || venue.city) && (
-          <VenueMap
-            address={[venue.streetAddress1, venue.city, venue.state, venue.zipCode].filter(Boolean).join(", ")}
-            venueName={venue.name}
-          />
-        )}
-
-        {venue.longDescription && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p
-                className="whitespace-pre-wrap"
-                data-testid="text-venue-long-description"
-              >
-                {venue.longDescription}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        
 
         <Card>
           <CardHeader>
