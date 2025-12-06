@@ -321,7 +321,7 @@ export function CommentItem({
               </div>
             </div>
           ) : (
-            <p className="mt-1 text-sm whitespace-pre-wrap break-words" data-testid={`text-comment-body-${comment.id}`}>
+            <p className="mt-2 text-sm whitespace-pre-wrap break-words" data-testid={`text-comment-body-${comment.id}`}>
               {comment.body}
               {isEdited && (
                 <p className="text-xs text-muted-foreground mt-1">Edited</p>
@@ -404,8 +404,8 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
   const isAdmin = currentUser?.role === "admin";
 
   return (
-    <div className="space-y-6 flex-1 bg-black" data-testid="comment-list">
-      <div className="bg-muted">
+    <div className="space-y-6 flex-1 " data-testid="comment-list">
+      <div>
         <CommentForm entityType={entityType} entityId={entityId} />
 
       </div>
@@ -416,7 +416,7 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
           <p>No comments yet. Be the first to comment!</p>
         </div>
       ) : (
-        <div className="space-y-8 flex-1 overflow-scroll border-4">
+        <div className="space-y-8 ">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}

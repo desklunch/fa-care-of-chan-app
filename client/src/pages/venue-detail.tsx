@@ -47,6 +47,7 @@ import {
   ChevronRight,
   ZoomIn,
   FolderPlus,
+  Map,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
@@ -165,38 +166,40 @@ export default function VenueDetailPage() {
           : []),
       ]}
     >
-      <div className=" space-y-4 overflow-hidden ">
-        <div className="flex items-center justify-between p-4 md:px-6 pb-2">
-          <div>
-            <h1
-              className="text-2xl font-bold"
-              data-testid="text-venue-name"
-            >
-              {venue.name}
-            </h1>
-            {venue.shortDescription && (
-              <p
-                className="text-muted-foreground mt-1"
-                data-testid="text-venue-short-description"
-              >
-                {venue.shortDescription}
-              </p>
-            )}
-          </div>
-        </div>
+      <div className=" ">
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList data-testid="tabs-venue" className="px-4 md:px-6">
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
-          </TabsList>
+          <div className="sticky top-[0px] bg-background z-10">
+            <div className="p-4 md:p-6 pb-2 md:pb-2 ">
+              <h1
+                className="text-2xl font-bold"
+                data-testid="text-venue-name"
+              >
+                {venue.name}
+              </h1>
+              {venue.shortDescription && (
+                <p
+                  className="text-muted-foreground mt-2"
+                  data-testid="text-venue-short-description"
+                >
+                  {venue.shortDescription}
+                </p>
+              )}
+            </div>
 
-          <TabsContent value="overview" className="max-w-4xl space-y-4 border-4 border-red-500">
+            <TabsList data-testid="tabs-venue" className="px-4 md:px-6">
+              <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+              <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+            </TabsList>
+          </div>
+
+
+          <TabsContent value="overview" className="max-w-4xl space-y-4">
 
         {venue.photoUrls && venue.photoUrls.length > 0 && (
           <> 
             <Card>
-              <CardContent className="p-0 space-y-0 h-64 ">
+              <CardContent className="p-0 space-y-0 h-64">
                 <button
                   type="button"
                   onClick={() => {
@@ -219,45 +222,7 @@ export default function VenueDetailPage() {
               </CardContent>
             </Card>
 
-            {venue.photoUrls.length > 1 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Image className="h-5 w-5" />
-                    Photo Gallery
-                  </CardTitle>
-                  <CardDescription>
-                    {venue.photoUrls.length - 1} additional photo{venue.photoUrls.length !== 2 ? "s" : ""}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {venue.photoUrls.slice(1).map((url, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => {
-                          setLightboxIndex(index + 1);
-                          setLightboxOpen(true);
-                        }}
-                        className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
-                        data-testid={`button-gallery-photo-${index}`}
-                      >
-                        <img
-                          src={url}
-                          alt={`${venue.name} photo ${index + 2}`}
-                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                          data-testid={`img-gallery-photo-${index}`}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
-                          <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+
 
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
               <DialogContent 
@@ -313,10 +278,10 @@ export default function VenueDetailPage() {
             <CardHeader>
               <CardTitle className="text-lg">Location</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               {(venue.streetAddress1 || venue.city || venue.state) ? (
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                <div className="flex items-start gap-4">
+                  <MapPin className="h-5 w-5 mt-1" />
                   <div data-testid="text-venue-address">
                     {venue.streetAddress1 && <div>{venue.streetAddress1}</div>}
                     {venue.streetAddress2 && <div>{venue.streetAddress2}</div>}
@@ -339,22 +304,21 @@ export default function VenueDetailPage() {
                     href={`https://www.google.com/maps/place/?q=place_id:${venue.googlePlaceId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                    className="inline-flex items-center gap-4 hover:underline"
                     data-testid="link-venue-google-maps"
                   >
-                    <MapPin className="h-4 w-4" />
+                    <Map className="h-5 w-5" />
                     View on Google Maps
-                    <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
               )}
 
               {venue.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-4">
+                  <Phone className="h-5 w-5" />
                   <a
                     href={`tel:${venue.phone}`}
-                    className="text-primary hover:underline"
+                    className=" hover:underline"
                     data-testid="link-venue-phone"
                   >
                     {venue.phone}
@@ -363,8 +327,8 @@ export default function VenueDetailPage() {
               )}
 
               {venue.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-4">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
                   <a
                     href={`mailto:${venue.email}`}
                     className="text-primary hover:underline"
@@ -381,19 +345,18 @@ export default function VenueDetailPage() {
             <CardHeader>
               <CardTitle className="text-lg">Online</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               {venue.website ? (
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-4">
+                  <Globe className="h-5 w-5" />
                   <a
                     href={venue.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1"
+                    className="hover:underline flex items-center gap-1"
                     data-testid="link-venue-website"
                   >
-                    Visit Website
-                    <ExternalLink className="h-3 w-3" />
+                    Website
                   </a>
                 </div>
               ) : (
@@ -401,27 +364,67 @@ export default function VenueDetailPage() {
               )}
 
               {venue.instagramAccount && (
-                <div className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4 text-pink-600" />
+                <div className="flex items-center gap-4">
+                  <Instagram className="h-5 w-5" />
                   <a
                     href={`https://instagram.com/${venue.instagramAccount.replace(/^@/, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-pink-600 hover:underline flex items-center gap-1"
+                    className="hover:underline flex items-center gap-1"
                     data-testid="link-venue-instagram"
                   >
-                    @{venue.instagramAccount.replace(/^@/, "")}
-                    <ExternalLink className="h-3 w-3" />
+                    {venue.instagramAccount.replace(/^@/, "")}
                   </a>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
+            {venue.photoUrls && venue.photoUrls.length > 1 && (
+              <> 
+             
 
-        {(venue.googlePlaceId || venue.streetAddress1 || venue.city) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Image className="h-5 w-5" />
+                      Photos
+                    </CardTitle>
+
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                      {venue.photoUrls.slice(1).map((url, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setLightboxIndex(index + 1);
+                            setLightboxOpen(true);
+                          }}
+                          className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
+                          data-testid={`button-gallery-photo-${index}`}
+                        >
+                          <img
+                            src={url}
+                            alt={`${venue.name} photo ${index + 2}`}
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            data-testid={`img-gallery-photo-${index}`}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+                            <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+
+              </>
+            )}
+        {(venue.streetAddress1 || venue.city) && (
           <VenueMap
-            googlePlaceId={venue.googlePlaceId}
             address={[venue.streetAddress1, venue.city, venue.state, venue.zipCode].filter(Boolean).join(", ")}
             venueName={venue.name}
           />
@@ -762,7 +765,7 @@ export default function VenueDetailPage() {
 
           </TabsContent>
 
-          <TabsContent value="comments" className="flex h-full flex-col">
+          <TabsContent value="comments" className="">
             <CommentList
               entityType="venue"
               entityId={id!}

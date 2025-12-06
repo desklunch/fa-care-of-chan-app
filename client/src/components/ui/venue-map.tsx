@@ -4,36 +4,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, ExternalLink } from "lucide-react";
 
 interface VenueMapProps {
-  googlePlaceId?: string | null;
   address?: string;
   venueName?: string;
   className?: string;
 }
 
-export function VenueMap({ googlePlaceId, address, venueName, className }: VenueMapProps) {
+export function VenueMap({ address, venueName, className }: VenueMapProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  if (!googlePlaceId && !address) {
+  if (!address) {
     return null;
   }
 
   const params = new URLSearchParams();
-  if (googlePlaceId) {
-    params.set("placeId", googlePlaceId);
-  } else if (address) {
-    params.set("address", address);
-  }
+  params.set("address", address);
   params.set("width", "800");
   params.set("height", "300");
 
   const staticMapUrl = `/api/maps/static?${params.toString()}`;
 
-  const googleMapsUrl = googlePlaceId
-    ? `https://www.google.com/maps/place/?q=place_id:${googlePlaceId}`
-    : address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
-    : null;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 
   return (
     <Card className={className}>
@@ -43,18 +34,16 @@ export function VenueMap({ googlePlaceId, address, venueName, className }: Venue
             <MapPin className="h-5 w-5" />
             Map
           </span>
-          {googleMapsUrl && (
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-normal text-primary hover:underline flex items-center gap-1"
-              data-testid="link-open-google-maps"
-            >
-              Open in Google Maps
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-normal text-primary hover:underline flex items-center gap-1"
+            data-testid="link-open-google-maps"
+          >
+            Open in Google Maps
+            <ExternalLink className="h-3 w-3" />
+          </a>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">

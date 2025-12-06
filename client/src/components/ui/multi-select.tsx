@@ -7,6 +7,7 @@ import {
   Check,
   ListChecks,
   ListRestart,
+  PanelTopClose,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -90,7 +91,7 @@ function MultiSelectContent({
 }) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 md:gap-2 p-4 md:p-2">
+      <div className="grid grid-cols-2 gap-4 md:gap-2 p-2">
 
 
         {showSearch && (
@@ -100,7 +101,7 @@ function MultiSelectContent({
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-14 md:h-10 pl-12 md:pl-8 pr-8 text-sm"
+              className="h-12 md:h-10 pl-12 md:pl-8 pr-8 text-sm"
               data-testid={`input-search-${testIdPrefix}`}
             />
             {searchQuery && (
@@ -218,7 +219,7 @@ function MultiSelectContent({
 
       <div className="h-px bg-border mx-1 mt-1" />
 
-      <div className="p-4 md:p-2">
+      <div className="p-2 flex">
         {showSelectAll && (
           <Button
             variant="outline"
@@ -237,20 +238,21 @@ function MultiSelectContent({
             variant="ghost"
             size="sm"
             onClick={reset}
-            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm [&_svg]:h-4 [&_svg]:w-4 [&_svg]:stroke-[2px]"
+            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
             data-testid={`button-reset-${testIdPrefix}`}
           >
-            <ListRestart />
+            <ListRestart className="h-4 w-4"/>
             Reset
           </Button>
         )}
         <Button
           variant="ghost"
           size="sm"
-          className="w-full text-sm md:text-xs h-12 md:h-8 rounded-lg md:rounded-sm"
+          className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm"
           onClick={() => setIsOpen(false)}
           data-testid={`button-close-${testIdPrefix}`}
         >
+          <PanelTopClose className="h-4 w-4" />
           Close
         </Button>
       </div>
