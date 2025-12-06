@@ -184,16 +184,13 @@ export default function CommentsPage() {
                             <EntityIcon className="h-3 w-3" />
                             {entityInfo.label}
                           </Badge>
-                          <Link href={entityInfo.href(comment.entityId)}>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 text-xs"
-                              data-testid={`link-entity-${comment.id}`}
-                            >
-                              View {entityInfo.label}
-                              <ExternalLink className="h-3 w-3 ml-1" />
-                            </Button>
+                          <Link 
+                            href={entityInfo.href(comment.entityId)}
+                            className="text-sm text-primary hover:underline flex items-center gap-1"
+                            data-testid={`link-entity-${comment.id}`}
+                          >
+                            {comment.entityName || `View ${entityInfo.label}`}
+                            <ExternalLink className="h-3 w-3" />
                           </Link>
                         </div>
                       </div>

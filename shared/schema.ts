@@ -1529,6 +1529,7 @@ export type InsertComment = typeof comments.$inferInsert;
 export type CommentWithAuthor = Comment & {
   createdBy: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   replies?: CommentWithAuthor[];
+  entityName?: string | null;
 };
 
 export const insertCommentSchema = createInsertSchema(comments).omit({

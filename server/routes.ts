@@ -3514,7 +3514,7 @@ export async function registerRoutes(
 
       // If this is a reply, verify parent exists and get its entityType/entityId
       if (result.data.parentId) {
-        const parentComment = await storage.getCommentById(result.data.parentId);
+        const parentComment = await storage.getEntityCommentById(result.data.parentId);
         if (!parentComment) {
           return res.status(404).json({ message: "Parent comment not found" });
         }
@@ -3524,10 +3524,10 @@ export async function registerRoutes(
         }
       }
 
-      const comment = await storage.createComment(result.data, userId);
+      const comment = await storage.createEntityComment(result.data, userId);
       
       // Fetch the comment with author info to return
-      const commentWithAuthor = await storage.getCommentById(comment.id);
+      const commentWithAuthor = await storage.getEntityCommentById(comment.id);
       
       res.status(201).json(commentWithAuthor);
     } catch (error) {
@@ -3542,7 +3542,7 @@ export async function registerRoutes(
       const userId = req.user.claims.sub;
       const commentId = req.params.id;
       
-      const existingComment = await storage.getCommentById(commentId);
+      const existingComment = await storage.getEntityCommentById(commentId);
       if (!existingComment) {
         return res.status(404).json({ message: "Comment not found" });
       }
@@ -3562,10 +3562,10 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const updatedComment = await storage.updateComment(commentId, result.data.body);
+      const updatedComment = await storage.updateEntityComment(commentId, result.data.body);
       
       // Fetch updated comment with author info
-      const commentWithAuthor = await storage.getCommentById(commentId);
+      const commentWithAuthor = await storage.getEntityCommentById(commentId);
       
       res.json(commentWithAuthor);
     } catch (error) {
@@ -3580,7 +3580,7 @@ export async function registerRoutes(
       const userId = req.user.claims.sub;
       const commentId = req.params.id;
       
-      const existingComment = await storage.getCommentById(commentId);
+      const existingComment = await storage.getEntityCommentById(commentId);
       if (!existingComment) {
         return res.status(404).json({ message: "Comment not found" });
       }
@@ -3599,7 +3599,7 @@ export async function registerRoutes(
         return res.status(403).json({ message: "You can only delete your own comments" });
       }
 
-      await storage.softDeleteComment(commentId);
+      await storage.softDeleteEntityComment(commentId);
       
       res.json({ message: "Comment deleted successfully" });
     } catch (error) {

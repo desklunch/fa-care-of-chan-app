@@ -330,13 +330,13 @@ export interface IStorage {
   // Public form data (for unauthenticated access)
   getPublicFormData(token: string): Promise<PublicFormData | undefined>;
   
-  // Comment operations
+  // Entity comment operations (for venues, vendors, contacts, venue_collections)
   getCommentsByEntity(entityType: string, entityId: string): Promise<CommentWithAuthor[]>;
   getAllComments(options?: { entityType?: string; limit?: number }): Promise<CommentWithAuthor[]>;
-  getCommentById(id: string): Promise<CommentWithAuthor | undefined>;
-  createComment(data: CreateComment, createdById: string): Promise<Comment>;
-  updateComment(id: string, body: string): Promise<Comment | undefined>;
-  softDeleteComment(id: string): Promise<void>;
+  getEntityCommentById(id: string): Promise<CommentWithAuthor | undefined>;
+  createEntityComment(data: CreateComment, createdById: string): Promise<Comment>;
+  updateEntityComment(id: string, body: string): Promise<Comment | undefined>;
+  softDeleteEntityComment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2582,10 +2582,49 @@ export class DatabaseStorage implements IStorage {
       query = query.limit(options.limit) as typeof query;
     }
 
-    return await query;
+    const results = await query;
+
+    // Fetch entity names for each comment
+    const commentsWithNames = await Promise.all(
+      results.map(async (comment) => {
+        let entityName: string | null = null;
+        
+        try {
+          switch (comment.entityType) {
+            case "venue": {
+              const [venue] = await db.select({ name: venues.name }).from(venues).where(eq(venues.id, comment.entityId));
+              entityName = venue?.name || null;
+              break;
+            }
+            case "vendor": {
+              const [vendor] = await db.select({ name: vendors.businessName }).from(vendors).where(eq(vendors.id, comment.entityId));
+              entityName = vendor?.name || null;
+              break;
+            }
+            case "contact": {
+              const [contact] = await db.select({ firstName: contacts.firstName, lastName: contacts.lastName }).from(contacts).where(eq(contacts.id, comment.entityId));
+              entityName = contact ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim() : null;
+              break;
+            }
+            case "venue_collection": {
+              const [collection] = await db.select({ name: venueCollections.name }).from(venueCollections).where(eq(venueCollections.id, comment.entityId));
+              entityName = collection?.name || null;
+              break;
+            }
+          }
+        } catch (e) {
+          // Entity may have been deleted
+          entityName = null;
+        }
+        
+        return { ...comment, entityName };
+      })
+    );
+
+    return commentsWithNames;
   }
 
-  async getCommentById(id: string): Promise<CommentWithAuthor | undefined> {
+  async getEntityCommentById(id: string): Promise<CommentWithAuthor | undefined> {
     const [comment] = await db
       .select({
         id: comments.id,
@@ -2611,7 +2650,7 @@ export class DatabaseStorage implements IStorage {
     return comment || undefined;
   }
 
-  async createComment(data: CreateComment, createdById: string): Promise<Comment> {
+  async createEntityComment(data: CreateComment, createdById: string): Promise<Comment> {
     const [comment] = await db
       .insert(comments)
       .values({
@@ -2622,7 +2661,7 @@ export class DatabaseStorage implements IStorage {
     return comment;
   }
 
-  async updateComment(id: string, body: string): Promise<Comment | undefined> {
+  async updateEntityComment(id: string, body: string): Promise<Comment | undefined> {
     const [comment] = await db
       .update(comments)
       .set({ body, updatedAt: new Date() })
@@ -2631,7 +2670,7 @@ export class DatabaseStorage implements IStorage {
     return comment || undefined;
   }
 
-  async softDeleteComment(id: string): Promise<void> {
+  async softDeleteEntityComment(id: string): Promise<void> {
     await db
       .update(comments)
       .set({ deletedAt: new Date(), body: "" })
