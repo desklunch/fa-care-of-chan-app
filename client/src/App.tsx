@@ -49,6 +49,7 @@ import FormRequestForm from "@/pages/form-request-form";
 import FormRequestDetail from "@/pages/form-request-detail";
 import PublicForm from "@/pages/public-form";
 import FormPreview from "@/pages/form-preview";
+import CommentsPage from "@/pages/comments";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -69,6 +70,7 @@ import {
   MapPin,
   Tag,
   FolderOpen,
+  MessageSquare,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -96,9 +98,11 @@ function useLayoutConfig() {
             href: "/team",
             icon: Users,
           },
-
-
-          
+          {
+            name: "Comments",
+            href: "/comments",
+            icon: MessageSquare,
+          },
         ],
       },
       {
@@ -266,6 +270,7 @@ function AuthenticatedRoutes() {
           <Route path="/venues/collections/:id" component={VenueCollectionDetail} />
           <Route path="/venues/:id/edit" component={VenueForm} />
           <Route path="/venues/:id" component={VenueDetail} />
+          <Route path="/comments" component={CommentsPage} />
           <Route path="/amenities" component={Amenities} />
           <Route path="/tags" component={TagsPage} />
           <Route path="/admin/invites" component={AdminInvites} />
