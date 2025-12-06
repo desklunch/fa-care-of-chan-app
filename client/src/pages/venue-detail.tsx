@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityDisplay } from "@/components/ui/amenity-toggle";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
+import { CommentList } from "@/components/ui/comments";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -182,6 +184,14 @@ export default function VenueDetailPage() {
             )}
           </div>
         </div>
+
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList data-testid="tabs-venue">
+            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6 mt-6">
 
         {venue.photoUrls && venue.photoUrls.length > 0 && (
           <>
@@ -749,6 +759,27 @@ export default function VenueDetailPage() {
             </CardContent>
           </Card>
         )}
+
+          </TabsContent>
+
+          <TabsContent value="comments" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Comments</CardTitle>
+                <CardDescription>
+                  Share your thoughts about this venue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CommentList
+                  entityType="venue"
+                  entityId={id!}
+                  currentUser={user || undefined}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
