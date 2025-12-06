@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { formatDistanceToNow } from "date-fns";
+import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths, differenceInYears } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +16,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  
+  const minutes = differenceInMinutes(now, date);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  
+  const hours = differenceInHours(now, date);
+  if (hours < 24) return `${hours}h ago`;
+  
+  const days = differenceInDays(now, date);
+  if (days < 30) return `${days}d ago`;
+  
+  const months = differenceInMonths(now, date);
+  if (months < 12) return `${months}mo ago`;
+  
+  const years = differenceInYears(now, date);
+  return `${years}y ago`;
+}
 
 interface CommentFormProps {
   entityType: string;
@@ -222,7 +242,7 @@ export function CommentItem({
           </Avatar>
         </Link>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <Link 
               href={`/team/${comment.createdById}`}
               className="font-medium text-sm hover:underline"
@@ -230,11 +250,61 @@ export function CommentItem({
             >
               {getAuthorName()}
             </Link>
-            <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-            </span>
-            {isEdited && (
-              <span className="text-xs text-muted-foreground italic">(edited)</span>
+
+            {!isEditing && (
+              <div className="flex   items-center justify-end gap-1 mt-2">
+                <span className="text-xs text-muted-foreground">
+                  {formatTimeAgo(new Date(comment.createdAt))}
+                </span>
+                {canReply && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsReplying(!isReplying)}
+                    data-testid={`button-reply-${comment.id}`}
+                  >
+                    <Reply className="h-3 w-3 mr-1" />
+                    Reply
+                  </Button>
+                )}
+                {(canEdit || canDelete) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        data-testid={`button-comment-menu-${comment.id}`}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canEdit && (
+                        <DropdownMenuItem
+                          onClick={() => setIsEditing(true)}
+                          data-testid={`button-edit-${comment.id}`}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <DropdownMenuItem
+                          onClick={() => deleteMutation.mutate()}
+                          disabled={deleteMutation.isPending}
+                          className="text-destructive focus:text-destructive"
+                          data-testid={`button-delete-${comment.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
             )}
           </div>
           
@@ -272,61 +342,13 @@ export function CommentItem({
           ) : (
             <p className="mt-1 text-sm whitespace-pre-wrap break-words" data-testid={`text-comment-body-${comment.id}`}>
               {comment.body}
+              {isEdited && (
+                <p className="text-xs text-muted-foreground mt-1">Edited</p>
+              )}
             </p>
           )}
 
-          {!isEditing && (
-            <div className="flex items-center gap-1 mt-2">
-              {canReply && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setIsReplying(!isReplying)}
-                  data-testid={`button-reply-${comment.id}`}
-                >
-                  <Reply className="h-3 w-3 mr-1" />
-                  Reply
-                </Button>
-              )}
-              {(canEdit || canDelete) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                      data-testid={`button-comment-menu-${comment.id}`}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {canEdit && (
-                      <DropdownMenuItem
-                        onClick={() => setIsEditing(true)}
-                        data-testid={`button-edit-${comment.id}`}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                    )}
-                    {canDelete && (
-                      <DropdownMenuItem
-                        onClick={() => deleteMutation.mutate()}
-                        disabled={deleteMutation.isPending}
-                        className="text-destructive focus:text-destructive"
-                        data-testid={`button-delete-${comment.id}`}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-          )}
+
         </div>
       </div>
 
