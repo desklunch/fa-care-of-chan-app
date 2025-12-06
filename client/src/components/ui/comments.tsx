@@ -209,7 +209,7 @@ export function CommentItem({
     <div className={`space-y-2 ${isReply ? "pl-10" : ""}`} data-testid={`comment-${comment.id}`}>
       <div className="flex gap-3">
         {isReply && <CornerDownRight className="h-4 w-4 text-muted-foreground shrink-0 mt-3" />}
-        <Link href={`/app/team/${comment.createdById}`}>
+        <Link href={`/team/${comment.createdById}`}>
           <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
             <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName()} />
             <AvatarFallback className="text-xs">{getAuthorInitials()}</AvatarFallback>
@@ -218,7 +218,7 @@ export function CommentItem({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <Link 
-              href={`/app/team/${comment.createdById}`}
+              href={`/team/${comment.createdById}`}
               className="font-medium text-sm hover:underline"
               data-testid={`link-author-${comment.id}`}
             >

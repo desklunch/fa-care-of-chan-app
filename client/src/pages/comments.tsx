@@ -136,7 +136,7 @@ export default function CommentsPage() {
                 <Card key={comment.id} data-testid={`comment-card-${comment.id}`}>
                   <CardContent className="p-4">
                     <div className="flex gap-3">
-                      <Link href={`/app/team/${comment.createdById}`}>
+                      <Link href={`/team/${comment.createdById}`}>
                         <Avatar className="h-10 w-10 cursor-pointer">
                           <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName(comment)} />
                           <AvatarFallback>{getAuthorInitials(comment)}</AvatarFallback>
@@ -145,7 +145,7 @@ export default function CommentsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <Link 
-                            href={`/app/team/${comment.createdById}`}
+                            href={`/team/${comment.createdById}`}
                             className="font-medium text-sm hover:underline"
                             data-testid={`link-author-${comment.id}`}
                           >
