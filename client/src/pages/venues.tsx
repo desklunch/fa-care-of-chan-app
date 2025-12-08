@@ -1,16 +1,15 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
-import type { VenueWithRelations, Amenity, Tag } from "@shared/schema";
-import type { ColumnConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, X, type LucideIcon } from "lucide-react";
+import type { VenueWithRelations } from "@shared/schema";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, type LucideIcon } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "cuisineTags", "styleTags", "location"];
 
@@ -374,16 +373,87 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
   },
 ];
 
+const venueFilters: FilterConfig<VenueWithRelations>[] = [
+  {
+    id: "location",
+    label: "Location",
+    icon: MapPin,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const locations = new Set<string>();
+        data.forEach(venue => {
+          if (venue.city && venue.state) {
+            locations.add(`${venue.city}, ${venue.state}`);
+          } else if (venue.city) {
+            locations.add(venue.city);
+          } else if (venue.state) {
+            locations.add(venue.state);
+          }
+        });
+        return Array.from(locations).sort().map(loc => ({ id: loc, label: loc }));
+      },
+    },
+    matchFn: (venue, selectedValues) => {
+      const venueLocation = venue.city && venue.state 
+        ? `${venue.city}, ${venue.state}`
+        : venue.city || venue.state || "";
+      return selectedValues.includes(venueLocation);
+    },
+  },
+  {
+    id: "amenities",
+    label: "Amenities",
+    icon: Building2,
+    optionSource: {
+      type: "query",
+      queryKey: "/api/amenities",
+      labelField: "name",
+      valueField: "id",
+    },
+    matchFn: (venue, selectedValues) => {
+      const venueAmenityIds = venue.amenities?.map(a => String(a.id)) || [];
+      return selectedValues.some(id => venueAmenityIds.includes(id));
+    },
+  },
+  {
+    id: "cuisine",
+    label: "Cuisine",
+    icon: Utensils,
+    optionSource: {
+      type: "query",
+      queryKey: "/api/tags",
+      labelField: "name",
+      valueField: "id",
+      filterFn: (item) => (item as { category?: string }).category === "Cuisine",
+    },
+    matchFn: (venue, selectedValues) => {
+      const venueCuisineIds = venue.cuisineTags?.map(t => String(t.id)) || [];
+      return selectedValues.some(id => venueCuisineIds.includes(id));
+    },
+  },
+  {
+    id: "style",
+    label: "Style",
+    icon: Sparkles,
+    optionSource: {
+      type: "query",
+      queryKey: "/api/tags",
+      labelField: "name",
+      valueField: "id",
+      filterFn: (item) => (item as { category?: string }).category === "Style",
+    },
+    matchFn: (venue, selectedValues) => {
+      const venueStyleIds = venue.styleTags?.map(t => String(t.id)) || [];
+      return selectedValues.some(id => venueStyleIds.includes(id));
+    },
+  },
+];
+
 export default function VenuesPage() {
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
   const isAdmin = user?.role === "admin";
-
-  // Filter state
-  const [selectedLocations, setSelectedLocations] = useState<(string | number)[]>([]);
-  const [selectedAmenities, setSelectedAmenities] = useState<(string | number)[]>([]);
-  const [selectedCuisine, setSelectedCuisine] = useState<(string | number)[]>([]);
-  const [selectedStyle, setSelectedStyle] = useState<(string | number)[]>([]);
 
   // Collection dialog state
   const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
@@ -394,122 +464,6 @@ export default function VenuesPage() {
   const { data: venues = [], isLoading: isVenuesLoading } = useQuery<VenueWithRelations[]>({
     queryKey: ["/api/venues"],
   });
-
-  // Fetch amenities for filter options
-  const { data: amenities = [] } = useQuery<Amenity[]>({
-    queryKey: ["/api/amenities"],
-  });
-
-  // Fetch tags for filter options
-  const { data: tags = [] } = useQuery<Tag[]>({
-    queryKey: ["/api/tags"],
-  });
-
-  // Extract unique locations from venues
-  const locationOptions = useMemo(() => {
-    const locations = new Set<string>();
-    venues.forEach(venue => {
-      if (venue.city && venue.state) {
-        locations.add(`${venue.city}, ${venue.state}`);
-      } else if (venue.city) {
-        locations.add(venue.city);
-      } else if (venue.state) {
-        locations.add(venue.state);
-      }
-    });
-    return Array.from(locations).sort().map(loc => ({ id: loc, label: loc }));
-  }, [venues]);
-
-  const locationLabels = useMemo(() => {
-    const labels: Record<string, string> = {};
-    locationOptions.forEach(opt => {
-      labels[opt.id] = opt.label;
-    });
-    return labels;
-  }, [locationOptions]);
-
-  // Build amenity options
-  const amenityOptions = useMemo(() => {
-    return amenities.map(a => ({ id: a.id, label: a.name }));
-  }, [amenities]);
-
-  const amenityLabels = useMemo(() => {
-    const labels: Record<string, string> = {};
-    amenities.forEach(a => {
-      labels[a.id] = a.name;
-    });
-    return labels;
-  }, [amenities]);
-
-  // Build cuisine tag options (category = "Cuisine")
-  const cuisineOptions = useMemo(() => {
-    return tags.filter(t => t.category === "Cuisine").map(t => ({ id: t.id, label: t.name }));
-  }, [tags]);
-
-  const cuisineLabels = useMemo(() => {
-    const labels: Record<string, string> = {};
-    tags.filter(t => t.category === "Cuisine").forEach(t => {
-      labels[t.id] = t.name;
-    });
-    return labels;
-  }, [tags]);
-
-  // Build style tag options (category = "Style")
-  const styleOptions = useMemo(() => {
-    return tags.filter(t => t.category === "Style").map(t => ({ id: t.id, label: t.name }));
-  }, [tags]);
-
-  const styleLabels = useMemo(() => {
-    const labels: Record<string, string> = {};
-    tags.filter(t => t.category === "Style").forEach(t => {
-      labels[t.id] = t.name;
-    });
-    return labels;
-  }, [tags]);
-
-  // Filter venues based on selected filters
-  const filteredVenues = useMemo(() => {
-    return venues.filter(venue => {
-      // Location filter
-      if (selectedLocations.length > 0) {
-        const venueLocation = venue.city && venue.state 
-          ? `${venue.city}, ${venue.state}`
-          : venue.city || venue.state || "";
-        if (!selectedLocations.includes(venueLocation)) {
-          return false;
-        }
-      }
-
-      // Amenities filter (venue must have at least one of the selected amenities)
-      if (selectedAmenities.length > 0) {
-        const venueAmenityIds = venue.amenities?.map(a => a.id) || [];
-        const hasMatchingAmenity = selectedAmenities.some(id => venueAmenityIds.includes(id as string));
-        if (!hasMatchingAmenity) {
-          return false;
-        }
-      }
-
-      // Cuisine filter (venue must have at least one of the selected cuisine tags)
-      if (selectedCuisine.length > 0) {
-        const venueCuisineIds = venue.cuisineTags?.map(t => t.id) || [];
-        const hasMatchingCuisine = selectedCuisine.some(id => venueCuisineIds.includes(id as string));
-        if (!hasMatchingCuisine) {
-          return false;
-        }
-      }
-
-      // Style filter (venue must have at least one of the selected style tags)
-      if (selectedStyle.length > 0) {
-        const venueStyleIds = venue.styleTags?.map(t => t.id) || [];
-        const hasMatchingStyle = selectedStyle.some(id => venueStyleIds.includes(id as string));
-        if (!hasMatchingStyle) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [venues, selectedLocations, selectedAmenities, selectedCuisine, selectedStyle]);
 
   const handleRowClick = useCallback((venue: VenueWithRelations) => {
     navigate(`/venues/${venue.id}`);
@@ -580,55 +534,6 @@ export default function VenuesPage() {
     return null;
   }
 
-  const filterBar = (
-    <div className="flex items-center gap-2 flex-wrap">
-      <MultiSelect
-        triggerLabel="Location"
-        triggerIcon={<MapPin className="h-4 w-4" />}
-        items={locationOptions}
-        itemLabels={locationLabels}
-        selectedIds={selectedLocations}
-        onSelectionChange={setSelectedLocations}
-        showSelectAll={false}
-        testIdPrefix="filter-location"
-        searchPlaceholder="Search locations..."
-      />
-      <MultiSelect
-        triggerLabel="Amenities"
-        triggerIcon={<Building2 className="h-4 w-4" />}
-        items={amenityOptions}
-        itemLabels={amenityLabels}
-        selectedIds={selectedAmenities}
-        onSelectionChange={setSelectedAmenities}
-        showSelectAll={false}
-        testIdPrefix="filter-amenities"
-        searchPlaceholder="Search amenities..."
-      />
-      <MultiSelect
-        triggerLabel="Cuisine"
-        triggerIcon={<Utensils className="h-4 w-4" />}
-        items={cuisineOptions}
-        itemLabels={cuisineLabels}
-        selectedIds={selectedCuisine}
-        onSelectionChange={setSelectedCuisine}
-        showSelectAll={false}
-        testIdPrefix="filter-cuisine"
-        searchPlaceholder="Search cuisines..."
-      />
-      <MultiSelect
-        triggerLabel="Style"
-        triggerIcon={<Sparkles className="h-4 w-4" />}
-        items={styleOptions}
-        itemLabels={styleLabels}
-        selectedIds={selectedStyle}
-        onSelectionChange={setSelectedStyle}
-        showSelectAll={false}
-        testIdPrefix="filter-style"
-        searchPlaceholder="Search styles..."
-      />
-    </div>
-  );
-
   const dataGridProps = {
     queryKey: "/api/venues",
     columns: venueColumns,
@@ -639,9 +544,9 @@ export default function VenuesPage() {
     getRowId: (venue: VenueWithRelations) => venue.id,
     emptyMessage: "No venues yet",
     emptyDescription: "Venues will appear here once they are added.",
-    externalData: filteredVenues,
+    externalData: venues,
     externalLoading: isVenuesLoading,
-    headerContent: filterBar,
+    filters: venueFilters,
     enableRowSelection: true,
     selectionToolbar: selectionToolbar,
   };
