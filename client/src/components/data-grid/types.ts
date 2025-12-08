@@ -1,6 +1,24 @@
 import { ColDef } from "ag-grid-community";
 import { LucideIcon } from "lucide-react";
 
+export interface FilterOptionSource<T> {
+  type: "deriveFromData" | "query";
+  queryKey?: string;
+  labelField?: string;
+  valueField?: string;
+  filterFn?: (item: unknown) => boolean;
+  deriveOptions?: (data: T[]) => Array<{ id: string; label: string }>;
+}
+
+export interface FilterConfig<T> {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  placeholder?: string;
+  optionSource: FilterOptionSource<T>;
+  matchFn: (item: T, selectedValues: string[]) => boolean;
+}
+
 export interface ColumnConfig<T> {
   id: string;
   headerName: string;
@@ -54,6 +72,9 @@ export interface DataGridPageProps<T, C = unknown> {
   enableRowSelection?: boolean;
   onSelectionChanged?: (selectedRows: T[]) => void;
   selectionToolbar?: (selectedRows: T[], clearSelection: () => void) => React.ReactNode;
+  
+  // Declarative filters
+  filters?: FilterConfig<T>[];
 }
 
 export interface ColumnSelectorProps {
