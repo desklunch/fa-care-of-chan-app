@@ -8,11 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Copy, Trash2, CheckCircle, XCircle, Clock, Mail, Loader2, CircleFadingPlus } from "lucide-react";
+import { Copy, Trash2, CheckCircle, XCircle, Clock, Mail, Loader2, CircleFadingPlus, Filter } from "lucide-react";
 import { CreateInviteDialog } from "@/components/create-invite-dialog";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
-import type { ColumnConfig } from "@/components/data-grid/types";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import type { Invite } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -23,6 +23,26 @@ function getInviteStatus(invite: Invite): InviteStatus {
   if (new Date(invite.expiresAt) < new Date()) return "expired";
   return "pending";
 }
+
+const inviteFilters: FilterConfig<Invite>[] = [
+  {
+    id: "status",
+    label: "Status",
+    icon: Filter,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: () => [
+        { id: "pending", label: "Pending" },
+        { id: "used", label: "Used" },
+        { id: "expired", label: "Expired" },
+      ],
+    },
+    matchFn: (invite, selectedValues) => {
+      const status = getInviteStatus(invite);
+      return selectedValues.includes(status);
+    },
+  },
+];
 
 function StatusCellRenderer({ value }: ICellRendererParams<Invite, InviteStatus>) {
   if (!value) return null;
@@ -343,6 +363,7 @@ export default function AdminInvites() {
         emptyMessage="No invitations found. Create one to get started."
         getRowId={(invite) => invite.id}
         context={gridContext}
+        filters={inviteFilters}
       />
     </PageLayout>
   );

@@ -3,11 +3,63 @@ import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users } from "lucide-react";
+import { Building2, Shield } from "lucide-react";
 import type { User } from "@shared/schema";
-import type { ColumnConfig } from "@/components/data-grid/types";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "title", "department", "role"];
+
+const teamFilters: FilterConfig<User>[] = [
+  {
+    id: "department",
+    label: "Department",
+    icon: Building2,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const departments = new Set<string>();
+        data.forEach((user) => {
+          if (user.department) {
+            departments.add(user.department);
+          }
+        });
+        return Array.from(departments)
+          .sort()
+          .map((dept) => ({ id: dept, label: dept }));
+      },
+    },
+    matchFn: (user, selectedValues) => {
+      if (!user.department) return false;
+      return selectedValues.includes(user.department);
+    },
+  },
+  {
+    id: "role",
+    label: "Role",
+    icon: Shield,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const roles = new Set<string>();
+        data.forEach((user) => {
+          if (user.role) {
+            roles.add(user.role);
+          }
+        });
+        return Array.from(roles)
+          .sort()
+          .map((role) => ({ 
+            id: role, 
+            label: role.charAt(0).toUpperCase() + role.slice(1) 
+          }));
+      },
+    },
+    matchFn: (user, selectedValues) => {
+      if (!user.role) return false;
+      return selectedValues.includes(user.role);
+    },
+  },
+];
 
 const teamColumns: ColumnConfig<User>[] = [
   {
@@ -261,6 +313,7 @@ export default function Team() {
         onRowClick={(user) => setLocation(`/team/${user.id}`)}
         getRowId={(user) => user.id || ""}
         emptyMessage="No team members found"
+        filters={teamFilters}
         toolbarActions={<></>}
       />
     </PageLayout>

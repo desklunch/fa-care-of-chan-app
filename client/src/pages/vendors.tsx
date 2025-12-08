@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -25,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ColumnConfig } from "@/components/data-grid/types";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["checkbox", "businessName", "services", "contacts", "locations"];
@@ -392,10 +391,78 @@ interface BatchResult {
   updateUrl?: string;
 }
 
+function buildLocationKey(loc: { city?: string | null; region?: string | null; country?: string | null }): string {
+  return `${loc.city || ""}|${loc.region || ""}|${loc.country || ""}`;
+}
+
+function buildLocationLabel(loc: { displayName?: string | null; city?: string | null; region?: string | null }): string {
+  if (loc.displayName) return loc.displayName;
+  const parts = [loc.city, loc.region].filter(Boolean);
+  return parts.join(", ") || "Unknown";
+}
+
+const vendorFilters: FilterConfig<VendorWithRelations>[] = [
+  {
+    id: "locations",
+    label: "Locations",
+    icon: MapPin,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const locationMap = new Map<string, string>();
+        data.forEach((vendor) => {
+          if (vendor.locations) {
+            vendor.locations.forEach((loc) => {
+              const key = buildLocationKey(loc);
+              const label = buildLocationLabel(loc);
+              locationMap.set(key, label);
+            });
+          }
+        });
+        return Array.from(locationMap.entries())
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([id, label]) => ({ id, label }));
+      },
+    },
+    matchFn: (vendor, selectedValues) => {
+      if (!vendor.locations || vendor.locations.length === 0) return false;
+      return vendor.locations.some((loc) => {
+        const key = buildLocationKey(loc);
+        return selectedValues.includes(key);
+      });
+    },
+  },
+  {
+    id: "services",
+    label: "Services",
+    icon: Briefcase,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const serviceMap = new Map<string, string>();
+        data.forEach((vendor) => {
+          if (vendor.services) {
+            vendor.services.forEach((service) => {
+              serviceMap.set(service.id, service.name);
+            });
+          }
+        });
+        return Array.from(serviceMap.entries())
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([id, label]) => ({ id, label }));
+      },
+    },
+    matchFn: (vendor, selectedValues) => {
+      if (!vendor.services || vendor.services.length === 0) return false;
+      return vendor.services.some((service) => 
+        selectedValues.includes(String(service.id))
+      );
+    },
+  },
+];
+
 export default function Vendors() {
   const [, setLocation] = useLocation();
-  const [selectedLocations, setSelectedLocations] = useState<(string | number)[]>([]);
-  const [selectedServices, setSelectedServices] = useState<(string | number)[]>([]);
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [assignFormDialogOpen, setAssignFormDialogOpen] = useState(false);
@@ -406,7 +473,7 @@ export default function Vendors() {
   const isAdmin = user?.role === "admin";
   const isAuthenticated = !!user;
 
-  const { data: vendors = [], isLoading } = useQuery<VendorWithRelations[]>({
+  const { data: vendors = [] } = useQuery<VendorWithRelations[]>({
     queryKey: ["/api/vendors"],
   });
 
@@ -513,98 +580,6 @@ export default function Vendors() {
     assignToFormMutation.mutate({ formRequestId: selectedFormRequestId, vendorIds });
   };
 
-  const { locationItems, locationLabels, serviceItems, serviceLabels } = useMemo(() => {
-    const locationMap = new Map<string, string>();
-    const serviceMap = new Map<string, string>();
-
-    vendors.forEach((vendor) => {
-      if (vendor.locations) {
-        vendor.locations.forEach((loc) => {
-          const key = `${loc.city}|${loc.region}|${loc.country}`;
-          const label = loc.displayName || `${loc.city}, ${loc.region}`;
-          locationMap.set(key, label);
-        });
-      }
-
-      if (vendor.services) {
-        vendor.services.forEach((service) => {
-          serviceMap.set(service.id, service.name);
-        });
-      }
-    });
-
-    const sortedLocations = Array.from(locationMap.entries())
-      .sort((a, b) => a[1].localeCompare(b[1]));
-    
-    const sortedServices = Array.from(serviceMap.entries())
-      .sort((a, b) => a[1].localeCompare(b[1]));
-
-    return {
-      locationItems: sortedLocations.map(([id, label]) => ({ id, label })),
-      locationLabels: Object.fromEntries(sortedLocations),
-      serviceItems: sortedServices.map(([id, label]) => ({ id, label })),
-      serviceLabels: Object.fromEntries(sortedServices),
-    };
-  }, [vendors]);
-
-  const filteredVendors = useMemo(() => {
-    let result = vendors;
-
-    if (selectedLocations.length > 0) {
-      result = result.filter((vendor) => {
-        if (!vendor.locations || vendor.locations.length === 0) return false;
-        return vendor.locations.some((loc) => {
-          const key = `${loc.city}|${loc.region}|${loc.country}`;
-          return selectedLocations.includes(key);
-        });
-      });
-    }
-
-    if (selectedServices.length > 0) {
-      result = result.filter((vendor) => {
-        if (!vendor.services || vendor.services.length === 0) return false;
-        return vendor.services.some((service) => 
-          selectedServices.includes(service.id)
-        );
-      });
-    }
-
-    return result;
-  }, [vendors, selectedLocations, selectedServices]);
-
-  const filterControls = (
-    <>
-      <MultiSelect
-        triggerLabel="Locations"
-        triggerIcon={<MapPin className="w-4 h-4 mr-1" />}
-        items={locationItems}
-        itemLabels={locationLabels}
-        selectedIds={selectedLocations}
-        onSelectionChange={setSelectedLocations}
-        showSelectAll={true}
-        showReset={true}
-        defaultSelectedIds={[]}
-        testIdPrefix="filter-locations"
-        searchPlaceholder="Search locations..."
-        align="start"
-      />
-      <MultiSelect
-        triggerLabel="Services"
-        triggerIcon={<Briefcase className="w-4 h-4 mr-1" />}
-        items={serviceItems}
-        itemLabels={serviceLabels}
-        selectedIds={selectedServices}
-        onSelectionChange={setSelectedServices}
-        showSelectAll={true}
-        showReset={true}
-        defaultSelectedIds={[]}
-        testIdPrefix="filter-services"
-        searchPlaceholder="Search services..."
-        align="start"
-      />
-    </>
-  );
-
   const selectionToolbar = (selectedVendors: VendorWithRelations[], clearSelection: () => void) => {
     const vendorsWithEmail = selectedVendors.filter(v => v.email);
     const vendorsWithoutEmail = selectedVendors.filter(v => !v.email);
@@ -702,9 +677,7 @@ export default function Vendors() {
         getRowId={(vendor) => vendor.id || ""}
         emptyMessage="No vendors found"
         emptyDescription="Your vendor directory is empty."
-        headerContent={filterControls}
-        externalData={filteredVendors}
-        externalLoading={isLoading}
+        filters={vendorFilters}
         toolbarActions={<></>}
         enableRowSelection={isAdmin}
         selectionToolbar={selectionToolbar}
