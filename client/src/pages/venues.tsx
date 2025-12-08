@@ -548,6 +548,7 @@ export default function VenuesPage() {
     externalData: venues,
     externalLoading: isVenuesLoading,
     filters: venueFilters,
+    collapsibleFilters: true,
     enableRowSelection: true,
     selectionToolbar: selectionToolbar,
   };
