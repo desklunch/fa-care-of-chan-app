@@ -289,13 +289,15 @@ export default function VenueCollectionDetail() {
                 Created by{" "}
                 <Link 
                   href={`/team/${collection.createdBy.id}`}
-                  className="hover:underline text-foreground"
+                  className="hover:underline text-foreground font-semibold"
                   data-testid={`link-creator-${collection.createdBy.id}`}
                 >
                   {collection.createdBy.firstName}
                 </Link>
                 {collection.createdAt && (
-                  <> {formatTimeAgo(new Date(collection.createdAt))}</>
+                  <span className="ml-1">
+                    {formatTimeAgo(new Date(collection.createdAt))}
+                  </span>
                 )}
               </span>
             </div>

@@ -412,6 +412,7 @@ export const venueCollectionVenues = pgTable(
     venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
     addedById: varchar("added_by_id").references(() => users.id),
     addedAt: timestamp("added_at").defaultNow(),
+    sortOrder: integer("sort_order").default(0),
   },
   (table) => [
     unique("unique_venue_collection_venue").on(table.collectionId, table.venueId),
