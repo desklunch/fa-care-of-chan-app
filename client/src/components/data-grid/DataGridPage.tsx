@@ -8,7 +8,7 @@ import { ExpandableSearch } from "./expandable-search";
 import { FilterBar } from "./filter-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -33,12 +33,14 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   onSelectionChanged,
   selectionToolbar,
   filters = [],
+  collapsibleFilters = false,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [filterState, setFilterState] = useState<Record<string, string[]>>({});
+  const [showFilters, setShowFilters] = useState(false);
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
@@ -250,7 +252,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
               placeholder={searchPlaceholder}
             />
           )}
-          {filters.length > 0 && (
+          {filters.length > 0 && !collapsibleFilters && (
             <FilterBar
               filters={filters}
               data={data}
@@ -258,6 +260,24 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
               onFilterChange={handleFilterChange}
             />
           )}
+          {filters.length > 0 && collapsibleFilters && (
+            <Button
+              variant={showFilters ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              data-testid="button-toggle-filters"
+              className="gap-1.5"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {Object.values(filterState).some((v) => v.length > 0) && (
+                <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 py-0.5 text-xs">
+                  {Object.values(filterState).filter((v) => v.length > 0).length}
+                </span>
+              )}
+            </Button>
+          )}
+  
           {headerContent}
         </div>
         <div className="flex items-center gap-4">
@@ -279,6 +299,17 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           />
         </div>
       </div>
+
+      {filters.length > 0 && collapsibleFilters && showFilters && (
+        <div className="flex items-center gap-2 flex-wrap" data-testid="collapsible-filter-row">
+          <FilterBar
+            filters={filters}
+            data={data}
+            filterState={filterState}
+            onFilterChange={handleFilterChange}
+          />
+        </div>
+      )}
 
       {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
         <div className="bg-muted/50 border rounded-lg p-3 mb-4" data-testid="selection-toolbar">

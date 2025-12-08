@@ -75,6 +75,9 @@ export interface DataGridPageProps<T, C = unknown> {
   
   // Declarative filters
   filters?: FilterConfig<T>[];
+  
+  // Collapsible filters - when true, filters are hidden behind a toggle button
+  collapsibleFilters?: boolean;
 }
 
 export interface ColumnSelectorProps {

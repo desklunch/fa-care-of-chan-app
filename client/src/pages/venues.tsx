@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, type LucideIcon } from "lucide-react";
+import { InfoBanner } from "@/components/ui/info-banner";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "cuisineTags", "styleTags", "location"];
 
@@ -561,7 +562,19 @@ export default function VenuesPage() {
           onClick: handleCreate,
         } : undefined}
       >
-        <DataGridPage {...dataGridProps} />
+        <div className="flex flex-col gap-4 h-full">
+          <InfoBanner
+            id="venue-features-tip"
+            title="Have a feature idea?"
+            description="Request new venue features or vote on existing ideas."
+            ctaLabel="App Features"
+            ctaUrl="/app/features"
+            userId={user?.id}
+          />
+          <div className="flex-1 min-h-0">
+            <DataGridPage {...dataGridProps} />
+          </div>
+        </div>
       </PageLayout>
       
       <AddToCollectionDialog
