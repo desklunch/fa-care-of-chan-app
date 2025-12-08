@@ -5,10 +5,11 @@ import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, Se
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { ExpandableSearch } from "./expandable-search";
+import { FilterBar } from "./filter-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { ColumnConfig, DataGridPageProps } from "./types";
+import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -31,11 +32,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   enableRowSelection,
   onSelectionChanged,
   selectionToolbar,
+  filters = [],
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
+  const [filterState, setFilterState] = useState<Record<string, string[]>>({});
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
@@ -93,27 +96,50 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     []
   );
 
+  const handleFilterChange = useCallback((filterId: string, values: string[]) => {
+    setFilterState((prev) => ({
+      ...prev,
+      [filterId]: values,
+    }));
+  }, []);
+
   const filteredData = useMemo(() => {
     // Disable client-side filtering when using server-side pagination
     // as the server already handles filtering
     if (pagination) return data;
     
-    if (!searchText.trim() || searchFields.length === 0) return data;
-    const search = searchText.toLowerCase();
+    let result = data;
 
-    return data.filter((item) => {
-      return searchFields.some((field) => {
-        if (typeof field === "function") {
-          return field(item).toLowerCase().includes(search);
-        }
-        const value = item[field];
-        if (typeof value === "string") {
-          return value.toLowerCase().includes(search);
-        }
-        return false;
+    // Apply search text filter
+    if (searchText.trim() && searchFields.length > 0) {
+      const search = searchText.toLowerCase();
+      result = result.filter((item) => {
+        return searchFields.some((field) => {
+          if (typeof field === "function") {
+            return field(item).toLowerCase().includes(search);
+          }
+          const value = item[field];
+          if (typeof value === "string") {
+            return value.toLowerCase().includes(search);
+          }
+          return false;
+        });
       });
-    });
-  }, [data, searchText, searchFields, pagination]);
+    }
+
+    // Apply declarative filters
+    if (filters.length > 0) {
+      result = result.filter((item) => {
+        return filters.every((filter) => {
+          const selectedValues = filterState[filter.id] || [];
+          if (selectedValues.length === 0) return true;
+          return filter.matchFn(item, selectedValues);
+        });
+      });
+    }
+
+    return result;
+  }, [data, searchText, searchFields, pagination, filters, filterState]);
 
   const onGridReady = useCallback((params: GridReadyEvent<T>) => {
     setGridApi(params.api);
@@ -222,6 +248,14 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
               value={searchText}
               onChange={setSearchText}
               placeholder={searchPlaceholder}
+            />
+          )}
+          {filters.length > 0 && (
+            <FilterBar
+              filters={filters}
+              data={data}
+              filterState={filterState}
+              onFilterChange={handleFilterChange}
             />
           )}
           {headerContent}
