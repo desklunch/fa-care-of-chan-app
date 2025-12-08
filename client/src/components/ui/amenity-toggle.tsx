@@ -96,11 +96,11 @@ export function AmenityDisplay({ amenities, className }: AmenityDisplayProps) {
         return (
           <Badge
             key={amenity.id}
-            variant="secondary"
-            className="gap-1.5 px-2.5 py-1"
+            variant="outline"
+            className="text-base gap-3 px-4 py-2 border-input rounded-full"
             data-testid={`display-amenity-${amenity.id}`}
           >
-            <IconComponent className="h-3.5 w-3.5" />
+            <IconComponent className="h-5 w-5 stroke-[1.5px]" />
             {amenity.name}
           </Badge>
         );

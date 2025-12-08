@@ -163,23 +163,16 @@ export function AddToCollectionDialog({
             </div>
           ) : (
             <>
-              {collections.length > 0 && (
+              {collections.length > 0 && mode === "existing" && (
                 <div className="flex gap-2 border-b pb-4">
+
                   <Button
                     type="button"
-                    variant={mode === "existing" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setMode("existing")}
-                    data-testid="button-mode-existing"
-                  >
-                    Existing Collection
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={mode === "new" ? "default" : "outline"}
-                    size="sm"
+                    variant="default"
+                    size="lg"
                     onClick={() => setMode("new")}
                     data-testid="button-mode-new"
+                    className="w-full"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     New Collection
@@ -189,7 +182,6 @@ export function AddToCollectionDialog({
 
               {mode === "existing" && collections.length > 0 ? (
                 <div className="space-y-3">
-                  <Label>Select a collection</Label>
                   <RadioGroup
                     value={selectedCollectionId}
                     onValueChange={setSelectedCollectionId}

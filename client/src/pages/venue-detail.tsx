@@ -469,12 +469,14 @@ export default function VenueDetailPage() {
             </CardHeader>
             <CardContent>
               {venue.cuisineTags && venue.cuisineTags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {venue.cuisineTags.map((tag) => (
                     <Badge
                       key={tag.id}
-                      variant="secondary"
+                      variant="outline"
                       data-testid={`badge-cuisine-tag-${tag.id}`}
+                      className="text-sm gap-2 px-3 py-2 border-input rounded-md"
+
                     >
                       {tag.name}
                     </Badge>
@@ -492,12 +494,14 @@ export default function VenueDetailPage() {
             </CardHeader>
             <CardContent>
               {venue.styleTags && venue.styleTags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {venue.styleTags.map((tag) => (
                     <Badge
                       key={tag.id}
                       variant="outline"
                       data-testid={`badge-style-tag-${tag.id}`}
+                      className="text-sm gap-2 px-3 py-2 border-input rounded-md"
+
                     >
                       {tag.name}
                     </Badge>
@@ -517,9 +521,7 @@ export default function VenueDetailPage() {
                 <Layout className="h-5 w-5" />
                 Floorplans
               </CardTitle>
-              <CardDescription>
-                {venue.floorplans.length} floorplan{venue.floorplans.length !== 1 ? "s" : ""} available
-              </CardDescription>
+
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -583,9 +585,7 @@ export default function VenueDetailPage() {
                 <Paperclip className="h-5 w-5" />
                 Attachments
               </CardTitle>
-              <CardDescription>
-                {venue.attachments.length} attachment{venue.attachments.length !== 1 ? "s" : ""} available
-              </CardDescription>
+ 
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -745,9 +745,7 @@ export default function VenueDetailPage() {
                 <FolderPlus className="h-5 w-5" />
                 Collections
               </CardTitle>
-              <CardDescription>
-                This venue is part of {venueCollections.length} collection{venueCollections.length !== 1 ? "s" : ""}
-              </CardDescription>
+
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">

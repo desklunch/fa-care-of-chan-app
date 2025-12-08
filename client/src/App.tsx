@@ -67,7 +67,7 @@ import {
   Link2,
   FileText,
   ScrollText,
-  MapPin,
+  Handshake,
   Tag,
   FolderOpen,
   MessageSquare,
@@ -111,7 +111,7 @@ function useLayoutConfig() {
           {
             name: "Venues",
             href: "/venues",
-            icon: MapPin,
+            icon: Store,
           },
           {
             name: "Collections",
@@ -136,7 +136,7 @@ function useLayoutConfig() {
           {
             name: "Vendors",
             href: "/vendors",
-            icon: Store,
+            icon: Handshake,
           },
           {
             name: "Contacts",

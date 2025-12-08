@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueCollectionWithCreator } from "@shared/schema";
-import { FolderOpen, Plus, MapPin } from "lucide-react";
+import { FolderOpen, Plus, Store } from "lucide-react";
 
 export default function VenueCollectionsPage() {
   const [, navigate] = useLocation();
@@ -95,33 +95,33 @@ export default function VenueCollectionsPage() {
             {collections.map((collection) => (
               <Card
                 key={collection.id}
-                className="cursor-pointer hover-elevate transition-all"
+                className="flex flex-col cursor-pointer hover-elevate transition-all"
                 onClick={() => handleCollectionClick(collection.id)}
                 data-testid={`card-collection-${collection.id}`}
               >
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
+                <CardHeader className="p-4 pb-2 flex-1">
+                  <div className="space-y-2">
+                    <div className="flex-1 min-w-0 flex justify-between">
                       <CardTitle className="text-lg truncate" data-testid={`text-collection-name-${collection.id}`}>
                         {collection.name}
                       </CardTitle>
-                      {collection.description && (
-                        <CardDescription className="line-clamp-2 mt-1">
-                          {collection.description}
-                        </CardDescription>
-                      )}
+                      <Badge variant="ghost" className="shrink-0 gap-1">
+                        <Store className="h-3 w-3" />
+                        {collection.venueCount}
+                      </Badge>
+        
                     </div>
-                    <Badge variant="secondary" className="shrink-0 gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {collection.venueCount}
-                    </Badge>
+                    {collection.description && (
+                      <CardDescription className="line-clamp-2 mt-1">
+                        {collection.description}
+                      </CardDescription>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {collection.createdBy ? (
                       <span>
-                        Created by{" "}
                         <Link 
                           href={`/team/${collection.createdBy.id}`}
                           onClick={(e) => e.stopPropagation()}

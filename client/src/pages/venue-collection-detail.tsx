@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueCollectionWithVenues, Venue } from "@shared/schema";
 import { 
-  MapPin, 
+  Store, 
   Phone, 
   Globe, 
   Instagram, 
@@ -92,7 +92,7 @@ function VenueCard({
         </div>
       </div>
       
-      <CardHeader className="pb-2 space-y-0 p-">
+      <CardHeader className="pb-2 space-y-0 px-4 pt-4">
         <CardTitle className="text-base line-clamp-1" data-testid={`text-venue-name-${venue.id}`}>
           {venue.name}
         </CardTitle>
@@ -114,12 +114,11 @@ function VenueCard({
 
         <div className="flex w-full justify-between items-center">
           {venue.addedBy && venue.addedAt && (
-            <div className="text-xs text-muted-foreground">
-              Added by{" "}
+            <div className="text-xs text-muted-foreground font-medium">
               <Link 
                 href={`/team/${venue.addedBy.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="hover:underline text-foreground"
+                className="hover:underline "
                 data-testid={`link-added-by-${venue.addedBy.id}`}
               >
                 {venue.addedBy.firstName}
@@ -279,8 +278,8 @@ export default function VenueCollectionDetail() {
               )}
             </div>
             <Badge variant="secondary" className="shrink-0 gap-1">
-              <MapPin className="h-3 w-3" />
-              {collection.venues.length} venue{collection.venues.length !== 1 ? "s" : ""}
+              {/* <Store className="h-3 w-3" /> */}
+              {collection.venues.length} Venue{collection.venues.length !== 1 ? "s" : ""}
             </Badge>
           </div>
           
@@ -295,6 +294,9 @@ export default function VenueCollectionDetail() {
                 >
                   {collection.createdBy.firstName}
                 </Link>
+                {collection.createdAt && (
+                  <> {formatTimeAgo(new Date(collection.createdAt))}</>
+                )}
               </span>
             </div>
           )}
