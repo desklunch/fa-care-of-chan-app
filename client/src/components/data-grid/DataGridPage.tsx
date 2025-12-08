@@ -4,10 +4,10 @@ import { AgGridReact } from "ag-grid-react";
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
-import { Input } from "@/components/ui/input";
+import { ExpandableSearch } from "./expandable-search";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ColumnConfig, DataGridPageProps } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -225,16 +225,11 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
             onResetToDefaults={handleResetToDefaults}
           />
           {!pagination && searchFields.length > 0 && (
-            <div className="relative flex-1 sm:w-48">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={searchPlaceholder}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                className="pl-9 h-9"
-                data-testid="input-search"
-              />
-            </div>
+            <ExpandableSearch
+              value={searchText}
+              onChange={setSearchText}
+              placeholder={searchPlaceholder}
+            />
           )}
           {headerContent}
         </div>
