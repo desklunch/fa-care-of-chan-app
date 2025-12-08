@@ -56,7 +56,7 @@ export function ExpandableSearch({
   if (!isExpanded && !value) {
     return (
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
         onClick={() => setIsExpanded(true)}
         data-testid="button-expand-search"

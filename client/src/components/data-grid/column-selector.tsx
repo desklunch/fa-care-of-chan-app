@@ -52,7 +52,7 @@ export function ColumnSelector<T>({
           className={menuOpen ? "bg-accent" : ""}
         >
           <Settings2 className="h-4 w-4" />
-          Columns
+          
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

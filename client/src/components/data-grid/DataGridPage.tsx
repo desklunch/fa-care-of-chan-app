@@ -214,16 +214,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   return (
     <div className="p-4 md:p-6 h-full flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 w-full sm:w-auto flex-wrap">
-          <ColumnSelector
-            columns={columns}
-            defaultVisibleColumns={defaultVisibleColumns}
-            getColumnVisibility={getColumnVisibility}
-            onToggleColumn={handleToggleColumn}
-            onShowAll={handleShowAll}
-            onResetToDefaults={handleResetToDefaults}
-          />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+
           {!pagination && searchFields.length > 0 && (
             <ExpandableSearch
               value={searchText}
@@ -233,14 +226,23 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           )}
           {headerContent}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           {toolbarActions}
           <div className="text-sm text-muted-foreground" data-testid="text-row-count">
             {pagination 
               ? `${pagination.total} total`
               : `${filteredData.length} of ${data.length}`
             }
+            
           </div>
+          <ColumnSelector
+            columns={columns}
+            defaultVisibleColumns={defaultVisibleColumns}
+            getColumnVisibility={getColumnVisibility}
+            onToggleColumn={handleToggleColumn}
+            onShowAll={handleShowAll}
+            onResetToDefaults={handleResetToDefaults}
+          />
         </div>
       </div>
 
