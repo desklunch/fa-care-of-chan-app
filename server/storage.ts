@@ -117,7 +117,7 @@ import {
   commentEntityTypes,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
+import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 export interface AuditLogFilters {
@@ -1616,7 +1616,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(venues, eq(venueCollectionVenues.venueId, venues.id))
       .leftJoin(users, eq(venueCollectionVenues.addedById, users.id))
       .where(eq(venueCollectionVenues.collectionId, id))
-      .orderBy(desc(venueCollectionVenues.addedAt));
+      .orderBy(asc(venueCollectionVenues.sortOrder), desc(venueCollectionVenues.addedAt));
     
     return {
       ...result.collection,
@@ -1681,6 +1681,23 @@ export class DatabaseStorage implements IStorage {
           eq(venueCollectionVenues.venueId, venueId)
         )
       );
+  }
+  
+  async reorderVenuesInCollection(collectionId: string, venueIds: string[]): Promise<void> {
+    // Update sortOrder for each venue in the collection based on the provided order
+    await Promise.all(
+      venueIds.map((venueId, index) =>
+        db
+          .update(venueCollectionVenues)
+          .set({ sortOrder: index })
+          .where(
+            and(
+              eq(venueCollectionVenues.collectionId, collectionId),
+              eq(venueCollectionVenues.venueId, venueId)
+            )
+          )
+      )
+    );
   }
   
   async getCollectionsForVenue(venueId: string): Promise<VenueCollectionWithCreator[]> {

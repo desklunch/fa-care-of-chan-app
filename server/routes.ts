@@ -2349,6 +2349,25 @@ export async function registerRoutes(
     }
   });
 
+  // Reorder venues in a collection
+  app.put("/api/venue-collections/:id/reorder", isAuthenticated, async (req: any, res) => {
+    try {
+      const { venueIds } = req.body;
+      if (!Array.isArray(venueIds)) {
+        return res.status(400).json({ message: "venueIds must be an array" });
+      }
+      
+      await storage.reorderVenuesInCollection(req.params.id, venueIds);
+      
+      // Return the updated collection
+      const collection = await storage.getVenueCollectionById(req.params.id);
+      res.json(collection);
+    } catch (error) {
+      console.error("Error reordering venues in collection:", error);
+      res.status(500).json({ message: "Failed to reorder venues in collection" });
+    }
+  });
+
   // ===== VENUE FLOORPLAN ROUTES =====
 
   // Get all floorplans for a venue
