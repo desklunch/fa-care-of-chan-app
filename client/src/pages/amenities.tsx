@@ -31,10 +31,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { SquarePen, Plus, CircleFadingPlus } from "lucide-react";
+import { CircleFadingPlus } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["icon", "name", "description", "actions"];
+const DEFAULT_VISIBLE_COLUMNS = ["icon", "name", "description"];
 
 const amenityFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -266,11 +266,12 @@ export default function AmenitiesPage() {
 
   const isAdmin = user?.role === "admin";
 
-  const handleEditClick = useCallback((amenity: Amenity, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedAmenity(amenity);
-    setEditDialogOpen(true);
-  }, []);
+  const handleRowClick = useCallback((amenity: Amenity) => {
+    if (isAdmin) {
+      setSelectedAmenity(amenity);
+      setEditDialogOpen(true);
+    }
+  }, [isAdmin]);
 
   const amenityColumns: ColumnConfig<Amenity>[] = [
     {
@@ -306,30 +307,6 @@ export default function AmenitiesPage() {
         cellRenderer: (params: { data: Amenity }) => <DescriptionCellRenderer data={params.data} />,
       },
     },
-    {
-      id: "actions",
-      headerName: "Actions",
-      category: "Actions",
-      colDef: {
-        flex: 0.5,
-        minWidth: 100,
-        cellRenderer: (params: { data: Amenity }) => {
-          if (!params.data || !isAdmin) return null;
-          return (
-            <div className="flex items-center h-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => handleEditClick(params.data, e)}
-                data-testid={`button-edit-amenity-${params.data.id}`}
-              >
-                <SquarePen className="w-4 h-4" />
-              </Button>
-            </div>
-          );
-        },
-      },
-    },
   ];
 
   const dataGridProps = {
@@ -338,6 +315,7 @@ export default function AmenitiesPage() {
     defaultVisibleColumns: DEFAULT_VISIBLE_COLUMNS,
     searchFields: ["name", "description"] as (keyof Amenity)[],
     searchPlaceholder: "Search amenities...",
+    onRowClick: handleRowClick,
     getRowId: (amenity: Amenity) => amenity.id,
     emptyMessage: "No amenities yet",
     emptyDescription: "Create your first amenity to get started.",

@@ -104,7 +104,7 @@ export default function CommentsPage() {
   return (
     <PageLayout breadcrumbs={breadcrumbs}>
       <div className="p-4 md:p-6 space-y-6">
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           
           <Select value={entityTypeFilter} onValueChange={setEntityTypeFilter}>
             <SelectTrigger className="w-40" data-testid="select-entity-type-filter">
@@ -119,7 +119,7 @@ export default function CommentsPage() {
             </SelectContent>
           </Select>
         </div>
-
+ */}
         {!filteredComments || filteredComments.length === 0 ? (
           <Card>
             <CardContent className="py-10 text-center">
@@ -141,20 +141,29 @@ export default function CommentsPage() {
 
               return (
                 <Card key={comment.id} data-testid={`comment-card-${comment.id}`} className="bg-transparent border-none shadow-non border-b pb-4">
-                  <CardContent className="p-0">
+                  <CardContent className="p-0 space-y-2">
+
+                    <Link 
+                      href={entityInfo.href(comment.entityId)}
+                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                      data-testid={`link-entity-${comment.id}`}
+                    >
+                      <EntityIcon className="h-4 w-4" />
+                      {comment.entityName || `View ${entityInfo.label}`}
+                    </Link>
                     <div className="flex gap-3">
 
                       <div className="flex-1 min-w-0 flex flex-col gap-2">
 
-                        <div className="flex items-center justify-between  mb-1">
+                        <div className="flex items-center justify-between">
                           
                             <div className="flex items-center gap-2 flex-wrap">
-                            <Link href={`/team/${comment.createdById}`}>
+                            {/* <Link href={`/team/${comment.createdById}`}>
                                 <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
                                 <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName(comment)} />
                                 <AvatarFallback className="text-xs">{getAuthorInitials(comment)}</AvatarFallback>
                               </Avatar>
-                            </Link>
+                            </Link> */}
                             <Link 
                               href={`/team/${comment.createdById}`}
                               className="font-medium text-sm hover:underline"
@@ -172,14 +181,6 @@ export default function CommentsPage() {
                 
 
 
-                            <Link 
-                              href={entityInfo.href(comment.entityId)}
-                              className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
-                              data-testid={`link-entity-${comment.id}`}
-                            >
-                              <EntityIcon className="h-4 w-4" />
-                              {comment.entityName || `View ${entityInfo.label}`}
-                            </Link>
                           </div>
 
                         </div>

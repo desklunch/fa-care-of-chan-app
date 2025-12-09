@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { X, Info, ArrowRight } from "lucide-react";
+import { X, Info, DraftingCompass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface InfoBannerProps {
@@ -46,25 +46,25 @@ export function InfoBanner({
 
   return (
     <div
-      className="relative flex items-center gap-3 rounded-lg border border-accent bg-accent/10 p-3 text-sm"
+      className="px-4 md:px-6 relative flex items-center gap-3 border border-accent bg-primary text-primary-foreground p-3 text-base"
       data-testid={`banner-${id}`}
     >
-      <Info className="h-5 w-5 shrink-0 text-accent-foreground" />
       <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex-1 min-w-0">
-          <span className="font-medium">{title}</span>
-          <span className="ml-1 text-muted-foreground">{description}</span>
+          <span className="font-bold">{title}</span>
+          <span className="ml-1 font-medium">{description}</span>
         </div>
         {ctaLabel && ctaUrl && (
           <Link href={ctaUrl}>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="gap-1 shrink-0"
               data-testid={`button-banner-cta-${id}`}
             >
+              <DraftingCompass className="h-4 w-4" />
+
               {ctaLabel}
-              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         )}

@@ -93,16 +93,7 @@ function useLayoutConfig() {
     navigation: [
       {
         items: [
-          {
-            name: "Team",
-            href: "/team",
-            icon: Users,
-          },
-          {
-            name: "Comments",
-            href: "/comments",
-            icon: MessageSquare,
-          },
+
         ],
       },
       {
@@ -117,6 +108,11 @@ function useLayoutConfig() {
             name: "Collections",
             href: "/venues/collections",
             icon: FolderOpen,
+          },
+          {
+            name: "Comments",
+            href: "/comments",
+            icon: MessageSquare,
           },
           {
             name: "Amenities",
@@ -147,12 +143,29 @@ function useLayoutConfig() {
             name: "Forms",
             href: "/forms/templates",
             icon: FileText,
-          },
+          }, 
           {
             name: "Requests",
             href: "/forms/requests",
             icon: ScrollText,
           },
+        ],
+      },
+      {
+        heading: "People",
+        items: [
+          {
+            name: "Team",
+            href: "/team",
+            icon: Users,
+          },
+          {
+            name: "Contacts",
+            href: "/contacts",
+            icon: Contact,
+          },
+
+
         ],
       },
             {

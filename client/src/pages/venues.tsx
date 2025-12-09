@@ -566,8 +566,8 @@ export default function VenuesPage() {
         <div className="flex flex-col gap-4 h-full">
           <InfoBanner
             id="venue-features-tip"
-            title="Have a feature idea?"
-            description="Request new venue features or vote on existing ideas."
+            title="Need a new feature?"
+            description="Request new functionality in the App Features section."
             ctaLabel="App Features"
             ctaUrl="/app/features"
             userId={user?.id}
