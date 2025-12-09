@@ -1570,11 +1570,13 @@ export const analyticsSessions = pgTable(
     userAgent: text("user_agent"),
     ipAddress: varchar("ip_address", { length: 45 }),
     deviceType: varchar("device_type", { length: 20 }), // 'desktop' | 'tablet' | 'mobile'
+    environment: varchar("environment", { length: 20 }).notNull().default("development"), // 'development' | 'production'
   },
   (table) => [
     index("idx_analytics_sessions_user").on(table.userId),
     index("idx_analytics_sessions_started").on(table.startedAt),
     index("idx_analytics_sessions_token").on(table.sessionToken),
+    index("idx_analytics_sessions_environment").on(table.environment),
   ],
 );
 
@@ -1590,12 +1592,14 @@ export const analyticsPageViews = pgTable(
     referrer: varchar("referrer", { length: 500 }),
     viewedAt: timestamp("viewed_at").defaultNow().notNull(),
     durationMs: integer("duration_ms"), // Time spent on page
+    environment: varchar("environment", { length: 20 }).notNull().default("development"), // 'development' | 'production'
   },
   (table) => [
     index("idx_analytics_page_views_session").on(table.sessionId),
     index("idx_analytics_page_views_user").on(table.userId),
     index("idx_analytics_page_views_path").on(table.path),
     index("idx_analytics_page_views_viewed_at").on(table.viewedAt),
+    index("idx_analytics_page_views_environment").on(table.environment),
   ],
 );
 
@@ -1613,6 +1617,7 @@ export const analyticsEvents = pgTable(
     elementId: varchar("element_id", { length: 100 }), // data-testid or element identifier
     metadata: jsonb("metadata"), // Additional event data
     occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+    environment: varchar("environment", { length: 20 }).notNull().default("development"), // 'development' | 'production'
   },
   (table) => [
     index("idx_analytics_events_session").on(table.sessionId),
@@ -1620,6 +1625,7 @@ export const analyticsEvents = pgTable(
     index("idx_analytics_events_type").on(table.eventType),
     index("idx_analytics_events_name").on(table.eventName),
     index("idx_analytics_events_occurred_at").on(table.occurredAt),
+    index("idx_analytics_events_environment").on(table.environment),
   ],
 );
 
