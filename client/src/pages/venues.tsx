@@ -1,16 +1,19 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, type LucideIcon } from "lucide-react";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, Search, Filter, MousePointerClick, type LucideIcon } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
+
+const VENUES_WELCOME_KEY = "venues_welcome_seen";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "cuisineTags", "styleTags", "location"];
 
@@ -456,6 +459,22 @@ export default function VenuesPage() {
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
   const isAdmin = user?.role === "admin";
 
+  // Welcome dialog state
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+
+  // Check if user has seen welcome dialog
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem(VENUES_WELCOME_KEY);
+    if (!hasSeenWelcome) {
+      setShowWelcomeDialog(true);
+    }
+  }, []);
+
+  const handleDismissWelcome = useCallback(() => {
+    localStorage.setItem(VENUES_WELCOME_KEY, "true");
+    setShowWelcomeDialog(false);
+  }, []);
+
   // Collection dialog state
   const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
   const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
@@ -584,6 +603,76 @@ export default function VenuesPage() {
         venueIds={selectedVenueIds}
         onSuccess={handleCollectionSuccess}
       />
+
+      <Dialog open={showWelcomeDialog} onOpenChange={(open) => !open && handleDismissWelcome()}>
+        <DialogContent className="sm:max-w-lg" data-testid="dialog-venues-welcome">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Building2 className="h-6 w-6 text-primary" />
+              Welcome to Venues
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Your central hub for discovering and managing event venues
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <Search className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">Search & Browse</h4>
+                <p className="text-sm text-muted-foreground">
+                  Quickly find venues by name, location, or description using the search bar.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <Filter className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">Filter by Tags</h4>
+                <p className="text-sm text-muted-foreground">
+                  Narrow down venues by location, amenities, cuisine type, or style using the filter options.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <MousePointerClick className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">View Details</h4>
+                <p className="text-sm text-muted-foreground">
+                  Click any venue row to see full details including photos, capacity, and contact information.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <FolderPlus className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">Create Collections</h4>
+                <p className="text-sm text-muted-foreground">
+                  Select multiple venues and organize them into collections for easy reference.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={handleDismissWelcome} data-testid="button-dismiss-welcome">
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
