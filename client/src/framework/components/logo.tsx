@@ -16,7 +16,7 @@ export default function Logo({ className, width = "36", collapsed = false }: Log
         <Building2 className="h-5 w-5" />
       </div>
       {!collapsed && (
-        <span className="font-semibold text-lg tracking-tight mr-3">Care of Chan</span>
+        <span className="font-semibold text-lg tracking-tight mr-3">Care of Chan OS</span>
       )}
     </div>
   );

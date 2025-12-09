@@ -11,7 +11,7 @@ export default function Landing() {
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
               <Building2 className="h-5 w-5" />
             </div>
-            <span className="font-semibold text-xl tracking-tight">Directory</span>
+            <span className="font-semibold text-xl tracking-tight">Care of Chan OS</span>
           </div>
           <a href="/api/login">
             <Button data-testid="button-sign-in">
@@ -23,10 +23,10 @@ export default function Landing() {
 
         <div className="max-w-4xl mx-auto text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-            Enterprise Employee Directory
+            Care of Chan OS
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            A centralized platform for managing your organization's employee information. 
+            A centralized platform for managing your organization's venues, vendors, and team. 
             Connect with colleagues, access contact details, and maintain accurate records.
           </p>
           <a href="/api/login">
@@ -43,9 +43,9 @@ export default function Landing() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Users className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle className="text-xl">Employee Directory</CardTitle>
+              <CardTitle className="text-xl">Team Directory</CardTitle>
               <CardDescription>
-                Browse and search through your organization's complete employee roster
+                Browse and search through your organization's complete team roster
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -90,7 +90,7 @@ export default function InviteActivation() {
           </div>
           <CardTitle className="text-xl">Activate Your Account</CardTitle>
           <CardDescription>
-            You've been invited to join the Employee Directory
+            You've been invited to join Care of Chan OS
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
