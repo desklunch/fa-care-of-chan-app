@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart3, Users, Eye, Clock, TrendingUp, Route, MousePointer } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { format, subDays } from "date-fns";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
 interface AnalyticsSummary {
   totalPageViews: number;
@@ -21,18 +21,26 @@ interface AnalyticsSummary {
 export default function AdminAnalytics() {
   const [dateRange, setDateRange] = useState("30");
 
-  const endDate = new Date();
-  const startDate = subDays(endDate, parseInt(dateRange));
+  // Memoize dates to prevent infinite re-fetching
+  const { startDateStr, endDateStr } = useMemo(() => {
+    const end = endOfDay(new Date());
+    const start = startOfDay(subDays(end, parseInt(dateRange)));
+    return {
+      startDateStr: start.toISOString(),
+      endDateStr: end.toISOString(),
+    };
+  }, [dateRange]);
 
   const { data, isLoading, error } = useQuery<AnalyticsSummary>({
-    queryKey: ["/api/admin/analytics", startDate.toISOString(), endDate.toISOString()],
+    queryKey: ["/api/admin/analytics", dateRange],
     queryFn: async () => {
       const res = await fetch(
-        `/api/admin/analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+        `/api/admin/analytics?startDate=${startDateStr}&endDate=${endDateStr}`
       );
       if (!res.ok) throw new Error("Failed to fetch analytics");
       return res.json();
     },
+    staleTime: 60000, // Data is fresh for 1 minute
   });
 
   if (isLoading) {
