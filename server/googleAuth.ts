@@ -153,6 +153,60 @@ export async function setupAuth(app: Express) {
       res.json({ authenticated: false });
     }
   });
+
+  // Development-only login endpoint for testing
+  if (process.env.NODE_ENV === "development") {
+    app.post("/api/auth/dev-login", async (req, res) => {
+      try {
+        const { email } = req.body;
+        
+        if (!email) {
+          return res.status(400).json({ message: "Email required" });
+        }
+
+        // Only allow specific dev emails
+        const allowedDevEmails = ["omar@functionalartists.ai"];
+        if (!allowedDevEmails.includes(email.toLowerCase())) {
+          return res.status(403).json({ message: "Email not allowed for dev login" });
+        }
+
+        // Find or create the user
+        let user = await storage.getUserByEmail(email);
+        
+        if (!user) {
+          // Create a new dev user
+          const devUserId = `dev-${Date.now()}`;
+          await storage.upsertUser({
+            id: devUserId,
+            email: email,
+            firstName: "Omar",
+            lastName: "Dev",
+            role: "admin",
+          });
+          user = await storage.getUser(devUserId);
+        }
+
+        if (!user) {
+          return res.status(500).json({ message: "Failed to create dev user" });
+        }
+
+        // Create session
+        (req.session as any).userId = user.id;
+        (req.session as any).email = email;
+        (req.session as any).claims = {
+          sub: user.id,
+          email: email,
+          given_name: user.firstName,
+          family_name: user.lastName,
+        };
+
+        res.json({ success: true, user });
+      } catch (error: any) {
+        console.error("Dev login error:", error);
+        res.status(500).json({ message: "Dev login failed", error: error.message });
+      }
+    });
+  }
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {

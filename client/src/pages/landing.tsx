@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Shield, Loader2 } from "lucide-react";
+import { Building2, Users, Shield, Loader2, Bug } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+const isDevelopment = import.meta.env.DEV;
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -30,6 +32,24 @@ export default function Landing() {
           variant: "destructive",
         });
       }
+    },
+  });
+
+  const devLoginMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const res = await apiRequest("POST", "/api/auth/dev-login", { email });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Dev login failed",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
     },
   });
 
@@ -199,6 +219,29 @@ export default function Landing() {
 
         <footer className="mt-24 text-center text-sm text-muted-foreground">
           <p>Care of Chan OS</p>
+          {isDevelopment && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => devLoginMutation.mutate("omar@functionalartists.ai")}
+                disabled={devLoginMutation.isPending}
+                data-testid="button-dev-login"
+              >
+                {devLoginMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  <>
+                    <Bug className="mr-2 h-4 w-4" />
+                    Dev Login (omar@functionalartists.ai)
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </footer>
       </div>
     </div>
