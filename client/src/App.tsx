@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { LayoutConfig } from "@/framework/types/layout";
 import Landing from "@/pages/landing";
 import InviteActivation from "@/pages/invite-activation";
+import AuthError from "@/pages/auth-error";
 import TeamPage from "@/pages/team";
 import TeamProfile from "@/pages/team-profile";
 import Profile from "@/pages/profile";
@@ -330,6 +331,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/invite" component={InviteActivation} />
+      <Route path="/auth-error" component={AuthError} />
       <Route path="/vendor-update/:token" component={VendorUpdateForm} />
       <Route path="/form/:token" component={PublicForm} />
       <Route path="/form/preview/:requestId" component={FormPreview} />

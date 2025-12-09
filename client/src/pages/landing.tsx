@@ -15,7 +15,7 @@ export default function Landing() {
           </div>
           <a href="/api/login">
             <Button data-testid="button-sign-in">
-              Sign In
+              Sign in with Google
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </a>
@@ -31,10 +31,13 @@ export default function Landing() {
           </p>
           <a href="/api/login">
             <Button size="lg" className="h-12 px-8" data-testid="button-get-started">
-              Get Started
+              Sign in with Google
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </a>
+          <p className="text-sm text-muted-foreground mt-4">
+            For Care of Chan team members with @careofchan.com accounts
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">

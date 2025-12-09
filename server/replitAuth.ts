@@ -131,7 +131,8 @@ export async function setupAuth(app: Express) {
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+      idp_hint: "google", // Force Google-only authentication
+    } as any)(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
@@ -146,9 +147,20 @@ export async function setupAuth(app: Express) {
     })(req, res, (err: any) => {
       if (err) return next(err);
       
+      // Validate email domain - only allow @careofchan.com
+      const claims = (req.user as any)?.claims;
+      const email = claims?.email as string | undefined;
+      
+      if (!email || !email.toLowerCase().endsWith("@careofchan.com")) {
+        // Clear the session and redirect to error page
+        req.logout(() => {
+          res.redirect("/auth-error?reason=domain");
+        });
+        return;
+      }
+      
       // After successful auth, process invite token
       if (inviteToken && req.user) {
-        const claims = (req.user as any).claims;
         upsertUser(claims, inviteToken).catch(console.error);
         delete (req.session as any).inviteToken;
       }
