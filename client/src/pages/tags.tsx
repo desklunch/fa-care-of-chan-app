@@ -29,10 +29,10 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { SquarePen, CircleFadingPlus, Tag as TagIcon } from "lucide-react";
+import { CircleFadingPlus, Tag as TagIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const DEFAULT_VISIBLE_COLUMNS = ["name", "category", "actions"];
+const DEFAULT_VISIBLE_COLUMNS = ["name", "category"];
 
 const tagFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -216,11 +216,12 @@ export default function TagsPage() {
 
   const isAdmin = user?.role === "admin";
 
-  const handleEditClick = useCallback((tag: Tag, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedTag(tag);
-    setEditDialogOpen(true);
-  }, []);
+  const handleRowClick = useCallback((tag: Tag) => {
+    if (isAdmin) {
+      setSelectedTag(tag);
+      setEditDialogOpen(true);
+    }
+  }, [isAdmin]);
 
   const tagColumns: ColumnConfig<Tag>[] = [
     {
@@ -245,30 +246,6 @@ export default function TagsPage() {
         cellRenderer: (params: { data: Tag }) => <CategoryCellRenderer data={params.data} />,
       },
     },
-    {
-      id: "actions",
-      headerName: "Actions",
-      category: "Actions",
-      colDef: {
-        flex: 0.5,
-        minWidth: 100,
-        cellRenderer: (params: { data: Tag }) => {
-          if (!params.data || !isAdmin) return null;
-          return (
-            <div className="flex items-center h-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => handleEditClick(params.data, e)}
-                data-testid={`button-edit-tag-${params.data.id}`}
-              >
-                <SquarePen className="w-4 h-4" />
-              </Button>
-            </div>
-          );
-        },
-      },
-    },
   ];
 
   const dataGridProps = {
@@ -277,6 +254,7 @@ export default function TagsPage() {
     defaultVisibleColumns: DEFAULT_VISIBLE_COLUMNS,
     searchFields: ["name", "category"] as (keyof Tag)[],
     searchPlaceholder: "Search tags...",
+    onRowClick: handleRowClick,
     getRowId: (tag: Tag) => tag.id,
     emptyMessage: "No tags yet",
     emptyDescription: "Create your first tag to get started.",
