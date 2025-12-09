@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Tag } from "@shared/schema";
-import type { ColumnConfig } from "@/components/data-grid/types";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import {
   Dialog,
   DialogContent,
@@ -29,10 +29,36 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CircleFadingPlus, Tag as TagIcon } from "lucide-react";
+import { CircleFadingPlus, Tag as TagIcon, Folder } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "category"];
+
+const tagFilters: FilterConfig<Tag>[] = [
+  {
+    id: "category",
+    label: "Category",
+    icon: Folder,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const categories = new Set<string>();
+        data.forEach((tag) => {
+          if (tag.category) {
+            categories.add(tag.category);
+          }
+        });
+        return Array.from(categories)
+          .sort()
+          .map((cat) => ({ id: cat, label: cat }));
+      },
+    },
+    matchFn: (tag, selectedValues) => {
+      if (!tag.category) return false;
+      return selectedValues.includes(tag.category);
+    },
+  },
+];
 
 const tagFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -258,6 +284,7 @@ export default function TagsPage() {
     getRowId: (tag: Tag) => tag.id,
     emptyMessage: "No tags yet",
     emptyDescription: "Create your first tag to get started.",
+    filters: tagFilters,
   };
 
   if (isAuthLoading) {
