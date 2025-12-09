@@ -1552,3 +1552,104 @@ export const updateCommentSchema = z.object({
 
 export type CreateComment = z.infer<typeof insertCommentSchema>;
 export type UpdateComment = z.infer<typeof updateCommentSchema>;
+
+// ============================================
+// Analytics Tables
+// ============================================
+
+// Analytics sessions - tracks user sessions for duration and journey
+export const analyticsSessions = pgTable(
+  "analytics_sessions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").references(() => users.id),
+    sessionToken: varchar("session_token").notNull().unique(),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    endedAt: timestamp("ended_at"),
+    lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+    userAgent: text("user_agent"),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    deviceType: varchar("device_type", { length: 20 }), // 'desktop' | 'tablet' | 'mobile'
+  },
+  (table) => [
+    index("idx_analytics_sessions_user").on(table.userId),
+    index("idx_analytics_sessions_started").on(table.startedAt),
+    index("idx_analytics_sessions_token").on(table.sessionToken),
+  ],
+);
+
+// Page views - tracks each page navigation
+export const analyticsPageViews = pgTable(
+  "analytics_page_views",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    sessionId: varchar("session_id").references(() => analyticsSessions.id),
+    userId: varchar("user_id").references(() => users.id),
+    path: varchar("path", { length: 500 }).notNull(),
+    title: varchar("title", { length: 200 }),
+    referrer: varchar("referrer", { length: 500 }),
+    viewedAt: timestamp("viewed_at").defaultNow().notNull(),
+    durationMs: integer("duration_ms"), // Time spent on page
+  },
+  (table) => [
+    index("idx_analytics_page_views_session").on(table.sessionId),
+    index("idx_analytics_page_views_user").on(table.userId),
+    index("idx_analytics_page_views_path").on(table.path),
+    index("idx_analytics_page_views_viewed_at").on(table.viewedAt),
+  ],
+);
+
+// Analytics events - tracks button clicks and other interactions
+export const analyticsEvents = pgTable(
+  "analytics_events",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    sessionId: varchar("session_id").references(() => analyticsSessions.id),
+    userId: varchar("user_id").references(() => users.id),
+    eventType: varchar("event_type", { length: 50 }).notNull(), // 'click' | 'submit' | 'vote' | etc.
+    eventName: varchar("event_name", { length: 100 }).notNull(), // e.g., 'feature_vote', 'login', 'form_submit'
+    eventCategory: varchar("event_category", { length: 50 }), // e.g., 'navigation', 'engagement', 'auth'
+    path: varchar("path", { length: 500 }),
+    elementId: varchar("element_id", { length: 100 }), // data-testid or element identifier
+    metadata: jsonb("metadata"), // Additional event data
+    occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_analytics_events_session").on(table.sessionId),
+    index("idx_analytics_events_user").on(table.userId),
+    index("idx_analytics_events_type").on(table.eventType),
+    index("idx_analytics_events_name").on(table.eventName),
+    index("idx_analytics_events_occurred_at").on(table.occurredAt),
+  ],
+);
+
+// Types for analytics
+export type AnalyticsSession = typeof analyticsSessions.$inferSelect;
+export type InsertAnalyticsSession = typeof analyticsSessions.$inferInsert;
+
+export type AnalyticsPageView = typeof analyticsPageViews.$inferSelect;
+export type InsertAnalyticsPageView = typeof analyticsPageViews.$inferInsert;
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
+// Insert schemas
+export const insertAnalyticsSessionSchema = createInsertSchema(analyticsSessions).omit({
+  id: true,
+  startedAt: true,
+  lastActivityAt: true,
+});
+
+export const insertAnalyticsPageViewSchema = createInsertSchema(analyticsPageViews).omit({
+  id: true,
+  viewedAt: true,
+});
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  occurredAt: true,
+});
+
+export type CreateAnalyticsSession = z.infer<typeof insertAnalyticsSessionSchema>;
+export type CreateAnalyticsPageView = z.infer<typeof insertAnalyticsPageViewSchema>;
+export type CreateAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;

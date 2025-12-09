@@ -41,7 +41,7 @@ async function verifyGoogleToken(idToken: string) {
   return payload;
 }
 
-async function upsertUser(payload: any, inviteToken?: string) {
+async function upsertUser(payload: any, inviteToken?: string): Promise<{ user: any; userId: string }> {
   let inviteData = null;
   if (inviteToken) {
     inviteData = await storage.getInviteByToken(inviteToken);
@@ -56,6 +56,21 @@ async function upsertUser(payload: any, inviteToken?: string) {
     }
   }
 
+  // Check if a user with this email already exists (handles migration from old auth systems)
+  const existingUser = await storage.getUserByEmail(payload.email);
+  
+  if (existingUser) {
+    // Update existing user's profile info but keep their original ID
+    await storage.updateUser(existingUser.id, {
+      firstName: inviteData?.firstName || payload.given_name || existingUser.firstName,
+      lastName: inviteData?.lastName || payload.family_name || existingUser.lastName,
+      profileImageUrl: payload.picture || existingUser.profileImageUrl,
+    });
+    const updatedUser = await storage.getUser(existingUser.id);
+    return { user: updatedUser, userId: existingUser.id };
+  }
+
+  // No existing user, create new one with Google's sub as ID
   await storage.upsertUser({
     id: payload.sub,
     email: payload.email,
@@ -64,7 +79,8 @@ async function upsertUser(payload: any, inviteToken?: string) {
     profileImageUrl: payload.picture,
   });
 
-  return await storage.getUser(payload.sub);
+  const newUser = await storage.getUser(payload.sub);
+  return { user: newUser, userId: payload.sub };
 }
 
 export async function setupAuth(app: Express) {
@@ -94,12 +110,13 @@ export async function setupAuth(app: Express) {
         });
       }
 
-      const user = await upsertUser(payload, inviteToken);
+      const { user, userId } = await upsertUser(payload, inviteToken);
       
-      (req.session as any).userId = payload.sub;
+      // Use the actual user ID (which may be different from Google's sub for migrated accounts)
+      (req.session as any).userId = userId;
       (req.session as any).email = payload.email;
       (req.session as any).claims = {
-        sub: payload.sub,
+        sub: userId, // Use the actual user ID for consistency
         email: payload.email,
         given_name: payload.given_name,
         family_name: payload.family_name,
