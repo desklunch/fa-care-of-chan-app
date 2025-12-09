@@ -15,9 +15,18 @@ function getDeviceType(): string {
   return "desktop";
 }
 
+function getEnvironment(): string {
+  const hostname = window.location.hostname;
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.includes(".replit.dev")) {
+    return "development";
+  }
+  return "production";
+}
+
 async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: string }> {
   let sessionToken = sessionStorage.getItem(ANALYTICS_SESSION_KEY);
   let sessionId = sessionStorage.getItem(ANALYTICS_SESSION_ID_KEY);
+  const environment = getEnvironment();
 
   if (sessionToken && sessionId) {
     try {
@@ -28,6 +37,7 @@ async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: 
           sessionToken,
           userAgent: navigator.userAgent,
           deviceType: getDeviceType(),
+          environment,
         }),
       });
       if (res.ok) {
@@ -50,6 +60,7 @@ async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: 
         sessionToken,
         userAgent: navigator.userAgent,
         deviceType: getDeviceType(),
+        environment,
       }),
     });
     if (res.ok) {
@@ -100,6 +111,7 @@ export function useAnalytics() {
           path,
           title: document.title,
           referrer: document.referrer,
+          environment: getEnvironment(),
         }),
       });
       if (res.ok) {
@@ -136,6 +148,7 @@ export function useAnalytics() {
           path: window.location.pathname,
           elementId: options?.elementId,
           metadata: options?.metadata,
+          environment: getEnvironment(),
         }),
       });
     } catch (e) {
