@@ -9,6 +9,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -318,7 +319,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
         </nav>
 
         <div className="border-t border-sidebar-border p-3">
-          <div className={cn("flex", !showExpanded && "justify-center")}>
+          <div className={cn("flex gap-1", !showExpanded && "justify-center")}>
             <Button
               variant="ghost"
               size="icon"
@@ -333,6 +334,23 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 <Moon className="h-5 w-5" />
               )}
             </Button>
+            {typeof window !== "undefined" && 
+              (window.location.hostname === "localhost" || window.location.hostname.endsWith(".replit.dev")) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.reload();
+                }}
+                className="h-9 w-9"
+                data-testid="button-clear-storage"
+                aria-label="Clear local storage (dev only)"
+                title="Clear local storage"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
 
