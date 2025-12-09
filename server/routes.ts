@@ -3627,5 +3627,150 @@ export async function registerRoutes(
     }
   });
 
+  // ============================================
+  // Analytics Routes
+  // ============================================
+
+  // POST /api/analytics/session - Create or get analytics session
+  app.post("/api/analytics/session", async (req: any, res) => {
+    try {
+      const { sessionToken, userAgent, deviceType } = req.body;
+      
+      if (!sessionToken) {
+        return res.status(400).json({ message: "Session token required" });
+      }
+
+      // Check if session already exists
+      const existingSession = await storage.getAnalyticsSessionByToken(sessionToken);
+      if (existingSession) {
+        await storage.updateAnalyticsSessionActivity(existingSession.id);
+        return res.json(existingSession);
+      }
+
+      // Get user ID if authenticated
+      const session = req.session as any;
+      const userId = session?.userId || null;
+
+      const analyticsSession = await storage.createAnalyticsSession({
+        sessionToken,
+        userId,
+        userAgent,
+        deviceType,
+        ipAddress: req.ip || req.connection?.remoteAddress,
+      });
+
+      res.json(analyticsSession);
+    } catch (error) {
+      console.error("Error creating analytics session:", error);
+      res.status(500).json({ message: "Failed to create session" });
+    }
+  });
+
+  // POST /api/analytics/pageview - Record a page view
+  app.post("/api/analytics/pageview", async (req: any, res) => {
+    try {
+      const { sessionId, path, title, referrer } = req.body;
+      
+      if (!path) {
+        return res.status(400).json({ message: "Path required" });
+      }
+
+      // Get user ID if authenticated
+      const session = req.session as any;
+      const userId = session?.userId || null;
+
+      const pageView = await storage.createPageView({
+        sessionId: sessionId || null,
+        userId,
+        path,
+        title,
+        referrer,
+      });
+
+      res.json(pageView);
+    } catch (error) {
+      console.error("Error creating page view:", error);
+      res.status(500).json({ message: "Failed to record page view" });
+    }
+  });
+
+  // PUT /api/analytics/pageview/:id/duration - Update page view duration
+  app.put("/api/analytics/pageview/:id/duration", async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { durationMs } = req.body;
+      
+      if (typeof durationMs !== "number") {
+        return res.status(400).json({ message: "Duration required" });
+      }
+
+      await storage.updatePageViewDuration(id, durationMs);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating page view duration:", error);
+      res.status(500).json({ message: "Failed to update duration" });
+    }
+  });
+
+  // POST /api/analytics/event - Record an analytics event
+  app.post("/api/analytics/event", async (req: any, res) => {
+    try {
+      const { sessionId, eventType, eventName, eventCategory, path, elementId, metadata } = req.body;
+      
+      if (!eventType || !eventName) {
+        return res.status(400).json({ message: "Event type and name required" });
+      }
+
+      // Get user ID if authenticated
+      const session = req.session as any;
+      const userId = session?.userId || null;
+
+      const event = await storage.createAnalyticsEvent({
+        sessionId: sessionId || null,
+        userId,
+        eventType,
+        eventName,
+        eventCategory,
+        path,
+        elementId,
+        metadata,
+      });
+
+      res.json(event);
+    } catch (error) {
+      console.error("Error creating analytics event:", error);
+      res.status(500).json({ message: "Failed to record event" });
+    }
+  });
+
+  // POST /api/analytics/session/:id/end - End an analytics session
+  app.post("/api/analytics/session/:id/end", async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.endAnalyticsSession(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error ending analytics session:", error);
+      res.status(500).json({ message: "Failed to end session" });
+    }
+  });
+
+  // GET /api/admin/analytics - Get analytics summary (admin only)
+  app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      // Default to last 30 days
+      const end = endDate ? new Date(endDate as string) : new Date();
+      const start = startDate ? new Date(startDate as string) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const summary = await storage.getAnalyticsSummary(start, end);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   return httpServer;
 }

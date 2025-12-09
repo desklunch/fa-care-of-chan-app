@@ -115,6 +115,15 @@ import {
   type CreateComment,
   type UpdateComment,
   commentEntityTypes,
+  analyticsSessions,
+  analyticsPageViews,
+  analyticsEvents,
+  type AnalyticsSession,
+  type InsertAnalyticsSession,
+  type AnalyticsPageView,
+  type InsertAnalyticsPageView,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -337,6 +346,25 @@ export interface IStorage {
   createEntityComment(data: CreateComment, createdById: string): Promise<Comment>;
   updateEntityComment(id: string, body: string): Promise<Comment | undefined>;
   softDeleteEntityComment(id: string): Promise<void>;
+  
+  // Analytics operations
+  createAnalyticsSession(data: InsertAnalyticsSession): Promise<AnalyticsSession>;
+  getAnalyticsSessionByToken(token: string): Promise<AnalyticsSession | undefined>;
+  updateAnalyticsSessionActivity(sessionId: string): Promise<void>;
+  endAnalyticsSession(sessionId: string): Promise<void>;
+  createPageView(data: InsertAnalyticsPageView): Promise<AnalyticsPageView>;
+  updatePageViewDuration(pageViewId: string, durationMs: number): Promise<void>;
+  createAnalyticsEvent(data: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
+  getAnalyticsSummary(startDate: Date, endDate: Date): Promise<{
+    totalPageViews: number;
+    uniqueUsers: number;
+    totalSessions: number;
+    avgSessionDuration: number;
+    topPages: { path: string; views: number }[];
+    topEvents: { name: string; count: number }[];
+    pageViewsByDay: { date: string; views: number }[];
+    userJourneys: { userId: string; userName: string; paths: string[] }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2692,6 +2720,193 @@ export class DatabaseStorage implements IStorage {
       .update(comments)
       .set({ deletedAt: new Date(), body: "" })
       .where(eq(comments.id, id));
+  }
+
+  // Analytics operations
+  async createAnalyticsSession(data: InsertAnalyticsSession): Promise<AnalyticsSession> {
+    const [session] = await db
+      .insert(analyticsSessions)
+      .values(data)
+      .returning();
+    return session;
+  }
+
+  async getAnalyticsSessionByToken(token: string): Promise<AnalyticsSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(analyticsSessions)
+      .where(eq(analyticsSessions.sessionToken, token));
+    return session;
+  }
+
+  async updateAnalyticsSessionActivity(sessionId: string): Promise<void> {
+    await db
+      .update(analyticsSessions)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(analyticsSessions.id, sessionId));
+  }
+
+  async endAnalyticsSession(sessionId: string): Promise<void> {
+    await db
+      .update(analyticsSessions)
+      .set({ endedAt: new Date() })
+      .where(eq(analyticsSessions.id, sessionId));
+  }
+
+  async createPageView(data: InsertAnalyticsPageView): Promise<AnalyticsPageView> {
+    const [pageView] = await db
+      .insert(analyticsPageViews)
+      .values(data)
+      .returning();
+    return pageView;
+  }
+
+  async updatePageViewDuration(pageViewId: string, durationMs: number): Promise<void> {
+    await db
+      .update(analyticsPageViews)
+      .set({ durationMs })
+      .where(eq(analyticsPageViews.id, pageViewId));
+  }
+
+  async createAnalyticsEvent(data: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    const [event] = await db
+      .insert(analyticsEvents)
+      .values(data)
+      .returning();
+    return event;
+  }
+
+  async getAnalyticsSummary(startDate: Date, endDate: Date): Promise<{
+    totalPageViews: number;
+    uniqueUsers: number;
+    totalSessions: number;
+    avgSessionDuration: number;
+    topPages: { path: string; views: number }[];
+    topEvents: { name: string; count: number }[];
+    pageViewsByDay: { date: string; views: number }[];
+    userJourneys: { userId: string; userName: string; paths: string[] }[];
+  }> {
+    // Total page views
+    const pageViewsResult = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(analyticsPageViews)
+      .where(and(
+        gte(analyticsPageViews.viewedAt, startDate),
+        lte(analyticsPageViews.viewedAt, endDate)
+      ));
+    const totalPageViews = pageViewsResult[0]?.count || 0;
+
+    // Unique users (from page views)
+    const uniqueUsersResult = await db
+      .select({ count: sql<number>`count(distinct user_id)::int` })
+      .from(analyticsPageViews)
+      .where(and(
+        gte(analyticsPageViews.viewedAt, startDate),
+        lte(analyticsPageViews.viewedAt, endDate)
+      ));
+    const uniqueUsers = uniqueUsersResult[0]?.count || 0;
+
+    // Total sessions
+    const sessionsResult = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(analyticsSessions)
+      .where(and(
+        gte(analyticsSessions.startedAt, startDate),
+        lte(analyticsSessions.startedAt, endDate)
+      ));
+    const totalSessions = sessionsResult[0]?.count || 0;
+
+    // Average session duration (in minutes)
+    const avgDurationResult = await db
+      .select({ 
+        avgDuration: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (COALESCE(ended_at, last_activity_at) - started_at)) / 60), 0)::float` 
+      })
+      .from(analyticsSessions)
+      .where(and(
+        gte(analyticsSessions.startedAt, startDate),
+        lte(analyticsSessions.startedAt, endDate)
+      ));
+    const avgSessionDuration = Math.round((avgDurationResult[0]?.avgDuration || 0) * 10) / 10;
+
+    // Top pages
+    const topPagesResult = await db
+      .select({
+        path: analyticsPageViews.path,
+        views: sql<number>`count(*)::int`,
+      })
+      .from(analyticsPageViews)
+      .where(and(
+        gte(analyticsPageViews.viewedAt, startDate),
+        lte(analyticsPageViews.viewedAt, endDate)
+      ))
+      .groupBy(analyticsPageViews.path)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    // Top events
+    const topEventsResult = await db
+      .select({
+        name: analyticsEvents.eventName,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(analyticsEvents)
+      .where(and(
+        gte(analyticsEvents.occurredAt, startDate),
+        lte(analyticsEvents.occurredAt, endDate)
+      ))
+      .groupBy(analyticsEvents.eventName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    // Page views by day
+    const pageViewsByDayResult = await db
+      .select({
+        date: sql<string>`TO_CHAR(viewed_at, 'YYYY-MM-DD')`,
+        views: sql<number>`count(*)::int`,
+      })
+      .from(analyticsPageViews)
+      .where(and(
+        gte(analyticsPageViews.viewedAt, startDate),
+        lte(analyticsPageViews.viewedAt, endDate)
+      ))
+      .groupBy(sql`TO_CHAR(viewed_at, 'YYYY-MM-DD')`)
+      .orderBy(sql`TO_CHAR(viewed_at, 'YYYY-MM-DD')`);
+
+    // User journeys (recent page sequences per user)
+    const journeysResult = await db
+      .select({
+        userId: analyticsPageViews.userId,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        paths: sql<string[]>`array_agg(path ORDER BY viewed_at)`,
+      })
+      .from(analyticsPageViews)
+      .leftJoin(users, eq(analyticsPageViews.userId, users.id))
+      .where(and(
+        gte(analyticsPageViews.viewedAt, startDate),
+        lte(analyticsPageViews.viewedAt, endDate),
+        sql`${analyticsPageViews.userId} IS NOT NULL`
+      ))
+      .groupBy(analyticsPageViews.userId, users.firstName, users.lastName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    return {
+      totalPageViews,
+      uniqueUsers,
+      totalSessions,
+      avgSessionDuration,
+      topPages: topPagesResult.map(r => ({ path: r.path, views: r.views })),
+      topEvents: topEventsResult.map(r => ({ name: r.name, count: r.count })),
+      pageViewsByDay: pageViewsByDayResult.map(r => ({ date: r.date, views: r.views })),
+      userJourneys: journeysResult
+        .filter(r => r.userId)
+        .map(r => ({
+          userId: r.userId!,
+          userName: [r.firstName, r.lastName].filter(Boolean).join(" ") || "Unknown",
+          paths: r.paths || [],
+        })),
+    };
   }
 }
 

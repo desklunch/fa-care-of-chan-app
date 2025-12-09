@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import type { LayoutConfig } from "@/framework/types/layout";
 import Landing from "@/pages/landing";
 import InviteActivation from "@/pages/invite-activation";
@@ -52,6 +53,7 @@ import FormRequestDetail from "@/pages/form-request-detail";
 import PublicForm from "@/pages/public-form";
 import FormPreview from "@/pages/form-preview";
 import CommentsPage from "@/pages/comments";
+import AdminAnalytics from "@/pages/admin-analytics";
 import NotFound from "@/pages/not-found";
 import {
   Users,
@@ -73,6 +75,7 @@ import {
   Tag,
   FolderOpen,
   MessageSquare,
+  BarChart3,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -243,6 +246,12 @@ function useLayoutConfig() {
             icon: SquareTerminal,
             allowedRoles: ["admin"],
           },
+          {
+            name: "Analytics",
+            href: "/admin/analytics",
+            icon: BarChart3,
+            allowedRoles: ["admin"],
+          },
         ],
       },
     ],
@@ -315,11 +324,17 @@ function AuthenticatedRoutes() {
           <Route path="/forms/requests/:id" component={FormRequestDetail} />
           <Route path="/admin/theme" component={AdminThemeEditor} />
           <Route path="/admin/logs" component={AdminLogs} />
+          <Route path="/admin/analytics" component={AdminAnalytics} />
           <Route component={NotFound} />
         </Switch>
       </AppShell>
     </LayoutProvider>
   );
+}
+
+function AnalyticsTracker() {
+  useAnalytics();
+  return null;
 }
 
 function Router() {
@@ -363,6 +378,7 @@ function App() {
       <GoogleAuthProviderWrapper>
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
           <TooltipProvider>
+            <AnalyticsTracker />
             <Toaster />
             <Router />
           </TooltipProvider>
