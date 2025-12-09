@@ -20,6 +20,7 @@ interface AnalyticsSummary {
 
 export default function AdminAnalytics() {
   const [dateRange, setDateRange] = useState("30");
+  const [environment, setEnvironment] = useState("production");
 
   // Memoize dates to prevent infinite re-fetching
   const { startDateStr, endDateStr } = useMemo(() => {
@@ -32,10 +33,10 @@ export default function AdminAnalytics() {
   }, [dateRange]);
 
   const { data, isLoading, error } = useQuery<AnalyticsSummary>({
-    queryKey: ["/api/admin/analytics", dateRange],
+    queryKey: ["/api/admin/analytics", dateRange, environment],
     queryFn: async () => {
       const res = await fetch(
-        `/api/admin/analytics?startDate=${startDateStr}&endDate=${endDateStr}`
+        `/api/admin/analytics?startDate=${startDateStr}&endDate=${endDateStr}&environment=${environment}`
       );
       if (!res.ok) throw new Error("Failed to fetch analytics");
       return res.json();
@@ -111,17 +112,29 @@ export default function AdminAnalytics() {
           <h1 className="text-2xl font-bold" data-testid="text-analytics-title">Analytics Dashboard</h1>
           <p className="text-muted-foreground">Monitor user activity and engagement</p>
         </div>
-        <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-[180px]" data-testid="select-date-range">
-            <SelectValue placeholder="Select range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="14">Last 14 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3">
+          <Select value={environment} onValueChange={setEnvironment}>
+            <SelectTrigger className="w-[160px]" data-testid="select-environment">
+              <SelectValue placeholder="Environment" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="production">Production</SelectItem>
+              <SelectItem value="development">Development</SelectItem>
+              <SelectItem value="all">All Environments</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-[180px]" data-testid="select-date-range">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="14">Last 14 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
