@@ -124,7 +124,7 @@ export default function Landing() {
         </div>
 
         <footer className="mt-24 text-center text-sm text-muted-foreground">
-          <p>Enterprise Employee Directory</p>
+          <p>Care of Chan OS</p>
         </footer>
       </div>
     </div>

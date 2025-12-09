@@ -1,8 +1,8 @@
-# Employee Directory - Enterprise Employee Management System
+# Care of Chan OS - Enterprise Management System
 
 ## Overview
 
-An enterprise-grade employee directory application for managing organizational employee information. The system provides a centralized platform for browsing employee profiles, managing contact details, and administering team members through role-based access controls. Built with a modern full-stack architecture featuring React, Express, and PostgreSQL.
+An enterprise-grade management system for organizing venues, vendors, and team members. The system provides a centralized platform for browsing venues, managing vendor relationships, coordinating team members, and submitting feature requests through role-based access controls. Built with a modern full-stack architecture featuring React, Express, and PostgreSQL.
 
 ## User Preferences
 
