@@ -3634,7 +3634,7 @@ export async function registerRoutes(
   // POST /api/analytics/session - Create or get analytics session
   app.post("/api/analytics/session", async (req: any, res) => {
     try {
-      const { sessionToken, userAgent, deviceType } = req.body;
+      const { sessionToken, userAgent, deviceType, environment } = req.body;
       
       if (!sessionToken) {
         return res.status(400).json({ message: "Session token required" });
@@ -3657,6 +3657,7 @@ export async function registerRoutes(
         userAgent,
         deviceType,
         ipAddress: req.ip || req.connection?.remoteAddress,
+        environment: environment || "development",
       });
 
       res.json(analyticsSession);
@@ -3669,7 +3670,7 @@ export async function registerRoutes(
   // POST /api/analytics/pageview - Record a page view
   app.post("/api/analytics/pageview", async (req: any, res) => {
     try {
-      const { sessionId, path, title, referrer } = req.body;
+      const { sessionId, path, title, referrer, environment } = req.body;
       
       if (!path) {
         return res.status(400).json({ message: "Path required" });
@@ -3685,6 +3686,7 @@ export async function registerRoutes(
         path,
         title,
         referrer,
+        environment: environment || "development",
       });
 
       res.json(pageView);
@@ -3715,7 +3717,7 @@ export async function registerRoutes(
   // POST /api/analytics/event - Record an analytics event
   app.post("/api/analytics/event", async (req: any, res) => {
     try {
-      const { sessionId, eventType, eventName, eventCategory, path, elementId, metadata } = req.body;
+      const { sessionId, eventType, eventName, eventCategory, path, elementId, metadata, environment } = req.body;
       
       if (!eventType || !eventName) {
         return res.status(400).json({ message: "Event type and name required" });
@@ -3734,6 +3736,7 @@ export async function registerRoutes(
         path,
         elementId,
         metadata,
+        environment: environment || "development",
       });
 
       res.json(event);
@@ -3758,13 +3761,15 @@ export async function registerRoutes(
   // GET /api/admin/analytics - Get analytics summary (admin only)
   app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, environment } = req.query;
       
       // Default to last 30 days
       const end = endDate ? new Date(endDate as string) : new Date();
       const start = startDate ? new Date(startDate as string) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-      const summary = await storage.getAnalyticsSummary(start, end);
+      // Pass environment filter (undefined means all environments)
+      const envFilter = environment && environment !== "all" ? environment as string : undefined;
+      const summary = await storage.getAnalyticsSummary(start, end, envFilter);
       res.json(summary);
     } catch (error) {
       console.error("Error fetching analytics:", error);
