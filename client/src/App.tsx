@@ -128,26 +128,31 @@ function useLayoutConfig() {
       },
       {
         heading: "Vendors",
+        defaultCollapsed: true,
         items: [
           {
             name: "Vendors",
             href: "/vendors",
             icon: Handshake,
+            active: false,
           },
           {
             name: "Contacts",
             href: "/contacts",
             icon: Contact,
+            active: false,
           },
           {
             name: "Forms",
             href: "/forms/templates",
             icon: FileText,
+            active: false,
           }, 
           {
             name: "Requests",
             href: "/forms/requests",
             icon: ScrollText,
+            active: false,
           },
         ],
       },

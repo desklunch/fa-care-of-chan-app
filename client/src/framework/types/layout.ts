@@ -13,6 +13,7 @@ export interface NavSection {
   heading?: string;
   items: NavItem[];
   allowedRoles?: string[];
+  defaultCollapsed?: boolean;
 }
 
 export interface LayoutUser {

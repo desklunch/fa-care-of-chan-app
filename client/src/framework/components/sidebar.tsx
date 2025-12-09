@@ -43,7 +43,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
     const initial: Record<string, boolean> = {};
     navigation.forEach((section) => {
       if (section.heading) {
-        initial[section.heading] = false;
+        initial[section.heading] = section.defaultCollapsed ?? false;
       }
     });
     return initial;
