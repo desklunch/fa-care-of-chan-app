@@ -2,8 +2,7 @@ import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent } from "ag-grid-community";
-import { gridThemeLight, gridThemeDark } from "@/lib/ag-grid-theme";
-import { useTheme } from "@/lib/theme-provider";
+import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { ExpandableSearch } from "./expandable-search";
 import { FilterBar } from "./filter-bar";
@@ -42,9 +41,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [filterState, setFilterState] = useState<Record<string, string[]>>({});
   const [showFilters, setShowFilters] = useState(false);
-  const { resolvedTheme } = useTheme();
-  
-  const gridTheme = resolvedTheme === "dark" ? gridThemeDark : gridThemeLight;
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
