@@ -89,7 +89,29 @@ export default function Landing() {
           />
         )}
       </div>
-
+      {isDevelopment && (
+        <div className="mt-6 pt-6 ">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => devLoginMutation.mutate("omar@functionalartists.ai")}
+            disabled={devLoginMutation.isPending}
+            data-testid="button-dev-login"
+          >
+            {devLoginMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              <>
+                <Bug className="mr-2 h-4 w-4" />
+                Dev Login (omar@functionalartists.ai)
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
