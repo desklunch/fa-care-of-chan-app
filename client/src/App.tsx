@@ -197,7 +197,7 @@ function useLayoutConfig() {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
-          },
+          },  
         ],
       },
       {
