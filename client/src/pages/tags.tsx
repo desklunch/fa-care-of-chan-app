@@ -71,7 +71,6 @@ function NameCellRenderer({ data }: { data: Tag }) {
   if (!data) return null;
   return (
     <div className="flex items-center gap-2 h-full">
-      <TagIcon className="w-4 h-4 text-muted-foreground" />
       <span className="font-medium truncate" data-testid={`text-tag-name-${data.id}`}>
         {data.name}
       </span>
@@ -82,9 +81,11 @@ function NameCellRenderer({ data }: { data: Tag }) {
 function CategoryCellRenderer({ data }: { data: Tag }) {
   if (!data?.category) return null;
   return (
-    <Badge variant="secondary" className="truncate">
+    <div className="flex items-center h-full"> 
+    <Badge variant="outline" className="truncate">
       {data.category}
     </Badge>
+    </div>  
   );
 }
 

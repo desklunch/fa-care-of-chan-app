@@ -56,8 +56,8 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
 function IconCellRenderer({ data }: { data: Amenity }) {
   if (!data) return null;
   return (
-    <div className="flex items-center justify-center h-full">
-      <DynamicIcon name={data.icon} className="w-5 h-5 text-muted-foreground" />
+    <div className="flex items-center justify-start h-full">
+      <DynamicIcon name={data.icon} className="w-5 h-5 [&_svg]:stroke-[1.5px]" />
     </div>
   );
 }
@@ -281,7 +281,8 @@ export default function AmenitiesPage() {
       category: "Basic Info",
       colDef: {
         flex: 0.5,
-        minWidth: 80,
+        maxWidth: 100,
+        minWidth: 100,
         cellRenderer: (params: { data: Amenity }) => <IconCellRenderer data={params.data} />,
       },
     },
@@ -302,7 +303,7 @@ export default function AmenitiesPage() {
       field: "description",
       category: "Basic Info",
       colDef: {
-        flex: 2,
+        flex: 3,
         minWidth: 200,
         cellRenderer: (params: { data: Amenity }) => <DescriptionCellRenderer data={params.data} />,
       },
