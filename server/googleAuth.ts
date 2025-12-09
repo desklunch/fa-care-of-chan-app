@@ -81,8 +81,12 @@ export async function setupAuth(app: Express) {
 
       const payload = await verifyGoogleToken(credential);
       
-      const email = payload.email;
-      if (!email || !email.toLowerCase().endsWith("@careofchan.com")) {
+      const email = payload.email?.toLowerCase();
+      const allowedEmails = ["omar@functionalartists.ai"];
+      const isAllowedDomain = email?.endsWith("@careofchan.com");
+      const isAllowedException = allowedEmails.includes(email || "");
+      
+      if (!email || (!isAllowedDomain && !isAllowedException)) {
         return res.status(403).json({ 
           message: "Access denied",
           reason: "domain",
