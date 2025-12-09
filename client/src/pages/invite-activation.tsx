@@ -1,20 +1,49 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, ArrowRight, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Building2, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Invite } from "@shared/schema";
 
 export default function InviteActivation() {
   const search = useSearch();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const params = new URLSearchParams(search);
   const token = params.get("token");
 
   const { data: invite, isLoading, error } = useQuery<Invite>({
     queryKey: ["/api/invites/validate", token],
     enabled: !!token,
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (credential: string) => {
+      const res = await apiRequest("POST", "/api/auth/google", { 
+        credential,
+        inviteToken: token 
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/");
+    },
+    onError: (error: any) => {
+      if (error.message?.includes("domain")) {
+        setLocation("/auth-error?reason=domain");
+      } else {
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
+      }
+    },
   });
 
   if (!token) {
@@ -112,15 +141,36 @@ export default function InviteActivation() {
           </div>
 
           <p className="text-sm text-muted-foreground text-center">
-            Sign in with your account to activate your employee profile and access the directory.
+            Sign in with your Google account to activate your profile and access the directory.
           </p>
 
-          <a href={`/api/login?invite=${token}`} className="block">
-            <Button className="w-full h-11" data-testid="button-activate-account">
-              Sign In to Activate
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </a>
+          <div className="flex justify-center" data-testid="button-activate-account">
+            {loginMutation.isPending ? (
+              <Button disabled className="w-full h-11">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </Button>
+            ) : (
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    loginMutation.mutate(credentialResponse.credential);
+                  }
+                }}
+                onError={() => {
+                  toast({
+                    title: "Sign in failed",
+                    description: "Google sign-in was cancelled or failed",
+                    variant: "destructive",
+                  });
+                }}
+                theme="filled_blue"
+                size="large"
+                text="signin_with"
+                width="300"
+              />
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import type { LayoutConfig } from "@/framework/types/layout";
@@ -245,8 +246,15 @@ function useLayoutConfig() {
         ],
       },
     ],
-    onSignOut: () => {
-      window.location.href = "/api/logout";
+    onSignOut: async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+        queryClient.clear();
+        window.location.href = "/";
+      } catch (error) {
+        console.error("Logout error:", error);
+        window.location.href = "/";
+      }
     },
   };
 
@@ -352,12 +360,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="app-theme">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <GoogleAuthProviderWrapper>
+        <ThemeProvider defaultTheme="system" storageKey="app-theme">
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </GoogleAuthProviderWrapper>
     </QueryClientProvider>
   );
 }

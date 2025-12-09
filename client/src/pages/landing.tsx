@@ -1,8 +1,38 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Shield, ArrowRight } from "lucide-react";
+import { Building2, Users, Shield, Loader2 } from "lucide-react";
+import { GoogleLogin } from "@react-oauth/google";
+import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const loginMutation = useMutation({
+    mutationFn: async (credential: string) => {
+      const res = await apiRequest("POST", "/api/auth/google", { credential });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/");
+    },
+    onError: (error: any) => {
+      if (error.message?.includes("domain")) {
+        setLocation("/auth-error?reason=domain");
+      } else {
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20">
       <div className="container mx-auto px-4 py-8">
@@ -13,12 +43,32 @@ export default function Landing() {
             </div>
             <span className="font-semibold text-xl tracking-tight">Care of Chan OS</span>
           </div>
-          <a href="/api/login">
-            <Button data-testid="button-sign-in">
-              Sign in with Google
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </a>
+          <div data-testid="button-sign-in">
+            {loginMutation.isPending ? (
+              <Button disabled>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </Button>
+            ) : (
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    loginMutation.mutate(credentialResponse.credential);
+                  }
+                }}
+                onError={() => {
+                  toast({
+                    title: "Sign in failed",
+                    description: "Google sign-in was cancelled or failed",
+                    variant: "destructive",
+                  });
+                }}
+                theme="outline"
+                size="large"
+                text="signin_with"
+              />
+            )}
+          </div>
         </nav>
 
         <div className="max-w-4xl mx-auto text-center mb-16">
@@ -29,12 +79,33 @@ export default function Landing() {
             A centralized platform for managing your organization's venues, vendors, and team. 
             Connect with colleagues, access contact details, and maintain accurate records.
           </p>
-          <a href="/api/login">
-            <Button size="lg" className="h-12 px-8" data-testid="button-get-started">
-              Sign in with Google
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </a>
+          <div className="flex justify-center" data-testid="button-get-started">
+            {loginMutation.isPending ? (
+              <Button size="lg" className="h-12 px-8" disabled>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Signing in...
+              </Button>
+            ) : (
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    loginMutation.mutate(credentialResponse.credential);
+                  }
+                }}
+                onError={() => {
+                  toast({
+                    title: "Sign in failed",
+                    description: "Google sign-in was cancelled or failed",
+                    variant: "destructive",
+                  });
+                }}
+                theme="filled_blue"
+                size="large"
+                text="signin_with"
+                shape="pill"
+              />
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-4">
             For Care of Chan team members with @careofchan.com accounts
           </p>
@@ -83,7 +154,7 @@ export default function Landing() {
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Single sign-on authentication
+                  Google sign-in authentication
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -91,7 +162,7 @@ export default function Landing() {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Invite-based registration
+                  Domain-restricted access
                 </li>
               </ul>
             </CardContent>
