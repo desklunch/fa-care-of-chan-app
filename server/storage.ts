@@ -355,7 +355,7 @@ export interface IStorage {
   createPageView(data: InsertAnalyticsPageView): Promise<AnalyticsPageView>;
   updatePageViewDuration(pageViewId: string, durationMs: number): Promise<void>;
   createAnalyticsEvent(data: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
-  getAnalyticsSummary(startDate: Date, endDate: Date): Promise<{
+  getAnalyticsSummary(startDate: Date, endDate: Date, environment?: string): Promise<{
     totalPageViews: number;
     uniqueUsers: number;
     totalSessions: number;
@@ -2776,7 +2776,7 @@ export class DatabaseStorage implements IStorage {
     return event;
   }
 
-  async getAnalyticsSummary(startDate: Date, endDate: Date): Promise<{
+  async getAnalyticsSummary(startDate: Date, endDate: Date, environment?: string): Promise<{
     totalPageViews: number;
     uniqueUsers: number;
     totalSessions: number;
@@ -2786,13 +2786,25 @@ export class DatabaseStorage implements IStorage {
     pageViewsByDay: { date: string; views: number }[];
     userJourneys: { userId: string; userName: string; paths: string[] }[];
   }> {
+    // Build environment filter conditions
+    const pageViewEnvFilter = environment 
+      ? eq(analyticsPageViews.environment, environment)
+      : undefined;
+    const sessionEnvFilter = environment
+      ? eq(analyticsSessions.environment, environment)
+      : undefined;
+    const eventEnvFilter = environment
+      ? eq(analyticsEvents.environment, environment)
+      : undefined;
+
     // Total page views
     const pageViewsResult = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(analyticsPageViews)
       .where(and(
         gte(analyticsPageViews.viewedAt, startDate),
-        lte(analyticsPageViews.viewedAt, endDate)
+        lte(analyticsPageViews.viewedAt, endDate),
+        pageViewEnvFilter
       ));
     const totalPageViews = pageViewsResult[0]?.count || 0;
 
@@ -2802,7 +2814,8 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsPageViews)
       .where(and(
         gte(analyticsPageViews.viewedAt, startDate),
-        lte(analyticsPageViews.viewedAt, endDate)
+        lte(analyticsPageViews.viewedAt, endDate),
+        pageViewEnvFilter
       ));
     const uniqueUsers = uniqueUsersResult[0]?.count || 0;
 
@@ -2812,7 +2825,8 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsSessions)
       .where(and(
         gte(analyticsSessions.startedAt, startDate),
-        lte(analyticsSessions.startedAt, endDate)
+        lte(analyticsSessions.startedAt, endDate),
+        sessionEnvFilter
       ));
     const totalSessions = sessionsResult[0]?.count || 0;
 
@@ -2824,7 +2838,8 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsSessions)
       .where(and(
         gte(analyticsSessions.startedAt, startDate),
-        lte(analyticsSessions.startedAt, endDate)
+        lte(analyticsSessions.startedAt, endDate),
+        sessionEnvFilter
       ));
     const avgSessionDuration = Math.round((avgDurationResult[0]?.avgDuration || 0) * 10) / 10;
 
@@ -2837,7 +2852,8 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsPageViews)
       .where(and(
         gte(analyticsPageViews.viewedAt, startDate),
-        lte(analyticsPageViews.viewedAt, endDate)
+        lte(analyticsPageViews.viewedAt, endDate),
+        pageViewEnvFilter
       ))
       .groupBy(analyticsPageViews.path)
       .orderBy(desc(sql`count(*)`))
@@ -2852,7 +2868,8 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsEvents)
       .where(and(
         gte(analyticsEvents.occurredAt, startDate),
-        lte(analyticsEvents.occurredAt, endDate)
+        lte(analyticsEvents.occurredAt, endDate),
+        eventEnvFilter
       ))
       .groupBy(analyticsEvents.eventName)
       .orderBy(desc(sql`count(*)`))
@@ -2867,7 +2884,8 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsPageViews)
       .where(and(
         gte(analyticsPageViews.viewedAt, startDate),
-        lte(analyticsPageViews.viewedAt, endDate)
+        lte(analyticsPageViews.viewedAt, endDate),
+        pageViewEnvFilter
       ))
       .groupBy(sql`TO_CHAR(viewed_at, 'YYYY-MM-DD')`)
       .orderBy(sql`TO_CHAR(viewed_at, 'YYYY-MM-DD')`);
@@ -2885,6 +2903,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         gte(analyticsPageViews.viewedAt, startDate),
         lte(analyticsPageViews.viewedAt, endDate),
+        pageViewEnvFilter,
         sql`${analyticsPageViews.userId} IS NOT NULL`
       ))
       .groupBy(analyticsPageViews.userId, users.firstName, users.lastName)
