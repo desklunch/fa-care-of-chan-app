@@ -48,6 +48,7 @@ import {
   ZoomIn,
   FolderPlus,
   Map,
+  Share2,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
@@ -232,6 +233,15 @@ export default function VenueDetailPage() {
           : undefined
       }
       additionalActions={[
+        {
+          label: "Copy Public Link",
+          icon: Share2,
+          onClick: () => {
+            const publicUrl = `${window.location.origin}/public/venues/${id}`;
+            navigator.clipboard.writeText(publicUrl);
+            toast({ title: "Public link copied", description: "Share this link with anyone to view this venue" });
+          },
+        },
         {
           label: "Add to Collection",
           icon: FolderPlus,
