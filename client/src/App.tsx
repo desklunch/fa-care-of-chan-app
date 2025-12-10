@@ -54,6 +54,7 @@ import PublicForm from "@/pages/public-form";
 import FormPreview from "@/pages/form-preview";
 import CommentsPage from "@/pages/comments";
 import AdminAnalytics from "@/pages/admin-analytics";
+import Guide from "@/pages/guide";
 import NotFound from "@/pages/not-found";
 import {
   CircleUserRound,
@@ -77,6 +78,7 @@ import {
   FolderOpen,
   MessageSquare,
   BarChart3,
+  BookOpen,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -255,6 +257,16 @@ function useLayoutConfig() {
           },
         ],
       },
+      {
+        heading: "Resources",
+        items: [
+          {
+            name: "User Guide",
+            href: "/guide",
+            icon: BookOpen,
+          },
+        ],
+      },
     ],
     onSignOut: async () => {
       try {
@@ -326,6 +338,7 @@ function AuthenticatedRoutes() {
           <Route path="/admin/theme" component={AdminThemeEditor} />
           <Route path="/admin/logs" component={AdminLogs} />
           <Route path="/admin/analytics" component={AdminAnalytics} />
+          <Route path="/guide" component={Guide} />
           <Route component={NotFound} />
         </Switch>
       </AppShell>
