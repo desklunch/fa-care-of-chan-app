@@ -46,9 +46,10 @@ export function InfoBanner({
 
   return (
     <div
-      className="px-4 md:px-6 relative flex items-center gap-3 border border-accent bg-primary text-primary-foreground p-3 text-base"
+      className="relative flex items-center gap-3 border border-accent bg-primary text-primary-foreground p-3 text-sm"
       data-testid={`banner-${id}`}
     >
+      <Info className="h-5 w-5 shrink-0 " />
       <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex-1 min-w-0">
           <span className="font-bold">{title}</span>
@@ -59,11 +60,10 @@ export function InfoBanner({
             <Button
               variant="outline"
               size="sm"
-              className="gap-1 shrink-0"
+              className="gap-1 shrink-0 dark:border-foreground"
               data-testid={`button-banner-cta-${id}`}
             >
               <DraftingCompass className="h-4 w-4" />
-
               {ctaLabel}
             </Button>
           </Link>

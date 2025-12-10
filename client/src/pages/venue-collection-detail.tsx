@@ -134,11 +134,7 @@ function SortableVenueCard({
               <span className="truncate">{location}</span>
             </div>
           )}
-          {venue.shortDescription && (
-            <CardDescription className="line-clamp-2">
-              {venue.shortDescription}
-            </CardDescription>
-          )}
+
         </CardHeader>
         
         <CardContent className="pt-0 pb-2 px-4 space-y-2">

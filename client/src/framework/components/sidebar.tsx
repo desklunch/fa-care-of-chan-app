@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLayout } from "../hooks/layout-context";
 import { useTheme } from "@/lib/theme-provider";
 import Logo from "./logo";
@@ -269,44 +270,57 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                         !isEnabled && "opacity-40 cursor-not-allowed pointer-events-none"
                       );
 
+                      const navContent = isEnabled ? (
+                        <Link
+                          href={item.href}
+                          className={navItemClasses}
+                          aria-label={showExpanded ? undefined : item.name}
+                          data-testid={`link-nav-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                          {showExpanded && (
+                            <span className="text-sm flex-1">{item.name}</span>
+                          )}
+                          {item.badge !== undefined && item.badge !== null && (
+                            <span
+                              className={cn(
+                                "rounded-full bg-primary text-foreground font-semibold flex items-center justify-center",
+                                showExpanded
+                                  ? "h-5 min-w-[20px] px-1.5 text-xs"
+                                  : "absolute -top-0.5 -right-0.5 h-3 w-3 text-[8px]"
+                              )}
+                              data-testid={`badge-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
+                            >
+                              {showExpanded
+                                ? typeof item.badge === "number" && item.badge > 9
+                                  ? "9+"
+                                  : item.badge
+                                : ""}
+                            </span>
+                          )}
+                        </Link>
+                      ) : (
+                        <div className={navItemClasses}>
+                          <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                          {showExpanded && (
+                            <span className="text-sm">{item.name}</span>
+                          )}
+                        </div>
+                      );
+
                       return (
                         <li key={item.name}>
-                          {isEnabled ? (
-                            <Link
-                              href={item.href}
-                              className={navItemClasses}
-                              aria-label={showExpanded ? undefined : item.name}
-                              data-testid={`link-nav-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
-                            >
-                              <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                              {showExpanded && (
-                                <span className="text-sm flex-1">{item.name}</span>
-                              )}
-                              {item.badge !== undefined && item.badge !== null && (
-                                <span
-                                  className={cn(
-                                    "rounded-full bg-primary text-foreground font-semibold flex items-center justify-center",
-                                    showExpanded
-                                      ? "h-5 min-w-[20px] px-1.5 text-xs"
-                                      : "absolute -top-0.5 -right-0.5 h-3 w-3 text-[8px]"
-                                  )}
-                                  data-testid={`badge-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
-                                >
-                                  {showExpanded
-                                    ? typeof item.badge === "number" && item.badge > 9
-                                      ? "9+"
-                                      : item.badge
-                                    : ""}
-                                </span>
-                              )}
-                            </Link>
+                          {!showExpanded ? (
+                            <Tooltip delayDuration={0}>
+                              <TooltipTrigger asChild>
+                                {navContent}
+                              </TooltipTrigger>
+                              <TooltipContent side="right" sideOffset={8}>
+                                {item.name}
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
-                            <div className={navItemClasses}>
-                              <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                              {showExpanded && (
-                                <span className="text-sm">{item.name}</span>
-                              )}
-                            </div>
+                            navContent
                           )}
                         </li>
                       );

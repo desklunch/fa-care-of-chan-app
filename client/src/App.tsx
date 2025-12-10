@@ -56,11 +56,11 @@ import CommentsPage from "@/pages/comments";
 import AdminAnalytics from "@/pages/admin-analytics";
 import NotFound from "@/pages/not-found";
 import {
-  Users,
+  CircleUserRound,
   UserPlus,
   SquareTerminal,
   DraftingCompass,
-  Tags,
+  Sparkles,
   BookOpenCheck,
   Bug,
   Contact,
@@ -70,9 +70,10 @@ import {
   Palette,
   Link2,
   FileText,
-  ScrollText,
+  RadioTower,
   Handshake,
   Tag,
+  Tags,
   FolderOpen,
   MessageSquare,
   BarChart3,
@@ -122,12 +123,12 @@ function useLayoutConfig() {
           {
             name: "Amenities",
             href: "/amenities",
-            icon: Tags,
+            icon: Sparkles,
           },
           {
             name: "Tags",
             href: "/tags",
-            icon: Tag,
+            icon: Tags,
           },
         ],
       },
@@ -142,9 +143,9 @@ function useLayoutConfig() {
             active: false,
           },
           {
-            name: "Contacts",
-            href: "/contacts",
-            icon: Contact,
+            name: "Requests",
+            href: "/forms/requests",
+            icon: RadioTower,
             active: false,
           },
           {
@@ -153,26 +154,25 @@ function useLayoutConfig() {
             icon: FileText,
             active: false,
           }, 
-          {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: ScrollText,
-            active: false,
-          },
         ],
       },
       {
         heading: "People",
+        defaultCollapsed: true,
         items: [
           {
             name: "Team",
             href: "/team",
-            icon: Users,
+            icon: CircleUserRound,
+            active: false,
+
           },
           {
             name: "Contacts",
             href: "/contacts",
             icon: Contact,
+            active: false,
+
           },
 
 
@@ -182,12 +182,12 @@ function useLayoutConfig() {
         heading: "App",
         allowedRoles: ["admin"],
         items: [
-          {
-            name: "Guide",
-            href: "/help",
-            icon: BookOpenCheck,
-            active: false,
-          },
+          // {
+          //   name: "Guide",
+          //   href: "/help",
+          //   icon: BookOpenCheck,
+          //   active: false,
+          // },
           {
             name: "Features",
             href: "/app/features",
@@ -203,6 +203,7 @@ function useLayoutConfig() {
       {
         heading: "Admin",
         allowedRoles: ["admin"],
+        defaultCollapsed: true,
         items: [
           {
             name: "Feature Roadmap",

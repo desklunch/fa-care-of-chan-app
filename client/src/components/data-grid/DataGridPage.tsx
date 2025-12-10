@@ -8,7 +8,7 @@ import { ExpandableSearch } from "./expandable-search";
 import { FilterBar } from "./filter-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
 import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -241,7 +241,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   `;
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col gap-4">
+    <div className="p-4 md:px-6 h-full flex flex-col gap-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
 
@@ -263,16 +263,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           {filters.length > 0 && collapsibleFilters && (
             <Button
               variant={showFilters ? "secondary" : "outline"}
-              size="sm"
+              size="icon"
               onClick={() => setShowFilters(!showFilters)}
               data-testid="button-toggle-filters"
               className="gap-1.5"
             >
-              <Filter className="h-4 w-4" />
-              Filters
+              <ListFilter className="h-4 w-4" />
               {Object.values(filterState).some((v) => v.length > 0) && (
-                <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 py-0.5 text-xs">
-                  {Object.values(filterState).filter((v) => v.length > 0).length}
+                <span className="absolute translate-x-3 -translate-y-2 rounded-full bg-primary text-primary-foreground h-2 w-2 text-xs">
+
                 </span>
               )}
             </Button>
