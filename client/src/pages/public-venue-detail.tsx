@@ -665,17 +665,6 @@ export default function PublicVenueDetailPage() {
           </Card>
         )}
 
-        <div className="py-8 text-center border-t">
-          <p className="text-muted-foreground text-sm mb-4">
-            Sign in to access comments, collections, and more features.
-          </p>
-          <Link href="/">
-            <Button className="gap-2" data-testid="button-sign-in-bottom">
-              <LogIn className="h-4 w-4" />
-              Sign In to Care of Chan OS
-            </Button>
-          </Link>
-        </div>
       </main>
     </div>
   );

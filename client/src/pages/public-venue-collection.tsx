@@ -184,17 +184,6 @@ export default function PublicVenueCollectionPage() {
           </div>
         )}
 
-        <div className="py-8 text-center border-t">
-          <p className="text-muted-foreground text-sm mb-4">
-            Sign in to add venues to collections, leave comments, and more.
-          </p>
-          <Link href="/">
-            <Button className="gap-2" data-testid="button-sign-in-bottom">
-              <LogIn className="h-4 w-4" />
-              Sign In to Care of Chan OS
-            </Button>
-          </Link>
-        </div>
       </main>
     </div>
   );
