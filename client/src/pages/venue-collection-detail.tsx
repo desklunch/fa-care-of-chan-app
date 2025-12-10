@@ -23,7 +23,8 @@ import {
   ExternalLink,
   FolderOpen,
   ImageOff,
-  GripVertical
+  GripVertical,
+  Share2
 } from "lucide-react";
 import { formatTimeAgo } from "@/lib/format-time";
 import {
@@ -330,6 +331,12 @@ export default function VenueCollectionDetail() {
     );
   }
 
+  const handleCopyPublicLink = useCallback(() => {
+    const publicUrl = `${window.location.origin}/public/venues/collections/${collectionId}`;
+    navigator.clipboard.writeText(publicUrl);
+    toast({ title: "Public link copied", description: "Share this link with anyone to view this collection" });
+  }, [collectionId, toast]);
+
   return (
     <PageLayout 
       breadcrumbs={[
@@ -342,6 +349,13 @@ export default function VenueCollectionDetail() {
         icon: Edit,
         onClick: handleEdit,
       }}
+      additionalActions={[
+        {
+          label: "Copy Public Link",
+          icon: Share2,
+          onClick: handleCopyPublicLink,
+        },
+      ]}
     >
       <div className="p-6">
         <div className="mb-6">

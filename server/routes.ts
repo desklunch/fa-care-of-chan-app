@@ -2104,6 +2104,20 @@ export async function registerRoutes(
     }
   });
 
+  // Get venue collection with venues - public read-only access
+  app.get("/api/public/venue-collections/:id", async (req, res) => {
+    try {
+      const collection = await storage.getVenueCollectionById(req.params.id);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      res.json(collection);
+    } catch (error) {
+      console.error("Error fetching public venue collection:", error);
+      res.status(500).json({ message: "Failed to fetch venue collection" });
+    }
+  });
+
   // ===== VENUES ROUTES =====
 
   // Get all venues with relationships

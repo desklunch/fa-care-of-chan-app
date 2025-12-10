@@ -56,6 +56,7 @@ import CommentsPage from "@/pages/comments";
 import AdminAnalytics from "@/pages/admin-analytics";
 import Guide from "@/pages/guide";
 import PublicVenueDetail from "@/pages/public-venue-detail";
+import PublicVenueCollection from "@/pages/public-venue-collection";
 import NotFound from "@/pages/not-found";
 import {
   CircleUserRound,
@@ -345,6 +346,7 @@ function Router() {
       <Route path="/form/:token" component={PublicForm} />
       <Route path="/form/preview/:requestId" component={FormPreview} />
       <Route path="/public/venues/:id" component={PublicVenueDetail} />
+      <Route path="/public/venues/collections/:id" component={PublicVenueCollection} />
       {isAuthenticated ? (
         <Route>
           <AuthenticatedRoutes />
@@ -354,6 +356,12 @@ function Router() {
           <Route path="/venues/:id">
             {(params) => {
               window.location.replace(`/public/venues/${params.id}`);
+              return null;
+            }}
+          </Route>
+          <Route path="/venues/collections/:id">
+            {(params) => {
+              window.location.replace(`/public/venues/collections/${params.id}`);
               return null;
             }}
           </Route>
