@@ -52,27 +52,6 @@ const guideSections: GuideSection[] = [
     ],
   },
   {
-    id: "team",
-    title: "Team Directory",
-    icon: Users,
-    isStub: true,
-    subsections: [
-      { id: "team-overview", title: "Overview" },
-      { id: "team-profiles", title: "Team Profiles" },
-      { id: "team-invites", title: "Inviting Team Members" },
-    ],
-  },
-  {
-    id: "contacts",
-    title: "Contacts",
-    icon: Contact,
-    isStub: true,
-    subsections: [
-      { id: "contacts-overview", title: "Overview" },
-      { id: "contacts-managing", title: "Managing Contacts" },
-    ],
-  },
-  {
     id: "vendors",
     title: "Vendors",
     icon: Briefcase,
@@ -84,7 +63,29 @@ const guideSections: GuideSection[] = [
     ],
   },
   {
-    id: "features",
+    id: "Contacts",
+    title: "Contacts",
+    icon: Users,
+    isStub: true,
+    subsections: [
+      { id: "team-overview", title: "Overview" },
+      { id: "team-profiles", title: "Team Profiles" },
+      { id: "team-invites", title: "Inviting Team Members" },
+    ],
+  },
+  {
+    id: "sales",
+    title: "Sales",
+    icon: Contact,
+    isStub: true,
+    subsections: [
+      { id: "contacts-overview", title: "Overview" },
+      { id: "contacts-managing", title: "Managing Contacts" },
+    ],
+  },
+
+  {
+    id: "Application",
     title: "Feature Requests",
     icon: Lightbulb,
     isStub: true,
@@ -127,7 +128,6 @@ function VenuesGuideContent() {
       {/* Venues Overview */}
       <section id="venues-overview" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Store className="h-6 w-6" />
           Venues Overview
         </h2>
         <Card>

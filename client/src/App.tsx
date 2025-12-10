@@ -181,15 +181,14 @@ function useLayoutConfig() {
         ],
       },
             {
-        heading: "App",
+        heading: "Application",
         allowedRoles: ["admin"],
         items: [
-          // {
-          //   name: "Guide",
-          //   href: "/help",
-          //   icon: BookOpenCheck,
-          //   active: false,
-          // },
+          {
+            name: "Guide",
+            href: "/guide",
+            icon: BookOpen,
+          },
           {
             name: "Features",
             href: "/app/features",
@@ -260,11 +259,7 @@ function useLayoutConfig() {
       {
         heading: "Resources",
         items: [
-          {
-            name: "User Guide",
-            href: "/guide",
-            icon: BookOpen,
-          },
+
         ],
       },
     ],
