@@ -351,6 +351,12 @@ function Router() {
         </Route>
       ) : (
         <>
+          <Route path="/venues/:id">
+            {(params) => {
+              window.location.replace(`/public/venues/${params.id}`);
+              return null;
+            }}
+          </Route>
           <Route path="/" component={Landing} />
           <Route component={NotFound} />
         </>
