@@ -99,11 +99,8 @@ function useLayoutConfig() {
         }
       : null,
     navigation: [
-      {
-        items: [
 
-        ],
-      },
+    
       {
         heading: "Venues",
         items: [
@@ -117,11 +114,7 @@ function useLayoutConfig() {
             href: "/venues/collections",
             icon: FolderOpen,
           },
-          {
-            name: "Comments",
-            href: "/comments",
-            icon: MessageSquare,
-          },
+
           {
             name: "Amenities",
             href: "/amenities",
@@ -159,28 +152,6 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "People",
-        defaultCollapsed: true,
-        items: [
-          {
-            name: "Team",
-            href: "/team",
-            icon: CircleUserRound,
-            active: false,
-
-          },
-          {
-            name: "Contacts",
-            href: "/contacts",
-            icon: Contact,
-            active: false,
-
-          },
-
-
-        ],
-      },
-            {
         heading: "Application",
         allowedRoles: ["admin"],
         items: [
@@ -206,6 +177,11 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
+          {
+            name: "Comments",
+            href: "/comments",
+            icon: MessageSquare,
+          },
           {
             name: "Feature Roadmap",
             href: "/admin/app/roadmap",

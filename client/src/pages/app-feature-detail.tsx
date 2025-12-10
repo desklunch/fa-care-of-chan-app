@@ -149,17 +149,22 @@ export default function AppFeatureDetail() {
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="space-y-2">
-                <Badge 
-                  variant="outline"
-                  style={{ 
-                    borderColor: feature.category.color || undefined,
-                    color: feature.category.color || undefined 
-                  }}
-                  data-testid="badge-feature-category"
-                >
-                  {feature.category.name}
-                </Badge>
+              <div className="">
+                <div>
+                  <Badge 
+                    variant="outline"
+                    className="inline-flex"
+
+                    style={{ 
+                      borderColor: feature.category.color || undefined,
+                      color: feature.category.color || undefined 
+                    }}
+                    data-testid="badge-feature-category"
+                  >
+                    {feature.category.name}
+                  </Badge>
+                </div>
+
                 <CardTitle className="text-2xl" data-testid="text-feature-title">
                   {feature.title}
                 </CardTitle>

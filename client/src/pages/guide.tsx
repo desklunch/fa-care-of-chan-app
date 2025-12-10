@@ -36,6 +36,17 @@ type GuideSection = {
 
 const guideSections: GuideSection[] = [
   {
+    id: "sales",
+    title: "Sales",
+    icon: Contact,
+    isStub: true,
+    subsections: [
+      { id: "contacts-overview", title: "Overview" },
+      { id: "contacts-managing", title: "Managing Contacts" },
+    ],
+  },
+  
+  {
     id: "venues",
     title: "Venues",
     icon: Store,
@@ -73,16 +84,7 @@ const guideSections: GuideSection[] = [
       { id: "team-invites", title: "Inviting Team Members" },
     ],
   },
-  {
-    id: "sales",
-    title: "Sales",
-    icon: Contact,
-    isStub: true,
-    subsections: [
-      { id: "contacts-overview", title: "Overview" },
-      { id: "contacts-managing", title: "Managing Contacts" },
-    ],
-  },
+
 
   {
     id: "Application",
@@ -556,7 +558,7 @@ export default function GuidePage() {
   };
 
   return (
-    <PageLayout breadcrumbs={[{ label: "User Guide" }]}>
+    <PageLayout breadcrumbs={[{ label: "App " }, { label: "Guide" }]}>
       <div className="flex h-[calc(100vh-120px)]">
         {/* Sidebar Navigation */}
         <aside className="w-64 border-r bg-muted/30 hidden lg:block">

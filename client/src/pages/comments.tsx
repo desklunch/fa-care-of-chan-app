@@ -143,14 +143,7 @@ export default function CommentsPage() {
                 <Card key={comment.id} data-testid={`comment-card-${comment.id}`} className="bg-transparent border-none shadow-non border-b pb-4">
                   <CardContent className="p-0 space-y-2">
 
-                    <Link 
-                      href={entityInfo.href(comment.entityId)}
-                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
-                      data-testid={`link-entity-${comment.id}`}
-                    >
-                      <EntityIcon className="h-4 w-4" />
-                      {comment.entityName || `View ${entityInfo.label}`}
-                    </Link>
+
                     <div className="flex gap-3">
 
                       <div className="flex-1 min-w-0 flex flex-col gap-2">
@@ -194,7 +187,14 @@ export default function CommentsPage() {
                             {comment.body}
                           </p>
                         )}
-
+                        <Link 
+                          href={entityInfo.href(comment.entityId)}
+                          className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                          data-testid={`link-entity-${comment.id}`}
+                        >
+                          <EntityIcon className="h-4 w-4" />
+                          {comment.entityName || `View ${entityInfo.label}`}
+                        </Link>
 
                       </div>
                     </div>
