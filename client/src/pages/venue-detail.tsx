@@ -105,9 +105,92 @@ export default function VenueDetailPage() {
   if (isLoading) {
     return (
       <PageLayout breadcrumbs={breadcrumbs}>
-        <div className="space-y-6 max-w-4xl mx-auto">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-[300px] w-full" />
+        <div className="p-4 md:p-6 space-y-6">
+          {/* Title and subtitle */}
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-5 w-96 max-w-full" />
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-4 border-b pb-2">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+
+          {/* Hero image */}
+          <Skeleton className="h-[280px] w-full rounded-lg" />
+
+          {/* About card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-6 w-16" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+
+          {/* Location and Online cards - two column grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <Skeleton className="h-6 w-20" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <Skeleton className="h-6 w-16" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Photos section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3 overflow-hidden">
+                <Skeleton className="h-24 w-32 rounded-md flex-shrink-0" />
+                <Skeleton className="h-24 w-32 rounded-md flex-shrink-0" />
+                <Skeleton className="h-24 w-32 rounded-md flex-shrink-0" />
+                <Skeleton className="h-24 w-32 rounded-md flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </PageLayout>
     );
