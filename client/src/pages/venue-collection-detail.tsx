@@ -279,6 +279,12 @@ export default function VenueCollectionDetail() {
     navigate(`/venues/collections/${collectionId}/edit`);
   }, [navigate, collectionId]);
 
+  const handleCopyPublicLink = useCallback(() => {
+    const publicUrl = `${window.location.origin}/public/venues/collections/${collectionId}`;
+    navigator.clipboard.writeText(publicUrl);
+    toast({ title: "Public link copied", description: "Share this link with anyone to view this collection" });
+  }, [collectionId, toast]);
+
   if (isAuthLoading || isCollectionLoading) {
     return (
       <PageLayout 
@@ -330,12 +336,6 @@ export default function VenueCollectionDetail() {
       </PageLayout>
     );
   }
-
-  const handleCopyPublicLink = useCallback(() => {
-    const publicUrl = `${window.location.origin}/public/venues/collections/${collectionId}`;
-    navigator.clipboard.writeText(publicUrl);
-    toast({ title: "Public link copied", description: "Share this link with anyone to view this collection" });
-  }, [collectionId, toast]);
 
   return (
     <PageLayout 
