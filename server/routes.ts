@@ -2088,6 +2088,22 @@ export async function registerRoutes(
     }
   });
 
+  // ===== PUBLIC VENUES ROUTES (no authentication required) =====
+
+  // Get single venue with all relationships - public read-only access
+  app.get("/api/public/venues/:id", async (req, res) => {
+    try {
+      const venue = await storage.getVenueByIdWithRelations(req.params.id);
+      if (!venue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      res.json(venue);
+    } catch (error) {
+      console.error("Error fetching public venue:", error);
+      res.status(500).json({ message: "Failed to fetch venue" });
+    }
+  });
+
   // ===== VENUES ROUTES =====
 
   // Get all venues with relationships

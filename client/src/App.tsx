@@ -55,6 +55,7 @@ import FormPreview from "@/pages/form-preview";
 import CommentsPage from "@/pages/comments";
 import AdminAnalytics from "@/pages/admin-analytics";
 import Guide from "@/pages/guide";
+import PublicVenueDetail from "@/pages/public-venue-detail";
 import NotFound from "@/pages/not-found";
 import {
   CircleUserRound,
@@ -343,6 +344,7 @@ function Router() {
       <Route path="/vendor-update/:token" component={VendorUpdateForm} />
       <Route path="/form/:token" component={PublicForm} />
       <Route path="/form/preview/:requestId" component={FormPreview} />
+      <Route path="/public/venues/:id" component={PublicVenueDetail} />
       {isAuthenticated ? (
         <Route>
           <AuthenticatedRoutes />
