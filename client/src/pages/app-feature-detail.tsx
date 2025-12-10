@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -7,16 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CommentList } from "@/components/ui/comments";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ThumbsUp, MessageSquare, Trash2, SquarePen } from "lucide-react";
+import { ThumbsUp, MessageSquare, SquarePen } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import type { AppFeatureWithRelations, FeatureComment, FeatureStatus, FeatureType } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureStatus, FeatureType } from "@shared/schema";
 
 const statusLabels: Record<FeatureStatus, string> = {
   proposed: "Proposed",
@@ -46,75 +44,14 @@ const featureTypeColors: Record<FeatureType, string> = {
   requirement: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
 };
 
-type FeatureCommentWithUser = FeatureComment & {
-  user: { id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null };
-};
-
-function CommentCard({ 
-  comment, 
-  onDelete,
-  canDelete
-}: { 
-  comment: FeatureCommentWithUser; 
-  onDelete: () => void;
-  canDelete: boolean;
-}) {
-  const userName = [comment.user.firstName, comment.user.lastName]
-    .filter(Boolean)
-    .join(" ") || "Unknown";
-
-  return (
-    <div className="flex gap-3 py-4" data-testid={`comment-${comment.id}`}>
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={comment.user.profileImageUrl || undefined} />
-        <AvatarFallback className="text-xs">
-          {userName.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1 space-y-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
-              {userName}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {comment.createdAt ? format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a") : ""}
-            </span>
-          </div>
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onDelete}
-              data-testid={`button-delete-comment-${comment.id}`}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-        <p className="text-sm" data-testid={`text-comment-content-${comment.id}`}>
-          {comment.body}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function AppFeatureDetail() {
   const [, params] = useRoute<{ id: string }>("/app/features/:id");
   const featureId = params?.id;
   const { user } = useAuth();
   const { toast } = useToast();
-  const [commentText, setCommentText] = useState("");
 
   const { data: feature, isLoading: featureLoading } = useQuery<AppFeatureWithRelations>({
     queryKey: ["/api/features", featureId],
-    enabled: !!featureId,
-  });
-
-  const { data: comments = [], isLoading: commentsLoading } = useQuery<FeatureCommentWithUser[]>({
-    queryKey: ["/api/features", featureId, "comments"],
     enabled: !!featureId,
   });
 
@@ -168,43 +105,8 @@ export default function AppFeatureDetail() {
     },
   });
 
-  const addCommentMutation = useMutation({
-    mutationFn: async (body: string) => {
-      return apiRequest("POST", `/api/features/${featureId}/comments`, { body });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/features", featureId, "comments"] });
-      setCommentText("");
-      toast({ title: "Comment added!" });
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to add comment", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const deleteCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      return apiRequest("DELETE", `/api/features/${featureId}/comments/${commentId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/features", featureId, "comments"] });
-      toast({ title: "Comment deleted!" });
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to delete comment", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
   const isAdmin = user?.role === "admin";
-  const isLoading = featureLoading || commentsLoading;
+  const isLoading = featureLoading;
 
   if (isLoading) {
     return (
@@ -336,44 +238,15 @@ export default function AppFeatureDetail() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              Comments ({comments.length})
+              Comments
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Textarea
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="min-h-[80px]"
-                data-testid="textarea-comment"
-              />
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => addCommentMutation.mutate(commentText)}
-                  disabled={!commentText.trim() || addCommentMutation.isPending}
-                  data-testid="button-submit-comment"
-                >
-                  {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
-                </Button>
-              </div>
-            </div>
-
-            {comments.length > 0 && (
-              <>
-                <Separator className="my-4" />
-                <div className="divide-y">
-                  {comments.map((comment) => (
-                    <CommentCard
-                      key={comment.id}
-                      comment={comment}
-                      onDelete={() => deleteCommentMutation.mutate(comment.id)}
-                      canDelete={isAdmin || comment.userId === user?.id}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            <CommentList 
+              entityType="app_feature" 
+              entityId={featureId!} 
+              currentUser={user || undefined} 
+            />
           </CardContent>
         </Card>
       </div>
