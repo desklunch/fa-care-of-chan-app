@@ -29,7 +29,18 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CircleFadingPlus, Tag as TagIcon, Folder } from "lucide-react";
+import { CircleFadingPlus, Tag as TagIcon, Folder, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "category"];
@@ -156,6 +167,25 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/tags/${tag!.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
+      toast({ title: "Tag deleted successfully" });
+      onSuccess();
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete tag",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: TagFormData) => {
     if (isEditing) {
       updateMutation.mutate(data);
@@ -164,7 +194,7 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -213,7 +243,40 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
+              {isEditing && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={isPending}
+                      data-testid="button-delete"
+                      className="mr-auto"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Tag</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{tag?.name}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <Button
                 type="button"
                 variant="outline"

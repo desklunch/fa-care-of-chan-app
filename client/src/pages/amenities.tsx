@@ -31,7 +31,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CircleFadingPlus } from "lucide-react";
+import { CircleFadingPlus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import * as LucideIcons from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["icon", "name", "description"];
@@ -151,6 +162,25 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/amenities/${amenity!.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/amenities"] });
+      toast({ title: "Amenity deleted successfully" });
+      onSuccess();
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete amenity",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: AmenityFormData) => {
     if (isEditing) {
       updateMutation.mutate(data);
@@ -159,7 +189,7 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -236,7 +266,40 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
+              {isEditing && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={isPending}
+                      data-testid="button-delete"
+                      className="mr-auto"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Amenity</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{amenity?.name}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <Button
                 type="button"
                 variant="outline"
