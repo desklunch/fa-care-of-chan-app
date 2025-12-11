@@ -102,7 +102,7 @@ export function TagAssignment({
           onChange={(e) => setSearchValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
           disabled={disabled || isLoading}
-          className="h-9"
+          className="h-12 pb-3"
           data-testid={`input-search-${category.toLowerCase()}-tag`}
         />
         

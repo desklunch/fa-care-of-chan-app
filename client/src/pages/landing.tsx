@@ -60,9 +60,9 @@ export default function Landing() {
         Care of Chan OS
       </h1>
       <p className="text-sm text-muted-foreground mb-4 ">
-        Sign in with your careofchan.com email.
+        Coming Soon
       </p>
-      <div className="flex justify-center" data-testid="button-get-started">
+      {/* <div className="flex justify-center" data-testid="button-get-started">
         {loginMutation.isPending ? (
           <Button size="lg" className="h-12 px-8" disabled>
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -88,7 +88,7 @@ export default function Landing() {
             shape="pill"
           />
         )}
-      </div>
+      </div> */}
       {isDevelopment && (
         <div className="mt-6 pt-6 ">
           <Button
