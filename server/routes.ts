@@ -2794,8 +2794,8 @@ export async function registerRoutes(
     }
   });
 
-  // Create new amenity (admin only)
-  app.post("/api/amenities", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Create new amenity
+  app.post("/api/amenities", isAuthenticated, async (req: any, res) => {
     try {
       const amenity = await storage.createAmenity(req.body);
       res.status(201).json(amenity);
@@ -2805,8 +2805,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update amenity (admin only)
-  app.patch("/api/amenities/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Update amenity
+  app.patch("/api/amenities/:id", isAuthenticated, async (req: any, res) => {
     try {
       const amenity = await storage.updateAmenity(req.params.id, req.body);
       if (!amenity) {
@@ -2819,8 +2819,8 @@ export async function registerRoutes(
     }
   });
 
-  // Delete amenity (admin only)
-  app.delete("/api/amenities/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Delete amenity
+  app.delete("/api/amenities/:id", isAuthenticated, async (req: any, res) => {
     try {
       await storage.deleteAmenity(req.params.id);
       res.status(204).send();
@@ -2857,8 +2857,8 @@ export async function registerRoutes(
     }
   });
 
-  // Create new tag (admin only)
-  app.post("/api/tags", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Create new tag
+  app.post("/api/tags", isAuthenticated, async (req: any, res) => {
     try {
       const tag = await storage.createTag(req.body);
       res.status(201).json(tag);
@@ -2868,8 +2868,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update tag (admin only)
-  app.patch("/api/tags/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Update tag
+  app.patch("/api/tags/:id", isAuthenticated, async (req: any, res) => {
     try {
       const tag = await storage.updateTag(req.params.id, req.body);
       if (!tag) {
@@ -2882,8 +2882,8 @@ export async function registerRoutes(
     }
   });
 
-  // Delete tag (admin only)
-  app.delete("/api/tags/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Delete tag
+  app.delete("/api/tags/:id", isAuthenticated, async (req: any, res) => {
     try {
       await storage.deleteTag(req.params.id);
       res.status(204).send();
