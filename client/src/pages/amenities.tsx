@@ -242,7 +242,15 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Enter a Lucide icon name (e.g., Wifi, Car, Waves, Utensils)
+                    Enter a Lucide icon name (e.g., Wifi, Car, Waves, Utensils).{" "}
+                    <a 
+                      href="https://lucide.dev/icons" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Browse all icons
+                    </a>
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
