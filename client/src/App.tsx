@@ -138,19 +138,16 @@ function useLayoutConfig() {
             name: "Vendors",
             href: "/vendors",
             icon: Handshake,
-            active: false,
           },
           {
             name: "Requests",
             href: "/forms/requests",
             icon: RadioTower,
-            active: false,
           },
           {
             name: "Forms",
             href: "/forms/templates",
             icon: FileText,
-            active: false,
           }, 
         ],
       },
@@ -273,7 +270,7 @@ function AuthenticatedRoutes() {
     <LayoutProvider config={layoutConfig}>
       <AppShell>
         <Switch>
-          <Route path="/" component={TeamPage} />
+          <Route path="/" component={Venues} />
           <Route path="/team" component={TeamPage} />
           <Route path="/team/:id" component={TeamProfile} />
           <Route path="/profile" component={Profile} />

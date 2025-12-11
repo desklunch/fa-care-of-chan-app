@@ -10,7 +10,7 @@ import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, Search, ListFilter, MousePointerClick, type LucideIcon } from "lucide-react";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Store, FolderPlus, Search, ListFilter, MousePointerClick, type LucideIcon } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
 
 const VENUES_WELCOME_KEY = "venues_welcome_seen";
@@ -408,7 +408,7 @@ const venueFilters: FilterConfig<VenueWithRelations>[] = [
   {
     id: "amenities",
     label: "Amenities",
-    icon: Building2,
+    icon: Store,
     optionSource: {
       type: "query",
       queryKey: "/api/amenities",
@@ -577,7 +577,7 @@ export default function VenuesPage() {
       <PageLayout
         breadcrumbs={[{ label: "Venues" }]}
         primaryAction={{
-            label: "Add Venue",
+            label: "New Venue",
             icon: CircleFadingPlus,
             onClick: handleCreate,
           }}
@@ -608,12 +608,10 @@ export default function VenuesPage() {
         <DialogContent className="sm:max-w-lg" data-testid="dialog-venues-welcome">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Building2 className="h-6 w-6 text-primary" />
-              Welcome to Venues
+              <Store className="h-6 w-6 text-primary" />
+              Venue Directory
             </DialogTitle>
-            <DialogDescription className="text-base">
-              Your central hub for discovering and managing event venues
-            </DialogDescription>
+
           </DialogHeader>
           
           <div className="space-y-4 py-4">
@@ -622,9 +620,9 @@ export default function VenuesPage() {
                 <Search className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h4 className="font-medium">Search & Browse</h4>
+                <h4 className="font-medium">Search</h4>
                 <p className="text-sm text-muted-foreground">
-                  Quickly find venues by name, location, or description using the search bar.
+                  Quickly search venues by name, location, or description.
                 </p>
               </div>
             </div>
@@ -636,7 +634,7 @@ export default function VenuesPage() {
               <div>
                 <h4 className="font-medium">Filter by Tags</h4>
                 <p className="text-sm text-muted-foreground">
-                  Narrow down venues by location, amenities, cuisine type, or style using the filter options.
+                  Filter venues location, amenities, cuisine type, or style.
                 </p>
               </div>
             </div>
@@ -648,7 +646,7 @@ export default function VenuesPage() {
               <div>
                 <h4 className="font-medium">View Details</h4>
                 <p className="text-sm text-muted-foreground">
-                  Click any venue row to see full details including photos, capacity, and contact information.
+                  Click on any row to access complete venue information.
                 </p>
               </div>
             </div>
@@ -660,7 +658,7 @@ export default function VenuesPage() {
               <div>
                 <h4 className="font-medium">Create Collections</h4>
                 <p className="text-sm text-muted-foreground">
-                  Select multiple venues and organize them into collections for easy reference.
+                  Select multiple venues and add them to collections for proposals.
                 </p>
               </div>
             </div>

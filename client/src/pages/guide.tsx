@@ -35,16 +35,7 @@ type GuideSection = {
 };
 
 const guideSections: GuideSection[] = [
-  {
-    id: "sales",
-    title: "Sales",
-    icon: Contact,
-    isStub: true,
-    subsections: [
-      { id: "contacts-overview", title: "Overview" },
-      { id: "contacts-managing", title: "Managing Contacts" },
-    ],
-  },
+
   
   {
     id: "venues",
@@ -62,52 +53,7 @@ const guideSections: GuideSection[] = [
       { id: "venues-amenities-tags", title: "Amenities & Tags" },
     ],
   },
-  {
-    id: "vendors",
-    title: "Vendors",
-    icon: Briefcase,
-    isStub: true,
-    subsections: [
-      { id: "vendors-overview", title: "Overview" },
-      { id: "vendors-directory", title: "Vendor Directory" },
-      { id: "vendors-services", title: "Services" },
-    ],
-  },
-  {
-    id: "Contacts",
-    title: "Contacts",
-    icon: Users,
-    isStub: true,
-    subsections: [
-      { id: "team-overview", title: "Overview" },
-      { id: "team-profiles", title: "Team Profiles" },
-      { id: "team-invites", title: "Inviting Team Members" },
-    ],
-  },
 
-
-  {
-    id: "Application",
-    title: "Feature Requests",
-    icon: Lightbulb,
-    isStub: true,
-    subsections: [
-      { id: "features-overview", title: "Overview" },
-      { id: "features-submitting", title: "Submitting Requests" },
-      { id: "features-voting", title: "Voting" },
-    ],
-  },
-  {
-    id: "admin",
-    title: "Admin Settings",
-    icon: Settings,
-    isStub: true,
-    subsections: [
-      { id: "admin-overview", title: "Overview" },
-      { id: "admin-users", title: "User Management" },
-      { id: "admin-logs", title: "Audit Logs" },
-    ],
-  },
 ];
 
 function StubContent({ title }: { title: string }) {
@@ -154,7 +100,6 @@ function VenuesGuideContent() {
       {/* Venues Directory */}
       <section id="venues-directory" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Search className="h-6 w-6" />
           Venues Directory
         </h2>
         <Card>
@@ -204,7 +149,6 @@ function VenuesGuideContent() {
       {/* Venue Detail Page */}
       <section id="venues-detail" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Eye className="h-6 w-6" />
           Venue Detail Page
         </h2>
         <Card>
@@ -250,7 +194,6 @@ function VenuesGuideContent() {
       {/* Comments */}
       <section id="venues-comments" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <MessageSquare className="h-6 w-6" />
           Comments
         </h2>
         <Card>
@@ -287,7 +230,6 @@ function VenuesGuideContent() {
       {/* Creating Venues */}
       <section id="venues-creating" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Plus className="h-6 w-6" />
           Creating Venues
         </h2>
         <Card>
@@ -342,7 +284,6 @@ function VenuesGuideContent() {
       {/* Floorplans */}
       <section id="venues-floorplans" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Layout className="h-6 w-6" />
           Floorplans
         </h2>
         <Card>
@@ -380,7 +321,6 @@ function VenuesGuideContent() {
       {/* Attachments */}
       <section id="venues-attachments" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Paperclip className="h-6 w-6" />
           Attachments
         </h2>
         <Card>
@@ -430,7 +370,6 @@ function VenuesGuideContent() {
       {/* Venue Collections */}
       <section id="venues-collections" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <FolderOpen className="h-6 w-6" />
           Venue Collections
         </h2>
         <Card>
@@ -491,7 +430,6 @@ function VenuesGuideContent() {
       {/* Amenities & Tags */}
       <section id="venues-amenities-tags" className="scroll-mt-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Tag className="h-6 w-6" />
           Amenities & Tags
         </h2>
         <Card>
@@ -561,11 +499,10 @@ export default function GuidePage() {
     <PageLayout breadcrumbs={[{ label: "App " }, { label: "Guide" }]}>
       <div className="flex h-[calc(100vh-120px)]">
         {/* Sidebar Navigation */}
-        <aside className="w-64 border-r bg-muted/30 hidden lg:block">
+        <aside className="w-64 border-r  hidden lg:block">
           <ScrollArea className="h-full py-4">
             <div className="px-4 mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
                 User Guide
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
@@ -589,7 +526,6 @@ export default function GuidePage() {
                       )}
                       data-testid={`button-guide-section-${section.id}`}
                     >
-                      <Icon className="h-4 w-4" />
                       <span className="flex-1 text-left">{section.title}</span>
                       {section.isStub && (
                         <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Soon</span>
@@ -640,7 +576,6 @@ export default function GuidePage() {
               {/* Section Header */}
               <div className="mb-8">
                 <h1 className="text-3xl font-bold flex items-center gap-3">
-                  {currentSection && <currentSection.icon className="h-8 w-8" />}
                   {currentSection?.title}
                 </h1>
                 {currentSection?.isStub && (

@@ -171,7 +171,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
       )}
       <aside
         className={cn(
-          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-200",
+          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-200 ",
           "flex flex-col h-full",
           "lg:relative lg:z-auto",
           isCollapsed && !isMediumScreen && "lg:w-[72px]",
@@ -185,15 +185,15 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
         onMouseLeave={handleMouseLeave}
         data-testid="sidebar-main"
       >
-        <div className="h-[72px] border-b border-sidebar-border flex items-center justify-between p-3 pl-4">
+        <div className="h-[72px] border-b border-sidebar-border flex items-center justify-between p-3 pl-4 ">
           <Button
             variant="ghost"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-0 flex items-center gap-4 transparent"
+            className="p-2 flex items-center gap-4    h-[36px]"
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <Logo width="36" collapsed={!showExpanded} />
+            <Logo width="24" collapsed={!showExpanded} />
           </Button>
 
           <Button

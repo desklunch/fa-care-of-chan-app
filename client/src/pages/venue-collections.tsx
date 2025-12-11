@@ -142,7 +142,7 @@ export default function VenueCollectionsPage() {
                       <span>
                         <Link 
                           onClick={(e) => e.stopPropagation()}
-                          className="hover:underline text-foreground"
+                          className=" text-foreground"
                           data-testid={`link-creator-${collection.createdBy.id}`}
                         >
                           By {collection.createdBy.firstName} {collection.createdBy.lastName?.[0] || ""}.
