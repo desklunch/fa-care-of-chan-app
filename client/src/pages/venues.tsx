@@ -10,7 +10,7 @@ import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, Search, Filter, MousePointerClick, type LucideIcon } from "lucide-react";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Building2, FolderPlus, Search, ListFilter, MousePointerClick, type LucideIcon } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
 
 const VENUES_WELCOME_KEY = "venues_welcome_seen";
@@ -631,7 +631,7 @@ export default function VenuesPage() {
             
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-primary/10 p-2">
-                <Filter className="h-5 w-5 text-primary" />
+                <ListFilter className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h4 className="font-medium">Filter by Tags</h4>
