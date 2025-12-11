@@ -90,29 +90,7 @@ export function TagAssignment({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5 min-h-[28px]">
-        {selectedTags.map((tag) => (
-          <Badge
-            key={tag.id}
-            variant="secondary"
-            className="gap-1 pr-1"
-            data-testid={`badge-tag-${tag.id}`}
-          >
-            {tag.name}
-            <button
-              type="button"
-              onClick={() => handleRemove(tag.id)}
-              disabled={disabled}
-              className="ml-0.5 rounded-sm hover:bg-muted p-0.5"
-              data-testid={`button-remove-tag-${tag.id}`}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
-      </div>
-
+    <div className="space-y-4">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -121,7 +99,7 @@ export function TagAssignment({
             role="combobox"
             aria-expanded={open}
             disabled={disabled || isLoading}
-            className="w-full justify-between"
+            className="h-12 pb-3 w-full justify-between"
             data-testid={`button-add-${category.toLowerCase()}-tag`}
           >
             <span className="flex items-center gap-2">
@@ -184,6 +162,29 @@ export function TagAssignment({
           </ScrollArea>
         </PopoverContent>
       </Popover>
+
+      <div className="flex flex-wrap gap-1.5 ">
+        {selectedTags.map((tag) => (
+          <Badge
+            key={tag.id}
+            variant="secondary"
+            className="gap-1 pr-1"
+            data-testid={`badge-tag-${tag.id}`}
+          >
+            {tag.name}
+            <button
+              type="button"
+              onClick={() => handleRemove(tag.id)}
+              disabled={disabled}
+              className="ml-0.5 rounded-sm hover:bg-muted p-0.5"
+              data-testid={`button-remove-tag-${tag.id}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+
     </div>
   );
 }

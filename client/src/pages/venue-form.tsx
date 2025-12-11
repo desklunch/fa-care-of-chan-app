@@ -53,7 +53,7 @@ import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertic
 import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
 import { insertVenueSchema } from "@shared/schema";
-
+import { Badge } from "@/components/ui/badge";
 const venueFormSchema = insertVenueSchema.extend({
   amenityIds: z.array(z.string()).default([]),
   cuisineTagIds: z.array(z.string()).default([]),
@@ -1084,14 +1084,15 @@ export default function VenueFormPage() {
         <Form {...form}>
           <form id="venue-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <button type="submit" id="venue-form-submit" className="hidden" />
-            <Card>
-              <CardHeader>
+              <Card className="border-primary border-2">
+              <CardHeader className="gap-2 pb-4 ">
+                <Badge variant="default" className="flex-0 w-fit">Start Here</Badge>
                 <CardTitle>Find on Google</CardTitle>
                 <CardDescription>
-                  Search for a venue to auto-fill details from Google Places
+                  Save time by pulling venue information and content from Google.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="pt-0">
                 <GooglePlaceSearch
                   onPlaceSelect={handlePlaceSelect}
                   placeholder="Search for venue by name (e.g., 'Albadawi NYC')"
