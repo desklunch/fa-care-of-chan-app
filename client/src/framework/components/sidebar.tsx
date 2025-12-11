@@ -348,8 +348,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 <Moon className="h-5 w-5" />
               )}
             </Button>
-            {typeof window !== "undefined" && 
-              (window.location.hostname === "localhost" || window.location.hostname.endsWith(".replit.dev")) && (
+            {import.meta.env.DEV && (
               <Button
                 variant="ghost"
                 size="icon"
