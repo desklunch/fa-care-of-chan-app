@@ -259,19 +259,15 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
 
 export default function AmenitiesPage() {
   const [, navigate] = useLocation();
-  const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
+  const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
 
-  const isAdmin = user?.role === "admin";
-
   const handleRowClick = useCallback((amenity: Amenity) => {
-    if (isAdmin) {
-      setSelectedAmenity(amenity);
-      setEditDialogOpen(true);
-    }
-  }, [isAdmin]);
+    setSelectedAmenity(amenity);
+    setEditDialogOpen(true);
+  }, []);
 
   const amenityColumns: ColumnConfig<Amenity>[] = [
     {
@@ -343,16 +339,12 @@ export default function AmenitiesPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Amenities" }]}
-      primaryAction={
-        isAdmin
-          ? {
-              label: "New Amenity",
-              onClick: () => setCreateDialogOpen(true),
-              icon: CircleFadingPlus,
-              variant: "default",
-            }
-          : undefined
-      }
+      primaryAction={{
+        label: "New Amenity",
+        onClick: () => setCreateDialogOpen(true),
+        icon: CircleFadingPlus,
+        variant: "default",
+      }}
     >
       <DataGridPage {...dataGridProps} />
 

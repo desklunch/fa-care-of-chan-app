@@ -236,19 +236,15 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
 
 export default function TagsPage() {
   const [, navigate] = useLocation();
-  const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
+  const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
 
-  const isAdmin = user?.role === "admin";
-
   const handleRowClick = useCallback((tag: Tag) => {
-    if (isAdmin) {
-      setSelectedTag(tag);
-      setEditDialogOpen(true);
-    }
-  }, [isAdmin]);
+    setSelectedTag(tag);
+    setEditDialogOpen(true);
+  }, []);
 
   const tagColumns: ColumnConfig<Tag>[] = [
     {
@@ -309,16 +305,12 @@ export default function TagsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Tags" }]}
-      primaryAction={
-        isAdmin
-          ? {
-              label: "New Tag",
-              onClick: () => setCreateDialogOpen(true),
-              icon: CircleFadingPlus,
-              variant: "default",
-            }
-          : undefined
-      }
+      primaryAction={{
+        label: "New Tag",
+        onClick: () => setCreateDialogOpen(true),
+        icon: CircleFadingPlus,
+        variant: "default",
+      }}
     >
       <DataGridPage {...dataGridProps} />
 
