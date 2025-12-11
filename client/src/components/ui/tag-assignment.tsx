@@ -1,15 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Plus, Check, ChevronsUpDown } from "lucide-react";
+import { X, Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import type { Tag } from "@shared/schema";
@@ -27,9 +21,10 @@ export function TagAssignment({
   onTagsChange,
   disabled = false,
 }: TagAssignmentProps) {
-  const [open, setOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -55,10 +50,15 @@ export function TagAssignment({
   });
 
   useEffect(() => {
-    if (open && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
-  }, [open]);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsFocused(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const selectedTags = tags.filter((tag) => selectedTagIds.includes(tag.id));
   const filteredTags = tags.filter(
@@ -76,6 +76,7 @@ export function TagAssignment({
   const handleSelect = (tagId: string) => {
     onTagsChange([...selectedTagIds, tagId]);
     setSearchValue("");
+    inputRef.current?.focus();
   };
 
   const handleRemove = (tagId: string) => {
@@ -89,81 +90,69 @@ export function TagAssignment({
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled || isLoading}
-            className="h-12 pb-3 w-full justify-between"
-            data-testid={`button-add-${category.toLowerCase()}-tag`}
-          >
-            <span className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add {category} Tag
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0" align="start">
-          <div className="p-2">
-            <Input
-              ref={inputRef}
-              placeholder={`Search or create ${category.toLowerCase()} tag...`}
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="h-9"
-              data-testid={`input-search-${category.toLowerCase()}-tag`}
-            />
-          </div>
-          <ScrollArea className="max-h-[200px]">
-            <div className="p-1">
-              {filteredTags.length === 0 && !showCreateOption && (
-                <div className="py-3 text-center text-sm text-muted-foreground">
-                  {searchValue ? "No matching tags found" : "No more tags available"}
-                </div>
-              )}
-              {filteredTags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  className={cn(
-                    "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover-elevate",
-                    "hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  onClick={() => handleSelect(tag.id)}
-                  data-testid={`option-tag-${tag.id}`}
-                >
-                  <Check className="mr-2 h-4 w-4 opacity-0" />
-                  {tag.name}
-                </button>
-              ))}
-              {showCreateOption && (
-                <button
-                  type="button"
-                  className={cn(
-                    "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    "text-primary font-medium"
-                  )}
-                  onClick={handleCreate}
-                  disabled={isCreating}
-                  data-testid={`button-create-${category.toLowerCase()}-tag`}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isCreating ? "Creating..." : `Create "${searchValue}"`}
-                </button>
-              )}
-            </div>
-          </ScrollArea>
-        </PopoverContent>
-      </Popover>
+  const showSuggestions = isFocused && (filteredTags.length > 0 || showCreateOption || searchValue.length > 0);
 
-      <div className="flex flex-wrap gap-1.5 ">
+  return (
+    <div className="space-y-2">
+      <div ref={containerRef} className="relative">
+        <Input
+          ref={inputRef}
+          placeholder={`Search or create ${category.toLowerCase()} tag...`}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          disabled={disabled || isLoading}
+          className="h-9"
+          data-testid={`input-search-${category.toLowerCase()}-tag`}
+        />
+        
+        {showSuggestions && (
+          <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
+            <ScrollArea className="max-h-[200px]">
+              <div className="p-1">
+                {filteredTags.length === 0 && !showCreateOption && (
+                  <div className="py-3 text-center text-sm text-muted-foreground">
+                    {searchValue ? "No matching tags found" : "No more tags available"}
+                  </div>
+                )}
+                {filteredTags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    className={cn(
+                      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover-elevate",
+                      "hover:bg-accent hover:text-accent-foreground"
+                    )}
+                    onClick={() => handleSelect(tag.id)}
+                    data-testid={`option-tag-${tag.id}`}
+                  >
+                    <Check className="mr-2 h-4 w-4 opacity-0" />
+                    {tag.name}
+                  </button>
+                ))}
+                {showCreateOption && (
+                  <button
+                    type="button"
+                    className={cn(
+                      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      "text-primary font-medium"
+                    )}
+                    onClick={handleCreate}
+                    disabled={isCreating}
+                    data-testid={`button-create-${category.toLowerCase()}-tag`}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {isCreating ? "Creating..." : `Create "${searchValue}"`}
+                  </button>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
         {selectedTags.map((tag) => (
           <Badge
             key={tag.id}
@@ -184,7 +173,6 @@ export function TagAssignment({
           </Badge>
         ))}
       </div>
-
     </div>
   );
 }
