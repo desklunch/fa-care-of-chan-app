@@ -101,7 +101,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [isFilterInitialized, setIsFilterInitialized] = useState(false);
 
   // Initialize filterState from URL params or session storage
@@ -117,6 +116,19 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       return sessionFilters;
     }
     return {};
+  });
+
+  // Expand filter bar if there are active filters
+  const [showFilters, setShowFilters] = useState(() => {
+    const urlFilters = getFiltersFromUrl();
+    if (Object.keys(urlFilters).some(k => urlFilters[k].length > 0)) {
+      return true;
+    }
+    const sessionFilters = getFiltersFromSession(window.location.pathname);
+    if (sessionFilters && Object.keys(sessionFilters).some(k => sessionFilters[k].length > 0)) {
+      return true;
+    }
+    return false;
   });
 
   // Sync filterState to URL and session storage when it changes
