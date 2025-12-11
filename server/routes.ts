@@ -88,6 +88,42 @@ export async function registerRoutes(
     }
   });
 
+  // Update user role (admin only)
+  app.patch("/api/team/:id/role", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      
+      if (!role || !["admin", "employee"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be 'admin' or 'employee'" });
+      }
+
+      const userBefore = await storage.getUser(id);
+      if (!userBefore) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updatedUser = await storage.updateUser(id, { role });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Log the role change
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "user",
+        entityId: id,
+        changes: { before: { role: userBefore.role }, after: { role } },
+        metadata: { changedBy: req.user.claims.sub },
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
   // Profile routes
   app.patch("/api/profile", isAuthenticated, async (req: any, res) => {
     try {

@@ -81,6 +81,7 @@ import {
   MessageSquare,
   BarChart3,
   BookOpen,
+  Users,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -179,6 +180,16 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
+          {
+            name: "Team",
+            href: "/team",
+            icon: Users,
+          },
+          {
+            name: "Contacts",
+            href: "/contacts",
+            icon: Contact,
+          },
           {
             name: "Comments",
             href: "/comments",
