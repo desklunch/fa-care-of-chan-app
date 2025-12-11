@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
@@ -12,6 +13,66 @@ import { ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
 import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Helper functions for URL params and session storage
+function getFiltersFromUrl(): Record<string, string[]> {
+  const params = new URLSearchParams(window.location.search);
+  const filters: Record<string, string[]> = {};
+  params.forEach((value, key) => {
+    if (key.startsWith("filter_")) {
+      const filterId = key.replace("filter_", "");
+      filters[filterId] = value.split(",").filter(Boolean);
+    }
+  });
+  return filters;
+}
+
+function setFiltersToUrl(filterState: Record<string, string[]>) {
+  const params = new URLSearchParams(window.location.search);
+  
+  // Remove existing filter params
+  Array.from(params.keys()).forEach((key) => {
+    if (key.startsWith("filter_")) {
+      params.delete(key);
+    }
+  });
+  
+  // Add current filter params
+  Object.entries(filterState).forEach(([filterId, values]) => {
+    if (values.length > 0) {
+      params.set(`filter_${filterId}`, values.join(","));
+    }
+  });
+  
+  const newUrl = params.toString() 
+    ? `${window.location.pathname}?${params.toString()}`
+    : window.location.pathname;
+  window.history.replaceState({}, "", newUrl);
+}
+
+function getSessionStorageKey(pathname: string): string {
+  return `datagrid_filters_${pathname}`;
+}
+
+function getFiltersFromSession(pathname: string): Record<string, string[]> | null {
+  try {
+    const stored = sessionStorage.getItem(getSessionStorageKey(pathname));
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to parse session storage filters:", e);
+  }
+  return null;
+}
+
+function saveFiltersToSession(pathname: string, filterState: Record<string, string[]>) {
+  try {
+    sessionStorage.setItem(getSessionStorageKey(pathname), JSON.stringify(filterState));
+  } catch (e) {
+    console.error("Failed to save filters to session storage:", e);
+  }
+}
 
 export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   queryKey,
@@ -35,12 +96,43 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   filters = [],
   collapsibleFilters = false,
 }: DataGridPageProps<T, C>) {
+  const [location] = useLocation();
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
-  const [filterState, setFilterState] = useState<Record<string, string[]>>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [isFilterInitialized, setIsFilterInitialized] = useState(false);
+
+  // Initialize filterState from URL params or session storage
+  const [filterState, setFilterState] = useState<Record<string, string[]>>(() => {
+    // First check URL params
+    const urlFilters = getFiltersFromUrl();
+    if (Object.keys(urlFilters).length > 0) {
+      return urlFilters;
+    }
+    // Then check session storage
+    const sessionFilters = getFiltersFromSession(window.location.pathname);
+    if (sessionFilters && Object.keys(sessionFilters).length > 0) {
+      return sessionFilters;
+    }
+    return {};
+  });
+
+  // Sync filterState to URL and session storage when it changes
+  useEffect(() => {
+    if (!isFilterInitialized) {
+      setIsFilterInitialized(true);
+      // On initial load, sync session storage filters to URL
+      if (Object.keys(filterState).length > 0) {
+        setFiltersToUrl(filterState);
+      }
+      return;
+    }
+    
+    setFiltersToUrl(filterState);
+    saveFiltersToSession(location, filterState);
+  }, [filterState, location, isFilterInitialized]);
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
