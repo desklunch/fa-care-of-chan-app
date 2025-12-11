@@ -194,7 +194,7 @@ export function CommentItem({
 
   const getAuthorName = () => {
     if (!comment.createdBy) return "Unknown User";
-    return `${comment.createdBy.firstName || ""} ${comment.createdBy.lastName || ""}`.trim() || "Unknown User";
+    return `${comment.createdBy.firstName || ""} ${comment.createdBy.lastName?.[0] || ""}.`.trim() || "Unknown User";
   };
 
   if (isDeleted) {
@@ -219,21 +219,23 @@ export function CommentItem({
         {isReply && <CornerDownRight className="h-4 w-4 text-muted-foreground shrink-0 mt-3" />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <Link 
-              href={`/team/${comment.createdById}`}
-              className="font-medium text-sm hover:underline flex gap-2 items-center"
-              data-testid={`link-author-${comment.id}`}
-            >
-              <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
-                <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName()} />
-                <AvatarFallback className="text-xs">{getAuthorInitials()}</AvatarFallback>
-              </Avatar>
-              {getAuthorName()}
+            <div className="flex gap-2 items-center">
+              <Link 
+                className="font-medium text-sm hover:underline flex gap-2 items-center"
+                data-testid={`link-author-${comment.id}`}
+              >
+                <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
+                  <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName()} />
+                  <AvatarFallback className="text-xs">{getAuthorInitials()}</AvatarFallback>
+                </Avatar>
+                {getAuthorName()}
+
+              </Link>
               <span className="text-xs text-muted-foreground">
                 {formatTimeAgo(new Date(comment.createdAt))}
               </span>
-            </Link>
-
+            </div>
+  
             {!isEditing && (
               <div className="flex   items-center justify-end gap-1 mt-2">
 

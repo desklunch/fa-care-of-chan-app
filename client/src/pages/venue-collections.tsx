@@ -141,12 +141,11 @@ export default function VenueCollectionsPage() {
                     {collection.createdBy ? (
                       <span>
                         <Link 
-                          href={`/team/${collection.createdBy.id}`}
                           onClick={(e) => e.stopPropagation()}
                           className="hover:underline text-foreground"
                           data-testid={`link-creator-${collection.createdBy.id}`}
                         >
-                          {collection.createdBy.firstName}
+                          By {collection.createdBy.firstName} {collection.createdBy.lastName?.[0] || ""}.
                         </Link>
                       </span>
                     ) : (

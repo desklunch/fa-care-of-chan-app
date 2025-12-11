@@ -376,7 +376,6 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
               )}
             >
               <Link
-                href="/profile"
                 className={cn(
                   "flex items-center gap-3 hover-elevate p-1 -m-1 min-w-0",
                   showExpanded ? "flex-1" : ""

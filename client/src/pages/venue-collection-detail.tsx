@@ -138,17 +138,15 @@ function SortableVenueCard({
 
         </CardHeader>
         
-        <CardContent className="pt-0 pb-2 px-4 space-y-2">
+        <CardContent className="pt-0 pb-2 px-4 pr-2 space-y-2">
           <div className="flex w-full justify-between items-center">
             {venue.addedBy && venue.addedAt && (
-              <div className="text-xs text-muted-foreground font-medium">
+              <div className="text-xs text-muted-foreground ">
                 <Link 
-                  href={`/team/${venue.addedBy.id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="hover:underline "
                   data-testid={`link-added-by-${venue.addedBy.id}`}
                 >
-                  {venue.addedBy.firstName}
+                  Added by {venue.addedBy.firstName} {venue.addedBy.lastName?.[0] || ""}
                 </Link>{" "}
                 {formatTimeAgo(new Date(venue.addedAt))}
               </div>
@@ -158,7 +156,7 @@ function SortableVenueCard({
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className=""
+                  className="w-6"
                   data-testid={`button-venue-menu-${venue.id}`}
                 >
                   <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -380,11 +378,10 @@ export default function VenueCollectionDetail() {
               <span>
                 Created by{" "}
                 <Link 
-                  href={`/team/${collection.createdBy.id}`}
-                  className="hover:underline text-foreground font-semibold"
+                  className="font-semibold"
                   data-testid={`link-creator-${collection.createdBy.id}`}
                 >
-                  {collection.createdBy.firstName}
+                  {collection.createdBy.firstName} {collection.createdBy.lastName?.[0] || ""}.
                 </Link>
                 {collection.createdAt && (
                   <span className="ml-1">
