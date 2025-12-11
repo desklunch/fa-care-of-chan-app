@@ -223,14 +223,12 @@ export default function VenueDetailPage() {
     <PageLayout
       breadcrumbs={breadcrumbs}
       primaryAction={
-        isAdmin
-          ? {
-              label: "Edit",
-              icon: SquarePen,
-              variant: "outline",
-              onClick: () => setLocation(`/venues/${id}/edit`),
-            }
-          : undefined
+        {
+          label: "Edit",
+          icon: SquarePen,
+          variant: "outline",
+          onClick: () => setLocation(`/venues/${id}/edit`),
+        }
       }
       additionalActions={[
         {
@@ -247,16 +245,12 @@ export default function VenueDetailPage() {
           icon: FolderPlus,
           onClick: () => setCollectionDialogOpen(true),
         },
-        ...(isAdmin
-          ? [
-              {
-                label: "Delete",
-                icon: Trash2,
-                variant: "destructive" as const,
-                onClick: () => setDeleteDialogOpen(true),
-              },
-            ]
-          : []),
+        {
+          label: "Delete",
+          icon: Trash2,
+          variant: "destructive" as const,
+          onClick: () => setDeleteDialogOpen(true),
+        },
       ]}
     >
       <div className=" ">

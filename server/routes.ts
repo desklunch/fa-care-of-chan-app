@@ -2195,8 +2195,8 @@ export async function registerRoutes(
     }
   });
 
-  // Create new venue (admin only)
-  app.post("/api/venues", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Create new venue
+  app.post("/api/venues", isAuthenticated, async (req: any, res) => {
     try {
       const { amenityIds, cuisineTagIds, styleTagIds, ...venueData } = req.body;
       const venue = await storage.createVenue(venueData);
@@ -2218,8 +2218,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update venue (admin only)
-  app.patch("/api/venues/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Update venue
+  app.patch("/api/venues/:id", isAuthenticated, async (req: any, res) => {
     try {
       const { amenityIds, cuisineTagIds, styleTagIds, ...venueData } = req.body;
       const venue = await storage.updateVenue(req.params.id, venueData);
@@ -2461,8 +2461,8 @@ export async function registerRoutes(
     }
   });
 
-  // Create a new floorplan (admin only)
-  app.post("/api/venues/:venueId/floorplans", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Create a new floorplan
+  app.post("/api/venues/:venueId/floorplans", isAuthenticated, async (req: any, res) => {
     try {
       const { fileUrl, thumbnailUrl, fileType, title, caption, sortOrder } = req.body;
       
@@ -2492,8 +2492,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update a floorplan (admin only)
-  app.patch("/api/floorplans/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Update a floorplan
+  app.patch("/api/floorplans/:id", isAuthenticated, async (req: any, res) => {
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
@@ -2514,8 +2514,8 @@ export async function registerRoutes(
     }
   });
 
-  // Delete a floorplan (admin only)
-  app.delete("/api/floorplans/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Delete a floorplan
+  app.delete("/api/floorplans/:id", isAuthenticated, async (req: any, res) => {
     try {
       const floorplan = await storage.getVenueFileById(req.params.id);
       if (!floorplan) {
@@ -2579,7 +2579,7 @@ export async function registerRoutes(
   });
 
   // Upload a file to object storage and create venue file record
-  app.post("/api/venue-files/upload", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/venue-files/upload", isAuthenticated, async (req: any, res) => {
     try {
       const { venueId, category, fileData, filename, mimeType, title, caption } = req.body;
       
@@ -2662,7 +2662,7 @@ export async function registerRoutes(
   });
 
   // Create a venue file record (for files already uploaded)
-  app.post("/api/venues/:venueId/files", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/venues/:venueId/files", isAuthenticated, async (req: any, res) => {
     try {
       const { category, fileUrl, thumbnailUrl, fileType, originalFilename, mimeType, title, caption, sortOrder } = req.body;
       
@@ -2698,8 +2698,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update a venue file (admin only)
-  app.patch("/api/venue-files/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Update a venue file
+  app.patch("/api/venue-files/:id", isAuthenticated, async (req: any, res) => {
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
@@ -2720,8 +2720,8 @@ export async function registerRoutes(
     }
   });
 
-  // Delete a venue file (admin only)
-  app.delete("/api/venue-files/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Delete a venue file
+  app.delete("/api/venue-files/:id", isAuthenticated, async (req: any, res) => {
     try {
       const file = await storage.getVenueFileById(req.params.id);
       if (!file) {

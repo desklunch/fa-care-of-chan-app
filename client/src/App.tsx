@@ -156,7 +156,6 @@ function useLayoutConfig() {
       },
       {
         heading: "Application",
-        allowedRoles: ["admin"],
         items: [
           {
             name: "Guide",

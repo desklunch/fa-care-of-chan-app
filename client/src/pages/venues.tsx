@@ -576,11 +576,11 @@ export default function VenuesPage() {
     <>
       <PageLayout
         breadcrumbs={[{ label: "Venues" }]}
-        primaryAction={isAdmin ? {
-          label: "Add Venue",
-          icon: CircleFadingPlus,
-          onClick: handleCreate,
-        } : undefined}
+        primaryAction={{
+            label: "Add Venue",
+            icon: CircleFadingPlus,
+            onClick: handleCreate,
+          }}
       >
         <div className="flex flex-col gap-4 h-full">
           <InfoBanner
