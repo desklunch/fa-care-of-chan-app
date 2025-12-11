@@ -98,7 +98,7 @@ export async function setupAuth(app: Express) {
       const payload = await verifyGoogleToken(credential);
       
       const email = payload.email?.toLowerCase();
-      const allowedEmails = ["omar@functionalartists.ai"];
+      const allowedEmails = ["omar@functionalartists.ai", "omar@omar.city"];
       const isAllowedDomain = email?.endsWith("@careofchan.com");
       const isAllowedException = allowedEmails.includes(email || "");
       
