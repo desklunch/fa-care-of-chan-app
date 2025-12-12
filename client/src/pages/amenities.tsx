@@ -242,15 +242,16 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Enter a Lucide icon name (e.g., Wifi, Car, Waves, Utensils).{" "}
+                    Enter a {" "}
                     <a 
                       href="https://lucide.dev/icons" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      Browse all icons
+                      Lucide icon
                     </a>
+                    {" "}name (e.g., Wifi, Car, Waves, Utensils).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -274,7 +275,7 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
                 </FormItem>
               )}
             />
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="pt-6 gap-2">
               {isEditing && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -285,7 +286,7 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
                       data-testid="button-delete"
                       className="mr-auto"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4" />
                       Delete
                     </Button>
                   </AlertDialogTrigger>

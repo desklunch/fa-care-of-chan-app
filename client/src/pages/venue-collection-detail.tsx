@@ -148,37 +148,41 @@ function SortableVenueCard({
                 >
                   Added by {venue.addedBy.firstName} {venue.addedBy.lastName?.[0] || ""}
                 </Link>{" "}
-                {formatTimeAgo(new Date(venue.addedAt))}
               </div>
             )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="w-6"
-                  data-testid={`button-venue-menu-${venue.id}`}
-                >
-                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/venues/${venue.id}`} className="flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
-                    View Details
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="text-destructive focus:text-destructive"
-                  onClick={handleRemoveClick}
-                  data-testid={`button-remove-venue-${venue.id}`}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove from Collection
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              {formatTimeAgo(new Date(venue.addedAt))}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="w-6"
+                    data-testid={`button-venue-menu-${venue.id}`}
+                  >
+                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href={`/venues/${venue.id}`} className="flex items-center gap-2">
+                      <ExternalLink className="h-4 w-4" />
+                      View Details
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleRemoveClick}
+                    data-testid={`button-remove-venue-${venue.id}`}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove from Collection
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
           </div>
         </CardContent>
       </Card>
@@ -406,18 +410,20 @@ export default function VenueCollectionDetail() {
           {collection.createdBy && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>
-                Created by{" "}
-                <Link 
-                  className="font-semibold"
-                  data-testid={`link-creator-${collection.createdBy.id}`}
-                >
-                  {collection.createdBy.firstName} {collection.createdBy.lastName?.[0] || ""}.
-                </Link>
+                Created 
                 {collection.createdAt && (
                   <span className="ml-1">
                     {formatTimeAgo(new Date(collection.createdAt))}
                   </span>
                 )}
+                by{" "}
+                <Link 
+                  className="font-semibold"
+                  data-testid={`link-creator-${collection.createdBy.id}`}
+                >
+                  {collection.createdBy.firstName} {collection.createdBy.lastName?.[0] || ""} 
+                </Link>
+       
               </span>
             </div>
           )}

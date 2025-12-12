@@ -26,6 +26,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -232,18 +239,22 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., Features, Dining, Accessibility"
-                      {...field}
-                      data-testid="input-tag-category"
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-tag-category">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Cuisine">Cuisine</SelectItem>
+                      <SelectItem value="Style">Style</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 pt-6">
               {isEditing && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -254,7 +265,7 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
                       data-testid="button-delete"
                       className="mr-auto"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4 " />
                       Delete
                     </Button>
                   </AlertDialogTrigger>
