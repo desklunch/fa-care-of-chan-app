@@ -1047,10 +1047,16 @@ export default function VenueFormPage() {
     });
   };
 
-  const breadcrumbs = [
-    { label: "Venues", href: "/venues" },
-    { label: isEditingVenue ? "Edit Venue" : "New Venue" },
-  ];
+  const breadcrumbs = isEditingVenue && venue
+    ? [
+        { label: "Venues", href: "/venues" },
+        { label: venue.name, href: `/venues/${id}` },
+        { label: "Edit" },
+      ]
+    : [
+        { label: "Venues", href: "/venues" },
+        { label: "New Venue" },
+      ];
 
   if (isEditingVenue && isLoadingVenue) {
     return (
