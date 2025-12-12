@@ -17,6 +17,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function renderTextWithLinks(text: string): (string | JSX.Element)[] {
+  const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      urlRegex.lastIndex = 0;
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline hover:text-primary/80"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 interface CommentFormProps {
   entityType: string;
   entityId: string;
@@ -324,9 +348,9 @@ export function CommentItem({
             </div>
           ) : (
             <p className="mt-2 text-sm whitespace-pre-wrap break-words" data-testid={`text-comment-body-${comment.id}`}>
-              {comment.body}
+              {renderTextWithLinks(comment.body)}
               {isEdited && (
-                <p className="text-xs text-muted-foreground mt-1">Edited</p>
+                <span className="text-xs text-muted-foreground mt-1 block">Edited</span>
               )}
             </p>
           )}
