@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -49,7 +49,7 @@ import { FloorplanUploader } from "@/components/ui/floorplan-uploader";
 import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive } from "lucide-react";
-import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader } from "@shared/schema";
+import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
 import { insertVenueSchema } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
@@ -57,13 +57,6 @@ const venueFormSchema = insertVenueSchema.extend({
   amenityIds: z.array(z.string()).default([]),
   cuisineTagIds: z.array(z.string()).default([]),
   styleTagIds: z.array(z.string()).default([]),
-  photoUrlItems: z.array(z.object({
-    url: z.string().refine(
-      (val) => val === "" || val.startsWith("/objects/") || val.startsWith("/api/") || val.startsWith("http://") || val.startsWith("https://"),
-      "Please enter a valid URL or leave empty"
-    ),
-    thumbnailUrl: z.string().optional(),
-  })).default([]),
 });
 
 type VenueFormValues = z.infer<typeof venueFormSchema>;
@@ -72,12 +65,13 @@ interface SortablePhotoItemProps {
   id: string;
   index: number;
   photoUrl: string;
-  thumbnailUrl?: string;
+  altText?: string;
   onView: () => void;
   onDelete: () => void;
+  isDeleting?: boolean;
 }
 
-function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, onView, onDelete }: SortablePhotoItemProps) {
+function SortablePhotoItem({ id, index, photoUrl, altText, onView, onDelete, isDeleting }: SortablePhotoItemProps) {
   const {
     attributes,
     listeners,
@@ -95,8 +89,6 @@ function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, onView, onDelete
     opacity: isDragging ? 0.8 : 1,
   };
 
-  const displayUrl = thumbnailUrl || photoUrl;
-
   return (
     <div
       ref={setNodeRef}
@@ -105,10 +97,10 @@ function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, onView, onDelete
       data-testid={`photo-item-${index}`}
     >
       <div className="w-full h-full overflow-hidden rounded-lg">
-        {displayUrl ? (
+        {photoUrl ? (
           <img
-            src={displayUrl}
-            alt={`Gallery photo ${index + 1}`}
+            src={photoUrl}
+            alt={altText || `Gallery photo ${index + 1}`}
             className="w-full h-full object-cover"
             loading="lazy"
           />
@@ -150,10 +142,11 @@ function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, onView, onDelete
             size="icon"
             className="h-8 w-8"
             onClick={onDelete}
+            disabled={isDeleting}
             title="Delete photo"
             data-testid={`button-remove-photo-${index}`}
           >
-            <Trash2 className="h-4 w-4" />
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -569,11 +562,24 @@ export default function VenueFormPage() {
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
   const [deletingFloorplanId, setDeletingFloorplanId] = useState<string | null>(null);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>([]);
 
   const { data: venue, isLoading: isLoadingVenue } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
     enabled: isEditingVenue,
   });
+
+  const { data: fetchedPhotos } = useQuery<VenuePhoto[]>({
+    queryKey: ["/api/venues", id, "photos"],
+    enabled: isEditingVenue,
+  });
+
+  useEffect(() => {
+    if (fetchedPhotos) {
+      setVenuePhotos(fetchedPhotos.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
+    }
+  }, [fetchedPhotos]);
 
   const form = useForm<VenueFormValues>({
     resolver: zodResolver(venueFormSchema),
@@ -595,13 +601,7 @@ export default function VenueFormPage() {
       amenityIds: [],
       cuisineTagIds: [],
       styleTagIds: [],
-      photoUrlItems: [],
     },
-  });
-
-  const { fields: photoUrlFields, append: appendPhotoUrl, remove: removePhotoUrl, replace: replacePhotoUrls } = useFieldArray({
-    control: form.control,
-    name: "photoUrlItems",
   });
 
   const sensors = useSensors(
@@ -615,24 +615,38 @@ export default function VenueFormPage() {
     })
   );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = photoUrlFields.findIndex((field) => field.id === active.id);
-      const newIndex = photoUrlFields.findIndex((field) => field.id === over.id);
+      const oldIndex = venuePhotos.findIndex((photo) => photo.id === active.id);
+      const newIndex = venuePhotos.findIndex((photo) => photo.id === over.id);
       
       if (oldIndex !== -1 && newIndex !== -1) {
-        const currentItems = form.getValues("photoUrlItems");
-        const newItems = arrayMove(currentItems, oldIndex, newIndex);
-        replacePhotoUrls(newItems);
+        const newPhotos = arrayMove(venuePhotos, oldIndex, newIndex);
+        setVenuePhotos(newPhotos);
+        
+        // Update sortOrder for all affected photos
+        const updates = newPhotos.map((photo, index) => ({
+          id: photo.id,
+          sortOrder: index,
+        }));
+        
+        // Update each photo's sortOrder
+        for (const update of updates) {
+          try {
+            await apiRequest("PUT", `/api/venue-photos/${update.id}`, { sortOrder: update.sortOrder });
+          } catch (err) {
+            console.error("Failed to update photo order:", err);
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "photos"] });
       }
     }
-  }, [photoUrlFields, form, replacePhotoUrls]);
+  }, [venuePhotos, id]);
 
   useEffect(() => {
     if (venue) {
-      const photoUrlItems = (venue.photoUrls || []).map(url => ({ url }));
       form.reset({
         name: venue.name || "",
         shortDescription: venue.shortDescription || "",
@@ -651,7 +665,6 @@ export default function VenueFormPage() {
         amenityIds: venue.amenities?.map((a) => a.id) || [],
         cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
         styleTagIds: venue.styleTags?.map((t) => t.id) || [],
-        photoUrlItems,
       });
       
       // If venue has a googlePlaceId, enable photo import
@@ -662,13 +675,53 @@ export default function VenueFormPage() {
     }
   }, [venue, form]);
 
+  // Photo mutations
+  const createPhotoMutation = useMutation({
+    mutationFn: async (data: { url: string; altText?: string; sortOrder?: number }) => {
+      const response = await apiRequest("POST", `/api/venues/${id}/photos`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "photos"] });
+      toast({
+        title: "Photo added",
+        description: "The photo has been added to the gallery.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add photo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deletePhotoMutation = useMutation({
+    mutationFn: async (photoId: string) => {
+      await apiRequest("DELETE", `/api/venue-photos/${photoId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "photos"] });
+      toast({
+        title: "Photo deleted",
+        description: "The photo has been removed from the gallery.",
+      });
+      setDeletingPhotoId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete photo",
+        variant: "destructive",
+      });
+      setDeletingPhotoId(null);
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: VenueFormValues) => {
-      const { photoUrlItems, ...rest } = data;
-      const photoUrls = photoUrlItems
-        .map(item => item.url)
-        .filter(url => url && url.trim() !== "");
-      const response = await apiRequest("POST", "/api/venues", { ...rest, photoUrls });
+      const response = await apiRequest("POST", "/api/venues", data);
       return response.json();
     },
     onSuccess: (newVenue) => {
@@ -690,11 +743,7 @@ export default function VenueFormPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: VenueFormValues) => {
-      const { photoUrlItems, ...rest } = data;
-      const photoUrls = photoUrlItems
-        .map(item => item.url)
-        .filter(url => url && url.trim() !== "");
-      const response = await apiRequest("PATCH", `/api/venues/${id}`, { ...rest, photoUrls });
+      const response = await apiRequest("PATCH", `/api/venues/${id}`, data);
       return response.json();
     },
     onSuccess: () => {
@@ -985,53 +1034,41 @@ export default function VenueFormPage() {
     });
   };
 
-  const handlePhotosSelected = (result: { 
+  const handlePhotosSelected = async (result: { 
     galleryPhotos: Array<{ photoUrl: string; thumbnailUrl: string; originalUrl: string }>; 
     primaryPhoto: { photoUrl: string; thumbnailUrl: string; originalUrl: string } | null 
   }) => {
-    const currentItems = form.getValues("photoUrlItems");
-    const existingUrls = new Set(currentItems.map(item => item.url));
+    const existingUrls = new Set(venuePhotos.map(p => p.url));
+    let nextSortOrder = venuePhotos.length;
+    let addedCount = 0;
     
-    const newPhotos: Array<{ url: string; thumbnailUrl?: string }> = [];
+    // If primary photo is selected and not existing, add it first (sortOrder 0)
+    if (result.primaryPhoto && !existingUrls.has(result.primaryPhoto.photoUrl)) {
+      // Need to shift all existing photos' sortOrder by 1
+      for (const photo of venuePhotos) {
+        await apiRequest("PUT", `/api/venue-photos/${photo.id}`, { sortOrder: (photo.sortOrder ?? 0) + 1 });
+      }
+      await apiRequest("POST", `/api/venues/${id}/photos`, { url: result.primaryPhoto.photoUrl, sortOrder: 0 });
+      existingUrls.add(result.primaryPhoto.photoUrl);
+      nextSortOrder++;
+      addedCount++;
+    }
     
-    // Add non-primary photos first
+    // Add gallery photos
     for (const photo of result.galleryPhotos) {
       if (!existingUrls.has(photo.photoUrl) && photo.photoUrl !== result.primaryPhoto?.photoUrl) {
-        newPhotos.push({ 
-          url: photo.photoUrl, 
-          thumbnailUrl: photo.thumbnailUrl 
-        });
+        await apiRequest("POST", `/api/venues/${id}/photos`, { url: photo.photoUrl, sortOrder: nextSortOrder++ });
         existingUrls.add(photo.photoUrl);
+        addedCount++;
       }
     }
     
-    // If a primary photo is selected, put it first
-    if (result.primaryPhoto && !existingUrls.has(result.primaryPhoto.photoUrl)) {
-      const primaryItem = { 
-        url: result.primaryPhoto.photoUrl, 
-        thumbnailUrl: result.primaryPhoto.thumbnailUrl 
-      };
-      // Prepend primary photo to the beginning
-      replacePhotoUrls([primaryItem, ...currentItems, ...newPhotos]);
-    } else if (result.primaryPhoto) {
-      // Primary photo already exists, move it to the front
-      const filteredItems = currentItems.filter(item => item.url !== result.primaryPhoto!.photoUrl);
-      const primaryItem = currentItems.find(item => item.url === result.primaryPhoto!.photoUrl) || 
-        { url: result.primaryPhoto.photoUrl, thumbnailUrl: result.primaryPhoto.thumbnailUrl };
-      replacePhotoUrls([primaryItem, ...filteredItems, ...newPhotos]);
-    } else {
-      // No primary photo, just append new photos
-      for (const photo of newPhotos) {
-        appendPhotoUrl(photo);
-      }
-    }
-    
-    const addedCount = newPhotos.length + (result.primaryPhoto && !currentItems.some(i => i.url === result.primaryPhoto?.photoUrl) ? 1 : 0);
+    queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "photos"] });
     
     toast({
       title: "Photos imported",
       description: addedCount > 0 
-        ? `Imported ${addedCount} photo${addedCount !== 1 ? "s" : ""} to App Storage${result.primaryPhoto ? " (hero photo set)" : ""}.`
+        ? `Imported ${addedCount} photo${addedCount !== 1 ? "s" : ""} to the gallery${result.primaryPhoto ? " (hero photo set)" : ""}.`
         : result.primaryPhoto 
           ? "Hero photo set (moved to first position)."
           : "No new photos added (already in gallery).",
@@ -1411,13 +1448,9 @@ export default function VenueFormPage() {
                     <PhotoUploader
                       venueId={isEditingVenue ? parseInt(id!) : undefined}
                       onPhotoUploaded={(result) => {
-                        appendPhotoUrl({ 
+                        createPhotoMutation.mutate({ 
                           url: result.photoUrl, 
-                          thumbnailUrl: result.thumbnailUrl 
-                        });
-                        toast({
-                          title: "Photo uploaded",
-                          description: "The photo has been added to the gallery.",
+                          sortOrder: venuePhotos.length 
                         });
                       }}
                       onError={(error) => {
@@ -1433,59 +1466,45 @@ export default function VenueFormPage() {
         
                 </div>
 
-                {photoUrlFields.length > 0 && (
+                {venuePhotos.length > 0 && (
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium">Gallery Photos ({photoUrlFields.length})</Label>
+                    <Label className="text-sm font-medium">Gallery Photos ({venuePhotos.length})</Label>
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
                       onDragEnd={handleDragEnd}
                     >
                       <SortableContext
-                        items={photoUrlFields.map(f => f.id)}
+                        items={venuePhotos.map(p => p.id)}
                         strategy={rectSortingStrategy}
                       >
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          {photoUrlFields.map((field, index) => {
-                            const photoUrl = form.watch(`photoUrlItems.${index}.url`);
-                            const thumbnailUrl = form.watch(`photoUrlItems.${index}.thumbnailUrl`);
-                            
-                            return (
-                              <SortablePhotoItem
-                                key={field.id}
-                                id={field.id}
-                                index={index}
-                                photoUrl={photoUrl}
-                                thumbnailUrl={thumbnailUrl}
-                                onView={() => {
-                                  if (photoUrl) {
-                                    window.open(photoUrl, "_blank");
-                                  }
-                                }}
-                                onDelete={async () => {
-                                  const photoData = form.getValues(`photoUrlItems.${index}`);
-                                  if (photoData.url.startsWith("/objects/")) {
-                                    try {
-                                      await apiRequest("DELETE", "/api/photos", {
-                                        photoUrl: photoData.url,
-                                        thumbnailUrl: photoData.thumbnailUrl,
-                                      });
-                                    } catch (err) {
-                                      console.error("Failed to delete from storage:", err);
-                                    }
-                                  }
-                                  removePhotoUrl(index);
-                                }}
-                              />
-                            );
-                          })}
+                          {venuePhotos.map((photo, index) => (
+                            <SortablePhotoItem
+                              key={photo.id}
+                              id={photo.id}
+                              index={index}
+                              photoUrl={photo.url}
+                              altText={photo.altText || undefined}
+                              onView={() => {
+                                if (photo.url) {
+                                  window.open(photo.url, "_blank");
+                                }
+                              }}
+                              onDelete={() => {
+                                setDeletingPhotoId(photo.id);
+                                deletePhotoMutation.mutate(photo.id);
+                              }}
+                              isDeleting={deletingPhotoId === photo.id}
+                            />
+                          ))}
                         </div>
                       </SortableContext>
                     </DndContext>
                   </div>
                 )}
 
-                {photoUrlFields.length === 0 && (
+                {venuePhotos.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No photos added yet. Use the uploader above to add gallery images.
                   </p>
