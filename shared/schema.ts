@@ -276,6 +276,23 @@ export const venues = pgTable(
   ],
 );
 
+// Venue photos - dedicated table for photo management with alt text and ordering
+export const venuePhotos = pgTable(
+  "venue_photos",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+    url: varchar("url", { length: 1000 }).notNull(),
+    altText: text("alt_text"),
+    sortOrder: integer("sort_order").default(0),
+    isHero: boolean("is_hero").default(false),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_venue_photos_venue_id").on(table.venueId),
+  ],
+);
+
 // Amenities that can be assigned to venues
 export const amenities = pgTable(
   "amenities",
@@ -633,6 +650,8 @@ export type VenueFile = typeof venueFiles.$inferSelect;
 export type InsertVenueFile = typeof venueFiles.$inferInsert;
 export type VenueFloorplan = typeof venueFloorplans.$inferSelect;
 export type InsertVenueFloorplan = typeof venueFloorplans.$inferInsert;
+export type VenuePhoto = typeof venuePhotos.$inferSelect;
+export type InsertVenuePhoto = typeof venuePhotos.$inferInsert;
 
 // VenueFile with uploader info
 export type VenueFileWithUploader = VenueFile & {
@@ -964,6 +983,26 @@ export const updateVenueFloorplanSchema = insertVenueFloorplanSchema.omit({
 
 export type CreateVenueFloorplan = z.infer<typeof insertVenueFloorplanSchema>;
 export type UpdateVenueFloorplan = z.infer<typeof updateVenueFloorplanSchema>;
+
+// Venue photo schemas
+export const insertVenuePhotoSchema = createInsertSchema(venuePhotos).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  venueId: z.string().min(1, "Venue ID is required"),
+  url: z.string().min(1, "Photo URL is required").max(1000),
+  altText: z.string().optional().nullable(),
+  sortOrder: z.number().int().default(0),
+  isHero: z.boolean().default(false),
+});
+
+export const updateVenuePhotoSchema = insertVenuePhotoSchema.omit({
+  venueId: true,
+  url: true,
+}).partial();
+
+export type CreateVenuePhoto = z.infer<typeof insertVenuePhotoSchema>;
+export type UpdateVenuePhoto = z.infer<typeof updateVenuePhotoSchema>;
 
 // Amenity schemas
 export const insertAmenitySchema = createInsertSchema(amenities).omit({
