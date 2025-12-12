@@ -205,9 +205,27 @@ Contacts table:
 - GET /objects/:objectPath(*) - Serve photos from storage with 7-day cache
 
 **Photo Organization**
-- The first photo in photoUrls array serves as the venue's hero image
+- Photos are now stored in the venue_photos table (not just photoUrls array)
+- Each photo has: url, altText, sortOrder, isHero flag
+- The isHero flag marks the primary photo for each venue
 - Drag-drop reordering allows easy hero image selection
-- No separate primaryPhotoUrl field - simplifies the data model
+
+**Venue Photos Database Schema (venue_photos table)**
+- id: varchar primary key with UUID default
+- venueId: references venues table (cascade delete)
+- url: storage path to the photo
+- altText: descriptive alt text for accessibility
+- sortOrder: integer for display ordering
+- isHero: boolean flag for primary photo
+- createdAt: timestamp
+
+**Venue Photos API Routes**
+- GET /api/venues/:venueId/photos - List photos for a venue
+- POST /api/venues/:venueId/photos - Create a single photo
+- POST /api/venues/:venueId/photos/bulk - Create multiple photos
+- PUT /api/venue-photos/:id - Update photo metadata
+- DELETE /api/venue-photos/:id - Delete a photo
+- PUT /api/venues/:venueId/photos/:photoId/hero - Set hero photo
 
 **Frontend Components**
 - PhotoUploader component (client/src/components/ui/photo-uploader.tsx)
