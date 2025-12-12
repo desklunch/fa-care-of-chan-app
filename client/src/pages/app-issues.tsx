@@ -91,7 +91,7 @@ function IssueCard({ issue }: { issue: AppIssueWithRelations }) {
         </CardContent>
         <CardFooter className="flex items-center justify-between gap-2 px-3 py-0">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="truncate max-w-[100px]">{createdByName}</span>
+            <span className="truncate max-w-[100px]">{issue.createdBy?.firstName || ""} {issue.createdBy.lastName?.[0] || ""}</span>
           </div>
           <span className="text-xs text-muted-foreground">
             {issue.createdAt && format(new Date(issue.createdAt), "MMM d, yyyy")}

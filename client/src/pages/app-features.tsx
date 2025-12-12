@@ -54,7 +54,7 @@ function FeatureCard({
     .join(" ") || "Unknown";
 
   return (
-    <Card className="py-3 space-y-3 hover-elevate" data-testid={`card-feature-${feature.id}`}>
+    <Card className="py-3 space-y-3 hover-elevate flex flex-col justify-between" data-testid={`card-feature-${feature.id}`}>
       <Link href={`/app/features/${feature.id}`}>
         <CardHeader className="px-3 py-0 cursor-pointer">
           <div className="flex items-start justify-between gap-2">
@@ -114,9 +114,8 @@ function FeatureCard({
       <CardFooter className="flex items-center justify-between gap-2 px-3 py-0">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
 
-          <span className="truncate max-w-[100px]">
-            {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName?.[0] || ""}
-          </span>
+          <span className="truncate max-w-[100px]">{feature.createdBy?.firstName || ""} {feature.createdBy.lastName?.[0] || ""}
+</span>
         </div>
         <div className="flex items-center gap-3">
 
@@ -270,7 +269,7 @@ export default function AppFeatures() {
               </div>
             </Card>
           ) : (
-            <div className="space-y-8 p-6">
+            <div className="space-y-12 p-6">
               {categoriesWithFeatures.map((category) => (
                 <div key={category.id} className="space-y-4 " data-testid={`category-section-${category.id}`}>
                   <div>

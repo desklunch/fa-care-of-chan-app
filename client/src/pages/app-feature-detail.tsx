@@ -206,7 +206,7 @@ export default function AppFeatureDetail() {
             </p>
             <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
    
-              <span>{createdByName}</span>
+              <span>{feature.createdBy?.firstName || ""} {feature.createdBy.lastName?.[0] || ""}</span>
               {feature.createdAt && (
                 <span>
                   {formatTimeAgo(new Date(feature.createdAt))}

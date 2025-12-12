@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
@@ -144,83 +145,53 @@ export default function AppIssueDetail() {
     .filter(Boolean)
     .join(" ") || "Unknown";
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   return (
-    <PageLayout 
-      breadcrumbs={[
-        { label: "App", href: "/app/issues" },
-        { label: issue.title },
-      ]}
-    >
-      <div className="p-6 max-w-3xl space-y-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold mb-3" data-testid="text-issue-title">
-              {issue.title}
-            </h1>
-            <div className="flex items-center gap-3 flex-wrap">
-              <Badge 
-                className={statusColors[issue.status as IssueStatus]}
-                data-testid="badge-issue-status"
-              >
-                {statusLabels[issue.status as IssueStatus]}
-              </Badge>
-              <Badge 
-                variant="outline"
-                className={severityColors[issue.severity as IssueSeverity]}
-                data-testid="badge-issue-severity"
-              >
-                <SeverityIcon className="h-3 w-3 mr-1" />
-                {severityLabels[issue.severity as IssueSeverity]}
-              </Badge>
+    <>
+      <PageLayout 
+        breadcrumbs={[
+          { label: "App", href: "/app/issues" },
+          { label: issue.title },
+        ]}
+        primaryAction={canEdit ? {
+          label: "Edit",
+          icon: SquarePen,
+          href: `/app/issues/${id}/edit`,
+        } : undefined}
+        additionalActions={isAdmin ? [
+          {
+            label: "Delete",
+            icon: Trash2,
+            variant: "destructive",
+            onClick: () => setDeleteDialogOpen(true),
+          },
+        ] : undefined}
+      >
+        <div className="p-6 max-w-3xl space-y-6">
+          <div className="flex items-start gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold mb-3" data-testid="text-issue-title">
+                {issue.title}
+              </h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge 
+                  className={statusColors[issue.status as IssueStatus]}
+                  data-testid="badge-issue-status"
+                >
+                  {statusLabels[issue.status as IssueStatus]}
+                </Badge>
+                <Badge 
+                  variant="outline"
+                  className={severityColors[issue.severity as IssueSeverity]}
+                  data-testid="badge-issue-severity"
+                >
+                  <SeverityIcon className="h-3 w-3 mr-1" />
+                  {severityLabels[issue.severity as IssueSeverity]}
+                </Badge>
+              </div>
             </div>
           </div>
-          
-          {canEdit && (
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate(`/app/issues/${id}/edit`)}
-                data-testid="button-edit-issue"
-              >
-                <SquarePen className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              {isAdmin && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      data-testid="button-delete-issue"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Issue</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this issue? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteMutation.mutate()}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-          )}
-        </div>
 
         <Card>
           <CardHeader>
@@ -293,5 +264,27 @@ export default function AppIssueDetail() {
         )}
       </div>
     </PageLayout>
+
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Issue</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this issue? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => deleteMutation.mutate()}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
