@@ -147,8 +147,8 @@ export default function AppFeatureForm() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "App Features", href: "/app/features" },
-          { label: isEditMode ? "Edit Feature" : "New Feature" }
+          { label: "App"}, { label: "Features", href: "/app/features" },
+          { label: isEditMode ? "Edit " : "New " }
         ]}
       >
         <div className="p-6 max-w-2xl mx-auto">
@@ -171,24 +171,17 @@ export default function AppFeatureForm() {
   return (
     <PageLayout 
       breadcrumbs={[
-        { label: "App Features", href: "/app/features" },
+        { label: "App"}, { label: "Features", href: "/app/features" },
         ...(isEditMode && existingFeature ? [{ label: existingFeature.title, href: `/app/features/${featureId}` }] : []),
-        { label: isEditMode ? "Edit" : "New Feature" }
+        { label: isEditMode ? "Edit" : "New" }
       ]}
     >
-      <div className="p-6 max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Link href={backUrl}>
-            <Button variant="ghost" size="sm" data-testid="button-back">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-        </div>
+      <div className="p-0 md:p-6 max-w-2xl mx-auto">
+  
 
         <Card>
           <CardHeader>
-            <CardTitle>{isEditMode ? "Edit Feature Request" : "Submit Feature Request"}</CardTitle>
+            <CardTitle>{isEditMode ? "Edit Feature Request" : "New Feature Request"}</CardTitle>
             <CardDescription>
               {isEditMode 
                 ? "Update the details of this feature request."
@@ -305,7 +298,7 @@ export default function AppFeatureForm() {
                       <Save className="h-4 w-4 mr-2" />
                       {isPending 
                         ? (isEditMode ? "Saving..." : "Submitting...") 
-                        : (isEditMode ? "Save Changes" : "Submit Feature")
+                        : (isEditMode ? "Save" : "Submit")
                       }
                     </Button>
                   </div>

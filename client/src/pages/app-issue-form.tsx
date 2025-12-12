@@ -28,19 +28,16 @@ const severityOptions: { value: IssueSeverity; label: string; description: strin
   { 
     value: "high", 
     label: "High", 
-    description: "Critical bug blocking normal operation",
     icon: AlertCircle,
   },
   { 
     value: "medium", 
     label: "Medium", 
-    description: "Bug affecting functionality but has workaround",
     icon: AlertTriangle,
   },
   { 
     value: "low", 
     label: "Low", 
-    description: "Minor issue or cosmetic problem",
     icon: Info,
   },
 ];
@@ -121,7 +118,7 @@ export default function AppIssueForm() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "Bug Reports", href: "/app/issues" },
+          { label: "App", href: "/app/issues" },
           { label: "Loading..." },
         ]}
       >
@@ -136,11 +133,11 @@ export default function AppIssueForm() {
   return (
     <PageLayout 
       breadcrumbs={[
-        { label: "Bug Reports", href: "/app/issues" },
-        { label: isEditing ? "Edit Issue" : "Report Issue" },
+        { label: "App"}, { label: "Issues", href: "/app/issues" },
+        { label: isEditing ? "Edit" : "Report" },
       ]}
     >
-      <div className="p-6 max-w-2xl">
+      <div className="p-0 md:p-6 max-w-2xl">
         <Card>
           <CardHeader>
             <CardTitle>{isEditing ? "Edit Issue" : "Report a Bug or Issue"}</CardTitle>
@@ -195,9 +192,7 @@ export default function AppIssueForm() {
                               <div className="flex items-center gap-2">
                                 <option.icon className="h-4 w-4" />
                                 <span>{option.label}</span>
-                                <span className="text-muted-foreground text-xs">
-                                  - {option.description}
-                                </span>
+   
                               </div>
                             </SelectItem>
                           ))}
@@ -220,7 +215,7 @@ export default function AppIssueForm() {
                       <FormControl>
                         <Textarea 
                           placeholder="Please describe the issue in detail. Include steps to reproduce, expected behavior, and actual behavior."
-                          className="min-h-[150px] resize-none"
+                          className="min-h-[150px] resize-none text-sm"
                           data-testid="textarea-issue-description"
                           {...field} 
                         />

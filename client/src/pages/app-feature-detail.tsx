@@ -15,6 +15,7 @@ import { ThumbsUp, MessageSquare, SquarePen } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureStatus, FeatureType } from "@shared/schema";
+import { formatTimeAgo } from "@/lib/format-time";
 
 const statusLabels: Record<FeatureStatus, string> = {
   proposed: "Proposed",
@@ -110,7 +111,7 @@ export default function AppFeatureDetail() {
 
   if (isLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: "Loading..." }]}>
+      <PageLayout breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: "Loading..." }]}>
         <div className="p-6 space-y-6 max-w-4xl mx-auto">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-32 w-full" />
@@ -122,7 +123,7 @@ export default function AppFeatureDetail() {
 
   if (!feature) {
     return (
-      <PageLayout breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: "Not Found" }]}>
+      <PageLayout breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: "Not Found" }]}>
         <div className="p-6 text-center">
           <h2 className="text-xl font-semibold">Feature not found</h2>
           <p className="text-muted-foreground mt-2">The feature you're looking for doesn't exist or has been removed.</p>
@@ -137,7 +138,7 @@ export default function AppFeatureDetail() {
 
   return (
     <PageLayout 
-      breadcrumbs={[{ label: "App Features", href: "/app/features" }, { label: feature.title }]}
+      breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: feature.title }]}
       primaryAction={(isAdmin || user?.id === feature.createdById) ? {
         label: "Edit",
         href: `/app/features/${feature.id}/edit`,
@@ -149,7 +150,7 @@ export default function AppFeatureDetail() {
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="">
+              <div className="space-y-4">
                 <div>
                   <Badge 
                     variant="outline"
@@ -203,16 +204,15 @@ export default function AppFeatureDetail() {
             <p className="text-muted-foreground whitespace-pre-wrap" data-testid="text-feature-description">
               {feature.description}
             </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={feature.createdBy.profileImageUrl || undefined} />
-                <AvatarFallback className="text-xs">
-                  {createdByName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span>Submitted by {createdByName}</span>
+            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+   
+              <span>{createdByName}</span>
               {feature.createdAt && (
-                <span>on {format(new Date(feature.createdAt), "MMM d, yyyy")}</span>
+                <span>
+                  {formatTimeAgo(new Date(feature.createdAt))}
+
+                </span>
+      
               )}
             </div>
           </CardContent>

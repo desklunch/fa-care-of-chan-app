@@ -106,7 +106,7 @@ export default function AppIssueDetail() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "App ", href: "/app/issues" },
+          { label: "App", href: "/app/issues" },
           { label: "Loading..." },
         ]}
       >
@@ -122,7 +122,7 @@ export default function AppIssueDetail() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "Bug Reports", href: "/app/issues" },
+          { label: "App", href: "/app/issues" },
           { label: "Not Found" },
         ]}
       >
@@ -147,7 +147,7 @@ export default function AppIssueDetail() {
   return (
     <PageLayout 
       breadcrumbs={[
-        { label: "App Issues", href: "/app/issues" },
+        { label: "App", href: "/app/issues" },
         { label: issue.title },
       ]}
     >

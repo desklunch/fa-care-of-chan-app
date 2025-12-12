@@ -32,12 +32,12 @@ const statusLabels: Record<FeatureStatus, string> = {
 };
 
 const statusColors: Record<FeatureStatus, string> = {
-  proposed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  under_review: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  planned: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  in_progress: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+  proposed: "py-1 h-fit uppercase bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  under_review: "py-1 h-fit uppercase bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  planned: "py-1 h-fit uppercase bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  in_progress: "py-1 h-fit uppercase bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  completed: "py-1 h-fit uppercase bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  archived: "py-1 h-fit uppercase bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
 };
 
 function FeatureCard({ 
@@ -59,12 +59,13 @@ function FeatureCard({
         <CardHeader className="px-3 py-0 cursor-pointer">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <div className="flex justify-between mb-2">
+              <div className="flex items-center justify-between mb-2">
 
 
                 <Badge 
                   className={statusColors[feature.status as FeatureStatus]}
                   data-testid={`badge-status-${feature.id}`}
+                  size="sm"
                 >
                   {statusLabels[feature.status as FeatureStatus]}
                 </Badge>
@@ -113,7 +114,9 @@ function FeatureCard({
       <CardFooter className="flex items-center justify-between gap-2 px-3 py-0">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
 
-          <span className="truncate max-w-[100px]">{createdByName}</span>
+          <span className="truncate max-w-[100px]">
+            {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName?.[0] || ""}
+          </span>
         </div>
         <div className="flex items-center gap-3">
 
