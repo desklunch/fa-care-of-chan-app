@@ -58,6 +58,7 @@ export default function AppIssueDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: issue, isLoading } = useQuery<AppIssueWithRelations>({
     queryKey: ["/api/app-issues", id],
@@ -107,7 +108,8 @@ export default function AppIssueDetail() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "App", href: "/app/issues" },
+                    { label: "App" },
+          { label: "Issues", href: "/app/issues" },
           { label: "Loading..." },
         ]}
       >
@@ -123,7 +125,8 @@ export default function AppIssueDetail() {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "App", href: "/app/issues" },
+                    { label: "App" },
+          { label: "Issues", href: "/app/issues" },
           { label: "Not Found" },
         ]}
       >
@@ -145,13 +148,12 @@ export default function AppIssueDetail() {
     .filter(Boolean)
     .join(" ") || "Unknown";
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
   return (
     <>
       <PageLayout 
         breadcrumbs={[
-          { label: "App", href: "/app/issues" },
+                    { label: "App" },
+          { label: "Issues", href: "/app/issues" },
           { label: issue.title },
         ]}
         primaryAction={canEdit ? {
