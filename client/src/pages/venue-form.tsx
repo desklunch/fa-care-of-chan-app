@@ -1716,6 +1716,32 @@ export default function VenueFormPage() {
               </CardContent>
             </Card>
 
+            {/* Bottom action buttons */}
+            <div className="flex gap-3 justify-end pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation("/venues")}
+                disabled={isPending}
+                data-testid="button-cancel-bottom"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-save-bottom"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                {isPending ? "Saving..." : (isEditingVenue ? "Save Changes" : "Create Venue")}
+              </Button>
+            </div>
+
           </form>
         </Form>
       </div>
