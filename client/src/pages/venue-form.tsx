@@ -42,7 +42,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityToggle } from "@/components/ui/amenity-toggle";
 import { TagAssignment } from "@/components/ui/tag-assignment";
-import { VenueAddressAutocomplete, ParsedAddress } from "@/components/ui/venue-address-autocomplete";
 import { GooglePlaceSearch, PlaceResult } from "@/components/ui/google-place-search";
 import { GooglePlacePhotoPicker } from "@/components/ui/google-place-photo-picker";
 import { PhotoUploader } from "@/components/ui/photo-uploader";
@@ -927,14 +926,6 @@ export default function VenueFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  const handleAddressSelect = (address: ParsedAddress) => {
-    form.setValue("streetAddress1", address.streetAddress1);
-    form.setValue("streetAddress2", address.streetAddress2);
-    form.setValue("city", address.city);
-    form.setValue("state", address.state);
-    form.setValue("zipCode", address.zipCode);
-  };
-
   const parseInstagramUsername = (input: string): string => {
     if (!input) return "";
     let value = input.trim();
@@ -1193,22 +1184,10 @@ export default function VenueFormPage() {
               <CardHeader>
                 <CardTitle>Location</CardTitle>
                 <CardDescription>
-                  Search for an address or enter manually
+                  Enter the venue's address
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>Search Address</FormLabel>
-                  <VenueAddressAutocomplete
-                    onAddressSelect={handleAddressSelect}
-                    placeholder="Search for venue address..."
-                    data-testid="input-venue-address-search"
-                  />
-                  <FormDescription>
-                    Start typing to search, or enter address manually below
-                  </FormDescription>
-                </div>
-
                 <FormField
                   control={form.control}
                   name="streetAddress1"
