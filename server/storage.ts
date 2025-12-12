@@ -1323,6 +1323,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(venueFiles.uploadedById, users.id))
       .orderBy(venueFiles.sortOrder, venueFiles.uploadedAt);
     
+    // Fetch all venue photos
+    const allVenuePhotos = await db
+      .select()
+      .from(venuePhotos)
+      .orderBy(asc(venuePhotos.sortOrder));
+    
     const amenitiesByVenue = new Map<string, Amenity[]>();
     for (const va of allVenueAmenities) {
       if (!amenitiesByVenue.has(va.venueId)) {
@@ -1359,11 +1365,20 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    const photosByVenue = new Map<string, VenuePhoto[]>();
+    for (const photo of allVenuePhotos) {
+      if (!photosByVenue.has(photo.venueId)) {
+        photosByVenue.set(photo.venueId, []);
+      }
+      photosByVenue.get(photo.venueId)!.push(photo);
+    }
+    
     return allVenues.map(venue => {
       const venueAmenitiesList = amenitiesByVenue.get(venue.id) || [];
       const venueTagsList = tagsByVenue.get(venue.id) || [];
       const venueFloorplansList = floorplansByVenue.get(venue.id) || [];
       const venueAttachmentsList = attachmentsByVenue.get(venue.id) || [];
+      const venuePhotosList = photosByVenue.get(venue.id) || [];
       
       return {
         ...venue,
@@ -1372,6 +1387,7 @@ export class DatabaseStorage implements IStorage {
         styleTags: venueTagsList.filter(t => t.category === 'Style'),
         floorplans: venueFloorplansList,
         attachments: venueAttachmentsList,
+        photos: venuePhotosList,
       };
     });
   }
@@ -1404,6 +1420,7 @@ export class DatabaseStorage implements IStorage {
     const venueAmenitiesList = await this.getVenueAmenities(id);
     const venueTagsList = await this.getVenueTags(id);
     const venueFilesList = await this.getVenueFiles(id);
+    const venuePhotosList = await this.getVenuePhotos(id);
     
     return {
       ...venue,
@@ -1412,6 +1429,7 @@ export class DatabaseStorage implements IStorage {
       styleTags: venueTagsList.filter(t => t.category === 'Style'),
       floorplans: venueFilesList.filter(f => f.category === 'floorplan'),
       attachments: venueFilesList.filter(f => f.category === 'attachment'),
+      photos: venuePhotosList,
     };
   }
   

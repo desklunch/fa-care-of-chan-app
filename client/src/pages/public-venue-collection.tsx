@@ -41,8 +41,8 @@ function PublicHeader() {
 function VenueCard({ venue }: { venue: VenueInCollection }) {
   const locationParts = [venue.city, venue.state].filter(Boolean);
   const location = locationParts.join(", ");
-  const photoUrls = venue.photoUrls as string[] | null;
-  const primaryPhoto = photoUrls && photoUrls.length > 0 ? photoUrls[0] : null;
+  const photos = (venue as any).photos as { url: string; altText?: string | null }[] | null;
+  const heroPhoto = photos && photos.length > 0 ? photos[0] : null;
 
   return (
     <Link href={`/public/venues/${venue.id}`}>
@@ -51,10 +51,10 @@ function VenueCard({ venue }: { venue: VenueInCollection }) {
         data-testid={`card-venue-${venue.id}`}
       >
         <div className="relative aspect-[16/9] bg-muted overflow-hidden">
-          {primaryPhoto ? (
+          {heroPhoto ? (
             <img 
-              src={primaryPhoto} 
-              alt={venue.name}
+              src={heroPhoto.url} 
+              alt={heroPhoto.altText || venue.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
           ) : (

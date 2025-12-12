@@ -686,13 +686,14 @@ export type ContactWithVendors = Contact & {
   vendors: Vendor[];
 };
 
-// Venue with associated amenities, tags, and floorplans
+// Venue with associated amenities, tags, floorplans, and photos
 export type VenueWithRelations = Venue & {
   amenities: Amenity[];
   cuisineTags: Tag[];
   styleTags: Tag[];
   floorplans: VenueFileWithUploader[];
   attachments: VenueFileWithUploader[];
+  photos: VenuePhoto[];
 };
 
 // Venue collection types

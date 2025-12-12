@@ -144,7 +144,7 @@ export default function PublicVenueDetailPage() {
           )}
         </div>
 
-        {venue.photoUrls && venue.photoUrls.length > 0 && (
+        {venue.photos && venue.photos.length > 0 && (
           <>
             <Card>
               <CardContent className="p-0 space-y-0 h-64">
@@ -158,8 +158,8 @@ export default function PublicVenueDetailPage() {
                   data-testid="button-hero-photo"
                 >
                   <img
-                    src={venue.photoUrls[0]}
-                    alt={venue.name}
+                    src={venue.photos[0].url}
+                    alt={venue.photos[0].altText || venue.name}
                     className="w-full h-64 object-cover rounded-lg"
                     data-testid="img-venue-photo"
                   />
@@ -177,8 +177,8 @@ export default function PublicVenueDetailPage() {
               >
                 <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
                   <img
-                    src={venue.photoUrls[lightboxIndex]}
-                    alt={`${venue.name} photo ${lightboxIndex + 1}`}
+                    src={venue.photos[lightboxIndex].url}
+                    alt={venue.photos[lightboxIndex].altText || `${venue.name} photo ${lightboxIndex + 1}`}
                     className="max-w-full max-h-full object-contain"
                     data-testid="img-lightbox-photo"
                   />
@@ -192,23 +192,23 @@ export default function PublicVenueDetailPage() {
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20"
-                    onClick={() => setLightboxIndex((prev) => (prev === 0 ? venue.photoUrls!.length - 1 : prev - 1))}
-                    disabled={venue.photoUrls.length <= 1}
+                    onClick={() => setLightboxIndex((prev) => (prev === 0 ? venue.photos!.length - 1 : prev - 1))}
+                    disabled={venue.photos.length <= 1}
                     data-testid="button-lightbox-prev"
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </Button>
                   
                   <span className="text-white text-sm min-w-[60px] text-center">
-                    {lightboxIndex + 1} / {venue.photoUrls.length}
+                    {lightboxIndex + 1} / {venue.photos.length}
                   </span>
                   
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20"
-                    onClick={() => setLightboxIndex((prev) => (prev === venue.photoUrls!.length - 1 ? 0 : prev + 1))}
-                    disabled={venue.photoUrls.length <= 1}
+                    onClick={() => setLightboxIndex((prev) => (prev === venue.photos!.length - 1 ? 0 : prev + 1))}
+                    disabled={venue.photos.length <= 1}
                     data-testid="button-lightbox-next"
                   >
                     <ChevronRight className="h-6 w-6" />
@@ -353,7 +353,7 @@ export default function PublicVenueDetailPage() {
           </Card>
         </div>
 
-        {venue.photoUrls && venue.photoUrls.length > 1 && (
+        {venue.photos && venue.photos.length > 1 && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -363,9 +363,9 @@ export default function PublicVenueDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {venue.photoUrls.slice(1).map((url, index) => (
+                {venue.photos.slice(1).map((photo, index) => (
                   <button
-                    key={index}
+                    key={photo.id}
                     type="button"
                     onClick={() => {
                       setLightboxIndex(index + 1);
@@ -375,8 +375,8 @@ export default function PublicVenueDetailPage() {
                     data-testid={`button-gallery-photo-${index}`}
                   >
                     <img
-                      src={url}
-                      alt={`${venue.name} photo ${index + 2}`}
+                      src={photo.url}
+                      alt={photo.altText || `${venue.name} photo ${index + 2}`}
                       className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                       data-testid={`img-gallery-photo-${index}`}
                     />

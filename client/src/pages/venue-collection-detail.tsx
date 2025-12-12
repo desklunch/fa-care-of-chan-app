@@ -89,8 +89,8 @@ function SortableVenueCard({
   const locationParts = [venue.city, venue.state].filter(Boolean);
   const location = locationParts.join(", ");
 
-  const photoUrls = venue.photoUrls as string[] | null;
-  const primaryPhoto = photoUrls && photoUrls.length > 0 ? photoUrls[0] : null;
+  const photos = (venue as any).photos as { url: string; altText?: string | null }[] | null;
+  const heroPhoto = photos && photos.length > 0 ? photos[0] : null;
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -102,10 +102,10 @@ function SortableVenueCard({
         data-testid={`card-venue-${venue.id}`}
       >
         <div className="relative aspect-[16/9] bg-muted overflow-hidden">
-          {primaryPhoto ? (
+          {heroPhoto ? (
             <img 
-              src={primaryPhoto} 
-              alt={venue.name}
+              src={heroPhoto.url} 
+              alt={heroPhoto.altText || venue.name}
               className="w-full h-full object-cover"
             />
           ) : (
