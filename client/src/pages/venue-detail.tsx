@@ -495,6 +495,19 @@ export default function VenueDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+            {/* Map Section */}
+            {(venue.streetAddress1 || venue.city || venue.state) && (
+              <VenueMap
+                address={[
+                  venue.streetAddress1,
+                  venue.streetAddress2,
+                  [venue.city, venue.state, venue.zipCode].filter(Boolean).join(", ")
+                ].filter(Boolean).join(", ")}
+                venueName={venue.name}
+              />
+            )}
+
             {venue.photoUrls && venue.photoUrls.length > 1 && (
               <> 
              
