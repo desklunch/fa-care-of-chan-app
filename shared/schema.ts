@@ -717,7 +717,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas

@@ -38,6 +38,8 @@ import {
   insertCommentSchema,
   updateCommentSchema,
   commentEntityTypes,
+  insertVenuePhotoSchema,
+  updateVenuePhotoSchema,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -3840,6 +3842,167 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // ====== VENUE PHOTOS ROUTES ======
+
+  // GET /api/venues/:venueId/photos - List photos for a venue
+  app.get("/api/venues/:venueId/photos", isAuthenticated, async (req, res) => {
+    try {
+      const photos = await storage.getVenuePhotos(req.params.venueId);
+      res.json(photos);
+    } catch (error) {
+      console.error("Error fetching venue photos:", error);
+      res.status(500).json({ message: "Failed to fetch venue photos" });
+    }
+  });
+
+  // POST /api/venues/:venueId/photos - Create a photo for a venue
+  app.post("/api/venues/:venueId/photos", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = insertVenuePhotoSchema.safeParse({
+        ...req.body,
+        venueId: req.params.venueId,
+      });
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const photo = await storage.createVenuePhoto(result.data);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_photo",
+        entityId: photo.id,
+        changes: { after: { venueId: req.params.venueId, url: result.data.url } },
+      });
+
+      res.status(201).json(photo);
+    } catch (error) {
+      console.error("Error creating venue photo:", error);
+      res.status(500).json({ message: "Failed to create venue photo" });
+    }
+  });
+
+  // POST /api/venues/:venueId/photos/bulk - Create multiple photos for a venue
+  app.post("/api/venues/:venueId/photos/bulk", isAuthenticated, async (req: any, res) => {
+    try {
+      const { photos: photosData } = req.body;
+      
+      if (!Array.isArray(photosData) || photosData.length === 0) {
+        return res.status(400).json({ message: "photos must be a non-empty array" });
+      }
+
+      const photosToCreate = photosData.map((p: any, index: number) => ({
+        venueId: req.params.venueId,
+        url: p.url,
+        altText: p.altText,
+        sortOrder: p.sortOrder ?? index,
+        isHero: p.isHero ?? (index === 0),
+      }));
+
+      const photos = await storage.createVenuePhotos(photosToCreate);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_photo",
+        entityId: "bulk",
+        metadata: { venueId: req.params.venueId, count: photos.length },
+      });
+
+      res.status(201).json(photos);
+    } catch (error) {
+      console.error("Error creating venue photos:", error);
+      res.status(500).json({ message: "Failed to create venue photos" });
+    }
+  });
+
+  // PUT /api/venue-photos/:id - Update a photo
+  app.put("/api/venue-photos/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const result = updateVenuePhotoSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const before = await storage.getVenuePhotoById(req.params.id);
+      if (!before) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      const photo = await storage.updateVenuePhoto(req.params.id, result.data);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue_photo",
+        entityId: req.params.id,
+        changes: getChangedFields(
+          before as unknown as Record<string, unknown>,
+          photo as unknown as Record<string, unknown>
+        ),
+      });
+
+      res.json(photo);
+    } catch (error) {
+      console.error("Error updating venue photo:", error);
+      res.status(500).json({ message: "Failed to update venue photo" });
+    }
+  });
+
+  // DELETE /api/venue-photos/:id - Delete a photo
+  app.delete("/api/venue-photos/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const photo = await storage.getVenuePhotoById(req.params.id);
+      if (!photo) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      await storage.deleteVenuePhoto(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue_photo",
+        entityId: req.params.id,
+        changes: { before: { venueId: photo.venueId, url: photo.url } },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting venue photo:", error);
+      res.status(500).json({ message: "Failed to delete venue photo" });
+    }
+  });
+
+  // PUT /api/venues/:venueId/photos/:photoId/hero - Set a photo as hero
+  app.put("/api/venues/:venueId/photos/:photoId/hero", isAuthenticated, async (req: any, res) => {
+    try {
+      const photo = await storage.getVenuePhotoById(req.params.photoId);
+      if (!photo || photo.venueId !== req.params.venueId) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      await storage.setVenuePhotoHero(req.params.venueId, req.params.photoId);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue_photo",
+        entityId: req.params.photoId,
+        metadata: { venueId: req.params.venueId, setAsHero: true },
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error setting hero photo:", error);
+      res.status(500).json({ message: "Failed to set hero photo" });
     }
   });
 

@@ -15,6 +15,7 @@ import {
   venueTags,
   venueFloorplans,
   venueFiles,
+  venuePhotos,
   venueCollections,
   venueCollectionVenues,
   vendorServices,
@@ -65,6 +66,9 @@ import {
   type VenueFileWithUploader,
   type CreateVenueFile,
   type UpdateVenueFile,
+  type VenuePhoto,
+  type CreateVenuePhoto,
+  type UpdateVenuePhoto,
   type Amenity,
   type CreateAmenity,
   type UpdateAmenity,
@@ -260,6 +264,15 @@ export interface IStorage {
   createVenueFile(data: CreateVenueFile): Promise<VenueFile>;
   updateVenueFile(id: string, data: UpdateVenueFile): Promise<VenueFile | undefined>;
   deleteVenueFile(id: string): Promise<void>;
+  
+  // Venue Photo operations
+  getVenuePhotos(venueId: string): Promise<VenuePhoto[]>;
+  getVenuePhotoById(id: string): Promise<VenuePhoto | undefined>;
+  createVenuePhoto(data: CreateVenuePhoto): Promise<VenuePhoto>;
+  createVenuePhotos(data: CreateVenuePhoto[]): Promise<VenuePhoto[]>;
+  updateVenuePhoto(id: string, data: UpdateVenuePhoto): Promise<VenuePhoto | undefined>;
+  deleteVenuePhoto(id: string): Promise<void>;
+  setVenuePhotoHero(venueId: string, photoId: string): Promise<void>;
   
   setVenueTags(venueId: string, tagIds: string[]): Promise<void>;
   getTagsByCategory(category: string): Promise<Tag[]>;
@@ -1572,6 +1585,78 @@ export class DatabaseStorage implements IStorage {
   
   async deleteVenueFile(id: string): Promise<void> {
     await db.delete(venueFiles).where(eq(venueFiles.id, id));
+  }
+  
+  // Venue Photo operations
+  async getVenuePhotos(venueId: string): Promise<VenuePhoto[]> {
+    return db
+      .select()
+      .from(venuePhotos)
+      .where(eq(venuePhotos.venueId, venueId))
+      .orderBy(asc(venuePhotos.sortOrder));
+  }
+  
+  async getVenuePhotoById(id: string): Promise<VenuePhoto | undefined> {
+    const [photo] = await db
+      .select()
+      .from(venuePhotos)
+      .where(eq(venuePhotos.id, id));
+    return photo;
+  }
+  
+  async createVenuePhoto(data: CreateVenuePhoto): Promise<VenuePhoto> {
+    const [photo] = await db
+      .insert(venuePhotos)
+      .values({
+        venueId: data.venueId,
+        url: data.url,
+        altText: data.altText,
+        sortOrder: data.sortOrder ?? 0,
+        isHero: data.isHero ?? false,
+      })
+      .returning();
+    return photo;
+  }
+  
+  async createVenuePhotos(data: CreateVenuePhoto[]): Promise<VenuePhoto[]> {
+    if (data.length === 0) return [];
+    const photos = await db
+      .insert(venuePhotos)
+      .values(data.map(d => ({
+        venueId: d.venueId,
+        url: d.url,
+        altText: d.altText,
+        sortOrder: d.sortOrder ?? 0,
+        isHero: d.isHero ?? false,
+      })))
+      .returning();
+    return photos;
+  }
+  
+  async updateVenuePhoto(id: string, data: UpdateVenuePhoto): Promise<VenuePhoto | undefined> {
+    const [photo] = await db
+      .update(venuePhotos)
+      .set(data)
+      .where(eq(venuePhotos.id, id))
+      .returning();
+    return photo;
+  }
+  
+  async deleteVenuePhoto(id: string): Promise<void> {
+    await db.delete(venuePhotos).where(eq(venuePhotos.id, id));
+  }
+  
+  async setVenuePhotoHero(venueId: string, photoId: string): Promise<void> {
+    // First, unset all hero photos for this venue
+    await db
+      .update(venuePhotos)
+      .set({ isHero: false })
+      .where(eq(venuePhotos.venueId, venueId));
+    // Then set the specified photo as hero
+    await db
+      .update(venuePhotos)
+      .set({ isHero: true })
+      .where(eq(venuePhotos.id, photoId));
   }
   
   async getTagsByCategory(category: string): Promise<Tag[]> {
