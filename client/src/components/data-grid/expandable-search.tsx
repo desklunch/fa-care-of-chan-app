@@ -71,7 +71,7 @@ export function ExpandableSearch({
       ref={containerRef}
       className={cn(
         "relative flex items-center transition-all duration-200",
-        "w-48"
+        "w-full md:w-48"
       )}
     >
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -81,7 +81,7 @@ export function ExpandableSearch({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={handleBlur}
-        className="pl-9 pr-8 h-9"
+        className="pl-9 pb-3  h-9"
         data-testid="input-search"
       />
       {value && (

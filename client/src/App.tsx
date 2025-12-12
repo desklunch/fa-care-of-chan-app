@@ -132,29 +132,9 @@ function useLayoutConfig() {
           },
         ],
       },
+
       {
-        heading: "Vendors",
-        defaultCollapsed: true,
-        items: [
-          {
-            name: "Vendors",
-            href: "/vendors",
-            icon: Handshake,
-          },
-          {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: RadioTower,
-          },
-          {
-            name: "Forms",
-            href: "/forms/templates",
-            icon: FileText,
-          }, 
-        ],
-      },
-      {
-        heading: "Application",
+        heading: "Support",
         items: [
           {
             name: "Guide",
@@ -184,6 +164,21 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
+          {
+            name: "Vendors",
+            href: "/vendors",
+            icon: Handshake,
+          },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: RadioTower,
+          },
+          {
+            name: "Forms",
+            href: "/forms/templates",
+            icon: FileText,
+          }, 
           {
             name: "Team",
             href: "/team",

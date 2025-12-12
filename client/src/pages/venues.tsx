@@ -586,7 +586,7 @@ export default function VenuesPage() {
           <InfoBanner
             id="venue-features-tip"
             title="Need a change or new feature?"
-            description="Submit requests in the App Features section."
+            description="Submit requests on the Features page."
             ctaLabel="App Features"
             ctaUrl="/app/features"
             userId={user?.id}

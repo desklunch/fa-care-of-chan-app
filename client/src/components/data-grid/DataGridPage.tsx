@@ -357,7 +357,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           {selectionToolbar(selectedRows, clearSelection)}
         </div>
       )}
-      <div className="flex items-start justify-between gap-3 flex-wrap">
+      <div className="flex items-start justify-between gap-3 ">
         
         <div className="flex items-center gap-2">
 
@@ -398,7 +398,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         </div>
         <div className="flex items-center gap-4">
           {toolbarActions}
-          <div className="text-sm text-muted-foreground" data-testid="text-row-count">
+          <div className="text-sm text-muted-foreground whitespace-nowrap
+" data-testid="text-row-count">
             {pagination 
               ? `${pagination.total} total`
               : `${filteredData.length} of ${data.length}`

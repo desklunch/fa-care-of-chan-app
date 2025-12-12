@@ -10,6 +10,13 @@ export default function Feedback() {
 
   return (
     <PageLayout breadcrumbs={[{ label: "App" },{ label: "Feedback" }]}>
+              <InfoBanner
+            id="feedback-features-tip"
+            title="Have a specific request?"
+            description="Visit the Features page."
+            ctaLabel="App Features"
+            ctaUrl="/app/features"
+          />
       <Card className="rounded-none border-none" >
         <CardHeader className="pb-4">
 
@@ -18,13 +25,7 @@ export default function Feedback() {
           </CardDescription>
         </CardHeader>
         <CardContent >
-          <InfoBanner
-            id="feedback-features-tip"
-            title="Need a change or new feature?"
-            description="Submit requests in the App Features section."
-            ctaLabel="App Features"
-            ctaUrl="/app/features"
-          />
+  
           <CommentList 
             entityType="feedback" 
             entityId="general" 
