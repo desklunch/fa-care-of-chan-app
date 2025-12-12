@@ -189,7 +189,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
           <Button
             variant="ghost"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 flex items-center gap-4    h-[36px]"
+            className="px-0 flex items-center  gap-4    h-[36px]"
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >

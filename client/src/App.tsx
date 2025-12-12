@@ -55,6 +55,7 @@ import FormPreview from "@/pages/form-preview";
 import CommentsPage from "@/pages/comments";
 import AdminAnalytics from "@/pages/admin-analytics";
 import Guide from "@/pages/guide";
+import Feedback from "@/pages/feedback";
 import PublicVenueDetail from "@/pages/public-venue-detail";
 import PublicVenueCollection from "@/pages/public-venue-collection";
 import NotFound from "@/pages/not-found";
@@ -79,6 +80,7 @@ import {
   Tags,
   FolderOpen,
   MessageSquare,
+  MessageCircleQuestion,
   BarChart3,
   BookOpen,
   Users,
@@ -168,6 +170,11 @@ function useLayoutConfig() {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
+          },
+          {
+            name: "Feedback",
+            href: "/app/feedback",
+            icon: MessageCircleQuestion,
           },
         ],
       },
@@ -319,6 +326,7 @@ function AuthenticatedRoutes() {
           <Route path="/admin/logs" component={AdminLogs} />
           <Route path="/admin/analytics" component={AdminAnalytics} />
           <Route path="/guide" component={Guide} />
+          <Route path="/app/feedback" component={Feedback} />
           <Route component={NotFound} />
         </Switch>
       </AppShell>
