@@ -495,6 +495,7 @@ export const commentEntityTypes = [
   "contact",
   "venue_collection",
   "app_feature",
+  "feedback",
 ] as const;
 export type CommentEntityType = (typeof commentEntityTypes)[number];
 
