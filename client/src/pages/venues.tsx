@@ -582,7 +582,7 @@ export default function VenuesPage() {
             onClick: handleCreate,
           }}
       >
-        <div className="flex flex-col gap-4 h-full">
+        <div className="flex flex-col  h-full">
           <InfoBanner
             id="venue-features-tip"
             title="Need a change or new feature?"
@@ -591,7 +591,7 @@ export default function VenuesPage() {
             ctaUrl="/app/features"
             userId={user?.id}
           />
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 ">
             <DataGridPage {...dataGridProps} />
           </div>
         </div>

@@ -351,9 +351,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   `;
 
   return (
-    <div className="p-4 md:px-6 h-full flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+    <div className="p-4 md:px-6 h-full flex flex-col gap-4 ">
+      {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
+        <div className="bg-muted/50 border rounded-lg p-3" data-testid="selection-toolbar">
+          {selectionToolbar(selectedRows, clearSelection)}
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        
+        <div className="flex items-center gap-2">
 
           {!pagination && searchFields.length > 0 && (
             <ExpandableSearch
@@ -373,14 +379,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           {filters.length > 0 && collapsibleFilters && (
             <Button
               variant={showFilters ? "secondary" : "outline"}
-              size="icon"
+              size="md"
               onClick={() => setShowFilters(!showFilters)}
               data-testid="button-toggle-filters"
-              className="gap-1.5"
+              className=""
             >
               <ListFilter className="h-4 w-4" />
+              Filters
               {Object.values(filterState).some((v) => v.length > 0) && (
-                <span className="absolute translate-x-3 -translate-y-2 rounded-full bg-primary text-primary-foreground h-2 w-2 text-xs">
+                <span className="rounded-full bg-primary text-primary-foreground h-2 w-2 text-xs">
 
                 </span>
               )}
@@ -420,11 +427,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         </div>
       )}
 
-      {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
-        <div className="bg-muted/50 border rounded-lg p-3 mb-4" data-testid="selection-toolbar">
-          {selectionToolbar(selectedRows, clearSelection)}
-        </div>
-      )}
+
 
       <div className="flex-1 min-h-[400px] overflow-hidden" data-testid="data-grid">
         <AgGridReact

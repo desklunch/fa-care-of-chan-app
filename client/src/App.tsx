@@ -162,6 +162,11 @@ function useLayoutConfig() {
             icon: BookOpen,
           },
           {
+            name: "Feedback",
+            href: "/app/feedback",
+            icon: MessageCircleQuestion,
+          },
+          {
             name: "Features",
             href: "/app/features",
             icon: DraftingCompass,
@@ -171,11 +176,7 @@ function useLayoutConfig() {
             href: "/app/issues",
             icon: Bug,
           },
-          {
-            name: "Feedback",
-            href: "/app/feedback",
-            icon: MessageCircleQuestion,
-          },
+
         ],
       },
       {

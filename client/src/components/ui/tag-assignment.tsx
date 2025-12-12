@@ -93,7 +93,7 @@ export function TagAssignment({
   const showSuggestions = isFocused && (filteredTags.length > 0 || showCreateOption || searchValue.length > 0);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <div ref={containerRef} className="relative">
         <Input
           ref={inputRef}
@@ -152,7 +152,7 @@ export function TagAssignment({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {selectedTags.map((tag) => (
           <Badge
             key={tag.id}

@@ -107,22 +107,25 @@ export function CommentForm({
         {onCancel && (
           <Button 
             type="button" 
-            variant="ghost" 
-            size="sm" 
+            variant="outline" 
+            size="md" 
             onClick={onCancel}
             data-testid="button-cancel-comment"
+            className="h-10"
+
           >
+            <X className="h-4 w-4 " />
             Cancel
           </Button>
         )}
         <Button 
           type="submit" 
-          size="sm" 
+          size="md" 
           disabled={!body.trim() || createMutation.isPending}
           data-testid="button-submit-comment"
           className="h-10"
         >
-          <MessageSquare className="h-3 w-3 " />
+          <MessageSquare className="h-4 w-4 " />
           {createMutation.isPending ? "Posting..." : (parentId ? "Reply" : "Post")}
         </Button>
       </div>
@@ -316,7 +319,7 @@ export function CommentItem({
           </div>
           
           {isEditing ? (
-            <div className="mt-2 space-y-2">
+            <div className="mt-2 space-y-4">
               <Textarea
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
@@ -324,24 +327,28 @@ export function CommentItem({
                 autoFocus
                 data-testid="input-edit-comment"
               />
-              <div className="flex gap-2">
+              <div className="flex justify-end gap-2">
                 <Button
-                  size="sm"
-                  variant="ghost"
+                  size="md"
+                  variant="outline"
                   onClick={handleCancelEdit}
                   disabled={updateMutation.isPending}
                   data-testid="button-cancel-edit"
+                  className="h-10"
+
                 >
-                  <X className="h-3 w-3 mr-1" />
+                  <X className="h-4 w-4" />
                   Cancel
                 </Button>
                 <Button
-                  size="sm"
+                  size="md"
                   onClick={handleSaveEdit}
                   disabled={!editBody.trim() || updateMutation.isPending}
                   data-testid="button-save-edit"
+                  className="h-10"
+
                 >
-                  <Check className="h-3 w-3 mr-1" />
+                  <Check className="h-4 w-4" />
                   {updateMutation.isPending ? "Saving..." : "Save"}
                 </Button>
               </div>
@@ -360,7 +367,7 @@ export function CommentItem({
       </div>
 
       {isReplying && (
-        <div className="pl-11 mt-2">
+        <div className=" mt-4">
           <CommentForm
             entityType={entityType}
             entityId={entityId}
