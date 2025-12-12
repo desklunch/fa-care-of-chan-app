@@ -247,6 +247,30 @@ export default function VenueCollectionDetail() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/venue-collections/${collectionId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venue-collections"] });
+      toast({ title: "Collection deleted" });
+      navigate("/venues/collections");
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to delete collection", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const handleDelete = useCallback(() => {
+    if (confirm("Are you sure you want to delete this collection? This cannot be undone.")) {
+      deleteMutation.mutate();
+    }
+  }, [deleteMutation]);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -352,6 +376,12 @@ export default function VenueCollectionDetail() {
           label: "Copy Public Link",
           icon: Share2,
           onClick: handleCopyPublicLink,
+        },
+        {
+          label: "Delete",
+          icon: Trash2,
+          variant: "destructive",
+          onClick: handleDelete,
         },
       ]}
     >
