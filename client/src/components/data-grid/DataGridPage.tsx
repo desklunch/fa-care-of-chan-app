@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent } from "ag-grid-community";
+import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent, RowClickedEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { ExpandableSearch } from "./expandable-search";
@@ -252,7 +252,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   }, []);
 
   const handleRowClick = useCallback(
-    (event: { data: T | undefined }) => {
+    (event: RowClickedEvent<T>) => {
+      // Skip navigation if click was in the checkbox selection column
+      const target = event.event?.target as HTMLElement | null;
+      const isCheckboxColumn = target?.closest('[col-id="ag-Grid-SelectionColumn"], [col-id="_selection"], .ag-selection-checkbox');
+      if (isCheckboxColumn) {
+        return;
+      }
       if (event.data && onRowClick) {
         onRowClick(event.data);
       }
