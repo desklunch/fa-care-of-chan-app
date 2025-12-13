@@ -4059,6 +4059,17 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Photo not found" });
       }
 
+      const storageService = new ObjectStorageService();
+
+      // Delete the photo file from object storage if it's stored there
+      if (photo.url && photo.url.startsWith("/objects/")) {
+        try {
+          await storageService.deleteObject(photo.url.replace("/objects/", ""));
+        } catch (err) {
+          console.error("Failed to delete photo from storage:", err);
+        }
+      }
+
       await storage.deleteVenuePhoto(req.params.id);
 
       await logAuditEvent(req, {
