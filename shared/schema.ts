@@ -266,6 +266,7 @@ export const venues = pgTable(
     googlePlaceId: varchar("google_place_id", { length: 255 }),
     photoUrls: jsonb("photo_urls").$type<string[]>().default([]),
     isActive: boolean("is_active").default(true).notNull(),
+    isDraft: boolean("is_draft").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -274,6 +275,7 @@ export const venues = pgTable(
     index("idx_venues_external_id").on(table.externalId),
     index("idx_venues_city_state").on(table.city, table.state),
     index("idx_venues_is_active").on(table.isActive),
+    index("idx_venues_is_draft").on(table.isDraft),
   ],
 );
 
@@ -901,6 +903,7 @@ export const insertVenueSchema = createInsertSchema(venues).omit({
   instagramAccount: z.string().max(100).optional().nullable(),
   photoUrls: z.array(z.string()).optional().nullable(),
   isActive: z.boolean().default(true),
+  isDraft: z.boolean().default(false),
 });
 
 export const updateVenueSchema = insertVenueSchema.partial();

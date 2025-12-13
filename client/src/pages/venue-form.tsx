@@ -613,6 +613,7 @@ export default function VenueFormPage() {
       instagramAccount: "",
       googlePlaceId: "",
       isActive: true,
+      isDraft: false,
       amenityIds: [],
       cuisineTagIds: [],
       styleTagIds: [],
@@ -677,6 +678,7 @@ export default function VenueFormPage() {
         instagramAccount: venue.instagramAccount || "",
         googlePlaceId: venue.googlePlaceId || "",
         isActive: venue.isActive ?? true,
+        isDraft: venue.isDraft ?? false,
         amenityIds: venue.amenities?.map((a) => a.id) || [],
         cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
         styleTagIds: venue.styleTags?.map((t) => t.id) || [],
@@ -1181,6 +1183,62 @@ export default function VenueFormPage() {
         <Form {...form}>
           <form id="venue-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <button type="submit" id="venue-form-submit" className="hidden" />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Status</CardTitle>
+                <CardDescription>
+                  Control visibility and publishing status
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-6">
+                  <FormField
+                    control={form.control}
+                    name="isDraft"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-3">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            data-testid="switch-venue-draft"
+                          />
+                        </FormControl>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base cursor-pointer">Draft</FormLabel>
+                          <FormDescription className="text-xs">
+                            Draft venues are hidden from regular listings
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-3">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            data-testid="switch-venue-active"
+                          />
+                        </FormControl>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base cursor-pointer">Active</FormLabel>
+                          <FormDescription className="text-xs">
+                            Inactive venues are archived
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
               <Card className="border-primary border-2">
               <CardHeader className="gap-2 pb-4 ">
                 <Badge variant="default" className="flex-0 w-fit">Start Here</Badge>
