@@ -65,7 +65,7 @@ interface VenueFileUploadResult {
 }
 
 interface VenueFileUploaderProps {
-  venueId: string;
+  venueId?: string;
   category: FileCategory;
   onFileUploaded: (result: VenueFileUploadResult, metadata: { title?: string; caption?: string }) => void;
   onError?: (error: string) => void;

@@ -262,6 +262,7 @@ export interface IStorage {
   getVenueFiles(venueId: string, category?: string): Promise<VenueFileWithUploader[]>;
   getVenueFileById(id: string): Promise<VenueFileWithUploader | undefined>;
   createVenueFile(data: CreateVenueFile): Promise<VenueFile>;
+  createVenueFiles(data: CreateVenueFile[]): Promise<VenueFile[]>;
   updateVenueFile(id: string, data: UpdateVenueFile): Promise<VenueFile | undefined>;
   deleteVenueFile(id: string): Promise<void>;
   
@@ -1590,6 +1591,27 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return file;
+  }
+  
+  async createVenueFiles(data: CreateVenueFile[]): Promise<VenueFile[]> {
+    if (data.length === 0) return [];
+    const files = await db
+      .insert(venueFiles)
+      .values(data.map(d => ({
+        venueId: d.venueId,
+        category: d.category,
+        fileUrl: d.fileUrl,
+        thumbnailUrl: d.thumbnailUrl,
+        fileType: d.fileType,
+        originalFilename: d.originalFilename,
+        mimeType: d.mimeType,
+        title: d.title,
+        caption: d.caption,
+        sortOrder: d.sortOrder ?? 0,
+        uploadedById: d.uploadedById,
+      })))
+      .returning();
+    return files;
   }
   
   async updateVenueFile(id: string, data: UpdateVenueFile): Promise<VenueFile | undefined> {

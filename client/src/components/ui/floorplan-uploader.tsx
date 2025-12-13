@@ -28,7 +28,7 @@ interface FloorplanUploadResult {
 }
 
 interface FloorplanUploaderProps {
-  venueId: string;
+  venueId?: string;
   onFloorplanUploaded: (result: FloorplanUploadResult, metadata: { title?: string; caption?: string }) => void;
   onError?: (error: string) => void;
   disabled?: boolean;

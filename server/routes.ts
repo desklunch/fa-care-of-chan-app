@@ -2494,6 +2494,43 @@ export async function registerRoutes(
     }
   });
 
+  // POST /api/venues/:venueId/floorplans/bulk - Create multiple floorplans for a venue
+  app.post("/api/venues/:venueId/floorplans/bulk", isAuthenticated, async (req: any, res) => {
+    try {
+      const { floorplans: floorplansData } = req.body;
+      
+      if (!Array.isArray(floorplansData) || floorplansData.length === 0) {
+        return res.status(400).json({ message: "floorplans must be a non-empty array" });
+      }
+
+      const filesToCreate = floorplansData.map((f: any, index: number) => ({
+        venueId: req.params.venueId,
+        category: 'floorplan' as const,
+        fileUrl: f.fileUrl,
+        thumbnailUrl: f.thumbnailUrl,
+        fileType: f.fileType || 'image',
+        title: f.title,
+        caption: f.caption,
+        sortOrder: f.sortOrder ?? index,
+        uploadedById: req.user?.id,
+      }));
+
+      const floorplans = await storage.createVenueFiles(filesToCreate);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_file",
+        entityId: "bulk",
+        metadata: { venueId: req.params.venueId, category: 'floorplan', count: floorplans.length },
+      });
+
+      res.status(201).json(floorplans);
+    } catch (error) {
+      console.error("Error creating floorplans:", error);
+      res.status(500).json({ message: "Failed to create floorplans" });
+    }
+  });
+
   // Update a floorplan
   app.patch("/api/floorplans/:id", isAuthenticated, async (req: any, res) => {
     try {
@@ -2585,8 +2622,8 @@ export async function registerRoutes(
     try {
       const { venueId, category, fileData, filename, mimeType, title, caption } = req.body;
       
-      if (!venueId || !fileData || !filename) {
-        return res.status(400).json({ message: "venueId, fileData, and filename are required" });
+      if (!fileData || !filename) {
+        return res.status(400).json({ message: "fileData and filename are required" });
       }
       
       if (!category || !["floorplan", "attachment"].includes(category)) {
@@ -2618,7 +2655,9 @@ export async function registerRoutes(
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 8);
       const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const objectPath = `venues/${venueId}/${category}s/${timestamp}-${randomId}-${sanitizedFilename}`;
+      const objectPath = venueId 
+        ? `venues/${venueId}/${category}s/${timestamp}-${randomId}-${sanitizedFilename}`
+        : `staged/${category}s/${timestamp}-${randomId}-${sanitizedFilename}`;
       
       // Upload file
       await storageService.uploadBuffer(buffer, objectPath, mimeType);
@@ -2642,21 +2681,36 @@ export async function registerRoutes(
         }
       }
       
-      const file = await storage.createVenueFile({
-        venueId,
-        category,
-        fileUrl,
-        thumbnailUrl,
-        fileType,
-        originalFilename: filename,
-        mimeType,
-        title,
-        caption,
-        sortOrder: 0,
-        uploadedById: req.user?.id,
-      });
-      
-      res.status(201).json(file);
+      // If venueId is provided, create a database record
+      // Otherwise, just return the file info for staging
+      if (venueId) {
+        const file = await storage.createVenueFile({
+          venueId,
+          category,
+          fileUrl,
+          thumbnailUrl,
+          fileType,
+          originalFilename: filename,
+          mimeType,
+          title,
+          caption,
+          sortOrder: 0,
+          uploadedById: req.user?.id,
+        });
+        
+        res.status(201).json(file);
+      } else {
+        // Return file info for staging (no database record created)
+        res.status(201).json({
+          fileUrl,
+          thumbnailUrl,
+          fileType,
+          originalFilename: filename,
+          mimeType,
+          title,
+          caption,
+        });
+      }
     } catch (error) {
       console.error("Error uploading venue file:", error);
       res.status(500).json({ message: "Failed to upload venue file" });
@@ -2697,6 +2751,45 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error creating venue file:", error);
       res.status(500).json({ message: "Failed to create venue file" });
+    }
+  });
+
+  // POST /api/venues/:venueId/files/bulk - Create multiple files for a venue
+  app.post("/api/venues/:venueId/files/bulk", isAuthenticated, async (req: any, res) => {
+    try {
+      const { files: filesData } = req.body;
+      
+      if (!Array.isArray(filesData) || filesData.length === 0) {
+        return res.status(400).json({ message: "files must be a non-empty array" });
+      }
+
+      const filesToCreate = filesData.map((f: any, index: number) => ({
+        venueId: req.params.venueId,
+        category: f.category || 'attachment',
+        fileUrl: f.fileUrl,
+        thumbnailUrl: f.thumbnailUrl,
+        fileType: f.fileType || 'other',
+        originalFilename: f.originalFilename,
+        mimeType: f.mimeType,
+        title: f.title,
+        caption: f.caption,
+        sortOrder: f.sortOrder ?? index,
+        uploadedById: req.user?.id,
+      }));
+
+      const files = await storage.createVenueFiles(filesToCreate);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_file",
+        entityId: "bulk",
+        metadata: { venueId: req.params.venueId, count: files.length },
+      });
+
+      res.status(201).json(files);
+    } catch (error) {
+      console.error("Error creating venue files:", error);
+      res.status(500).json({ message: "Failed to create venue files" });
     }
   });
 
