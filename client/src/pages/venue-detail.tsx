@@ -259,12 +259,12 @@ export default function VenueDetailPage() {
           <div className="sticky top-[0px] bg-background z-10">
             <div className="p-4 md:p-6 pb-2 md:pb-2 ">
               {(venue.isDraft || !venue.isActive) && (
-                <div className="flex gap-2 mb-2" data-testid="venue-status-badges">
+                <div className="flex gap-2 mb-4" data-testid="venue-status-badges">
                   {venue.isDraft && (
-                    <Badge variant="secondary" data-testid="badge-venue-draft">Draft</Badge>
+                    <Badge variant="outline" className="border-destructive text-destructive uppercase px-1"data-testid="badge-venue-draft">Draft</Badge>
                   )}
                   {!venue.isActive && (
-                    <Badge variant="destructive" data-testid="badge-venue-inactive">Inactive</Badge>
+                    <Badge variant="outline" className="border-destructive text-destructive uppercase px-1" data-testid="badge-venue-inactive">Inactive</Badge>
                   )}
                 </div>
               )}

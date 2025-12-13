@@ -16,7 +16,7 @@ const badgeVariants = cva(
         outline: "border border-input shadow-xs",
       },
       size: {
-        sm: "px-1.5 py-0.5 text-[10px]",
+        sm: "px-[1.5px] py-[0.5px] text-[9px]",
         default: "px-2.5 py-0.5 text-xs",
         lg: "px-3 py-2 text-sm gap-2 [&_svg]:w-4 [&_svg]:h-4",
       },
