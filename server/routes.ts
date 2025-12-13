@@ -2566,7 +2566,7 @@ export async function registerRoutes(
       // Delete the file from object storage if it's stored there
       if (floorplan.fileUrl.startsWith("/objects/")) {
         try {
-          await storageService.deleteObject(floorplan.fileUrl.replace("/objects/", ""));
+          await storageService.deleteObject(floorplan.fileUrl);
         } catch (err) {
           console.error("Failed to delete floorplan file from storage:", err);
         }
@@ -2575,7 +2575,7 @@ export async function registerRoutes(
       // Delete thumbnail if it exists
       if (floorplan.thumbnailUrl?.startsWith("/objects/")) {
         try {
-          await storageService.deleteObject(floorplan.thumbnailUrl.replace("/objects/", ""));
+          await storageService.deleteObject(floorplan.thumbnailUrl);
         } catch (err) {
           console.error("Failed to delete floorplan thumbnail from storage:", err);
         }
@@ -2828,7 +2828,7 @@ export async function registerRoutes(
       // Delete the file from object storage if it's stored there
       if (file.fileUrl.startsWith("/objects/")) {
         try {
-          await storageService.deleteObject(file.fileUrl.replace("/objects/", ""));
+          await storageService.deleteObject(file.fileUrl);
         } catch (err) {
           console.error("Failed to delete file from storage:", err);
         }
@@ -2837,7 +2837,7 @@ export async function registerRoutes(
       // Delete thumbnail if it exists
       if (file.thumbnailUrl?.startsWith("/objects/")) {
         try {
-          await storageService.deleteObject(file.thumbnailUrl.replace("/objects/", ""));
+          await storageService.deleteObject(file.thumbnailUrl);
         } catch (err) {
           console.error("Failed to delete thumbnail from storage:", err);
         }
@@ -4064,7 +4064,7 @@ export async function registerRoutes(
       // Delete the photo file from object storage if it's stored there
       if (photo.url && photo.url.startsWith("/objects/")) {
         try {
-          await storageService.deleteObject(photo.url.replace("/objects/", ""));
+          await storageService.deleteObject(photo.url);
         } catch (err) {
           console.error("Failed to delete photo from storage:", err);
         }
