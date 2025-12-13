@@ -29,6 +29,12 @@ function NameCellRenderer({ data }: { data: VenueWithRelations }) {
       <span className="font-medium truncate" data-testid={`text-venue-name-${data.id}`}>
         {data.name}
       </span>
+      {data.isDraft && (
+        <Badge variant="secondary" className="text-xs" data-testid={`badge-draft-${data.id}`}>Draft</Badge>
+      )}
+      {!data.isActive && (
+        <Badge variant="destructive" className="text-xs" data-testid={`badge-inactive-${data.id}`}>Inactive</Badge>
+      )}
     </div>
   );
 }
@@ -102,14 +108,6 @@ function StatusCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-function DraftCellRenderer({ data }: { data: VenueWithRelations }) {
-  if (!data?.isDraft) return null;
-  return (
-    <Badge variant="secondary" className="text-xs" data-testid={`badge-draft-${data.id}`}>
-      Draft
-    </Badge>
-  );
-}
 
 function DescriptionCellRenderer({ data }: { data: VenueWithRelations }) {
   if (!data?.shortDescription) return null;
@@ -382,17 +380,6 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
       flex: 0.8,
       minWidth: 100,
       cellRenderer: (params: { data: VenueWithRelations }) => <StatusCellRenderer data={params.data} />,
-    },
-  },
-  {
-    id: "isDraft",
-    headerName: "Draft",
-    field: "isDraft",
-    category: "Status",
-    colDef: {
-      flex: 0.5,
-      minWidth: 80,
-      cellRenderer: (params: { data: VenueWithRelations }) => <DraftCellRenderer data={params.data} />,
     },
   },
 ];
