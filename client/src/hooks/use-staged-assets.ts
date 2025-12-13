@@ -127,8 +127,8 @@ export function useStagedAssets(): UseStagedAssetsReturn {
         const photosToCreate = stagedAssets.photos.map((p, index) => ({
           url: p.url,
           altText: p.altText,
-          sortOrder: index,
-          isHero: index === 0,
+          sortOrder: p.sortOrder ?? index,
+          isHero: p.isHero ?? (index === 0),
         }));
 
         const response = await apiRequest("POST", `/api/venues/${venueId}/photos/bulk`, {

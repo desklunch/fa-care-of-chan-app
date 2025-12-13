@@ -48,6 +48,7 @@ import { PhotoUploader } from "@/components/ui/photo-uploader";
 import { FloorplanUploader } from "@/components/ui/floorplan-uploader";
 import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
+import { useStagedAssets, StagedPhoto, StagedFloorplan, StagedAttachment } from "@/hooks/use-staged-assets";
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive } from "lucide-react";
 import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
@@ -564,6 +565,20 @@ export default function VenueFormPage() {
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>([]);
+  
+  const {
+    stagedAssets,
+    addStagedPhoto,
+    addStagedFloorplan,
+    addStagedAttachment,
+    removeStagedPhoto,
+    removeStagedFloorplan,
+    removeStagedAttachment,
+    updateStagedPhotoOrder,
+    syncStagedAssets,
+    cleanupStagedFiles,
+    hasStagedAssets,
+  } = useStagedAssets();
 
   const { data: venue, isLoading: isLoadingVenue } = useQuery<VenueWithRelations>({
     queryKey: ["/api/venues", id, "full"],
@@ -724,7 +739,17 @@ export default function VenueFormPage() {
       const response = await apiRequest("POST", "/api/venues", data);
       return response.json();
     },
-    onSuccess: (newVenue) => {
+    onSuccess: async (newVenue) => {
+      if (hasStagedAssets) {
+        const syncResult = await syncStagedAssets(newVenue.id.toString());
+        if (!syncResult.success) {
+          toast({
+            title: "Warning",
+            description: `Venue created but some assets failed to save: ${syncResult.errors.join(", ")}`,
+            variant: "destructive",
+          });
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
       toast({
         title: "Venue created",
@@ -732,7 +757,10 @@ export default function VenueFormPage() {
       });
       setLocation(`/venues/${newVenue.id}`);
     },
-    onError: (error: Error) => {
+    onError: async (error: Error) => {
+      if (hasStagedAssets) {
+        await cleanupStagedFiles();
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to create venue",
@@ -1038,13 +1066,49 @@ export default function VenueFormPage() {
     galleryPhotos: Array<{ photoUrl: string; thumbnailUrl: string; originalUrl: string }>; 
     primaryPhoto: { photoUrl: string; thumbnailUrl: string; originalUrl: string } | null 
   }) => {
+    if (!isEditingVenue) {
+      const existingUrls = new Set(stagedAssets.photos.map(p => p.url));
+      let nextSortOrder = stagedAssets.photos.length;
+      let addedCount = 0;
+      
+      if (result.primaryPhoto && !existingUrls.has(result.primaryPhoto.photoUrl)) {
+        addStagedPhoto({
+          url: result.primaryPhoto.photoUrl,
+          thumbnailUrl: result.primaryPhoto.thumbnailUrl,
+          sortOrder: 0,
+          isHero: true,
+        });
+        existingUrls.add(result.primaryPhoto.photoUrl);
+        nextSortOrder++;
+        addedCount++;
+      }
+      
+      for (const photo of result.galleryPhotos) {
+        if (!existingUrls.has(photo.photoUrl) && photo.photoUrl !== result.primaryPhoto?.photoUrl) {
+          addStagedPhoto({
+            url: photo.photoUrl,
+            thumbnailUrl: photo.thumbnailUrl,
+            sortOrder: nextSortOrder++,
+          });
+          existingUrls.add(photo.photoUrl);
+          addedCount++;
+        }
+      }
+      
+      toast({
+        title: "Photos staged",
+        description: addedCount > 0 
+          ? `Added ${addedCount} photo${addedCount !== 1 ? "s" : ""} to the gallery. Save the venue to finalize.`
+          : "No new photos added.",
+      });
+      return;
+    }
+    
     const existingUrls = new Set(venuePhotos.map(p => p.url));
     let nextSortOrder = venuePhotos.length;
     let addedCount = 0;
     
-    // If primary photo is selected and not existing, add it first (sortOrder 0)
     if (result.primaryPhoto && !existingUrls.has(result.primaryPhoto.photoUrl)) {
-      // Need to shift all existing photos' sortOrder by 1
       for (const photo of venuePhotos) {
         await apiRequest("PUT", `/api/venue-photos/${photo.id}`, { sortOrder: (photo.sortOrder ?? 0) + 1 });
       }
@@ -1054,7 +1118,6 @@ export default function VenueFormPage() {
       addedCount++;
     }
     
-    // Add gallery photos
     for (const photo of result.galleryPhotos) {
       if (!existingUrls.has(photo.photoUrl) && photo.photoUrl !== result.primaryPhoto?.photoUrl) {
         await apiRequest("POST", `/api/venues/${id}/photos`, { url: photo.photoUrl, sortOrder: nextSortOrder++ });
@@ -1448,10 +1511,22 @@ export default function VenueFormPage() {
                     <PhotoUploader
                       venueId={isEditingVenue ? parseInt(id!) : undefined}
                       onPhotoUploaded={(result) => {
-                        createPhotoMutation.mutate({ 
-                          url: result.photoUrl, 
-                          sortOrder: venuePhotos.length 
-                        });
+                        if (isEditingVenue) {
+                          createPhotoMutation.mutate({ 
+                            url: result.photoUrl, 
+                            sortOrder: venuePhotos.length 
+                          });
+                        } else {
+                          addStagedPhoto({
+                            url: result.photoUrl,
+                            thumbnailUrl: result.thumbnailUrl,
+                            sortOrder: stagedAssets.photos.length,
+                          });
+                          toast({
+                            title: "Photo staged",
+                            description: "Photo added. Save the venue to finalize.",
+                          });
+                        }
                       }}
                       onError={(error) => {
                         toast({
@@ -1466,7 +1541,7 @@ export default function VenueFormPage() {
         
                 </div>
 
-                {venuePhotos.length > 0 && (
+                {isEditingVenue && venuePhotos.length > 0 && (
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Gallery Photos ({venuePhotos.length})</Label>
                     <DndContext
@@ -1504,7 +1579,58 @@ export default function VenueFormPage() {
                   </div>
                 )}
 
-                {venuePhotos.length === 0 && (
+                {!isEditingVenue && stagedAssets.photos.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Staged Photos ({stagedAssets.photos.length})</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {stagedAssets.photos.map((photo, index) => (
+                        <div
+                          key={photo.id}
+                          className="relative group aspect-square bg-muted rounded-lg overflow-visible border"
+                          data-testid={`staged-photo-item-${index}`}
+                        >
+                          <div className="w-full h-full overflow-hidden rounded-lg">
+                            <img
+                              src={photo.url}
+                              alt={photo.altText || `Gallery photo ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 rounded-lg pointer-events-none">
+                            <div className="pointer-events-auto flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => window.open(photo.url, "_blank")}
+                                title="View full size"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => removeStagedPhoto(photo.id)}
+                                title="Remove photo"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(isEditingVenue ? venuePhotos.length === 0 : stagedAssets.photos.length === 0) && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No photos added yet. Use the uploader above to add gallery images.
                   </p>
@@ -1512,112 +1638,211 @@ export default function VenueFormPage() {
               </CardContent>
             </Card>
 
-            {isEditingVenue && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Floorplans</CardTitle>
-                  <CardDescription>
-                    Upload floorplan images with optional titles and captions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FloorplanUploader
-                    venueId={id!}
-                    onFloorplanUploaded={handleFloorplanUploaded}
-                    onError={(error) => {
-                      toast({
-                        title: "Upload failed",
-                        description: error,
-                        variant: "destructive",
+            <Card>
+              <CardHeader>
+                <CardTitle>Floorplans</CardTitle>
+                <CardDescription>
+                  Upload floorplan images with optional titles and captions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FloorplanUploader
+                  venueId={isEditingVenue ? id! : undefined}
+                  onFloorplanUploaded={(result, metadata) => {
+                    if (isEditingVenue) {
+                      handleFloorplanUploaded(result, metadata);
+                    } else {
+                      addStagedFloorplan({
+                        fileUrl: result.fileUrl,
+                        thumbnailUrl: result.thumbnailUrl,
+                        fileType: result.fileType,
+                        title: metadata.title,
+                        caption: metadata.caption,
+                        sortOrder: stagedAssets.floorplans.length,
                       });
-                    }}
-                    disabled={createFloorplanMutation.isPending}
-                    data-testid="floorplan-uploader"
-                  />
-
-                  {venue?.floorplans && venue.floorplans.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">
-                        Uploaded Floorplans ({venue.floorplans.length})
-                      </Label>
-                      <div className="space-y-3">
-                        {venue.floorplans
-                          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-                          .map((floorplan) => (
-                            <FloorplanItem
-                              key={floorplan.id}
-                              floorplan={floorplan}
-                              onEdit={handleFloorplanEdit}
-                              onDelete={handleFloorplanDelete}
-                              isDeleting={deletingFloorplanId === floorplan.id}
-                            />
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(!venue?.floorplans || venue.floorplans.length === 0) && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No floorplans added yet. Upload images or PDFs using the uploader above.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {isEditingVenue && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Attachments</CardTitle>
-                  <CardDescription>
-                    Upload documents, contracts, or other files related to this venue
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <VenueFileUploader
-                    venueId={id!}
-                    category="attachment"
-                    onFileUploaded={handleAttachmentUploaded}
-                    onError={(error) => {
                       toast({
-                        title: "Upload failed",
-                        description: error,
-                        variant: "destructive",
+                        title: "Floorplan staged",
+                        description: "Floorplan added. Save the venue to finalize.",
                       });
-                    }}
-                    disabled={createAttachmentMutation.isPending}
-                    data-testid="attachment-uploader"
-                  />
+                    }
+                  }}
+                  onError={(error) => {
+                    toast({
+                      title: "Upload failed",
+                      description: error,
+                      variant: "destructive",
+                    });
+                  }}
+                  disabled={createFloorplanMutation.isPending}
+                  data-testid="floorplan-uploader"
+                />
 
-                  {venue?.attachments && venue.attachments.length > 0 && (
+                {isEditingVenue && venue?.floorplans && venue.floorplans.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">
+                      Uploaded Floorplans ({venue.floorplans.length})
+                    </Label>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">
-                        Uploaded Attachments ({venue.attachments.length})
-                      </Label>
-                      <div className="space-y-3">
-                        {venue.attachments
-                          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-                          .map((attachment) => (
-                            <AttachmentItem
-                              key={attachment.id}
-                              file={attachment}
-                              onEdit={handleAttachmentEdit}
-                              onDelete={handleAttachmentDelete}
-                              isDeleting={deletingAttachmentId === attachment.id}
-                            />
-                          ))}
-                      </div>
+                      {venue.floorplans
+                        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                        .map((floorplan) => (
+                          <FloorplanItem
+                            key={floorplan.id}
+                            floorplan={floorplan}
+                            onEdit={handleFloorplanEdit}
+                            onDelete={handleFloorplanDelete}
+                            isDeleting={deletingFloorplanId === floorplan.id}
+                          />
+                        ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {(!venue?.attachments || venue.attachments.length === 0) && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No attachments added yet. Upload PDFs, documents, or other files using the uploader above.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                {!isEditingVenue && stagedAssets.floorplans.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">
+                      Staged Floorplans ({stagedAssets.floorplans.length})
+                    </Label>
+                    <div className="space-y-3">
+                      {stagedAssets.floorplans.map((floorplan) => (
+                        <div key={floorplan.id} className="border rounded-lg p-4 flex gap-4">
+                          <div className="shrink-0 w-24 h-24 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                            {floorplan.fileType === "pdf" ? (
+                              <FileText className="h-12 w-12 text-red-500" />
+                            ) : floorplan.thumbnailUrl ? (
+                              <img src={floorplan.thumbnailUrl} alt={floorplan.title || "Floorplan"} className="w-full h-full object-cover" />
+                            ) : (
+                              <FileImage className="h-12 w-12 text-blue-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">{floorplan.title || "Untitled Floorplan"}</p>
+                                {floorplan.caption && <p className="text-sm text-muted-foreground">{floorplan.caption}</p>}
+                              </div>
+                              <Button type="button" variant="ghost" size="icon" onClick={() => removeStagedFloorplan(floorplan.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(isEditingVenue ? (!venue?.floorplans || venue.floorplans.length === 0) : stagedAssets.floorplans.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No floorplans added yet. Upload images or PDFs using the uploader above.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Attachments</CardTitle>
+                <CardDescription>
+                  Upload documents, contracts, or other files related to this venue
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <VenueFileUploader
+                  venueId={isEditingVenue ? id! : undefined}
+                  category="attachment"
+                  onFileUploaded={(result, metadata) => {
+                    if (isEditingVenue) {
+                      handleAttachmentUploaded(result, metadata);
+                    } else {
+                      addStagedAttachment({
+                        fileUrl: result.fileUrl,
+                        thumbnailUrl: result.thumbnailUrl,
+                        fileType: result.fileType,
+                        mimeType: result.contentType,
+                        originalFilename: result.filename,
+                        title: metadata.title,
+                        caption: metadata.caption,
+                        sortOrder: stagedAssets.attachments.length,
+                      });
+                      toast({
+                        title: "Attachment staged",
+                        description: "Attachment added. Save the venue to finalize.",
+                      });
+                    }
+                  }}
+                  onError={(error) => {
+                    toast({
+                      title: "Upload failed",
+                      description: error,
+                      variant: "destructive",
+                    });
+                  }}
+                  disabled={createAttachmentMutation.isPending}
+                  data-testid="attachment-uploader"
+                />
+
+                {isEditingVenue && venue?.attachments && venue.attachments.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">
+                      Uploaded Attachments ({venue.attachments.length})
+                    </Label>
+                    <div className="space-y-3">
+                      {venue.attachments
+                        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                        .map((attachment) => (
+                          <AttachmentItem
+                            key={attachment.id}
+                            file={attachment}
+                            onEdit={handleAttachmentEdit}
+                            onDelete={handleAttachmentDelete}
+                            isDeleting={deletingAttachmentId === attachment.id}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {!isEditingVenue && stagedAssets.attachments.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">
+                      Staged Attachments ({stagedAssets.attachments.length})
+                    </Label>
+                    <div className="space-y-3">
+                      {stagedAssets.attachments.map((attachment) => (
+                        <div key={attachment.id} className="border rounded-lg p-4 flex gap-4">
+                          <div className="shrink-0 w-16 h-16 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                            <FileTypeIcon 
+                              filename={attachment.originalFilename || ""} 
+                              mimeType={attachment.mimeType}
+                              size="lg"
+                              showExtension={true}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">{attachment.title || attachment.originalFilename || "Untitled"}</p>
+                                {attachment.caption && <p className="text-sm text-muted-foreground">{attachment.caption}</p>}
+                              </div>
+                              <Button type="button" variant="ghost" size="icon" onClick={() => removeStagedAttachment(attachment.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(isEditingVenue ? (!venue?.attachments || venue.attachments.length === 0) : stagedAssets.attachments.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No attachments added yet. Upload PDFs, documents, or other files using the uploader above.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
