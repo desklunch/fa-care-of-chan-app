@@ -258,6 +258,7 @@ export const venues = pgTable(
     city: varchar("city", { length: 100 }),
     state: varchar("state", { length: 50 }),
     zipCode: varchar("zip_code", { length: 20 }),
+    neighborhood: varchar("neighborhood", { length: 255 }),
     phone: varchar("phone", { length: 50 }),
     email: varchar("email", { length: 255 }),
     website: varchar("website", { length: 500 }),
