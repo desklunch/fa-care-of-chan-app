@@ -27,7 +27,12 @@ function getFiltersFromUrl(): Record<string, string[]> {
   return filters;
 }
 
-function setFiltersToUrl(filterState: Record<string, string[]>) {
+function getSearchFromUrl(): string {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("search") || "";
+}
+
+function setFiltersToUrl(filterState: Record<string, string[]>, searchText?: string) {
   const params = new URLSearchParams(window.location.search);
   
   // Remove existing filter params
@@ -43,6 +48,15 @@ function setFiltersToUrl(filterState: Record<string, string[]>) {
       params.set(`filter_${filterId}`, values.join(","));
     }
   });
+  
+  // Handle search param
+  if (searchText !== undefined) {
+    if (searchText.trim()) {
+      params.set("search", searchText.trim());
+    } else {
+      params.delete("search");
+    }
+  }
   
   const newUrl = params.toString() 
     ? `${window.location.pathname}?${params.toString()}`
@@ -99,7 +113,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [location] = useLocation();
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(() => getSearchFromUrl());
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [isFilterInitialized, setIsFilterInitialized] = useState(false);
 
@@ -131,20 +145,20 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     return false;
   });
 
-  // Sync filterState to URL and session storage when it changes
+  // Sync filterState and searchText to URL and session storage when they change
   useEffect(() => {
     if (!isFilterInitialized) {
       setIsFilterInitialized(true);
       // On initial load, sync session storage filters to URL
-      if (Object.keys(filterState).length > 0) {
-        setFiltersToUrl(filterState);
+      if (Object.keys(filterState).length > 0 || searchText) {
+        setFiltersToUrl(filterState, searchText);
       }
       return;
     }
     
-    setFiltersToUrl(filterState);
+    setFiltersToUrl(filterState, searchText);
     saveFiltersToSession(location, filterState);
-  }, [filterState, location, isFilterInitialized]);
+  }, [filterState, searchText, location, isFilterInitialized]);
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
