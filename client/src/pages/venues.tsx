@@ -30,10 +30,10 @@ function NameCellRenderer({ data }: { data: VenueWithRelations }) {
         {data.name}
       </span>
       {data.isDraft && (
-        <Badge variant="outline" size="sm" className="uppercase opacity-50 h-5 px-1" data-testid={`badge-draft-${data.id}`}>Draft</Badge>
+        <Badge variant="outline" size="xs" className="opacity-50" data-testid={`badge-draft-${data.id}`}>Draft</Badge>
       )}
       {!data.isActive && (
-        <Badge variant="outline" size="sm" className="uppercase opacity-50  h-5 px-1" data-testid={`badge-inactive-${data.id}`}>Inactive</Badge>
+        <Badge variant="outline" size="xs" className="opacity-50" data-testid={`badge-inactive-${data.id}`}>Inactive</Badge>
       )}
     </div>
   );

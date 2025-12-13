@@ -1653,7 +1653,12 @@ export default function VenueFormPage() {
                   venueId={isEditingVenue ? id! : undefined}
                   onFloorplanUploaded={(result, metadata) => {
                     if (isEditingVenue) {
-                      handleFloorplanUploaded(result, metadata);
+                      // Record already created by upload endpoint, just refresh and notify
+                      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+                      toast({
+                        title: "Floorplan uploaded",
+                        description: "The floorplan has been added successfully.",
+                      });
                     } else {
                       addStagedFloorplan({
                         fileUrl: result.fileUrl,
@@ -1756,7 +1761,12 @@ export default function VenueFormPage() {
                   category="attachment"
                   onFileUploaded={(result, metadata) => {
                     if (isEditingVenue) {
-                      handleAttachmentUploaded(result, metadata);
+                      // Record already created by upload endpoint, just refresh and notify
+                      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
+                      toast({
+                        title: "Attachment uploaded",
+                        description: "The file has been added successfully.",
+                      });
                     } else {
                       addStagedAttachment({
                         fileUrl: result.fileUrl,
