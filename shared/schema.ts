@@ -286,6 +286,7 @@ export const venuePhotos = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
     url: varchar("url", { length: 1000 }).notNull(),
+    thumbnailUrl: varchar("thumbnail_url", { length: 1000 }),
     altText: text("alt_text"),
     sortOrder: integer("sort_order").default(0),
     isHero: boolean("is_hero").default(false),
