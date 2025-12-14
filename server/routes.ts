@@ -3994,6 +3994,7 @@ export async function registerRoutes(
       const photosToCreate = photosData.map((p: any, index: number) => ({
         venueId: req.params.venueId,
         url: p.url,
+        thumbnailUrl: p.thumbnailUrl,
         altText: p.altText,
         sortOrder: p.sortOrder ?? index,
         isHero: p.isHero ?? (index === 0),

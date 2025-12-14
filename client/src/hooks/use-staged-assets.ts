@@ -126,6 +126,7 @@ export function useStagedAssets(): UseStagedAssetsReturn {
       if (stagedAssets.photos.length > 0) {
         const photosToCreate = stagedAssets.photos.map((p, index) => ({
           url: p.url,
+          thumbnailUrl: p.thumbnailUrl,
           altText: p.altText,
           sortOrder: p.sortOrder ?? index,
           isHero: p.isHero ?? (index === 0),

@@ -544,7 +544,7 @@ export default function VenueDetailPage() {
                           data-testid={`button-gallery-photo-${index}`}
                         >
                           <img
-                            src={photo.url}
+                            src={photo.thumbnailUrl || photo.url}
                             alt={photo.altText || `${venue.name} photo ${index + 2}`}
                             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                             data-testid={`img-gallery-photo-${index}`}

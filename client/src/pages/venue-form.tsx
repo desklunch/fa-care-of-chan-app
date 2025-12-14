@@ -66,13 +66,14 @@ interface SortablePhotoItemProps {
   id: string;
   index: number;
   photoUrl: string;
+  thumbnailUrl?: string;
   altText?: string;
   onView: () => void;
   onDelete: () => void;
   isDeleting?: boolean;
 }
 
-function SortablePhotoItem({ id, index, photoUrl, altText, onView, onDelete, isDeleting }: SortablePhotoItemProps) {
+function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, altText, onView, onDelete, isDeleting }: SortablePhotoItemProps) {
   const {
     attributes,
     listeners,
@@ -100,7 +101,7 @@ function SortablePhotoItem({ id, index, photoUrl, altText, onView, onDelete, isD
       <div className="w-full h-full overflow-hidden rounded-lg">
         {photoUrl ? (
           <img
-            src={photoUrl}
+            src={thumbnailUrl || photoUrl}
             alt={altText || `Gallery photo ${index + 1}`}
             className="w-full h-full object-cover"
             loading="lazy"
@@ -1114,7 +1115,7 @@ export default function VenueFormPage() {
       for (const photo of venuePhotos) {
         await apiRequest("PUT", `/api/venue-photos/${photo.id}`, { sortOrder: (photo.sortOrder ?? 0) + 1 });
       }
-      await apiRequest("POST", `/api/venues/${id}/photos`, { url: result.primaryPhoto.photoUrl, sortOrder: 0 });
+      await apiRequest("POST", `/api/venues/${id}/photos`, { url: result.primaryPhoto.photoUrl, thumbnailUrl: result.primaryPhoto.thumbnailUrl, sortOrder: 0 });
       existingUrls.add(result.primaryPhoto.photoUrl);
       nextSortOrder++;
       addedCount++;
@@ -1122,7 +1123,7 @@ export default function VenueFormPage() {
     
     for (const photo of result.galleryPhotos) {
       if (!existingUrls.has(photo.photoUrl) && photo.photoUrl !== result.primaryPhoto?.photoUrl) {
-        await apiRequest("POST", `/api/venues/${id}/photos`, { url: photo.photoUrl, sortOrder: nextSortOrder++ });
+        await apiRequest("POST", `/api/venues/${id}/photos`, { url: photo.photoUrl, thumbnailUrl: photo.thumbnailUrl, sortOrder: nextSortOrder++ });
         existingUrls.add(photo.photoUrl);
         addedCount++;
       }
@@ -1563,6 +1564,7 @@ export default function VenueFormPage() {
                               id={photo.id}
                               index={index}
                               photoUrl={photo.url}
+                              thumbnailUrl={photo.thumbnailUrl || undefined}
                               altText={photo.altText || undefined}
                               onView={() => {
                                 if (photo.url) {
@@ -1594,7 +1596,7 @@ export default function VenueFormPage() {
                         >
                           <div className="w-full h-full overflow-hidden rounded-lg">
                             <img
-                              src={photo.url}
+                              src={photo.thumbnailUrl || photo.url}
                               alt={photo.altText || `Gallery photo ${index + 1}`}
                               className="w-full h-full object-cover"
                               loading="lazy"
