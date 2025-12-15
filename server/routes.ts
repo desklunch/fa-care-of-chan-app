@@ -4678,17 +4678,53 @@ Please analyze the venue and suggest appropriate tags from the lists above.`;
         return res.status(500).json({ message: "Failed to parse AI response" });
       }
 
-      // Validate that suggested IDs exist in our lists
-      const validAmenityIds = new Set(amenities.map(a => a.id));
-      const validCuisineIds = new Set(cuisineTags.map(t => t.id));
-      const validStyleIds = new Set(styleTags.map(t => t.id));
+      // Log raw AI response for debugging
+      console.log("AI tag suggestions raw response:", JSON.stringify(suggestions, null, 2));
+
+      // Create ID and name lookup maps for validation and fallback matching
+      const amenityIdSet = new Set(amenities.map(a => a.id));
+      const cuisineIdSet = new Set(cuisineTags.map(t => t.id));
+      const styleIdSet = new Set(styleTags.map(t => t.id));
+      
+      // Create name-to-ID maps for fallback matching (case-insensitive)
+      const amenityNameToId = new Map(amenities.map(a => [a.name.toLowerCase(), a.id]));
+      const cuisineNameToId = new Map(cuisineTags.map(t => [t.name.toLowerCase(), t.id]));
+      const styleNameToId = new Map(styleTags.map(t => [t.name.toLowerCase(), t.id]));
+
+      // Helper function to resolve value to valid ID (supports both ID and name lookup)
+      const resolveToId = (value: string, idSet: Set<string>, nameToIdMap: Map<string, string>): string | null => {
+        // First check if it's a valid ID
+        if (idSet.has(value)) {
+          return value;
+        }
+        // Fallback: check if it's a name (case-insensitive)
+        const idFromName = nameToIdMap.get(value.toLowerCase());
+        if (idFromName) {
+          return idFromName;
+        }
+        return null;
+      };
+
+      const resolvedAmenityIds = (suggestions.amenityIds || [])
+        .map((v: string) => resolveToId(v, amenityIdSet, amenityNameToId))
+        .filter((id: string | null): id is string => id !== null);
+      
+      const resolvedCuisineIds = (suggestions.cuisineTagIds || [])
+        .map((v: string) => resolveToId(v, cuisineIdSet, cuisineNameToId))
+        .filter((id: string | null): id is string => id !== null);
+      
+      const resolvedStyleIds = (suggestions.styleTagIds || [])
+        .map((v: string) => resolveToId(v, styleIdSet, styleNameToId))
+        .filter((id: string | null): id is string => id !== null);
 
       const filteredSuggestions = {
-        amenityIds: (suggestions.amenityIds || []).filter((id: string) => validAmenityIds.has(id)),
-        cuisineTagIds: (suggestions.cuisineTagIds || []).filter((id: string) => validCuisineIds.has(id)),
-        styleTagIds: (suggestions.styleTagIds || []).filter((id: string) => validStyleIds.has(id)),
+        amenityIds: resolvedAmenityIds,
+        cuisineTagIds: resolvedCuisineIds,
+        styleTagIds: resolvedStyleIds,
         reasoning: suggestions.reasoning || "",
       };
+
+      console.log("AI tag suggestions resolved:", JSON.stringify(filteredSuggestions, null, 2));
 
       res.json(filteredSuggestions);
     } catch (error: any) {
