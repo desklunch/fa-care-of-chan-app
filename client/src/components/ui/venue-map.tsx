@@ -31,7 +31,6 @@ export function VenueMap({ address, venueName, className }: VenueMapProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
             Map
           </span>
           <a

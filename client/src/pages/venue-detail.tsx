@@ -53,6 +53,7 @@ import {
   Utensils,
   Palette,
   Upload,
+  Sparkles
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
@@ -290,7 +291,7 @@ export default function VenueDetailPage() {
 
             <TabsList data-testid="tabs-venue" className="px-4 md:px-6">
               <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-              <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+              <TabsTrigger value="comments" data-testid="tab-comments">Notes</TabsTrigger>
             </TabsList>
           </div>
 
@@ -529,7 +530,6 @@ export default function VenueDetailPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Image className="h-5 w-5" />
                       Photos
                     </CardTitle>
 
@@ -567,21 +567,33 @@ export default function VenueDetailPage() {
             )}
         
 
-        <Card>
-          <CardHeader>
+        <Card className="group relative">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg">Amenities</CardTitle>
+            {venue.amenities && venue.amenities.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                className="invisible group-hover:visible"
+                data-testid="button-edit-amenities"
+              >
+                <SquarePen className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {venue.amenities && venue.amenities.length > 0 ? (
               <AmenityDisplay amenities={venue.amenities} />
             ) : (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setLocation(`/venues/${id}/edit`)}
                 data-testid="button-add-amenity"
+                className="bg-foreground/10 opacity-50 hover:opacity-100"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Sparkles className="h-4 w-4" />
                 Add an Amenity
               </Button>
             )}
@@ -589,9 +601,20 @@ export default function VenueDetailPage() {
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
+          <Card className="group relative">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg">Cuisine</CardTitle>
+              {venue.cuisineTags && venue.cuisineTags.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setLocation(`/venues/${id}/edit`)}
+                  className="invisible group-hover:visible"
+                  data-testid="button-edit-cuisine"
+                >
+                  <SquarePen className="h-4 w-4" />
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {venue.cuisineTags && venue.cuisineTags.length > 0 ? (
@@ -602,7 +625,6 @@ export default function VenueDetailPage() {
                       variant="outline"
                       data-testid={`badge-cuisine-tag-${tag.id}`}
                       className="text-sm gap-2 px-3 py-2 border-input rounded-md"
-
                     >
                       {tag.name}
                     </Badge>
@@ -610,21 +632,33 @@ export default function VenueDetailPage() {
                 </div>
               ) : (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => setLocation(`/venues/${id}/edit`)}
                   data-testid="button-assign-cuisine"
+                  className="bg-foreground/10 opacity-50 hover:opacity-100"
                 >
-                  <Utensils className="h-4 w-4 mr-2" />
+                  <Utensils className="h-4 w-4" />
                   Assign a Cuisine
                 </Button>
               )}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="group relative">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg">Style</CardTitle>
+              {venue.styleTags && venue.styleTags.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setLocation(`/venues/${id}/edit`)}
+                  className="invisible group-hover:visible"
+                  data-testid="button-edit-style"
+                >
+                  <SquarePen className="h-4 w-4" />
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {venue.styleTags && venue.styleTags.length > 0 ? (
@@ -635,7 +669,6 @@ export default function VenueDetailPage() {
                       variant="outline"
                       data-testid={`badge-style-tag-${tag.id}`}
                       className="text-sm gap-2 px-3 py-2 border-input rounded-md"
-
                     >
                       {tag.name}
                     </Badge>
@@ -643,12 +676,13 @@ export default function VenueDetailPage() {
                 </div>
               ) : (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => setLocation(`/venues/${id}/edit`)}
                   data-testid="button-assign-styles"
+                  className="bg-foreground/10 opacity-50 hover:opacity-100"
                 >
-                  <Palette className="h-4 w-4 mr-2" />
+                  <Palette className="h-4 w-4" />
                   Assign Styles
                 </Button>
               )}
@@ -656,12 +690,22 @@ export default function VenueDetailPage() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
+        <Card className="group relative">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Layout className="h-5 w-5" />
               Floorplans
             </CardTitle>
+            {venue.floorplans && venue.floorplans.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                className="invisible group-hover:visible"
+                data-testid="button-edit-floorplans"
+              >
+                <SquarePen className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {venue.floorplans && venue.floorplans.length > 0 ? (
@@ -717,24 +761,34 @@ export default function VenueDetailPage() {
               </div>
             ) : (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setLocation(`/venues/${id}/edit`)}
-                data-testid="button-upload-floorplan"
+                className="bg-foreground/10 opacity-50 hover:opacity-100"
               >
-                <Upload className="h-4 w-4 mr-2" />
+                <Layout className="h-4 w-4" />
                 Upload a Floorplan
               </Button>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="group relative">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Paperclip className="h-5 w-5" />
               Attachments
             </CardTitle>
+            {venue.attachments && venue.attachments.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                className="invisible group-hover:visible"
+                data-testid="button-edit-attachments"
+              >
+                <SquarePen className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {venue.attachments && venue.attachments.length > 0 ? (
@@ -886,24 +940,35 @@ export default function VenueDetailPage() {
               </div>
             ) : (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setLocation(`/venues/${id}/edit`)}
                 data-testid="button-attach-file"
+                className="bg-foreground/10 opacity-50 hover:opacity-100"
               >
-                <Paperclip className="h-4 w-4 mr-2" />
+                <Paperclip className="h-4 w-4" />
                 Attach a File
               </Button>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="group relative">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <FolderPlus className="h-5 w-5" />
               Collections
             </CardTitle>
+            {venueCollections.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCollectionDialogOpen(true)}
+                className="invisible group-hover:visible"
+                data-testid="button-edit-collections"
+              >
+                <SquarePen className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {venueCollections.length > 0 ? (
@@ -925,12 +990,13 @@ export default function VenueDetailPage() {
               </div>
             ) : (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setCollectionDialogOpen(true)}
-                data-testid="button-add-to-collection"
+                data-testid="button-add-to-collection "
+                className="bg-foreground/10 opacity-50 hover:opacity-100"
               >
-                <FolderPlus className="h-4 w-4 mr-2" />
+                <FolderPlus className="h-4 w-4" />
                 Add to a Collection
               </Button>
             )}
