@@ -49,7 +49,7 @@ import { FloorplanUploader } from "@/components/ui/floorplan-uploader";
 import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { useStagedAssets, StagedPhoto, StagedFloorplan, StagedAttachment } from "@/hooks/use-staged-assets";
-import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive, Sparkles, RefreshCw, Unlink, MapPin } from "lucide-react";
 import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
 import { insertVenueSchema, venueTypes } from "@shared/schema";
@@ -573,6 +573,7 @@ export default function VenueFormPage() {
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [selectedPlaceName, setSelectedPlaceName] = useState<string>("");
+  const [currentGooglePlaceData, setCurrentGooglePlaceData] = useState<PlaceResult | null>(null);
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
   const [deletingFloorplanId, setDeletingFloorplanId] = useState<string | null>(null);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
@@ -1067,15 +1068,95 @@ export default function VenueFormPage() {
       form.setValue("shortDescription", place.editorialSummary);
     }
     
-    // Store place info for photo picker
+    // Store place info for photo picker and AI tag suggestions
     setSelectedPlaceId(place.placeId);
     setSelectedPlaceName(place.name);
+    setCurrentGooglePlaceData(place);
     
     toast({
       title: "Place imported",
       description: `Filled in details for "${place.name}". You can now import photos from Google.`,
     });
   };
+
+  const handleUnlinkGooglePlace = () => {
+    form.setValue("googlePlaceId", "");
+    setSelectedPlaceId(null);
+    setSelectedPlaceName("");
+    setCurrentGooglePlaceData(null);
+    toast({
+      title: "Google Place unlinked",
+      description: "This venue is no longer linked to a Google Place.",
+    });
+  };
+
+  const refreshGooglePlaceData = async (placeId: string) => {
+    try {
+      const response = await apiRequest("POST", "/api/places/refresh", { placeId });
+      if (!response.ok) {
+        throw new Error("Failed to fetch place details");
+      }
+      const place = await response.json();
+      handlePlaceSelect(place);
+      toast({
+        title: "Data refreshed",
+        description: "Venue data has been updated from Google Places.",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh failed",
+        description: "Could not fetch updated data from Google Places.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const tagSuggestionMutation = useMutation({
+    mutationFn: async (googlePlaceData: PlaceResult) => {
+      const response = await apiRequest("POST", "/api/venues/tag-suggestions", { googlePlaceData });
+      if (!response.ok) {
+        throw new Error("Failed to get tag suggestions");
+      }
+      return response.json();
+    },
+    onSuccess: (suggestions) => {
+      // Apply suggested tags to the form
+      if (suggestions.amenityIds?.length > 0) {
+        const currentAmenities = form.getValues("amenityIds") || [];
+        const merged = Array.from(new Set([...currentAmenities, ...suggestions.amenityIds]));
+        form.setValue("amenityIds", merged);
+      }
+      if (suggestions.cuisineTagIds?.length > 0) {
+        const currentCuisine = form.getValues("cuisineTagIds") || [];
+        const merged = Array.from(new Set([...currentCuisine, ...suggestions.cuisineTagIds]));
+        form.setValue("cuisineTagIds", merged);
+      }
+      if (suggestions.styleTagIds?.length > 0) {
+        const currentStyle = form.getValues("styleTagIds") || [];
+        const merged = Array.from(new Set([...currentStyle, ...suggestions.styleTagIds]));
+        form.setValue("styleTagIds", merged);
+      }
+      
+      const totalSuggested = 
+        (suggestions.amenityIds?.length || 0) + 
+        (suggestions.cuisineTagIds?.length || 0) + 
+        (suggestions.styleTagIds?.length || 0);
+      
+      toast({
+        title: "Tags suggested",
+        description: totalSuggested > 0 
+          ? `Added ${totalSuggested} tag${totalSuggested !== 1 ? "s" : ""} based on Google Places data.`
+          : "No matching tags found for this venue.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get tag suggestions",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handlePhotosSelected = async (result: { 
     galleryPhotos: Array<{ photoUrl: string; thumbnailUrl: string; originalUrl: string }>; 
@@ -1198,19 +1279,78 @@ export default function VenueFormPage() {
             <button type="submit" id="venue-form-submit" className="hidden" />
 
               <Card className="border-primary border-2">
-              <CardHeader className="gap-2 pb-4 ">
-                <Badge variant="default" className="flex-0 w-fit">Start Here</Badge>
-                <CardTitle>Find on Google</CardTitle>
+              <CardHeader className="gap-2 pb-4">
+                <Badge variant="default" className="flex-0 w-fit">
+                  {selectedPlaceId ? "Linked" : "Start Here"}
+                </Badge>
+                <CardTitle>
+                  {selectedPlaceId ? "Google Place" : "Find on Google"}
+                </CardTitle>
                 <CardDescription>
-                  Save time by pulling venue information and content from Google.
+                  {selectedPlaceId
+                    ? "This venue is linked to a Google Place. You can refresh the data or unlink it."
+                    : "Save time by pulling venue information and content from Google."}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
-                <GooglePlaceSearch
-                  onPlaceSelect={handlePlaceSelect}
-                  placeholder="Search for venue by name (e.g., 'Albadawi NYC')"
-                  data-testid="input-venue-google-search"
-                />
+              <CardContent className="pt-0 space-y-4">
+                {selectedPlaceId ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{selectedPlaceName}</p>
+                        <p className="text-xs text-muted-foreground font-mono truncate">
+                          {selectedPlaceId}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => refreshGooglePlaceData(selectedPlaceId)}
+                        data-testid="button-refresh-google-place"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh Data
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleUnlinkGooglePlace}
+                        data-testid="button-unlink-google-place"
+                      >
+                        <Unlink className="h-4 w-4 mr-2" />
+                        Unlink
+                      </Button>
+                      {currentGooglePlaceData && (
+                        <Button
+                          type="button"
+                          variant="default"
+                          size="sm"
+                          onClick={() => tagSuggestionMutation.mutate(currentGooglePlaceData)}
+                          disabled={tagSuggestionMutation.isPending}
+                          data-testid="button-suggest-tags-ai"
+                        >
+                          {tagSuggestionMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4 mr-2" />
+                          )}
+                          Suggest Tags with AI
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <GooglePlaceSearch
+                    onPlaceSelect={handlePlaceSelect}
+                    placeholder="Search for venue by name (e.g., 'Albadawi NYC')"
+                    data-testid="input-venue-google-search"
+                  />
+                )}
               </CardContent>
             </Card>
 

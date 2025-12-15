@@ -1389,6 +1389,123 @@ export async function registerRoutes(
     }
   });
 
+  // Google Places Refresh - Re-fetch full place details by placeId
+  app.post("/api/places/refresh", isAuthenticated, async (req, res) => {
+    try {
+      const { placeId } = req.body;
+      if (!placeId || typeof placeId !== "string") {
+        return res.status(400).json({ message: "Place ID is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      // Request comprehensive field mask for full PlaceDetails
+      const fieldMask = [
+        "id",
+        "displayName",
+        "formattedAddress",
+        "addressComponents",
+        "nationalPhoneNumber",
+        "internationalPhoneNumber",
+        "websiteUri",
+        "googleMapsUri",
+        "location",
+        "types",
+        "businessStatus",
+        "priceLevel",
+        "rating",
+        "userRatingCount",
+        "regularOpeningHours",
+        "primaryType",
+        "primaryTypeDisplayName",
+        "editorialSummary",
+        "photos",
+      ].join(",");
+
+      const response = await fetch(
+        `https://places.googleapis.com/v1/places/${placeId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Google Places API error:", errorData);
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const place = await response.json();
+      
+      // Parse address components
+      let streetNumber = "";
+      let route = "";
+      let city = "";
+      let state = "";
+      let stateCode = "";
+      let zipCode = "";
+      let country = "";
+      let countryCode = "";
+
+      if (place.addressComponents) {
+        for (const component of place.addressComponents) {
+          const types = component.types || [];
+          if (types.includes("street_number")) {
+            streetNumber = component.longText || "";
+          } else if (types.includes("route")) {
+            route = component.longText || "";
+          } else if (types.includes("locality")) {
+            city = component.longText || "";
+          } else if (types.includes("sublocality_level_1") && !city) {
+            city = component.longText || "";
+          } else if (types.includes("administrative_area_level_1")) {
+            state = component.longText || "";
+            stateCode = component.shortText || "";
+          } else if (types.includes("postal_code")) {
+            zipCode = component.longText || "";
+          } else if (types.includes("country")) {
+            country = component.longText || "";
+            countryCode = component.shortText || "";
+          }
+        }
+      }
+
+      const streetAddress1 = [streetNumber, route].filter(Boolean).join(" ");
+
+      const result = {
+        placeId: place.id || placeId,
+        name: place.displayName?.text || "",
+        formattedAddress: place.formattedAddress || "",
+        streetAddress1,
+        city,
+        state,
+        stateCode,
+        zipCode,
+        country,
+        countryCode,
+        phone: place.nationalPhoneNumber || place.internationalPhoneNumber || "",
+        website: place.websiteUri || "",
+        googleMapsUrl: place.googleMapsUri || "",
+        location: place.location || null,
+        editorialSummary: place.editorialSummary?.text || "",
+        rawPlaceDetails: place,
+      };
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error refreshing place details:", error);
+      res.status(500).json({ message: "Failed to refresh place details" });
+    }
+  });
+
   // Google Places Photos API - Fetch photos for a place
   app.get("/api/places/:placeId/photos", isAuthenticated, async (req, res) => {
     try {
