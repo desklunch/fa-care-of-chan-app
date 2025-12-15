@@ -624,16 +624,15 @@ export default function VenueDetailPage() {
           </Card>
         </div>
 
-        {venue.floorplans && venue.floorplans.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Layout className="h-5 w-5" />
-                Floorplans
-              </CardTitle>
-
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Layout className="h-5 w-5" />
+              Floorplans
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {venue.floorplans && venue.floorplans.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {venue.floorplans
                   .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
@@ -684,20 +683,21 @@ export default function VenueDetailPage() {
                     </a>
                   ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-muted-foreground text-sm">No floorplans available</p>
+            )}
+          </CardContent>
+        </Card>
 
-        {venue.attachments && venue.attachments.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Paperclip className="h-5 w-5" />
-                Attachments
-              </CardTitle>
- 
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Paperclip className="h-5 w-5" />
+              Attachments
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {venue.attachments && venue.attachments.length > 0 ? (
               <div className="space-y-3">
                 {venue.attachments
                   .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
@@ -844,20 +844,21 @@ export default function VenueDetailPage() {
                     );
                   })}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-muted-foreground text-sm">No attachments available</p>
+            )}
+          </CardContent>
+        </Card>
 
-        {venueCollections.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FolderPlus className="h-5 w-5" />
-                Collections
-              </CardTitle>
-
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FolderPlus className="h-5 w-5" />
+              Collections
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {venueCollections.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {venueCollections.map((collection) => (
                   <Link 
@@ -874,9 +875,11 @@ export default function VenueDetailPage() {
                   </Link>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-muted-foreground text-sm">Not in any collections</p>
+            )}
+          </CardContent>
+        </Card>
 
           </TabsContent>
 
