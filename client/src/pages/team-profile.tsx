@@ -145,8 +145,8 @@ export default function TeamProfile() {
           : undefined
       }
     >
-      <div className="p-4 md:p-6 max-w-5xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-6">
+      <div className="p-4 md:p-6 max-w-lg mx-auto">
+        <div className="gap-6">
           <div className="md:col-span-1">
             <Card className="border-card-border">
               <CardContent className="p-6">
@@ -211,11 +211,19 @@ export default function TeamProfile() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-border space-y-3">
+                <div className=" flex flex-col items-center  gap-2 mt-6 pt-6 border-t border-border space-y-3">
+                  {member.bio && (
+      <p
+        className="whitespace-pre-wrap text-center"
+        data-testid="text-bio"
+      >
+        {member.bio}
+      </p>
+                  )}
                   {member.email && (
                     <a
                       href={`mailto:${member.email}`}
-                      className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+                      className="flex items-center gap-3 text-sm hover:text-primary transition-colors text-muted-foreground"
                       data-testid="link-email"
                     >
                       <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -225,7 +233,7 @@ export default function TeamProfile() {
                   {member.phone && (
                     <a
                       href={`tel:${member.phone}`}
-                      className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+                      className="flex items-center gap-3 text-sm hover:text-primary transition-colors text-muted-foreground" 
                       data-testid="link-phone"
                     >
                       <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -234,7 +242,7 @@ export default function TeamProfile() {
                   )}
                   {member.location && (
                     <div
-                      className="flex items-center gap-3 text-sm"
+                      className="flex items-center gap-3 text-sm text-muted-foreground"
                       data-testid="text-location"
                     >
                       <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -246,82 +254,6 @@ export default function TeamProfile() {
             </Card>
           </div>
 
-          <div className="md:col-span-2 space-y-6">
-            {member.bio && (
-              <Card className="border-card-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">About</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p
-                    className="text-muted-foreground whitespace-pre-wrap"
-                    data-testid="text-bio"
-                  >
-                    {member.bio}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="border-card-border">
-              <CardHeader>
-                <CardTitle className="text-lg">Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-accent/50 flex items-center justify-center flex-shrink-0">
-                      <Briefcase className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Title</p>
-                      <p className="font-medium" data-testid="text-detail-title">
-                        {member.title || "Not specified"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-accent/50 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Department</p>
-                      <p className="font-medium" data-testid="text-detail-department">
-                        {member.department || "Not specified"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-accent/50 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="font-medium" data-testid="text-detail-location">
-                        {member.location || "Not specified"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-accent/50 flex items-center justify-center flex-shrink-0">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Joined</p>
-                      <p className="font-medium" data-testid="text-detail-joined">
-                        {member.createdAt
-                          ? new Date(member.createdAt).toLocaleDateString("en-US", {
-                              month: "long",
-                              year: "numeric",
-                            })
-                          : "Not available"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </PageLayout>
