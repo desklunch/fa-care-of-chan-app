@@ -34,6 +34,34 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+function summarizeResponse(body: any): string {
+  if (body === null || body === undefined) return "null";
+  if (Array.isArray(body)) {
+    return `[Array: ${body.length} items]`;
+  }
+  if (typeof body === "object") {
+    const keys = Object.keys(body);
+    if (keys.length <= 3) {
+      const preview: Record<string, any> = {};
+      for (const key of keys) {
+        const val = body[key];
+        if (Array.isArray(val)) {
+          preview[key] = `[${val.length} items]`;
+        } else if (typeof val === "object" && val !== null) {
+          preview[key] = "{...}";
+        } else if (typeof val === "string" && val.length > 50) {
+          preview[key] = val.substring(0, 50) + "...";
+        } else {
+          preview[key] = val;
+        }
+      }
+      return JSON.stringify(preview);
+    }
+    return `{${keys.length} keys: ${keys.slice(0, 4).join(", ")}${keys.length > 4 ? "..." : ""}}`;
+  }
+  return String(body).substring(0, 100);
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -50,7 +78,7 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        logLine += ` :: ${summarizeResponse(capturedJsonResponse)}`;
       }
 
       log(logLine);
