@@ -751,16 +751,15 @@ export default function VenuesPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-4 text-2xl">
               Care of Chan App
-      
             </DialogTitle>
             <span className="text-xs opacity-50 mt-1 tracking-wide font-light">
               Verison 1.0
             </span>
             <DialogDescription>
               This app is being built to serve as a unified, fully-tailored, hub
-              for all Care of Chan projects and work. focuses on venue
-              management. In the following days and weeks, new sections will be
-              added to the app.
+              for all Care of Chan projects and work. Version 1.0 focuses on
+              Venue management and curation. In the following days and weeks,
+              new sections will be added to the app.
             </DialogDescription>
           </DialogHeader>
 
@@ -802,7 +801,11 @@ export default function VenuesPage() {
                 <h4 className="font-medium">Venue Collections</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                You can create collections of venues to share with teammates and clients. On the venues directory page, selecting one or more venues in the table will reveal a toolbar to add them to a collection. You can also add an individual venue to a collection from the venue listing page.
+                You can create collections of venues to share with teammates and
+                clients. On the venues directory page, selecting one or more
+                venues in the table will reveal a toolbar to add them to a
+                collection. You can also add an individual venue to a collection
+                from the venue listing page.
               </p>
             </div>
             <div className="space-y-4">
@@ -813,7 +816,10 @@ export default function VenuesPage() {
                 <h4 className="font-medium">Support</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                Check out the feature roadmap, request new features, report bugs, or ask questions via the Support links in the app's sidebar menu. This is YOUR app. Your ideas, requirements, and feedback, are will make it amazing.
+                Check out the feature roadmap, request new features, report
+                bugs, or ask questions via the Support links in the app's
+                sidebar menu. This is YOUR app. Your ideas, requirements, and
+                feedback, are will make it amazing.
               </p>
             </div>
           </div>
@@ -823,10 +829,11 @@ export default function VenuesPage() {
               onClick={handleDismissWelcome}
               data-testid="button-dismiss-welcome"
               size="lg"
-              className="w-full h-16 text-base "
+              className="w-full h-12 text-base "
             >
               {/* <AppWindow className="h-6 w-6 " /> */}
-              Explore the new <span className="font-bold">Care of Chan App</span>
+              Explore the new{" "}
+              <span className="font-bold">Care of Chan App</span>
             </Button>
           </DialogFooter>
         </DialogContent>
