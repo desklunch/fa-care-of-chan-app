@@ -52,8 +52,20 @@ import { useStagedAssets, StagedPhoto, StagedFloorplan, StagedAttachment } from 
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive } from "lucide-react";
 import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
-import { insertVenueSchema } from "@shared/schema";
+import { insertVenueSchema, venueTypes } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const venueTypeLabels: Record<string, string> = {
+  restaurant: "Restaurant",
+  event_space: "Event Space",
+};
 const venueFormSchema = insertVenueSchema.extend({
   amenityIds: z.array(z.string()).default([]),
   cuisineTagIds: z.array(z.string()).default([]),
@@ -1234,6 +1246,34 @@ export default function VenueFormPage() {
                           data-testid="input-venue-name"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="venueType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Venue Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-venue-type">
+                            <SelectValue placeholder="Select venue type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {venueTypes.map((type) => (
+                            <SelectItem key={type} value={type} data-testid={`option-venue-type-${type}`}>
+                              {venueTypeLabels[type] || type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

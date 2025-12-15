@@ -219,6 +219,25 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     },
   },
   {
+    id: "venueType",
+    headerName: "Type",
+    field: "venueType",
+    category: "Basic Info",
+    colDef: {
+      flex: 0.8,
+      minWidth: 100,
+      valueFormatter: (params) => {
+        const value = params.value as string | null;
+        if (!value) return "";
+        const labels: Record<string, string> = {
+          restaurant: "Restaurant",
+          event_space: "Event Space",
+        };
+        return labels[value] || value;
+      },
+    },
+  },
+  {
     id: "shortDescription",
     headerName: "Description",
     field: "shortDescription",
