@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation, useParams } from "wouter";
 import { format } from "date-fns";
 import { SquarePen, Trash2, AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
@@ -63,6 +64,8 @@ export default function AppIssueDetail() {
   const { data: issue, isLoading } = useQuery<AppIssueWithRelations>({
     queryKey: ["/api/app-issues", id],
   });
+
+  usePageTitle(issue?.title || "Issue");
 
   const isAdmin = user?.role === "admin";
   const isOwner = issue?.createdById === user?.id;

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CommentList } from "@/components/ui/comments";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { ThumbsUp, MessageSquare, SquarePen } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
@@ -55,6 +56,8 @@ export default function AppFeatureDetail() {
     queryKey: ["/api/features", featureId],
     enabled: !!featureId,
   });
+
+  usePageTitle(feature?.title || "Feature");
 
   const voteMutation = useMutation({
     mutationFn: async () => {

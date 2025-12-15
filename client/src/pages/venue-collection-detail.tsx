@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { VenueCollectionWithVenues, Venue } from "@shared/schema";
 import { 
   Edit, 
@@ -201,6 +202,8 @@ export default function VenueCollectionDetail() {
     queryKey: ["/api/venue-collections", collectionId],
     enabled: !!collectionId,
   });
+
+  usePageTitle(collection?.name || "Collection");
 
   // Local state for optimistic reordering
   const [orderedVenues, setOrderedVenues] = useState<VenueInCollection[]>([]);

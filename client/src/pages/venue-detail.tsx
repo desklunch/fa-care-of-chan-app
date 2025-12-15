@@ -11,6 +11,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityDisplay } from "@/components/ui/amenity-toggle";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
@@ -82,6 +83,8 @@ export default function VenueDetailPage() {
     queryKey: ["/api/venues", id, "collections"],
     enabled: !!id,
   });
+
+  usePageTitle(venue?.name || "Venue");
 
   const deleteMutation = useMutation({
     mutationFn: async () => {

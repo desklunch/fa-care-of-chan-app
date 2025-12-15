@@ -28,6 +28,7 @@ import {
   Shield,
 } from "lucide-react";
 import type { User } from "@shared/schema";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function TeamProfile() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +40,8 @@ export default function TeamProfile() {
     queryKey: ["/api/team", id],
     enabled: !!id,
   });
+
+  usePageTitle(member ? `${member.firstName} ${member.lastName}` : "Team Member");
 
   const updateRoleMutation = useMutation({
     mutationFn: async (newRole: string) => {

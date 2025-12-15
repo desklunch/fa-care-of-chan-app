@@ -18,6 +18,7 @@ import {
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import type { Contact } from "@shared/schema";
 import { format } from "date-fns";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,8 @@ export default function ContactDetail() {
     queryKey: ["/api/contacts", id],
     enabled: !!id,
   });
+
+  usePageTitle(contact ? `${contact.firstName} ${contact.lastName}` : "Contact");
 
   if (isLoading) {
     return (

@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AgGridReact } from "ag-grid-react";
@@ -305,6 +306,8 @@ export default function AdminFormRequestDetailPage() {
     queryKey: ["/api/form-requests", id],
     enabled: !!id && isAuthenticated,
   });
+
+  usePageTitle(request?.title || "Form Request");
 
   const removeRecipientMutation = useMutation({
     mutationFn: async (tokenId: string) => {

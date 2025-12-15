@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation, useParams } from "wouter";
 import { format } from "date-fns";
 import {
@@ -88,6 +89,8 @@ export default function AdminReleaseDetail() {
   const { data: release, isLoading } = useQuery<AppReleaseWithDetails>({
     queryKey: ["/api/releases", params.id],
   });
+
+  usePageTitle(release?.versionLabel ? `Release ${release.versionLabel}` : "Release");
 
   const { data: suggestedFeatures } = useQuery<
     { id: string; title: string; completedAt: Date | null }[]

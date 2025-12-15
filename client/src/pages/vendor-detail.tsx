@@ -38,6 +38,7 @@ import type { VendorWithRelations } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function VendorDetail() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +56,8 @@ export default function VendorDetail() {
     queryKey: ["/api/vendors", id],
     enabled: !!id,
   });
+
+  usePageTitle(vendor?.businessName || "Vendor");
   
   const generateLinkMutation = useMutation({
     mutationFn: async () => {

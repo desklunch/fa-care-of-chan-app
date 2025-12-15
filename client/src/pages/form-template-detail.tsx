@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { SquarePen, FileText, Calendar, Layers } from "lucide-react";
 import { format } from "date-fns";
 import type { FormTemplate, FormSection, FormField as FormFieldType } from "@shared/schema";
@@ -131,6 +132,8 @@ export default function FormTemplateDetailPage() {
     queryKey: ["/api/form-templates", id],
     enabled: !!id && isAuthenticated,
   });
+
+  usePageTitle(template?.name || "Form Template");
 
   if (isAuthLoading || isLoading) {
     return (
