@@ -1,4 +1,5 @@
 import { PageLayout } from "@/framework";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CommentList } from "@/components/ui/comments";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,6 +7,7 @@ import { MessageCircleQuestion } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
 
 export default function Feedback() {
+  usePageTitle("Feedback");
   const { user } = useAuth();
 
   return (

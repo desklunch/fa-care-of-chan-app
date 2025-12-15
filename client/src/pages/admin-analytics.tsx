@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface RecentPageView {
 }
 
 export default function AdminAnalytics() {
+  usePageTitle("Analytics");
   const [dateRange, setDateRange] = useState("30");
   const [environment, setEnvironment] = useState("production");
 

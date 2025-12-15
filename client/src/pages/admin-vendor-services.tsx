@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Button } from "@/components/ui/button";
@@ -392,6 +393,7 @@ function EditServiceDialog({ service, open, onOpenChange }: EditServiceDialogPro
 }
 
 export default function AdminVendorServices() {
+  usePageTitle("Vendor Services");
   const [editingService, setEditingService] = useState<VendorService | null>(null);
 
   const vendorServiceColumns: ColumnConfig<VendorService>[] = [

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
@@ -309,6 +310,7 @@ function TagFormDialog({ open, onOpenChange, tag, onSuccess }: TagFormDialogProp
 }
 
 export default function TagsPage() {
+  usePageTitle("Tags");
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

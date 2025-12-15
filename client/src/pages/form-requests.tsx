@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
@@ -228,6 +229,7 @@ const requestColumns: ColumnConfig<FormRequest>[] = [
 const defaultVisibleColumns = ["title", "status", "recipients", "dueDate", "createdAt"];
 
 export default function AdminFormRequestsPage() {
+  usePageTitle("Form Requests");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();

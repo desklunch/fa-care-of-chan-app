@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -50,6 +51,7 @@ const createReleaseSchema = z.object({
 type CreateReleaseData = z.infer<typeof createReleaseSchema>;
 
 export default function AdminReleases() {
+  usePageTitle("Releases");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

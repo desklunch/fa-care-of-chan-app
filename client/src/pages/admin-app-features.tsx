@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
@@ -441,6 +442,7 @@ function EditCategoryDialog({
 }
 
 export default function AdminAppFeatures() {
+  usePageTitle("Feature Categories");
   const [editingCategory, setEditingCategory] = useState<FeatureCategory | null>(null);
   const { toast } = useToast();
 

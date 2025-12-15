@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
@@ -205,6 +206,7 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
 const defaultVisibleColumns = ["name", "description", "sections", "fields", "createdBy", "createdAt", "actions"];
 
 export default function AdminFormTemplatesPage() {
+  usePageTitle("Form Templates");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();

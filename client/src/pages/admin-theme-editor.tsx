@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -130,6 +131,7 @@ function ColorSection({ title, description, children }: ColorSectionProps) {
 }
 
 export default function AdminThemeEditor() {
+  usePageTitle("Theme Editor");
   const { toast } = useToast();
   const [activeMode, setActiveMode] = useState<"light" | "dark">("light");
   const [localTheme, setLocalTheme] = useState<ThemeConfig>(defaultTheme);

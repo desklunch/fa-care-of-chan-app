@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
@@ -330,6 +331,7 @@ function AmenityFormDialog({ open, onOpenChange, amenity, onSuccess }: AmenityFo
 }
 
 export default function AmenitiesPage() {
+  usePageTitle("Amenities");
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

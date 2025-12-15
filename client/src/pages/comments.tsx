@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Link } from "wouter";
 import { formatTimeAgo } from "@/lib/format-time";
 import { PageLayout } from "@/framework";
@@ -20,6 +21,7 @@ const entityTypeLabels: Record<string, { label: string; icon: typeof Store; href
 };
 
 export default function CommentsPage() {
+  usePageTitle("Comments");
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>("all");
 
   const queryUrl = entityTypeFilter !== "all" 

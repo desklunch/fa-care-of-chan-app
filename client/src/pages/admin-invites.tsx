@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
@@ -219,6 +220,7 @@ const inviteColumns: ColumnConfig<Invite>[] = [
 const defaultVisibleColumns = [ "name", "status", "actions"];
 
 export default function AdminInvites() {
+  usePageTitle("Invites");
   const [, setLocation] = useLocation();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();

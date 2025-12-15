@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageLayout } from "@/framework";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -484,6 +485,7 @@ function VenuesGuideContent() {
 }
 
 export default function GuidePage() {
+  usePageTitle("Guide");
   const [activeSection, setActiveSection] = useState("venues");
 
   const currentSection = guideSections.find((s) => s.id === activeSection);

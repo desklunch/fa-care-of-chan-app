@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { Badge } from "@/components/ui/badge";
@@ -235,6 +236,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
 const defaultVisibleColumns = ["performedAt", "performerName", "action", "entityType", "status", "changes"];
 
 export default function AdminLogs() {
+  usePageTitle("Activity Logs");
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);

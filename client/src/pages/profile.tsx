@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLayout } from "@/framework";
 
 export default function Profile() {
+  usePageTitle("Profile");
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 

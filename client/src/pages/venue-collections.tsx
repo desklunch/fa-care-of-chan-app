@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { FolderOpen, Plus, Store, ListChecks, MousePointerClick, ArrowRightLeft,
 const COLLECTIONS_WELCOME_KEY = "venue_collections_welcome_seen";
 
 export default function VenueCollectionsPage() {
+  usePageTitle("Venue Collections");
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
 
