@@ -473,7 +473,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       )}
       <div className="flex items-start justify-between gap-3 ">
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-foreground">
 
           {!pagination && searchFields.length > 0 && (
             <ExpandableSearch

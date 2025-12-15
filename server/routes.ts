@@ -3938,6 +3938,22 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/admin/analytics/pageviews/recent - Get recent page views (admin only)
+  app.get("/api/admin/analytics/pageviews/recent", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const environment = req.query.environment as string | undefined;
+      
+      // Pass environment filter (undefined means all environments)
+      const envFilter = environment && environment !== "all" ? environment : undefined;
+      const recentPageViews = await storage.getRecentPageViews(Math.min(limit, 100), envFilter);
+      res.json(recentPageViews);
+    } catch (error) {
+      console.error("Error fetching recent page views:", error);
+      res.status(500).json({ message: "Failed to fetch recent page views" });
+    }
+  });
+
   // ====== VENUE PHOTOS ROUTES ======
 
   // GET /api/venues/:venueId/photos - List photos for a venue

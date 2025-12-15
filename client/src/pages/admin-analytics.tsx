@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, Users, Eye, Clock, TrendingUp, Route, MousePointer } from "lucide-react";
+import { BarChart3, Users, Eye, Clock, TrendingUp, Route, MousePointer, List } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, formatDistanceToNow } from "date-fns";
 
 interface AnalyticsSummary {
   totalPageViews: number;
@@ -16,6 +16,16 @@ interface AnalyticsSummary {
   topEvents: { name: string; count: number }[];
   pageViewsByDay: { date: string; views: number }[];
   userJourneys: { userId: string; userName: string; paths: string[] }[];
+}
+
+interface RecentPageView {
+  id: string;
+  path: string;
+  title: string | null;
+  viewedAt: string;
+  durationMs: number | null;
+  userName: string | null;
+  environment: string;
 }
 
 export default function AdminAnalytics() {
@@ -42,6 +52,18 @@ export default function AdminAnalytics() {
       return res.json();
     },
     staleTime: 60000, // Data is fresh for 1 minute
+  });
+
+  const { data: recentPageViews } = useQuery<RecentPageView[]>({
+    queryKey: ["/api/admin/analytics/pageviews/recent", environment],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/admin/analytics/pageviews/recent?limit=50&environment=${environment}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch recent page views");
+      return res.json();
+    },
+    staleTime: 30000, // Data is fresh for 30 seconds
   });
 
   if (isLoading) {
@@ -306,6 +328,63 @@ export default function AdminAnalytics() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <List className="h-5 w-5" />
+            Recent Page Views
+          </CardTitle>
+          <CardDescription>50 most recent page views</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {recentPageViews && recentPageViews.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left">
+                    <th className="pb-2 font-medium text-muted-foreground">Page</th>
+                    <th className="pb-2 font-medium text-muted-foreground">User</th>
+                    <th className="pb-2 font-medium text-muted-foreground">Time</th>
+                    <th className="pb-2 font-medium text-muted-foreground text-right">Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentPageViews.map((pv) => (
+                    <tr key={pv.id} className="border-b last:border-0" data-testid={`row-pageview-${pv.id}`}>
+                      <td className="py-2">
+                        <div className="flex flex-col">
+                          <span className="font-medium truncate max-w-[200px]" title={pv.path}>
+                            {pv.path}
+                          </span>
+                          {pv.title && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px]" title={pv.title}>
+                              {pv.title}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 text-muted-foreground">
+                        {pv.userName || "Anonymous"}
+                      </td>
+                      <td className="py-2 text-muted-foreground">
+                        {formatDistanceToNow(new Date(pv.viewedAt), { addSuffix: true })}
+                      </td>
+                      <td className="py-2 text-right text-muted-foreground">
+                        {pv.durationMs != null ? `${Math.round(pv.durationMs / 1000)}s` : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-12 text-center text-muted-foreground">
+              No page views recorded yet
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

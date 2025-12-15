@@ -379,6 +379,15 @@ export interface IStorage {
     pageViewsByDay: { date: string; views: number }[];
     userJourneys: { userId: string; userName: string; paths: string[] }[];
   }>;
+  getRecentPageViews(limit?: number, environment?: string): Promise<{
+    id: string;
+    path: string;
+    title: string | null;
+    viewedAt: Date;
+    durationMs: number | null;
+    userName: string | null;
+    environment: string;
+  }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3070,6 +3079,47 @@ export class DatabaseStorage implements IStorage {
           paths: r.paths || [],
         })),
     };
+  }
+
+  async getRecentPageViews(limit: number = 50, environment?: string): Promise<{
+    id: string;
+    path: string;
+    title: string | null;
+    viewedAt: Date;
+    durationMs: number | null;
+    userName: string | null;
+    environment: string;
+  }[]> {
+    const envCondition = environment && environment !== "all"
+      ? eq(analyticsPageViews.environment, environment)
+      : undefined;
+    
+    const results = await db
+      .select({
+        id: analyticsPageViews.id,
+        path: analyticsPageViews.path,
+        title: analyticsPageViews.title,
+        viewedAt: analyticsPageViews.viewedAt,
+        durationMs: analyticsPageViews.durationMs,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        environment: analyticsPageViews.environment,
+      })
+      .from(analyticsPageViews)
+      .leftJoin(users, eq(analyticsPageViews.userId, users.id))
+      .where(envCondition)
+      .orderBy(desc(analyticsPageViews.viewedAt))
+      .limit(limit);
+    
+    return results.map(r => ({
+      id: r.id,
+      path: r.path,
+      title: r.title,
+      viewedAt: r.viewedAt,
+      durationMs: r.durationMs,
+      userName: r.firstName ? `${r.firstName} ${r.lastName ? r.lastName.charAt(0) + '.' : ''}`.trim() : null,
+      environment: r.environment,
+    }));
   }
 }
 
