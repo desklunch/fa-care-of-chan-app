@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -598,6 +599,8 @@ export default function VenueFormPage() {
     queryKey: ["/api/venues", id, "full"],
     enabled: isEditingVenue,
   });
+
+  usePageTitle(isEditingVenue ? `Edit ${venue?.name || "Venue"}` : "New Venue");
 
   const { data: fetchedPhotos } = useQuery<VenuePhoto[]>({
     queryKey: ["/api/venues", id, "photos"],

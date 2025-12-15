@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ export default function VendorUpdateForm() {
   const { toast } = useToast();
   const [isSuccess, setIsSuccess] = useState(false);
   const [locations, setLocations] = useState<VendorLocation[]>([]);
+
+  usePageTitle("Vendor Update");
 
   const { data: vendor, isLoading, error } = useQuery<VendorWithServices>({
     queryKey: ["/api/vendor-update", token],

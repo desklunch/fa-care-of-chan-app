@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { PageLayout } from "@/framework";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,8 @@ export default function AdminFormRequestFormPage() {
     queryKey: ["/api/form-templates"],
     enabled: isAuthenticated,
   });
+
+  usePageTitle(isEditing ? "Edit Form Request" : "New Form Request");
 
   useEffect(() => {
     if (existingRequest) {

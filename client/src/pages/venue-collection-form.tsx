@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,8 @@ export default function VenueCollectionForm() {
     queryKey: ["/api/venue-collections", collectionId],
     enabled: isEditMode && !!collectionId,
   });
+
+  usePageTitle(isEditMode ? "Edit Collection" : "New Collection");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
