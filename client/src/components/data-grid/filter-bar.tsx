@@ -34,6 +34,10 @@ function FilterControl<T>({
   });
 
   const options = useMemo((): FilterOption[] => {
+    if (optionSource.type === "static" && optionSource.options) {
+      return optionSource.options;
+    }
+
     if (optionSource.type === "deriveFromData" && optionSource.deriveOptions) {
       return optionSource.deriveOptions(data);
     }

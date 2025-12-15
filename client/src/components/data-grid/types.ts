@@ -2,12 +2,13 @@ import { ColDef } from "ag-grid-community";
 import { LucideIcon } from "lucide-react";
 
 export interface FilterOptionSource<T> {
-  type: "deriveFromData" | "query";
+  type: "deriveFromData" | "query" | "static";
   queryKey?: string;
   labelField?: string;
   valueField?: string;
   filterFn?: (item: unknown) => boolean;
   deriveOptions?: (data: T[]) => Array<{ id: string; label: string }>;
+  options?: Array<{ id: string; label: string }>;
 }
 
 export interface FilterConfig<T> {

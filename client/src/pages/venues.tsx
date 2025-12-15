@@ -10,7 +10,7 @@ import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import type { VenueWithRelations } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Store, FolderPlus, Search, ListFilter, MousePointerClick, type LucideIcon } from "lucide-react";
+import { MapPin, Globe, Instagram, ExternalLink, icons, HelpCircle, CircleFadingPlus, Utensils, Sparkles, Store, Building2, FolderPlus, Search, ListFilter, MousePointerClick, type LucideIcon } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
 
 const VENUES_WELCOME_KEY = "venues_welcome_seen";
@@ -404,6 +404,21 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
 ];
 
 const venueFilters: FilterConfig<VenueWithRelations>[] = [
+  {
+    id: "venueType",
+    label: "Type",
+    icon: Building2,
+    optionSource: {
+      type: "static",
+      options: [
+        { id: "restaurant", label: "Restaurant" },
+        { id: "event_space", label: "Event Space" },
+      ],
+    },
+    matchFn: (venue, selectedValues) => {
+      return venue.venueType ? selectedValues.includes(venue.venueType) : false;
+    },
+  },
   {
     id: "location",
     label: "Location",
