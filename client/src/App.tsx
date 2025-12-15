@@ -54,6 +54,8 @@ import PublicForm from "@/pages/public-form";
 import FormPreview from "@/pages/form-preview";
 import CommentsPage from "@/pages/comments";
 import AdminAnalytics from "@/pages/admin-analytics";
+import AdminReleases from "@/pages/admin-releases";
+import AdminReleaseDetail from "@/pages/admin-release-detail";
 import Guide from "@/pages/guide";
 import Feedback from "@/pages/feedback";
 import PublicVenueDetail from "@/pages/public-venue-detail";
@@ -84,6 +86,7 @@ import {
   BarChart3,
   BookOpen,
   Users,
+  Rocket,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -243,6 +246,12 @@ function useLayoutConfig() {
             icon: BarChart3,
             allowedRoles: ["admin"],
           },
+          {
+            name: "Releases",
+            href: "/admin/releases",
+            icon: Rocket,
+            allowedRoles: ["admin"],
+          },
         ],
       },
       {
@@ -322,6 +331,8 @@ function AuthenticatedRoutes() {
           <Route path="/admin/theme" component={AdminThemeEditor} />
           <Route path="/admin/logs" component={AdminLogs} />
           <Route path="/admin/analytics" component={AdminAnalytics} />
+          <Route path="/admin/releases" component={AdminReleases} />
+          <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
           <Route path="/guide" component={Guide} />
           <Route path="/app/feedback" component={Feedback} />
           <Route component={NotFound} />
