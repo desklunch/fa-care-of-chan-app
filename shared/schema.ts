@@ -244,12 +244,17 @@ export const vendors = pgTable(
   ],
 );
 
+// Venue type enum values
+export const venueTypes = ["restaurant", "event_space"] as const;
+export type VenueType = (typeof venueTypes)[number];
+
 // Venues directory
 export const venues = pgTable(
   "venues",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     externalId: varchar("external_id", { length: 255 }),
+    venueType: varchar("venue_type", { length: 50 }),
     name: varchar("name", { length: 255 }).notNull(),
     shortDescription: text("short_description"),
     longDescription: text("long_description"),

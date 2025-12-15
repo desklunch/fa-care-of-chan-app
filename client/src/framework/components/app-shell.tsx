@@ -13,12 +13,12 @@ function AppShellContent({ children }: AppShellProps) {
 
   return (
     <div className="flex flex-col bg-muted overflow-hidden overscroll-contain w-screen h-screen">
-      <div className="flex flex-1 bg-background rounded-none md:rounded-xl ring ring-[1.5px] ring-black/5 shadow-lg overflow-hidden overscroll-contain md:m-4 shadow-4xl">
+      <div className="flex flex-1 bg-background rounded-none md:rounded-xl ring ring-[1.5px] ring-black/5 shadow-lg overflow-hidden overscroll-contain md:m-3 shadow-4xl">
         <Sidebar
           isMobileOpen={isMobileOpen}
           onMobileClose={() => setIsMobileOpen(false)}
         />
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden overscroll-contain">
           <Header
             isMobileOpen={isMobileOpen}
             onToggle={() => setIsMobileOpen(!isMobileOpen)}
@@ -26,7 +26,7 @@ function AppShellContent({ children }: AppShellProps) {
             primaryAction={headerState.primaryAction}
             additionalActions={headerState.additionalActions}
           />
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto overscroll-contain">{children}</main>
         </div>
       </div>
     </div>
