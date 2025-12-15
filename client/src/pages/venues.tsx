@@ -743,7 +743,7 @@ export default function VenuesPage() {
         onOpenChange={(open) => !open && handleDismissWelcome()}
       >
         <DialogContent
-          className="sm:max-w-l m-4"
+          className="sm:max-w-l"
           data-testid="dialog-venues-welcome"
         >
           <DialogHeader>
@@ -786,8 +786,8 @@ export default function VenuesPage() {
               </div>
               <p className="text-sm text-muted-foreground">
                 Access venue listings from the directory to view complete venue
-                information. Access flooplans, files, and other venue assets.
-                Leave notes for other team members on the comment tabs.
+                information. View flooplans, files, and other venue assets.
+                Leave notes for other team members in the Comments tab.
               </p>
             </div>
 
@@ -799,30 +799,18 @@ export default function VenuesPage() {
                 <h4 className="font-medium">Venue Collections</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                You can create collections of venues to share with teammates and clients. Add multiple venu
+                You can create collections of venues to share with teammates and clients. On the venues directory page, selecting one or more venues in the table will reveal a toolbar to add them to a collection. You can also add an individual venue to a collection from the venue listing page.
               </p>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-primary/10 p-1.5">
-                <FolderPlus className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-medium">Create Collections</h4>
-                <p className="text-sm text-muted-foreground">
-                  Select multiple venues and add them to collections for
-                  proposals.
-                </p>
-              </div>
-            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col items-start justify-start ">
             <Button
               onClick={handleDismissWelcome}
               data-testid="button-dismiss-welcome"
             >
-              Got it
+              Explore the App
             </Button>
           </DialogFooter>
         </DialogContent>

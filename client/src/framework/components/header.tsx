@@ -1,4 +1,4 @@
-import { ChevronRight, MoreVertical } from "lucide-react";
+import { ChevronRight, MoreVertical, Menu } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -102,7 +102,7 @@ export default function Header({
         data-testid="button-mobile-menu"
         aria-label="Toggle navigation menu"
       >
-        <Logo width="24" collapsed />
+        <Menu width="24" collapsed />
       </Button>
 
       {breadcrumbs && breadcrumbs.length > 0 && (
