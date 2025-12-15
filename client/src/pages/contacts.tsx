@@ -1,6 +1,7 @@
 import { useLocation, Link } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
@@ -253,6 +254,7 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
 ];
 
 export default function Contacts() {
+  usePageTitle("Contacts");
   const [, setLocation] = useLocation();
 
   return (

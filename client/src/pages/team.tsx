@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Building2, Shield } from "lucide-react";
@@ -294,6 +295,7 @@ const teamColumns: ColumnConfig<User>[] = [
 ];
 
 export default function Team() {
+  usePageTitle("Team");
   const [, setLocation] = useLocation();
 
   return (

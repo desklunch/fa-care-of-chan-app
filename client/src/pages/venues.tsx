@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -571,6 +572,7 @@ const venueFilters: FilterConfig<VenueWithRelations>[] = [
 ];
 
 export default function VenuesPage() {
+  usePageTitle("Venues");
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
   const isAdmin = user?.role === "admin";

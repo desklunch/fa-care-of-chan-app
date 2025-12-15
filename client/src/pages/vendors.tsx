@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -446,6 +447,7 @@ const vendorFilters: FilterConfig<VendorWithRelations>[] = [
 ];
 
 export default function Vendors() {
+  usePageTitle("Vendors");
   const [, setLocation] = useLocation();
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
