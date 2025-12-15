@@ -32,12 +32,12 @@ const statusLabels: Record<FeatureStatus, string> = {
 };
 
 const statusColors: Record<FeatureStatus, string> = {
-  proposed: "py-1 h-fit uppercase bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  under_review: "py-1 h-fit uppercase bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  planned: "py-1 h-fit uppercase bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  in_progress: "py-1 h-fit uppercase bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  completed: "py-1 h-fit uppercase bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  archived: "py-1 h-fit uppercase bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+  proposed: "px-1 h-fit uppercase bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  under_review: "px-1 h-fit uppercase bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  planned: "px-1 h-fit uppercase bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  in_progress: "px-1 h-fit uppercase bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  completed: "px-1 h-fit uppercase bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  archived: "px-1 h-fit uppercase bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
 };
 
 function FeatureCard({ 
@@ -269,7 +269,7 @@ export default function AppFeatures() {
               </div>
             </Card>
           ) : (
-            <div className="space-y-12 p-6">
+            <div className="space-y-12 p-6 max-w-5xl">
               {categoriesWithFeatures.map((category) => (
                 <div key={category.id} className="space-y-4 " data-testid={`category-section-${category.id}`}>
                   <div>
