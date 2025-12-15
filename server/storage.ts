@@ -1771,6 +1771,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(venueCollectionVenues.collectionId, id))
       .orderBy(asc(venueCollectionVenues.sortOrder), desc(venueCollectionVenues.addedAt));
     
+    // Get photos for all venues in this collection
+    const venueIds = collectionVenues.map(cv => cv.venue.id);
+    const allPhotos = venueIds.length > 0 
+      ? await db
+          .select()
+          .from(venuePhotos)
+          .where(inArray(venuePhotos.venueId, venueIds))
+          .orderBy(asc(venuePhotos.sortOrder))
+      : [];
+    
+    // Group photos by venue
+    const photosByVenue = new Map<string, typeof allPhotos>();
+    for (const photo of allPhotos) {
+      const existing = photosByVenue.get(photo.venueId) || [];
+      existing.push(photo);
+      photosByVenue.set(photo.venueId, existing);
+    }
+    
     return {
       ...result.collection,
       createdBy: result.createdBy,
@@ -1778,6 +1796,7 @@ export class DatabaseStorage implements IStorage {
         ...cv.venue,
         addedBy: cv.addedBy,
         addedAt: cv.addedAt,
+        photos: photosByVenue.get(cv.venue.id) || [],
       })),
     };
   }
