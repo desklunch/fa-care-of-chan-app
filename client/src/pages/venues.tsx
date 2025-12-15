@@ -35,6 +35,7 @@ import {
   MousePointerClick,
   NotepadText,
   DraftingCompass,
+  AppWindow,
   type LucideIcon,
 } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -812,17 +813,20 @@ export default function VenuesPage() {
                 <h4 className="font-medium">Support</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                Request 
+                Check out the feature roadmap, request new features, report bugs, or ask questions via the Support links in the app's sidebar menu. This is YOUR app. Your ideas, requirements, and feedback, are will make it amazing.
               </p>
             </div>
           </div>
 
-          <DialogFooter className="flex-col items-start justify-start ">
+          <DialogFooter className="block">
             <Button
               onClick={handleDismissWelcome}
               data-testid="button-dismiss-welcome"
+              size="lg"
+              className="w-full h-16 text-base "
             >
-              Explore the App
+              {/* <AppWindow className="h-6 w-6 " /> */}
+              Explore the new <span className="font-bold">Care of Chan App</span>
             </Button>
           </DialogFooter>
         </DialogContent>
