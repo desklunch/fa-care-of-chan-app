@@ -236,3 +236,17 @@ export const isAdmin: RequestHandler = async (req, res, next) => {
   
   next();
 };
+
+export const isManagerOrAdmin: RequestHandler = async (req, res, next) => {
+  const session = req.session as any;
+  if (!session?.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  const user = await storage.getUser(session.userId);
+  if (!user || (user.role !== "admin" && user.role !== "manager")) {
+    return res.status(403).json({ message: "Forbidden: Manager or Admin access required" });
+  }
+  
+  next();
+};
