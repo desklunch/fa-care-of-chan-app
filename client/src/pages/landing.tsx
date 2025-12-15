@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, Shield, Loader2, Bug } from "lucide-react";
+import Logo from "@/framework/components/logo";
 import { GoogleLogin } from "@react-oauth/google";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -56,6 +57,9 @@ export default function Landing() {
   return (
 
     <div className="max-w-4xl mx-auto h-screen flex flex-col  justify-center text-center gap-4">
+      <div className="flex justify-center mb-4">
+        <Logo width="48" />
+      </div>
       <h1 className="text-4xl md:text-5xl font-bold tracking-tight ">
         <p className="text-xs opacity-50 mb-2 tracking-wide font-light">
           COCA 1.0

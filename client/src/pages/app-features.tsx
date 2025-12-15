@@ -217,7 +217,7 @@ export default function AppFeatures() {
         variant: "default",
       }}
     >
-      <div className="overflow-hidden flex flex-col h-full max-w-5xl">
+      <div className="overflow-hidden flex flex-col h-full ">
         
         <div className="border-b p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
