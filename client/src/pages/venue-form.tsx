@@ -1111,6 +1111,8 @@ export default function VenueFormPage() {
     }
   };
 
+  const [aiSuggestions, setAiSuggestions] = useState<string | null>(null);
+  
   const tagSuggestionMutation = useMutation({
     mutationFn: async (googlePlaceData: PlaceResult) => {
       const response = await apiRequest("POST", "/api/venues/tag-suggestions", { googlePlaceData });
@@ -1119,35 +1121,8 @@ export default function VenueFormPage() {
       }
       return response.json();
     },
-    onSuccess: (suggestions) => {
-      // Apply suggested tags to the form
-      if (suggestions.amenityIds?.length > 0) {
-        const currentAmenities = form.getValues("amenityIds") || [];
-        const merged = Array.from(new Set([...currentAmenities, ...suggestions.amenityIds]));
-        form.setValue("amenityIds", merged);
-      }
-      if (suggestions.cuisineTagIds?.length > 0) {
-        const currentCuisine = form.getValues("cuisineTagIds") || [];
-        const merged = Array.from(new Set([...currentCuisine, ...suggestions.cuisineTagIds]));
-        form.setValue("cuisineTagIds", merged);
-      }
-      if (suggestions.styleTagIds?.length > 0) {
-        const currentStyle = form.getValues("styleTagIds") || [];
-        const merged = Array.from(new Set([...currentStyle, ...suggestions.styleTagIds]));
-        form.setValue("styleTagIds", merged);
-      }
-      
-      const totalSuggested = 
-        (suggestions.amenityIds?.length || 0) + 
-        (suggestions.cuisineTagIds?.length || 0) + 
-        (suggestions.styleTagIds?.length || 0);
-      
-      toast({
-        title: "Tags suggested",
-        description: totalSuggested > 0 
-          ? `Added ${totalSuggested} tag${totalSuggested !== 1 ? "s" : ""} based on Google Places data.`
-          : "No matching tags found for this venue.",
-      });
+    onSuccess: (data) => {
+      setAiSuggestions(data.suggestions);
     },
     onError: (error: Error) => {
       toast({
@@ -1343,6 +1318,27 @@ export default function VenueFormPage() {
                         </Button>
                       )}
                     </div>
+                    
+                    {aiSuggestions && (
+                      <div className="p-3 bg-muted/50 rounded-lg border" data-testid="ai-suggestions-display">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            AI Tag Suggestions
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setAiSuggestions(null)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <pre className="text-sm whitespace-pre-wrap text-muted-foreground font-sans">{aiSuggestions}</pre>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <GooglePlaceSearch

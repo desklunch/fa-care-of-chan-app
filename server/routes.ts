@@ -4589,65 +4589,27 @@ export async function registerRoutes(
         return res.status(400).json({ message: "googlePlaceData is required" });
       }
 
-      // Fetch all available tags
-      const [amenities, allTags] = await Promise.all([
-        storage.getAmenities(),
-        storage.getTags(),
-      ]);
+      const systemPrompt = `You are a venue categorization assistant. Analyze Google Places data and suggest tags that are EXPLICITLY confirmed by the data.
 
-      const cuisineTags = allTags.filter(t => t.category === "cuisine");
-      const styleTags = allTags.filter(t => t.category === "style");
+CRITICAL RULES:
+1. ONLY suggest tags if the Google Places data EXPLICITLY confirms them
+2. DO NOT infer, guess, or assume - if the data doesn't explicitly state it, don't suggest it
+3. Be concise - just list the tag names, no explanations needed for each tag
+4. If nothing is explicitly confirmed for a category, say "None confirmed"
 
-      // Build the prompt
-      const amenityList = amenities.map(a => ({ id: a.id, name: a.name }));
-      const cuisineList = cuisineTags.map(t => ({ id: t.id, name: t.name }));
-      const styleList = styleTags.map(t => ({ id: t.id, name: t.name }));
+WHAT TO LOOK FOR:
+- Cuisine: The "primaryType" field (e.g., "italian_restaurant" means Italian cuisine)
+- Style: The "editorialSummary" for explicit descriptions (e.g., "fine dining", "casual", "romantic", "retro")
+- Amenities: Explicit boolean fields like outdoorSeating, liveMusic, servesCocktails, wheelchairAccessibleEntrance, valetParking, etc.
 
-      const systemPrompt = `You are a venue categorization assistant. Analyze Google Places data and assign ONLY tags that are EXPLICITLY confirmed by the data.
+Format your response as plain text with three sections:
+CUISINE: [list cuisine types, or "None confirmed"]
+STYLE: [list style descriptors, or "None confirmed"]  
+AMENITIES: [list amenities, or "None confirmed"]`;
 
-CRITICAL RULES - YOU MUST FOLLOW THESE EXACTLY:
-1. ONLY assign a tag if the Google Places data EXPLICITLY confirms it
-2. DO NOT infer, guess, or assume - if the data doesn't explicitly state it, don't assign it
-3. Return tag IDs (UUIDs), not names
-4. If nothing is explicitly confirmed, return empty arrays
+      const userPrompt = `Analyze this venue's Google Places data and suggest appropriate tags:
 
-EXAMPLES OF WHAT TO LOOK FOR:
-- Cuisine: Look at "primaryType" field (e.g., "italian_restaurant" = Italian cuisine tag)
-- Style: Look at "editorialSummary" for explicit descriptions like "fine dining", "casual", "romantic"
-- Amenities: Look at explicit boolean fields like "outdoorSeating": true, "liveMusic": true, "restroom": true, "servesCocktails": true, "wheelchairAccessibleEntrance": true, etc.
-
-DO NOT ASSIGN:
-- Amenities based on restaurant type (don't assume Italian restaurants have wine rooms)
-- Style tags based on assumptions (don't assume expensive = elegant)
-- Anything that requires inference or guessing
-
-Respond with ONLY valid JSON:
-{
-  "amenityIds": ["uuid1", "uuid2"],
-  "cuisineTagIds": ["uuid1"],
-  "styleTagIds": ["uuid1"],
-  "reasoning": "What explicit data points confirmed each tag"
-}`;
-
-      const userPrompt = `AVAILABLE TAGS TO CHOOSE FROM:
-
-CUISINE TAGS (${cuisineList.length} available):
-${cuisineList.map(t => `${t.id}: ${t.name}`).join("\n")}
-
-STYLE TAGS (${styleList.length} available):
-${styleList.map(t => `${t.id}: ${t.name}`).join("\n")}
-
-AMENITIES (${amenityList.length} available):
-${amenityList.map(a => `${a.id}: ${a.name}`).join("\n")}
-
----
-
-GOOGLE PLACES DATA TO ANALYZE:
-${JSON.stringify(googlePlaceData, null, 2)}
-
----
-
-Assign ONLY tags that are EXPLICITLY confirmed by the Google Places data above. Use the UUIDs from the tag lists.`;
+${JSON.stringify(googlePlaceData, null, 2)}`;
 
       // Initialize OpenAI client with Replit AI Integrations
       const openai = new OpenAI({
@@ -4662,7 +4624,7 @@ Assign ONLY tags that are EXPLICITLY confirmed by the Google Places data above. 
           { role: "user", content: userPrompt },
         ],
         temperature: 0.2,
-        max_tokens: 1000,
+        max_tokens: 500,
       });
 
       const responseText = completion.choices[0]?.message?.content;
@@ -4670,69 +4632,7 @@ Assign ONLY tags that are EXPLICITLY confirmed by the Google Places data above. 
         return res.status(500).json({ message: "No response from AI" });
       }
 
-      // Parse the JSON response
-      let suggestions;
-      try {
-        // Extract JSON from response (handle markdown code blocks)
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error("No JSON found in response");
-        }
-        suggestions = JSON.parse(jsonMatch[0]);
-      } catch (parseError) {
-        console.error("Failed to parse AI response:", responseText);
-        return res.status(500).json({ message: "Failed to parse AI response" });
-      }
-
-      // Log raw AI response for debugging
-      console.log("AI tag suggestions raw response:", JSON.stringify(suggestions, null, 2));
-
-      // Create ID and name lookup maps for validation and fallback matching
-      const amenityIdSet = new Set(amenities.map(a => a.id));
-      const cuisineIdSet = new Set(cuisineTags.map(t => t.id));
-      const styleIdSet = new Set(styleTags.map(t => t.id));
-      
-      // Create name-to-ID maps for fallback matching (case-insensitive)
-      const amenityNameToId = new Map(amenities.map(a => [a.name.toLowerCase(), a.id]));
-      const cuisineNameToId = new Map(cuisineTags.map(t => [t.name.toLowerCase(), t.id]));
-      const styleNameToId = new Map(styleTags.map(t => [t.name.toLowerCase(), t.id]));
-
-      // Helper function to resolve value to valid ID (supports both ID and name lookup)
-      const resolveToId = (value: string, idSet: Set<string>, nameToIdMap: Map<string, string>): string | null => {
-        // First check if it's a valid ID
-        if (idSet.has(value)) {
-          return value;
-        }
-        // Fallback: check if it's a name (case-insensitive)
-        const idFromName = nameToIdMap.get(value.toLowerCase());
-        if (idFromName) {
-          return idFromName;
-        }
-        return null;
-      };
-
-      const resolvedAmenityIds = (suggestions.amenityIds || [])
-        .map((v: string) => resolveToId(v, amenityIdSet, amenityNameToId))
-        .filter((id: string | null): id is string => id !== null);
-      
-      const resolvedCuisineIds = (suggestions.cuisineTagIds || [])
-        .map((v: string) => resolveToId(v, cuisineIdSet, cuisineNameToId))
-        .filter((id: string | null): id is string => id !== null);
-      
-      const resolvedStyleIds = (suggestions.styleTagIds || [])
-        .map((v: string) => resolveToId(v, styleIdSet, styleNameToId))
-        .filter((id: string | null): id is string => id !== null);
-
-      const filteredSuggestions = {
-        amenityIds: resolvedAmenityIds,
-        cuisineTagIds: resolvedCuisineIds,
-        styleTagIds: resolvedStyleIds,
-        reasoning: suggestions.reasoning || "",
-      };
-
-      console.log("AI tag suggestions resolved:", JSON.stringify(filteredSuggestions, null, 2));
-
-      res.json(filteredSuggestions);
+      res.json({ suggestions: responseText });
     } catch (error: any) {
       console.error("Error generating tag suggestions:", error);
       res.status(500).json({ message: "Failed to generate tag suggestions", error: error.message });
