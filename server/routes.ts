@@ -4603,45 +4603,51 @@ export async function registerRoutes(
       const cuisineList = cuisineTags.map(t => ({ id: t.id, name: t.name }));
       const styleList = styleTags.map(t => ({ id: t.id, name: t.name }));
 
-      const systemPrompt = `You are an expert venue categorization assistant. Your job is to analyze venue data from Google Places and suggest appropriate tags.
+      const systemPrompt = `You are a venue categorization assistant. Analyze Google Places data and assign ONLY tags that are EXPLICITLY confirmed by the data.
 
-You will be given:
-1. Venue data from Google Places (name, address, types, editorial summary, etc.)
-2. Lists of available amenities, cuisine tags, and style tags
+CRITICAL RULES - YOU MUST FOLLOW THESE EXACTLY:
+1. ONLY assign a tag if the Google Places data EXPLICITLY confirms it
+2. DO NOT infer, guess, or assume - if the data doesn't explicitly state it, don't assign it
+3. Return tag IDs (UUIDs), not names
+4. If nothing is explicitly confirmed, return empty arrays
 
-Your task is to suggest which tags best match the venue based on the Google Places data.
+EXAMPLES OF WHAT TO LOOK FOR:
+- Cuisine: Look at "primaryType" field (e.g., "italian_restaurant" = Italian cuisine tag)
+- Style: Look at "editorialSummary" for explicit descriptions like "fine dining", "casual", "romantic"
+- Amenities: Look at explicit boolean fields like "outdoorSeating": true, "liveMusic": true, "restroom": true, "servesCocktails": true, "wheelchairAccessibleEntrance": true, etc.
 
-IMPORTANT RULES:
-- Only suggest tags from the provided lists - never invent new tags
-- Return tag IDs, not names
-- Be conservative - only suggest tags when you are confident they apply
-- For restaurants/food venues, suggest relevant cuisine and style tags
-- For event spaces, focus on amenities and style tags
-- If no tags clearly apply, return empty arrays
+DO NOT ASSIGN:
+- Amenities based on restaurant type (don't assume Italian restaurants have wine rooms)
+- Style tags based on assumptions (don't assume expensive = elegant)
+- Anything that requires inference or guessing
 
-Respond with ONLY valid JSON in this exact format:
+Respond with ONLY valid JSON:
 {
-  "amenityIds": ["id1", "id2"],
-  "cuisineTagIds": ["id1", "id2"],
-  "styleTagIds": ["id1", "id2"],
-  "reasoning": "Brief explanation of why these tags were chosen"
+  "amenityIds": ["uuid1", "uuid2"],
+  "cuisineTagIds": ["uuid1"],
+  "styleTagIds": ["uuid1"],
+  "reasoning": "What explicit data points confirmed each tag"
 }`;
 
-      const userPrompt = `Analyze this venue and suggest appropriate tags:
+      const userPrompt = `AVAILABLE TAGS TO CHOOSE FROM:
 
-VENUE DATA FROM GOOGLE PLACES:
+CUISINE TAGS (${cuisineList.length} available):
+${cuisineList.map(t => `${t.id}: ${t.name}`).join("\n")}
+
+STYLE TAGS (${styleList.length} available):
+${styleList.map(t => `${t.id}: ${t.name}`).join("\n")}
+
+AMENITIES (${amenityList.length} available):
+${amenityList.map(a => `${a.id}: ${a.name}`).join("\n")}
+
+---
+
+GOOGLE PLACES DATA TO ANALYZE:
 ${JSON.stringify(googlePlaceData, null, 2)}
 
-AVAILABLE AMENITIES (id: name):
-${amenityList.map(a => `- ${a.id}: ${a.name}`).join("\n")}
+---
 
-AVAILABLE CUISINE TAGS (id: name):
-${cuisineList.map(t => `- ${t.id}: ${t.name}`).join("\n")}
-
-AVAILABLE STYLE TAGS (id: name):
-${styleList.map(t => `- ${t.id}: ${t.name}`).join("\n")}
-
-Please analyze the venue and suggest appropriate tags from the lists above.`;
+Assign ONLY tags that are EXPLICITLY confirmed by the Google Places data above. Use the UUIDs from the tag lists.`;
 
       // Initialize OpenAI client with Replit AI Integrations
       const openai = new OpenAI({
