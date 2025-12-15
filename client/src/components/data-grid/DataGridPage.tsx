@@ -88,6 +88,55 @@ function saveFiltersToSession(pathname: string, filterState: Record<string, stri
   }
 }
 
+// Helper functions for column visibility URL params and session storage
+function getColumnsFromUrl(): string[] | null {
+  const params = new URLSearchParams(window.location.search);
+  const cols = params.get("columns");
+  if (cols) {
+    return cols.split(",").filter(Boolean);
+  }
+  return null;
+}
+
+function setColumnsToUrl(visibleColumns: string[]) {
+  const params = new URLSearchParams(window.location.search);
+  
+  if (visibleColumns.length > 0) {
+    params.set("columns", visibleColumns.join(","));
+  } else {
+    params.delete("columns");
+  }
+  
+  const newUrl = params.toString() 
+    ? `${window.location.pathname}?${params.toString()}`
+    : window.location.pathname;
+  window.history.replaceState({}, "", newUrl);
+}
+
+function getColumnSessionStorageKey(pathname: string): string {
+  return `datagrid_columns_${pathname}`;
+}
+
+function getColumnsFromSession(pathname: string): string[] | null {
+  try {
+    const stored = sessionStorage.getItem(getColumnSessionStorageKey(pathname));
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to parse session storage columns:", e);
+  }
+  return null;
+}
+
+function saveColumnsToSession(pathname: string, visibleColumns: string[]) {
+  try {
+    sessionStorage.setItem(getColumnSessionStorageKey(pathname), JSON.stringify(visibleColumns));
+  } catch (e) {
+    console.error("Failed to save columns to session storage:", e);
+  }
+}
+
 export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   queryKey,
   columns,
@@ -145,6 +194,40 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     return false;
   });
 
+  // Initialize visibleColumns from URL params or session storage
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    // First check URL params
+    const urlColumns = getColumnsFromUrl();
+    if (urlColumns && urlColumns.length > 0) {
+      return urlColumns;
+    }
+    // Then check session storage
+    const sessionColumns = getColumnsFromSession(window.location.pathname);
+    if (sessionColumns && sessionColumns.length > 0) {
+      return sessionColumns;
+    }
+    // Fall back to defaults
+    return defaultVisibleColumns;
+  });
+  const [isColumnInitialized, setIsColumnInitialized] = useState(false);
+
+  // Sync visibleColumns to URL and session storage when they change
+  useEffect(() => {
+    if (!isColumnInitialized) {
+      setIsColumnInitialized(true);
+      // On initial load, sync to URL if not using defaults
+      const urlColumns = getColumnsFromUrl();
+      const sessionColumns = getColumnsFromSession(window.location.pathname);
+      if (urlColumns || sessionColumns) {
+        setColumnsToUrl(visibleColumns);
+      }
+      return;
+    }
+    
+    setColumnsToUrl(visibleColumns);
+    saveColumnsToSession(location, visibleColumns);
+  }, [visibleColumns, location, isColumnInitialized]);
+
   // Sync filterState and searchText to URL and session storage when they change
   useEffect(() => {
     if (!isFilterInitialized) {
@@ -194,17 +277,22 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     
     // Add data columns
     columns.forEach((col) => {
+      // Non-toggleable columns are always visible based on their default or explicit hide setting
+      const isToggleable = col.toggleable !== false;
+      const shouldHide = isToggleable 
+        ? (col.hide ?? !visibleColumns.includes(col.id))
+        : (col.hide ?? false);
       cols.push({
         colId: col.id,
         headerName: col.headerName,
         field: col.field,
-        hide: col.hide ?? !defaultVisibleColumns.includes(col.id),
+        hide: shouldHide,
         ...col.colDef,
       } as ColDef<T>);
     });
     
     return cols;
-  }, [columns, defaultVisibleColumns, enableRowSelection]);
+  }, [columns, visibleColumns, enableRowSelection]);
 
   const defaultColDef: ColDef = useMemo(
     () => ({
@@ -283,32 +371,43 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const getColumnVisibility = useCallback(
     (columnId: string) => {
       if (!gridApi) {
-        return defaultVisibleColumns.includes(columnId);
+        return visibleColumns.includes(columnId);
       }
       const column = gridApi.getColumn(columnId);
       return column ? column.isVisible() : false;
     },
-    [gridApi, defaultVisibleColumns]
+    [gridApi, visibleColumns]
   );
 
   const handleToggleColumn = useCallback(
     (columnId: string) => {
       if (!gridApi) return;
+      // Only allow toggling of toggleable columns
+      const colConfig = columns.find(c => c.id === columnId);
+      if (colConfig?.toggleable === false) return;
+      
       const column = gridApi.getColumn(columnId);
       if (column) {
         const isVisible = column.isVisible();
         gridApi.setColumnsVisible([columnId], !isVisible);
+        // Update state to trigger URL/session sync (only toggleable columns)
+        setVisibleColumns(prev => 
+          isVisible 
+            ? prev.filter(id => id !== columnId)
+            : [...prev, columnId]
+        );
       }
     },
-    [gridApi]
+    [gridApi, columns]
   );
 
   const handleShowAll = useCallback(() => {
     if (!gridApi) return;
-    const allColumnIds = columns
+    const toggleableColumnIds = columns
       .filter((col) => col.toggleable !== false)
       .map((col) => col.id);
-    gridApi.setColumnsVisible(allColumnIds, true);
+    gridApi.setColumnsVisible(toggleableColumnIds, true);
+    setVisibleColumns(toggleableColumnIds);
   }, [gridApi, columns]);
 
   const handleSelectionChanged = useCallback((event: SelectionChangedEvent<T>) => {
@@ -333,6 +432,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       const shouldBeVisible = defaultVisibleColumns.includes(colId);
       gridApi.setColumnsVisible([colId], shouldBeVisible);
     });
+    setVisibleColumns([...defaultVisibleColumns]);
   }, [gridApi, columns, defaultVisibleColumns]);
 
   const defaultEmptyIconHtml = `
