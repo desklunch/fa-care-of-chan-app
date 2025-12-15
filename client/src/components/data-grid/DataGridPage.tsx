@@ -257,23 +257,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const columnDefs = useMemo(() => {
     const cols: ColDef<T>[] = [];
     
-    // Add checkbox selection column if row selection is enabled
-    if (enableRowSelection) {
-      cols.push({
-        colId: "_selection",
-        headerName: "",
-        width: 50,
-        maxWidth: 50,
-        minWidth: 50,
-        headerCheckboxSelection: true,
-        checkboxSelection: true,
-        suppressHeaderFilterButton: true,
-        sortable: false,
-        filter: false,
-        resizable: false,
-      
-      });
-    }
+    // Row selection is handled via rowSelection prop in AG-Grid v32+
+    // No need for a separate checkbox column
     
     // Add data columns
     columns.forEach((col) => {
@@ -560,9 +545,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           context={context}
           getRowId={getRowId ? (params) => String(getRowId(params.data as T)) : (params) => String(params.data?.id)}
           overlayNoRowsTemplate={emptyOverlay}
-          rowSelection={enableRowSelection ? "multiple" : undefined}
+          rowSelection={enableRowSelection ? { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false } : undefined}
           onSelectionChanged={enableRowSelection ? handleSelectionChanged : undefined}
-          suppressRowClickSelection={enableRowSelection}
         />
       </div>
 

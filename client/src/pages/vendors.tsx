@@ -27,26 +27,10 @@ import {
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["checkbox", "businessName", "services", "contacts", "locations"];
+const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "locations"];
 
 const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
-  {
-    id: "checkbox",
-    headerName: "",
-    category: "Selection",
-    toggleable: false,
-    colDef: {
-      width: 50,
-      maxWidth: 50,
-      checkboxSelection: true,
-      headerCheckboxSelection: true,
-      resizable: false,
-      sortable: false,
-      filter: false,
-      suppressHeaderFilterButton: true,
-    },
-  },
-  {
+    {
     id: "id",
     headerName: "ID",
     field: "id",
@@ -493,7 +477,7 @@ export default function Vendors() {
             vendorIds: [vendorId],
             sendEmail: true,
           });
-          const data = response as { results: Array<{ vendorId: string; success: boolean; error?: string; updateUrl?: string }> };
+          const data = await response.json() as { results: Array<{ vendorId: string; success: boolean; error?: string; updateUrl?: string }> };
           const result = data.results[0];
           results.push({
             vendorId,
