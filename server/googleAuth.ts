@@ -234,6 +234,10 @@ export const isAdmin: RequestHandler = async (req, res, next) => {
     return res.status(403).json({ message: "Forbidden: Admin access required" });
   }
   
+  (req as any).user = {
+    claims: session.claims
+  };
+  
   next();
 };
 
@@ -247,6 +251,10 @@ export const isManagerOrAdmin: RequestHandler = async (req, res, next) => {
   if (!user || (user.role !== "admin" && user.role !== "manager")) {
     return res.status(403).json({ message: "Forbidden: Manager or Admin access required" });
   }
+  
+  (req as any).user = {
+    claims: session.claims
+  };
   
   next();
 };
