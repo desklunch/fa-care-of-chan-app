@@ -53,7 +53,8 @@ import {
   Utensils,
   Palette,
   Upload,
-  Sparkles
+  Sparkles,
+  ImagePlus,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
@@ -523,48 +524,59 @@ export default function VenueDetailPage() {
               />
             )}
 
-            {venue.photos && venue.photos.length > 1 && (
-              <> 
-             
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      Photos
-                    </CardTitle>
-
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                      {venue.photos.slice(1).map((photo, index) => (
-                        <button
-                          key={photo.id}
-                          type="button"
-                          onClick={() => {
-                            setLightboxIndex(index + 1);
-                            setLightboxOpen(true);
-                          }}
-                          className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
-                          data-testid={`button-gallery-photo-${index}`}
-                        >
-                          <img
-                            src={photo.thumbnailUrl || photo.url}
-                            alt={photo.altText || `${venue.name} photo ${index + 2}`}
-                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                            data-testid={`img-gallery-photo-${index}`}
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
-                            <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-
-              </>
-            )}
+            <Card className="group relative">
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Photos
+                </CardTitle>
+                {venue.photos && venue.photos.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setLocation(`/venues/${id}/edit`)}
+                    className="invisible group-hover:visible"
+                    data-testid="button-edit-photos"
+                  >
+                    <SquarePen className="h-4 w-4" />
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {venue.photos && venue.photos.slice(1).map((photo, index) => (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      onClick={() => {
+                        setLightboxIndex(index + 1);
+                        setLightboxOpen(true);
+                      }}
+                      className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
+                      data-testid={`button-gallery-photo-${index}`}
+                    >
+                      <img
+                        src={photo.thumbnailUrl || photo.url}
+                        alt={photo.altText || `${venue.name} photo ${index + 2}`}
+                        className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        data-testid={`img-gallery-photo-${index}`}
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+                        <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      </div>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setLocation(`/venues/${id}/edit`)}
+                    className="relative aspect-square overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 hover:bg-muted hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2"
+                    data-testid="button-upload-photos"
+                  >
+                    <ImagePlus className="h-8 w-8 text-muted-foreground/50" />
+                    <span className="text-xs text-muted-foreground/50 text-center px-2">Upload or Import Photos</span>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
         
 
         <Card className="group relative">
