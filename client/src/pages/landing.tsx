@@ -57,11 +57,12 @@ export default function Landing() {
 
     <div className="max-w-4xl mx-auto h-screen flex flex-col  justify-center text-center gap-4">
       <h1 className="text-4xl md:text-5xl font-bold tracking-tight ">
-        Care of Chane App
-        <span className="text-xs opacity-50 mt-1 tracking-wide font-light">
+        <p className="text-xs opacity-50 mb-2 tracking-wide font-light">
           COCA 1.0
-        </span>
+        </p>
+        Care of Chan App
       </h1>
+
       <p className="text-sm text-muted-foreground mb-4 ">
         Sign in with your careofchan.com email.
       </p>

@@ -33,7 +33,8 @@ import {
   Search,
   ListFilter,
   MousePointerClick,
-  NotepadText,  
+  NotepadText,
+  DraftingCompass,
   type LucideIcon,
 } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -749,10 +750,11 @@ export default function VenuesPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-4 text-2xl">
               Care of Chan App
-              <span className="text-xs opacity-50 mt-1 tracking-wide font-light">
-                Verison 1.0
-              </span>
+      
             </DialogTitle>
+            <span className="text-xs opacity-50 mt-1 tracking-wide font-light">
+              Verison 1.0
+            </span>
             <DialogDescription>
               This app is being built to serve as a unified, fully-tailored, hub
               for all Care of Chan projects and work. focuses on venue
@@ -802,7 +804,17 @@ export default function VenuesPage() {
                 You can create collections of venues to share with teammates and clients. On the venues directory page, selecting one or more venues in the table will reveal a toolbar to add them to a collection. You can also add an individual venue to a collection from the venue listing page.
               </p>
             </div>
-
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-1.5">
+                  <DraftingCompass className="h-5 w-5 text-primary" />
+                </div>
+                <h4 className="font-medium">Support</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Request 
+              </p>
+            </div>
           </div>
 
           <DialogFooter className="flex-col items-start justify-start ">
