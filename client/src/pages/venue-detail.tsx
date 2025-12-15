@@ -49,6 +49,10 @@ import {
   FolderPlus,
   Map,
   Share2,
+  Plus,
+  Utensils,
+  Palette,
+  Upload,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
@@ -568,7 +572,19 @@ export default function VenueDetailPage() {
             <CardTitle className="text-lg">Amenities</CardTitle>
           </CardHeader>
           <CardContent>
-            <AmenityDisplay amenities={venue.amenities || []} />
+            {venue.amenities && venue.amenities.length > 0 ? (
+              <AmenityDisplay amenities={venue.amenities} />
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                data-testid="button-add-amenity"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add an Amenity
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -593,7 +609,15 @@ export default function VenueDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No cuisine tags</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation(`/venues/${id}/edit`)}
+                  data-testid="button-assign-cuisine"
+                >
+                  <Utensils className="h-4 w-4 mr-2" />
+                  Assign a Cuisine
+                </Button>
               )}
             </CardContent>
           </Card>
@@ -618,7 +642,15 @@ export default function VenueDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No style tags</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation(`/venues/${id}/edit`)}
+                  data-testid="button-assign-styles"
+                >
+                  <Palette className="h-4 w-4 mr-2" />
+                  Assign Styles
+                </Button>
               )}
             </CardContent>
           </Card>
@@ -684,7 +716,15 @@ export default function VenueDetailPage() {
                   ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">No floorplans available</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                data-testid="button-upload-floorplan"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload a Floorplan
+              </Button>
             )}
           </CardContent>
         </Card>
@@ -845,7 +885,15 @@ export default function VenueDetailPage() {
                   })}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">No attachments available</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                data-testid="button-attach-file"
+              >
+                <Paperclip className="h-4 w-4 mr-2" />
+                Attach a File
+              </Button>
             )}
           </CardContent>
         </Card>
@@ -876,7 +924,15 @@ export default function VenueDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">Not in any collections</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCollectionDialogOpen(true)}
+                data-testid="button-add-to-collection"
+              >
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Add to a Collection
+              </Button>
             )}
           </CardContent>
         </Card>
