@@ -40,6 +40,11 @@ import {
   commentEntityTypes,
   insertVenuePhotoSchema,
   updateVenuePhotoSchema,
+  insertAppReleaseSchema,
+  updateAppReleaseSchema,
+  insertAppReleaseChangeSchema,
+  releaseStatuses,
+  type ReleaseStatus,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -4124,6 +4129,336 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error setting hero photo:", error);
       res.status(500).json({ message: "Failed to set hero photo" });
+    }
+  });
+
+  // ==========================================
+  // APP RELEASE / VERSION MANAGEMENT ROUTES
+  // ==========================================
+
+  // GET /api/releases - List all releases
+  app.get("/api/releases", isAuthenticated, async (req: any, res) => {
+    try {
+      const status = req.query.status as ReleaseStatus | undefined;
+      if (status && !releaseStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const releases = await storage.getReleases(status);
+      res.json(releases);
+    } catch (error) {
+      console.error("Error fetching releases:", error);
+      res.status(500).json({ message: "Failed to fetch releases" });
+    }
+  });
+
+  // GET /api/releases/:id - Get release details
+  app.get("/api/releases/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+      res.json(release);
+    } catch (error) {
+      console.error("Error fetching release:", error);
+      res.status(500).json({ message: "Failed to fetch release" });
+    }
+  });
+
+  // POST /api/releases - Create new release (admin only)
+  app.post("/api/releases", isAdmin, async (req: any, res) => {
+    try {
+      const result = insertAppReleaseSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const userId = req.user.claims.sub;
+      const release = await storage.createRelease(result.data, userId);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "app_release",
+        entityId: release.id,
+        changes: { after: result.data as Record<string, unknown> },
+      });
+
+      res.status(201).json(release);
+    } catch (error: any) {
+      console.error("Error creating release:", error);
+      if (error.code === "23505") {
+        return res.status(400).json({ message: "Version label already exists" });
+      }
+      res.status(500).json({ message: "Failed to create release" });
+    }
+  });
+
+  // PUT /api/releases/:id - Update release (admin only)
+  app.put("/api/releases/:id", isAdmin, async (req: any, res) => {
+    try {
+      const existing = await storage.getReleaseById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (existing.status === "released") {
+        return res.status(400).json({ message: "Cannot edit a published release" });
+      }
+
+      const result = updateAppReleaseSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const release = await storage.updateRelease(req.params.id, result.data);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_release",
+        entityId: req.params.id,
+        changes: { before: existing, after: result.data as Record<string, unknown> },
+      });
+
+      res.json(release);
+    } catch (error: any) {
+      console.error("Error updating release:", error);
+      if (error.code === "23505") {
+        return res.status(400).json({ message: "Version label already exists" });
+      }
+      res.status(500).json({ message: "Failed to update release" });
+    }
+  });
+
+  // POST /api/releases/:id/publish - Publish release (admin only)
+  app.post("/api/releases/:id/publish", isAdmin, async (req: any, res) => {
+    try {
+      const existing = await storage.getReleaseById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (existing.status === "released") {
+        return res.status(400).json({ message: "Release is already published" });
+      }
+
+      const release = await storage.publishRelease(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_release",
+        entityId: req.params.id,
+        metadata: { action: "publish" },
+      });
+
+      res.json(release);
+    } catch (error) {
+      console.error("Error publishing release:", error);
+      res.status(500).json({ message: "Failed to publish release" });
+    }
+  });
+
+  // DELETE /api/releases/:id - Delete release (admin only)
+  app.delete("/api/releases/:id", isAdmin, async (req: any, res) => {
+    try {
+      const existing = await storage.getReleaseById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (existing.status === "released") {
+        return res.status(400).json({ message: "Cannot delete a published release" });
+      }
+
+      await storage.deleteRelease(req.params.id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "app_release",
+        entityId: req.params.id,
+        changes: { before: { versionLabel: existing.versionLabel } },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting release:", error);
+      res.status(500).json({ message: "Failed to delete release" });
+    }
+  });
+
+  // POST /api/releases/:id/features - Add feature to release (admin only)
+  app.post("/api/releases/:id/features", isAdmin, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (release.status === "released") {
+        return res.status(400).json({ message: "Cannot modify a published release" });
+      }
+
+      const { featureId, notes } = req.body;
+      if (!featureId) {
+        return res.status(400).json({ message: "featureId is required" });
+      }
+
+      const releaseFeature = await storage.addFeatureToRelease(req.params.id, featureId, notes);
+      res.status(201).json(releaseFeature);
+    } catch (error: any) {
+      console.error("Error adding feature to release:", error);
+      if (error.code === "23505") {
+        return res.status(400).json({ message: "Feature already added to this release" });
+      }
+      res.status(500).json({ message: "Failed to add feature to release" });
+    }
+  });
+
+  // DELETE /api/releases/:id/features/:featureId - Remove feature from release
+  app.delete("/api/releases/:id/features/:featureId", isAdmin, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (release.status === "released") {
+        return res.status(400).json({ message: "Cannot modify a published release" });
+      }
+
+      await storage.removeFeatureFromRelease(req.params.id, req.params.featureId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing feature from release:", error);
+      res.status(500).json({ message: "Failed to remove feature from release" });
+    }
+  });
+
+  // POST /api/releases/:id/issues - Add issue to release (admin only)
+  app.post("/api/releases/:id/issues", isAdmin, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (release.status === "released") {
+        return res.status(400).json({ message: "Cannot modify a published release" });
+      }
+
+      const { issueId, notes } = req.body;
+      if (!issueId) {
+        return res.status(400).json({ message: "issueId is required" });
+      }
+
+      const releaseIssue = await storage.addIssueToRelease(req.params.id, issueId, notes);
+      res.status(201).json(releaseIssue);
+    } catch (error: any) {
+      console.error("Error adding issue to release:", error);
+      if (error.code === "23505") {
+        return res.status(400).json({ message: "Issue already added to this release" });
+      }
+      res.status(500).json({ message: "Failed to add issue to release" });
+    }
+  });
+
+  // DELETE /api/releases/:id/issues/:issueId - Remove issue from release
+  app.delete("/api/releases/:id/issues/:issueId", isAdmin, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (release.status === "released") {
+        return res.status(400).json({ message: "Cannot modify a published release" });
+      }
+
+      await storage.removeIssueFromRelease(req.params.id, req.params.issueId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing issue from release:", error);
+      res.status(500).json({ message: "Failed to remove issue from release" });
+    }
+  });
+
+  // POST /api/releases/:id/changes - Add manual change to release (admin only)
+  app.post("/api/releases/:id/changes", isAdmin, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (release.status === "released") {
+        return res.status(400).json({ message: "Cannot modify a published release" });
+      }
+
+      const result = insertAppReleaseChangeSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const userId = req.user.claims.sub;
+      const change = await storage.addChangeToRelease(req.params.id, result.data, userId);
+      res.status(201).json(change);
+    } catch (error) {
+      console.error("Error adding change to release:", error);
+      res.status(500).json({ message: "Failed to add change to release" });
+    }
+  });
+
+  // DELETE /api/releases/:id/changes/:changeId - Remove change from release
+  app.delete("/api/releases/:id/changes/:changeId", isAdmin, async (req: any, res) => {
+    try {
+      const release = await storage.getReleaseById(req.params.id);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+
+      if (release.status === "released") {
+        return res.status(400).json({ message: "Cannot modify a published release" });
+      }
+
+      await storage.removeChangeFromRelease(req.params.changeId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing change from release:", error);
+      res.status(500).json({ message: "Failed to remove change from release" });
+    }
+  });
+
+  // GET /api/releases/suggestions/features - Get suggested features for release
+  app.get("/api/releases/suggestions/features", isAdmin, async (req: any, res) => {
+    try {
+      const lastRelease = await storage.getLatestReleasedVersion();
+      const sinceDate = lastRelease?.releaseDate || undefined;
+      const features = await storage.getCompletedFeaturesNotInRelease(sinceDate);
+      res.json(features);
+    } catch (error) {
+      console.error("Error fetching suggested features:", error);
+      res.status(500).json({ message: "Failed to fetch suggested features" });
+    }
+  });
+
+  // GET /api/releases/suggestions/issues - Get suggested issues for release
+  app.get("/api/releases/suggestions/issues", isAdmin, async (req: any, res) => {
+    try {
+      const lastRelease = await storage.getLatestReleasedVersion();
+      const sinceDate = lastRelease?.releaseDate || undefined;
+      const issues = await storage.getFixedIssuesNotInRelease(sinceDate);
+      res.json(issues);
+    } catch (error) {
+      console.error("Error fetching suggested issues:", error);
+      res.status(500).json({ message: "Failed to fetch suggested issues" });
     }
   });
 

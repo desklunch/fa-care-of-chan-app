@@ -129,11 +129,13 @@ export const appFeatures = pgTable(
     ownerId: varchar("owner_id").references(() => users.id),
     voteCount: integer("vote_count").default(0).notNull(),
     estimatedDelivery: timestamp("estimated_delivery"),
+    completedAt: timestamp("completed_at"), // When status changed to "completed"
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("idx_app_features_status").on(table.status),
+    index("idx_app_features_completed_at").on(table.completedAt),
     index("idx_app_features_category").on(table.categoryId),
     index("idx_app_features_created_by").on(table.createdById),
     index("idx_app_features_vote_count").on(table.voteCount),
@@ -727,7 +729,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -1224,6 +1226,7 @@ export const appIssues = pgTable(
     createdById: varchar("created_by_id")
       .notNull()
       .references(() => users.id),
+    fixedAt: timestamp("fixed_at"), // When status changed to "fixed" or "closed"
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -1231,6 +1234,7 @@ export const appIssues = pgTable(
     index("idx_app_issues_status").on(table.status),
     index("idx_app_issues_severity").on(table.severity),
     index("idx_app_issues_created_by").on(table.createdById),
+    index("idx_app_issues_fixed_at").on(table.fixedAt),
   ],
 );
 
@@ -1711,3 +1715,198 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
 export type CreateAnalyticsSession = z.infer<typeof insertAnalyticsSessionSchema>;
 export type CreateAnalyticsPageView = z.infer<typeof insertAnalyticsPageViewSchema>;
 export type CreateAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+
+// ==========================================
+// APP RELEASES / VERSION MANAGEMENT
+// ==========================================
+
+// Release status enum
+export const releaseStatuses = ["draft", "released"] as const;
+export type ReleaseStatus = (typeof releaseStatuses)[number];
+
+// Change type enum for manual changes
+export const changeTypes = ["feature", "bugfix", "improvement", "task"] as const;
+export type ChangeType = (typeof changeTypes)[number];
+
+// App releases - version records
+export const appReleases = pgTable(
+  "app_releases",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    versionLabel: varchar("version_label", { length: 50 }).notNull().unique(), // e.g., "V1.0.1"
+    title: varchar("title", { length: 200 }), // Optional release title/name
+    releaseNotes: text("release_notes"), // Summary of the release
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    releaseDate: timestamp("release_date"), // When released (null if draft)
+    createdById: varchar("created_by_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_app_releases_status").on(table.status),
+    index("idx_app_releases_release_date").on(table.releaseDate),
+    index("idx_app_releases_version").on(table.versionLabel),
+  ],
+);
+
+// App release features - links releases to app_features
+export const appReleaseFeatures = pgTable(
+  "app_release_features",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    releaseId: varchar("release_id")
+      .notNull()
+      .references(() => appReleases.id, { onDelete: "cascade" }),
+    featureId: varchar("feature_id")
+      .notNull()
+      .references(() => appFeatures.id, { onDelete: "cascade" }),
+    notes: text("notes"), // Optional notes about inclusion
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    unique("unique_release_feature").on(table.releaseId, table.featureId),
+    index("idx_app_release_features_release").on(table.releaseId),
+    index("idx_app_release_features_feature").on(table.featureId),
+  ],
+);
+
+// App release issues - links releases to app_issues
+export const appReleaseIssues = pgTable(
+  "app_release_issues",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    releaseId: varchar("release_id")
+      .notNull()
+      .references(() => appReleases.id, { onDelete: "cascade" }),
+    issueId: varchar("issue_id")
+      .notNull()
+      .references(() => appIssues.id, { onDelete: "cascade" }),
+    notes: text("notes"), // Optional notes about fix
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    unique("unique_release_issue").on(table.releaseId, table.issueId),
+    index("idx_app_release_issues_release").on(table.releaseId),
+    index("idx_app_release_issues_issue").on(table.issueId),
+  ],
+);
+
+// App release changes - manual change entries (non-feature, non-issue)
+export const appReleaseChanges = pgTable(
+  "app_release_changes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    releaseId: varchar("release_id")
+      .notNull()
+      .references(() => appReleases.id, { onDelete: "cascade" }),
+    changeType: varchar("change_type", { length: 20 }).notNull(), // feature, bugfix, improvement, task
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description"),
+    createdById: varchar("created_by_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_app_release_changes_release").on(table.releaseId),
+    index("idx_app_release_changes_type").on(table.changeType),
+  ],
+);
+
+// Relations for releases
+export const appReleasesRelations = relations(appReleases, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [appReleases.createdById],
+    references: [users.id],
+  }),
+  features: many(appReleaseFeatures),
+  issues: many(appReleaseIssues),
+  changes: many(appReleaseChanges),
+}));
+
+export const appReleaseFeaturesRelations = relations(appReleaseFeatures, ({ one }) => ({
+  release: one(appReleases, {
+    fields: [appReleaseFeatures.releaseId],
+    references: [appReleases.id],
+  }),
+  feature: one(appFeatures, {
+    fields: [appReleaseFeatures.featureId],
+    references: [appFeatures.id],
+  }),
+}));
+
+export const appReleaseIssuesRelations = relations(appReleaseIssues, ({ one }) => ({
+  release: one(appReleases, {
+    fields: [appReleaseIssues.releaseId],
+    references: [appReleases.id],
+  }),
+  issue: one(appIssues, {
+    fields: [appReleaseIssues.issueId],
+    references: [appIssues.id],
+  }),
+}));
+
+export const appReleaseChangesRelations = relations(appReleaseChanges, ({ one }) => ({
+  release: one(appReleases, {
+    fields: [appReleaseChanges.releaseId],
+    references: [appReleases.id],
+  }),
+  createdBy: one(users, {
+    fields: [appReleaseChanges.createdById],
+    references: [users.id],
+  }),
+}));
+
+// Types for releases
+export type AppRelease = typeof appReleases.$inferSelect;
+export type InsertAppRelease = typeof appReleases.$inferInsert;
+export type AppReleaseFeature = typeof appReleaseFeatures.$inferSelect;
+export type AppReleaseIssue = typeof appReleaseIssues.$inferSelect;
+export type AppReleaseChange = typeof appReleaseChanges.$inferSelect;
+
+// Release with full details
+export type AppReleaseWithDetails = AppRelease & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName">;
+  features: Array<AppReleaseFeature & { feature: Pick<AppFeature, "id" | "title" | "featureType" | "status"> }>;
+  issues: Array<AppReleaseIssue & { issue: Pick<AppIssue, "id" | "title" | "severity" | "status"> }>;
+  changes: Array<AppReleaseChange & { createdBy: Pick<User, "id" | "firstName" | "lastName"> }>;
+};
+
+// Insert schemas
+export const insertAppReleaseSchema = createInsertSchema(appReleases).omit({
+  id: true,
+  createdById: true,
+  status: true,
+  releaseDate: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  versionLabel: z.string().min(1, "Version label is required").max(50).regex(/^V?\d+(\.\d+)*$/, "Version must be in format V1.0.0 or 1.0.0"),
+  title: z.string().max(200).optional(),
+  releaseNotes: z.string().optional(),
+});
+
+export const updateAppReleaseSchema = createInsertSchema(appReleases).pick({
+  versionLabel: true,
+  title: true,
+  releaseNotes: true,
+}).partial().extend({
+  versionLabel: z.string().min(1).max(50).regex(/^V?\d+(\.\d+)*$/, "Version must be in format V1.0.0 or 1.0.0").optional(),
+});
+
+export const insertAppReleaseChangeSchema = createInsertSchema(appReleaseChanges).omit({
+  id: true,
+  releaseId: true,
+  createdById: true,
+  createdAt: true,
+}).extend({
+  changeType: z.enum(changeTypes, { required_error: "Change type is required" }),
+  title: z.string().min(3, "Title must be at least 3 characters").max(200),
+  description: z.string().optional(),
+});
+
+export type CreateAppRelease = z.infer<typeof insertAppReleaseSchema>;
+export type UpdateAppRelease = z.infer<typeof updateAppReleaseSchema>;
+export type CreateAppReleaseChange = z.infer<typeof insertAppReleaseChangeSchema>;

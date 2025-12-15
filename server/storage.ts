@@ -128,6 +128,19 @@ import {
   type InsertAnalyticsPageView,
   type AnalyticsEvent,
   type InsertAnalyticsEvent,
+  appReleases,
+  appReleaseFeatures,
+  appReleaseIssues,
+  appReleaseChanges,
+  type AppRelease,
+  type AppReleaseFeature,
+  type AppReleaseIssue,
+  type AppReleaseChange,
+  type AppReleaseWithDetails,
+  type CreateAppRelease,
+  type UpdateAppRelease,
+  type CreateAppReleaseChange,
+  type ReleaseStatus,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -388,6 +401,27 @@ export interface IStorage {
     userName: string | null;
     environment: string;
   }[]>;
+  
+  // App release operations
+  getReleases(status?: ReleaseStatus): Promise<AppRelease[]>;
+  getReleaseById(id: string): Promise<AppReleaseWithDetails | undefined>;
+  createRelease(data: CreateAppRelease, createdById: string): Promise<AppRelease>;
+  updateRelease(id: string, data: UpdateAppRelease): Promise<AppRelease | undefined>;
+  publishRelease(id: string): Promise<AppRelease | undefined>;
+  deleteRelease(id: string): Promise<void>;
+  
+  // Release associations
+  addFeatureToRelease(releaseId: string, featureId: string, notes?: string): Promise<AppReleaseFeature>;
+  removeFeatureFromRelease(releaseId: string, featureId: string): Promise<void>;
+  addIssueToRelease(releaseId: string, issueId: string, notes?: string): Promise<AppReleaseIssue>;
+  removeIssueFromRelease(releaseId: string, issueId: string): Promise<void>;
+  addChangeToRelease(releaseId: string, data: CreateAppReleaseChange, createdById: string): Promise<AppReleaseChange>;
+  removeChangeFromRelease(changeId: string): Promise<void>;
+  
+  // Helpers for auto-suggest
+  getCompletedFeaturesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; completedAt: Date | null }[]>;
+  getFixedIssuesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; fixedAt: Date | null }[]>;
+  getLatestReleasedVersion(): Promise<AppRelease | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -715,6 +749,7 @@ export class DatabaseStorage implements IStorage {
         ownerId: appFeatures.ownerId,
         voteCount: appFeatures.voteCount,
         estimatedDelivery: appFeatures.estimatedDelivery,
+        completedAt: appFeatures.completedAt,
         createdAt: appFeatures.createdAt,
         updatedAt: appFeatures.updatedAt,
         categoryName: appFeatureCategories.name,
@@ -753,6 +788,7 @@ export class DatabaseStorage implements IStorage {
       ownerId: f.ownerId,
       voteCount: f.voteCount,
       estimatedDelivery: f.estimatedDelivery,
+      completedAt: f.completedAt,
       createdAt: f.createdAt,
       updatedAt: f.updatedAt,
       category: {
@@ -793,6 +829,7 @@ export class DatabaseStorage implements IStorage {
         ownerId: appFeatures.ownerId,
         voteCount: appFeatures.voteCount,
         estimatedDelivery: appFeatures.estimatedDelivery,
+        completedAt: appFeatures.completedAt,
         createdAt: appFeatures.createdAt,
         updatedAt: appFeatures.updatedAt,
         categoryName: appFeatureCategories.name,
@@ -836,6 +873,7 @@ export class DatabaseStorage implements IStorage {
       ownerId: f.ownerId,
       voteCount: f.voteCount,
       estimatedDelivery: f.estimatedDelivery,
+      completedAt: f.completedAt,
       createdAt: f.createdAt,
       updatedAt: f.updatedAt,
       category: {
@@ -2152,6 +2190,7 @@ export class DatabaseStorage implements IStorage {
         severity: appIssues.severity,
         status: appIssues.status,
         createdById: appIssues.createdById,
+        fixedAt: appIssues.fixedAt,
         createdAt: appIssues.createdAt,
         updatedAt: appIssues.updatedAt,
         createdByFirstName: users.firstName,
@@ -2170,6 +2209,7 @@ export class DatabaseStorage implements IStorage {
       severity: i.severity,
       status: i.status,
       createdById: i.createdById,
+      fixedAt: i.fixedAt,
       createdAt: i.createdAt,
       updatedAt: i.updatedAt,
       createdBy: {
@@ -2190,6 +2230,7 @@ export class DatabaseStorage implements IStorage {
         severity: appIssues.severity,
         status: appIssues.status,
         createdById: appIssues.createdById,
+        fixedAt: appIssues.fixedAt,
         createdAt: appIssues.createdAt,
         updatedAt: appIssues.updatedAt,
         createdByFirstName: users.firstName,
@@ -2210,6 +2251,7 @@ export class DatabaseStorage implements IStorage {
       severity: i.severity,
       status: i.status,
       createdById: i.createdById,
+      fixedAt: i.fixedAt,
       createdAt: i.createdAt,
       updatedAt: i.updatedAt,
       createdBy: {
@@ -3120,6 +3162,287 @@ export class DatabaseStorage implements IStorage {
       userName: r.firstName ? `${r.firstName} ${r.lastName ? r.lastName.charAt(0) + '.' : ''}`.trim() : null,
       environment: r.environment,
     }));
+  }
+
+  // ==========================================
+  // APP RELEASE STORAGE METHODS
+  // ==========================================
+
+  async getReleases(status?: ReleaseStatus): Promise<AppRelease[]> {
+    const condition = status ? eq(appReleases.status, status) : undefined;
+    return await db
+      .select()
+      .from(appReleases)
+      .where(condition)
+      .orderBy(desc(appReleases.releaseDate), desc(appReleases.createdAt));
+  }
+
+  async getReleaseById(id: string): Promise<AppReleaseWithDetails | undefined> {
+    const [release] = await db
+      .select()
+      .from(appReleases)
+      .where(eq(appReleases.id, id));
+
+    if (!release) return undefined;
+
+    // Get creator
+    const [creator] = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(users)
+      .where(eq(users.id, release.createdById));
+
+    // Get features
+    const featuresResult = await db
+      .select({
+        id: appReleaseFeatures.id,
+        releaseId: appReleaseFeatures.releaseId,
+        featureId: appReleaseFeatures.featureId,
+        notes: appReleaseFeatures.notes,
+        createdAt: appReleaseFeatures.createdAt,
+        featureTitle: appFeatures.title,
+        featureType: appFeatures.featureType,
+        featureStatus: appFeatures.status,
+      })
+      .from(appReleaseFeatures)
+      .innerJoin(appFeatures, eq(appReleaseFeatures.featureId, appFeatures.id))
+      .where(eq(appReleaseFeatures.releaseId, id));
+
+    // Get issues
+    const issuesResult = await db
+      .select({
+        id: appReleaseIssues.id,
+        releaseId: appReleaseIssues.releaseId,
+        issueId: appReleaseIssues.issueId,
+        notes: appReleaseIssues.notes,
+        createdAt: appReleaseIssues.createdAt,
+        issueTitle: appIssues.title,
+        issueSeverity: appIssues.severity,
+        issueStatus: appIssues.status,
+      })
+      .from(appReleaseIssues)
+      .innerJoin(appIssues, eq(appReleaseIssues.issueId, appIssues.id))
+      .where(eq(appReleaseIssues.releaseId, id));
+
+    // Get changes
+    const changesResult = await db
+      .select({
+        id: appReleaseChanges.id,
+        releaseId: appReleaseChanges.releaseId,
+        changeType: appReleaseChanges.changeType,
+        title: appReleaseChanges.title,
+        description: appReleaseChanges.description,
+        createdById: appReleaseChanges.createdById,
+        createdAt: appReleaseChanges.createdAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+      })
+      .from(appReleaseChanges)
+      .innerJoin(users, eq(appReleaseChanges.createdById, users.id))
+      .where(eq(appReleaseChanges.releaseId, id));
+
+    return {
+      ...release,
+      createdBy: {
+        id: creator.id,
+        firstName: creator.firstName,
+        lastName: creator.lastName,
+      },
+      features: featuresResult.map(f => ({
+        id: f.id,
+        releaseId: f.releaseId,
+        featureId: f.featureId,
+        notes: f.notes,
+        createdAt: f.createdAt,
+        feature: {
+          id: f.featureId,
+          title: f.featureTitle,
+          featureType: f.featureType,
+          status: f.featureStatus,
+        },
+      })),
+      issues: issuesResult.map(i => ({
+        id: i.id,
+        releaseId: i.releaseId,
+        issueId: i.issueId,
+        notes: i.notes,
+        createdAt: i.createdAt,
+        issue: {
+          id: i.issueId,
+          title: i.issueTitle,
+          severity: i.issueSeverity,
+          status: i.issueStatus,
+        },
+      })),
+      changes: changesResult.map(c => ({
+        id: c.id,
+        releaseId: c.releaseId,
+        changeType: c.changeType,
+        title: c.title,
+        description: c.description,
+        createdById: c.createdById,
+        createdAt: c.createdAt,
+        createdBy: {
+          id: c.createdById,
+          firstName: c.createdByFirstName,
+          lastName: c.createdByLastName,
+        },
+      })),
+    };
+  }
+
+  async createRelease(data: CreateAppRelease, createdById: string): Promise<AppRelease> {
+    const [release] = await db
+      .insert(appReleases)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return release;
+  }
+
+  async updateRelease(id: string, data: UpdateAppRelease): Promise<AppRelease | undefined> {
+    const [release] = await db
+      .update(appReleases)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(appReleases.id, id))
+      .returning();
+    return release;
+  }
+
+  async publishRelease(id: string): Promise<AppRelease | undefined> {
+    const [release] = await db
+      .update(appReleases)
+      .set({
+        status: "released",
+        releaseDate: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(appReleases.id, id))
+      .returning();
+    return release;
+  }
+
+  async deleteRelease(id: string): Promise<void> {
+    await db.delete(appReleases).where(eq(appReleases.id, id));
+  }
+
+  // Release associations
+  async addFeatureToRelease(releaseId: string, featureId: string, notes?: string): Promise<AppReleaseFeature> {
+    const [feature] = await db
+      .insert(appReleaseFeatures)
+      .values({ releaseId, featureId, notes })
+      .returning();
+    return feature;
+  }
+
+  async removeFeatureFromRelease(releaseId: string, featureId: string): Promise<void> {
+    await db
+      .delete(appReleaseFeatures)
+      .where(and(
+        eq(appReleaseFeatures.releaseId, releaseId),
+        eq(appReleaseFeatures.featureId, featureId)
+      ));
+  }
+
+  async addIssueToRelease(releaseId: string, issueId: string, notes?: string): Promise<AppReleaseIssue> {
+    const [issue] = await db
+      .insert(appReleaseIssues)
+      .values({ releaseId, issueId, notes })
+      .returning();
+    return issue;
+  }
+
+  async removeIssueFromRelease(releaseId: string, issueId: string): Promise<void> {
+    await db
+      .delete(appReleaseIssues)
+      .where(and(
+        eq(appReleaseIssues.releaseId, releaseId),
+        eq(appReleaseIssues.issueId, issueId)
+      ));
+  }
+
+  async addChangeToRelease(releaseId: string, data: CreateAppReleaseChange, createdById: string): Promise<AppReleaseChange> {
+    const [change] = await db
+      .insert(appReleaseChanges)
+      .values({
+        ...data,
+        releaseId,
+        createdById,
+      })
+      .returning();
+    return change;
+  }
+
+  async removeChangeFromRelease(changeId: string): Promise<void> {
+    await db.delete(appReleaseChanges).where(eq(appReleaseChanges.id, changeId));
+  }
+
+  // Helpers for auto-suggest
+  async getCompletedFeaturesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; completedAt: Date | null }[]> {
+    // Get all feature IDs already in any release
+    const releasedFeatureIds = await db
+      .select({ featureId: appReleaseFeatures.featureId })
+      .from(appReleaseFeatures);
+    
+    const excludeIds = releasedFeatureIds.map(r => r.featureId);
+    
+    let condition = eq(appFeatures.status, "completed");
+    if (sinceDate) {
+      condition = and(condition, gte(appFeatures.completedAt, sinceDate)) as any;
+    }
+    
+    const features = await db
+      .select({
+        id: appFeatures.id,
+        title: appFeatures.title,
+        completedAt: appFeatures.completedAt,
+      })
+      .from(appFeatures)
+      .where(condition)
+      .orderBy(desc(appFeatures.completedAt));
+    
+    return features.filter(f => !excludeIds.includes(f.id));
+  }
+
+  async getFixedIssuesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; fixedAt: Date | null }[]> {
+    // Get all issue IDs already in any release
+    const releasedIssueIds = await db
+      .select({ issueId: appReleaseIssues.issueId })
+      .from(appReleaseIssues);
+    
+    const excludeIds = releasedIssueIds.map(r => r.issueId);
+    
+    let condition = inArray(appIssues.status, ["fixed", "closed"]);
+    if (sinceDate) {
+      condition = and(condition, gte(appIssues.fixedAt, sinceDate)) as any;
+    }
+    
+    const issues = await db
+      .select({
+        id: appIssues.id,
+        title: appIssues.title,
+        fixedAt: appIssues.fixedAt,
+      })
+      .from(appIssues)
+      .where(condition)
+      .orderBy(desc(appIssues.fixedAt));
+    
+    return issues.filter(i => !excludeIds.includes(i.id));
+  }
+
+  async getLatestReleasedVersion(): Promise<AppRelease | undefined> {
+    const [release] = await db
+      .select()
+      .from(appReleases)
+      .where(eq(appReleases.status, "released"))
+      .orderBy(desc(appReleases.releaseDate))
+      .limit(1);
+    return release;
   }
 }
 
