@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
   Trash2,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,9 +23,10 @@ import type { NavItem, NavSection } from "../types/layout";
 interface SidebarProps {
   isMobileOpen: boolean;
   onMobileClose: () => void;
+  onSearch?: () => void;
 }
 
-export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
+export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: SidebarProps) {
   const { user, navigation, onSignOut } = useLayout();
   const { resolvedTheme, setTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -224,6 +226,42 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
             </Button>
           )}
         </div>
+
+        {onSearch && (
+          <div className="px-2 pt-3">
+            {showExpanded ? (
+              <Button
+                variant="outline"
+                onClick={onSearch}
+                className="w-full justify-start gap-2 text-muted-foreground font-normal"
+                data-testid="button-search-trigger"
+              >
+                <Search className="h-4 w-4" />
+                <span className="flex-1 text-left">Search...</span>
+                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </Button>
+            ) : (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onSearch}
+                    className="w-full"
+                    data-testid="button-search-trigger-collapsed"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  Search (⌘K)
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
 
         <nav className="flex-1 overflow-y-auto p-2 py-3 space-y-1" data-testid="nav-sidebar">
           {visibleNavigation.map((section, sectionIndex) => {
