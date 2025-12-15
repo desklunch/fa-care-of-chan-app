@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import OpenAI from "openai";
 import sharp from "sharp";
 import { 
   insertInviteSchema, 
@@ -4459,6 +4460,123 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching suggested issues:", error);
       res.status(500).json({ message: "Failed to fetch suggested issues" });
+    }
+  });
+
+  // POST /api/venues/tag-suggestions - Get AI-suggested tags for a venue based on Google Places data
+  app.post("/api/venues/tag-suggestions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { googlePlaceData } = req.body;
+      
+      if (!googlePlaceData) {
+        return res.status(400).json({ message: "googlePlaceData is required" });
+      }
+
+      // Fetch all available tags
+      const [amenities, allTags] = await Promise.all([
+        storage.getAmenities(),
+        storage.getTags(),
+      ]);
+
+      const cuisineTags = allTags.filter(t => t.category === "cuisine");
+      const styleTags = allTags.filter(t => t.category === "style");
+
+      // Build the prompt
+      const amenityList = amenities.map(a => ({ id: a.id, name: a.name }));
+      const cuisineList = cuisineTags.map(t => ({ id: t.id, name: t.name }));
+      const styleList = styleTags.map(t => ({ id: t.id, name: t.name }));
+
+      const systemPrompt = `You are an expert venue categorization assistant. Your job is to analyze venue data from Google Places and suggest appropriate tags.
+
+You will be given:
+1. Venue data from Google Places (name, address, types, editorial summary, etc.)
+2. Lists of available amenities, cuisine tags, and style tags
+
+Your task is to suggest which tags best match the venue based on the Google Places data.
+
+IMPORTANT RULES:
+- Only suggest tags from the provided lists - never invent new tags
+- Return tag IDs, not names
+- Be conservative - only suggest tags when you are confident they apply
+- For restaurants/food venues, suggest relevant cuisine and style tags
+- For event spaces, focus on amenities and style tags
+- If no tags clearly apply, return empty arrays
+
+Respond with ONLY valid JSON in this exact format:
+{
+  "amenityIds": ["id1", "id2"],
+  "cuisineTagIds": ["id1", "id2"],
+  "styleTagIds": ["id1", "id2"],
+  "reasoning": "Brief explanation of why these tags were chosen"
+}`;
+
+      const userPrompt = `Analyze this venue and suggest appropriate tags:
+
+VENUE DATA FROM GOOGLE PLACES:
+${JSON.stringify(googlePlaceData, null, 2)}
+
+AVAILABLE AMENITIES (id: name):
+${amenityList.map(a => `- ${a.id}: ${a.name}`).join("\n")}
+
+AVAILABLE CUISINE TAGS (id: name):
+${cuisineList.map(t => `- ${t.id}: ${t.name}`).join("\n")}
+
+AVAILABLE STYLE TAGS (id: name):
+${styleList.map(t => `- ${t.id}: ${t.name}`).join("\n")}
+
+Please analyze the venue and suggest appropriate tags from the lists above.`;
+
+      // Initialize OpenAI client with Replit AI Integrations
+      const openai = new OpenAI({
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      });
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 1000,
+      });
+
+      const responseText = completion.choices[0]?.message?.content;
+      if (!responseText) {
+        return res.status(500).json({ message: "No response from AI" });
+      }
+
+      // Parse the JSON response
+      let suggestions;
+      try {
+        // Extract JSON from response (handle markdown code blocks)
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("No JSON found in response");
+        }
+        suggestions = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error("Failed to parse AI response:", responseText);
+        return res.status(500).json({ message: "Failed to parse AI response" });
+      }
+
+      // Validate that suggested IDs exist in our lists
+      const validAmenityIds = new Set(amenities.map(a => a.id));
+      const validCuisineIds = new Set(cuisineTags.map(t => t.id));
+      const validStyleIds = new Set(styleTags.map(t => t.id));
+
+      const filteredSuggestions = {
+        amenityIds: (suggestions.amenityIds || []).filter((id: string) => validAmenityIds.has(id)),
+        cuisineTagIds: (suggestions.cuisineTagIds || []).filter((id: string) => validCuisineIds.has(id)),
+        styleTagIds: (suggestions.styleTagIds || []).filter((id: string) => validStyleIds.has(id)),
+        reasoning: suggestions.reasoning || "",
+      };
+
+      res.json(filteredSuggestions);
+    } catch (error: any) {
+      console.error("Error generating tag suggestions:", error);
+      res.status(500).json({ message: "Failed to generate tag suggestions", error: error.message });
     }
   });
 
