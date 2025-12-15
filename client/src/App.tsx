@@ -163,6 +163,33 @@ function useLayoutConfig() {
         ],
       },
       {
+        heading: "Manager",
+        allowedRoles: ["admin", "manager"],
+        defaultCollapsed: true,
+        items: [
+          {
+            name: "Team",
+            href: "/team",
+            icon: Users,
+          },
+          {
+            name: "Logs",
+            href: "/admin/logs",
+            icon: SquareTerminal,
+          },
+          {
+            name: "Analytics",
+            href: "/admin/analytics",
+            icon: BarChart3,
+          },
+          {
+            name: "Theme Editor",
+            href: "/admin/theme",
+            icon: Palette,
+          },
+        ],
+      },
+      {
         heading: "Admin",
         allowedRoles: ["admin"],
         defaultCollapsed: true,
@@ -183,12 +210,6 @@ function useLayoutConfig() {
             icon: FileText,
           }, 
           {
-            name: "Team",
-            href: "/team",
-            icon: Users,
-            allowedRoles: ["admin", "manager"],
-          },
-          {
             name: "Contacts",
             href: "/contacts",
             icon: Contact,
@@ -202,55 +223,31 @@ function useLayoutConfig() {
             name: "Feature Roadmap",
             href: "/admin/app/roadmap",
             icon: Map,
-            allowedRoles: ["admin"],
           },
           {
             name: "Invites",
             href: "/admin/invites",
             icon: UserPlus,
-            allowedRoles: ["admin"],
           },
           {
             name: "Feature Categories",
             href: "/admin/app/features",
             icon: Tags,
-            allowedRoles: ["admin"],
           },
           {
             name: "Vendor Services",
             href: "/admin/vendors/services",
             icon: Briefcase,
-            allowedRoles: ["admin"],
           },
           {
             name: "Vendor Tokens",
             href: "/admin/vendors/tokens",
             icon: Link2,
-            allowedRoles: ["admin"],
-          },
-          {
-            name: "Theme Editor",
-            href: "/admin/theme",
-            icon: Palette,
-            allowedRoles: ["admin"],
-          },
-          {
-            name: "Logs",
-            href: "/admin/logs",
-            icon: SquareTerminal,
-            allowedRoles: ["admin"],
-          },
-          {
-            name: "Analytics",
-            href: "/admin/analytics",
-            icon: BarChart3,
-            allowedRoles: ["admin"],
           },
           {
             name: "Releases",
             href: "/admin/releases",
             icon: Rocket,
-            allowedRoles: ["admin"],
           },
         ],
       },

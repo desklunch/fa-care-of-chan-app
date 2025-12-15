@@ -523,7 +523,7 @@ const venueFilters: FilterConfig<VenueWithRelations>[] = [
   {
     id: "amenities",
     label: "Amenities",
-    icon: Store,
+    icon: Sparkles,
     optionSource: {
       type: "query",
       queryKey: "/api/amenities",
