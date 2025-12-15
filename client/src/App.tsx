@@ -37,7 +37,6 @@ import VenueCollectionDetail from "@/pages/venue-collection-detail";
 import Amenities from "@/pages/amenities";
 import TagsPage from "@/pages/tags";
 import AdminVendorServices from "@/pages/admin-vendor-services";
-import AppFeatureRoadmap from "@/pages/app-feature-roadmap";
 import AdminThemeEditor from "@/pages/admin-theme-editor";
 import AdminVendorTokens from "@/pages/admin-vendor-tokens";
 import VendorUpdateForm from "@/pages/vendor-update-form";
@@ -72,7 +71,6 @@ import {
   Contact,
   Store,
   Briefcase,
-  Map,
   Palette,
   Link2,
   FileText,
@@ -220,11 +218,6 @@ function useLayoutConfig() {
             icon: MessageSquare,
           },
           {
-            name: "Feature Roadmap",
-            href: "/admin/app/roadmap",
-            icon: Map,
-          },
-          {
             name: "Invites",
             href: "/admin/invites",
             icon: UserPlus,
@@ -252,9 +245,68 @@ function useLayoutConfig() {
         ],
       },
       {
+        heading: "Admin",
+        allowedRoles: ["admin"],
+        defaultCollapsed: true,
+        items: [
+          {
+            name: "Vendors",
+            href: "/vendors",
+            icon: Handshake,
+          },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: RadioTower,
+          },
+          {
+            name: "Forms",
+            href: "/forms/templates",
+            icon: FileText,
+          }, 
+          {
+            name: "Contacts",
+            href: "/contacts",
+            icon: Contact,
+          },
+          {
+            name: "Comments",
+            href: "/comments",
+            icon: MessageSquare,
+          },
+
+          {
+            name: "Invites",
+            href: "/admin/invites",
+            icon: UserPlus,
+          },
+
+          {
+            name: "Vendor Services",
+            href: "/admin/vendors/services",
+            icon: Briefcase,
+          },
+          {
+            name: "Vendor Tokens",
+            href: "/admin/vendors/tokens",
+            icon: Link2,
+          },
+
+        ],
+      },
+      {
         heading: "Resources",
         items: [
-
+          {
+            name: "Feature Categories",
+            href: "/admin/app/features",
+            icon: Tags,
+          },
+          {
+            name: "Releases",
+            href: "/admin/releases",
+            icon: Rocket,
+          },
         ],
       },
     ],
@@ -314,7 +366,6 @@ function AuthenticatedRoutes() {
           <Route path="/tags" component={TagsPage} />
           <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
-          <Route path="/admin/app/roadmap" component={AppFeatureRoadmap} />
           <Route path="/admin/vendors/services" component={AdminVendorServices} />
           <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
           <Route path="/forms/templates" component={FormTemplates} />

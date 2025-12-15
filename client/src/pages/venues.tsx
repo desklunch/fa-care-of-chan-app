@@ -816,10 +816,9 @@ export default function VenuesPage() {
                 <h4 className="font-medium">Support</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                Check out the feature roadmap, request new features, report
-                bugs, or ask questions via the Support links in the app's
-                sidebar menu. This is YOUR app. Your ideas, requirements, and
-                feedback, are will make it amazing.
+                Request new features, report bugs, or ask questions via the 
+                Support links in the app's sidebar menu. This is YOUR app. 
+                Your ideas, requirements, and feedback will make it amazing.
               </p>
             </div>
           </div>
