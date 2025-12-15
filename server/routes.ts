@@ -96,8 +96,8 @@ export async function registerRoutes(
       const { id } = req.params;
       const { role } = req.body;
       
-      if (!role || !["admin", "employee"].includes(role)) {
-        return res.status(400).json({ message: "Invalid role. Must be 'admin' or 'employee'" });
+      if (!role || !["admin", "manager", "employee"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be 'admin', 'manager', or 'employee'" });
       }
 
       const userBefore = await storage.getUser(id);

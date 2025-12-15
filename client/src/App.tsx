@@ -183,6 +183,7 @@ function useLayoutConfig() {
             name: "Team",
             href: "/team",
             icon: Users,
+            allowedRoles: ["admin", "manager"],
           },
           {
             name: "Contacts",
