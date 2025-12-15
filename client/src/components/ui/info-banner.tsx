@@ -60,7 +60,7 @@ export function InfoBanner({
             <Button
               variant="outline"
               size="sm"
-              className="gap-1 shrink-0 dark:border-foreground"
+              className="gap-1 shrink-0 "
               data-testid={`button-banner-cta-${id}`}
             >
               <DraftingCompass className="h-4 w-4" />
