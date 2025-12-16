@@ -243,6 +243,8 @@ function useLayoutConfig() {
       },
       {
         heading: "Application",
+        allowedRoles: ["admin"],
+        defaultCollapsed: true,
         items: [
           {
             name: "Feature Categories",
