@@ -24,7 +24,7 @@ export interface ColumnConfig<T> {
   id: string;
   headerName: string;
   field?: keyof T | string;
-  category: string;
+  category?: string;
   hide?: boolean;
   toggleable?: boolean;
   colDef: Omit<ColDef<T>, "colId" | "headerName" | "field" | "hide">;
