@@ -61,9 +61,9 @@ export default function Landing() {
   });
 
   return (
-    <div className="max-4xl mx-auto h-screen flex flex-col items-center justify-center text-center gap-12 text-primary p-6 ">
+    <div className=" mx-auto h-screen flex flex-col items-center justify-center text-center gap-12 text-primary p-6 bg-primary">
 
-      <div className=" max-w-2xl rounded-xl shadow-xl border p-6 flex flex-col items-center gap-4">
+      <div className="w-full bg-background max-w-md rounded-xl shadow-xl border p-6 flex flex-col items-center gap-4">
 
       
         <div className="flex justify-center mb-6">
@@ -71,17 +71,17 @@ export default function Landing() {
 
         </div>
 
-        <div className="rounded-md border border-primary w-fit p-2 py-1 text-xs tracking-wide font-normal">
+        <div className="rounded-md border border-primary w-fit p-2 py-1 text-base tracking-wide font-normal">
           CoCOS 1.0.1
         </div>
         
         {/* Desktop: Show sign-in */}
         <div
-          className="flex hidden md:flex-col items-center gap-2"
+          className="flex flex-col items-center gap-6 my-12 "
           data-testid="button-get-started"
         >
-          <p className="text-base mb-4 ">
-            Sign in with your primary Care of Chan email address.
+          <p className="text-base1">
+            Sign in with yout Care of Chan email.
           </p>
           {loginMutation.isPending ? (
             <Button size="lg" className="h-12 px-8" disabled>
@@ -108,20 +108,16 @@ export default function Landing() {
               shape="pill"
             />
           )}
-        </div>
-
-        {/* Mobile: Show not optimized message */}
-        <div
-          className="flex md:hidden items-center"
-          data-testid="mobile-notice"
-        >
-          <p className="text-base text-muted-foreground">
+          <p className="text-xs max-w-64 text-muted-foreground">
             This app is not yet fully optimized for mobile devices. Please use a
             desktop computer.
           </p>
         </div>
+        
+
+
         {isDevelopment && (
-          <div className="mt-6 pt-6 ">
+          <div className="">
             <Button
               variant="outline"
               size="sm"
@@ -143,6 +139,16 @@ export default function Landing() {
             </Button>
           </div>
         )}
+
+        
+        {/* Mobile: Show not optimized message */}
+        <div
+          className="flex items-center"
+          data-testid="mobile-notice"
+        >
+   
+        </div>
+
  
       </div>
 
