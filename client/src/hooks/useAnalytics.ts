@@ -30,7 +30,7 @@ async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: 
 
   if (sessionToken && sessionId) {
     try {
-      const res = await fetch("/api/analytics/session", {
+      const res = await fetch("/api/activity/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -45,7 +45,7 @@ async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: 
         return { sessionId: session.id, sessionToken };
       }
     } catch (e) {
-      console.error("Failed to update session:", e);
+      // Silently fail - tracking is non-critical
     }
   }
 
@@ -53,7 +53,7 @@ async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: 
   sessionStorage.setItem(ANALYTICS_SESSION_KEY, sessionToken);
 
   try {
-    const res = await fetch("/api/analytics/session", {
+    const res = await fetch("/api/activity/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -69,7 +69,7 @@ async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: 
       return { sessionId: session.id, sessionToken };
     }
   } catch (e) {
-    console.error("Failed to create session:", e);
+    // Silently fail - tracking is non-critical
   }
 
   return { sessionId: "", sessionToken };
@@ -88,7 +88,7 @@ export function useAnalytics() {
     if (currentPageViewRef.current) {
       const duration = Date.now() - currentPageViewRef.current.startTime;
       try {
-        await fetch(`/api/analytics/pageview/${currentPageViewRef.current.id}/duration`, {
+        await fetch(`/api/activity/pageview/${currentPageViewRef.current.id}/duration`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ durationMs: duration }),
@@ -103,7 +103,7 @@ export function useAnalytics() {
     }
 
     try {
-      const res = await fetch("/api/analytics/pageview", {
+      const res = await fetch("/api/activity/pageview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ export function useAnalytics() {
         currentPageViewRef.current = { id: pageView.id, startTime: Date.now() };
       }
     } catch (e) {
-      console.error("Failed to track page view:", e);
+      // Silently fail - tracking is non-critical
     }
   }, []);
 
@@ -137,7 +137,7 @@ export function useAnalytics() {
     }
 
     try {
-      await fetch("/api/analytics/event", {
+      await fetch("/api/activity/event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +152,7 @@ export function useAnalytics() {
         }),
       });
     } catch (e) {
-      console.error("Failed to track event:", e);
+      // Silently fail - tracking is non-critical
     }
   }, []);
 
@@ -169,13 +169,13 @@ export function useAnalytics() {
       if (currentPageViewRef.current) {
         const duration = Date.now() - currentPageViewRef.current.startTime;
         navigator.sendBeacon(
-          `/api/analytics/pageview/${currentPageViewRef.current.id}/duration`,
+          `/api/activity/pageview/${currentPageViewRef.current.id}/duration`,
           JSON.stringify({ durationMs: duration })
         );
       }
       if (sessionRef.current?.sessionId) {
         navigator.sendBeacon(
-          `/api/analytics/session/${sessionRef.current.sessionId}/end`,
+          `/api/activity/session/${sessionRef.current.sessionId}/end`,
           ""
         );
       }

@@ -4639,5 +4639,124 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // Activity tracking routes (using "activity" instead of "analytics" to avoid ad blockers)
+  // POST /api/activity/session - Create or update an analytics session
+  app.post("/api/activity/session", async (req: any, res) => {
+    try {
+      const { sessionToken, userAgent, deviceType, environment } = req.body;
+      
+      if (!sessionToken) {
+        return res.status(400).json({ message: "sessionToken is required" });
+      }
+
+      // Check if session already exists
+      const existingSession = await storage.getAnalyticsSessionByToken(sessionToken);
+      if (existingSession) {
+        await storage.updateAnalyticsSessionActivity(existingSession.id);
+        return res.json(existingSession);
+      }
+
+      // Create new session
+      const userId = req.user?.claims?.sub || null;
+      const session = await storage.createAnalyticsSession({
+        sessionToken,
+        userId,
+        userAgent,
+        deviceType,
+        environment: environment || "production",
+      });
+      
+      res.json(session);
+    } catch (error) {
+      console.error("Error creating/updating session:", error);
+      res.status(500).json({ message: "Failed to create session" });
+    }
+  });
+
+  // POST /api/activity/session/:id/end - End an analytics session
+  app.post("/api/activity/session/:id/end", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.endAnalyticsSession(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error ending session:", error);
+      res.status(500).json({ message: "Failed to end session" });
+    }
+  });
+
+  // POST /api/activity/pageview - Create a page view
+  app.post("/api/activity/pageview", async (req: any, res) => {
+    try {
+      const { sessionId, path, title, referrer, environment } = req.body;
+      
+      if (!path) {
+        return res.status(400).json({ message: "path is required" });
+      }
+
+      const userId = req.user?.claims?.sub || null;
+      const pageView = await storage.createPageView({
+        sessionId: sessionId || null,
+        userId,
+        path,
+        title,
+        referrer,
+        environment: environment || "production",
+      });
+      
+      res.json(pageView);
+    } catch (error) {
+      console.error("Error creating page view:", error);
+      res.status(500).json({ message: "Failed to create page view" });
+    }
+  });
+
+  // PUT /api/activity/pageview/:id/duration - Update page view duration
+  app.put("/api/activity/pageview/:id/duration", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { durationMs } = req.body;
+      
+      if (typeof durationMs !== "number") {
+        return res.status(400).json({ message: "durationMs is required" });
+      }
+
+      await storage.updatePageViewDuration(id, durationMs);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating page view duration:", error);
+      res.status(500).json({ message: "Failed to update page view duration" });
+    }
+  });
+
+  // POST /api/activity/event - Create an analytics event
+  app.post("/api/activity/event", async (req: any, res) => {
+    try {
+      const { sessionId, eventType, eventName, eventCategory, path, elementId, metadata, environment } = req.body;
+      
+      if (!eventType || !eventName) {
+        return res.status(400).json({ message: "eventType and eventName are required" });
+      }
+
+      const userId = req.user?.claims?.sub || null;
+      const event = await storage.createAnalyticsEvent({
+        sessionId: sessionId || null,
+        userId,
+        eventType,
+        eventName,
+        eventCategory,
+        path,
+        elementId,
+        metadata,
+        environment: environment || "production",
+      });
+      
+      res.json(event);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({ message: "Failed to create event" });
+    }
+  });
+
   return httpServer;
 }
