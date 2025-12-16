@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import {
   CommandDialog,
   CommandEmpty,
@@ -7,9 +8,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import { useLayout } from "../hooks/layout-context";
 import type { NavItem, NavSection } from "../types/layout";
+import type { VenueWithRelations, VenueCollectionWithCreator } from "@shared/schema";
+import { MapPin, FolderOpen } from "lucide-react";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -18,7 +22,20 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [, navigate] = useLocation();
+  const [search, setSearch] = useState("");
   const { navigation, user } = useLayout();
+
+  // Fetch venues for global search
+  const { data: venues = [] } = useQuery<VenueWithRelations[]>({
+    queryKey: ["/api/venues"],
+    enabled: open,
+  });
+
+  // Fetch collections for global search
+  const { data: collections = [] } = useQuery<VenueCollectionWithCreator[]>({
+    queryKey: ["/api/venue-collections"],
+    enabled: open,
+  });
 
   const filterByRole = useCallback((items: NavItem[]) => {
     if (!user?.role) return items;
@@ -44,30 +61,72 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const visibleNavigation = filterSections(navigation);
 
+  // Filter venues based on search
+  const filteredVenues = useMemo(() => {
+    if (!search.trim()) return venues.slice(0, 5);
+    const searchLower = search.toLowerCase();
+    return venues
+      .filter((venue) => 
+        venue.name.toLowerCase().includes(searchLower) ||
+        venue.streetAddress1?.toLowerCase().includes(searchLower) ||
+        venue.city?.toLowerCase().includes(searchLower) ||
+        venue.neighborhood?.toLowerCase().includes(searchLower)
+      )
+      .slice(0, 10);
+  }, [venues, search]);
+
+  // Filter collections based on search
+  const filteredCollections = useMemo(() => {
+    if (!search.trim()) return collections.slice(0, 5);
+    const searchLower = search.toLowerCase();
+    return collections
+      .filter((collection) =>
+        collection.name.toLowerCase().includes(searchLower) ||
+        collection.description?.toLowerCase().includes(searchLower)
+      )
+      .slice(0, 10);
+  }, [collections, search]);
+
   const handleSelect = useCallback((href: string) => {
     navigate(href);
     onOpenChange(false);
+    setSearch("");
   }, [navigate, onOpenChange]);
+
+  // Reset search when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setSearch("");
+    }
+  }, [open]);
+
+  const hasVenueResults = filteredVenues.length > 0;
+  const hasCollectionResults = filteredCollections.length > 0;
+  const hasSearchResults = search.trim() && (hasVenueResults || hasCollectionResults);
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput 
-        placeholder="Search pages..." 
+        placeholder="Search pages, venues, and collections..." 
         data-testid="input-command-search"
+        value={search}
+        onValueChange={setSearch}
       />
       <CommandList>
-        <CommandEmpty>No pages found.</CommandEmpty>
+        <CommandEmpty>No results found.</CommandEmpty>
+        
+        {/* Navigation Pages */}
         {visibleNavigation.map((section, sectionIndex) => (
           <CommandGroup 
             key={section.heading || `section-${sectionIndex}`}
-            heading={section.heading}
+            heading={section.heading || "Pages"}
           >
             {section.items.map((item) => {
               const Icon = item.icon;
               return (
                 <CommandItem
                   key={item.href}
-                  value={item.name}
+                  value={`page-${item.name}`}
                   onSelect={() => handleSelect(item.href)}
                   className="cursor-pointer"
                   data-testid={`command-item-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
@@ -79,6 +138,60 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             })}
           </CommandGroup>
         ))}
+
+        {/* Venues */}
+        {hasVenueResults && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Venues">
+              {filteredVenues.map((venue) => (
+                <CommandItem
+                  key={venue.id}
+                  value={`venue-${venue.name}-${venue.id}`}
+                  onSelect={() => handleSelect(`/venues/${venue.id}`)}
+                  className="cursor-pointer"
+                  data-testid={`command-item-venue-${venue.id}`}
+                >
+                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span>{venue.name}</span>
+                    {venue.neighborhood && (
+                      <span className="text-xs text-muted-foreground">
+                        {venue.neighborhood}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {/* Collections */}
+        {hasCollectionResults && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Collections">
+              {filteredCollections.map((collection) => (
+                <CommandItem
+                  key={collection.id}
+                  value={`collection-${collection.name}-${collection.id}`}
+                  onSelect={() => handleSelect(`/venue-collections/${collection.id}`)}
+                  className="cursor-pointer"
+                  data-testid={`command-item-collection-${collection.id}`}
+                >
+                  <FolderOpen className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span>{collection.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {collection.venueCount} {collection.venueCount === 1 ? "venue" : "venues"}
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
       </CommandList>
     </CommandDialog>
   );
