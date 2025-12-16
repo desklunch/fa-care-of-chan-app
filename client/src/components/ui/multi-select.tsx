@@ -370,7 +370,6 @@ export function MultiSelect({
 
   const triggerButton = (
     <Button
-      variant={buttonVariant}
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
