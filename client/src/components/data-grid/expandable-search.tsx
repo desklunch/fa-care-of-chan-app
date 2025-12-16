@@ -56,10 +56,11 @@ export function ExpandableSearch({
   if (!isExpanded && !value) {
     return (
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={() => setIsExpanded(true)}
         data-testid="button-expand-search"
+        className="bg-foreground/10 rounded-full"
       >
         <Search className="h-4 w-4" />
       </Button>

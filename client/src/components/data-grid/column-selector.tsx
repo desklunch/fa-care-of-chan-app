@@ -37,10 +37,10 @@ export function ColumnSelector<T>({
     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="md"
           data-testid="button-column-selector"
-          className={menuOpen ? "bg-accent" : ""}
+          className={menuOpen ? "bg-foreground/30 rounded-full" : "bg-foreground/10 rounded-full"}
         >
           <Settings2 className="h-4 w-4" />
           

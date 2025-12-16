@@ -478,10 +478,11 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           {filters.length > 0 && collapsibleFilters && (
             <Button
               variant={showFilters ? "secondary" : "outline"}
+              variant="ghost"
               size="md"
               onClick={() => setShowFilters(!showFilters)}
               data-testid="button-toggle-filters"
-              className=""
+              className="bg-foreground/10 rounded-full"
             >
               <ListFilter className="h-4 w-4" />
               Filters

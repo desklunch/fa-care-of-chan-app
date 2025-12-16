@@ -527,7 +527,7 @@ export default function VenueDetailPage() {
               />
             )}
 
-            <Card className="group relative">
+            <Card className="group/card relative">
               <CardHeader className="flex flex-row items-center justify-between gap-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                   Photos
@@ -537,7 +537,7 @@ export default function VenueDetailPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setLocation(`/venues/${id}/edit`)}
-                    className="invisible group-hover:visible"
+                    className="invisible group-hover/card:visible"
                     data-testid="button-edit-photos"
                   >
                     <SquarePen className="h-4 w-4" />
@@ -554,17 +554,17 @@ export default function VenueDetailPage() {
                         setLightboxIndex(index + 1);
                         setLightboxOpen(true);
                       }}
-                      className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
+                      className="relative aspect-square overflow-hidden rounded-lg group/photo cursor-pointer"
                       data-testid={`button-gallery-photo-${index}`}
                     >
                       <img
                         src={photo.thumbnailUrl || photo.url}
                         alt={photo.altText || `${venue.name} photo ${index + 2}`}
-                        className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-200 group-hover/photo:scale-105"
                         data-testid={`img-gallery-photo-${index}`}
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
-                        <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      <div className="absolute inset-0 bg-black/0 group-hover/photo:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+                        <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover/photo:opacity-100 transition-opacity duration-200" />
                       </div>
                     </button>
                   ))}

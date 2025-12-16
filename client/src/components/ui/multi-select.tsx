@@ -372,8 +372,9 @@ export function MultiSelect({
     <Button
       variant={buttonVariant}
       size="md"
+      variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName} gap-1 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : ""}`}
+      className={`${appliedButtonClassName} gap-1 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>
