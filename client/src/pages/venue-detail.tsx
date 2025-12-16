@@ -571,11 +571,11 @@ export default function VenueDetailPage() {
                   <button
                     type="button"
                     onClick={() => setLocation(`/venues/${id}/edit`)}
-                    className="relative aspect-square overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 hover:bg-muted hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2"
+                    className="relative aspect-square overflow-hidden rounded-lg  bg-muted/50 hover:bg-muted transition-colors cursor-pointer flex items-center justify-center gap-2"
                     data-testid="button-upload-photos"
                   >
-                    <ImagePlus className="h-8 w-8 text-muted-foreground/50" />
-                    <span className="text-xs text-muted-foreground/50 text-center px-2">Upload or Import Photos</span>
+                    <ImagePlus className="h-5 w-5 text-muted-foreground/50" />
+                    <span className="text-sm text-muted-foreground/50 text-center">Add Photos</span>
                   </button>
                 </div>
               </CardContent>
@@ -654,7 +654,7 @@ export default function VenueDetailPage() {
                   className="bg-foreground/10 opacity-50 hover:opacity-100"
                 >
                   <Utensils className="h-4 w-4" />
-                  Assign a Cuisine
+                  Assign Cuisine
                 </Button>
               )}
             </CardContent>
@@ -782,7 +782,7 @@ export default function VenueDetailPage() {
                 className="bg-foreground/10 opacity-50 hover:opacity-100"
               >
                 <Layout className="h-4 w-4" />
-                Upload a Floorplan
+                Upload Floorplans
               </Button>
             )}
           </CardContent>
@@ -962,7 +962,7 @@ export default function VenueDetailPage() {
                 className="bg-foreground/10 opacity-50 hover:opacity-100"
               >
                 <Paperclip className="h-4 w-4" />
-                Attach a File
+                Attach Files
               </Button>
             )}
           </CardContent>

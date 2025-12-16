@@ -477,7 +477,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           )}
           {filters.length > 0 && collapsibleFilters && (
             <Button
-              variant={showFilters ? "secondary" : "outline"}
               variant="ghost"
               size="md"
               onClick={() => setShowFilters(!showFilters)}
