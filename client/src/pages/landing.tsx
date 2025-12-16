@@ -62,6 +62,9 @@ export default function Landing() {
 
   return (
     <div className="max-4xl mx-auto h-screen flex flex-col items-center justify-center text-center gap-12 text-primary ">
+
+      <div className=" max-w-2xl r">
+      </div>
       <div className="flex justify-center mb-2">
         <svg
           viewBox="0 0 49 44"
@@ -85,7 +88,7 @@ export default function Landing() {
 
       {/* Desktop: Show sign-in */}
       <div
-        className="hidden flex flex-col items-center gap-2"
+        className="flex hidden md:flex-col items-center gap-2"
         data-testid="button-get-started"
       >
         <p className="text-base mb-4 ">
@@ -120,7 +123,7 @@ export default function Landing() {
 
       {/* Mobile: Show not optimized message */}
       <div
-        className="flex md:hidden flex-col items-center px-6"
+        className="flex md:hidden items-center px-6"
         data-testid="mobile-notice"
       >
         <p className="text-base text-muted-foreground">
