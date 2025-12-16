@@ -81,7 +81,7 @@ export default function Landing() {
           data-testid="button-get-started"
         >
           <p className="text-base1">
-            Sign in with yout Care of Chan email.
+            Sign in with your Care of Chan account.
           </p>
           {loginMutation.isPending ? (
             <Button size="lg" className="h-12 px-8" disabled>
