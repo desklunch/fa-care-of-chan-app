@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation, useParams } from "wouter";
 import { format } from "date-fns";
+import { PageContainer } from "@/framework";
 import {
   Card,
   CardContent,
@@ -249,39 +250,38 @@ export default function AdminReleaseDetail() {
     release.features.length + release.issues.length + release.changes.length;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/admin/releases")}
-          data-testid="button-back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold" data-testid="text-version-label">
-              {release.versionLabel}
-            </h1>
-            <Badge variant={isDraft ? "secondary" : "default"}>
-              {isDraft ? "Draft" : "Published"}
-            </Badge>
+    <PageContainer
+      breadcrumbs={[
+        { label: "Admin", href: "/admin" },
+        { label: "Releases", href: "/admin/releases" },
+        { label: release.versionLabel },
+      ]}
+      primaryAction={
+        isDraft
+          ? {
+              label: "Publish",
+              icon: Rocket,
+              onClick: () => setIsPublishOpen(true),
+            }
+          : undefined
+      }
+    >
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold" data-testid="text-version-label">
+                {release.versionLabel}
+              </h1>
+              <Badge variant={isDraft ? "secondary" : "default"}>
+                {isDraft ? "Draft" : "Published"}
+              </Badge>
+            </div>
+            <p className="text-muted-foreground">
+              {release.title || "Untitled Release"}
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            {release.title || "Untitled Release"}
-          </p>
         </div>
-        {isDraft && (
-          <Button
-            onClick={() => setIsPublishOpen(true)}
-            data-testid="button-publish"
-          >
-            <Rocket className="h-4 w-4 mr-2" />
-            Publish Release
-          </Button>
-        )}
-      </div>
 
       {release.releaseNotes && (
         <Card>
@@ -666,6 +666,7 @@ export default function AdminReleaseDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </PageContainer>
   );
 }

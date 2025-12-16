@@ -5,6 +5,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
+import { PageContainer } from "@/framework";
 import {
   Card,
   CardContent,
@@ -130,23 +131,29 @@ export default function AdminReleases() {
   const publishedReleases = releases?.filter((r) => r.status === "released") || [];
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">
-            Release Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage app versions and track changes across releases
-          </p>
+    <PageContainer
+      breadcrumbs={[
+        { label: "Admin", href: "/admin" },
+        { label: "Releases" },
+      ]}
+      primaryAction={{
+        label: "New Release",
+        icon: Plus,
+        onClick: () => setIsCreateDialogOpen(true),
+      }}
+    >
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-page-title">
+              Release Management
+            </h1>
+            <p className="text-muted-foreground">
+              Manage app versions and track changes across releases
+            </p>
+          </div>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-release">
-              <Plus className="h-4 w-4 mr-2" />
-              New Release
-            </Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Release</DialogTitle>
@@ -232,9 +239,8 @@ export default function AdminReleases() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
 
-      {draftReleases.length > 0 && (
+        {draftReleases.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -370,7 +376,8 @@ export default function AdminReleases() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </div>
+        </Dialog>
+      </div>
+    </PageContainer>
   );
 }
