@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Building2, Users, Shield, Loader2, Bug } from "lucide-react";
+import { Building2, Users, Shield, Loader2, KeyboardMusic } from "lucide-react";
 import Logo from "@/framework/components/logo";
 import { GoogleLogin } from "@react-oauth/google";
 import { useLocation } from "wouter";
@@ -76,10 +76,12 @@ export default function Landing() {
         
         {/* Desktop: Show sign-in */}
         <div
-          className="flex flex-col items-center gap-2 my-6"
+          className="flex flex-col items-center gap-6 my-6"
           data-testid="button-get-started"
         >
-
+          <p className="text-base mt-4">
+            Sign in with your Care of Chan account.
+          </p>
           {loginMutation.isPending ? (
             <Button size="lg" className="h-12 px-8 " disabled>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -105,9 +107,7 @@ export default function Landing() {
               shape="pill"
             />
           )}
-          <p className="text-base mt-4">
-            Sign in with your Care of Chan account.
-          </p>
+
           <p className="text-xs max-w-64 text-muted-foreground leading-[1.5em]">
             This app is not yet fully optimized for mobile devices. Please use a
             desktop computer.
@@ -132,7 +132,7 @@ export default function Landing() {
                 </>
               ) : (
                 <>
-                  <Bug className="mr-2 h-4 w-4" />
+                  <KeyboardMusic className="mr-2 h-4 w-4" />
                   Dev Login (omar@functionalartists.ai)
                 </>
               )}
