@@ -236,7 +236,9 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                 className=" px-2 w-full bg-foreground/10 justify-between gap-2 text-muted-foreground font-normal"
                 data-testid="button-search-trigger"
               >
-                <Search className="h-4 w-4" />
+                
+                
+                <span className="text-xs flex gap-2 font-medium opacity-60 hover:opacity-100"><Search className="h-4 w-4" />Search</span>
                 <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
                   <span className="text-xs">⌘</span>K
                 </kbd>

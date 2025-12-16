@@ -188,7 +188,7 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Admin",
+        heading: "In Development",
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
@@ -227,60 +227,6 @@ function useLayoutConfig() {
             href: "/admin/app/features",
             icon: Tags,
           },
-          {
-            name: "Vendor Services",
-            href: "/admin/vendors/services",
-            icon: Briefcase,
-          },
-          {
-            name: "Vendor Tokens",
-            href: "/admin/vendors/tokens",
-            icon: Link2,
-          },
-          {
-            name: "Releases",
-            href: "/admin/releases",
-            icon: Rocket,
-          },
-        ],
-      },
-      {
-        heading: "Admin",
-        allowedRoles: ["admin"],
-        defaultCollapsed: true,
-        items: [
-          {
-            name: "Vendors",
-            href: "/vendors",
-            icon: Handshake,
-          },
-          {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: RadioTower,
-          },
-          {
-            name: "Forms",
-            href: "/forms/templates",
-            icon: FileText,
-          }, 
-          {
-            name: "Contacts",
-            href: "/contacts",
-            icon: Contact,
-          },
-          {
-            name: "Comments",
-            href: "/comments",
-            icon: MessageSquare,
-          },
-
-          {
-            name: "Invites",
-            href: "/admin/invites",
-            icon: UserPlus,
-          },
-
           {
             name: "Vendor Services",
             href: "/admin/vendors/services",
