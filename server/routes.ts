@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
+import { setupAuth, isAuthenticated, isAdmin, isManagerOrAdmin } from "./googleAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import OpenAI from "openai";
 import sharp from "sharp";
@@ -46,6 +46,8 @@ import {
   insertAppReleaseChangeSchema,
   releaseStatuses,
   type ReleaseStatus,
+  insertVenueSchema,
+  updateVenueSchema,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -2352,9 +2354,20 @@ export async function registerRoutes(
 
   // Create new venue
   app.post("/api/venues", isAuthenticated, async (req: any, res) => {
+    let venueId: string | undefined;
     try {
-      const { amenityIds, cuisineTagIds, styleTagIds, ...venueData } = req.body;
-      const venue = await storage.createVenue(venueData);
+      const { amenityIds, cuisineTagIds, styleTagIds, ...rawVenueData } = req.body;
+      
+      const parsed = insertVenueSchema.safeParse(rawVenueData);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid venue data", 
+          errors: parsed.error.flatten() 
+        });
+      }
+      
+      const venue = await storage.createVenue(parsed.data);
+      venueId = venue.id;
       
       if (amenityIds && amenityIds.length > 0) {
         await storage.setVenueAmenities(venue.id, amenityIds);
@@ -2366,9 +2379,25 @@ export async function registerRoutes(
       }
       
       const fullVenue = await storage.getVenueByIdWithRelations(venue.id);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue",
+        entityId: venue.id,
+        status: "success",
+        metadata: { venueName: venue.name },
+      });
+      
       res.status(201).json(fullVenue);
     } catch (error) {
       console.error("Error creating venue:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue",
+        entityId: venueId || "unknown",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
       res.status(500).json({ message: "Failed to create venue" });
     }
   });
@@ -2376,8 +2405,22 @@ export async function registerRoutes(
   // Update venue
   app.patch("/api/venues/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const { amenityIds, cuisineTagIds, styleTagIds, ...venueData } = req.body;
-      const venue = await storage.updateVenue(req.params.id, venueData);
+      const existingVenue = await storage.getVenueById(req.params.id);
+      if (!existingVenue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      
+      const { amenityIds, cuisineTagIds, styleTagIds, ...rawVenueData } = req.body;
+      
+      const parsed = updateVenueSchema.safeParse(rawVenueData);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid venue data", 
+          errors: parsed.error.flatten() 
+        });
+      }
+      
+      const venue = await storage.updateVenue(req.params.id, parsed.data);
       if (!venue) {
         return res.status(404).json({ message: "Venue not found" });
       }
@@ -2392,20 +2435,63 @@ export async function registerRoutes(
       }
       
       const fullVenue = await storage.getVenueByIdWithRelations(venue.id);
+      
+      const changes = getChangedFields(
+        existingVenue as unknown as Record<string, unknown>,
+        venue as unknown as Record<string, unknown>
+      );
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue",
+        entityId: req.params.id,
+        changes,
+        status: "success",
+        metadata: { venueName: venue.name },
+      });
+      
       res.json(fullVenue);
     } catch (error) {
       console.error("Error updating venue:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
       res.status(500).json({ message: "Failed to update venue" });
     }
   });
 
-  // Delete venue (admin only)
-  app.delete("/api/venues/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Delete venue (manager or admin only)
+  app.delete("/api/venues/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
     try {
+      const existingVenue = await storage.getVenueById(req.params.id);
+      if (!existingVenue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      
       await storage.deleteVenue(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { deletedVenue: existingVenue.name },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting venue:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
       res.status(500).json({ message: "Failed to delete venue" });
     }
   });
