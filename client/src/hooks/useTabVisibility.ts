@@ -5,41 +5,61 @@ const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 export function useTabVisibility() {
   const lastActiveRef = useRef<number>(Date.now());
-  const isVisibleRef = useRef<boolean>(true);
+  const lastUserInteractionRef = useRef<number>(Date.now());
+
+  const forceRouterSync = useCallback(() => {
+    window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
+  }, []);
+
+  const handleWakeUp = useCallback((source: string) => {
+    const idleTime = Date.now() - lastUserInteractionRef.current;
+    
+    if (idleTime > STALE_THRESHOLD_MS) {
+      console.log(`[AppVisibility] App idle for ${Math.round(idleTime / 1000)}s (${source}), syncing router and invalidating queries`);
+      
+      forceRouterSync();
+      
+      setTimeout(() => {
+        queryClient.invalidateQueries();
+      }, 100);
+    }
+    
+    lastActiveRef.current = Date.now();
+    lastUserInteractionRef.current = Date.now();
+  }, [forceRouterSync]);
 
   const handleVisibilityChange = useCallback(() => {
-    const isNowVisible = document.visibilityState === "visible";
-    
-    if (isNowVisible && !isVisibleRef.current) {
-      const idleTime = Date.now() - lastActiveRef.current;
-      
-      if (idleTime > STALE_THRESHOLD_MS) {
-        console.log(`[TabVisibility] Tab was idle for ${Math.round(idleTime / 1000)}s, invalidating queries`);
-        queryClient.invalidateQueries();
-      }
+    if (document.visibilityState === "visible") {
+      handleWakeUp("visibility");
     }
-    
-    isVisibleRef.current = isNowVisible;
-    
-    if (isNowVisible) {
-      lastActiveRef.current = Date.now();
-    }
+  }, [handleWakeUp]);
+
+  const handleWindowFocus = useCallback(() => {
+    handleWakeUp("focus");
+  }, [handleWakeUp]);
+
+  const handleUserInteraction = useCallback(() => {
+    lastUserInteractionRef.current = Date.now();
   }, []);
 
   useEffect(() => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleWindowFocus);
     
-    const intervalId = setInterval(() => {
-      if (isVisibleRef.current) {
-        lastActiveRef.current = Date.now();
-      }
-    }, 60000);
+    document.addEventListener("click", handleUserInteraction, { passive: true });
+    document.addEventListener("keydown", handleUserInteraction, { passive: true });
+    document.addEventListener("scroll", handleUserInteraction, { passive: true });
+    document.addEventListener("mousemove", handleUserInteraction, { passive: true });
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(intervalId);
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("keydown", handleUserInteraction);
+      document.removeEventListener("scroll", handleUserInteraction);
+      document.removeEventListener("mousemove", handleUserInteraction);
     };
-  }, [handleVisibilityChange]);
+  }, [handleVisibilityChange, handleWindowFocus, handleUserInteraction]);
 }
 
 export function TabVisibilityHandler() {
