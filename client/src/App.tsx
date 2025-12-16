@@ -242,7 +242,7 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Application",
+        heading: "App",
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
