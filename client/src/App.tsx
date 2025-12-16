@@ -8,6 +8,7 @@ import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { TabVisibilityHandler } from "@/hooks/useTabVisibility";
 import type { LayoutConfig } from "@/framework/types/layout";
 import Landing from "@/pages/landing";
 import InviteActivation from "@/pages/invite-activation";
@@ -397,6 +398,7 @@ function App() {
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
           <TooltipProvider>
             <AnalyticsTracker />
+            <TabVisibilityHandler />
             <Toaster />
             <Router />
           </TooltipProvider>
