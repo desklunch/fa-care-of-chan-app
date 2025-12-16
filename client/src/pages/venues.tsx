@@ -241,7 +241,6 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     id: "id",
     headerName: "ID",
     field: "id",
-    category: "System",
     colDef: {
       flex: 1,
       minWidth: 100,
@@ -251,7 +250,6 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     id: "externalId",
     headerName: "External ID",
     field: "externalId",
-    category: "System",
     colDef: {
       flex: 0.5,
       minWidth: 80,
@@ -261,7 +259,6 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     id: "name",
     headerName: "Name",
     field: "name",
-    category: "Basic Info",
     colDef: {
       flex: 1.5,
       minWidth: 200,
@@ -274,7 +271,6 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     id: "venueType",
     headerName: "Type",
     field: "venueType",
-    category: "Basic Info",
     colDef: {
       flex: 0.8,
       minWidth: 100,
@@ -288,92 +284,9 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
         return labels[value] || value;
       },
     },
-  },
-  {
-    id: "shortDescription",
-    headerName: "Description",
-    field: "shortDescription",
-    category: "Basic Info",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
-        <DescriptionCellRenderer data={params.data} />
-      ),
-    },
-  },
-  {
-    id: "cuisineTags",
-    headerName: "Cuisine",
-    category: "Tags",
-    colDef: {
-      flex: 1,
-      minWidth: 120,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
-        <CuisineTagsCellRenderer data={params.data} />
-      ),
-      valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
-        return data?.cuisineTags?.map((t) => t.name).join(", ") || "";
-      },
-    },
-  },
-  {
-    id: "styleTags",
-    headerName: "Style",
-    category: "Tags",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
-        <StyleTagsCellRenderer data={params.data} />
-      ),
-      valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
-        return data?.styleTags?.map((t) => t.name).join(", ") || "";
-      },
-    },
-  },
-  {
-    id: "amenities",
-    headerName: "Amenities",
-    category: "Features",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
-        <AmenitiesCellRenderer data={params.data} />
-      ),
-      valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
-        return data?.amenities?.map((a) => a.name).join(", ") || "";
-      },
-    },
-  },
-  {
-    id: "city",
-    headerName: "City",
-    field: "city",
-    category: "Location",
-    colDef: {
-      flex: 1,
-      minWidth: 120,
-    },
-  },
-  {
-    id: "state",
-    headerName: "State",
-    field: "state",
-    category: "Location",
-    colDef: {
-      flex: 0.5,
-      minWidth: 80,
-    },
-  },
-  {
+  },  {
     id: "location",
     headerName: "Location",
-    category: "Location",
     colDef: {
       flex: 1,
       minWidth: 150,
@@ -387,84 +300,67 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     },
   },
   {
-    id: "fullAddress",
-    headerName: "Full Address",
-    category: "Location",
+    id: "styleTags",
+    headerName: "Style",
     colDef: {
-      flex: 2,
-      minWidth: 250,
+      flex: 1.5,
+      minWidth: 180,
       cellRenderer: (params: { data: VenueWithRelations }) => (
-        <AddressCellRenderer data={params.data} />
+        <StyleTagsCellRenderer data={params.data} />
       ),
       valueGetter: (params) => {
         const data = params.data as VenueWithRelations;
-        return [data?.streetAddress1, data?.city, data?.state, data?.zipCode]
-          .filter(Boolean)
-          .join(", ");
+        return data?.styleTags?.map((t) => t.name).join(", ") || "";
       },
     },
   },
   {
-    id: "zipCode",
-    headerName: "ZIP Code",
-    field: "zipCode",
-    category: "Location",
-    colDef: {
-      flex: 0.5,
-      minWidth: 80,
-    },
-  },
-  {
-    id: "phone",
-    headerName: "Phone",
-    field: "phone",
-    category: "Contact",
-    colDef: {
-      flex: 1,
-      minWidth: 120,
-    },
-  },
-  {
-    id: "email",
-    headerName: "Email",
-    field: "email",
-    category: "Contact",
-    colDef: {
-      flex: 1,
-      minWidth: 150,
-    },
-  },
-  {
-    id: "website",
-    headerName: "Website",
-    field: "website",
-    category: "Links",
-    colDef: {
-      flex: 0.8,
-      minWidth: 100,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
-        <WebsiteCellRenderer data={params.data} />
-      ),
-    },
-  },
-  {
-    id: "instagram",
-    headerName: "Instagram",
-    field: "instagramAccount",
-    category: "Links",
+    id: "cuisineTags",
+    headerName: "Cuisine",
     colDef: {
       flex: 1,
       minWidth: 120,
       cellRenderer: (params: { data: VenueWithRelations }) => (
-        <InstagramCellRenderer data={params.data} />
+        <CuisineTagsCellRenderer data={params.data} />
+      ),
+      valueGetter: (params) => {
+        const data = params.data as VenueWithRelations;
+        return data?.cuisineTags?.map((t) => t.name).join(", ") || "";
+      },
+    },
+  },
+  {
+    id: "amenities",
+    headerName: "Amenities",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { data: VenueWithRelations }) => (
+        <AmenitiesCellRenderer data={params.data} />
+      ),
+      valueGetter: (params) => {
+        const data = params.data as VenueWithRelations;
+        return data?.amenities?.map((a) => a.name).join(", ") || "";
+      },
+    },
+  },
+  {
+    id: "shortDescription",
+    headerName: "Description",
+    field: "shortDescription",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { data: VenueWithRelations }) => (
+        <DescriptionCellRenderer data={params.data} />
       ),
     },
   },
+
   {
     id: "isActive",
     headerName: "Status",
     field: "isActive",
-    category: "Status",
     colDef: {
       flex: 0.8,
       minWidth: 100,

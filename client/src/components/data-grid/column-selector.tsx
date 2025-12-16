@@ -29,17 +29,8 @@ export function ColumnSelector<T>({
 }: ColumnSelectorProps<T>) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const categorizedColumns = useMemo(() => {
-    const categories: Record<string, ColumnConfig<T>[]> = {};
-    columns
-      .filter((col) => col.toggleable !== false)
-      .forEach((col) => {
-        if (!categories[col.category]) {
-          categories[col.category] = [];
-        }
-        categories[col.category].push(col);
-      });
-    return categories;
+  const toggleableColumns = useMemo(() => {
+    return columns.filter((col) => col.toggleable !== false);
   }, [columns]);
 
   return (
@@ -84,22 +75,15 @@ export function ColumnSelector<T>({
         <DropdownMenuSeparator />
 
         <div className="overflow-y-auto flex-1 py-2">
-          {Object.entries(categorizedColumns).map(([category, cols]) => (
-            <div key={category} className="mb-3">
-              <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
-                {category}
-              </div>
-              {cols.map((col) => (
-                <DropdownMenuCheckboxItem
-                  key={col.id}
-                  checked={getColumnVisibility(col.id)}
-                  onCheckedChange={() => onToggleColumn(col.id)}
-                  data-testid={`checkbox-column-${col.id}`}
-                >
-                  {col.headerName}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </div>
+          {toggleableColumns.map((col) => (
+            <DropdownMenuCheckboxItem
+              key={col.id}
+              checked={getColumnVisibility(col.id)}
+              onCheckedChange={() => onToggleColumn(col.id)}
+              data-testid={`checkbox-column-${col.id}`}
+            >
+              {col.headerName}
+            </DropdownMenuCheckboxItem>
           ))}
         </div>
 
