@@ -4072,8 +4072,8 @@ export async function registerRoutes(
     }
   });
 
-  // GET /api/admin/analytics - Get analytics summary (admin only)
-  app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req: any, res) => {
+  // GET /api/admin/activity - Get analytics summary (admin only)
+  app.get("/api/admin/activity", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { startDate, endDate, environment } = req.query;
       
@@ -4091,8 +4091,8 @@ export async function registerRoutes(
     }
   });
 
-  // GET /api/admin/analytics/pageviews/recent - Get recent page views (admin only)
-  app.get("/api/admin/analytics/pageviews/recent", isAuthenticated, isAdmin, async (req: any, res) => {
+  // GET /api/admin/activity/pageviews/recent - Get recent page views (admin only)
+  app.get("/api/admin/activity/pageviews/recent", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
       const environment = req.query.environment as string | undefined;

@@ -45,10 +45,10 @@ export default function AdminAnalytics() {
   }, [dateRange]);
 
   const { data, isLoading, error } = useQuery<AnalyticsSummary>({
-    queryKey: ["/api/admin/analytics", dateRange, environment],
+    queryKey: ["/api/admin/activity", dateRange, environment],
     queryFn: async () => {
       const res = await fetch(
-        `/api/admin/analytics?startDate=${startDateStr}&endDate=${endDateStr}&environment=${environment}`
+        `/api/admin/activity?startDate=${startDateStr}&endDate=${endDateStr}&environment=${environment}`
       );
       if (!res.ok) throw new Error("Failed to fetch analytics");
       return res.json();
@@ -57,10 +57,10 @@ export default function AdminAnalytics() {
   });
 
   const { data: recentPageViews } = useQuery<RecentPageView[]>({
-    queryKey: ["/api/admin/analytics/pageviews/recent", environment],
+    queryKey: ["/api/admin/activity/pageviews/recent", environment],
     queryFn: async () => {
       const res = await fetch(
-        `/api/admin/analytics/pageviews/recent?limit=50&environment=${environment}`
+        `/api/admin/activity/pageviews/recent?limit=50&environment=${environment}`
       );
       if (!res.ok) throw new Error("Failed to fetch recent page views");
       return res.json();
