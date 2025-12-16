@@ -63,7 +63,7 @@ export default function Landing() {
   return (
     <div className=" mx-auto h-screen flex flex-col items-center justify-center text-center gap-12 text-primary p-6 bg-primary">
 
-      <div className="w-full bg-background max-w-md rounded-xl shadow-xl border p-6 flex flex-col items-center gap-4">
+      <div className="w-full bg-background max-w-md rounded-xl shadow-lg border p-6 flex flex-col items-center gap-4">
 
       
         <div className="flex justify-center mb-6">
@@ -77,14 +77,12 @@ export default function Landing() {
         
         {/* Desktop: Show sign-in */}
         <div
-          className="flex flex-col items-center gap-6 my-12 "
+          className="flex flex-col items-center gap-2 my-12"
           data-testid="button-get-started"
         >
-          <p className="text-base1">
-            Sign in with your Care of Chan account.
-          </p>
+
           {loginMutation.isPending ? (
-            <Button size="lg" className="h-12 px-8" disabled>
+            <Button size="lg" className="h-12 px-8 " disabled>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Signing in...
             </Button>
@@ -108,7 +106,10 @@ export default function Landing() {
               shape="pill"
             />
           )}
-          <p className="text-xs max-w-64 text-muted-foreground">
+          <p className="text-base mt-4">
+            Sign in with your Care of Chan account.
+          </p>
+          <p className="text-xs max-w-64 text-muted-foreground leading-[1.5em]">
             This app is not yet fully optimized for mobile devices. Please use a
             desktop computer.
           </p>
