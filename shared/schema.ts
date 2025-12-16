@@ -250,6 +250,14 @@ export const vendors = pgTable(
 export const venueTypes = ["restaurant", "event_space"] as const;
 export type VenueType = (typeof venueTypes)[number];
 
+// Venue space type for JSON storage (will migrate to separate table later)
+export interface VenueSpace {
+  id: string;
+  name: string;
+  capacity: number;
+  description?: string | null;
+}
+
 // Venues directory
 export const venues = pgTable(
   "venues",
@@ -272,6 +280,7 @@ export const venues = pgTable(
     instagramAccount: varchar("instagram_account", { length: 100 }),
     googlePlaceId: varchar("google_place_id", { length: 255 }),
     photoUrls: jsonb("photo_urls").$type<string[]>().default([]),
+    venueSpaces: jsonb("venue_spaces").$type<VenueSpace[]>().default([]),
     isActive: boolean("is_active").default(true).notNull(),
     isDraft: boolean("is_draft").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
@@ -910,6 +919,12 @@ export const insertVenueSchema = createInsertSchema(venues).omit({
   website: z.string().url("Invalid URL").max(500).optional().nullable().or(z.literal("")),
   instagramAccount: z.string().max(100).optional().nullable(),
   photoUrls: z.array(z.string()).optional().nullable(),
+  venueSpaces: z.array(z.object({
+    id: z.string().min(1),
+    name: z.string().min(1, "Space name is required").max(255),
+    capacity: z.number().int().min(0, "Capacity must be 0 or greater"),
+    description: z.string().optional().nullable(),
+  })).optional().nullable(),
   isActive: z.boolean().default(true),
   isDraft: z.boolean().default(false),
 });

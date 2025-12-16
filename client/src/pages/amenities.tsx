@@ -348,7 +348,6 @@ export default function AmenitiesPage() {
       id: "icon",
       headerName: "Icon",
       field: "icon",
-      category: "Basic Info",
       colDef: {
         flex: 0.5,
         maxWidth: 100,
@@ -360,7 +359,6 @@ export default function AmenitiesPage() {
       id: "name",
       headerName: "Name",
       field: "name",
-      category: "Basic Info",
       colDef: {
         flex: 1,
         minWidth: 150,
@@ -371,7 +369,6 @@ export default function AmenitiesPage() {
       id: "description",
       headerName: "Description",
       field: "description",
-      category: "Basic Info",
       colDef: {
         flex: 3,
         minWidth: 200,

@@ -327,7 +327,6 @@ export default function TagsPage() {
       id: "name",
       headerName: "Name",
       field: "name",
-      category: "Basic Info",
       colDef: {
         flex: 1,
         minWidth: 150,
@@ -338,7 +337,6 @@ export default function TagsPage() {
       id: "category",
       headerName: "Category",
       field: "category",
-      category: "Basic Info",
       colDef: {
         flex: 1,
         minWidth: 150,
