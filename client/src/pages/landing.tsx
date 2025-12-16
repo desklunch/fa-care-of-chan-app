@@ -80,7 +80,8 @@ export default function Landing() {
       </h1>
 
 
-      <div className="flex-col items-center" data-testid="button-get-started">
+      {/* Desktop: Show sign-in */}
+      <div className="hidden md:flex flex-col items-center" data-testid="button-get-started">
         <p className="text-base mb-4 ">
           Sign in with your primary <span className="font-semibold text-foreground">Care of Chan</span> email address. 
         </p>
@@ -109,6 +110,13 @@ export default function Landing() {
             shape="pill"
           />
         )}
+      </div>
+
+      {/* Mobile: Show not optimized message */}
+      <div className="flex md:hidden flex-col items-center px-6" data-testid="mobile-notice">
+        <p className="text-base text-muted-foreground">
+          This app is not yet fully optimized for mobile devices. Please access it from a desktop or laptop computer for the best experience.
+        </p>
       </div>
       {isDevelopment && (
         <div className="mt-6 pt-6 ">

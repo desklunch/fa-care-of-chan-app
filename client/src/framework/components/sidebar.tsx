@@ -228,7 +228,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
         </div>
 
         {onSearch && (
-          <div className="px-4 pt-3">
+          <div className="px-4 kjkl pt- kjkl3">
             {showExpanded ? (
               <Button
                 variant="ghost"
