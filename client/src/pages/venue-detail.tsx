@@ -56,12 +56,13 @@ import {
   Upload,
   Sparkles,
   ImagePlus,
+  Users,
 } from "lucide-react";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { VenueMap } from "@/components/ui/venue-map";
 import { formatTimeAgo } from "@/lib/format-time";
 import { Link } from "wouter";
-import type { VenueWithRelations, VenueCollectionWithCreator } from "@shared/schema";
+import type { VenueWithRelations, VenueCollectionWithCreator, VenueSpace } from "@shared/schema";
 
 export default function VenueDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -704,6 +705,64 @@ export default function VenueDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="group relative">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              Event Spaces
+            </CardTitle>
+            {venue.venueSpaces && venue.venueSpaces.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                className="invisible group-hover:visible"
+                data-testid="button-edit-spaces"
+              >
+                <SquarePen className="h-4 w-4" />
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            {venue.venueSpaces && venue.venueSpaces.length > 0 ? (
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {venue.venueSpaces.map((space: VenueSpace) => (
+                  <div
+                    key={space.id}
+                    className="border rounded-lg p-4 space-y-2"
+                    data-testid={`venue-space-${space.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-medium" data-testid={`text-space-name-${space.id}`}>
+                        {space.name}
+                      </h4>
+                      <Badge variant="secondary" className="shrink-0" data-testid={`badge-space-capacity-${space.id}`}>
+                        <Users className="h-3 w-3 mr-1" />
+                        {space.capacity}
+                      </Badge>
+                    </div>
+                    {space.description && (
+                      <p className="text-sm text-muted-foreground" data-testid={`text-space-description-${space.id}`}>
+                        {space.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocation(`/venues/${id}/edit`)}
+                data-testid="button-add-space"
+                className="bg-foreground/10 opacity-50 hover:opacity-100"
+              >
+                <Plus className="h-4 w-4" />
+                Add Event Space
+              </Button>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="group relative">
           <CardHeader className="flex flex-row items-center justify-between gap-2">

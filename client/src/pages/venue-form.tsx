@@ -51,9 +51,10 @@ import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { useStagedAssets, StagedPhoto, StagedFloorplan, StagedAttachment } from "@/hooks/use-staged-assets";
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive, Sparkles, RefreshCw, Unlink, MapPin } from "lucide-react";
-import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto } from "@shared/schema";
+import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto, VenueSpace } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
 import { insertVenueSchema, venueTypes } from "@shared/schema";
+import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -634,6 +635,7 @@ export default function VenueFormPage() {
       amenityIds: [],
       cuisineTagIds: [],
       styleTagIds: [],
+      venueSpaces: [],
     },
   });
 
@@ -699,6 +701,7 @@ export default function VenueFormPage() {
         amenityIds: venue.amenities?.map((a) => a.id) || [],
         cuisineTagIds: venue.cuisineTags?.map((t) => t.id) || [],
         styleTagIds: venue.styleTags?.map((t) => t.id) || [],
+        venueSpaces: venue.venueSpaces || [],
       });
       
       // If venue has a googlePlaceId, enable photo import
@@ -2114,6 +2117,139 @@ export default function VenueFormPage() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="gap-2">
+                <CardTitle>Event Spaces</CardTitle>
+                <CardDescription>
+                  Define bookable or rentable spaces within this venue (e.g., private rooms, patios, main dining)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="venueSpaces"
+                  render={({ field }) => {
+                    const spaces = field.value || [];
+                    
+                    const addSpace = () => {
+                      const newSpace: VenueSpace = {
+                        id: crypto.randomUUID(),
+                        name: "",
+                        capacity: 0,
+                        description: "",
+                      };
+                      field.onChange([...spaces, newSpace]);
+                    };
+                    
+                    const removeSpace = (id: string) => {
+                      field.onChange(spaces.filter((s: VenueSpace) => s.id !== id));
+                    };
+                    
+                    const updateSpace = (id: string, updates: Partial<VenueSpace>) => {
+                      field.onChange(
+                        spaces.map((s: VenueSpace) => 
+                          s.id === id ? { ...s, ...updates } : s
+                        )
+                      );
+                    };
+                    
+                    return (
+                      <FormItem>
+                        <FormControl>
+                          <div className="space-y-4">
+                            {spaces.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-4">
+                                No event spaces defined yet. Add spaces to specify capacity for different areas.
+                              </p>
+                            ) : (
+                              <div className="space-y-3">
+                                {spaces.map((space: VenueSpace, index: number) => (
+                                  <div 
+                                    key={space.id} 
+                                    className="border rounded-lg p-4 space-y-3"
+                                    data-testid={`venue-space-${index}`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="md:col-span-2">
+                                          <Label htmlFor={`space-name-${space.id}`} className="text-xs text-muted-foreground">
+                                            Space Name
+                                          </Label>
+                                          <Input
+                                            id={`space-name-${space.id}`}
+                                            value={space.name}
+                                            onChange={(e) => updateSpace(space.id, { name: e.target.value })}
+                                            placeholder="e.g., Private Dining Room"
+                                            data-testid={`input-space-name-${index}`}
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label htmlFor={`space-capacity-${space.id}`} className="text-xs text-muted-foreground">
+                                            Capacity
+                                          </Label>
+                                          <div className="relative">
+                                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                              id={`space-capacity-${space.id}`}
+                                              type="number"
+                                              min={0}
+                                              value={space.capacity}
+                                              onChange={(e) => updateSpace(space.id, { capacity: parseInt(e.target.value) || 0 })}
+                                              placeholder="0"
+                                              className="pl-9"
+                                              data-testid={`input-space-capacity-${index}`}
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeSpace(space.id)}
+                                        className="shrink-0"
+                                        data-testid={`button-remove-space-${index}`}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                    <div>
+                                      <Label htmlFor={`space-description-${space.id}`} className="text-xs text-muted-foreground">
+                                        Description (optional)
+                                      </Label>
+                                      <Textarea
+                                        id={`space-description-${space.id}`}
+                                        value={space.description || ""}
+                                        onChange={(e) => updateSpace(space.id, { description: e.target.value })}
+                                        placeholder="Describe the space, setup options, included amenities..."
+                                        rows={2}
+                                        data-testid={`input-space-description-${index}`}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={addSpace}
+                              className="w-full"
+                              data-testid="button-add-space"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Space
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </CardContent>
             </Card>
