@@ -228,16 +228,15 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
         </div>
 
         {onSearch && (
-          <div className="px-2 pt-3">
+          <div className="px-4 pt-3">
             {showExpanded ? (
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={onSearch}
-                className="w-full justify-start gap-2 text-muted-foreground font-normal"
+                className=" px-2 w-full bg-foreground/10 justify-between gap-2 text-muted-foreground font-normal"
                 data-testid="button-search-trigger"
               >
                 <Search className="h-4 w-4" />
-                <span className="flex-1 text-left">Search...</span>
                 <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
                   <span className="text-xs">⌘</span>K
                 </kbd>
