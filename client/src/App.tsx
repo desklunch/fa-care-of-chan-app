@@ -162,7 +162,7 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Manager",
+        heading: "Admin",
         allowedRoles: ["admin", "manager"],
         defaultCollapsed: true,
         items: [
@@ -242,7 +242,7 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Resources",
+        heading: "Application",
         items: [
           {
             name: "Feature Categories",

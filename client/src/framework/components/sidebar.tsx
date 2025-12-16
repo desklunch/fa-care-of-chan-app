@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import {
-  ChevronLeft,
+  PanelLeftClose,
   ChevronRight,
   X,
   ChevronUp,
@@ -211,24 +211,24 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
 
           {showExpanded && !isMediumScreen && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="h-8 w-8 p-0 hidden lg:flex"
+              className="h-8 w-8 p-0 hidden lg:flex opacity-50 hover:opacity-100"
               data-testid="button-collapse-sidebar"
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
               ) : (
-                <ChevronLeft className="h-4 w-4" />
+                <PanelLeftClose className="h-4 w-4" />
               )}
             </Button>
           )}
         </div>
 
         {onSearch && (
-          <div className="px-4 kjkl pt- kjkl3">
+          <div className="px-4 pt-3">
             {showExpanded ? (
               <Button
                 variant="ghost"
@@ -247,10 +247,10 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     onClick={onSearch}
-                    className="w-full"
+                    className="w-full "
                     data-testid="button-search-trigger-collapsed"
                   >
                     <Search className="h-4 w-4" />
@@ -303,8 +303,8 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
 
                       const navItemClasses = cn(
                         "flex items-center gap-3 px-3 py-2 font-medium  rounded-lg transition-colors duration-150 relative",
-                        isEnabled && "hover:bg-sidebar-accent",
-                        isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
+                        isEnabled && "hover:bg-primary/20 hover:text-primary",
+                        isActive && "bg-primary text-primary-foreground font-semibold hover:bg-primary/50 hover:text-foreground",
                         !showExpanded && "justify-center",
                         !isEnabled && "opacity-40 cursor-not-allowed pointer-events-none"
                       );

@@ -266,21 +266,18 @@ export default function AdminReleaseDetail() {
           : undefined
       }
     >
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold" data-testid="text-version-label">
-                {release.versionLabel}
-              </h1>
-              <Badge variant={isDraft ? "secondary" : "default"}>
-                {isDraft ? "Draft" : "Published"}
-              </Badge>
-            </div>
-            <p className="text-muted-foreground">
-              {release.title || "Untitled Release"}
-            </p>
-          </div>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="space-y-2">
+          <Badge variant={isDraft ? "secondary" : "default"}>
+            {isDraft ? "Draft" : "Published"}
+          </Badge>
+          <h1 className="text-2xl font-bold" data-testid="text-version-label">
+            {release.versionLabel}
+          </h1>
+
+          <p className="text-muted-foreground">
+            {release.title || "Untitled Release"}
+          </p>
         </div>
 
       {release.releaseNotes && (

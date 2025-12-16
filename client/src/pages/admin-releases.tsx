@@ -142,17 +142,7 @@ export default function AdminReleases() {
         onClick: () => setIsCreateDialogOpen(true),
       }}
     >
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold" data-testid="text-page-title">
-              Release Management
-            </h1>
-            <p className="text-muted-foreground">
-              Manage app versions and track changes across releases
-            </p>
-          </div>
-        </div>
+      <div className="container mx-auto p-6 space-y-6">
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -244,12 +234,9 @@ export default function AdminReleases() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Pencil className="h-5 w-5" />
+              <Pencil className="h-4 w-4" />
               Draft Releases
             </CardTitle>
-            <CardDescription>
-              Releases in progress that haven't been published yet
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -297,12 +284,9 @@ export default function AdminReleases() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Rocket className="h-5 w-5" />
-            Published Releases
+            <Rocket className="h-4 w-4" />
+            Published
           </CardTitle>
-          <CardDescription>
-            Released versions with their change logs
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {publishedReleases.length === 0 ? (
