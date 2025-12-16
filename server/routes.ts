@@ -1604,7 +1604,7 @@ export async function registerRoutes(
   // Google Maps Static API - Serve static map image for venue
   app.get("/api/maps/static", async (req, res) => {
     try {
-      const { placeId, address, width, height } = req.query;
+      const { placeId, address, width, height, theme } = req.query;
       
       if (!placeId && !address) {
         return res.status(400).json({ message: "Either placeId or address is required" });
@@ -1617,6 +1617,7 @@ export async function registerRoutes(
 
       const mapWidth = parseInt(width as string) || 600;
       const mapHeight = parseInt(height as string) || 300;
+      const mapTheme = (theme as string) || "light";
       
       // Build the static map URL
       let location: string;
@@ -1626,7 +1627,31 @@ export async function registerRoutes(
         location = address as string;
       }
 
-      const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+      // Dark theme styles for Google Maps Static API
+      const darkModeStyles = [
+        "style=element:geometry|color:0x212121",
+        "style=element:labels.icon|visibility:off",
+        "style=element:labels.text.fill|color:0x757575",
+        "style=element:labels.text.stroke|color:0x212121",
+        "style=feature:administrative|element:geometry|color:0x757575",
+        "style=feature:administrative.country|element:labels.text.fill|color:0x9e9e9e",
+        "style=feature:administrative.land_parcel|visibility:off",
+        "style=feature:administrative.locality|element:labels.text.fill|color:0xbdbdbd",
+        "style=feature:poi|element:labels.text.fill|color:0x757575",
+        "style=feature:poi.park|element:geometry|color:0x181818",
+        "style=feature:poi.park|element:labels.text.fill|color:0x616161",
+        "style=feature:road|element:geometry.fill|color:0x2c2c2c",
+        "style=feature:road|element:labels.text.fill|color:0x8a8a8a",
+        "style=feature:road.arterial|element:geometry|color:0x373737",
+        "style=feature:road.highway|element:geometry|color:0x3c3c3c",
+        "style=feature:road.highway.controlled_access|element:geometry|color:0x4e4e4e",
+        "style=feature:road.local|element:labels.text.fill|color:0x616161",
+        "style=feature:transit|element:labels.text.fill|color:0x757575",
+        "style=feature:water|element:geometry|color:0x000000",
+        "style=feature:water|element:labels.text.fill|color:0x3d3d3d",
+      ];
+
+      let staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
         `center=${encodeURIComponent(location)}` +
         `&zoom=15` +
         `&size=${mapWidth}x${mapHeight}` +
@@ -1634,6 +1659,11 @@ export async function registerRoutes(
         `&maptype=roadmap` +
         `&markers=color:red%7C${encodeURIComponent(location)}` +
         `&key=${apiKey}`;
+      
+      // Apply dark mode styles if theme is dark
+      if (mapTheme === "dark") {
+        staticMapUrl += "&" + darkModeStyles.join("&");
+      }
 
       // Fetch the static map image and proxy it
       const response = await fetch(staticMapUrl);

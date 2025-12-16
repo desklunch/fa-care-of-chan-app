@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, ExternalLink } from "lucide-react";
+import { useTheme } from "@/lib/theme-provider";
 
 interface VenueMapProps {
   address?: string;
@@ -12,6 +13,7 @@ interface VenueMapProps {
 export function VenueMap({ address, venueName, className }: VenueMapProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   if (!address) {
     return null;
@@ -21,6 +23,7 @@ export function VenueMap({ address, venueName, className }: VenueMapProps) {
   params.set("address", address);
   params.set("width", "800");
   params.set("height", "300");
+  params.set("theme", resolvedTheme);
 
   const staticMapUrl = `/api/maps/static?${params.toString()}`;
 
