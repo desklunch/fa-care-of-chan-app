@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Building2, Users, Shield, Loader2, Bug } from "lucide-react";
 import Logo from "@/framework/components/logo";
 import { GoogleLogin } from "@react-oauth/google";
@@ -55,7 +61,6 @@ export default function Landing() {
   });
 
   return (
-
     <div className="max-4xl mx-auto h-screen flex flex-col items-center justify-center text-center gap-12 text-primary ">
       <div className="flex justify-center mb-2">
         <svg
@@ -72,18 +77,19 @@ export default function Landing() {
         </svg>
       </div>
       <h1 className="text-4xl md:text-5xl font-bold ">
-
         Care of Chan
         <p className="text-xs mb-2 tracking-wide font-normal mt-2 opacity-80">
-          CoCOS 1.0.1 
+          CoCOS 1.0.1
         </p>
       </h1>
 
-
       {/* Desktop: Show sign-in */}
-      <div className="hidden md:flex flex-col items-center" data-testid="button-get-started">
+      <div
+        className="hidden flex flex-col items-center gap-2"
+        data-testid="button-get-started"
+      >
         <p className="text-base mb-4 ">
-          Sign in with your primary Care of Chan email address. 
+          Sign in with your primary Care of Chan email address.
         </p>
         {loginMutation.isPending ? (
           <Button size="lg" className="h-12 px-8" disabled>
@@ -113,9 +119,13 @@ export default function Landing() {
       </div>
 
       {/* Mobile: Show not optimized message */}
-      <div className="flex md:hidden flex-col items-center px-6" data-testid="mobile-notice">
+      <div
+        className="flex md:hidden flex-col items-center px-6"
+        data-testid="mobile-notice"
+      >
         <p className="text-base text-muted-foreground">
-          This app is not yet fully optimized for mobile devices. Please use a desktop computer.
+          This app is not yet fully optimized for mobile devices. Please use a
+          desktop computer.
         </p>
       </div>
       {isDevelopment && (
