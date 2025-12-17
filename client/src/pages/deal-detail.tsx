@@ -22,9 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock } from "lucide-react";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
-import type { DealWithRelations, DealStatus, DealLocation, DealEvent } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, DealEvent, DealService } from "@shared/schema";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
   "Inquiry": { variant: "outline" },
@@ -282,6 +282,31 @@ export default function DealDetail() {
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Services Section */}
+            {((deal.services as DealService[]) || []).length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Services
+                  </h3>
+                  <div className="flex flex-wrap gap-2" data-testid="deal-services">
+                    {((deal.services as DealService[]) || []).map((service) => (
+                      <Badge
+                        key={service}
+                        variant="secondary"
+                        className="gap-1"
+                        data-testid={`badge-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        <Briefcase className="h-3 w-3" />
+                        {service}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               </>
