@@ -154,7 +154,7 @@ import {
   type UpdateClient,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
+import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray, alias } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 export interface AuditLogFilters {
@@ -3473,6 +3473,7 @@ export class DatabaseStorage implements IStorage {
 
   // Deal operations
   async getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]> {
+    const ownerUsers = alias(users, "owner_users");
     let query = db
       .select({
         id: deals.id,
@@ -3483,6 +3484,8 @@ export class DatabaseStorage implements IStorage {
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
         services: deals.services,
+        concept: deals.concept,
+        ownerId: deals.ownerId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3497,10 +3500,17 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industry: clients.industry,
         },
+        owner: {
+          id: ownerUsers.id,
+          firstName: ownerUsers.firstName,
+          lastName: ownerUsers.lastName,
+          profileImageUrl: ownerUsers.profileImageUrl,
+        },
       })
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
-      .leftJoin(clients, eq(deals.clientId, clients.id));
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id));
 
     if (options?.status && options.status.length > 0) {
       query = query.where(inArray(deals.status, options.status)) as any;
@@ -3511,6 +3521,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDealById(id: string): Promise<DealWithRelations | undefined> {
+    const ownerUsers = alias(users, "owner_users");
     const [result] = await db
       .select({
         id: deals.id,
@@ -3521,6 +3532,8 @@ export class DatabaseStorage implements IStorage {
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
         services: deals.services,
+        concept: deals.concept,
+        ownerId: deals.ownerId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3535,15 +3548,23 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industry: clients.industry,
         },
+        owner: {
+          id: ownerUsers.id,
+          firstName: ownerUsers.firstName,
+          lastName: ownerUsers.lastName,
+          profileImageUrl: ownerUsers.profileImageUrl,
+        },
       })
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .where(eq(deals.id, id));
     return result as DealWithRelations | undefined;
   }
 
   async getDealsByClientId(clientId: string): Promise<DealWithRelations[]> {
+    const ownerUsers = alias(users, "owner_users");
     const results = await db
       .select({
         id: deals.id,
@@ -3554,6 +3575,8 @@ export class DatabaseStorage implements IStorage {
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
         services: deals.services,
+        concept: deals.concept,
+        ownerId: deals.ownerId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3568,10 +3591,17 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industry: clients.industry,
         },
+        owner: {
+          id: ownerUsers.id,
+          firstName: ownerUsers.firstName,
+          lastName: ownerUsers.lastName,
+          profileImageUrl: ownerUsers.profileImageUrl,
+        },
       })
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .where(eq(deals.clientId, clientId))
       .orderBy(desc(deals.createdAt));
     return results as DealWithRelations[];
