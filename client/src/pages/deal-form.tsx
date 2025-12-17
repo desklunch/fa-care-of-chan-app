@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User } from "@shared/schema";
 import { dealStatuses, dealLocationSchema, dealServices } from "@shared/schema";
 
 const dealFormSchema = z.object({
@@ -44,6 +45,8 @@ const dealFormSchema = z.object({
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
   services: z.array(z.enum(dealServices)).default([]),
+  concept: z.string().optional(),
+  ownerId: z.string().optional(),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -60,6 +63,10 @@ export default function DealForm() {
     enabled: isEditing,
   });
 
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
   usePageTitle(isEditing ? (deal?.displayName ? `Edit ${deal.displayName}` : "Edit Deal") : "New Deal");
 
   const form = useForm<DealFormValues>({
@@ -71,6 +78,8 @@ export default function DealForm() {
       locations: [],
       eventSchedule: [],
       services: [],
+      concept: "",
+      ownerId: "",
     },
   });
 
@@ -83,6 +92,8 @@ export default function DealForm() {
         locations: (deal.locations as DealLocation[]) || [],
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
         services: (deal.services as DealService[]) || [],
+        concept: deal.concept || "",
+        ownerId: deal.ownerId || "",
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
@@ -336,6 +347,57 @@ export default function DealForm() {
                       </FormControl>
                       <FormDescription>
                         Select the services included in this deal.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="concept"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Concept</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter concept details..."
+                          className="min-h-[120px] resize-y"
+                          {...field}
+                          data-testid="textarea-concept"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Describe the concept or vision for this deal.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ownerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Owner</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-deal-owner">
+                            <SelectValue placeholder="Select owner..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No owner</SelectItem>
+                          {users.filter(u => u.isActive).map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.firstName} {user.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        The team member responsible for this deal.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
