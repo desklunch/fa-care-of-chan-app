@@ -3553,6 +3553,7 @@ export class DatabaseStorage implements IStorage {
         displayName: deals.displayName,
         status: deals.status,
         clientId: deals.clientId,
+        primaryContactId: deals.primaryContactId,
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
         services: deals.services,
@@ -3578,11 +3579,19 @@ export class DatabaseStorage implements IStorage {
           lastName: ownerUsers.lastName,
           profileImageUrl: ownerUsers.profileImageUrl,
         },
+        primaryContact: {
+          id: contacts.id,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          emailAddresses: contacts.emailAddresses,
+          phoneNumbers: contacts.phoneNumbers,
+        },
       })
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
+      .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
       .where(eq(deals.id, id));
     return result as DealWithRelations | undefined;
   }
