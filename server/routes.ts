@@ -52,6 +52,8 @@ import {
   updateDealSchema,
   dealStatuses,
   type DealStatus,
+  insertDealTaskSchema,
+  updateDealTaskSchema,
   insertClientSchema,
   updateClientSchema,
 } from "@shared/schema";
@@ -4998,6 +5000,68 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     } catch (error) {
       console.error("Error deleting deal:", error);
       res.status(500).json({ message: "Failed to delete deal" });
+    }
+  });
+
+  // GET /api/deals/:dealId/tasks - Get tasks for a deal
+  app.get("/api/deals/:dealId/tasks", isAuthenticated, async (req, res) => {
+    try {
+      const deal = await storage.getDealById(req.params.dealId);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      const tasks = await storage.getDealTasks(req.params.dealId);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching deal tasks:", error);
+      res.status(500).json({ message: "Failed to fetch deal tasks" });
+    }
+  });
+
+  // POST /api/deals/:dealId/tasks - Create a task for a deal
+  app.post("/api/deals/:dealId/tasks", isAuthenticated, async (req: any, res) => {
+    try {
+      const deal = await storage.getDealById(req.params.dealId);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      const validatedData = insertDealTaskSchema.parse({
+        ...req.body,
+        dealId: req.params.dealId,
+      });
+      const task = await storage.createDealTask(validatedData, req.user.claims.sub);
+      res.status(201).json(task);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating deal task:", error);
+      res.status(500).json({ message: "Failed to create deal task" });
+    }
+  });
+
+  // PATCH /api/deals/:dealId/tasks/:taskId - Update a task
+  app.patch("/api/deals/:dealId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingTask = await storage.getDealTaskById(req.params.taskId);
+      if (!existingTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (existingTask.dealId !== req.params.dealId) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      const validatedData = updateDealTaskSchema.parse(req.body);
+      const task = await storage.updateDealTask(req.params.taskId, validatedData);
+      res.json(task);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error updating deal task:", error);
+      res.status(500).json({ message: "Failed to update deal task" });
     }
   });
 

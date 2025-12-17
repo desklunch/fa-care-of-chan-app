@@ -1,5 +1,6 @@
 import { sql, relations } from "drizzle-orm";
 import {
+  date,
   index,
   integer,
   jsonb,
@@ -629,6 +630,33 @@ export const deals = pgTable(
   ],
 );
 
+// Deal tasks table
+export const dealTasks = pgTable(
+  "deal_tasks",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 500 }).notNull(),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    dueDate: date("due_date"),
+    assignedUserId: varchar("assigned_user_id").references(() => users.id),
+    completed: boolean("completed").notNull().default(false),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_deal_tasks_deal").on(table.dealId),
+    index("idx_deal_tasks_created_by").on(table.createdById),
+    index("idx_deal_tasks_assigned_user").on(table.assignedUserId),
+    index("idx_deal_tasks_completed").on(table.completed),
+    index("idx_deal_tasks_due_date").on(table.dueDate),
+  ],
+);
+
+export type DealTask = typeof dealTasks.$inferSelect;
+export type InsertDealTask = typeof dealTasks.$inferInsert;
+
 // Clients table for client company directory
 export const clients = pgTable(
   "clients",
@@ -673,6 +701,7 @@ export const commentEntityTypes = [
   "venue_collection",
   "app_feature",
   "feedback",
+  "deal",
 ] as const;
 export type CommentEntityType = (typeof commentEntityTypes)[number];
 
@@ -1507,6 +1536,29 @@ export const updateDealSchema = createInsertSchema(deals).pick({
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;
 export type UpdateDeal = z.infer<typeof updateDealSchema>;
+
+// Deal task schemas
+export const insertDealTaskSchema = z.object({
+  dealId: z.string().min(1, "Deal is required"),
+  title: z.string().min(1, "Title is required").max(500),
+  dueDate: z.string().nullable().optional(),
+  assignedUserId: z.string().nullable().optional(),
+});
+
+export const updateDealTaskSchema = z.object({
+  completed: z.boolean().optional(),
+  dueDate: z.string().nullable().optional(),
+  assignedUserId: z.string().nullable().optional(),
+});
+
+export type CreateDealTask = z.infer<typeof insertDealTaskSchema>;
+export type UpdateDealTask = z.infer<typeof updateDealTaskSchema>;
+
+// Deal task with relations type
+export type DealTaskWithRelations = DealTask & {
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  assignedUser?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+};
 
 // ==========================================
 // CLIENTS

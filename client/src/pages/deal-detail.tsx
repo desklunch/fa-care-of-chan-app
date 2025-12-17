@@ -9,6 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,10 +28,16 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase, UserCircle, Mail, Phone, DollarSign } from "lucide-react";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase, UserCircle, Mail, Phone, DollarSign, CalendarCheck, Users } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
 import { CommentList } from "@/components/ui/comments";
-import type { DealWithRelations, DealStatus, DealLocation, DealEvent, DealService } from "@shared/schema";
+import { cn } from "@/lib/utils";
+import type { DealWithRelations, DealStatus, DealLocation, DealEvent, DealService, DealTaskWithRelations, User as UserType } from "@shared/schema";
+
+function parseDateOnly(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
   "Inquiry": { variant: "outline" },
@@ -46,10 +57,23 @@ export default function DealDetail() {
   const { user } = useAuth();
   const isManagerOrAdmin = user?.role === "admin" || user?.role === "manager";
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>();
+  const [newTaskAssignee, setNewTaskAssignee] = useState<string>("");
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
     enabled: Boolean(id),
+  });
+  
+  const { data: tasks = [] } = useQuery<DealTaskWithRelations[]>({
+    queryKey: ["/api/deals", id, "tasks"],
+    enabled: Boolean(id),
+  });
+  
+  const { data: usersData = [] } = useQuery<UserType[]>({
+    queryKey: ["/api/users"],
   });
 
   usePageTitle(deal?.displayName || "Deal");
@@ -67,6 +91,50 @@ export default function DealDetail() {
       toast({ title: "Failed to delete deal", description: error.message, variant: "destructive" });
     },
   });
+  
+  const createTaskMutation = useMutation({
+    mutationFn: async (data: { title: string; dueDate?: string; assignedUserId?: string }) => {
+      return await apiRequest("POST", `/api/deals/${id}/tasks`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "tasks"] });
+      setNewTaskTitle("");
+      setNewTaskDueDate(undefined);
+      setNewTaskAssignee("");
+      toast({ title: "Task created" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to create task", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ taskId, data }: { taskId: string; data: { completed?: boolean } }) => {
+      return await apiRequest("PATCH", `/api/deals/${id}/tasks/${taskId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "tasks"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update task", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  const handleCreateTask = () => {
+    if (!newTaskTitle.trim()) return;
+    createTaskMutation.mutate({
+      title: newTaskTitle.trim(),
+      dueDate: newTaskDueDate ? format(newTaskDueDate, "yyyy-MM-dd") : undefined,
+      assignedUserId: newTaskAssignee && newTaskAssignee !== "unassigned" ? newTaskAssignee : undefined,
+    });
+  };
+  
+  const handleToggleTaskComplete = (task: DealTaskWithRelations) => {
+    updateTaskMutation.mutate({
+      taskId: task.id,
+      data: { completed: !task.completed },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -148,6 +216,7 @@ export default function DealDetail() {
             <Tabs defaultValue="overview" className="w-full">
               <TabsList>
                 <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+                <TabsTrigger value="tasks" data-testid="tab-tasks">Tasks</TabsTrigger>
                 <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
               </TabsList>
 
@@ -417,6 +486,135 @@ export default function DealDetail() {
                     </div>
                   </>
                 )}
+              </TabsContent>
+
+              <TabsContent value="tasks" className="space-y-4 mt-6">
+                <Card>
+                  <CardContent className="flex items-center gap-2 p-4">
+                    <div className="flex flex-1">
+                      <Input
+                        placeholder="Task title"
+                        value={newTaskTitle}
+                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleCreateTask();
+                          }
+                        }}
+                        data-testid="input-task-title"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "justify-start text-left font-normal",
+                              !newTaskDueDate && ""
+                            )}
+                            data-testid="button-task-due-date"
+                          >
+                            <CalendarCheck className="h-4 w-4" />
+                            {newTaskDueDate ? format(newTaskDueDate, 'MMM d') : ""}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={newTaskDueDate}
+                            onSelect={setNewTaskDueDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <Select value={newTaskAssignee} onValueChange={setNewTaskAssignee}>
+                        <SelectTrigger data-testid="select-task-assignee" className="w-[140px]">
+                          <SelectValue placeholder="Assignee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {usersData.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.firstName} {u.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={handleCreateTask}
+                      disabled={createTaskMutation.isPending || !newTaskTitle.trim()}
+                      data-testid="button-create-task"
+                      size="sm"
+                    >
+                      {createTaskMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        'Add'
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-base">Tasks ({tasks.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    {tasks.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">No tasks yet</p>
+                    ) : (
+                      tasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className={cn(
+                            "flex items-start gap-3 p-3 rounded-md border hover:bg-accent/50 transition-colors",
+                            task.completed && "opacity-60"
+                          )}
+                          data-testid={`task-item-${task.id}`}
+                        >
+                          <Checkbox
+                            checked={task.completed}
+                            onCheckedChange={() => handleToggleTaskComplete(task)}
+                            disabled={updateTaskMutation.isPending}
+                            data-testid={`checkbox-task-${task.id}`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={cn(
+                                "text-sm font-medium",
+                                task.completed && "line-through text-muted-foreground"
+                              )}
+                            >
+                              {task.title}
+                            </p>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              {task.dueDate && (
+                                <span className="flex items-center gap-1">
+                                  <CalendarCheck className="h-3 w-3" />
+                                  {format(parseDateOnly(task.dueDate), 'MMM d, yyyy')}
+                                </span>
+                              )}
+                              {task.assignedUser && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {task.assignedUser.firstName} {task.assignedUser.lastName}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="comments" className="mt-6">

@@ -148,6 +148,10 @@ import {
   type UpdateDeal,
   type DealStatus,
   dealStatuses,
+  dealTasks,
+  type DealTask,
+  type DealTaskWithRelations,
+  type CreateDealTask,
   clients,
   clientContacts,
   type Client,
@@ -443,6 +447,12 @@ export interface IStorage {
   createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
   updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
   deleteDeal(id: string): Promise<void>;
+  
+  // Deal task operations
+  getDealTasks(dealId: string): Promise<DealTaskWithRelations[]>;
+  getDealTaskById(id: string): Promise<DealTask | undefined>;
+  createDealTask(data: CreateDealTask, createdById: string): Promise<DealTask>;
+  updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null }): Promise<DealTask | undefined>;
   
   // Client operations
   getClients(): Promise<Client[]>;
@@ -3665,6 +3675,104 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDeal(id: string): Promise<void> {
     await db.delete(deals).where(eq(deals.id, id));
+  }
+
+  // Deal task operations
+  async getDealTaskById(id: string): Promise<DealTask | undefined> {
+    const [task] = await db
+      .select()
+      .from(dealTasks)
+      .where(eq(dealTasks.id, id));
+    return task;
+  }
+
+  async getDealTasks(dealId: string): Promise<DealTaskWithRelations[]> {
+    const createdByUsers = alias(users, "created_by_users");
+    const assignedUsers = alias(users, "assigned_users");
+    
+    const results = await db
+      .select({
+        id: dealTasks.id,
+        dealId: dealTasks.dealId,
+        title: dealTasks.title,
+        createdById: dealTasks.createdById,
+        dueDate: dealTasks.dueDate,
+        assignedUserId: dealTasks.assignedUserId,
+        completed: dealTasks.completed,
+        completedAt: dealTasks.completedAt,
+        createdAt: dealTasks.createdAt,
+        updatedAt: dealTasks.updatedAt,
+        createdBy: {
+          id: createdByUsers.id,
+          firstName: createdByUsers.firstName,
+          lastName: createdByUsers.lastName,
+          profileImageUrl: createdByUsers.profileImageUrl,
+        },
+        assignedUser: {
+          id: assignedUsers.id,
+          firstName: assignedUsers.firstName,
+          lastName: assignedUsers.lastName,
+          profileImageUrl: assignedUsers.profileImageUrl,
+        },
+      })
+      .from(dealTasks)
+      .leftJoin(createdByUsers, eq(dealTasks.createdById, createdByUsers.id))
+      .leftJoin(assignedUsers, eq(dealTasks.assignedUserId, assignedUsers.id))
+      .where(eq(dealTasks.dealId, dealId))
+      .orderBy(asc(dealTasks.completed), asc(dealTasks.dueDate), desc(dealTasks.createdAt));
+
+    return results.map(r => ({
+      id: r.id,
+      dealId: r.dealId,
+      title: r.title,
+      createdById: r.createdById,
+      dueDate: r.dueDate,
+      assignedUserId: r.assignedUserId,
+      completed: r.completed,
+      completedAt: r.completedAt,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      createdBy: r.createdBy?.id ? r.createdBy : null,
+      assignedUser: r.assignedUser?.id ? r.assignedUser : null,
+    }));
+  }
+
+  async createDealTask(data: CreateDealTask, createdById: string): Promise<DealTask> {
+    const [task] = await db
+      .insert(dealTasks)
+      .values({
+        dealId: data.dealId,
+        title: data.title,
+        dueDate: data.dueDate || null,
+        assignedUserId: data.assignedUserId || null,
+        createdById,
+      })
+      .returning();
+    return task;
+  }
+
+  async updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null }): Promise<DealTask | undefined> {
+    const updateData: Partial<{ completed: boolean; completedAt: Date | null; assignedUserId: string | null; dueDate: string | null; updatedAt: Date }> = {
+      updatedAt: new Date(),
+    };
+    
+    if (data.completed !== undefined) {
+      updateData.completed = data.completed;
+      updateData.completedAt = data.completed ? new Date() : null;
+    }
+    if (data.assignedUserId !== undefined) {
+      updateData.assignedUserId = data.assignedUserId;
+    }
+    if (data.dueDate !== undefined) {
+      updateData.dueDate = data.dueDate;
+    }
+
+    const [task] = await db
+      .update(dealTasks)
+      .set(updateData)
+      .where(eq(dealTasks.id, id))
+      .returning();
+    return task;
   }
 
   // Client operations
