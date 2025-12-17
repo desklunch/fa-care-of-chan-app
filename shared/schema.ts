@@ -1447,6 +1447,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   status: true,
   clientId: true,
   locations: true,
+  eventSchedule: true,
 }).partial();
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;
