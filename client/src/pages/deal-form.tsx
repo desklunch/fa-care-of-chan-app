@@ -63,7 +63,7 @@ export default function DealForm() {
   });
 
   const { data: users } = useQuery<User[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/team"],
   });
 
   const [selectedClientId, setSelectedClientId] = useState<string>("");
