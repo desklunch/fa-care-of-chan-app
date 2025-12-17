@@ -249,26 +249,48 @@ export default function DealDetail() {
                     <p className="text-sm text-muted-foreground">{deal.dateType}</p>
                   </div>
 
-                  {deal.primaryDate && (
+                  {deal.dateType !== "Unconfirmed" && deal.primaryDate && (
                     <div>
                       <p className="text-sm font-medium">Primary Date</p>
                       <p className="text-sm text-muted-foreground">
                         {format(new Date(deal.primaryDate), "MMMM d, yyyy")}
-                        {deal.isDateFlexible && (
-                          <Badge variant="outline" className="ml-2">Flexible</Badge>
-                        )}
                       </p>
                     </div>
                   )}
 
-                  {deal.numberOfDays && deal.numberOfDays >= 2 && (
+                  {(deal.dateType === "Single Day" || deal.dateType === "Multi Day") && (
+                    <div>
+                      <p className="text-sm font-medium">Date Flexibility</p>
+                      <p className="text-sm text-muted-foreground">
+                        {deal.isDateFlexible ? "Flexible" : "Fixed"}
+                      </p>
+                    </div>
+                  )}
+
+                  {(deal.dateType === "Single Day" || deal.dateType === "Multi Day") && 
+                   deal.isDateFlexible && 
+                   deal.alternativeDates && 
+                   deal.alternativeDates.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium">Alternative Dates</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {deal.alternativeDates.map((date, idx) => (
+                          <Badge key={idx} variant="secondary">
+                            {format(new Date(date), "MMM d, yyyy")}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {deal.dateType === "Multi Day" && deal.numberOfDays && deal.numberOfDays >= 2 && (
                     <div>
                       <p className="text-sm font-medium">Duration</p>
                       <p className="text-sm text-muted-foreground">{deal.numberOfDays} days</p>
                     </div>
                   )}
 
-                  {deal.estimatedMonths && deal.estimatedMonths.length > 0 && (
+                  {deal.dateType === "Unconfirmed" && deal.estimatedMonths && deal.estimatedMonths.length > 0 && (
                     <div>
                       <p className="text-sm font-medium">Estimated Months</p>
                       <div className="flex flex-wrap gap-1 mt-1">

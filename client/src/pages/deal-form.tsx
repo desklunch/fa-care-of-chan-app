@@ -209,6 +209,31 @@ export default function DealForm() {
     }
   }, [watchClientId, selectedClientId, form, initialLoadComplete]);
 
+  const [previousDateType, setPreviousDateType] = useState<string | null | undefined>(null);
+
+  useEffect(() => {
+    if (!initialLoadComplete) return;
+    if (watchDateType === previousDateType) return;
+    
+    setPreviousDateType(watchDateType || null);
+
+    if (watchDateType === "Unconfirmed") {
+      form.setValue("primaryDate", null);
+      form.setValue("numberOfDays", null);
+      form.setValue("isDateFlexible", true);
+      form.setValue("alternativeDates", []);
+    } else if (watchDateType === "Single Day") {
+      form.setValue("estimatedMonths", []);
+      form.setValue("numberOfDays", 1);
+    } else if (watchDateType === "Multi Day") {
+      form.setValue("estimatedMonths", []);
+      const currentDays = form.getValues("numberOfDays");
+      if (!currentDays || currentDays < 2) {
+        form.setValue("numberOfDays", 2);
+      }
+    }
+  }, [watchDateType, initialLoadComplete, form, previousDateType]);
+
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
       return apiRequest("POST", "/api/deals", data);
