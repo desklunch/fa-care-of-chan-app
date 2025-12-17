@@ -1,10 +1,20 @@
 import { useParams, useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   Building,
@@ -15,14 +25,23 @@ import {
   Users,
   CircleDollarSign,
   StickyNote,
+  Plus,
+  Search,
+  UserPlus,
+  Link as LinkIcon,
 } from "lucide-react";
-import type { ClientWithRelations, DealWithRelations } from "@shared/schema";
+import type { ClientWithRelations, DealWithRelations, Contact } from "@shared/schema";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ClientDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [contactSearch, setContactSearch] = useState("");
 
   const { data: client, isLoading, error } = useQuery<ClientWithRelations>({
     queryKey: ["/api/clients", id],
@@ -35,7 +54,37 @@ export default function ClientDetail() {
     select: (data) => data.filter(deal => deal.clientId === id),
   });
 
+  const { data: allContacts } = useQuery<Contact[]>({
+    queryKey: ["/api/contacts"],
+    enabled: linkDialogOpen,
+  });
+
+  const linkContactMutation = useMutation({
+    mutationFn: async (contactId: string) => {
+      return apiRequest("POST", `/api/clients/${id}/contacts`, { contactId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", id] });
+      toast({ title: "Contact linked to client" });
+      setLinkDialogOpen(false);
+      setContactSearch("");
+    },
+    onError: () => {
+      toast({ title: "Failed to link contact", variant: "destructive" });
+    },
+  });
+
   usePageTitle(client?.name || "Client");
+
+  const linkedContactIds = new Set(client?.clientContacts?.map(cc => cc.contact.id) || []);
+  const availableContacts = allContacts?.filter(c => 
+    !linkedContactIds.has(c.id) &&
+    (contactSearch === "" || 
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(contactSearch.toLowerCase()) ||
+      c.emailAddresses?.some(e => e.toLowerCase().includes(contactSearch.toLowerCase())) ||
+      c.jobTitle?.toLowerCase().includes(contactSearch.toLowerCase())
+    )
+  ) || [];
 
   if (isLoading) {
     return (
@@ -212,11 +261,73 @@ export default function ClientDetail() {
                   <Users className="h-4 w-4" />
                   Contacts
                 </CardTitle>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/contacts/new?clientId=${id}`}>
-                    Add Contact
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" data-testid="button-link-contact">
+                        <LinkIcon className="h-4 w-4 mr-1" />
+                        Link Existing
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Link Existing Contact</DialogTitle>
+                        <DialogDescription>
+                          Search for a contact to link to {client?.name}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search by name, email, or company..."
+                            value={contactSearch}
+                            onChange={(e) => setContactSearch(e.target.value)}
+                            className="pl-9"
+                            data-testid="input-contact-search"
+                          />
+                        </div>
+                        <div className="max-h-64 overflow-y-auto space-y-2">
+                          {availableContacts.length > 0 ? (
+                            availableContacts.slice(0, 10).map((contact) => (
+                              <div
+                                key={contact.id}
+                                className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer"
+                                onClick={() => linkContactMutation.mutate(contact.id)}
+                                data-testid={`link-contact-${contact.id}`}
+                              >
+                                <div>
+                                  <p className="font-medium">
+                                    {contact.firstName} {contact.lastName}
+                                  </p>
+                                  {contact.emailAddresses?.[0] && (
+                                    <p className="text-sm text-muted-foreground">{contact.emailAddresses[0]}</p>
+                                  )}
+                                  {contact.jobTitle && (
+                                    <p className="text-xs text-muted-foreground">{contact.jobTitle}</p>
+                                  )}
+                                </div>
+                                <Button size="sm" variant="ghost" disabled={linkContactMutation.isPending}>
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              {contactSearch ? "No matching contacts found" : "No unlinked contacts available"}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button variant="outline" size="sm" asChild data-testid="button-add-contact">
+                    <Link href={`/contacts/new?clientId=${id}`}>
+                      <UserPlus className="h-4 w-4 mr-1" />
+                      Add New
+                    </Link>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {client.clientContacts && client.clientContacts.length > 0 ? (
