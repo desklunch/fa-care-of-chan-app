@@ -127,7 +127,7 @@ function formatMonthRange(
     return `${MONTHS[startMonth]} ${startYear}`;
   }
   if (startYear === endYear) {
-    return `${MONTHS[startMonth]}–${MONTHS[endMonth]} ${startYear}`;
+    return `${MONTHS[startMonth]} – ${MONTHS[endMonth]} ${startYear}`;
   }
   return `${MONTHS[startMonth]} ${startYear} – ${MONTHS[endMonth]} ${endYear}`;
 }
@@ -143,7 +143,7 @@ function getEventSummary(event: DealEvent): string | null {
     
     const startDate = primary.startDate;
     const altCount = alternatives.length;
-    const altText = altCount > 0 ? ` [${altCount} Alternate Date${altCount > 1 ? "s" : ""}]` : "";
+    const altText = altCount > 0 ? ` (${altCount} alt date${altCount > 1 ? "s" : ""})` : "";
     
     if (event.durationDays === 1) {
       return `${format(startDate, "EEE MMM d, yyyy")}${altText}`;
@@ -152,7 +152,7 @@ function getEventSummary(event: DealEvent): string | null {
       const dateRange = startDate.getMonth() === endDate.getMonth()
         ? `${format(startDate, "EEE MMM d")} – ${format(endDate, "d, yyyy")}`
         : `${format(startDate, "EEE MMM d")} – ${format(endDate, "MMM d, yyyy")}`;
-      return `${dateRange} (${event.durationDays} days)${altText}`;
+      return `${event.durationDays} days, ${dateRange} ${altText}`;
     }
   } else {
     const range = event.schedules.find((s) => s.kind === "range");
@@ -271,13 +271,13 @@ function EventRow({
   const startValue =
     rangeSchedule?.rangeStartMonth !== undefined &&
     rangeSchedule?.rangeStartYear !== undefined
-      ? `${rangeSchedule.rangeStartMonth}-${rangeSchedule.rangeStartYear}`
+      ? `${rangeSchedule.rangeStartMonth} - ${rangeSchedule.rangeStartYear}`
       : undefined;
 
   const endValue =
     rangeSchedule?.rangeEndMonth !== undefined &&
     rangeSchedule?.rangeEndYear !== undefined
-      ? `${rangeSchedule.rangeEndMonth}-${rangeSchedule.rangeEndYear}`
+      ? `${rangeSchedule.rangeEndMonth} - ${rangeSchedule.rangeEndYear}`
       : undefined;
 
   const summary = getEventSummary(event);
@@ -287,12 +287,23 @@ function EventRow({
       className="border rounded-md p-3 space-y-2"
       data-testid={`event-card-${event.id}`}
     >
-      {summary && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid={`text-summary-${event.id}`}>
+      <div className="w-full flex items-center justify-between pb-2 border-b">
+        <div className="flex items-center gap-2 text-sm " data-testid={`text-summary-${event.id}`}>
           <CalendarClock className="h-4 w-4 shrink-0" />
-          <span>{summary}</span>
+          <span>{summary ? summary : "Please provide date requirements below"}</span>
         </div>
-      )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+          data-testid={`button-remove-event-${event.id}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
       <div className="flex items-center gap-3">
         <div className="flex gap-4 w-full">
           <div className="space-y-1 w-full">
@@ -306,21 +317,26 @@ function EventRow({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Duration (days)</Label>
-            <Input
-              type="number"
-              min={1}
-              max={30}
-              value={event.durationDays}
-              onChange={(e) =>
-                updateField(
-                  "durationDays",
-                  Math.max(1, parseInt(e.target.value) || 1),
-                )
-              }
-              className="h-9 w-24"
-              data-testid={`input-duration-${event.id}`}
-            />
+            <Label className="text-xs">Duration</Label>
+            <div className="flex h-9 items-center rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring">
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={event.durationDays}
+                onChange={(e) =>
+                  updateField(
+                    "durationDays",
+                    Math.max(1, parseInt(e.target.value) || 1),
+                  )
+                }
+                className="w-8 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                data-testid={`input-duration-${event.id}`}
+              />
+              <span className="text-muted-foreground ml-1">
+                {event.durationDays === 1 ? "day" : "days"}
+              </span>
+            </div>
           </div>
           <div className="space-y-1">
             <Label htmlFor={`tbd-${event.id}`} className="text-xs">
@@ -392,10 +408,10 @@ function EventRow({
             ))}
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={addAlternativeDate}
-              className="h-9 text-xs px-2"
+              className="h-9 text-xs px-2 border-bo"
               data-testid={`button-add-alternative-${event.id}`}
             >
               <Plus className="h-3 w-3" />
@@ -480,19 +496,7 @@ function EventRow({
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-1">
-  
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onRemove}
-          className="h-9 w-9 text-muted-foreground hover:text-destructive"
-          data-testid={`button-remove-event-${event.id}`}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+
     </div>
   );
 }
