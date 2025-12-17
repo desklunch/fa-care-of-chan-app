@@ -613,6 +613,7 @@ export const deals = pgTable(
     concept: text("concept"),
     primaryContactId: varchar("primary_contact_id").references(() => contacts.id),
     ownerId: varchar("owner_id").references(() => users.id),
+    dealValue: integer("deal_value"),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -1489,6 +1490,7 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   status: z.enum(dealStatuses).default("Inquiry"),
   clientId: z.string().min(1, "Client is required"),
   locations: z.array(dealLocationSchema).default([]),
+  dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
 });
 
 export const updateDealSchema = createInsertSchema(deals).pick({
@@ -1499,6 +1501,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   eventSchedule: true,
   concept: true,
   ownerId: true,
+  dealValue: true,
   services: true,
 }).partial();
 

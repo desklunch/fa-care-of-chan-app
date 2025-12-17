@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase, UserCircle, Mail, Phone } from "lucide-react";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase, UserCircle, Mail, Phone, DollarSign } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
 import type { DealWithRelations, DealStatus, DealLocation, DealEvent, DealService } from "@shared/schema";
 
@@ -287,6 +287,21 @@ export default function DealDetail() {
                     <p className="text-muted-foreground">No owner assigned</p>
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Deal Value
+                </h3>
+                
+                <div className="flex items-center gap-3" data-testid="deal-value">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <p className={deal.dealValue ? "font-medium" : "text-muted-foreground"}>
+                    {deal.dealValue 
+                      ? `$${deal.dealValue.toLocaleString("en-US")}`
+                      : "Not specified"}
+                  </p>
+                </div>
               </div>
             </div>
 

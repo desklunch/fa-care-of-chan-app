@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, X, CalendarClock } from "lucide-react";
+import { CalendarPlus, Trash2, X, Calendar, Plus } from "lucide-react";
 import { format, addDays } from "date-fns";
 import type { DealEvent, EventScheduleItem, ScheduleMode } from "@shared/schema";
 
@@ -215,11 +215,11 @@ function EventRow({
   const primaryDate = primarySchedule?.startDate ? new Date(primarySchedule.startDate) : undefined;
 
   return (
-    <div className="border rounded-md p-3 space-y-2" data-testid={`event-card-${event.id}`}>
+    <div className="border rounded-md p-3 space-y-3 pb-4" data-testid={`event-card-${event.id}`}>
       <div className="w-full flex items-center justify-between pb-2 border-b">
         <div className="flex items-center gap-2 text-sm" data-testid={`text-summary-${event.id}`}>
-          <CalendarClock className="h-4 w-4 shrink-0" />
-          <span>{summary ? summary.text : "Please provide date requirements below"}</span>
+          <Calendar className="h-4 w-4 shrink-0" />
+          <span>{summary ? summary.text : "Please provide date requirements"}</span>
           {summary && summary.altCount > 0 && (
             <Badge variant="outline" className="text-muted-foreground text-xs px-1 py-0.5">
               {summary.altCount} Alt Date{summary.altCount > 1 ? "s" : ""}
@@ -231,7 +231,7 @@ function EventRow({
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+          className="h-8 w-8  hover:text-destructive"
           data-testid={`button-remove-event-${event.id}`}
         >
           <Trash2 className="h-4 w-4" />
@@ -246,13 +246,13 @@ function EventRow({
               value={event.label}
               onChange={(e) => updateField("label", e.target.value)}
               placeholder="Description (e.g., Main Conference)"
-              className="h-9"
+              className="h-10"
               data-testid={`input-event-label-${event.id}`}
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Duration</Label>
-            <div className="flex h-9 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
+            <div className="flex h-10 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
               <input
                 type="number"
                 min={1}
@@ -269,7 +269,7 @@ function EventRow({
           </div>
           <div className="space-y-1">
             <Label htmlFor={`tbd-${event.id}`} className="text-xs">Date TBD</Label>
-            <div className="h-9 w-16 flex items-center justify-center bg-background border border-input rounded-md">
+            <div className="h-10 w-16 flex items-center justify-center bg-background border border-input rounded-md">
               <Switch
                 id={`tbd-${event.id}`}
                 checked={event.scheduleMode === "flexible"}
@@ -298,6 +298,7 @@ function EventRow({
                 }}
                 placeholder="Select date"
                 data-testid={`input-primary-date-${event.id}`}
+                className="h-10 pr-6"
               />
             </div>
 
@@ -321,7 +322,7 @@ function EventRow({
                       variant="ghost"
                       size="icon"
                       onClick={() => removeSchedule(alt.id)}
-                      className="h-6 rounded-l-none text-muted-foreground hover:text-destructive w-5 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:stroke-[2.5px] border-none mr-1"
+                      className="h-10 rounded-l-none text-muted-foreground hover:text-destructive w-5 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:stroke-[2.5px] border-none mr-1"
                       data-testid={`button-remove-alternative-${event.id}-${index}`}
                     >
                       <X className="h-4 w-4" />
@@ -335,7 +336,7 @@ function EventRow({
               variant="outline"
               size="sm"
               onClick={addAlternativeDate}
-              className="h-9 text-xs px-2"
+              className="h-10 text-xs px-2 pr-4"
               data-testid={`button-add-alternative-${event.id}`}
             >
               <Plus className="h-3 w-3" />
@@ -365,7 +366,7 @@ function EventRow({
                 }
               }}
             >
-              <SelectTrigger className="h-9 w-48" data-testid={`select-start-month-${event.id}`}>
+              <SelectTrigger className="h-10 w-48" data-testid={`select-start-month-${event.id}`}>
                 <SelectValue placeholder="From" />
               </SelectTrigger>
               <SelectContent>
@@ -388,7 +389,7 @@ function EventRow({
               }}
               disabled={!startValue}
             >
-              <SelectTrigger className="h-9 w-48" data-testid={`select-end-month-${event.id}`}>
+              <SelectTrigger className="h-10 w-48" data-testid={`select-end-month-${event.id}`}>
                 <SelectValue placeholder="To" />
               </SelectTrigger>
               <SelectContent>
@@ -443,14 +444,14 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
       ))}
       <Button
         type="button"
-        variant="outline"
-        size="sm"
+        variant="default"
+        size="lg"
         onClick={addEvent}
-        className="w-full"
+        className="w-full h-10"
         data-testid="button-add-event"
       >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Event
+        <CalendarPlus className="h-4 w-4 " />
+        Add a Calendar Block
       </Button>
     </div>
   );

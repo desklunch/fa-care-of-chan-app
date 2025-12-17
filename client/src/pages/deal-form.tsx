@@ -31,7 +31,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
-import { Loader2, X } from "lucide-react";
+import { ChevronsUpDown, Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,6 +48,7 @@ const dealFormSchema = z.object({
   services: z.array(z.enum(dealServices)).default([]),
   concept: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
+  dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -83,6 +84,7 @@ export default function DealForm() {
       services: [],
       concept: "",
       ownerId: "",
+      dealValue: null,
     },
   });
 
@@ -105,6 +107,7 @@ export default function DealForm() {
         services: (deal.services as DealService[]) || [],
         concept: deal.concept || "",
         ownerId: deal.ownerId || "",
+        dealValue: deal.dealValue ?? null,
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
@@ -179,7 +182,7 @@ export default function DealForm() {
         { label: isEditing ? "Edit" : "New Deal" },
       ]}
     >
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl p-6">
         <Card>
           <CardHeader>
             <CardTitle>{isEditing ? "Edit Deal" : "Create New Deal"}</CardTitle>
@@ -192,7 +195,11 @@ export default function DealForm() {
                   name="displayName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Deal Name</FormLabel>
+                      
+                      <div className="w-full flex justify-between items-center">
+                        <FormLabel>Deal Name </FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
                       <FormControl>
                         <Input
                           placeholder="Enter deal name..."
@@ -201,7 +208,7 @@ export default function DealForm() {
                         />
                       </FormControl>
                       <FormDescription>
-                        A descriptive name for this deal or opportunity.
+                        Short name to help identify this deal.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -213,7 +220,10 @@ export default function DealForm() {
                   name="clientId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Client *</FormLabel>
+                        <div className="w-full flex justify-between items-center">                        <FormLabel>Client </FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
+                      
                       <FormControl>
                         <ClientSearch
                           selectedClientId={field.value || null}
@@ -229,9 +239,7 @@ export default function DealForm() {
                           }}
                         />
                       </FormControl>
-                      <FormDescription>
-                        The client company associated with this deal.
-                      </FormDescription>
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -243,7 +251,9 @@ export default function DealForm() {
                     name="primaryContactId"
                     render={({ field }) => (
                       <FormItem>
+
                         <FormLabel>Primary Contact</FormLabel>
+      
                         <Select 
                           onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
                           value={field.value || "__none__"}
@@ -264,8 +274,8 @@ export default function DealForm() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          Select a contact linked to this client as the primary contact.
-                          {linkedContacts.length === 0 && " No contacts linked to this client yet."}
+                          Select a primary contact at the client organization.
+                          {linkedContacts.length === 0 && " No contacts found for this client."}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -279,6 +289,7 @@ export default function DealForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
+      
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-deal-status">
@@ -293,9 +304,38 @@ export default function DealForm() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        The current stage of this deal in your pipeline.
-                      </FormDescription>
+ 
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+
+                <FormField
+                  control={form.control}
+                  name="ownerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Deal Owner</FormLabel>
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-deal-owner">
+                            <SelectValue placeholder="Select owner..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No owner</SelectItem>
+                          {users.filter(u => u.isActive).map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.firstName} {user.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -306,7 +346,7 @@ export default function DealForm() {
                   name="locations"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Locations</FormLabel>
+                      <FormLabel>Event Locations</FormLabel>
                       <FormControl>
                         <CitySearch
                           value={field.value}
@@ -315,29 +355,7 @@ export default function DealForm() {
                           data-testid="city-search"
                         />
                       </FormControl>
-                      <FormDescription>
-                        The cities where this deal will take place.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="eventSchedule"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Schedule</FormLabel>
-                      <FormControl>
-                        <EventScheduleEditor
-                          value={field.value as DealEvent[]}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Optional. Add event dates and schedules for this deal.
-                      </FormDescription>
+  
                       <FormMessage />
                     </FormItem>
                   )}
@@ -350,19 +368,16 @@ export default function DealForm() {
                     <FormItem>
                       <FormLabel>Services</FormLabel>
                       <FormControl>
-                        <div className="space-y-2">
+                        <div className="space-y-2 ">
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="px-3 w-full justify-start font-normal min-h-9 bg-background border-input"
+                                className="h-12 px-3 w-full justify-start font-normal min-h-9 bg-background border-input"
                                 data-testid="button-services-select"
                               >
-                                <span className="text-muted-foreground">
-                                  {field.value.length > 0 
-                                    ? `${field.value.length} service${field.value.length > 1 ? 's' : ''} selected`
-                                    : "Select services..."}
-                                </span>
+                                Select services...
+                                <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-0" align="start">
@@ -414,13 +429,34 @@ export default function DealForm() {
                           )}
                         </div>
                       </FormControl>
+     
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+
+                <FormField
+                  control={form.control}
+                  name="eventSchedule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Schedule</FormLabel>
+
+                      <FormControl>
+                        <EventScheduleEditor
+                          value={field.value as DealEvent[]}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
                       <FormDescription>
-                        Select the services included in this deal.
+                        Add confirmed or tentative event dates.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
 
                 <FormField
                   control={form.control}
@@ -437,7 +473,7 @@ export default function DealForm() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Describe the concept or vision for this deal.
+                        Describe the concept and provide some context.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -446,30 +482,38 @@ export default function DealForm() {
 
                 <FormField
                   control={form.control}
-                  name="ownerId"
+                  name="dealValue"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Owner</FormLabel>
-                      <Select 
-                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || "__none__"}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-deal-owner">
-                            <SelectValue placeholder="Select owner..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">No owner</SelectItem>
-                          {users.filter(u => u.isActive).map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.firstName} {user.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Deal Value</FormLabel>
+                      <FormControl>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
+                            $
+                          </span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            className="rounded-l-none"
+                            value={field.value ? field.value.toLocaleString("en-US") : ""}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "");
+                              if (raw === "") {
+                                field.onChange(null);
+                              } else {
+                                const num = parseInt(raw, 10);
+                                if (!isNaN(num)) {
+                                  field.onChange(num);
+                                }
+                              }
+                            }}
+                            data-testid="input-deal-value"
+                          />
+                        </div>
+                      </FormControl>
                       <FormDescription>
-                        The team member responsible for this deal.
+                        Optional. Estimated value of this deal (minimum $1,000).
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
