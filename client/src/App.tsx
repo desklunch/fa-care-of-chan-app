@@ -27,6 +27,8 @@ import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
 import ContactForm from "@/pages/contact-form";
 import Clients from "@/pages/clients";
+import ClientDetail from "@/pages/client-detail";
+import ClientForm from "@/pages/client-form";
 import Deals from "@/pages/deals";
 import Vendors from "@/pages/vendors";
 import VendorDetail from "@/pages/vendor-detail";
@@ -313,6 +315,9 @@ function AuthenticatedRoutes() {
           <Route path="/contacts/:id/edit" component={ContactForm} />
           <Route path="/contacts/:id" component={ContactDetail} />
           <Route path="/clients" component={Clients} />
+          <Route path="/clients/new" component={ClientForm} />
+          <Route path="/clients/:id/edit" component={ClientForm} />
+          <Route path="/clients/:id" component={ClientDetail} />
           <Route path="/deals" component={Deals} />
           <Route path="/vendors" component={Vendors} />
           <Route path="/vendors/new" component={VendorForm} />
