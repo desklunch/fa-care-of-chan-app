@@ -706,14 +706,14 @@ export async function registerRoutes(
 
       // Auto-manage completed_at based on status changes
       if (updateData.status !== undefined) {
-        const wasComplete = feature.status === "complete";
-        const isNowComplete = updateData.status === "complete";
+        const wasCompleted = feature.status === "completed";
+        const isNowCompleted = updateData.status === "completed";
         
-        if (!wasComplete && isNowComplete) {
-          // Status changed to complete - set completed_at
+        if (!wasCompleted && isNowCompleted) {
+          // Status changed to completed - set completed_at
           (updateData as any).completedAt = new Date();
-        } else if (wasComplete && !isNowComplete) {
-          // Status changed from complete to something else - clear completed_at
+        } else if (wasCompleted && !isNowCompleted) {
+          // Status changed from completed to something else - clear completed_at
           (updateData as any).completedAt = null;
         }
       }

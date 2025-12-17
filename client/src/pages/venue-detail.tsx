@@ -737,14 +737,18 @@ export default function VenueDetailPage() {
                         {space.name}
                       </h4>
                       <div className="flex items-center gap-2 shrink-0">
-                        {space.format && (
+                        {(space.hasSeatedFormat || space.hasStandingFormat) && (
                           <Badge variant="outline" className="text-xs" data-testid={`badge-space-format-${space.id}`}>
-                            {space.format}
+                            {[
+                              space.hasSeatedFormat && "Seated",
+                              space.hasStandingFormat && "Standing"
+                            ].filter(Boolean).join(" & ")}
                           </Badge>
                         )}
                         <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
                           <Users className="h-3 w-3 mr-1" />
-                          {space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacity}
+                          {space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacitySeated}
+                          {space.maxCapacityStanding ? ` / ${space.maxCapacityStanding} standing` : ""}
                         </Badge>
                       </div>
                     </div>

@@ -2139,10 +2139,12 @@ export default function VenueFormPage() {
                       const newSpace: VenueSpace = {
                         id: crypto.randomUUID(),
                         name: "",
-                        maxCapacity: 0,
+                        maxCapacitySeated: 0,
+                        maxCapacityStanding: null,
                         minCapacity: null,
                         sizeSqft: null,
-                        format: null,
+                        hasSeatedFormat: null,
+                        hasStandingFormat: null,
                         description: "",
                       };
                       field.onChange([...spaces, newSpace]);
@@ -2191,20 +2193,20 @@ export default function VenueFormPage() {
                                           />
                                         </div>
                                         <div>
-                                          <Label htmlFor={`space-max-capacity-${space.id}`} className="text-xs text-muted-foreground">
-                                            Max Capacity
+                                          <Label htmlFor={`space-max-seated-${space.id}`} className="text-xs text-muted-foreground">
+                                            Maximum Seated Capacity
                                           </Label>
                                           <div className="relative">
                                             <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
-                                              id={`space-max-capacity-${space.id}`}
+                                              id={`space-max-seated-${space.id}`}
                                               type="number"
                                               min={0}
-                                              value={space.maxCapacity}
-                                              onChange={(e) => updateSpace(space.id, { maxCapacity: parseInt(e.target.value) || 0 })}
+                                              value={space.maxCapacitySeated}
+                                              onChange={(e) => updateSpace(space.id, { maxCapacitySeated: parseInt(e.target.value) || 0 })}
                                               placeholder="0"
                                               className="pl-9"
-                                              data-testid={`input-space-max-capacity-${index}`}
+                                              data-testid={`input-space-max-seated-${index}`}
                                             />
                                           </div>
                                         </div>
@@ -2220,7 +2222,21 @@ export default function VenueFormPage() {
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                      <div>
+                                        <Label htmlFor={`space-max-standing-${space.id}`} className="text-xs text-muted-foreground">
+                                          Maximum Standing Capacity
+                                        </Label>
+                                        <Input
+                                          id={`space-max-standing-${space.id}`}
+                                          type="number"
+                                          min={1}
+                                          value={space.maxCapacityStanding || ""}
+                                          onChange={(e) => updateSpace(space.id, { maxCapacityStanding: e.target.value ? parseInt(e.target.value) : null })}
+                                          placeholder="—"
+                                          data-testid={`input-space-max-standing-${index}`}
+                                        />
+                                      </div>
                                       <div>
                                         <Label htmlFor={`space-min-capacity-${space.id}`} className="text-xs text-muted-foreground">
                                           Min Capacity (optional)
@@ -2250,21 +2266,31 @@ export default function VenueFormPage() {
                                         />
                                       </div>
                                       <div>
-                                        <Label htmlFor={`space-format-${space.id}`} className="text-xs text-muted-foreground">
-                                          Format (optional)
+                                        <Label className="text-xs text-muted-foreground">
+                                          Format Options
                                         </Label>
-                                        <Select
-                                          value={space.format || ""}
-                                          onValueChange={(value) => updateSpace(space.id, { format: value as "Seated" | "Standing" | null || null })}
-                                        >
-                                          <SelectTrigger id={`space-format-${space.id}`} data-testid={`select-space-format-${index}`}>
-                                            <SelectValue placeholder="Select format" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="Seated">Seated</SelectItem>
-                                            <SelectItem value="Standing">Standing</SelectItem>
-                                          </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-4 mt-2">
+                                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input
+                                              type="checkbox"
+                                              checked={space.hasSeatedFormat || false}
+                                              onChange={(e) => updateSpace(space.id, { hasSeatedFormat: e.target.checked ? true : null })}
+                                              className="rounded border-input"
+                                              data-testid={`checkbox-seated-${index}`}
+                                            />
+                                            Seated
+                                          </label>
+                                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input
+                                              type="checkbox"
+                                              checked={space.hasStandingFormat || false}
+                                              onChange={(e) => updateSpace(space.id, { hasStandingFormat: e.target.checked ? true : null })}
+                                              className="rounded border-input"
+                                              data-testid={`checkbox-standing-${index}`}
+                                            />
+                                            Standing
+                                          </label>
+                                        </div>
                                       </div>
                                     </div>
                                     <div>
