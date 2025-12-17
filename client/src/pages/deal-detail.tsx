@@ -22,8 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin } from "lucide-react";
-import type { DealWithRelations, DealStatus, DealLocation } from "@shared/schema";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock } from "lucide-react";
+import { getEventSummary } from "@/components/event-schedule";
+import type { DealWithRelations, DealStatus, DealLocation, DealEvent } from "@shared/schema";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
   "Inquiry": { variant: "outline" },
@@ -242,6 +243,45 @@ export default function DealDetail() {
                         {location.displayName}
                       </Badge>
                     ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Event Schedule Section */}
+            {((deal.eventSchedule as DealEvent[]) || []).length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Event Schedule
+                  </h3>
+                  <div className="space-y-2" data-testid="deal-event-schedule">
+                    {((deal.eventSchedule as DealEvent[]) || []).map((event) => {
+                      const summary = getEventSummary(event);
+                      return (
+                        <div
+                          key={event.id}
+                          className="flex items-center gap-3 p-3 rounded-md bg-muted/50"
+                          data-testid={`event-schedule-item-${event.id}`}
+                        >
+                          <CalendarClock className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            {event.label && (
+                              <p className="font-medium text-sm truncate">{event.label}</p>
+                            )}
+                            <p className="text-sm text-muted-foreground">
+                              {summary ? summary.text : "Date not specified"}
+                            </p>
+                          </div>
+                          {summary && summary.altCount > 0 && (
+                            <Badge variant="outline" className="shrink-0 text-xs">
+                              {summary.altCount} Alt Date{summary.altCount > 1 ? "s" : ""}
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </>
