@@ -564,6 +564,24 @@ export const deals = pgTable(
   ],
 );
 
+// Clients table for client company directory
+export const clients = pgTable(
+  "clients",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    website: varchar("website", { length: 255 }),
+    industry: varchar("industry", { length: 255 }),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_clients_name").on(table.name),
+    index("idx_clients_industry").on(table.industry),
+    index("idx_clients_created_at").on(table.createdAt),
+  ],
+);
+
 // Entity types that can have comments
 export const commentEntityTypes = [
   "venue",
@@ -1377,6 +1395,34 @@ export const updateDealSchema = createInsertSchema(deals).pick({
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;
 export type UpdateDeal = z.infer<typeof updateDealSchema>;
+
+// ==========================================
+// CLIENTS
+// ==========================================
+
+// Client types
+export type Client = typeof clients.$inferSelect;
+export type InsertClient = typeof clients.$inferInsert;
+
+// Client schemas
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Client name is required").max(255),
+  website: z.string().max(255).optional().nullable(),
+  industry: z.string().max(255).optional().nullable(),
+});
+
+export const updateClientSchema = createInsertSchema(clients).pick({
+  name: true,
+  website: true,
+  industry: true,
+}).partial();
+
+export type CreateClient = z.infer<typeof insertClientSchema>;
+export type UpdateClient = z.infer<typeof updateClientSchema>;
 
 // ==========================================
 // FORM OUTREACH / RFI SYSTEM
