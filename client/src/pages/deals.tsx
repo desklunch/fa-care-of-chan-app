@@ -3,12 +3,12 @@ import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { getEventsSummaryText } from "@/components/event-schedule";
-import type { DealWithRelations, DealEvent } from "@shared/schema";
+import type { DealWithRelations, DealEvent, DealService } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "eventSchedule", "status", "createdBy", "createdAt"];
+const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "eventSchedule", "services", "status", "createdBy", "createdAt"];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
@@ -82,6 +82,21 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const events = params.data?.eventSchedule as DealEvent[] | null;
         if (!events || events.length === 0) return "";
         return getEventsSummaryText(events);
+      },
+    },
+  },
+  {
+    id: "services",
+    headerName: "Services",
+    field: "services",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 180,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const services = params.data?.services as DealService[] | null;
+        if (!services || services.length === 0) return "";
+        return services.join(", ");
       },
     },
   },
