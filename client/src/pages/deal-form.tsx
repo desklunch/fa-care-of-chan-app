@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -27,13 +27,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ClientSearch } from "@/components/client-search";
 import { Loader2 } from "lucide-react";
-import type { Deal, DealStatus } from "@shared/schema";
+import type { DealWithRelations, DealStatus } from "@shared/schema";
 import { dealStatuses } from "@shared/schema";
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
   status: z.enum(dealStatuses).default("Inquiry"),
+  clientId: z.string().min(1, "Client is required"),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -43,8 +45,9 @@ export default function DealForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const isEditing = Boolean(id);
+  const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
 
-  const { data: deal, isLoading: isLoadingDeal } = useQuery<Deal>({
+  const { data: deal, isLoading: isLoadingDeal } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
     enabled: isEditing,
   });
@@ -56,6 +59,7 @@ export default function DealForm() {
     defaultValues: {
       displayName: "",
       status: "Inquiry",
+      clientId: "",
     },
   });
 
@@ -64,7 +68,11 @@ export default function DealForm() {
       form.reset({
         displayName: deal.displayName,
         status: deal.status as DealStatus,
+        clientId: deal.clientId || "",
       });
+      if (deal.client) {
+        setSelectedClient({ id: deal.client.id, name: deal.client.name });
+      }
     }
   }, [deal, isEditing, form]);
 
@@ -150,6 +158,35 @@ export default function DealForm() {
                       </FormControl>
                       <FormDescription>
                         A descriptive name for this deal or opportunity.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="clientId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client *</FormLabel>
+                      <FormControl>
+                        <ClientSearch
+                          selectedClientId={field.value || null}
+                          selectedClientName={selectedClient?.name || null}
+                          onSelect={(client) => {
+                            if (client) {
+                              field.onChange(client.id);
+                              setSelectedClient(client);
+                            } else {
+                              field.onChange("");
+                              setSelectedClient(null);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The client company associated with this deal.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
