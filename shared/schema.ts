@@ -609,6 +609,8 @@ export const deals = pgTable(
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
     services: text("services").array().$type<DealService[]>().default([]),
+    concept: text("concept"),
+    ownerId: varchar("owner_id").references(() => users.id),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -618,6 +620,7 @@ export const deals = pgTable(
     index("idx_deals_status").on(table.status),
     index("idx_deals_client_id").on(table.clientId),
     index("idx_deals_created_by").on(table.createdById),
+    index("idx_deals_owner").on(table.ownerId),
     index("idx_deals_created_at").on(table.createdAt),
   ],
 );
@@ -1437,6 +1440,7 @@ export type InsertDeal = typeof deals.$inferInsert;
 export type DealWithRelations = Deal & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   client?: Pick<Client, "id" | "name" | "industry"> | null;
+  owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
 };
 
 // Deal location validation schema
@@ -1470,6 +1474,8 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   clientId: true,
   locations: true,
   eventSchedule: true,
+  concept: true,
+  ownerId: true,
   services: true,
 }).partial();
 

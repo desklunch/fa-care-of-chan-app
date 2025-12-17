@@ -288,7 +288,7 @@ export default function DealForm() {
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start font-normal h-auto min-h-9"
+                              className="px-3 w-full justify-start font-normal h-12 min-h-9 bg-background border-input"
                               data-testid="button-services-select"
                             >
                               {field.value.length > 0 ? (
@@ -296,8 +296,8 @@ export default function DealForm() {
                                   {field.value.map((service) => (
                                     <Badge
                                       key={service}
-                                      variant="secondary"
-                                      className="text-xs"
+                                      variant="default"
+                                      className="text-xs py-1 text-background"
                                     >
                                       {service}
                                     </Badge>
@@ -309,7 +309,7 @@ export default function DealForm() {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-80 p-0" align="start">
-                            <div className="max-h-64 overflow-y-auto p-2">
+                            <div className="max-h-64  overflow-y-auto p-2">
                               {dealServices.map((service) => {
                                 const isSelected = field.value.includes(service);
                                 return (
