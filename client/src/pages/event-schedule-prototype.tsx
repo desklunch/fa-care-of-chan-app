@@ -305,8 +305,8 @@ function EventRow({
           <CalendarClock className="h-4 w-4 shrink-0" />
           <span>{summary ? summary.text : "Please provide date requirements below"}</span>
           {summary && summary.altCount > 0 && (
-            <Badge variant="secondary" className="text-xs px-1.5 py-0">
-              +{summary.altCount} alt{summary.altCount > 1 ? "s" : ""}
+            <Badge variant="outline" size="sm" className="text-muted-foreground text-xs px-1 py-0.5">
+              {summary.altCount} Alt Date{summary.altCount > 1 ? "s" : ""}
             </Badge>
           )}
         </div>
@@ -360,7 +360,7 @@ function EventRow({
             <Label htmlFor={`tbd-${event.id}`} className="text-xs">
               Date TBD
             </Label>
-            <div className="h-9 w-16 flex items-center justify-center border border-input rounded-md">
+            <div className="h-9 w-16 flex items-center justify-center bg-background border border-input rounded-md">
               {" "}
               <Switch
                 id={`tbd-${event.id}`}

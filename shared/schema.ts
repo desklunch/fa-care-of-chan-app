@@ -555,6 +555,27 @@ export interface DealLocation {
   displayName: string;       // Pre-formatted: "Austin, TX" or "London, United Kingdom"
 }
 
+// Event schedule types for deals
+export type ScheduleMode = "specific" | "flexible";
+
+export interface EventScheduleItem {
+  id: string;
+  kind: "primary" | "alternative" | "range";
+  startDate?: string;        // ISO date string for JSON serialization
+  rangeStartMonth?: number;
+  rangeStartYear?: number;
+  rangeEndMonth?: number;
+  rangeEndYear?: number;
+}
+
+export interface DealEvent {
+  id: string;
+  label: string;
+  durationDays: number;
+  scheduleMode: ScheduleMode;
+  schedules: EventScheduleItem[];
+}
+
 // Deals for tracking sales pipeline
 export const deals = pgTable(
   "deals",
@@ -565,6 +586,7 @@ export const deals = pgTable(
     status: varchar("status", { length: 50 }).notNull().default("Inquiry"),
     clientId: varchar("client_id").notNull(),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
+    eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
