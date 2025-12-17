@@ -8,7 +8,10 @@ import { randomUUID } from "crypto";
 interface VenueSpace {
   id: string;
   name: string;
-  capacity: number;
+  maxCapacity: number;
+  minCapacity: number | null;
+  sizeSqft: number | null;
+  format: "Seated" | "Standing" | null;
   description: string | null;
 }
 
@@ -34,7 +37,10 @@ function parseVenueSpaces(spacesArray: string): VenueSpace[] {
     spaces.push({
       id: randomUUID(),
       name,
-      capacity,
+      maxCapacity: capacity,
+      minCapacity: null,
+      sizeSqft: null,
+      format: null,
       description: null,
     });
   }
@@ -103,7 +109,7 @@ async function main() {
       .set({ venueSpaces: spaces })
       .where(eq(venues.id, venue.id));
     
-    console.log(`  [OK] ${venue.name}: ${spaces.map(s => `${s.name} (${s.capacity})`).join(", ")}`);
+    console.log(`  [OK] ${venue.name}: ${spaces.map(s => `${s.name} (${s.maxCapacity})`).join(", ")}`);
     updated++;
   }
   

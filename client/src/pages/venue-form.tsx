@@ -2139,7 +2139,10 @@ export default function VenueFormPage() {
                       const newSpace: VenueSpace = {
                         id: crypto.randomUUID(),
                         name: "",
-                        capacity: 0,
+                        maxCapacity: 0,
+                        minCapacity: null,
+                        sizeSqft: null,
+                        format: null,
                         description: "",
                       };
                       field.onChange([...spaces, newSpace]);
@@ -2188,20 +2191,20 @@ export default function VenueFormPage() {
                                           />
                                         </div>
                                         <div>
-                                          <Label htmlFor={`space-capacity-${space.id}`} className="text-xs text-muted-foreground">
-                                            Capacity
+                                          <Label htmlFor={`space-max-capacity-${space.id}`} className="text-xs text-muted-foreground">
+                                            Max Capacity
                                           </Label>
                                           <div className="relative">
                                             <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
-                                              id={`space-capacity-${space.id}`}
+                                              id={`space-max-capacity-${space.id}`}
                                               type="number"
                                               min={0}
-                                              value={space.capacity}
-                                              onChange={(e) => updateSpace(space.id, { capacity: parseInt(e.target.value) || 0 })}
+                                              value={space.maxCapacity}
+                                              onChange={(e) => updateSpace(space.id, { maxCapacity: parseInt(e.target.value) || 0 })}
                                               placeholder="0"
                                               className="pl-9"
-                                              data-testid={`input-space-capacity-${index}`}
+                                              data-testid={`input-space-max-capacity-${index}`}
                                             />
                                           </div>
                                         </div>
@@ -2216,6 +2219,53 @@ export default function VenueFormPage() {
                                       >
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                      <div>
+                                        <Label htmlFor={`space-min-capacity-${space.id}`} className="text-xs text-muted-foreground">
+                                          Min Capacity (optional)
+                                        </Label>
+                                        <Input
+                                          id={`space-min-capacity-${space.id}`}
+                                          type="number"
+                                          min={1}
+                                          value={space.minCapacity || ""}
+                                          onChange={(e) => updateSpace(space.id, { minCapacity: e.target.value ? parseInt(e.target.value) : null })}
+                                          placeholder="—"
+                                          data-testid={`input-space-min-capacity-${index}`}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor={`space-size-${space.id}`} className="text-xs text-muted-foreground">
+                                          Size (sq ft, optional)
+                                        </Label>
+                                        <Input
+                                          id={`space-size-${space.id}`}
+                                          type="number"
+                                          min={1}
+                                          value={space.sizeSqft || ""}
+                                          onChange={(e) => updateSpace(space.id, { sizeSqft: e.target.value ? parseInt(e.target.value) : null })}
+                                          placeholder="—"
+                                          data-testid={`input-space-size-${index}`}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor={`space-format-${space.id}`} className="text-xs text-muted-foreground">
+                                          Format (optional)
+                                        </Label>
+                                        <Select
+                                          value={space.format || ""}
+                                          onValueChange={(value) => updateSpace(space.id, { format: value as "Seated" | "Standing" | null || null })}
+                                        >
+                                          <SelectTrigger id={`space-format-${space.id}`} data-testid={`select-space-format-${index}`}>
+                                            <SelectValue placeholder="Select format" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="Seated">Seated</SelectItem>
+                                            <SelectItem value="Standing">Standing</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
                                     </div>
                                     <div>
                                       <Label htmlFor={`space-description-${space.id}`} className="text-xs text-muted-foreground">

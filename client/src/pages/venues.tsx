@@ -365,7 +365,7 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
       valueGetter: (params) => {
         const data = params.data as VenueWithRelations;
         if (!data?.venueSpaces || data.venueSpaces.length === 0) return null;
-        return Math.max(...data.venueSpaces.map((s) => s.capacity || 0));
+        return Math.max(...data.venueSpaces.map((s) => s.maxCapacity || 0));
       },
       valueFormatter: (params) => {
         const value = params.value as number | null;

@@ -736,10 +736,24 @@ export default function VenueDetailPage() {
                       <h4 className="font-medium" data-testid={`text-space-name-${space.id}`}>
                         {space.name}
                       </h4>
-                      <Badge variant="secondary" className="shrink-0" data-testid={`badge-space-capacity-${space.id}`}>
-                        <Users className="h-3 w-3 mr-1" />
-                        {space.capacity}
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {space.format && (
+                          <Badge variant="outline" className="text-xs" data-testid={`badge-space-format-${space.id}`}>
+                            {space.format}
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
+                          <Users className="h-3 w-3 mr-1" />
+                          {space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacity}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                      {space.sizeSqft && (
+                        <span data-testid={`text-space-size-${space.id}`}>
+                          {space.sizeSqft.toLocaleString()} sq ft
+                        </span>
+                      )}
                     </div>
                     {space.description && (
                       <p className="text-sm text-muted-foreground" data-testid={`text-space-description-${space.id}`}>
