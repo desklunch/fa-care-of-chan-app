@@ -31,7 +31,7 @@ export function DatePicker({
         <button
           type="button"
           className={cn(
-            "flex h-9 items-center rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+            "flex h-9 items-center rounded-md border border-input bg-background px-2 pr-3 py-1 text-xs shadow-sm transition-colors",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
             "hover:bg-accent hover:text-accent-foreground",
             !date && "text-muted-foreground",
@@ -39,9 +39,9 @@ export function DatePicker({
           )}
           data-testid={testId}
         >
-          <CalendarIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-          <span className="truncate">
-            {date ? format(date, "MM/dd/yyyy") : placeholder}
+          <CalendarIcon className="mr-2 h-3.5 w-3.5 stroke-1.5 shrink-0" />
+          <span className="truncate ">
+            {date ? format(date, "MMM d, yyyy") : placeholder}
           </span>
         </button>
       </PopoverTrigger>

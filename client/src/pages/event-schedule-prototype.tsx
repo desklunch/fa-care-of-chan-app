@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Plus, Trash2, X, CalendarClock } from "lucide-react";
+import { Calendar, Plus, Trash2, X, CalendarClock, SeparatorVertical } from "lucide-react";
 import { format, addDays } from "date-fns";
 
 type ScheduleMode = "specific" | "flexible";
@@ -238,12 +238,12 @@ function EventRow({
 
   return (
     <div
-      className="border rounded-md p-3 space-y-3"
+      className="border rounded-md p-3 space-y-2"
       data-testid={`event-card-${event.id}`}
     >
       <div className="flex items-center gap-3">
         <div className="flex gap-4 w-full">
-          <div className="w-full">
+          <div className="space-y-1 w-full">
             <Label className="text-xs">Description</Label>
             <Input
               value={event.label}
@@ -253,7 +253,7 @@ function EventRow({
               data-testid={`input-event-label-${event.id}`}
             />
           </div>
-          <div className="">
+          <div className="space-y-1">
             <Label className="text-xs">Duration (days)</Label>
             <Input
               type="number"
@@ -270,18 +270,18 @@ function EventRow({
               data-testid={`input-duration-${event.id}`}
             />
           </div>
-          <div className="flex-col">
+          <div className="space-y-1">
             <Label htmlFor={`tbd-${event.id}`} className="text-xs">
               Date TBD
             </Label>
-            <div className="h-9 w-16 border flex items-center">
+            <div className="h-9 w-16 flex items-center">
               {" "}
               <Switch
                 id={`tbd-${event.id}`}
                 checked={event.scheduleMode === "flexible"}
                 onCheckedChange={toggleTBD}
                 data-testid={`switch-tbd-${event.id}`}
-                className="h"
+                className=""
               />
             </div>
           </div>
@@ -290,8 +290,8 @@ function EventRow({
 
       {event.scheduleMode === "specific" && (
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-4">
-            <div>
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+            <div className="space-y-1">
               <Label className="text-xs">
                 {event.durationDays === 1 ? "Event Date" : "Start Date"}
               </Label>
@@ -304,31 +304,32 @@ function EventRow({
                   }
                 }}
                 placeholder="Select date"
-                className="w-40"
+                className=""
                 data-testid={`input-primary-date-${event.id}`}
               />
             </div>
 
             {getAlternativeSchedules().map((alt, index) => (
-              <div key={alt.id} className="flex items-center gap-1">
-                <div>
-                  <Label className="text-xs">Alt {index + 1}</Label>
-                  <div className="flex items-center gap-1">
+              <div key={alt.id} className="flex items-center">
+                <div className="space-y-1">
+                  <Label className="text-xs">Alt Date {index + 1}</Label>
+                  <div className="flex items-center gap-0 bg-background rounded-md border">
                     <DatePicker
                       date={alt.startDate}
                       onSelect={(date) => {
                         updateSchedule(alt.id, { startDate: date });
                       }}
                       placeholder="Select date"
-                      className="w-36"
+                      className="rounded-r-none border-none"
                       data-testid={`input-alternative-${event.id}-${index}`}
                     />
+                    <div className="h-6 w-px bg-border mx-1 " />
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
                       onClick={() => removeSchedule(alt.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="h-6  rounded-l-none text-muted-foreground hover:text-destructive w-5 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:stroke-[2.5px] border-none mr-1"
                       data-testid={`button-remove-alternative-${event.id}-${index}`}
                     >
                       <X className="h-4 w-4" />
@@ -342,112 +343,93 @@ function EventRow({
               variant="ghost"
               size="sm"
               onClick={addAlternativeDate}
-              className="h-9 text-xs"
+              className="h-9 text-xs px-2"
               data-testid={`button-add-alternative-${event.id}`}
             >
-              <Plus className="h-3 w-3 " />
+              <Plus className="h-3 w-3" />
               Alt Dates
             </Button>
           </div>
-          {getPrimarySchedule()?.startDate && event.durationDays > 1 && (
-            <p className="text-xs text-muted-foreground">
-              {formatDateRange(
-                getPrimarySchedule()!.startDate!,
-                event.durationDays,
-              )}
-            </p>
-          )}
+     
         </div>
       )}
 
       {event.scheduleMode === "flexible" && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            value={startValue}
-            onValueChange={(v) => {
-              const [month, year] = v.split("-").map(Number);
-              const schedule = getRangeSchedule();
-              if (schedule) {
-                const newEndOptions = getEndMonthOptions(month, year);
-                updateSchedule(schedule.id, {
-                  rangeStartMonth: month,
-                  rangeStartYear: year,
-                  rangeEndMonth: newEndOptions[0].month,
-                  rangeEndYear: newEndOptions[0].year,
-                });
-              }
-            }}
-          >
-            <SelectTrigger
-              className="h-9 w-40"
-              data-testid={`select-start-month-${event.id}`}
+        <div className="space-y-1">
+          <Label className="text-xs">Date Window</Label>
+          <div className="flex items-center gap-2">
+            <Select
+              value={startValue}
+              onValueChange={(v) => {
+                const [month, year] = v.split("-").map(Number);
+                const schedule = getRangeSchedule();
+                if (schedule) {
+                  const newEndOptions = getEndMonthOptions(month, year);
+                  updateSchedule(schedule.id, {
+                    rangeStartMonth: month,
+                    rangeStartYear: year,
+                    rangeEndMonth: newEndOptions[0].month,
+                    rangeEndYear: newEndOptions[0].year,
+                  });
+                }
+              }}
             >
-              <SelectValue placeholder="From" />
-            </SelectTrigger>
-            <SelectContent>
-              {startMonthOptions.map((opt) => (
-                <SelectItem
-                  key={`${opt.month}-${opt.year}`}
-                  value={`${opt.month}-${opt.year}`}
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-muted-foreground text-sm">to</span>
-          <Select
-            value={endValue}
-            onValueChange={(v) => {
-              const [month, year] = v.split("-").map(Number);
-              const schedule = getRangeSchedule();
-              if (schedule) {
-                updateSchedule(schedule.id, {
-                  rangeEndMonth: month,
-                  rangeEndYear: year,
-                });
-              }
-            }}
-            disabled={!startValue}
-          >
-            <SelectTrigger
-              className="h-9 w-40"
-              data-testid={`select-end-month-${event.id}`}
+              <SelectTrigger
+                className="h-9 w-48"
+                data-testid={`select-start-month-${event.id}`}
+              >
+                <SelectValue placeholder="From" />
+              </SelectTrigger>
+              <SelectContent>
+                {startMonthOptions.map((opt) => (
+                  <SelectItem
+                    key={`${opt.month}-${opt.year}`}
+                    value={`${opt.month}-${opt.year}`}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-muted-foreground text-xs mx-1">to</span>
+            <Select
+              value={endValue}
+              onValueChange={(v) => {
+                const [month, year] = v.split("-").map(Number);
+                const schedule = getRangeSchedule();
+                if (schedule) {
+                  updateSchedule(schedule.id, {
+                    rangeEndMonth: month,
+                    rangeEndYear: year,
+                  });
+                }
+              }}
+              disabled={!startValue}
             >
-              <SelectValue placeholder="To" />
-            </SelectTrigger>
-            <SelectContent>
-              {endMonthOptions.map((opt) => (
-                <SelectItem
-                  key={`${opt.month}-${opt.year}`}
-                  value={`${opt.month}-${opt.year}`}
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                className="h-9 w-48"
+                data-testid={`select-end-month-${event.id}`}
+              >
+                <SelectValue placeholder="To" />
+              </SelectTrigger>
+              <SelectContent>
+                {endMonthOptions.map((opt) => (
+                  <SelectItem
+                    key={`${opt.month}-${opt.year}`}
+                    value={`${opt.month}-${opt.year}`}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+</div>
+
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-1 border-t">
-        <div className="flex items-center gap-1">
-          {event.scheduleMode === "flexible" ? (
-            <Badge variant="outline" className="text-xs">
-              <CalendarClock className="h-3 w-3 mr-1" />
-              TBD
-            </Badge>
-          ) : getPrimarySchedule()?.startDate &&
-            getAlternativeSchedules().length === 0 ? (
-            <Badge variant="default" className="text-xs">
-              Confirmed
-            </Badge>
-          ) : getAlternativeSchedules().length > 0 ? (
-            <Badge variant="secondary" className="text-xs">
-              {getAlternativeSchedules().length + 1} options
-            </Badge>
-          ) : null}
-        </div>
+      <div className="flex items-center justify-between pt-1">
+  
         <Button
           type="button"
           variant="ghost"
