@@ -26,6 +26,8 @@ import AdminAppFeatures from "@/pages/admin-app-features";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
 import ContactForm from "@/pages/contact-form";
+import Clients from "@/pages/clients";
+import Deals from "@/pages/deals";
 import Vendors from "@/pages/vendors";
 import VendorDetail from "@/pages/vendor-detail";
 import VendorForm from "@/pages/vendor-form";
@@ -86,6 +88,8 @@ import {
   BookOpen,
   Users,
   Rocket,
+  Building,
+  CircleDollarSign,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -209,6 +213,16 @@ function useLayoutConfig() {
             icon: FileText,
           }, 
           {
+            name: "Clients",
+            href: "/clients",
+            icon: Building,
+          },
+          {
+            name: "Deals",
+            href: "/deals",
+            icon: CircleDollarSign,
+          },
+          {
             name: "Contacts",
             href: "/contacts",
             icon: Contact,
@@ -298,6 +312,8 @@ function AuthenticatedRoutes() {
           <Route path="/contacts/new" component={ContactForm} />
           <Route path="/contacts/:id/edit" component={ContactForm} />
           <Route path="/contacts/:id" component={ContactDetail} />
+          <Route path="/clients" component={Clients} />
+          <Route path="/deals" component={Deals} />
           <Route path="/vendors" component={Vendors} />
           <Route path="/vendors/new" component={VendorForm} />
           <Route path="/vendors/:id/edit" component={VendorForm} />
