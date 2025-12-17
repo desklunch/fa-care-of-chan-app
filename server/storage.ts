@@ -148,6 +148,10 @@ import {
   type UpdateDeal,
   type DealStatus,
   dealStatuses,
+  clients,
+  type Client,
+  type CreateClient,
+  type UpdateClient,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -436,6 +440,13 @@ export interface IStorage {
   createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
   updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
   deleteDeal(id: string): Promise<void>;
+  
+  // Client operations
+  getClients(): Promise<Client[]>;
+  getClientById(id: string): Promise<Client | undefined>;
+  createClient(data: CreateClient): Promise<Client>;
+  updateClient(id: string, data: UpdateClient): Promise<Client | undefined>;
+  deleteClient(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3536,6 +3547,46 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDeal(id: string): Promise<void> {
     await db.delete(deals).where(eq(deals.id, id));
+  }
+
+  // Client operations
+  async getClients(): Promise<Client[]> {
+    return await db
+      .select()
+      .from(clients)
+      .orderBy(asc(clients.name));
+  }
+
+  async getClientById(id: string): Promise<Client | undefined> {
+    const [client] = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, id));
+    return client;
+  }
+
+  async createClient(data: CreateClient): Promise<Client> {
+    const [client] = await db
+      .insert(clients)
+      .values(data)
+      .returning();
+    return client;
+  }
+
+  async updateClient(id: string, data: UpdateClient): Promise<Client | undefined> {
+    const [client] = await db
+      .update(clients)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(clients.id, id))
+      .returning();
+    return client;
+  }
+
+  async deleteClient(id: string): Promise<void> {
+    await db.delete(clients).where(eq(clients.id, id));
   }
 }
 
