@@ -29,8 +29,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
+import { EventScheduleEditor } from "@/components/event-schedule";
 import { Loader2 } from "lucide-react";
-import type { DealWithRelations, DealStatus, DealLocation, Deal } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent } from "@shared/schema";
 import { dealStatuses, dealLocationSchema } from "@shared/schema";
 
 const dealFormSchema = z.object({
@@ -38,6 +39,7 @@ const dealFormSchema = z.object({
   status: z.enum(dealStatuses).default("Inquiry"),
   clientId: z.string().min(1, "Client is required"),
   locations: z.array(dealLocationSchema).default([]),
+  eventSchedule: z.array(z.any()).default([]),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -63,6 +65,7 @@ export default function DealForm() {
       status: "Inquiry",
       clientId: "",
       locations: [],
+      eventSchedule: [],
     },
   });
 
@@ -73,6 +76,7 @@ export default function DealForm() {
         status: deal.status as DealStatus,
         clientId: deal.clientId || "",
         locations: (deal.locations as DealLocation[]) || [],
+        eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
@@ -241,6 +245,26 @@ export default function DealForm() {
                       </FormControl>
                       <FormDescription>
                         The cities where this deal will take place.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="eventSchedule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Schedule</FormLabel>
+                      <FormControl>
+                        <EventScheduleEditor
+                          value={field.value as DealEvent[]}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Optional. Add event dates and schedules for this deal.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
