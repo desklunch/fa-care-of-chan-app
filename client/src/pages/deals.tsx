@@ -2,7 +2,8 @@ import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { DealWithRelations } from "@shared/schema";
+import { getEventsSummaryText } from "@/components/event-schedule";
+import type { DealWithRelations, DealEvent } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
@@ -66,6 +67,21 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const locations = params.data?.locations as Array<{ displayName: string }> | null;
         if (!locations || locations.length === 0) return "";
         return locations.map((loc) => loc.displayName).join(" | ");
+      },
+    },
+  },
+  {
+    id: "eventSchedule",
+    headerName: "Event Schedule",
+    field: "eventSchedule",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 180,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const events = params.data?.eventSchedule as DealEvent[] | null;
+        if (!events || events.length === 0) return "";
+        return getEventsSummaryText(events);
       },
     },
   },
