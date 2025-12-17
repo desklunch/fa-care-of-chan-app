@@ -7,7 +7,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "status", "createdBy", "createdAt"];
+const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "status", "createdBy", "createdAt"];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
@@ -39,6 +39,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 200,
+    },
+  },
+  {
+    id: "client",
+    headerName: "Client",
+    field: "client",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        return params.data?.client?.name || "";
+      },
     },
   },
   {
@@ -114,6 +127,7 @@ export default function Deals() {
           "displayName",
           (deal) => `#${deal.dealNumber}`,
           "status",
+          (deal) => deal.client?.name || "",
         ]}
         searchPlaceholder="Search deals..."
         onRowClick={(deal) => setLocation(`/deals/${deal.id}`)}
