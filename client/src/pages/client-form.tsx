@@ -49,10 +49,8 @@ export default function ClientForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateClient) => {
-      return apiRequest<Client>("/api/clients", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest("POST", "/api/clients", data);
+      return res.json() as Promise<Client>;
     },
     onSuccess: (newClient) => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
@@ -73,10 +71,8 @@ export default function ClientForm() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: CreateClient) => {
-      return apiRequest<Client>(`/api/clients/${params.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest("PATCH", `/api/clients/${params.id}`, data);
+      return res.json() as Promise<Client>;
     },
     onSuccess: (updatedClient) => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
