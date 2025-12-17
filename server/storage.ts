@@ -437,6 +437,7 @@ export interface IStorage {
   // Deal operations
   getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]>;
   getDealById(id: string): Promise<DealWithRelations | undefined>;
+  getDealsByClientId(clientId: string): Promise<DealWithRelations[]>;
   createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
   updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
   deleteDeal(id: string): Promise<void>;
@@ -3478,6 +3479,7 @@ export class DatabaseStorage implements IStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        clientId: deals.clientId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3487,9 +3489,14 @@ export class DatabaseStorage implements IStorage {
           lastName: users.lastName,
           profileImageUrl: users.profileImageUrl,
         },
+        client: {
+          id: clients.id,
+          name: clients.name,
+        },
       })
       .from(deals)
-      .leftJoin(users, eq(deals.createdById, users.id));
+      .leftJoin(users, eq(deals.createdById, users.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id));
 
     if (options?.status && options.status.length > 0) {
       query = query.where(inArray(deals.status, options.status)) as any;
@@ -3506,6 +3513,7 @@ export class DatabaseStorage implements IStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        clientId: deals.clientId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3515,11 +3523,46 @@ export class DatabaseStorage implements IStorage {
           lastName: users.lastName,
           profileImageUrl: users.profileImageUrl,
         },
+        client: {
+          id: clients.id,
+          name: clients.name,
+        },
       })
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
       .where(eq(deals.id, id));
     return result as DealWithRelations | undefined;
+  }
+
+  async getDealsByClientId(clientId: string): Promise<DealWithRelations[]> {
+    const results = await db
+      .select({
+        id: deals.id,
+        dealNumber: deals.dealNumber,
+        displayName: deals.displayName,
+        status: deals.status,
+        clientId: deals.clientId,
+        createdById: deals.createdById,
+        createdAt: deals.createdAt,
+        updatedAt: deals.updatedAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+        client: {
+          id: clients.id,
+          name: clients.name,
+        },
+      })
+      .from(deals)
+      .leftJoin(users, eq(deals.createdById, users.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .where(eq(deals.clientId, clientId))
+      .orderBy(desc(deals.createdAt));
+    return results as DealWithRelations[];
   }
 
   async createDeal(data: CreateDeal, createdById: string): Promise<Deal> {

@@ -4913,6 +4913,21 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // GET /api/clients/:id/deals - Get deals for a client
+  app.get("/api/clients/:id/deals", isAuthenticated, async (req, res) => {
+    try {
+      const client = await storage.getClientById(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      const deals = await storage.getDealsByClientId(req.params.id);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching client deals:", error);
+      res.status(500).json({ message: "Failed to fetch client deals" });
+    }
+  });
+
   // POST /api/clients - Create a new client
   app.post("/api/clients", isAuthenticated, async (req: any, res) => {
     try {

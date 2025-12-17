@@ -552,6 +552,7 @@ export const deals = pgTable(
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("Inquiry"),
+    clientId: varchar("client_id").notNull(),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -559,6 +560,7 @@ export const deals = pgTable(
   (table) => [
     index("idx_deals_deal_number").on(table.dealNumber),
     index("idx_deals_status").on(table.status),
+    index("idx_deals_client_id").on(table.clientId),
     index("idx_deals_created_by").on(table.createdById),
     index("idx_deals_created_at").on(table.createdAt),
   ],
@@ -1365,6 +1367,10 @@ export const dealsRelations = relations(deals, ({ one }) => ({
     fields: [deals.createdById],
     references: [users.id],
   }),
+  client: one(clients, {
+    fields: [deals.clientId],
+    references: [clients.id],
+  }),
 }));
 
 // Deal types
@@ -1374,6 +1380,7 @@ export type InsertDeal = typeof deals.$inferInsert;
 // Deal with relations
 export type DealWithRelations = Deal & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  client?: Pick<Client, "id" | "name"> | null;
 };
 
 // Deal schemas
@@ -1386,11 +1393,13 @@ export const insertDealSchema = createInsertSchema(deals).omit({
 }).extend({
   displayName: z.string().min(1, "Display name is required").max(255),
   status: z.enum(dealStatuses).default("Inquiry"),
+  clientId: z.string().min(1, "Client is required"),
 });
 
 export const updateDealSchema = createInsertSchema(deals).pick({
   displayName: true,
   status: true,
+  clientId: true,
 }).partial();
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;
