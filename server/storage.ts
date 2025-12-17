@@ -29,6 +29,7 @@ import {
   outreachTokens,
   formResponses,
   comments,
+  deals,
   type User,
   type UpsertUser,
   type Invite,
@@ -141,6 +142,12 @@ import {
   type UpdateAppRelease,
   type CreateAppReleaseChange,
   type ReleaseStatus,
+  type Deal,
+  type DealWithRelations,
+  type CreateDeal,
+  type UpdateDeal,
+  type DealStatus,
+  dealStatuses,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -422,6 +429,13 @@ export interface IStorage {
   getCompletedFeaturesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; completedAt: Date | null }[]>;
   getFixedIssuesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; fixedAt: Date | null }[]>;
   getLatestReleasedVersion(): Promise<AppRelease | undefined>;
+  
+  // Deal operations
+  getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]>;
+  getDealById(id: string): Promise<DealWithRelations | undefined>;
+  createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
+  updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
+  deleteDeal(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3443,6 +3457,85 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(appReleases.releaseDate))
       .limit(1);
     return release;
+  }
+
+  // Deal operations
+  async getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]> {
+    let query = db
+      .select({
+        id: deals.id,
+        dealNumber: deals.dealNumber,
+        displayName: deals.displayName,
+        status: deals.status,
+        createdById: deals.createdById,
+        createdAt: deals.createdAt,
+        updatedAt: deals.updatedAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(deals)
+      .leftJoin(users, eq(deals.createdById, users.id));
+
+    if (options?.status && options.status.length > 0) {
+      query = query.where(inArray(deals.status, options.status)) as any;
+    }
+
+    const results = await query.orderBy(desc(deals.createdAt));
+    return results as DealWithRelations[];
+  }
+
+  async getDealById(id: string): Promise<DealWithRelations | undefined> {
+    const [result] = await db
+      .select({
+        id: deals.id,
+        dealNumber: deals.dealNumber,
+        displayName: deals.displayName,
+        status: deals.status,
+        createdById: deals.createdById,
+        createdAt: deals.createdAt,
+        updatedAt: deals.updatedAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(deals)
+      .leftJoin(users, eq(deals.createdById, users.id))
+      .where(eq(deals.id, id));
+    return result as DealWithRelations | undefined;
+  }
+
+  async createDeal(data: CreateDeal, createdById: string): Promise<Deal> {
+    const [deal] = await db
+      .insert(deals)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return deal;
+  }
+
+  async updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined> {
+    const [deal] = await db
+      .update(deals)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(deals.id, id))
+      .returning();
+    return deal;
+  }
+
+  async deleteDeal(id: string): Promise<void> {
+    await db.delete(deals).where(eq(deals.id, id));
   }
 }
 
