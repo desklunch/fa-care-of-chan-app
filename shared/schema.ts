@@ -576,6 +576,27 @@ export interface DealEvent {
   schedules: EventScheduleItem[];
 }
 
+// Deal services options
+export const dealServices = [
+  "Consulting",
+  "Creative Direction",
+  "Culinary Programming",
+  "Concept Development",
+  "Executive Production",
+  "Culinary Production",
+  "Liquor Cabinet Programming",
+  "Marketing",
+  "Production",
+  "Programming",
+  "RSVP Management",
+  "Talent Programming",
+  "Gifting",
+  "Content Creation",
+  "Referral Agreement",
+] as const;
+
+export type DealService = (typeof dealServices)[number];
+
 // Deals for tracking sales pipeline
 export const deals = pgTable(
   "deals",
@@ -587,6 +608,7 @@ export const deals = pgTable(
     clientId: varchar("client_id").notNull(),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
+    services: text("services").array().$type<DealService[]>().default([]),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -1448,6 +1470,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   clientId: true,
   locations: true,
   eventSchedule: true,
+  services: true,
 }).partial();
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;
