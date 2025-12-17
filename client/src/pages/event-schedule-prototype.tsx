@@ -271,13 +271,13 @@ function EventRow({
   const startValue =
     rangeSchedule?.rangeStartMonth !== undefined &&
     rangeSchedule?.rangeStartYear !== undefined
-      ? `${rangeSchedule.rangeStartMonth} - ${rangeSchedule.rangeStartYear}`
+      ? `${rangeSchedule.rangeStartMonth}-${rangeSchedule.rangeStartYear}`
       : undefined;
 
   const endValue =
     rangeSchedule?.rangeEndMonth !== undefined &&
     rangeSchedule?.rangeEndYear !== undefined
-      ? `${rangeSchedule.rangeEndMonth} - ${rangeSchedule.rangeEndYear}`
+      ? `${rangeSchedule.rangeEndMonth}-${rangeSchedule.rangeEndYear}`
       : undefined;
 
   const summary = getEventSummary(event);
@@ -318,7 +318,7 @@ function EventRow({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Duration</Label>
-            <div className="flex h-9 items-center rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring">
+            <div className="flex h-9 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
               <input
                 type="number"
                 min={1}
@@ -330,10 +330,10 @@ function EventRow({
                     Math.max(1, parseInt(e.target.value) || 1),
                   )
                 }
-                className="w-8 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-4 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 data-testid={`input-duration-${event.id}`}
               />
-              <span className="text-muted-foreground ml-1">
+              <span className="text-muted-foreground text-xs">
                 {event.durationDays === 1 ? "day" : "days"}
               </span>
             </div>
@@ -342,7 +342,7 @@ function EventRow({
             <Label htmlFor={`tbd-${event.id}`} className="text-xs">
               Date TBD
             </Label>
-            <div className="h-9 w-16 flex items-center">
+            <div className="h-9 w-16 flex items-center justify-center border border-input rounded-md">
               {" "}
               <Switch
                 id={`tbd-${event.id}`}
