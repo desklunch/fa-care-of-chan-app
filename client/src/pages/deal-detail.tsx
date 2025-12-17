@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash } from "lucide-react";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2 } from "lucide-react";
 import type { DealWithRelations, DealStatus } from "@shared/schema";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
@@ -168,6 +168,31 @@ export default function DealDetail() {
                       <p className="text-sm text-muted-foreground">Last Updated</p>
                       <p>{format(new Date(deal.updatedAt), "MMMM d, yyyy 'at' h:mm a")}</p>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Client
+                </h3>
+                
+                {deal.client ? (
+                  <Link href={`/clients/${deal.client.id}`}>
+                    <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50 hover-elevate cursor-pointer" data-testid="link-deal-client">
+                      <Building2 className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{deal.client.name}</p>
+                        {deal.client.industry && (
+                          <p className="text-sm text-muted-foreground">{deal.client.industry}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <Building2 className="h-4 w-4" />
+                    <span>No client assigned</span>
                   </div>
                 )}
               </div>
