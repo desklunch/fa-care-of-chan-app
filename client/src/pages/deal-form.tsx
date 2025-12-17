@@ -31,7 +31,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -350,55 +350,69 @@ export default function DealForm() {
                     <FormItem>
                       <FormLabel>Services</FormLabel>
                       <FormControl>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="px-3 w-full justify-start font-normal h-12 min-h-9 bg-background border-input"
-                              data-testid="button-services-select"
-                            >
-                              {field.value.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {field.value.map((service) => (
-                                    <Badge
+                        <div className="space-y-2">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="px-3 w-full justify-start font-normal min-h-9 bg-background border-input"
+                                data-testid="button-services-select"
+                              >
+                                <span className="text-muted-foreground">
+                                  {field.value.length > 0 
+                                    ? `${field.value.length} service${field.value.length > 1 ? 's' : ''} selected`
+                                    : "Select services..."}
+                                </span>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-0" align="start">
+                              <div className="max-h-64 overflow-y-auto p-2">
+                                {dealServices.map((service) => {
+                                  const isSelected = field.value.includes(service);
+                                  return (
+                                    <div
                                       key={service}
-                                      variant="default"
-                                      className="text-xs py-1 text-background"
+                                      className="flex items-center gap-2 p-2 rounded-md hover-elevate cursor-pointer"
+                                      onClick={() => {
+                                        if (isSelected) {
+                                          field.onChange(field.value.filter((s) => s !== service));
+                                        } else {
+                                          field.onChange([...field.value, service]);
+                                        }
+                                      }}
+                                      data-testid={`checkbox-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
                                     >
-                                      {service}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">Select services...</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80 p-0" align="start">
-                            <div className="max-h-64  overflow-y-auto p-2">
-                              {dealServices.map((service) => {
-                                const isSelected = field.value.includes(service);
-                                return (
-                                  <div
-                                    key={service}
-                                    className="flex items-center gap-2 p-2 rounded-md hover-elevate cursor-pointer"
-                                    onClick={() => {
-                                      if (isSelected) {
-                                        field.onChange(field.value.filter((s) => s !== service));
-                                      } else {
-                                        field.onChange([...field.value, service]);
-                                      }
-                                    }}
-                                    data-testid={`checkbox-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                                      <Checkbox checked={isSelected} />
+                                      <span className="text-sm">{service}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          {field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {field.value.map((service) => (
+                                <Badge
+                                  key={service}
+                                  variant="secondary"
+                                  className="text-xs gap-1 pr-1"
+                                  data-testid={`badge-selected-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                                >
+                                  {service}
+                                  <button
+                                    type="button"
+                                    onClick={() => field.onChange(field.value.filter((s) => s !== service))}
+                                    className="ml-1 rounded-full hover:bg-muted p-0.5"
+                                    data-testid={`button-remove-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
                                   >
-                                    <Checkbox checked={isSelected} />
-                                    <span className="text-sm">{service}</span>
-                                  </div>
-                                );
-                              })}
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ))}
                             </div>
-                          </PopoverContent>
-                        </Popover>
+                          )}
+                        </div>
                       </FormControl>
                       <FormDescription>
                         Select the services included in this deal.
