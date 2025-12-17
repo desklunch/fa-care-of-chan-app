@@ -358,14 +358,18 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
   },
   {
     id: "maxCapacity",
-    headerName: "Max Seated",
+    headerName: "Max Capacity",
     colDef: {
       flex: 0.6,
       minWidth: 100,
       valueGetter: (params) => {
         const data = params.data as VenueWithRelations;
         if (!data?.venueSpaces || data.venueSpaces.length === 0) return null;
-        return Math.max(...data.venueSpaces.map((s) => s.maxCapacitySeated || 0));
+        const capacities = data.venueSpaces.flatMap((s) => [
+          s.maxCapacitySeated || 0,
+          s.maxCapacityStanding || 0,
+        ]);
+        return Math.max(...capacities);
       },
       valueFormatter: (params) => {
         const value = params.value as number | null;
