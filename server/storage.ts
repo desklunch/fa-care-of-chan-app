@@ -149,6 +149,7 @@ import {
   type DealStatus,
   dealStatuses,
   clients,
+  clientContacts,
   type Client,
   type CreateClient,
   type UpdateClient,
@@ -449,6 +450,12 @@ export interface IStorage {
   createClient(data: CreateClient): Promise<Client>;
   updateClient(id: string, data: UpdateClient): Promise<Client | undefined>;
   deleteClient(id: string): Promise<void>;
+  
+  // Client-Contact link operations
+  getContactsForClient(clientId: string): Promise<Contact[]>;
+  getClientsForContact(contactId: string): Promise<Client[]>;
+  linkClientContact(clientId: string, contactId: string): Promise<void>;
+  unlinkClientContact(clientId: string, contactId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3673,6 +3680,45 @@ export class DatabaseStorage implements IStorage {
 
   async deleteClient(id: string): Promise<void> {
     await db.delete(clients).where(eq(clients.id, id));
+  }
+  
+  // Client-Contact link operations
+  async getContactsForClient(clientId: string): Promise<Contact[]> {
+    const result = await db
+      .select({ contact: contacts })
+      .from(clientContacts)
+      .innerJoin(contacts, eq(clientContacts.contactId, contacts.id))
+      .where(eq(clientContacts.clientId, clientId))
+      .orderBy(asc(contacts.lastName), asc(contacts.firstName));
+    return result.map(r => r.contact);
+  }
+
+  async getClientsForContact(contactId: string): Promise<Client[]> {
+    const result = await db
+      .select({ client: clients })
+      .from(clientContacts)
+      .innerJoin(clients, eq(clientContacts.clientId, clients.id))
+      .where(eq(clientContacts.contactId, contactId))
+      .orderBy(asc(clients.name));
+    return result.map(r => r.client);
+  }
+
+  async linkClientContact(clientId: string, contactId: string): Promise<void> {
+    await db
+      .insert(clientContacts)
+      .values({ clientId, contactId })
+      .onConflictDoNothing();
+  }
+
+  async unlinkClientContact(clientId: string, contactId: string): Promise<void> {
+    await db
+      .delete(clientContacts)
+      .where(
+        and(
+          eq(clientContacts.clientId, clientId),
+          eq(clientContacts.contactId, contactId)
+        )
+      );
   }
 }
 

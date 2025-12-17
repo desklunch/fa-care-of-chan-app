@@ -5117,5 +5117,133 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // ==========================================
+  // CLIENT-CONTACT LINKING
+  // ==========================================
+
+  // GET /api/clients/:id/contacts - Get contacts linked to a client
+  app.get("/api/clients/:id/contacts", isAuthenticated, async (req, res) => {
+    try {
+      const client = await storage.getClientById(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      const contacts = await storage.getContactsForClient(req.params.id);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching client contacts:", error);
+      res.status(500).json({ message: "Failed to fetch client contacts" });
+    }
+  });
+
+  // POST /api/clients/:id/contacts/:contactId - Link a contact to a client
+  app.post("/api/clients/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
+    try {
+      const client = await storage.getClientById(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      const contact = await storage.getContactById(req.params.contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      await storage.linkClientContact(req.params.id, req.params.contactId);
+      
+      await logAuditEvent(req, {
+        action: "link",
+        entityType: "client_contact",
+        entityId: req.params.id,
+        metadata: { clientId: req.params.id, contactId: req.params.contactId, contactName: `${contact.firstName} ${contact.lastName}` },
+      });
+      
+      res.status(201).json({ message: "Contact linked to client" });
+    } catch (error) {
+      console.error("Error linking contact to client:", error);
+      res.status(500).json({ message: "Failed to link contact to client" });
+    }
+  });
+
+  // DELETE /api/clients/:id/contacts/:contactId - Unlink a contact from a client
+  app.delete("/api/clients/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.unlinkClientContact(req.params.id, req.params.contactId);
+      
+      await logAuditEvent(req, {
+        action: "unlink",
+        entityType: "client_contact",
+        entityId: req.params.id,
+        metadata: { clientId: req.params.id, contactId: req.params.contactId },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unlinking contact from client:", error);
+      res.status(500).json({ message: "Failed to unlink contact from client" });
+    }
+  });
+
+  // GET /api/contacts/:id/clients - Get clients linked to a contact
+  app.get("/api/contacts/:id/clients", isAuthenticated, async (req, res) => {
+    try {
+      const contact = await storage.getContactById(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      const clients = await storage.getClientsForContact(req.params.id);
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching contact clients:", error);
+      res.status(500).json({ message: "Failed to fetch contact clients" });
+    }
+  });
+
+  // POST /api/contacts/:id/clients/:clientId - Link a client to a contact
+  app.post("/api/contacts/:id/clients/:clientId", isAuthenticated, async (req: any, res) => {
+    try {
+      const contact = await storage.getContactById(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      const client = await storage.getClientById(req.params.clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      await storage.linkClientContact(req.params.clientId, req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "link",
+        entityType: "client_contact",
+        entityId: req.params.id,
+        metadata: { contactId: req.params.id, clientId: req.params.clientId, clientName: client.name },
+      });
+      
+      res.status(201).json({ message: "Client linked to contact" });
+    } catch (error) {
+      console.error("Error linking client to contact:", error);
+      res.status(500).json({ message: "Failed to link client to contact" });
+    }
+  });
+
+  // DELETE /api/contacts/:id/clients/:clientId - Unlink a client from a contact
+  app.delete("/api/contacts/:id/clients/:clientId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.unlinkClientContact(req.params.clientId, req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "unlink",
+        entityType: "client_contact",
+        entityId: req.params.id,
+        metadata: { contactId: req.params.id, clientId: req.params.clientId },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unlinking client from contact:", error);
+      res.status(500).json({ message: "Failed to unlink client from contact" });
+    }
+  });
+
   return httpServer;
 }
