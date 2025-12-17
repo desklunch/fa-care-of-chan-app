@@ -2124,7 +2124,7 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   primaryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().nullable(),
   isDateFlexible: z.boolean().default(false),
   alternativeDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().nullable(),
-  numberOfDays: z.number().int().min(2, "Number of days must be at least 2").optional().nullable(),
+  numberOfDays: z.number().int().min(1).optional().nullable(),
   estimatedMonths: z.array(z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")).optional().nullable(),
   eventPurpose: z.string().max(50).optional().nullable(),
   eventFormat: z.string().max(50).optional().nullable(),
