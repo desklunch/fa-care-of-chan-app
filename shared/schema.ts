@@ -4,6 +4,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  serial,
   timestamp,
   unique,
   varchar,
@@ -527,6 +528,39 @@ export const vendorUpdateTokens = pgTable(
     index("idx_vendor_update_tokens_token").on(table.token),
     index("idx_vendor_update_tokens_vendor_id").on(table.vendorId),
     index("idx_vendor_update_tokens_created_by").on(table.createdById),
+  ],
+);
+
+// Deal status enum values
+export const dealStatuses = [
+  "Inquiry",
+  "Discovery", 
+  "Internal Review",
+  "Contracting",
+  "Won",
+  "Lost",
+  "Canceled",
+  "Declined",
+] as const;
+export type DealStatus = (typeof dealStatuses)[number];
+
+// Deals for tracking sales pipeline
+export const deals = pgTable(
+  "deals",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealNumber: serial("deal_number").notNull().unique(),
+    displayName: varchar("display_name", { length: 255 }).notNull(),
+    status: varchar("status", { length: 50 }).notNull().default("Inquiry"),
+    createdById: varchar("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_deals_deal_number").on(table.dealNumber),
+    index("idx_deals_status").on(table.status),
+    index("idx_deals_created_by").on(table.createdById),
+    index("idx_deals_created_at").on(table.createdAt),
   ],
 );
 
@@ -1302,6 +1336,47 @@ export const updateAppIssueSchema = createInsertSchema(appIssues).pick({
 
 export type CreateAppIssue = z.infer<typeof insertAppIssueSchema>;
 export type UpdateAppIssue = z.infer<typeof updateAppIssueSchema>;
+
+// ==========================================
+// DEALS / SALES PIPELINE
+// ==========================================
+
+// Deals relations
+export const dealsRelations = relations(deals, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [deals.createdById],
+    references: [users.id],
+  }),
+}));
+
+// Deal types
+export type Deal = typeof deals.$inferSelect;
+export type InsertDeal = typeof deals.$inferInsert;
+
+// Deal with relations
+export type DealWithRelations = Deal & {
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+};
+
+// Deal schemas
+export const insertDealSchema = createInsertSchema(deals).omit({
+  id: true,
+  dealNumber: true,
+  createdById: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  displayName: z.string().min(1, "Display name is required").max(255),
+  status: z.enum(dealStatuses).default("Inquiry"),
+});
+
+export const updateDealSchema = createInsertSchema(deals).pick({
+  displayName: true,
+  status: true,
+}).partial();
+
+export type CreateDeal = z.infer<typeof insertDealSchema>;
+export type UpdateDeal = z.infer<typeof updateDealSchema>;
 
 // ==========================================
 // FORM OUTREACH / RFI SYSTEM
