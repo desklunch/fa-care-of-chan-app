@@ -66,6 +66,7 @@ import DealDetail from "@/pages/deal-detail";
 import Clients from "@/pages/clients";
 import ClientForm from "@/pages/client-form";
 import ClientDetail from "@/pages/client-detail";
+import EventSchedulePrototype from "@/pages/event-schedule-prototype";
 import NotFound from "@/pages/not-found";
 import {
   CircleUserRound,
@@ -339,6 +340,7 @@ function AuthenticatedRoutes() {
           <Route path="/clients/new" component={ClientForm} />
           <Route path="/clients/:id/edit" component={ClientForm} />
           <Route path="/clients/:id" component={ClientDetail} />
+          <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
           <Route path="/admin/vendors/services" component={AdminVendorServices} />
