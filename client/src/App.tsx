@@ -138,16 +138,7 @@ function useLayoutConfig() {
           },
         ],
       },
-      {
-        heading: "Sales",
-        items: [
-          {
-            name: "Deals",
-            href: "/deals",
-            icon: DollarSign,
-          },
-        ],
-      },
+
       {
         heading: "Support",
         items: [
@@ -206,6 +197,11 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
+          {
+            name: "Deals",
+            href: "/deals",
+            icon: DollarSign,
+          },
           {
             name: "Vendors",
             href: "/vendors",
