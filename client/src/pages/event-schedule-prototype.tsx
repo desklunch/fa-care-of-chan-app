@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Plus, Trash2, ChevronDown, ChevronUp, GripVertical, CalendarDays, CalendarRange } from "lucide-react";
+import { Calendar, Plus, Trash2, X, CalendarClock } from "lucide-react";
 import { format, addDays } from "date-fns";
 
 type ScheduleMode = "specific" | "flexible";
@@ -28,10 +27,14 @@ interface DealEvent {
   durationDays: number;
   scheduleMode: ScheduleMode;
   schedules: EventSchedule[];
-  isExpanded: boolean;
 }
 
 const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
+const MONTHS_FULL = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
@@ -44,7 +47,7 @@ function getNext12Months(): { month: number; year: number; label: string }[] {
     result.push({
       month: date.getMonth(),
       year: date.getFullYear(),
-      label: `${MONTHS[date.getMonth()]} ${date.getFullYear()}`,
+      label: `${MONTHS_FULL[date.getMonth()]} ${date.getFullYear()}`,
     });
   }
   return result;
@@ -57,7 +60,7 @@ function getEndMonthOptions(startMonth: number, startYear: number): { month: num
     result.push({
       month: date.getMonth(),
       year: date.getFullYear(),
-      label: `${MONTHS[date.getMonth()]} ${date.getFullYear()}`,
+      label: `${MONTHS_FULL[date.getMonth()]} ${date.getFullYear()}`,
     });
   }
   return result;
@@ -83,12 +86,12 @@ function formatMonthRange(startMonth: number, startYear: number, endMonth: numbe
     return `${MONTHS[startMonth]} ${startYear}`;
   }
   if (startYear === endYear) {
-    return `${MONTHS[startMonth]} – ${MONTHS[endMonth]} ${startYear}`;
+    return `${MONTHS[startMonth]}–${MONTHS[endMonth]} ${startYear}`;
   }
   return `${MONTHS[startMonth]} ${startYear} – ${MONTHS[endMonth]} ${endYear}`;
 }
 
-function EventCard({ 
+function EventRow({ 
   event, 
   onUpdate, 
   onRemove 
@@ -131,341 +134,225 @@ function EventCard({
   const getAlternativeSchedules = () => event.schedules.filter(s => s.kind === "alternative");
   const getRangeSchedule = () => event.schedules.find(s => s.kind === "range");
 
-  const isConfirmed = event.scheduleMode === "specific" && 
-    getPrimarySchedule()?.startDate && 
-    getAlternativeSchedules().length === 0;
-
-  const handleScheduleModeChange = (mode: ScheduleMode) => {
-    let newSchedules: EventSchedule[] = [];
-    
-    if (mode === "specific") {
-      newSchedules = [{ id: generateId(), kind: "primary", startDate: undefined }];
-    } else if (mode === "flexible") {
+  const toggleTBD = (isTBD: boolean) => {
+    if (isTBD) {
       const startOptions = getNext12Months();
       const firstStart = startOptions[0];
-      newSchedules = [{
-        id: generateId(),
-        kind: "range",
-        rangeStartMonth: firstStart.month,
-        rangeStartYear: firstStart.year,
-        rangeEndMonth: firstStart.month,
-        rangeEndYear: firstStart.year,
-      }];
+      onUpdate({
+        ...event,
+        scheduleMode: "flexible",
+        schedules: [{
+          id: generateId(),
+          kind: "range",
+          rangeStartMonth: firstStart.month,
+          rangeStartYear: firstStart.year,
+          rangeEndMonth: firstStart.month,
+          rangeEndYear: firstStart.year,
+        }],
+      });
+    } else {
+      onUpdate({
+        ...event,
+        scheduleMode: "specific",
+        schedules: [{ id: generateId(), kind: "primary", startDate: undefined }],
+      });
     }
-    
-    onUpdate({ ...event, scheduleMode: mode, schedules: newSchedules });
   };
 
-  const getStatusBadge = () => {
-    if (event.scheduleMode === "flexible") {
-      return <Badge variant="outline">Flexible</Badge>;
-    }
-    if (isConfirmed) {
-      return <Badge variant="default">Confirmed</Badge>;
-    }
-    if (getAlternativeSchedules().length > 0) {
-      return <Badge variant="secondary">Alternatives</Badge>;
-    }
-    return <Badge variant="outline">Pending</Badge>;
-  };
-
-  const getEventSummary = () => {
-    const durationText = event.durationDays > 1 ? `${event.durationDays} days` : "1 day";
-    
-    if (event.scheduleMode === "specific") {
-      const primary = getPrimarySchedule();
-      if (primary?.startDate) {
-        const dateText = formatDateRange(primary.startDate, event.durationDays);
-        const altCount = getAlternativeSchedules().length;
-        if (altCount > 0) {
-          return `${dateText} (+${altCount} alternative${altCount > 1 ? 's' : ''})`;
-        }
-        return dateText;
-      }
-      return durationText;
-    }
-    
-    if (event.scheduleMode === "flexible") {
-      const range = getRangeSchedule();
-      if (range) {
-        return `${durationText} • Window: ${formatMonthRange(
-          range.rangeStartMonth!,
-          range.rangeStartYear!,
-          range.rangeEndMonth!,
-          range.rangeEndYear!
-        )}`;
-      }
-    }
-    
-    return durationText;
-  };
+  const rangeSchedule = getRangeSchedule();
+  const startMonthOptions = getNext12Months();
+  const endMonthOptions = rangeSchedule?.rangeStartMonth !== undefined && rangeSchedule?.rangeStartYear !== undefined
+    ? getEndMonthOptions(rangeSchedule.rangeStartMonth, rangeSchedule.rangeStartYear)
+    : [];
+  
+  const startValue = rangeSchedule?.rangeStartMonth !== undefined && rangeSchedule?.rangeStartYear !== undefined
+    ? `${rangeSchedule.rangeStartMonth}-${rangeSchedule.rangeStartYear}`
+    : undefined;
+  
+  const endValue = rangeSchedule?.rangeEndMonth !== undefined && rangeSchedule?.rangeEndYear !== undefined
+    ? `${rangeSchedule.rangeEndMonth}-${rangeSchedule.rangeEndYear}`
+    : undefined;
 
   return (
-    <Card className="mb-4" data-testid={`event-card-${event.id}`}>
-      <Collapsible open={event.isExpanded} onOpenChange={(open) => updateField("isExpanded", open)}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover-elevate rounded-t-md">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <CardTitle className="text-base">{event.label || "Untitled Event"}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {getEventSummary()}
-                  </CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {getStatusBadge()}
-                {event.isExpanded ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
+    <div className="border rounded-md p-3 space-y-3" data-testid={`event-card-${event.id}`}>
+      <div className="flex items-start gap-3">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-[1fr_80px] gap-2">
+          <Input
+            value={event.label}
+            onChange={(e) => updateField("label", e.target.value)}
+            placeholder="Description (e.g., Main Conference)"
+            className="h-9"
+            data-testid={`input-event-label-${event.id}`}
+          />
+          <Input
+            type="number"
+            min={1}
+            max={30}
+            value={event.durationDays}
+            onChange={(e) => updateField("durationDays", Math.max(1, parseInt(e.target.value) || 1))}
+            className="h-9 w-20"
+            data-testid={`input-duration-${event.id}`}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+          className="h-9 w-9 text-muted-foreground hover:text-destructive"
+          data-testid={`button-remove-event-${event.id}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
 
-        <CollapsibleContent>
-          <CardContent className="space-y-6 pt-4 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor={`event-label-${event.id}`}>Event Name</Label>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-xs">Duration: {event.durationDays} {event.durationDays === 1 ? "day" : "days"}</span>
+      </div>
+
+      {event.scheduleMode === "specific" && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="date"
+              value={getPrimarySchedule()?.startDate ? format(getPrimarySchedule()!.startDate!, "yyyy-MM-dd") : ""}
+              onChange={(e) => {
+                const schedule = getPrimarySchedule();
+                if (schedule && e.target.value) {
+                  updateSchedule(schedule.id, { startDate: new Date(e.target.value) });
+                }
+              }}
+              className="h-9 w-40"
+              data-testid={`input-primary-date-${event.id}`}
+            />
+            {getAlternativeSchedules().map((alt, index) => (
+              <div key={alt.id} className="flex items-center gap-1">
                 <Input
-                  id={`event-label-${event.id}`}
-                  value={event.label}
-                  onChange={(e) => updateField("label", e.target.value)}
-                  placeholder="e.g., Main Conference, Gala Dinner"
-                  data-testid={`input-event-label-${event.id}`}
+                  type="date"
+                  value={alt.startDate ? format(alt.startDate, "yyyy-MM-dd") : ""}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      updateSchedule(alt.id, { startDate: new Date(e.target.value) });
+                    }
+                  }}
+                  className="h-9 w-40"
+                  data-testid={`input-alternative-${event.id}-${index}`}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeSchedule(alt.id)}
+                  className="h-7 w-7"
+                  data-testid={`button-remove-alternative-${event.id}-${index}`}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </div>
+            ))}
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm"
+              onClick={addAlternativeDate}
+              className="h-9 text-xs"
+              data-testid={`button-add-alternative-${event.id}`}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Alt
+            </Button>
+          </div>
+          {getPrimarySchedule()?.startDate && event.durationDays > 1 && (
+            <p className="text-xs text-muted-foreground">
+              {formatDateRange(getPrimarySchedule()!.startDate!, event.durationDays)}
+            </p>
+          )}
+        </div>
+      )}
 
-              <div className="space-y-2">
-                <Label htmlFor={`duration-${event.id}`}>Duration (days)</Label>
-                <Input
-                  id={`duration-${event.id}`}
-                  type="number"
-                  min={1}
-                  max={30}
-                  value={event.durationDays}
-                  onChange={(e) => updateField("durationDays", Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-32"
-                  data-testid={`input-duration-${event.id}`}
-                />
-              </div>
-            </div>
+      {event.scheduleMode === "flexible" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={startValue}
+            onValueChange={(v) => {
+              const [month, year] = v.split("-").map(Number);
+              const schedule = getRangeSchedule();
+              if (schedule) {
+                const newEndOptions = getEndMonthOptions(month, year);
+                updateSchedule(schedule.id, { 
+                  rangeStartMonth: month, 
+                  rangeStartYear: year,
+                  rangeEndMonth: newEndOptions[0].month,
+                  rangeEndYear: newEndOptions[0].year,
+                });
+              }
+            }}
+          >
+            <SelectTrigger className="h-9 w-40" data-testid={`select-start-month-${event.id}`}>
+              <SelectValue placeholder="From" />
+            </SelectTrigger>
+            <SelectContent>
+              {startMonthOptions.map((opt) => (
+                <SelectItem key={`${opt.month}-${opt.year}`} value={`${opt.month}-${opt.year}`}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-muted-foreground text-sm">to</span>
+          <Select
+            value={endValue}
+            onValueChange={(v) => {
+              const [month, year] = v.split("-").map(Number);
+              const schedule = getRangeSchedule();
+              if (schedule) {
+                updateSchedule(schedule.id, { rangeEndMonth: month, rangeEndYear: year });
+              }
+            }}
+            disabled={!startValue}
+          >
+            <SelectTrigger className="h-9 w-40" data-testid={`select-end-month-${event.id}`}>
+              <SelectValue placeholder="To" />
+            </SelectTrigger>
+            <SelectContent>
+              {endMonthOptions.map((opt) => (
+                <SelectItem key={`${opt.month}-${opt.year}`} value={`${opt.month}-${opt.year}`}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
-            <div className="space-y-3">
-              <Label>Date Selection</Label>
-              <Tabs 
-                value={event.scheduleMode} 
-                onValueChange={(v) => handleScheduleModeChange(v as ScheduleMode)}
-              >
-                <TabsList className="w-full">
-                  <TabsTrigger value="specific" className="flex-1" data-testid={`mode-specific-${event.id}`}>
-                    <CalendarDays className="h-4 w-4 mr-2" />
-                    Specific Date
-                  </TabsTrigger>
-                  <TabsTrigger value="flexible" className="flex-1" data-testid={`mode-flexible-${event.id}`}>
-                    <CalendarRange className="h-4 w-4 mr-2" />
-                    Flexible Window
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {event.scheduleMode === "specific" && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>
-                    {event.durationDays === 1 ? "Event Date" : "Start Date"}
-                  </Label>
-                  <Input
-                    type="date"
-                    value={getPrimarySchedule()?.startDate ? format(getPrimarySchedule()!.startDate!, "yyyy-MM-dd") : ""}
-                    onChange={(e) => {
-                      const schedule = getPrimarySchedule();
-                      if (schedule && e.target.value) {
-                        updateSchedule(schedule.id, { startDate: new Date(e.target.value) });
-                      }
-                    }}
-                    className="w-48"
-                    data-testid={`input-primary-date-${event.id}`}
-                  />
-                  {getPrimarySchedule()?.startDate && event.durationDays > 1 && (
-                    <p className="text-sm text-muted-foreground">
-                      Event runs: {formatDateRange(getPrimarySchedule()!.startDate!, event.durationDays)}
-                    </p>
-                  )}
-                  {isConfirmed && (
-                    <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      This date is confirmed (no alternatives)
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Alternative {event.durationDays === 1 ? "Dates" : "Start Dates"}</Label>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={addAlternativeDate}
-                      data-testid={`button-add-alternative-${event.id}`}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Alternative
-                    </Button>
-                  </div>
-                  
-                  {getAlternativeSchedules().length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No alternatives. Add alternative dates if the primary date isn't final.
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {getAlternativeSchedules().map((alt, index) => (
-                        <div key={alt.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
-                          <Input
-                            type="date"
-                            value={alt.startDate ? format(alt.startDate, "yyyy-MM-dd") : ""}
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                updateSchedule(alt.id, { startDate: new Date(e.target.value) });
-                              }
-                            }}
-                            className="w-40"
-                            data-testid={`input-alternative-${event.id}-${index}`}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeSchedule(alt.id)}
-                            data-testid={`button-remove-alternative-${event.id}-${index}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {event.scheduleMode === "flexible" && (() => {
-              const rangeSchedule = getRangeSchedule();
-              const startMonthOptions = getNext12Months();
-              const endMonthOptions = rangeSchedule?.rangeStartMonth !== undefined && rangeSchedule?.rangeStartYear !== undefined
-                ? getEndMonthOptions(rangeSchedule.rangeStartMonth, rangeSchedule.rangeStartYear)
-                : [];
-              
-              const startValue = rangeSchedule?.rangeStartMonth !== undefined && rangeSchedule?.rangeStartYear !== undefined
-                ? `${rangeSchedule.rangeStartMonth}-${rangeSchedule.rangeStartYear}`
-                : undefined;
-              
-              const endValue = rangeSchedule?.rangeEndMonth !== undefined && rangeSchedule?.rangeEndYear !== undefined
-                ? `${rangeSchedule.rangeEndMonth}-${rangeSchedule.rangeEndYear}`
-                : undefined;
-
-              return (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Window Start</Label>
-                      <Select
-                        value={startValue}
-                        onValueChange={(v) => {
-                          const [month, year] = v.split("-").map(Number);
-                          const schedule = getRangeSchedule();
-                          if (schedule) {
-                            const newEndOptions = getEndMonthOptions(month, year);
-                            updateSchedule(schedule.id, { 
-                              rangeStartMonth: month, 
-                              rangeStartYear: year,
-                              rangeEndMonth: newEndOptions[0].month,
-                              rangeEndYear: newEndOptions[0].year,
-                            });
-                          }
-                        }}
-                      >
-                        <SelectTrigger data-testid={`select-start-month-${event.id}`}>
-                          <SelectValue placeholder="Select start month" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {startMonthOptions.map((opt) => (
-                            <SelectItem key={`${opt.month}-${opt.year}`} value={`${opt.month}-${opt.year}`}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Window End</Label>
-                      <Select
-                        value={endValue}
-                        onValueChange={(v) => {
-                          const [month, year] = v.split("-").map(Number);
-                          const schedule = getRangeSchedule();
-                          if (schedule) {
-                            updateSchedule(schedule.id, { rangeEndMonth: month, rangeEndYear: year });
-                          }
-                        }}
-                        disabled={!startValue}
-                      >
-                        <SelectTrigger data-testid={`select-end-month-${event.id}`}>
-                          <SelectValue placeholder={startValue ? "Select end month" : "Select start first"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {endMonthOptions.map((opt) => (
-                            <SelectItem key={`${opt.month}-${opt.year}`} value={`${opt.month}-${opt.year}`}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {rangeSchedule && rangeSchedule.rangeStartMonth !== undefined && rangeSchedule.rangeEndMonth !== undefined && (
-                    <p className="text-sm text-muted-foreground">
-                      {event.durationDays === 1 ? "Event date" : "Start date"} will be finalized within: {" "}
-                      <span className="font-medium">
-                        {formatMonthRange(
-                          rangeSchedule.rangeStartMonth,
-                          rangeSchedule.rangeStartYear!,
-                          rangeSchedule.rangeEndMonth,
-                          rangeSchedule.rangeEndYear!
-                        )}
-                      </span>
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
-
-            <div className="flex justify-end pt-4 border-t">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={onRemove}
-                className="text-destructive hover:text-destructive"
-                data-testid={`button-remove-event-${event.id}`}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Remove Event
-              </Button>
-            </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+      <div className="flex items-center justify-between pt-1 border-t">
+        <div className="flex items-center gap-2">
+          <Switch
+            id={`tbd-${event.id}`}
+            checked={event.scheduleMode === "flexible"}
+            onCheckedChange={toggleTBD}
+            data-testid={`switch-tbd-${event.id}`}
+          />
+          <Label htmlFor={`tbd-${event.id}`} className="text-xs text-muted-foreground cursor-pointer">
+            Date TBD
+          </Label>
+        </div>
+        <div className="flex items-center gap-1">
+          {event.scheduleMode === "flexible" ? (
+            <Badge variant="outline" className="text-xs">
+              <CalendarClock className="h-3 w-3 mr-1" />
+              TBD
+            </Badge>
+          ) : getPrimarySchedule()?.startDate && getAlternativeSchedules().length === 0 ? (
+            <Badge variant="default" className="text-xs">Confirmed</Badge>
+          ) : getAlternativeSchedules().length > 0 ? (
+            <Badge variant="secondary" className="text-xs">
+              {getAlternativeSchedules().length + 1} options
+            </Badge>
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -477,7 +364,6 @@ export default function EventSchedulePrototype() {
       durationDays: 3,
       scheduleMode: "specific",
       schedules: [{ id: generateId(), kind: "primary", startDate: new Date("2025-06-15") }],
-      isExpanded: true,
     },
     {
       id: generateId(),
@@ -488,7 +374,6 @@ export default function EventSchedulePrototype() {
         { id: generateId(), kind: "primary", startDate: new Date("2025-06-14") },
         { id: generateId(), kind: "alternative", startDate: new Date("2025-06-13") },
       ],
-      isExpanded: false,
     },
     {
       id: generateId(),
@@ -503,7 +388,6 @@ export default function EventSchedulePrototype() {
         rangeEndMonth: 10,
         rangeEndYear: 2025,
       }],
-      isExpanded: false,
     },
   ]);
 
@@ -514,7 +398,6 @@ export default function EventSchedulePrototype() {
       durationDays: 1,
       scheduleMode: "specific",
       schedules: [{ id: generateId(), kind: "primary", startDate: undefined }],
-      isExpanded: true,
     };
     setEvents([...events, newEvent]);
   };
@@ -528,50 +411,45 @@ export default function EventSchedulePrototype() {
   };
 
   return (
-    <div className="container max-w-4xl py-8">
-      <div className="mb-8">
+    <div className="container max-w-3xl py-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold" data-testid="text-page-title">Event Schedule Prototype</h1>
-        <p className="text-muted-foreground mt-1">
-          UI/UX prototype for managing event dates on deals. Dates are confirmed when no alternatives exist.
-          Duration defaults to 1 day and can be increased for multi-day events.
+        <p className="text-muted-foreground text-sm mt-1">
+          Compact event scheduling UI. Toggle "Date TBD" to switch to flexible date windows.
         </p>
       </div>
 
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Event Schedule
+            Events
           </CardTitle>
-          <CardDescription>
-            Add events for this deal. Each event can have a specific date (with optional alternatives) 
-            or a flexible window for when the date will be finalized.
+          <CardDescription className="text-sm">
+            Add events with specific dates or flexible windows.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           {events.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No events added yet.</p>
-              <p className="text-sm">Click the button below to add your first event.</p>
+            <div className="text-center py-6 text-muted-foreground">
+              <Calendar className="h-10 w-10 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">No events added yet.</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onUpdate={updateEvent}
-                  onRemove={() => removeEvent(event.id)}
-                />
-              ))}
-            </div>
+            events.map((event) => (
+              <EventRow
+                key={event.id}
+                event={event}
+                onUpdate={updateEvent}
+                onRemove={() => removeEvent(event.id)}
+              />
+            ))
           )}
 
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full mt-4"
+            className="w-full"
             onClick={addEvent}
             data-testid="button-add-event"
           >
@@ -582,12 +460,11 @@ export default function EventSchedulePrototype() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Current State (Debug)</CardTitle>
-          <CardDescription>JSON representation of the event schedule data</CardDescription>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Debug: Current State</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-muted p-4 rounded-md overflow-auto max-h-96">
+          <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-64">
             {JSON.stringify(events, null, 2)}
           </pre>
         </CardContent>
