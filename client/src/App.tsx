@@ -63,6 +63,9 @@ import PublicVenueCollection from "@/pages/public-venue-collection";
 import Deals from "@/pages/deals";
 import DealForm from "@/pages/deal-form";
 import DealDetail from "@/pages/deal-detail";
+import Clients from "@/pages/clients";
+import ClientForm from "@/pages/client-form";
+import ClientDetail from "@/pages/client-detail";
 import NotFound from "@/pages/not-found";
 import {
   CircleUserRound,
@@ -90,6 +93,7 @@ import {
   Users,
   Rocket,
   DollarSign,
+  Building2,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -201,6 +205,11 @@ function useLayoutConfig() {
             name: "Deals",
             href: "/deals",
             icon: DollarSign,
+          },
+          {
+            name: "Clients",
+            href: "/clients",
+            icon: Building2,
           },
           {
             name: "Vendors",
@@ -326,6 +335,10 @@ function AuthenticatedRoutes() {
           <Route path="/deals/new" component={DealForm} />
           <Route path="/deals/:id/edit" component={DealForm} />
           <Route path="/deals/:id" component={DealDetail} />
+          <Route path="/clients" component={Clients} />
+          <Route path="/clients/new" component={ClientForm} />
+          <Route path="/clients/:id/edit" component={ClientForm} />
+          <Route path="/clients/:id" component={ClientDetail} />
           <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
           <Route path="/admin/vendors/services" component={AdminVendorServices} />
