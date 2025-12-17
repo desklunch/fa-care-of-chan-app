@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -18,9 +18,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Client, DealWithRelations, DealStatus } from "@shared/schema";
-import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Plus } from "lucide-react";
+import type { Client, DealWithRelations, DealStatus, Contact } from "@shared/schema";
+import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Plus, Users } from "lucide-react";
 import { format } from "date-fns";
+import { ContactLinkSearch } from "@/components/contact-link-search";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
   "Inquiry": { variant: "outline" },
@@ -47,6 +48,25 @@ export default function ClientDetail() {
     queryKey: ["/api/clients", params.id, "deals"],
     enabled: Boolean(params.id),
   });
+
+  const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<Contact[]>({
+    queryKey: ["/api/clients", params.id, "contacts"],
+    enabled: Boolean(params.id),
+  });
+
+  const [localLinkedContacts, setLocalLinkedContacts] = useState<Contact[]>([]);
+  
+  useEffect(() => {
+    setLocalLinkedContacts(linkedContacts);
+  }, [linkedContacts]);
+
+  const handleLinkContact = (contact: Contact) => {
+    setLocalLinkedContacts(prev => [...prev, contact]);
+  };
+
+  const handleUnlinkContact = (contactId: string) => {
+    setLocalLinkedContacts(prev => prev.filter(c => c.id !== contactId));
+  };
 
   usePageTitle(client?.name || "Client Details");
 
@@ -174,6 +194,34 @@ export default function ClientDetail() {
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Contacts
+              </CardTitle>
+              <CardDescription>
+                {localLinkedContacts.length} contact{localLinkedContacts.length !== 1 ? "s" : ""} linked to this client
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingContacts ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ContactLinkSearch
+                clientId={params.id!}
+                linkedContacts={localLinkedContacts}
+                onLink={handleLinkContact}
+                onUnlink={handleUnlinkContact}
+              />
+            )}
           </CardContent>
         </Card>
 
