@@ -30,7 +30,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -300,13 +300,6 @@ export default function DealForm() {
                                       className="text-xs"
                                     >
                                       {service}
-                                      <X
-                                        className="h-3 w-3 ml-1 cursor-pointer"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          field.onChange(field.value.filter((s) => s !== service));
-                                        }}
-                                      />
                                     </Badge>
                                   ))}
                                 </div>
