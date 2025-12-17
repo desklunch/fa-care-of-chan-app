@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -16,7 +17,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -42,6 +42,7 @@ export default function DealDetail() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isManagerOrAdmin = user?.role === "admin" || user?.role === "manager";
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -105,10 +106,18 @@ export default function DealDetail() {
         href: `/deals/${id}/edit`,
         icon: Pencil,
       }}
+      additionalActions={isManagerOrAdmin ? [
+        {
+          label: "Delete Deal",
+          onClick: () => setShowDeleteDialog(true),
+          icon: Trash2,
+          variant: "destructive",
+        },
+      ] : undefined}
     >
       <div className="max-w-4xl mx-auto space-y-6">
         <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <CardHeader>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground font-mono" data-testid="text-deal-number">
@@ -126,40 +135,6 @@ export default function DealDetail() {
                 {deal.displayName}
               </CardTitle>
             </div>
-            {isManagerOrAdmin && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    data-testid="button-delete-deal"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Deal</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{deal.displayName}"? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteMutation.mutate()}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      disabled={deleteMutation.isPending}
-                      data-testid="button-confirm-delete"
-                    >
-                      {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
           </CardHeader>
           <CardContent className="space-y-6">
             <Separator />
@@ -224,6 +199,29 @@ export default function DealDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Deal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deal.displayName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }
