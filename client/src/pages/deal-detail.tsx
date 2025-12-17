@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase } from "lucide-react";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase, UserCircle, Mail, Phone } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
 import type { DealWithRelations, DealStatus, DealLocation, DealEvent, DealService } from "@shared/schema";
 
@@ -199,6 +199,44 @@ export default function DealDetail() {
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <Building2 className="h-4 w-4" />
                     <span>No client assigned</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Primary Contact
+                </h3>
+                
+                {deal.primaryContact ? (
+                  <Link href={`/contacts/${deal.primaryContact.id}`}>
+                    <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50 hover-elevate cursor-pointer" data-testid="link-deal-primary-contact">
+                      <UserCircle className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">
+                          {deal.primaryContact.firstName} {deal.primaryContact.lastName}
+                        </p>
+                        <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                          {deal.primaryContact.emailAddresses?.[0] && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {deal.primaryContact.emailAddresses[0]}
+                            </span>
+                          )}
+                          {deal.primaryContact.phoneNumbers?.[0] && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {deal.primaryContact.phoneNumbers[0]}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <UserCircle className="h-4 w-4" />
+                    <span>No primary contact</span>
                   </div>
                 )}
               </div>

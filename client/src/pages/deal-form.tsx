@@ -35,13 +35,14 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact } from "@shared/schema";
 import { dealStatuses, dealLocationSchema, dealServices } from "@shared/schema";
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
   status: z.enum(dealStatuses).default("Inquiry"),
   clientId: z.string().min(1, "Client is required"),
+  primaryContactId: z.string().optional().transform(val => val || undefined),
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
   services: z.array(z.enum(dealServices)).default([]),
@@ -75,6 +76,7 @@ export default function DealForm() {
       displayName: "",
       status: "Inquiry",
       clientId: "",
+      primaryContactId: "",
       locations: [],
       eventSchedule: [],
       services: [],
@@ -83,12 +85,20 @@ export default function DealForm() {
     },
   });
 
+  const watchedClientId = form.watch("clientId");
+
+  const { data: linkedContacts = [] } = useQuery<Contact[]>({
+    queryKey: [`/api/clients/${watchedClientId}/contacts`],
+    enabled: Boolean(watchedClientId),
+  });
+
   useEffect(() => {
     if (deal && isEditing) {
       form.reset({
         displayName: deal.displayName,
         status: deal.status as DealStatus,
         clientId: deal.clientId || "",
+        primaryContactId: deal.primaryContactId || "",
         locations: (deal.locations as DealLocation[]) || [],
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
         services: (deal.services as DealService[]) || [],
@@ -100,6 +110,12 @@ export default function DealForm() {
       }
     }
   }, [deal, isEditing, form]);
+
+  useEffect(() => {
+    if (!isEditing || (deal && watchedClientId !== deal.clientId)) {
+      form.setValue("primaryContactId", "");
+    }
+  }, [watchedClientId, isEditing, deal, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: DealFormValues) => {
@@ -217,6 +233,42 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+
+                {watchedClientId && (
+                  <FormField
+                    control={form.control}
+                    name="primaryContactId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Primary Contact</FormLabel>
+                        <Select 
+                          onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                          value={field.value || "__none__"}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-primary-contact">
+                              <SelectValue placeholder="Select primary contact..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="__none__">No primary contact</SelectItem>
+                            {linkedContacts.map((contact) => (
+                              <SelectItem key={contact.id} value={contact.id}>
+                                {contact.firstName} {contact.lastName}
+                                {contact.jobTitle && ` - ${contact.jobTitle}`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Select a contact linked to this client as the primary contact.
+                          {linkedContacts.length === 0 && " No contacts linked to this client yet."}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
