@@ -1,8 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Loader2, MapPin, X } from "lucide-react";
+import { Loader2, MapPin, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { DealLocation } from "@shared/schema";
 
@@ -37,7 +36,7 @@ export function CitySearch({
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const searchCities = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -70,15 +69,30 @@ export function CitySearch({
     }
   }, []);
 
-  const handleSearch = () => {
-    searchCities(query);
-  };
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!query.trim()) {
+      setResults([]);
+      setIsOpen(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      searchCities(query);
+    }, 350);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [query, searchCities]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSearch();
-    } else if (e.key === "Escape") {
+    if (e.key === "Escape") {
       setIsOpen(false);
     }
   };
@@ -132,41 +146,31 @@ export function CitySearch({
 
   return (
     <div ref={containerRef} className="space-y-2">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            data-testid={testId}
-            className="pr-8"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              data-testid={`${testId}-clear`}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-        <Button
-          type="button"
-          onClick={handleSearch}
-          disabled={isLoading || !query.trim()}
-          data-testid={`${testId}-button`}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
-        </Button>
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          data-testid={testId}
+          className="pr-8"
+        />
+        {isLoading ? (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
+        ) : query ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            data-testid={`${testId}-clear`}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
 
       {error && (
