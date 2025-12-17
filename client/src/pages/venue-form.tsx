@@ -2139,7 +2139,7 @@ export default function VenueFormPage() {
                       const newSpace: VenueSpace = {
                         id: crypto.randomUUID(),
                         name: "",
-                        maxCapacitySeated: 0,
+                        maxCapacitySeated: null,
                         maxCapacityStanding: null,
                         minCapacity: null,
                         sizeSqft: null,
@@ -2201,10 +2201,10 @@ export default function VenueFormPage() {
                                             <Input
                                               id={`space-max-seated-${space.id}`}
                                               type="number"
-                                              min={0}
-                                              value={space.maxCapacitySeated}
-                                              onChange={(e) => updateSpace(space.id, { maxCapacitySeated: parseInt(e.target.value) || 0 })}
-                                              placeholder="0"
+                                              min={1}
+                                              value={space.maxCapacitySeated ?? ""}
+                                              onChange={(e) => updateSpace(space.id, { maxCapacitySeated: e.target.value ? parseInt(e.target.value) : null })}
+                                              placeholder="—"
                                               className="pl-9"
                                               data-testid={`input-space-max-seated-${index}`}
                                             />

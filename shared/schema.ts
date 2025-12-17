@@ -254,7 +254,7 @@ export type VenueType = (typeof venueTypes)[number];
 export interface VenueSpace {
   id: string;
   name: string;
-  maxCapacitySeated: number;
+  maxCapacitySeated?: number | null;
   maxCapacityStanding?: number | null;
   minCapacity?: number | null;
   sizeSqft?: number | null;
@@ -927,7 +927,7 @@ export const insertVenueSchema = createInsertSchema(venues).omit({
   venueSpaces: z.array(z.object({
     id: z.string().min(1),
     name: z.string().min(1, "Space name is required").max(255),
-    maxCapacitySeated: z.number().int().min(0, "Maximum seated capacity must be 0 or greater"),
+    maxCapacitySeated: z.number().int().min(1, "Maximum seated capacity must be greater than 0").optional().nullable(),
     maxCapacityStanding: z.number().int().min(1, "Maximum standing capacity must be greater than 0").optional().nullable(),
     minCapacity: z.number().int().min(1, "Minimum capacity must be greater than 0").optional().nullable(),
     sizeSqft: z.number().int().min(1, "Size must be greater than 0").optional().nullable(),

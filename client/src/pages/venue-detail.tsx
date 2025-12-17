@@ -745,11 +745,18 @@ export default function VenueDetailPage() {
                             ].filter(Boolean).join(" & ")}
                           </Badge>
                         )}
-                        <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
-                          <Users className="h-3 w-3 mr-1" />
-                          {space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacitySeated}
-                          {space.maxCapacityStanding ? ` / ${space.maxCapacityStanding} standing` : ""}
-                        </Badge>
+                        {(space.maxCapacitySeated || space.maxCapacityStanding) && (
+                          <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
+                            <Users className="h-3 w-3 mr-1" />
+                            {space.maxCapacitySeated && (
+                              <span>{space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacitySeated} seated</span>
+                            )}
+                            {space.maxCapacitySeated && space.maxCapacityStanding && " / "}
+                            {space.maxCapacityStanding && (
+                              <span>{space.maxCapacityStanding} standing</span>
+                            )}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">

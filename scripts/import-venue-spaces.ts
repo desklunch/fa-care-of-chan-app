@@ -8,7 +8,7 @@ import { randomUUID } from "crypto";
 interface VenueSpace {
   id: string;
   name: string;
-  maxCapacitySeated: number;
+  maxCapacitySeated: number | null;
   maxCapacityStanding: number | null;
   minCapacity: number | null;
   sizeSqft: number | null;
