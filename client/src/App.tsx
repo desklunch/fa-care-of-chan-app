@@ -60,6 +60,9 @@ import Guide from "@/pages/guide";
 import Feedback from "@/pages/feedback";
 import PublicVenueDetail from "@/pages/public-venue-detail";
 import PublicVenueCollection from "@/pages/public-venue-collection";
+import Deals from "@/pages/deals";
+import DealForm from "@/pages/deal-form";
+import DealDetail from "@/pages/deal-detail";
 import NotFound from "@/pages/not-found";
 import {
   CircleUserRound,
@@ -86,6 +89,7 @@ import {
   BookOpen,
   Users,
   Rocket,
+  DollarSign,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -134,7 +138,16 @@ function useLayoutConfig() {
           },
         ],
       },
-
+      {
+        heading: "Sales",
+        items: [
+          {
+            name: "Deals",
+            href: "/deals",
+            icon: DollarSign,
+          },
+        ],
+      },
       {
         heading: "Support",
         items: [
@@ -313,6 +326,10 @@ function AuthenticatedRoutes() {
           <Route path="/comments" component={CommentsPage} />
           <Route path="/amenities" component={Amenities} />
           <Route path="/tags" component={TagsPage} />
+          <Route path="/deals" component={Deals} />
+          <Route path="/deals/new" component={DealForm} />
+          <Route path="/deals/:id/edit" component={DealForm} />
+          <Route path="/deals/:id" component={DealDetail} />
           <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
           <Route path="/admin/vendors/services" component={AdminVendorServices} />
