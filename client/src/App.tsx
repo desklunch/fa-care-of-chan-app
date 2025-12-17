@@ -30,6 +30,8 @@ import Clients from "@/pages/clients";
 import ClientDetail from "@/pages/client-detail";
 import ClientForm from "@/pages/client-form";
 import Deals from "@/pages/deals";
+import DealDetail from "@/pages/deal-detail";
+import DealForm from "@/pages/deal-form";
 import Vendors from "@/pages/vendors";
 import VendorDetail from "@/pages/vendor-detail";
 import VendorForm from "@/pages/vendor-form";
@@ -319,6 +321,9 @@ function AuthenticatedRoutes() {
           <Route path="/clients/:id/edit" component={ClientForm} />
           <Route path="/clients/:id" component={ClientDetail} />
           <Route path="/deals" component={Deals} />
+          <Route path="/deals/new" component={DealForm} />
+          <Route path="/deals/:id/edit" component={DealForm} />
+          <Route path="/deals/:id" component={DealDetail} />
           <Route path="/vendors" component={Vendors} />
           <Route path="/vendors/new" component={VendorForm} />
           <Route path="/vendors/:id/edit" component={VendorForm} />
