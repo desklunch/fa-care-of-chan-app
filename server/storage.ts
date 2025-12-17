@@ -1119,9 +1119,25 @@ export class DatabaseStorage implements IStorage {
       vendorsByContactId.set(mapping.contactId, existing);
     }
 
+    const contactClientMappings = await db
+      .select({
+        contactId: clientContacts.contactId,
+        client: clients,
+      })
+      .from(clientContacts)
+      .innerJoin(clients, eq(clientContacts.clientId, clients.id));
+
+    const clientsByContactId = new Map<string, Client[]>();
+    for (const mapping of contactClientMappings) {
+      const existing = clientsByContactId.get(mapping.contactId) || [];
+      existing.push(mapping.client);
+      clientsByContactId.set(mapping.contactId, existing);
+    }
+
     return allContacts.map((contact) => ({
       ...contact,
       vendors: vendorsByContactId.get(contact.id) || [],
+      clients: clientsByContactId.get(contact.id) || [],
     }));
   }
 

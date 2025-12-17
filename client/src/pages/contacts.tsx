@@ -3,12 +3,12 @@ import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Badge } from "@/components/ui/badge";
-import type { ContactWithVendors, Vendor } from "@shared/schema";
+import type { ContactWithVendors, Vendor, Client } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { Building2, CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "emailAddresses", "phoneNumbers"];
+const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "clients", "emailAddresses", "phoneNumbers"];
 
 const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   {
@@ -106,6 +106,45 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
             {vendors.length > 2 && (
               <Badge variant="outline" className="text-xs shrink-0">
                 +{vendors.length - 2}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "clients",
+    headerName: "Clients",
+    field: "clients",
+    category: "Work",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: { value: Client[] | undefined }) => {
+        const clients = params.value;
+        if (!clients || clients.length === 0) return null;
+        return (
+          <div className="flex items-center gap-1 h-full overflow-hidden">
+            {clients.slice(0, 2).map((client) => (
+              <Link 
+                key={client.id} 
+                href={`/clients/${client.id}`}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              >
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
+                  data-testid={`badge-client-${client.id}`}
+                >
+                  <CircleFadingPlus className="w-3 h-3" />
+                  {client.name}
+                </Badge>
+              </Link>
+            ))}
+            {clients.length > 2 && (
+              <Badge variant="secondary" className="text-xs shrink-0">
+                +{clients.length - 2}
               </Badge>
             )}
           </div>

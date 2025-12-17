@@ -841,6 +841,7 @@ export type VendorWithRelations = Vendor & {
 
 export type ContactWithVendors = Contact & {
   vendors: Vendor[];
+  clients: Client[];
 };
 
 // Venue with associated amenities, tags, floorplans, and photos
