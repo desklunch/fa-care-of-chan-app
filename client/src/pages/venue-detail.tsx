@@ -725,62 +725,51 @@ export default function VenueDetailPage() {
           </CardHeader>
           <CardContent>
             {venue.venueSpaces && venue.venueSpaces.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {venue.venueSpaces.map((space: VenueSpace) => (
                   <div
                     key={space.id}
                     className="border rounded-lg p-4 space-y-2"
                     data-testid={`venue-space-${space.id}`}
                   >
-                    <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <h4 className="font-medium" data-testid={`text-space-name-${space.id}`}>
                         {space.name}
                       </h4>
-        
-                      <div className="flex flex-wrap gap-2 shrink-0">
-                        {space.hasSeatedFormat && (
-                          <Badge variant="secondary" className="text-xs w-fit px-1" data-testid={`badge-space-format-seated-${space.id}`}>
-                            Seated
+                      <div className="flex items-center gap-2 shrink-0">
+                        {(space.hasSeatedFormat || space.hasStandingFormat) && (
+                          <Badge variant="outline" className="text-xs" data-testid={`badge-space-format-${space.id}`}>
+                            {[
+                              space.hasSeatedFormat && "Seated",
+                              space.hasStandingFormat && "Standing"
+                            ].filter(Boolean).join(" & ")}
                           </Badge>
                         )}
-                        {space.hasStandingFormat && (
-                          <Badge variant="secondary" className="text-xs w-fit px-1" data-testid={`badge-space-format-standing-${space.id}`}>
-                            Standing
-                          </Badge>
-                        )}
-                        {space.maxCapacitySeated && (
-                          <Badge variant="outline" className="text-xs w-fit px-1" data-testid={`badge-space-max-capacity-seated-${space.id}`}>
+                        {(space.maxCapacitySeated || space.maxCapacityStanding) && (
+                          <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
                             <Users className="h-3 w-3 mr-1" />
-                            {space.maxCapacitySeated} Seated 
+                            {space.maxCapacitySeated && (
+                              <span>{space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacitySeated} seated</span>
+                            )}
+                            {space.maxCapacitySeated && space.maxCapacityStanding && " / "}
+                            {space.maxCapacityStanding && (
+                              <span>{space.maxCapacityStanding} standing</span>
+                            )}
                           </Badge>
                         )}
-                        {space.maxCapacityStanding && (
-                          <Badge variant="outline" className="text-xs w-fit px-1" data-testid={`badge-space-max-capacity-standing-${space.id}`}>
-                            <Users className="h-3 w-3 mr-1" />
-                            {space.maxCapacityStanding} Standing 
-                          </Badge>
-                        )}
-                        {space.minCapacity && (
-                          <Badge variant="outline" className="text-xs w-fit px-1" data-testid={`badge-space-max-capacity-standing-${space.id}`}>
-                            <Users className="h-3 w-3 mr-1" />
-                            {space.minCapacity} Guest Minimum 
-                          </Badge>
-                        )}
-
                       </div>
-         
-      
                     </div>
-  
+                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                      {space.sizeSqft && (
+                        <span data-testid={`text-space-size-${space.id}`}>
+                          {space.sizeSqft.toLocaleString()} sq ft
+                        </span>
+                      )}
+                    </div>
                     {space.description && (
                       <p className="text-sm text-muted-foreground" data-testid={`text-space-description-${space.id}`}>
                         {space.description}
                       </p>
-                    )}
-                    {space.sizeSqft && (
-                      <span className="text-xs text-muted-foreground" data-testid={`text-space-size-${space.id}`}>
-                        {space.sizeSqft.toLocaleString()} sq ft
-                      </span>
                     )}
                   </div>
                 ))}

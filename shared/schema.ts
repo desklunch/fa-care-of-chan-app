@@ -192,7 +192,7 @@ export const contacts = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     externalId: varchar("external_id", { length: 255 }),
     firstName: varchar("first_name", { length: 100 }).notNull(),
-    lastName: varchar("last_name", { length: 100 }),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
     phoneNumbers: text("phone_numbers").array(),
     emailAddresses: text("email_addresses").array(),
     jobTitle: varchar("job_title", { length: 150 }),
@@ -743,7 +743,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'client' | 'client_contact' | 'deal';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -888,7 +888,7 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   updatedAt: true,
 }).extend({
   firstName: z.string().min(1, "First name is required").max(100),
-  lastName: z.string().max(100).optional().nullable(),
+  lastName: z.string().min(1, "Last name is required").max(100),
   phoneNumbers: z.array(z.string()).optional().nullable(),
   emailAddresses: z.array(z.string().email("Invalid email address")).optional().nullable(),
   jobTitle: z.string().max(150).optional().nullable(),
@@ -1935,224 +1935,3 @@ export const insertAppReleaseChangeSchema = createInsertSchema(appReleaseChanges
 export type CreateAppRelease = z.infer<typeof insertAppReleaseSchema>;
 export type UpdateAppRelease = z.infer<typeof updateAppReleaseSchema>;
 export type CreateAppReleaseChange = z.infer<typeof insertAppReleaseChangeSchema>;
-
-// ============================================
-// DEALS PIPELINE - Clients, Contacts, Deals
-// ============================================
-
-// Deal status pipeline stages
-export const dealStatuses = [
-  "Inquiry",
-  "Discovery", 
-  "Internal Review",
-  "Contracting",
-  "Won",
-  "Lost",
-  "Cancelled",
-  "Declined",
-] as const;
-export type DealStatus = (typeof dealStatuses)[number];
-
-// Deal date types
-export const dealDateTypes = ["Single Day", "Multi Day", "Unconfirmed"] as const;
-export type DealDateType = (typeof dealDateTypes)[number];
-
-// Clients table
-export const clients = pgTable(
-  "clients",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    name: varchar("name", { length: 255 }).notNull(),
-    industry: varchar("industry", { length: 255 }),
-    domain: varchar("domain", { length: 255 }),
-    about: text("about"),
-    notes: text("notes"),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-  },
-  (table) => [
-    index("idx_clients_name").on(table.name),
-    index("idx_clients_industry").on(table.industry),
-  ],
-);
-
-// Client-Contact junction table (many-to-many)
-export const clientContacts = pgTable(
-  "client_contacts",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    clientId: varchar("client_id")
-      .notNull()
-      .references(() => clients.id, { onDelete: "cascade" }),
-    contactId: varchar("contact_id")
-      .notNull()
-      .references(() => contacts.id, { onDelete: "cascade" }),
-    isActive: boolean("is_active").default(true).notNull(),
-    createdAt: timestamp("created_at").defaultNow(),
-  },
-  (table) => [
-    unique("unique_client_contact").on(table.clientId, table.contactId),
-    index("idx_client_contacts_client").on(table.clientId),
-    index("idx_client_contacts_contact").on(table.contactId),
-  ],
-);
-
-// Deal location type for JSON storage
-export interface DealLocation {
-  city: string;
-  region: string;
-  displayName: string;
-  placeId?: string;
-}
-
-// Deals table
-export const deals = pgTable(
-  "deals",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    status: varchar("status", { length: 20 }).default("Inquiry").notNull(),
-    ownerId: varchar("owner_id").references(() => users.id),
-    clientId: varchar("client_id")
-      .notNull()
-      .references(() => clients.id),
-    primaryContactId: varchar("primary_contact_id").references(() => contacts.id),
-    maxBudget: integer("max_budget"), // Stored in thousands (50 = $50,000)
-    dateType: varchar("date_type", { length: 20 }), // Single Day, Multi Day, Unconfirmed
-    primaryDate: varchar("primary_date", { length: 10 }), // YYYY-MM-DD format
-    isDateFlexible: boolean("is_date_flexible").default(false),
-    alternativeDates: jsonb("alternative_dates").$type<string[]>().default([]), // Array of YYYY-MM-DD
-    numberOfDays: integer("number_of_days"), // For Multi Day events, must be >= 2
-    estimatedMonths: jsonb("estimated_months").$type<string[]>().default([]), // Array of YYYY-MM for Unconfirmed
-    eventPurpose: varchar("event_purpose", { length: 50 }),
-    eventFormat: varchar("event_format", { length: 50 }),
-    services: varchar("services", { length: 50 }),
-    guestCount: integer("guest_count"),
-    locations: jsonb("locations").$type<DealLocation[]>().default([]),
-    eventConcept: text("event_concept"),
-    notes: text("notes"),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-  },
-  (table) => [
-    index("idx_deals_status").on(table.status),
-    index("idx_deals_client").on(table.clientId),
-    index("idx_deals_owner").on(table.ownerId),
-    index("idx_deals_primary_date").on(table.primaryDate),
-  ],
-);
-
-// Relations for clients
-export const clientsRelations = relations(clients, ({ many }) => ({
-  deals: many(deals),
-  clientContacts: many(clientContacts),
-}));
-
-// Relations for client_contacts
-export const clientContactsRelations = relations(clientContacts, ({ one }) => ({
-  client: one(clients, {
-    fields: [clientContacts.clientId],
-    references: [clients.id],
-  }),
-  contact: one(contacts, {
-    fields: [clientContacts.contactId],
-    references: [contacts.id],
-  }),
-}));
-
-// Relations for deals
-export const dealsRelations = relations(deals, ({ one }) => ({
-  client: one(clients, {
-    fields: [deals.clientId],
-    references: [clients.id],
-  }),
-  owner: one(users, {
-    fields: [deals.ownerId],
-    references: [users.id],
-  }),
-  primaryContact: one(contacts, {
-    fields: [deals.primaryContactId],
-    references: [contacts.id],
-  }),
-}));
-
-// Types
-export type Client = typeof clients.$inferSelect;
-export type InsertClient = typeof clients.$inferInsert;
-export type ClientContact = typeof clientContacts.$inferSelect;
-export type InsertClientContact = typeof clientContacts.$inferInsert;
-export type Deal = typeof deals.$inferSelect;
-export type InsertDeal = typeof deals.$inferInsert;
-
-// Extended types with relations
-export type ClientWithRelations = Client & {
-  deals?: Deal[];
-  clientContacts?: (ClientContact & { contact: Contact })[];
-};
-
-export type DealWithRelations = Deal & {
-  client: Client;
-  owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
-  primaryContact?: Contact | null;
-};
-
-// Zod schemas for validation
-export const insertClientSchema = createInsertSchema(clients).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  name: z.string().min(1, "Name is required").max(255),
-  industry: z.string().max(255).optional().nullable(),
-  domain: z.string().max(255).optional().nullable(),
-  about: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
-});
-
-export const updateClientSchema = insertClientSchema.partial();
-
-export const insertDealSchema = createInsertSchema(deals).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  status: z.enum(dealStatuses).default("Inquiry"),
-  ownerId: z.string().optional().nullable(),
-  clientId: z.string().min(1, "Client is required"),
-  primaryContactId: z.string().optional().nullable(),
-  maxBudget: z.number().int().min(0).optional().nullable(),
-  dateType: z.enum(dealDateTypes).optional().nullable(),
-  primaryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().nullable(),
-  isDateFlexible: z.boolean().default(false),
-  alternativeDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().nullable(),
-  numberOfDays: z.number().int().min(1).optional().nullable(),
-  estimatedMonths: z.array(z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")).optional().nullable(),
-  eventPurpose: z.string().max(50).optional().nullable(),
-  eventFormat: z.string().max(50).optional().nullable(),
-  services: z.string().max(50).optional().nullable(),
-  guestCount: z.number().int().min(1).optional().nullable(),
-  locations: z.array(z.object({
-    city: z.string(),
-    region: z.string(),
-    displayName: z.string(),
-    placeId: z.string().optional(),
-  })).optional().nullable(),
-  eventConcept: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
-});
-
-export const updateDealSchema = insertDealSchema.partial();
-
-export const insertClientContactSchema = createInsertSchema(clientContacts).omit({
-  id: true,
-  createdAt: true,
-}).extend({
-  clientId: z.string().min(1, "Client is required"),
-  contactId: z.string().min(1, "Contact is required"),
-  isActive: z.boolean().default(true),
-});
-
-export type CreateClient = z.infer<typeof insertClientSchema>;
-export type UpdateClient = z.infer<typeof updateClientSchema>;
-export type CreateDeal = z.infer<typeof insertDealSchema>;
-export type UpdateDeal = z.infer<typeof updateDealSchema>;
-export type CreateClientContact = z.infer<typeof insertClientContactSchema>;
