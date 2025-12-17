@@ -1,14 +1,17 @@
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   Briefcase,
+  Building2,
   Calendar,
+  Loader2,
   MapPin,
   Mail,
   Phone,
@@ -16,9 +19,10 @@ import {
   User,
 } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
-import type { Contact } from "@shared/schema";
+import type { Contact, Client } from "@shared/schema";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { ClientLinkSearch } from "@/components/client-link-search";
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +32,25 @@ export default function ContactDetail() {
     queryKey: ["/api/contacts", id],
     enabled: !!id,
   });
+
+  const { data: linkedClients = [], isLoading: isLoadingClients } = useQuery<Client[]>({
+    queryKey: ["/api/contacts", id, "clients"],
+    enabled: !!id,
+  });
+
+  const [localLinkedClients, setLocalLinkedClients] = useState<Client[]>([]);
+  
+  useEffect(() => {
+    setLocalLinkedClients(linkedClients);
+  }, [linkedClients]);
+
+  const handleLinkClient = (client: Client) => {
+    setLocalLinkedClients(prev => [...prev, client]);
+  };
+
+  const handleUnlinkClient = (clientId: string) => {
+    setLocalLinkedClients(prev => prev.filter(c => c.id !== clientId));
+  };
 
   usePageTitle(contact ? `${contact.firstName} ${contact.lastName}` : "Contact");
 
@@ -262,6 +285,34 @@ export default function ContactDetail() {
                 </CardContent>
               </Card>
             )}
+
+            <Card className="border-card-border">
+              <CardHeader>
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Clients
+                  </CardTitle>
+                  <CardDescription>
+                    {localLinkedClients.length} client{localLinkedClients.length !== 1 ? "s" : ""} linked to this contact
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingClients ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <ClientLinkSearch
+                    contactId={id!}
+                    linkedClients={localLinkedClients}
+                    onLink={handleLinkClient}
+                    onUnlink={handleUnlinkClient}
+                  />
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
