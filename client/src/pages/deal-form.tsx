@@ -381,14 +381,17 @@ export default function DealForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Owner</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        value={field.value || "__none__"}
+                      >
                         <FormControl>
                           <SelectTrigger data-testid="select-deal-owner">
                             <SelectValue placeholder="Select owner..." />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No owner</SelectItem>
+                          <SelectItem value="__none__">No owner</SelectItem>
                           {users.filter(u => u.isActive).map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.firstName} {user.lastName}
