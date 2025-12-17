@@ -95,6 +95,11 @@ export default function DealDetail() {
     ? [deal.createdBy.firstName, deal.createdBy.lastName].filter(Boolean).join(" ") || "Unknown"
     : "Unknown";
   const createdByInitials = createdByName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  
+  const ownerName = deal.owner 
+    ? [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ") || "Unassigned"
+    : null;
+  const ownerInitials = ownerName ? ownerName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "";
 
   return (
     <PageLayout
@@ -221,6 +226,30 @@ export default function DealDetail() {
                   </div>
                 )}
               </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Owner
+                </h3>
+                
+                {ownerName ? (
+                  <div className="flex items-center gap-3" data-testid="deal-owner">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={deal.owner?.profileImageUrl || undefined} alt={ownerName} />
+                      <AvatarFallback>{ownerInitials}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{ownerName}</p>
+                      <p className="text-sm text-muted-foreground">Deal Owner</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No owner assigned</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Locations Section */}
@@ -307,6 +336,21 @@ export default function DealDetail() {
                         {service}
                       </Badge>
                     ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Concept Section */}
+            {deal.concept && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Concept
+                  </h3>
+                  <div className="whitespace-pre-wrap text-sm" data-testid="deal-concept">
+                    {deal.concept}
                   </div>
                 </div>
               </>

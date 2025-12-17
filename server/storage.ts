@@ -154,7 +154,8 @@ import {
   type UpdateClient,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray, alias } from "drizzle-orm";
+import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { randomBytes } from "crypto";
 
 export interface AuditLogFilters {
