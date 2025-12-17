@@ -36,8 +36,32 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const currentYear = new Date().getFullYear();
-const YEARS = Array.from({ length: 5 }, (_, i) => currentYear + i);
+function getNext12Months(): { month: number; year: number; label: string }[] {
+  const now = new Date();
+  const result = [];
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    result.push({
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      label: `${MONTHS[date.getMonth()]} ${date.getFullYear()}`,
+    });
+  }
+  return result;
+}
+
+function getEndMonthOptions(startMonth: number, startYear: number): { month: number; year: number; label: string }[] {
+  const result = [];
+  for (let i = 0; i < 5; i++) {
+    const date = new Date(startYear, startMonth + i, 1);
+    result.push({
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      label: `${MONTHS[date.getMonth()]} ${date.getFullYear()}`,
+    });
+  }
+  return result;
+}
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9);
@@ -117,14 +141,15 @@ function EventCard({
     if (mode === "specific") {
       newSchedules = [{ id: generateId(), kind: "primary", startDate: undefined }];
     } else if (mode === "flexible") {
-      const now = new Date();
+      const startOptions = getNext12Months();
+      const firstStart = startOptions[0];
       newSchedules = [{
         id: generateId(),
         kind: "range",
-        rangeStartMonth: now.getMonth(),
-        rangeStartYear: now.getFullYear(),
-        rangeEndMonth: now.getMonth(),
-        rangeEndYear: now.getFullYear(),
+        rangeStartMonth: firstStart.month,
+        rangeStartYear: firstStart.year,
+        rangeEndMonth: firstStart.month,
+        rangeEndYear: firstStart.year,
       }];
     }
     
@@ -332,109 +357,98 @@ function EventCard({
               </div>
             )}
 
-            {event.scheduleMode === "flexible" && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Window Start</Label>
-                    <div className="flex gap-2">
+            {event.scheduleMode === "flexible" && (() => {
+              const rangeSchedule = getRangeSchedule();
+              const startMonthOptions = getNext12Months();
+              const endMonthOptions = rangeSchedule?.rangeStartMonth !== undefined && rangeSchedule?.rangeStartYear !== undefined
+                ? getEndMonthOptions(rangeSchedule.rangeStartMonth, rangeSchedule.rangeStartYear)
+                : [];
+              
+              const startValue = rangeSchedule?.rangeStartMonth !== undefined && rangeSchedule?.rangeStartYear !== undefined
+                ? `${rangeSchedule.rangeStartMonth}-${rangeSchedule.rangeStartYear}`
+                : undefined;
+              
+              const endValue = rangeSchedule?.rangeEndMonth !== undefined && rangeSchedule?.rangeEndYear !== undefined
+                ? `${rangeSchedule.rangeEndMonth}-${rangeSchedule.rangeEndYear}`
+                : undefined;
+
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Window Start</Label>
                       <Select
-                        value={getRangeSchedule()?.rangeStartMonth?.toString()}
+                        value={startValue}
                         onValueChange={(v) => {
+                          const [month, year] = v.split("-").map(Number);
                           const schedule = getRangeSchedule();
                           if (schedule) {
-                            updateSchedule(schedule.id, { rangeStartMonth: parseInt(v) });
+                            const newEndOptions = getEndMonthOptions(month, year);
+                            updateSchedule(schedule.id, { 
+                              rangeStartMonth: month, 
+                              rangeStartYear: year,
+                              rangeEndMonth: newEndOptions[0].month,
+                              rangeEndYear: newEndOptions[0].year,
+                            });
                           }
                         }}
                       >
-                        <SelectTrigger className="flex-1" data-testid={`select-start-month-${event.id}`}>
-                          <SelectValue placeholder="Month" />
+                        <SelectTrigger data-testid={`select-start-month-${event.id}`}>
+                          <SelectValue placeholder="Select start month" />
                         </SelectTrigger>
                         <SelectContent>
-                          {MONTHS.map((month, i) => (
-                            <SelectItem key={i} value={i.toString()}>{month}</SelectItem>
+                          {startMonthOptions.map((opt) => (
+                            <SelectItem key={`${opt.month}-${opt.year}`} value={`${opt.month}-${opt.year}`}>
+                              {opt.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Window End</Label>
                       <Select
-                        value={getRangeSchedule()?.rangeStartYear?.toString()}
+                        value={endValue}
                         onValueChange={(v) => {
+                          const [month, year] = v.split("-").map(Number);
                           const schedule = getRangeSchedule();
                           if (schedule) {
-                            updateSchedule(schedule.id, { rangeStartYear: parseInt(v) });
+                            updateSchedule(schedule.id, { rangeEndMonth: month, rangeEndYear: year });
                           }
                         }}
+                        disabled={!startValue}
                       >
-                        <SelectTrigger className="w-28" data-testid={`select-start-year-${event.id}`}>
-                          <SelectValue placeholder="Year" />
+                        <SelectTrigger data-testid={`select-end-month-${event.id}`}>
+                          <SelectValue placeholder={startValue ? "Select end month" : "Select start first"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {YEARS.map((year) => (
-                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                          {endMonthOptions.map((opt) => (
+                            <SelectItem key={`${opt.month}-${opt.year}`} value={`${opt.month}-${opt.year}`}>
+                              {opt.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Window End</Label>
-                    <div className="flex gap-2">
-                      <Select
-                        value={getRangeSchedule()?.rangeEndMonth?.toString()}
-                        onValueChange={(v) => {
-                          const schedule = getRangeSchedule();
-                          if (schedule) {
-                            updateSchedule(schedule.id, { rangeEndMonth: parseInt(v) });
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="flex-1" data-testid={`select-end-month-${event.id}`}>
-                          <SelectValue placeholder="Month" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {MONTHS.map((month, i) => (
-                            <SelectItem key={i} value={i.toString()}>{month}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={getRangeSchedule()?.rangeEndYear?.toString()}
-                        onValueChange={(v) => {
-                          const schedule = getRangeSchedule();
-                          if (schedule) {
-                            updateSchedule(schedule.id, { rangeEndYear: parseInt(v) });
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-28" data-testid={`select-end-year-${event.id}`}>
-                          <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {YEARS.map((year) => (
-                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  {rangeSchedule && rangeSchedule.rangeStartMonth !== undefined && rangeSchedule.rangeEndMonth !== undefined && (
+                    <p className="text-sm text-muted-foreground">
+                      {event.durationDays === 1 ? "Event date" : "Start date"} will be finalized within: {" "}
+                      <span className="font-medium">
+                        {formatMonthRange(
+                          rangeSchedule.rangeStartMonth,
+                          rangeSchedule.rangeStartYear!,
+                          rangeSchedule.rangeEndMonth,
+                          rangeSchedule.rangeEndYear!
+                        )}
+                      </span>
+                    </p>
+                  )}
                 </div>
-
-                {getRangeSchedule() && (
-                  <p className="text-sm text-muted-foreground">
-                    {event.durationDays === 1 ? "Event date" : "Start date"} will be finalized within: {" "}
-                    <span className="font-medium">
-                      {formatMonthRange(
-                        getRangeSchedule()!.rangeStartMonth!,
-                        getRangeSchedule()!.rangeStartYear!,
-                        getRangeSchedule()!.rangeEndMonth!,
-                        getRangeSchedule()!.rangeEndYear!
-                      )}
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
+              );
+            })()}
 
             <div className="flex justify-end pt-4 border-t">
               <Button 
