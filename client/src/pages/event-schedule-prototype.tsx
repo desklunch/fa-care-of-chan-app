@@ -132,6 +132,50 @@ function formatMonthRange(
   return `${MONTHS[startMonth]} ${startYear} – ${MONTHS[endMonth]} ${endYear}`;
 }
 
+function getEventSummary(event: DealEvent): string | null {
+  if (event.scheduleMode === "specific") {
+    const primary = event.schedules.find((s) => s.kind === "primary");
+    const alternatives = event.schedules.filter((s) => s.kind === "alternative");
+    
+    if (!primary?.startDate) {
+      return null;
+    }
+    
+    const startDate = primary.startDate;
+    const altCount = alternatives.length;
+    const altText = altCount > 0 ? ` [${altCount} Alternate Date${altCount > 1 ? "s" : ""}]` : "";
+    
+    if (event.durationDays === 1) {
+      return `${format(startDate, "EEE MMM d, yyyy")}${altText}`;
+    } else {
+      const endDate = addDays(startDate, event.durationDays - 1);
+      const dateRange = startDate.getMonth() === endDate.getMonth()
+        ? `${format(startDate, "EEE MMM d")} – ${format(endDate, "d, yyyy")}`
+        : `${format(startDate, "EEE MMM d")} – ${format(endDate, "MMM d, yyyy")}`;
+      return `${dateRange} (${event.durationDays} days)${altText}`;
+    }
+  } else {
+    const range = event.schedules.find((s) => s.kind === "range");
+    if (
+      range?.rangeStartMonth === undefined ||
+      range?.rangeStartYear === undefined ||
+      range?.rangeEndMonth === undefined ||
+      range?.rangeEndYear === undefined
+    ) {
+      return null;
+    }
+    
+    const dayText = event.durationDays === 1 ? "1 day" : `${event.durationDays} days`;
+    const monthRange = formatMonthRange(
+      range.rangeStartMonth,
+      range.rangeStartYear,
+      range.rangeEndMonth,
+      range.rangeEndYear,
+    );
+    return `${dayText} in ${monthRange}`;
+  }
+}
+
 function EventRow({
   event,
   onUpdate,
@@ -236,11 +280,19 @@ function EventRow({
       ? `${rangeSchedule.rangeEndMonth}-${rangeSchedule.rangeEndYear}`
       : undefined;
 
+  const summary = getEventSummary(event);
+
   return (
     <div
       className="border rounded-md p-3 space-y-2"
       data-testid={`event-card-${event.id}`}
     >
+      {summary && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid={`text-summary-${event.id}`}>
+          <CalendarClock className="h-4 w-4 shrink-0" />
+          <span>{summary}</span>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <div className="flex gap-4 w-full">
           <div className="space-y-1 w-full">
