@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin, CalendarClock, Briefcase, UserCircle, Mail, Phone, DollarSign } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
+import { CommentList } from "@/components/ui/comments";
 import type { DealWithRelations, DealStatus, DealLocation, DealEvent, DealService } from "@shared/schema";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
@@ -143,7 +145,14 @@ export default function DealDetail() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Separator />
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList>
+                <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+                <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="mt-6 space-y-6">
+                <Separator />
             
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4">
@@ -394,20 +403,30 @@ export default function DealDetail() {
               </>
             )}
 
-            {/* Concept Section */}
-            {deal.concept && (
-              <>
-                <Separator />
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                    Concept
-                  </h3>
-                  <div className="whitespace-pre-wrap text-sm" data-testid="deal-concept">
-                    {deal.concept}
-                  </div>
-                </div>
-              </>
-            )}
+                {/* Concept Section */}
+                {deal.concept && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Concept
+                      </h3>
+                      <div className="whitespace-pre-wrap text-sm" data-testid="deal-concept">
+                        {deal.concept}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </TabsContent>
+
+              <TabsContent value="comments" className="mt-6">
+                <CommentList 
+                  entityType="deal" 
+                  entityId={id} 
+                  currentUser={user || undefined}
+                />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
