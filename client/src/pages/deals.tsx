@@ -8,7 +8,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "status", "createdBy", "createdAt"];
+const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "eventSchedule", "status", "createdBy", "createdAt"];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
