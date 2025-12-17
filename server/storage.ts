@@ -29,6 +29,9 @@ import {
   outreachTokens,
   formResponses,
   comments,
+  clients,
+  clientContacts,
+  deals,
   type User,
   type UpsertUser,
   type Invite,
@@ -141,6 +144,17 @@ import {
   type UpdateAppRelease,
   type CreateAppReleaseChange,
   type ReleaseStatus,
+  type Client,
+  type CreateClient,
+  type UpdateClient,
+  type ClientWithRelations,
+  type ClientContact,
+  type CreateClientContact,
+  type Deal,
+  type CreateDeal,
+  type UpdateDeal,
+  type DealWithRelations,
+  type DealStatus,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -422,6 +436,28 @@ export interface IStorage {
   getCompletedFeaturesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; completedAt: Date | null }[]>;
   getFixedIssuesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; fixedAt: Date | null }[]>;
   getLatestReleasedVersion(): Promise<AppRelease | undefined>;
+  
+  // Client operations
+  getClients(): Promise<Client[]>;
+  getClientById(id: string): Promise<Client | undefined>;
+  getClientByIdWithRelations(id: string): Promise<ClientWithRelations | undefined>;
+  createClient(data: CreateClient): Promise<Client>;
+  updateClient(id: string, data: UpdateClient): Promise<Client | undefined>;
+  deleteClient(id: string): Promise<void>;
+  
+  // Client-Contact operations
+  getClientContacts(clientId: string): Promise<(ClientContact & { contact: Contact })[]>;
+  addContactToClient(clientId: string, contactId: string): Promise<ClientContact>;
+  removeContactFromClient(clientId: string, contactId: string): Promise<void>;
+  setClientContactActive(clientId: string, contactId: string, isActive: boolean): Promise<void>;
+  getContactsForClient(clientId: string): Promise<Contact[]>;
+  
+  // Deal operations
+  getDeals(options?: { status?: DealStatus[]; clientId?: string; ownerId?: string }): Promise<DealWithRelations[]>;
+  getDealById(id: string): Promise<DealWithRelations | undefined>;
+  createDeal(data: CreateDeal): Promise<Deal>;
+  updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
+  deleteDeal(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3443,6 +3479,225 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(appReleases.releaseDate))
       .limit(1);
     return release;
+  }
+
+  // Client operations
+  async getClients(): Promise<Client[]> {
+    return db.select().from(clients).orderBy(asc(clients.name));
+  }
+
+  async getClientById(id: string): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    return client;
+  }
+
+  async getClientByIdWithRelations(id: string): Promise<ClientWithRelations | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    if (!client) return undefined;
+
+    const clientDeals = await db
+      .select()
+      .from(deals)
+      .where(eq(deals.clientId, id))
+      .orderBy(desc(deals.createdAt));
+
+    const clientContactLinks = await db
+      .select({
+        id: clientContacts.id,
+        clientId: clientContacts.clientId,
+        contactId: clientContacts.contactId,
+        isActive: clientContacts.isActive,
+        createdAt: clientContacts.createdAt,
+        contact: contacts,
+      })
+      .from(clientContacts)
+      .innerJoin(contacts, eq(clientContacts.contactId, contacts.id))
+      .where(eq(clientContacts.clientId, id));
+
+    return {
+      ...client,
+      deals: clientDeals,
+      clientContacts: clientContactLinks,
+    };
+  }
+
+  async createClient(data: CreateClient): Promise<Client> {
+    const [client] = await db.insert(clients).values(data).returning();
+    return client;
+  }
+
+  async updateClient(id: string, data: UpdateClient): Promise<Client | undefined> {
+    const [client] = await db
+      .update(clients)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(clients.id, id))
+      .returning();
+    return client;
+  }
+
+  async deleteClient(id: string): Promise<void> {
+    await db.delete(clients).where(eq(clients.id, id));
+  }
+
+  // Client-Contact operations
+  async getClientContacts(clientId: string): Promise<(ClientContact & { contact: Contact })[]> {
+    const results = await db
+      .select({
+        id: clientContacts.id,
+        clientId: clientContacts.clientId,
+        contactId: clientContacts.contactId,
+        isActive: clientContacts.isActive,
+        createdAt: clientContacts.createdAt,
+        contact: contacts,
+      })
+      .from(clientContacts)
+      .innerJoin(contacts, eq(clientContacts.contactId, contacts.id))
+      .where(eq(clientContacts.clientId, clientId));
+    return results;
+  }
+
+  async addContactToClient(clientId: string, contactId: string): Promise<ClientContact> {
+    const [link] = await db
+      .insert(clientContacts)
+      .values({ clientId, contactId, isActive: true })
+      .onConflictDoUpdate({
+        target: [clientContacts.clientId, clientContacts.contactId],
+        set: { isActive: true },
+      })
+      .returning();
+    return link;
+  }
+
+  async removeContactFromClient(clientId: string, contactId: string): Promise<void> {
+    await db
+      .delete(clientContacts)
+      .where(and(eq(clientContacts.clientId, clientId), eq(clientContacts.contactId, contactId)));
+  }
+
+  async setClientContactActive(clientId: string, contactId: string, isActive: boolean): Promise<void> {
+    await db
+      .update(clientContacts)
+      .set({ isActive })
+      .where(and(eq(clientContacts.clientId, clientId), eq(clientContacts.contactId, contactId)));
+  }
+
+  async getContactsForClient(clientId: string): Promise<Contact[]> {
+    const results = await db
+      .select({ contact: contacts })
+      .from(clientContacts)
+      .innerJoin(contacts, eq(clientContacts.contactId, contacts.id))
+      .where(and(eq(clientContacts.clientId, clientId), eq(clientContacts.isActive, true)));
+    return results.map(r => r.contact);
+  }
+
+  // Deal operations
+  async getDeals(options?: { status?: DealStatus[]; clientId?: string; ownerId?: string }): Promise<DealWithRelations[]> {
+    let conditions = [];
+    
+    if (options?.status && options.status.length > 0) {
+      conditions.push(inArray(deals.status, options.status));
+    }
+    if (options?.clientId) {
+      conditions.push(eq(deals.clientId, options.clientId));
+    }
+    if (options?.ownerId) {
+      conditions.push(eq(deals.ownerId, options.ownerId));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const dealsList = await db
+      .select()
+      .from(deals)
+      .where(whereClause)
+      .orderBy(desc(deals.createdAt));
+
+    const dealsWithRelations: DealWithRelations[] = [];
+    
+    for (const deal of dealsList) {
+      const [client] = await db.select().from(clients).where(eq(clients.id, deal.clientId));
+      
+      let owner = null;
+      if (deal.ownerId) {
+        const [ownerData] = await db
+          .select({
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          })
+          .from(users)
+          .where(eq(users.id, deal.ownerId));
+        owner = ownerData || null;
+      }
+      
+      let primaryContact = null;
+      if (deal.primaryContactId) {
+        const [contactData] = await db.select().from(contacts).where(eq(contacts.id, deal.primaryContactId));
+        primaryContact = contactData || null;
+      }
+      
+      dealsWithRelations.push({
+        ...deal,
+        client,
+        owner,
+        primaryContact,
+      });
+    }
+    
+    return dealsWithRelations;
+  }
+
+  async getDealById(id: string): Promise<DealWithRelations | undefined> {
+    const [deal] = await db.select().from(deals).where(eq(deals.id, id));
+    if (!deal) return undefined;
+
+    const [client] = await db.select().from(clients).where(eq(clients.id, deal.clientId));
+    
+    let owner = null;
+    if (deal.ownerId) {
+      const [ownerData] = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(users)
+        .where(eq(users.id, deal.ownerId));
+      owner = ownerData || null;
+    }
+    
+    let primaryContact = null;
+    if (deal.primaryContactId) {
+      const [contactData] = await db.select().from(contacts).where(eq(contacts.id, deal.primaryContactId));
+      primaryContact = contactData || null;
+    }
+
+    return {
+      ...deal,
+      client,
+      owner,
+      primaryContact,
+    };
+  }
+
+  async createDeal(data: CreateDeal): Promise<Deal> {
+    const [deal] = await db.insert(deals).values(data).returning();
+    return deal;
+  }
+
+  async updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined> {
+    const [deal] = await db
+      .update(deals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(deals.id, id))
+      .returning();
+    return deal;
+  }
+
+  async deleteDeal(id: string): Promise<void> {
+    await db.delete(deals).where(eq(deals.id, id));
   }
 }
 
