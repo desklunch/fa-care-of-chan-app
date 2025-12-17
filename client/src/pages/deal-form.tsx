@@ -67,6 +67,7 @@ export default function DealForm() {
   });
 
   const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const { data: clientContacts } = useQuery<(ClientContact & { contact: Contact })[]>({
     queryKey: ["/api/clients", selectedClientId, "contacts"],
@@ -108,6 +109,7 @@ export default function DealForm() {
 
   useEffect(() => {
     if (isEditMode && existingDeal) {
+      setSelectedClientId(existingDeal.clientId);
       form.reset({
         status: existingDeal.status as any,
         ownerId: existingDeal.ownerId,
@@ -128,7 +130,9 @@ export default function DealForm() {
         eventConcept: existingDeal.eventConcept || "",
         notes: existingDeal.notes || "",
       });
-      setSelectedClientId(existingDeal.clientId);
+      setInitialLoadComplete(true);
+    } else if (!isEditMode) {
+      setInitialLoadComplete(true);
     }
   }, [isEditMode, existingDeal, form]);
 
@@ -136,11 +140,11 @@ export default function DealForm() {
   const watchClientId = form.watch("clientId");
 
   useEffect(() => {
-    if (watchClientId && watchClientId !== selectedClientId) {
+    if (initialLoadComplete && watchClientId && watchClientId !== selectedClientId) {
       setSelectedClientId(watchClientId);
       form.setValue("primaryContactId", null);
     }
-  }, [watchClientId, selectedClientId, form]);
+  }, [watchClientId, selectedClientId, form, initialLoadComplete]);
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
