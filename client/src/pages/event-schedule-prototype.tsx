@@ -132,7 +132,12 @@ function formatMonthRange(
   return `${MONTHS[startMonth]} ${startYear} – ${MONTHS[endMonth]} ${endYear}`;
 }
 
-function getEventSummary(event: DealEvent): string | null {
+interface EventSummary {
+  text: string;
+  altCount: number;
+}
+
+function getEventSummary(event: DealEvent): EventSummary | null {
   if (event.scheduleMode === "specific") {
     const primary = event.schedules.find((s) => s.kind === "primary");
     const alternatives = event.schedules.filter((s) => s.kind === "alternative");
@@ -143,16 +148,21 @@ function getEventSummary(event: DealEvent): string | null {
     
     const startDate = primary.startDate;
     const altCount = alternatives.length;
-    const altText = altCount > 0 ? ` (${altCount} alt date${altCount > 1 ? "s" : ""})` : "";
     
     if (event.durationDays === 1) {
-      return `${format(startDate, "EEE MMM d, yyyy")}${altText}`;
+      return {
+        text: format(startDate, "EEE MMM d, yyyy"),
+        altCount,
+      };
     } else {
       const endDate = addDays(startDate, event.durationDays - 1);
       const dateRange = startDate.getMonth() === endDate.getMonth()
         ? `${format(startDate, "EEE MMM d")} – ${format(endDate, "d, yyyy")}`
         : `${format(startDate, "EEE MMM d")} – ${format(endDate, "MMM d, yyyy")}`;
-      return `${event.durationDays} days, ${dateRange} ${altText}`;
+      return {
+        text: `${event.durationDays} days, ${dateRange}`,
+        altCount,
+      };
     }
   } else {
     const range = event.schedules.find((s) => s.kind === "range");
@@ -172,7 +182,10 @@ function getEventSummary(event: DealEvent): string | null {
       range.rangeEndMonth,
       range.rangeEndYear,
     );
-    return `${dayText} in ${monthRange}`;
+    return {
+      text: `${dayText} in ${monthRange}`,
+      altCount: 0,
+    };
   }
 }
 
@@ -288,9 +301,14 @@ function EventRow({
       data-testid={`event-card-${event.id}`}
     >
       <div className="w-full flex items-center justify-between pb-2 border-b">
-        <div className="flex items-center gap-2 text-sm " data-testid={`text-summary-${event.id}`}>
+        <div className="flex items-center gap-2 text-sm" data-testid={`text-summary-${event.id}`}>
           <CalendarClock className="h-4 w-4 shrink-0" />
-          <span>{summary ? summary : "Please provide date requirements below"}</span>
+          <span>{summary ? summary.text : "Please provide date requirements below"}</span>
+          {summary && summary.altCount > 0 && (
+            <Badge variant="secondary" className="text-xs px-1.5 py-0">
+              +{summary.altCount} alt{summary.altCount > 1 ? "s" : ""}
+            </Badge>
+          )}
         </div>
         <Button
           type="button"
