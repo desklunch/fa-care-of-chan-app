@@ -704,6 +704,20 @@ export async function registerRoutes(
         };
       }
 
+      // Auto-manage completed_at based on status changes
+      if (updateData.status !== undefined) {
+        const wasComplete = feature.status === "complete";
+        const isNowComplete = updateData.status === "complete";
+        
+        if (!wasComplete && isNowComplete) {
+          // Status changed to complete - set completed_at
+          (updateData as any).completedAt = new Date();
+        } else if (wasComplete && !isNowComplete) {
+          // Status changed from complete to something else - clear completed_at
+          (updateData as any).completedAt = null;
+        }
+      }
+
       const updated = await storage.updateFeature(req.params.id, updateData);
 
       const changes = getChangedFields(
