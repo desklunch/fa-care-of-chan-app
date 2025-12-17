@@ -18,6 +18,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertClientSchema, type Client, type CreateClient } from "@shared/schema";
+import { z } from "zod";
+
+const clientFormSchema = insertClientSchema.extend({
+  website: z.string().optional().refine(
+    (val) => !val || val === "" || /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(val),
+    { message: "Please enter a valid URL (e.g., https://example.com)" }
+  ),
+});
 import { Loader2 } from "lucide-react";
 
 export default function ClientForm() {
@@ -34,7 +42,7 @@ export default function ClientForm() {
   usePageTitle(isEdit ? (client?.name || "Edit Client") : "New Client");
 
   const form = useForm<CreateClient>({
-    resolver: zodResolver(insertClientSchema),
+    resolver: zodResolver(clientFormSchema),
     defaultValues: {
       name: "",
       website: "",
