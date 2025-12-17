@@ -58,6 +58,7 @@ export default function DealForm() {
   const { toast } = useToast();
   const isEditing = Boolean(id);
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
+  const [initialClientId, setInitialClientId] = useState<string | null>(null);
 
   const { data: deal, isLoading: isLoadingDeal } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -108,14 +109,16 @@ export default function DealForm() {
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
       }
+      setInitialClientId(deal.clientId || null);
     }
   }, [deal, isEditing, form]);
 
   useEffect(() => {
-    if (!isEditing || (deal && watchedClientId !== deal.clientId)) {
+    if (initialClientId !== null && watchedClientId !== initialClientId) {
       form.setValue("primaryContactId", "");
+      setInitialClientId(watchedClientId);
     }
-  }, [watchedClientId, isEditing, deal, form]);
+  }, [watchedClientId, initialClientId, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: DealFormValues) => {
