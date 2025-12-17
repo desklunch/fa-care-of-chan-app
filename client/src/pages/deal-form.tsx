@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -69,6 +69,7 @@ export default function DealForm() {
 
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const initialClientIdRef = useRef<string | null>(null);
 
   const { data: clientContacts } = useQuery<(ClientContact & { contact: Contact })[]>({
     queryKey: ["/api/clients", selectedClientId, "contacts"],
@@ -110,6 +111,7 @@ export default function DealForm() {
 
   useEffect(() => {
     if (isEditMode && existingDeal) {
+      initialClientIdRef.current = existingDeal.clientId;
       setSelectedClientId(existingDeal.clientId);
       form.reset({
         status: existingDeal.status as any,
@@ -204,8 +206,16 @@ export default function DealForm() {
 
   useEffect(() => {
     if (initialLoadComplete && watchClientId && watchClientId !== selectedClientId) {
+      // Skip clearing primaryContactId if this is the initial load matching existing deal's client
+      const isInitialClientLoad = initialClientIdRef.current === watchClientId;
       setSelectedClientId(watchClientId);
-      form.setValue("primaryContactId", null);
+      if (!isInitialClientLoad) {
+        form.setValue("primaryContactId", null);
+      }
+      // Clear the ref after initial load is processed
+      if (isInitialClientLoad) {
+        initialClientIdRef.current = null;
+      }
     }
   }, [watchClientId, selectedClientId, form, initialLoadComplete]);
 
