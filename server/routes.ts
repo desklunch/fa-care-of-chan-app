@@ -5032,18 +5032,25 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         });
       }
 
+      // Sanitize data - convert empty strings to null for optional foreign keys
+      const sanitizedData = {
+        ...result.data,
+        primaryContactId: result.data.primaryContactId || null,
+        ownerId: result.data.ownerId || null,
+      };
+
       // If primaryContactId is set, validate it belongs to the client
-      if (result.data.primaryContactId) {
-        const clientContacts = await storage.getContactsForClient(result.data.clientId);
+      if (sanitizedData.primaryContactId) {
+        const clientContacts = await storage.getContactsForClient(sanitizedData.clientId);
         const contactIds = clientContacts.map(c => c.id);
-        if (!contactIds.includes(result.data.primaryContactId)) {
+        if (!contactIds.includes(sanitizedData.primaryContactId)) {
           return res.status(400).json({
             message: "Primary contact must be associated with the selected client",
           });
         }
       }
 
-      const deal = await storage.createDeal(result.data);
+      const deal = await storage.createDeal(sanitizedData);
 
       await logAuditEvent(req, {
         action: "create",
@@ -5081,19 +5088,26 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         return res.status(404).json({ message: "Deal not found" });
       }
 
+      // Sanitize data - convert empty strings to null for optional foreign keys
+      const sanitizedData = {
+        ...result.data,
+        primaryContactId: result.data.primaryContactId || null,
+        ownerId: result.data.ownerId || null,
+      };
+
       // If primaryContactId is being updated, validate it belongs to the client
-      const clientId = result.data.clientId || existingDeal.clientId;
-      if (result.data.primaryContactId) {
+      const clientId = sanitizedData.clientId || existingDeal.clientId;
+      if (sanitizedData.primaryContactId) {
         const clientContacts = await storage.getContactsForClient(clientId);
         const contactIds = clientContacts.map(c => c.id);
-        if (!contactIds.includes(result.data.primaryContactId)) {
+        if (!contactIds.includes(sanitizedData.primaryContactId)) {
           return res.status(400).json({
             message: "Primary contact must be associated with the selected client",
           });
         }
       }
 
-      const deal = await storage.updateDeal(req.params.id, result.data);
+      const deal = await storage.updateDeal(req.params.id, sanitizedData);
 
       await logAuditEvent(req, {
         action: "update",
