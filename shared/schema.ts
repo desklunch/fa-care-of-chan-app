@@ -1380,7 +1380,7 @@ export type InsertDeal = typeof deals.$inferInsert;
 // Deal with relations
 export type DealWithRelations = Deal & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
-  client?: Pick<Client, "id" | "name"> | null;
+  client?: Pick<Client, "id" | "name" | "industry"> | null;
 };
 
 // Deal schemas

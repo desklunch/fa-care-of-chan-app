@@ -3492,6 +3492,7 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
+          industry: clients.industry,
         },
       })
       .from(deals)
@@ -3526,6 +3527,7 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
+          industry: clients.industry,
         },
       })
       .from(deals)
@@ -3555,6 +3557,7 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
+          industry: clients.industry,
         },
       })
       .from(deals)
