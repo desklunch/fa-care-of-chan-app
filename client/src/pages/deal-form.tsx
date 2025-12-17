@@ -28,14 +28,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
+import { CitySearch } from "@/components/city-search";
 import { Loader2 } from "lucide-react";
-import type { DealWithRelations, DealStatus } from "@shared/schema";
-import { dealStatuses } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal } from "@shared/schema";
+import { dealStatuses, dealLocationSchema } from "@shared/schema";
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
   status: z.enum(dealStatuses).default("Inquiry"),
   clientId: z.string().min(1, "Client is required"),
+  locations: z.array(dealLocationSchema).default([]),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -60,6 +62,7 @@ export default function DealForm() {
       displayName: "",
       status: "Inquiry",
       clientId: "",
+      locations: [],
     },
   });
 
@@ -69,6 +72,7 @@ export default function DealForm() {
         displayName: deal.displayName,
         status: deal.status as DealStatus,
         clientId: deal.clientId || "",
+        locations: (deal.locations as DealLocation[]) || [],
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
@@ -215,6 +219,28 @@ export default function DealForm() {
                       </Select>
                       <FormDescription>
                         The current stage of this deal in your pipeline.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="locations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Locations</FormLabel>
+                      <FormControl>
+                        <CitySearch
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Search for a city..."
+                          data-testid="city-search"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The cities where this deal will take place.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

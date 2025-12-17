@@ -544,6 +544,17 @@ export const dealStatuses = [
 ] as const;
 export type DealStatus = (typeof dealStatuses)[number];
 
+// Deal location type for city assignments
+export interface DealLocation {
+  placeId: string;           // Google Place ID for deduplication
+  city: string;              // "Austin", "London"
+  state: string;             // "California", "England" (full name)
+  stateCode: string;         // "CA", "" (abbreviation, may be empty internationally)
+  country: string;           // "United States", "United Kingdom"
+  countryCode: string;       // "US", "GB"
+  displayName: string;       // Pre-formatted: "Austin, TX" or "London, United Kingdom"
+}
+
 // Deals for tracking sales pipeline
 export const deals = pgTable(
   "deals",
@@ -553,6 +564,7 @@ export const deals = pgTable(
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("Inquiry"),
     clientId: varchar("client_id").notNull(),
+    locations: jsonb("locations").$type<DealLocation[]>().default([]),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -1383,6 +1395,17 @@ export type DealWithRelations = Deal & {
   client?: Pick<Client, "id" | "name" | "industry"> | null;
 };
 
+// Deal location validation schema
+export const dealLocationSchema = z.object({
+  placeId: z.string(),
+  city: z.string(),
+  state: z.string(),
+  stateCode: z.string(),
+  country: z.string(),
+  countryCode: z.string(),
+  displayName: z.string(),
+});
+
 // Deal schemas
 export const insertDealSchema = createInsertSchema(deals).omit({
   id: true,
@@ -1394,12 +1417,14 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   displayName: z.string().min(1, "Display name is required").max(255),
   status: z.enum(dealStatuses).default("Inquiry"),
   clientId: z.string().min(1, "Client is required"),
+  locations: z.array(dealLocationSchema).default([]),
 });
 
 export const updateDealSchema = createInsertSchema(deals).pick({
   displayName: true,
   status: true,
   clientId: true,
+  locations: true,
 }).partial();
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;

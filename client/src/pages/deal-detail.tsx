@@ -22,8 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2 } from "lucide-react";
-import type { DealWithRelations, DealStatus } from "@shared/schema";
+import { Loader2, Pencil, Trash2, Calendar, User, Hash, Building2, MapPin } from "lucide-react";
+import type { DealWithRelations, DealStatus, DealLocation } from "@shared/schema";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
   "Inquiry": { variant: "outline" },
@@ -221,6 +221,31 @@ export default function DealDetail() {
                 )}
               </div>
             </div>
+
+            {/* Locations Section */}
+            {((deal.locations as DealLocation[]) || []).length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Locations
+                  </h3>
+                  <div className="flex flex-wrap gap-2" data-testid="deal-locations">
+                    {((deal.locations as DealLocation[]) || []).map((location) => (
+                      <Badge
+                        key={location.placeId}
+                        variant="secondary"
+                        className="gap-1"
+                        data-testid={`badge-location-${location.placeId}`}
+                      >
+                        <MapPin className="h-3 w-3" />
+                        {location.displayName}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

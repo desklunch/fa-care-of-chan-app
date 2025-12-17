@@ -7,7 +7,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "status", "createdBy", "createdAt"];
+const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "status", "createdBy", "createdAt"];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
@@ -51,6 +51,21 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 150,
       valueGetter: (params: { data: DealWithRelations }) => {
         return params.data?.client?.name || "";
+      },
+    },
+  },
+  {
+    id: "locations",
+    headerName: "Locations",
+    field: "locations",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const locations = params.data?.locations as Array<{ displayName: string }> | null;
+        if (!locations || locations.length === 0) return "";
+        return locations.map((loc) => loc.displayName).join(" | ");
       },
     },
   },
@@ -128,6 +143,10 @@ export default function Deals() {
           (deal) => `#${deal.dealNumber}`,
           "status",
           (deal) => deal.client?.name || "",
+          (deal) => {
+            const locations = deal.locations as Array<{ displayName: string }> | null;
+            return locations?.map((loc) => loc.displayName).join(" ") || "";
+          },
         ]}
         searchPlaceholder="Search deals..."
         onRowClick={(deal) => setLocation(`/deals/${deal.id}`)}

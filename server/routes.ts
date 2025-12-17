@@ -1411,6 +1411,109 @@ export async function registerRoutes(
     }
   });
 
+  // Google Places City Search - Search for cities only
+  app.post("/api/places/city-search", isAuthenticated, async (req, res) => {
+    try {
+      const { query } = req.body;
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ message: "Query is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      // Request only the fields needed for city information
+      const fieldMask = [
+        "places.id",
+        "places.displayName",
+        "places.formattedAddress",
+        "places.addressComponents",
+      ].join(",");
+
+      const response = await fetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
+          body: JSON.stringify({
+            textQuery: `${query} city`,
+            includedType: "locality",
+            maxResultCount: 10,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Google Places API error:", errorData);
+        throw new Error("Failed to fetch from Google Places API");
+      }
+
+      const data = await response.json();
+
+      // Transform the response to city format
+      const cities = (data.places || []).map((place: any) => {
+        let city = "";
+        let state = "";
+        let stateCode = "";
+        let country = "";
+        let countryCode = "";
+
+        if (place.addressComponents) {
+          for (const component of place.addressComponents) {
+            const types = component.types || [];
+            if (types.includes("locality")) {
+              city = component.longText || "";
+            } else if (types.includes("sublocality_level_1") && !city) {
+              city = component.longText || "";
+            } else if (types.includes("administrative_area_level_1")) {
+              state = component.longText || "";
+              stateCode = component.shortText || "";
+            } else if (types.includes("country")) {
+              country = component.longText || "";
+              countryCode = component.shortText || "";
+            }
+          }
+        }
+
+        // Use display name as city if locality not found
+        if (!city && place.displayName?.text) {
+          city = place.displayName.text;
+        }
+
+        // Format displayName: "City, StateCode" for US, "City, Country" for international
+        let displayName = city;
+        if (countryCode === "US" && stateCode) {
+          displayName = `${city}, ${stateCode}`;
+        } else if (country) {
+          displayName = `${city}, ${country}`;
+        }
+
+        return {
+          placeId: place.id || "",
+          city,
+          state,
+          stateCode,
+          country,
+          countryCode,
+          displayName,
+          formattedAddress: place.formattedAddress || "",
+        };
+      }).filter((c: any) => c.city); // Only return results with a city name
+
+      res.json({ cities });
+    } catch (error) {
+      console.error("Error in city search:", error);
+      res.status(500).json({ message: "Failed to search cities" });
+    }
+  });
+
   // Google Places Refresh - Re-fetch full place details by placeId
   app.post("/api/places/refresh", isAuthenticated, async (req, res) => {
     try {
