@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Plus, X } from "lucide-react";
+import { format, addMonths } from "date-fns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -138,6 +139,68 @@ export default function DealForm() {
 
   const watchDateType = form.watch("dateType");
   const watchClientId = form.watch("clientId");
+  const watchIsDateFlexible = form.watch("isDateFlexible");
+  const watchAlternativeDates = form.watch("alternativeDates");
+  const watchEstimatedMonths = form.watch("estimatedMonths");
+
+  const getNext12Months = () => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = addMonths(now, i);
+      months.push({
+        value: format(date, "yyyy-MM"),
+        label: format(date, "MMM yyyy"),
+      });
+    }
+    return months;
+  };
+
+  const next12Months = getNext12Months();
+
+  const handleMonthClick = (monthValue: string) => {
+    const currentMonths = watchEstimatedMonths || [];
+    const monthIndex = next12Months.findIndex(m => m.value === monthValue);
+    
+    if (currentMonths.length === 0) {
+      form.setValue("estimatedMonths", [monthValue]);
+    } else if (currentMonths.includes(monthValue)) {
+      const newMonths = currentMonths.filter((m: string) => m !== monthValue);
+      form.setValue("estimatedMonths", newMonths);
+    } else {
+      const selectedIndices = currentMonths.map((m: string) => 
+        next12Months.findIndex(nm => nm.value === m)
+      );
+      const minIndex = Math.min(...selectedIndices);
+      const maxIndex = Math.max(...selectedIndices);
+      
+      if (monthIndex < minIndex) {
+        const range = next12Months.slice(monthIndex, maxIndex + 1).map(m => m.value);
+        form.setValue("estimatedMonths", range);
+      } else if (monthIndex > maxIndex) {
+        const range = next12Months.slice(minIndex, monthIndex + 1).map(m => m.value);
+        form.setValue("estimatedMonths", range);
+      } else {
+        form.setValue("estimatedMonths", [monthValue]);
+      }
+    }
+  };
+
+  const addAlternativeDate = () => {
+    const currentDates = watchAlternativeDates || [];
+    form.setValue("alternativeDates", [...currentDates, ""]);
+  };
+
+  const removeAlternativeDate = (index: number) => {
+    const currentDates = watchAlternativeDates || [];
+    form.setValue("alternativeDates", currentDates.filter((_: string, i: number) => i !== index));
+  };
+
+  const updateAlternativeDate = (index: number, value: string) => {
+    const currentDates = [...(watchAlternativeDates || [])];
+    currentDates[index] = value;
+    form.setValue("alternativeDates", currentDates);
+  };
 
   useEffect(() => {
     if (initialLoadComplete && watchClientId && watchClientId !== selectedClientId) {
@@ -626,7 +689,99 @@ export default function DealForm() {
                         </FormItem>
                       )}
                     />
+
+                    {watchIsDateFlexible && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Alternative Dates</FormLabel>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addAlternativeDate}
+                            data-testid="button-add-alternative-date"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add Date
+                          </Button>
+                        </div>
+                        {(watchAlternativeDates || []).length === 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            No alternative dates added yet. Click "Add Date" to add one.
+                          </p>
+                        )}
+                        <div className="space-y-2">
+                          {(watchAlternativeDates || []).map((date: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Input
+                                type="date"
+                                value={date}
+                                onChange={(e) => updateAlternativeDate(index, e.target.value)}
+                                className="flex-1"
+                                data-testid={`input-alternative-date-${index}`}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeAlternativeDate(index)}
+                                data-testid={`button-remove-alternative-date-${index}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
+                )}
+
+                {watchDateType === "Unconfirmed" && (
+                  <div className="space-y-3">
+                    <FormLabel>Estimated Months</FormLabel>
+                    <FormDescription>
+                      Select a single month or a range of sequential months when the event might occur.
+                    </FormDescription>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                      {next12Months.map((month) => {
+                        const isSelected = (watchEstimatedMonths || []).includes(month.value);
+                        return (
+                          <Button
+                            key={month.value}
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleMonthClick(month.value)}
+                            className="w-full"
+                            data-testid={`button-month-${month.value}`}
+                          >
+                            {month.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    {(watchEstimatedMonths || []).length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Selected:</span>
+                        <span className="text-sm font-medium">
+                          {(watchEstimatedMonths || []).length === 1
+                            ? next12Months.find(m => m.value === (watchEstimatedMonths || [])[0])?.label
+                            : `${next12Months.find(m => m.value === (watchEstimatedMonths || [])[0])?.label} - ${next12Months.find(m => m.value === (watchEstimatedMonths || [])[(watchEstimatedMonths || []).length - 1])?.label}`
+                          }
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => form.setValue("estimatedMonths", [])}
+                          data-testid="button-clear-months"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {watchDateType === "Multi Day" && (
