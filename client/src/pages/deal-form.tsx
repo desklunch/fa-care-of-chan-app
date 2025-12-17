@@ -45,8 +45,8 @@ const dealFormSchema = z.object({
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
   services: z.array(z.enum(dealServices)).default([]),
-  concept: z.string().optional(),
-  ownerId: z.string().optional(),
+  concept: z.string().optional().transform(val => val || undefined),
+  ownerId: z.string().optional().transform(val => val || undefined),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;

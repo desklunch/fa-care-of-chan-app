@@ -8,7 +8,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "eventSchedule", "services", "status", "createdBy", "createdAt"];
+const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "eventSchedule", "services", "status", "owner", "createdBy", "createdAt"];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
@@ -107,6 +107,21 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       width: 140,
+    },
+  },
+  {
+    id: "owner",
+    headerName: "Owner",
+    field: "owner",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const owner = params.data?.owner;
+        if (!owner) return "";
+        return [owner.firstName, owner.lastName].filter(Boolean).join(" ") || "Unassigned";
+      },
     },
   },
   {
