@@ -48,6 +48,10 @@ import {
   type ReleaseStatus,
   insertVenueSchema,
   updateVenueSchema,
+  insertDealSchema,
+  updateDealSchema,
+  dealStatuses,
+  type DealStatus,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -4766,6 +4770,119 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     } catch (error: any) {
       console.error("Error generating tag suggestions:", error);
       res.status(500).json({ message: "Failed to generate tag suggestions", error: error.message });
+    }
+  });
+
+  // ==========================================
+  // DEALS / SALES PIPELINE ROUTES
+  // ==========================================
+
+  // GET /api/deals - Get all deals
+  app.get("/api/deals", isAuthenticated, async (req, res) => {
+    try {
+      const { status } = req.query;
+      let statusFilter: DealStatus[] | undefined;
+      
+      if (status) {
+        const statusArray = Array.isArray(status) ? status : [status];
+        statusFilter = statusArray.filter(s => dealStatuses.includes(s as DealStatus)) as DealStatus[];
+      }
+      
+      const deals = await storage.getDeals({ status: statusFilter });
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching deals:", error);
+      res.status(500).json({ message: "Failed to fetch deals" });
+    }
+  });
+
+  // GET /api/deals/:id - Get a single deal
+  app.get("/api/deals/:id", isAuthenticated, async (req, res) => {
+    try {
+      const deal = await storage.getDealById(req.params.id);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      res.json(deal);
+    } catch (error) {
+      console.error("Error fetching deal:", error);
+      res.status(500).json({ message: "Failed to fetch deal" });
+    }
+  });
+
+  // POST /api/deals - Create a new deal
+  app.post("/api/deals", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertDealSchema.parse(req.body);
+      const deal = await storage.createDeal(validatedData, req.user.claims.sub);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal",
+        entityId: deal.id,
+        metadata: { displayName: deal.displayName, status: deal.status },
+      });
+      
+      res.status(201).json(deal);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating deal:", error);
+      res.status(500).json({ message: "Failed to create deal" });
+    }
+  });
+
+  // PATCH /api/deals/:id - Update a deal
+  app.patch("/api/deals/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingDeal = await storage.getDealById(req.params.id);
+      if (!existingDeal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      const validatedData = updateDealSchema.parse(req.body);
+      const deal = await storage.updateDeal(req.params.id, validatedData);
+      
+      const changes = getChangedFields(existingDeal, deal);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal",
+        entityId: req.params.id,
+        changes,
+      });
+      
+      res.json(deal);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error updating deal:", error);
+      res.status(500).json({ message: "Failed to update deal" });
+    }
+  });
+
+  // DELETE /api/deals/:id - Delete a deal
+  app.delete("/api/deals/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
+    try {
+      const deal = await storage.getDealById(req.params.id);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      await storage.deleteDeal(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal",
+        entityId: req.params.id,
+        metadata: { displayName: deal.displayName },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting deal:", error);
+      res.status(500).json({ message: "Failed to delete deal" });
     }
   });
 
