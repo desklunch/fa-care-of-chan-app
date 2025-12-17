@@ -4,6 +4,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   serial,
   timestamp,
   unique,
@@ -642,6 +643,24 @@ export const clients = pgTable(
     index("idx_clients_created_at").on(table.createdAt),
   ],
 );
+
+// Client-Contact many-to-many junction table
+export const clientContacts = pgTable(
+  "client_contacts",
+  {
+    clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: "cascade" }),
+    contactId: varchar("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.clientId, table.contactId] }),
+    index("idx_client_contacts_client").on(table.clientId),
+    index("idx_client_contacts_contact").on(table.contactId),
+  ],
+);
+
+export type ClientContact = typeof clientContacts.$inferSelect;
+export type InsertClientContact = typeof clientContacts.$inferInsert;
 
 // Entity types that can have comments
 export const commentEntityTypes = [
