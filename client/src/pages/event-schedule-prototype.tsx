@@ -7,15 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Plus, Trash2, ChevronDown, ChevronUp, GripVertical, CalendarDays, CalendarRange, CalendarClock } from "lucide-react";
+import { Calendar, Plus, Trash2, ChevronDown, ChevronUp, GripVertical, CalendarDays, CalendarRange } from "lucide-react";
 import { format, addDays } from "date-fns";
 
-type EventType = "single" | "multi";
-type ScheduleMode = "confirmed" | "preferred" | "flexible";
+type ScheduleMode = "specific" | "flexible";
 
 interface EventSchedule {
   id: string;
-  kind: "confirmed" | "preferred" | "alternative" | "range";
+  kind: "primary" | "alternative" | "range";
   startDate?: Date;
   rangeStartMonth?: number;
   rangeStartYear?: number;
@@ -26,7 +25,6 @@ interface EventSchedule {
 interface DealEvent {
   id: string;
   label: string;
-  eventType: EventType;
   durationDays: number;
   scheduleMode: ScheduleMode;
   schedules: EventSchedule[];
@@ -105,20 +103,19 @@ function EventCard({
     });
   };
 
-  const getConfirmedSchedule = () => event.schedules.find(s => s.kind === "confirmed");
-  const getPreferredSchedule = () => event.schedules.find(s => s.kind === "preferred");
+  const getPrimarySchedule = () => event.schedules.find(s => s.kind === "primary");
   const getAlternativeSchedules = () => event.schedules.filter(s => s.kind === "alternative");
   const getRangeSchedule = () => event.schedules.find(s => s.kind === "range");
+
+  const isConfirmed = event.scheduleMode === "specific" && 
+    getPrimarySchedule()?.startDate && 
+    getAlternativeSchedules().length === 0;
 
   const handleScheduleModeChange = (mode: ScheduleMode) => {
     let newSchedules: EventSchedule[] = [];
     
-    if (mode === "confirmed") {
-      newSchedules = [{ id: generateId(), kind: "confirmed", startDate: undefined }];
-    } else if (mode === "preferred") {
-      newSchedules = [
-        { id: generateId(), kind: "preferred", startDate: undefined },
-      ];
+    if (mode === "specific") {
+      newSchedules = [{ id: generateId(), kind: "primary", startDate: undefined }];
     } else if (mode === "flexible") {
       const now = new Date();
       newSchedules = [{
@@ -134,6 +131,50 @@ function EventCard({
     onUpdate({ ...event, scheduleMode: mode, schedules: newSchedules });
   };
 
+  const getStatusBadge = () => {
+    if (event.scheduleMode === "flexible") {
+      return <Badge variant="outline">Flexible</Badge>;
+    }
+    if (isConfirmed) {
+      return <Badge variant="default">Confirmed</Badge>;
+    }
+    if (getAlternativeSchedules().length > 0) {
+      return <Badge variant="secondary">Alternatives</Badge>;
+    }
+    return <Badge variant="outline">Pending</Badge>;
+  };
+
+  const getEventSummary = () => {
+    const durationText = event.durationDays > 1 ? `${event.durationDays} days` : "1 day";
+    
+    if (event.scheduleMode === "specific") {
+      const primary = getPrimarySchedule();
+      if (primary?.startDate) {
+        const dateText = formatDateRange(primary.startDate, event.durationDays);
+        const altCount = getAlternativeSchedules().length;
+        if (altCount > 0) {
+          return `${dateText} (+${altCount} alternative${altCount > 1 ? 's' : ''})`;
+        }
+        return dateText;
+      }
+      return durationText;
+    }
+    
+    if (event.scheduleMode === "flexible") {
+      const range = getRangeSchedule();
+      if (range) {
+        return `${durationText} • Window: ${formatMonthRange(
+          range.rangeStartMonth!,
+          range.rangeStartYear!,
+          range.rangeEndMonth!,
+          range.rangeEndYear!
+        )}`;
+      }
+    }
+    
+    return durationText;
+  };
+
   return (
     <Card className="mb-4" data-testid={`event-card-${event.id}`}>
       <Collapsible open={event.isExpanded} onOpenChange={(open) => updateField("isExpanded", open)}>
@@ -145,40 +186,12 @@ function EventCard({
                 <div>
                   <CardTitle className="text-base">{event.label || "Untitled Event"}</CardTitle>
                   <CardDescription className="mt-1">
-                    {event.eventType === "multi" ? `${event.durationDays} days` : "Single day"}
-                    {event.scheduleMode === "confirmed" && getConfirmedSchedule()?.startDate && (
-                      <span className="ml-2">
-                        {formatDateRange(getConfirmedSchedule()!.startDate!, event.durationDays)}
-                      </span>
-                    )}
-                    {event.scheduleMode === "preferred" && getPreferredSchedule()?.startDate && (
-                      <span className="ml-2">
-                        Preferred: {formatDateRange(getPreferredSchedule()!.startDate!, event.durationDays)}
-                        {getAlternativeSchedules().length > 0 && ` (+${getAlternativeSchedules().length} alternatives)`}
-                      </span>
-                    )}
-                    {event.scheduleMode === "flexible" && getRangeSchedule() && (
-                      <span className="ml-2">
-                        Window: {formatMonthRange(
-                          getRangeSchedule()!.rangeStartMonth!,
-                          getRangeSchedule()!.rangeStartYear!,
-                          getRangeSchedule()!.rangeEndMonth!,
-                          getRangeSchedule()!.rangeEndYear!
-                        )}
-                      </span>
-                    )}
+                    {getEventSummary()}
                   </CardDescription>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={
-                  event.scheduleMode === "confirmed" ? "default" :
-                  event.scheduleMode === "preferred" ? "secondary" : "outline"
-                }>
-                  {event.scheduleMode === "confirmed" && "Confirmed"}
-                  {event.scheduleMode === "preferred" && "Preferred"}
-                  {event.scheduleMode === "flexible" && "Flexible"}
-                </Badge>
+                {getStatusBadge()}
                 {event.isExpanded ? (
                   <ChevronUp className="h-4 w-4 text-muted-foreground" />
                 ) : (
@@ -204,55 +217,30 @@ function EventCard({
               </div>
 
               <div className="space-y-2">
-                <Label>Event Type</Label>
-                <Tabs 
-                  value={event.eventType} 
-                  onValueChange={(v) => updateField("eventType", v as EventType)}
-                >
-                  <TabsList className="w-full">
-                    <TabsTrigger value="single" className="flex-1" data-testid={`tab-single-${event.id}`}>
-                      <CalendarDays className="h-4 w-4 mr-2" />
-                      Single Day
-                    </TabsTrigger>
-                    <TabsTrigger value="multi" className="flex-1" data-testid={`tab-multi-${event.id}`}>
-                      <CalendarRange className="h-4 w-4 mr-2" />
-                      Multi-Day
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </div>
-
-            {event.eventType === "multi" && (
-              <div className="space-y-2">
                 <Label htmlFor={`duration-${event.id}`}>Duration (days)</Label>
                 <Input
                   id={`duration-${event.id}`}
                   type="number"
-                  min={2}
+                  min={1}
                   max={30}
                   value={event.durationDays}
-                  onChange={(e) => updateField("durationDays", Math.max(2, parseInt(e.target.value) || 2))}
+                  onChange={(e) => updateField("durationDays", Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-32"
                   data-testid={`input-duration-${event.id}`}
                 />
               </div>
-            )}
+            </div>
 
             <div className="space-y-3">
-              <Label>Scheduling Mode</Label>
+              <Label>Date Selection</Label>
               <Tabs 
                 value={event.scheduleMode} 
                 onValueChange={(v) => handleScheduleModeChange(v as ScheduleMode)}
               >
                 <TabsList className="w-full">
-                  <TabsTrigger value="confirmed" className="flex-1" data-testid={`mode-confirmed-${event.id}`}>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Confirmed Date
-                  </TabsTrigger>
-                  <TabsTrigger value="preferred" className="flex-1" data-testid={`mode-preferred-${event.id}`}>
-                    <CalendarClock className="h-4 w-4 mr-2" />
-                    Preferred + Alternatives
+                  <TabsTrigger value="specific" className="flex-1" data-testid={`mode-specific-${event.id}`}>
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    Specific Date
                   </TabsTrigger>
                   <TabsTrigger value="flexible" className="flex-1" data-testid={`mode-flexible-${event.id}`}>
                     <CalendarRange className="h-4 w-4 mr-2" />
@@ -262,59 +250,40 @@ function EventCard({
               </Tabs>
             </div>
 
-            {event.scheduleMode === "confirmed" && (
-              <div className="space-y-2">
-                <Label>
-                  {event.eventType === "single" ? "Event Date" : "Start Date"}
-                </Label>
-                <Input
-                  type="date"
-                  value={getConfirmedSchedule()?.startDate ? format(getConfirmedSchedule()!.startDate!, "yyyy-MM-dd") : ""}
-                  onChange={(e) => {
-                    const schedule = getConfirmedSchedule();
-                    if (schedule && e.target.value) {
-                      updateSchedule(schedule.id, { startDate: new Date(e.target.value) });
-                    }
-                  }}
-                  className="w-48"
-                  data-testid={`input-confirmed-date-${event.id}`}
-                />
-                {getConfirmedSchedule()?.startDate && event.eventType === "multi" && (
-                  <p className="text-sm text-muted-foreground">
-                    Event runs: {formatDateRange(getConfirmedSchedule()!.startDate!, event.durationDays)}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {event.scheduleMode === "preferred" && (
+            {event.scheduleMode === "specific" && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>
-                    Preferred {event.eventType === "single" ? "Date" : "Start Date"}
+                    {event.durationDays === 1 ? "Event Date" : "Start Date"}
                   </Label>
                   <Input
                     type="date"
-                    value={getPreferredSchedule()?.startDate ? format(getPreferredSchedule()!.startDate!, "yyyy-MM-dd") : ""}
+                    value={getPrimarySchedule()?.startDate ? format(getPrimarySchedule()!.startDate!, "yyyy-MM-dd") : ""}
                     onChange={(e) => {
-                      const schedule = getPreferredSchedule();
+                      const schedule = getPrimarySchedule();
                       if (schedule && e.target.value) {
                         updateSchedule(schedule.id, { startDate: new Date(e.target.value) });
                       }
                     }}
                     className="w-48"
-                    data-testid={`input-preferred-date-${event.id}`}
+                    data-testid={`input-primary-date-${event.id}`}
                   />
-                  {getPreferredSchedule()?.startDate && event.eventType === "multi" && (
+                  {getPrimarySchedule()?.startDate && event.durationDays > 1 && (
                     <p className="text-sm text-muted-foreground">
-                      Event runs: {formatDateRange(getPreferredSchedule()!.startDate!, event.durationDays)}
+                      Event runs: {formatDateRange(getPrimarySchedule()!.startDate!, event.durationDays)}
+                    </p>
+                  )}
+                  {isConfirmed && (
+                    <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      This date is confirmed (no alternatives)
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Alternative {event.eventType === "single" ? "Dates" : "Start Dates"}</Label>
+                    <Label>Alternative {event.durationDays === 1 ? "Dates" : "Start Dates"}</Label>
                     <Button 
                       type="button" 
                       variant="outline" 
@@ -328,7 +297,9 @@ function EventCard({
                   </div>
                   
                   {getAlternativeSchedules().length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No alternative dates added yet.</p>
+                    <p className="text-sm text-muted-foreground">
+                      No alternatives. Add alternative dates if the primary date isn't final.
+                    </p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {getAlternativeSchedules().map((alt, index) => (
@@ -451,7 +422,7 @@ function EventCard({
 
                 {getRangeSchedule() && (
                   <p className="text-sm text-muted-foreground">
-                    {event.eventType === "single" ? "Event date" : "Start date"} will be finalized within: {" "}
+                    {event.durationDays === 1 ? "Event date" : "Start date"} will be finalized within: {" "}
                     <span className="font-medium">
                       {formatMonthRange(
                         getRangeSchedule()!.rangeStartMonth!,
@@ -489,20 +460,18 @@ export default function EventSchedulePrototype() {
     {
       id: generateId(),
       label: "Main Conference",
-      eventType: "multi",
       durationDays: 3,
-      scheduleMode: "confirmed",
-      schedules: [{ id: generateId(), kind: "confirmed", startDate: new Date("2025-06-15") }],
+      scheduleMode: "specific",
+      schedules: [{ id: generateId(), kind: "primary", startDate: new Date("2025-06-15") }],
       isExpanded: true,
     },
     {
       id: generateId(),
       label: "Welcome Reception",
-      eventType: "single",
       durationDays: 1,
-      scheduleMode: "preferred",
+      scheduleMode: "specific",
       schedules: [
-        { id: generateId(), kind: "preferred", startDate: new Date("2025-06-14") },
+        { id: generateId(), kind: "primary", startDate: new Date("2025-06-14") },
         { id: generateId(), kind: "alternative", startDate: new Date("2025-06-13") },
       ],
       isExpanded: false,
@@ -510,7 +479,6 @@ export default function EventSchedulePrototype() {
     {
       id: generateId(),
       label: "Corporate Retreat",
-      eventType: "multi",
       durationDays: 2,
       scheduleMode: "flexible",
       schedules: [{
@@ -529,10 +497,9 @@ export default function EventSchedulePrototype() {
     const newEvent: DealEvent = {
       id: generateId(),
       label: "",
-      eventType: "single",
       durationDays: 1,
-      scheduleMode: "confirmed",
-      schedules: [{ id: generateId(), kind: "confirmed", startDate: undefined }],
+      scheduleMode: "specific",
+      schedules: [{ id: generateId(), kind: "primary", startDate: undefined }],
       isExpanded: true,
     };
     setEvents([...events, newEvent]);
@@ -551,8 +518,8 @@ export default function EventSchedulePrototype() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold" data-testid="text-page-title">Event Schedule Prototype</h1>
         <p className="text-muted-foreground mt-1">
-          UI/UX prototype for managing event dates on deals. This demonstrates the proposed interface
-          for handling confirmed dates, preferred dates with alternatives, and flexible date windows.
+          UI/UX prototype for managing event dates on deals. Dates are confirmed when no alternatives exist.
+          Duration defaults to 1 day and can be increased for multi-day events.
         </p>
       </div>
 
@@ -563,7 +530,7 @@ export default function EventSchedulePrototype() {
             Event Schedule
           </CardTitle>
           <CardDescription>
-            Add events for this deal. Each event can have confirmed dates, preferred dates with alternatives,
+            Add events for this deal. Each event can have a specific date (with optional alternatives) 
             or a flexible window for when the date will be finalized.
           </CardDescription>
         </CardHeader>
