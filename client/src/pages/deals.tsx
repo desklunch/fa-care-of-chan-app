@@ -8,7 +8,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["dealNumber", "displayName", "client", "locations", "eventSchedule", "services", "dealValue", "status", "owner", "createdBy", "createdAt"];
+const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "dealValue", "status", "owner"];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
@@ -48,7 +48,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "client",
     category: "Basic Info",
     colDef: {
-      flex: 1,
+      flex: 1.5,
       minWidth: 150,
       valueGetter: (params: { data: DealWithRelations }) => {
         return params.data?.client?.name || "";
@@ -62,11 +62,50 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 150,
+      minWidth: 250,
       valueGetter: (params: { data: DealWithRelations }) => {
         const locations = params.data?.locations as Array<{ displayName: string }> | null;
         if (!locations || locations.length === 0) return "";
         return locations.map((loc) => loc.displayName).join(" | ");
+      },
+    },
+  },
+  {
+    id: "dealValue",
+    headerName: "Deal Value",
+    field: "dealValue",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      width: 130,
+      valueFormatter: (params: { value: number | null }) => {
+        if (!params.value) return "Unconfirmed";
+        return `$${params.value.toLocaleString("en-US")}`;
+      },
+    },
+  },
+  {
+    id: "status",
+    headerName: "Status",
+    field: "status",
+    category: "Basic Info",
+    colDef: {
+      flex:1,
+      width: 140,
+    },
+  },
+  {
+    id: "owner",
+    headerName: "Owner",
+    field: "owner",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const owner = params.data?.owner;
+        if (!owner) return "";
+        return [owner.firstName, owner.lastName].filter(Boolean).join(" ") || "Unassigned";
       },
     },
   },
@@ -100,43 +139,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "dealValue",
-    headerName: "Deal Value",
-    field: "dealValue",
-    category: "Basic Info",
-    colDef: {
-      width: 130,
-      valueFormatter: (params: { value: number | null }) => {
-        if (!params.value) return "";
-        return `$${params.value.toLocaleString("en-US")}`;
-      },
-    },
-  },
-  {
-    id: "status",
-    headerName: "Status",
-    field: "status",
-    category: "Basic Info",
-    colDef: {
-      width: 140,
-    },
-  },
-  {
-    id: "owner",
-    headerName: "Owner",
-    field: "owner",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (params: { data: DealWithRelations }) => {
-        const owner = params.data?.owner;
-        if (!owner) return "";
-        return [owner.firstName, owner.lastName].filter(Boolean).join(" ") || "Unassigned";
-      },
-    },
-  },
+
+
   {
     id: "createdBy",
     headerName: "Created By",

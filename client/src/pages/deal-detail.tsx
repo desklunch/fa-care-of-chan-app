@@ -550,13 +550,13 @@ export default function DealDetail() {
               return (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
+                    <CardTitle className="text-lg">Next Steps</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-0">
                     {displayTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="flex items-start gap-3 p-3 rounded-md border"
+                        className="flex items-center gap-3 py-6 bg-card  border-b"
                         data-testid={`preview-task-${task.id}`}
                       >
                         <Checkbox
@@ -564,23 +564,27 @@ export default function DealDetail() {
                           onCheckedChange={() => handleToggleTaskComplete(task)}
                           disabled={updateTaskMutation.isPending}
                           data-testid={`preview-checkbox-task-${task.id}`}
+                          className="w-4 h-4 rounded-full"
                         />
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 flex justify-between items-center flex-wrap min-w-0">
                           <p className="text-sm font-medium">{task.title}</p>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+
+                          <div className="flex items-center gap-3 mt-1 text-xs">
+                            {task.assignedUser && (
+                              <span className="text-xs font-medium flex items-center gap-1">
+
+                                {task.assignedUser.firstName} {task.assignedUser.lastName}
+                              </span>
+                            )}
                             {task.dueDate && (
                               <span className="flex items-center gap-1">
                                 <CalendarCheck className="h-3 w-3" />
                                 {format(parseDateOnly(task.dueDate), "MMM d, yyyy")}
                               </span>
                             )}
-                            {task.assignedUser && (
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                {task.assignedUser.firstName} {task.assignedUser.lastName}
-                              </span>
-                            )}
+   
                           </div>
+                    
                         </div>
                       </div>
                     ))}
@@ -588,10 +592,10 @@ export default function DealDetail() {
                       <button
                         type="button"
                         onClick={() => setActiveTab("tasks")}
-                        className="w-full text-sm text-primary hover:underline text-center py-2"
+                        className="w-full text-xs text-primary hover:underline text-left py-4"
                         data-testid="link-more-tasks"
                       >
-                        +{remainingCount} more incomplete task{remainingCount > 1 ? "s" : ""}
+                        + {remainingCount} more incomplete task{remainingCount > 1 ? "s" : ""}
                       </button>
                     )}
                   </CardContent>
@@ -628,7 +632,7 @@ export default function DealDetail() {
                         variant="outline"
                       
                         className={cn(
-                          "h-12 w-12 justify-center text-left font-normal",
+                          "min-w-12 w-fit h-12 justify-center text-left font-normal",
                           !newTaskDueDate && "",
                         )}
                         data-testid="button-task-due-date"

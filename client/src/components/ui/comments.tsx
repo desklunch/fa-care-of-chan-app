@@ -99,7 +99,7 @@ export function CommentForm({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder={placeholder}
-        className="min-h-10 h-10 resize-y"
+        className="min-h-10 h-12 resize-y"
         autoFocus={autoFocus}
         data-testid={parentId ? "input-reply" : "input-comment"}
       />
@@ -111,7 +111,7 @@ export function CommentForm({
             size="md" 
             onClick={onCancel}
             data-testid="button-cancel-comment"
-            className="h-10"
+            className="h-12"
 
           >
             <X className="h-4 w-4 " />
@@ -123,7 +123,7 @@ export function CommentForm({
           size="md" 
           disabled={!body.trim() || createMutation.isPending}
           data-testid="button-submit-comment"
-          className="h-10"
+          className="h-12"
         >
           <MessageSquare className="h-4 w-4 " />
           {createMutation.isPending ? "Posting..." : (parentId ? "Reply" : "Post")}
@@ -444,9 +444,9 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
       </div>
       
       {!comments || comments.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
-          <MessageSquare className="h-8 w-8" />
-          <p>No comments yet. Be the first to comment!</p>
+        <div className="text-center text-sm py-8 text-muted-foreground flex flex-col items-center gap-2">
+          <MessageSquare className="h-4 w-4" />
+          <p>No comments yet</p>
         </div>
       ) : (
         <div className="space-y-8 ">
