@@ -497,9 +497,11 @@ export default function DealDetail() {
                     </span>
                   )}
                 </FieldRow>
-                {/* <FieldRow label="Deal Number" testId="field-deal-number">
-                  <span className="font-mono">{deal.dealNumber}</span>
-                </FieldRow> */}
+                {deal.externalId && (
+                  <FieldRow label="External ID" testId="field-external-id">
+                    <span className="font-mono text-muted-foreground">{deal.externalId}</span>
+                  </FieldRow>
+                )}
                 {locations.length > 0 && (
                   <FieldRow
                     label="Locations"

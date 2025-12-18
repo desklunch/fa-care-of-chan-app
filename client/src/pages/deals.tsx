@@ -157,11 +157,70 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      width: 130,
-      valueFormatter: (params: { value: number | null }) => {
-        if (!params.value) return "Unconfirmed";
-        return `$${params.value.toLocaleString("en-US")}`;
+      width: 150,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        const deal = params.data;
+        if (!deal) return "";
+        if (!deal.dealValue && !deal.lowValue) return "";
+        if (deal.lowValue && deal.dealValue) {
+          return `$${deal.lowValue.toLocaleString("en-US")} - $${deal.dealValue.toLocaleString("en-US")}`;
+        }
+        if (deal.dealValue) {
+          return `$${deal.dealValue.toLocaleString("en-US")}`;
+        }
+        if (deal.lowValue) {
+          return `$${deal.lowValue.toLocaleString("en-US")}+`;
+        }
+        return "Unconfirmed";
       },
+    },
+  },
+  {
+    id: "startedOn",
+    headerName: "Started On",
+    field: "startedOn",
+    category: "Dates",
+    colDef: {
+      width: 120,
+      valueFormatter: (params: { value: string | null }) => {
+        if (!params.value) return "";
+        return format(new Date(params.value), "MMM d, yyyy");
+      },
+    },
+  },
+  {
+    id: "wonOn",
+    headerName: "Won On",
+    field: "wonOn",
+    category: "Dates",
+    colDef: {
+      width: 120,
+      valueFormatter: (params: { value: string | null }) => {
+        if (!params.value) return "";
+        return format(new Date(params.value), "MMM d, yyyy");
+      },
+    },
+  },
+  {
+    id: "lastContactOn",
+    headerName: "Last Contact",
+    field: "lastContactOn",
+    category: "Dates",
+    colDef: {
+      width: 120,
+      valueFormatter: (params: { value: string | null }) => {
+        if (!params.value) return "";
+        return format(new Date(params.value), "MMM d, yyyy");
+      },
+    },
+  },
+  {
+    id: "externalId",
+    headerName: "External ID",
+    field: "externalId",
+    category: "Details",
+    colDef: {
+      width: 100,
     },
   },
   {

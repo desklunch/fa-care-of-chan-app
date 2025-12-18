@@ -182,6 +182,11 @@ export default function ClientDetail() {
 
             <div className="border-t pt-4">
               <div className="flex gap-6 text-sm text-muted-foreground">
+                {client.externalId && (
+                  <span data-testid="text-client-external-id">
+                    External ID: <span className="font-mono">{client.externalId}</span>
+                  </span>
+                )}
                 {client.createdAt && (
                   <span data-testid="text-client-created">
                     Created {format(new Date(client.createdAt), "MMM d, yyyy")}
