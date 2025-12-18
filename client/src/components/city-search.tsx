@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Globe, X } from "lucide-react";
+import { Loader2, MapPin, Globe, Map, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { DealLocation } from "@shared/schema";
 
@@ -14,7 +14,7 @@ interface LocationResult {
   countryCode: string;
   displayName: string;
   formattedAddress: string;
-  type: "city" | "country";
+  type: "city" | "country" | "state";
 }
 
 interface CitySearchProps {
@@ -27,7 +27,7 @@ interface CitySearchProps {
 export function CitySearch({
   value,
   onChange,
-  placeholder = "Search for a city or country...",
+  placeholder = "Search for a city, state, or country...",
   "data-testid": testId = "city-search",
 }: CitySearchProps) {
   const [query, setQuery] = useState("");
@@ -182,7 +182,7 @@ export function CitySearch({
         <div className="absolute z-50 w-full max-w-md mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
           {results.map((result, index) => {
             const isDuplicate = value.some((loc) => loc.placeId === result.placeId);
-            const Icon = result.type === "country" ? Globe : MapPin;
+            const Icon = result.type === "country" ? Globe : result.type === "state" ? Map : MapPin;
             return (
               <button
                 key={result.placeId || index}
@@ -198,7 +198,7 @@ export function CitySearch({
                 <div className="min-w-0">
                   <div className="font-medium">{result.displayName}</div>
                   <div className="text-sm text-muted-foreground truncate">
-                    {result.type === "country" ? "Country" : result.formattedAddress}
+                    {result.type === "country" ? "Country" : result.type === "state" ? "US State" : result.formattedAddress}
                   </div>
                 </div>
                 {isDuplicate && (
@@ -219,8 +219,9 @@ export function CitySearch({
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2" data-testid={`${testId}-chips`}>
           {value.map((location) => {
-            const isCountry = !location.city;
-            const LocationIcon = isCountry ? Globe : MapPin;
+            const isCountry = !location.city && !location.state;
+            const isState = !location.city && location.state;
+            const LocationIcon = isCountry ? Globe : isState ? Map : MapPin;
             return (
               <Badge
                 key={location.placeId}

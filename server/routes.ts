@@ -1583,10 +1583,29 @@ export async function registerRoutes(
         }
       );
 
+      // Search for US states (administrative_area_level_1)
+      const stateResponse = await fetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
+          body: JSON.stringify({
+            textQuery: `${query} state USA`,
+            includedType: "administrative_area_level_1",
+            maxResultCount: 3,
+          }),
+        }
+      );
+
       const cityData = cityResponse.ok ? await cityResponse.json() : { places: [] };
       const countryData = countryResponse.ok ? await countryResponse.json() : { places: [] };
+      const stateData = stateResponse.ok ? await stateResponse.json() : { places: [] };
 
-      const parseLocation = (place: any, isCountry: boolean) => {
+      const parseLocation = (place: any, locationType: "city" | "country" | "state") => {
         let city = "";
         let state = "";
         let stateCode = "";
@@ -1611,7 +1630,7 @@ export async function registerRoutes(
         }
 
         // For countries, use display name as country if not parsed
-        if (isCountry && !country && place.displayName?.text) {
+        if (locationType === "country" && !country && place.displayName?.text) {
           country = place.displayName.text;
           // Try to get country code from types or addressComponents
           if (place.addressComponents?.length === 1) {
@@ -1619,15 +1638,23 @@ export async function registerRoutes(
           }
         }
 
+        // For states, use display name if state not found
+        if (locationType === "state" && !state && place.displayName?.text) {
+          state = place.displayName.text;
+          stateCode = place.addressComponents?.[0]?.shortText || "";
+        }
+
         // For cities, use display name if locality not found
-        if (!isCountry && !city && place.displayName?.text) {
+        if (locationType === "city" && !city && place.displayName?.text) {
           city = place.displayName.text;
         }
 
         // Format displayName based on type
         let displayName: string;
-        if (isCountry) {
+        if (locationType === "country") {
           displayName = country;
+        } else if (locationType === "state") {
+          displayName = `${state}, USA`;
         } else if (countryCode === "US" && stateCode) {
           displayName = `${city}, ${stateCode}`;
         } else if (country) {
@@ -1638,27 +1665,31 @@ export async function registerRoutes(
 
         return {
           placeId: place.id || "",
-          city: isCountry ? undefined : city,
-          state: isCountry ? undefined : state,
-          stateCode: isCountry ? undefined : stateCode,
+          city: locationType === "city" ? city : undefined,
+          state: locationType === "city" ? state : (locationType === "state" ? state : undefined),
+          stateCode: locationType === "city" ? stateCode : (locationType === "state" ? stateCode : undefined),
           country,
           countryCode,
           displayName,
           formattedAddress: place.formattedAddress || "",
-          type: isCountry ? "country" : "city",
+          type: locationType,
         };
       };
 
       const cities = (cityData.places || [])
-        .map((p: any) => parseLocation(p, false))
+        .map((p: any) => parseLocation(p, "city"))
         .filter((c: any) => c.city);
 
       const countries = (countryData.places || [])
-        .map((p: any) => parseLocation(p, true))
+        .map((p: any) => parseLocation(p, "country"))
         .filter((c: any) => c.country);
 
-      // Combine results: countries first (if query matches), then cities
-      const locations = [...countries, ...cities];
+      const states = (stateData.places || [])
+        .map((p: any) => parseLocation(p, "state"))
+        .filter((s: any) => s.state && s.countryCode === "US");
+
+      // Combine results: countries first, then US states, then cities
+      const locations = [...countries, ...states, ...cities];
 
       res.json({ locations });
     } catch (error) {
