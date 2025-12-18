@@ -535,14 +535,16 @@ export const vendorUpdateTokens = pgTable(
 
 // Deal status enum values
 export const dealStatuses = [
-  "Inquiry",
-  "Discovery", 
-  "Internal Review",
-  "Contracting",
-  "Won",
-  "Lost",
+  "Prospecting",
+  "Proposal Phase",
+  "Waiting for Feedback",
+  "Contracting Phase",
+  "In Progress",
+  "Final Invoicing",
+  "Complete",
+  "No-Go",
   "Canceled",
-  "Declined",
+  "Warm Lead",
 ] as const;
 export type DealStatus = (typeof dealStatuses)[number];
 
@@ -606,7 +608,7 @@ export const deals = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
-    status: varchar("status", { length: 50 }).notNull().default("Inquiry"),
+    status: varchar("status", { length: 50 }).notNull().default("Prospecting"),
     clientId: varchar("client_id").notNull(),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
@@ -1517,7 +1519,7 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   updatedAt: true,
 }).extend({
   displayName: z.string().min(1, "Display name is required").max(255),
-  status: z.enum(dealStatuses).default("Inquiry"),
+  status: z.enum(dealStatuses).default("Prospecting"),
   clientId: z.string().min(1, "Client is required"),
   locations: z.array(dealLocationSchema).default([]),
   dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
