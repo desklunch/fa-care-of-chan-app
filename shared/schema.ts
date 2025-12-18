@@ -586,6 +586,7 @@ export const dealServices = [
   "Creative Direction",
   "Culinary Programming",
   "Concept Development",
+  "Event Concepting",
   "Executive Production",
   "Culinary Production",
   "Liquor Cabinet Programming",
@@ -606,6 +607,7 @@ export const deals = pgTable(
   "deals",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 50 }),
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("Prospecting"),
@@ -618,12 +620,17 @@ export const deals = pgTable(
     primaryContactId: varchar("primary_contact_id").references(() => contacts.id),
     ownerId: varchar("owner_id").references(() => users.id),
     dealValue: integer("deal_value"),
+    lowValue: integer("low_value"),
+    startedOn: date("started_on"),
+    wonOn: date("won_on"),
+    lastContactOn: date("last_contact_on"),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("idx_deals_deal_number").on(table.dealNumber),
+    index("idx_deals_external_id").on(table.externalId),
     index("idx_deals_status").on(table.status),
     index("idx_deals_client_id").on(table.clientId),
     index("idx_deals_created_by").on(table.createdById),
@@ -665,6 +672,7 @@ export const clients = pgTable(
   "clients",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 50 }),
     name: varchar("name", { length: 255 }).notNull(),
     website: varchar("website", { length: 255 }),
     industry: varchar("industry", { length: 255 }),
@@ -675,6 +683,7 @@ export const clients = pgTable(
     index("idx_clients_name").on(table.name),
     index("idx_clients_industry").on(table.industry),
     index("idx_clients_created_at").on(table.createdAt),
+    index("idx_clients_external_id").on(table.externalId),
   ],
 );
 
