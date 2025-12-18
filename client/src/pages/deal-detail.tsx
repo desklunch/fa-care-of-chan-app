@@ -49,10 +49,10 @@ const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "out
   "Declined": { variant: "outline", className: "opacity-50" },
 };
 
-function FieldRow({ label, children, testId }: { label: string; children: React.ReactNode; testId?: string }) {
+function FieldRow({ label, children, testId, colSpan = 1 }: { label: string; children: React.ReactNode; testId?: string; colSpan?: number }) {
   return (
-    <div className="flex py-2 border-b border-border/50 last:border-b-0" data-testid={testId}>
-      <div className="w-1/3 text-sm text-muted-foreground shrink-0">{label}</div>
+    <div className={`flex py-4 border-b border-border/50 last:border-b-0 col-span-${colSpan}`} data-testid={testId}>
+      <div className="w-1/3 text-xs font-semibold shrink-0">{label}</div>
       <div className="flex-1 text-sm">{children}</div>
     </div>
   );
@@ -208,9 +208,7 @@ export default function DealDetail() {
           <div className="sticky top-0 bg-background z-10">
             <div className="p-4 md:p-6 pb-2 md:pb-2">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-muted-foreground font-mono text-sm" data-testid="text-deal-number">
-                  #{deal.dealNumber}
-                </span>
+
                 <Badge 
                   variant={statusConfig.variant}
                   className={statusConfig.className}
@@ -237,18 +235,98 @@ export default function DealDetail() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Deal Information</CardTitle>
               </CardHeader>
-              <CardContent>
-                <FieldRow label="Deal Number" testId="field-deal-number">
-                  <span className="font-mono">{deal.dealNumber}</span>
+              <CardContent className="grid grid-cols-2">
+                <FieldRow label="Client" testId="field-client">
+                  {deal.client ? (
+                    <Link href={`/clients/${deal.client.id}`}>
+                      <span className="text-primary hover:underline cursor-pointer" data-testid="link-deal-client">
+                        {deal.client.name}
+                        {deal.client.industry && (
+                          <span className="text-muted-foreground ml-2">({deal.client.industry})</span>
+                        )}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">No client assigned</span>
+                  )}
                 </FieldRow>
-                <FieldRow label="Status" testId="field-status">
+                <FieldRow label="Primary Contact" testId="field-primary-contact">
+                  {deal.primaryContact ? (
+                    <Link href={`/contacts/${deal.primaryContact.id}`}>
+                      <span className="text-primary hover:underline cursor-pointer" data-testid="link-deal-primary-contact">
+                        {deal.primaryContact.firstName} {deal.primaryContact.lastName}
+                        {deal.primaryContact.emailAddresses?.[0] && (
+                          <span className="text-muted-foreground ml-2">({deal.primaryContact.emailAddresses[0]})</span>
+                        )}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">No primary contact</span>
+                  )}
+                </FieldRow>
+                {/* <FieldRow label="Deal Number" testId="field-deal-number">
+                  <span className="font-mono">{deal.dealNumber}</span>
+                </FieldRow> */}
+                {locations.length > 0 && (
+                  <FieldRow label="Locations" testId="field-locations" colSpan={2}>
+                    <div className="flex flex-wrap gap-1" data-testid="deal-locations">
+                      {locations.map((location) => (
+                        <Badge
+                          key={location.placeId}
+                          variant="secondary"
+                          data-testid={`badge-location-${location.placeId}`}
+                        >
+                          {location.displayName}
+                        </Badge>
+                      ))}
+                    </div>
+                  </FieldRow>
+                )}
+                {eventSchedule.length > 0 && (
+                  <FieldRow label="Event Schedule" testId="field-event-schedule">
+                    <div className="space-y-2" data-testid="deal-event-schedule">
+                      {eventSchedule.map((event) => {
+                        const summary = getEventSummary(event);
+                        return (
+                          <div key={event.id} data-testid={`event-schedule-item-${event.id}`}>
+                            {event.label && <span className="font-medium">{event.label}: </span>}
+                            <span className="text-muted-foreground">
+                              {summary ? summary.text : "Date not specified"}
+                            </span>
+                            {summary && summary.altCount > 0 && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {summary.altCount} Alt
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </FieldRow>
+                )}
+                {services.length > 0 && (
+                  <FieldRow label="Services" testId="field-services">
+                    <div className="flex flex-wrap gap-1" data-testid="deal-services">
+                      {services.map((service) => (
+                        <Badge
+                          key={service}
+                          variant="secondary"
+                          data-testid={`badge-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {service}
+                        </Badge>
+                      ))}
+                    </div>
+                  </FieldRow>
+                )}
+                {/* <FieldRow label="Status" testId="field-status">
                   <Badge 
                     variant={statusConfig.variant}
                     className={statusConfig.className}
                   >
                     {deal.status}
                   </Badge>
-                </FieldRow>
+                </FieldRow> */}
                 <FieldRow label="Deal Value" testId="field-deal-value">
                   {deal.dealValue 
                     ? <span className="font-medium">${deal.dealValue.toLocaleString("en-US")}</span>
@@ -306,34 +384,7 @@ export default function DealDetail() {
                 <CardTitle className="text-lg">Client & Contact</CardTitle>
               </CardHeader>
               <CardContent>
-                <FieldRow label="Client" testId="field-client">
-                  {deal.client ? (
-                    <Link href={`/clients/${deal.client.id}`}>
-                      <span className="text-primary hover:underline cursor-pointer" data-testid="link-deal-client">
-                        {deal.client.name}
-                        {deal.client.industry && (
-                          <span className="text-muted-foreground ml-2">({deal.client.industry})</span>
-                        )}
-                      </span>
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">No client assigned</span>
-                  )}
-                </FieldRow>
-                <FieldRow label="Primary Contact" testId="field-primary-contact">
-                  {deal.primaryContact ? (
-                    <Link href={`/contacts/${deal.primaryContact.id}`}>
-                      <span className="text-primary hover:underline cursor-pointer" data-testid="link-deal-primary-contact">
-                        {deal.primaryContact.firstName} {deal.primaryContact.lastName}
-                        {deal.primaryContact.emailAddresses?.[0] && (
-                          <span className="text-muted-foreground ml-2">({deal.primaryContact.emailAddresses[0]})</span>
-                        )}
-                      </span>
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">No primary contact</span>
-                  )}
-                </FieldRow>
+ 
               </CardContent>
             </Card>
 
@@ -344,58 +395,7 @@ export default function DealDetail() {
                   <CardTitle className="text-lg">Event Details</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {locations.length > 0 && (
-                    <FieldRow label="Locations" testId="field-locations">
-                      <div className="flex flex-wrap gap-1" data-testid="deal-locations">
-                        {locations.map((location) => (
-                          <Badge
-                            key={location.placeId}
-                            variant="secondary"
-                            data-testid={`badge-location-${location.placeId}`}
-                          >
-                            {location.displayName}
-                          </Badge>
-                        ))}
-                      </div>
-                    </FieldRow>
-                  )}
-                  {eventSchedule.length > 0 && (
-                    <FieldRow label="Event Schedule" testId="field-event-schedule">
-                      <div className="space-y-2" data-testid="deal-event-schedule">
-                        {eventSchedule.map((event) => {
-                          const summary = getEventSummary(event);
-                          return (
-                            <div key={event.id} data-testid={`event-schedule-item-${event.id}`}>
-                              {event.label && <span className="font-medium">{event.label}: </span>}
-                              <span className="text-muted-foreground">
-                                {summary ? summary.text : "Date not specified"}
-                              </span>
-                              {summary && summary.altCount > 0 && (
-                                <Badge variant="outline" className="ml-2 text-xs">
-                                  {summary.altCount} Alt
-                                </Badge>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </FieldRow>
-                  )}
-                  {services.length > 0 && (
-                    <FieldRow label="Services" testId="field-services">
-                      <div className="flex flex-wrap gap-1" data-testid="deal-services">
-                        {services.map((service) => (
-                          <Badge
-                            key={service}
-                            variant="secondary"
-                            data-testid={`badge-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
-                          >
-                            {service}
-                          </Badge>
-                        ))}
-                      </div>
-                    </FieldRow>
-                  )}
+
                 </CardContent>
               </Card>
             )}
