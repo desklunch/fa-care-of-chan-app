@@ -186,21 +186,21 @@ export default function DealForm() {
       ]}
     >
       <div className="max-w-2xl p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{isEditing ? "Edit Deal" : "Create New Deal"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Card 1: Deal Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{isEditing ? "Edit Deal" : "Deal Info"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="displayName"
                   render={({ field }) => (
                     <FormItem>
-                      
                       <div className="w-full flex justify-between items-center">
-                        <FormLabel>Deal Name </FormLabel>
+                        <FormLabel>Deal Name</FormLabel>
                         <span className="text-xs font-medium text-muted-foreground">Required</span>
                       </div>
                       <FormControl>
@@ -223,10 +223,10 @@ export default function DealForm() {
                   name="clientId"
                   render={({ field }) => (
                     <FormItem>
-                        <div className="w-full flex justify-between items-center">                        <FormLabel>Client </FormLabel>
+                      <div className="w-full flex justify-between items-center">
+                        <FormLabel>Client</FormLabel>
                         <span className="text-xs font-medium text-muted-foreground">Required</span>
                       </div>
-                      
                       <FormControl>
                         <ClientSearch
                           selectedClientId={field.value || null}
@@ -242,7 +242,6 @@ export default function DealForm() {
                           }}
                         />
                       </FormControl>
-
                       <FormMessage />
                     </FormItem>
                   )}
@@ -254,9 +253,7 @@ export default function DealForm() {
                     name="primaryContactId"
                     render={({ field }) => (
                       <FormItem>
-
                         <FormLabel>Primary Contact</FormLabel>
-      
                         <Select 
                           onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
                           value={field.value || "__none__"}
@@ -292,7 +289,6 @@ export default function DealForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-      
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-deal-status">
@@ -307,12 +303,10 @@ export default function DealForm() {
                           ))}
                         </SelectContent>
                       </Select>
- 
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
 
                 <FormField
                   control={form.control}
@@ -338,12 +332,19 @@ export default function DealForm() {
                           ))}
                         </SelectContent>
                       </Select>
-
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
+            {/* Card 2: Deal Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Deal Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="locations"
@@ -545,29 +546,31 @@ export default function DealForm() {
                   )}
                 />
 
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    data-testid="button-submit-deal"
-                  >
-                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isEditing ? "Update Deal" : "Create Deal"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setLocation(isEditing ? `/deals/${id}` : "/deals")}
-                    disabled={isPending}
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Submit Buttons */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-submit-deal"
+              >
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? "Update Deal" : "Create Deal"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation(isEditing ? `/deals/${id}` : "/deals")}
+                disabled={isPending}
+                data-testid="button-cancel"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
     </PageLayout>
   );

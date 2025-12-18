@@ -43,7 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, CalendarCheck, UserRound, MoreVertical, X, Check } from "lucide-react";
+import { Loader2, Pencil, Trash2, CalendarCheck, UserRound, MoreVertical, X, Check, PenBox } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
 import { CommentList } from "@/components/ui/comments";
 import { cn } from "@/lib/utils";
@@ -363,13 +363,13 @@ export default function DealDetail() {
       primaryAction={{
         label: "Edit",
         href: `/deals/${id}/edit`,
-        icon: Pencil,
+        icon: PenBox,
       }}
       additionalActions={
         isManagerOrAdmin
           ? [
               {
-                label: "Delete Deal",
+                label: "Delete",
                 onClick: () => setShowDeleteDialog(true),
                 icon: Trash2,
                 variant: "destructive",
@@ -383,13 +383,7 @@ export default function DealDetail() {
           <div className="sticky top-0 bg-background z-10">
             <div className="p-4 md:p-6 pb-2 md:pb-2">
               <div className="flex flex-col gap-2 ">
-                <Badge
-                  variant={statusConfig.variant}
-                  className={statusConfig.className}
-                  data-testid="badge-deal-status"
-                >
-                  {deal.status}
-                </Badge>
+
                 <div>
                   <span className="text-sm font-semibold">
                     {deal.client?.name}
@@ -401,23 +395,32 @@ export default function DealDetail() {
                     {deal.displayName}
                   </h1>
                 </div>
+                <div className="flex items-center gap-4">
+                  <Badge
+                    variant={statusConfig.variant}
+                    className={statusConfig.className}
+                    data-testid="badge-deal-status"
+                  >
+                    {deal.status}
+                  </Badge>
+                  {ownerName ? (
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-5 w-5 rounded-full">
+                        <AvatarImage
+                          src={deal.owner?.profileImageUrl || undefined}
+                          alt={ownerName}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {ownerInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-medium  ">{ownerName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-medium">Unassigned</span>
+                  )}
+                </div>
 
-                {ownerName ? (
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-5 w-5 rounded-full">
-                      <AvatarImage
-                        src={deal.owner?.profileImageUrl || undefined}
-                        alt={ownerName}
-                      />
-                      <AvatarFallback className="text-xs">
-                        {ownerInitials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-semibold">{ownerName}</span>
-                  </div>
-                ) : (
-                  <span className="text-xs font-medium">Unassigned</span>
-                )}
               </div>
             </div>
 
@@ -674,7 +677,7 @@ export default function DealDetail() {
                                   }}
                                   data-testid={`preview-button-edit-task-${task.id}`}
                                 >
-                                  <Pencil className="h-4 w-4 mr-2" />
+                                  <PenBox className="h-4 w-4 mr-2" />
                                   Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -734,7 +737,7 @@ export default function DealDetail() {
                       <Button
                         variant="outline"
                         className={cn(
-                          "border-input min-w-12 w-fit h-12 justify-center text-left font-normal",
+                          "border-input min-w-12 w-fit h-12 text-xs justify-center text-left font-normal",
                           !newTaskDueDate && "",
                         )}
                         data-testid="button-task-due-date"
@@ -797,7 +800,9 @@ export default function DealDetail() {
             <Card>
               <CardHeader className="p-4">
                 <CardTitle className="text-base">
-                  Tasks ({tasks.length})
+                  {tasks.filter((t) => !t.completed).length > 0 && `${tasks.filter((t) => !t.completed).length} Task${tasks.filter((t) => !t.completed).length > 1 ? 's' : ''}`} 
+                   {tasks.filter((t) => !t.completed).length == 0 && `Tasks`} 
+                  {/*tasks.filter((t) => t.completed).length > 0  */}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0 space-y-2">
@@ -838,7 +843,7 @@ export default function DealDetail() {
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "border-input min-w-12 w-fit h-9 justify-center text-left font-normal",
+                                    "border-input min-w-12 w-fit h-12 bg-backgroun text-xs justify-center text-left font-normal",
                                   )}
                                   data-testid={`button-edit-task-due-date-${task.id}`}
                                 >
@@ -861,7 +866,7 @@ export default function DealDetail() {
                             >
                               <SelectTrigger
                                 data-testid={`select-edit-task-assignee-${task.id}`}
-                                className="w-[140px] text-xs"
+                                className="w-[140px] text-xs text-left"
                               >
                                 <SelectValue placeholder="Assignee" />
                               </SelectTrigger>
@@ -881,6 +886,7 @@ export default function DealDetail() {
                             size="icon"
                             variant="ghost"
                             data-testid={`button-save-edit-task-${task.id}`}
+                            className="h-12"
                           >
                             {updateTaskMutation.isPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -893,6 +899,7 @@ export default function DealDetail() {
                             size="icon"
                             variant="ghost"
                             data-testid={`button-cancel-edit-task-${task.id}`}
+                            className="h-12"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -952,7 +959,7 @@ export default function DealDetail() {
                                   onClick={() => handleStartEditTask(task)}
                                   data-testid={`button-edit-task-${task.id}`}
                                 >
-                                  <Pencil className="h-4 w-4 mr-2" />
+                                  <PenBox className="h-4 w-4 mr-2" />
                                   Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -974,7 +981,7 @@ export default function DealDetail() {
                     {tasks.filter((t) => t.completed).length > 0 && (
                       <>
                         <div className="pt-4 pb-2">
-                          <h4 className="text-sm font-semibold text-muted-foreground">Completed</h4>
+                          <h4 className="text-sm font-semibold text-muted-foreground">                  {tasks.filter((t) => t.completed).length > 0 && `${tasks.filter((t) => t.completed).length} Completed`} </h4>
                         </div>
                         {tasks.filter((t) => t.completed).map((task) => (
                           editingTaskId === task.id ? (
@@ -1006,7 +1013,7 @@ export default function DealDetail() {
                                     <Button
                                       variant="outline"
                                       className={cn(
-                                        "border-input min-w-12 w-fit h-9 justify-center text-left font-normal",
+                                        "border-input min-w-12 w-fit h-12 text-xs justify-center text-left font-normal",
                                       )}
                                       data-testid={`button-edit-task-due-date-${task.id}`}
                                     >
@@ -1120,7 +1127,7 @@ export default function DealDetail() {
                                       onClick={() => handleStartEditTask(task)}
                                       data-testid={`button-edit-task-${task.id}`}
                                     >
-                                      <Pencil className="h-4 w-4 mr-2" />
+                                      <PenBox className="h-4 w-4 mr-2" />
                                       Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
