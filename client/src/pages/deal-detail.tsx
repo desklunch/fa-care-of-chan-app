@@ -592,15 +592,15 @@ export default function DealDetail() {
                     </div>
                   </FieldRow>
                 )}
-                <FieldRow label="Deal Value" testId="field-deal-value">
-                  {deal.dealValue || deal.lowValue ? (
+                <FieldRow label="Budget" testId="field-budget">
+                  {deal.budgetHigh || deal.budgetLow ? (
                     <span className="font-medium">
-                      {deal.lowValue && deal.dealValue
-                        ? `$${deal.lowValue.toLocaleString("en-US")} - $${deal.dealValue.toLocaleString("en-US")}`
-                        : deal.dealValue
-                        ? `$${deal.dealValue.toLocaleString("en-US")}`
-                        : deal.lowValue
-                        ? `$${deal.lowValue.toLocaleString("en-US")}+`
+                      {deal.budgetLow && deal.budgetHigh
+                        ? `$${deal.budgetLow.toLocaleString("en-US")} - $${deal.budgetHigh.toLocaleString("en-US")}`
+                        : deal.budgetHigh
+                        ? `$${deal.budgetHigh.toLocaleString("en-US")}`
+                        : deal.budgetLow
+                        ? `$${deal.budgetLow.toLocaleString("en-US")}+`
                         : null}
                     </span>
                   ) : (

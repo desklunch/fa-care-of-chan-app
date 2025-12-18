@@ -9,7 +9,7 @@ import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "dealValue", "status", "owner"];
+const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner"];
 
 // Filter configurations
 const dealFilters: FilterConfig<DealWithRelations>[] = [
@@ -151,9 +151,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
-    id: "dealValue",
-    headerName: "Deal Value",
-    field: "dealValue",
+    id: "budget",
+    headerName: "Budget",
+    field: "budgetHigh",
     category: "Basic Info",
     colDef: {
       flex: 1,
@@ -161,15 +161,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         const deal = params.data;
         if (!deal) return "";
-        if (!deal.dealValue && !deal.lowValue) return "";
-        if (deal.lowValue && deal.dealValue) {
-          return `$${deal.lowValue.toLocaleString("en-US")} - $${deal.dealValue.toLocaleString("en-US")}`;
+        if (!deal.budgetHigh && !deal.budgetLow) return "";
+        if (deal.budgetLow && deal.budgetHigh) {
+          return `$${deal.budgetLow.toLocaleString("en-US")} - $${deal.budgetHigh.toLocaleString("en-US")}`;
         }
-        if (deal.dealValue) {
-          return `$${deal.dealValue.toLocaleString("en-US")}`;
+        if (deal.budgetHigh) {
+          return `$${deal.budgetHigh.toLocaleString("en-US")}`;
         }
-        if (deal.lowValue) {
-          return `$${deal.lowValue.toLocaleString("en-US")}+`;
+        if (deal.budgetLow) {
+          return `$${deal.budgetLow.toLocaleString("en-US")}+`;
         }
         return "Unconfirmed";
       },

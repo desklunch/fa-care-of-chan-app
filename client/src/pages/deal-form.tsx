@@ -51,8 +51,8 @@ const dealFormSchema = z.object({
   concept: z.string().optional().transform(val => val || undefined),
   notes: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
-  dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
-  lowValue: z.number().int().min(1000, "Minimum low value is $1,000").nullable().optional(),
+  budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
+  budgetLow: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
   startedOn: z.string().nullable().optional(),
   wonOn: z.string().nullable().optional(),
   lastContactOn: z.string().nullable().optional(),
@@ -92,8 +92,8 @@ export default function DealForm() {
       concept: "",
       notes: "",
       ownerId: "",
-      dealValue: null,
-      lowValue: null,
+      budgetHigh: null,
+      budgetLow: null,
       startedOn: null,
       wonOn: null,
       lastContactOn: null,
@@ -120,8 +120,8 @@ export default function DealForm() {
         concept: deal.concept || "",
         notes: deal.notes || "",
         ownerId: deal.ownerId || "",
-        dealValue: deal.dealValue ?? null,
-        lowValue: deal.lowValue ?? null,
+        budgetHigh: deal.budgetHigh ?? null,
+        budgetLow: deal.budgetLow ?? null,
         startedOn: deal.startedOn ?? null,
         wonOn: deal.wonOn ?? null,
         lastContactOn: deal.lastContactOn ?? null,
@@ -543,10 +543,10 @@ export default function DealForm() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="lowValue"
+                    name="budgetLow"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Low Value</FormLabel>
+                        <FormLabel>Budget Low</FormLabel>
                         <FormControl>
                           <div className="flex">
                             <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
@@ -569,7 +569,7 @@ export default function DealForm() {
                                   }
                                 }
                               }}
-                              data-testid="input-low-value"
+                              data-testid="input-budget-low"
                             />
                           </div>
                         </FormControl>
@@ -582,10 +582,10 @@ export default function DealForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="dealValue"
+                    name="budgetHigh"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Deal Value</FormLabel>
+                        <FormLabel>Budget High</FormLabel>
                         <FormControl>
                           <div className="flex">
                             <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
@@ -608,7 +608,7 @@ export default function DealForm() {
                                   }
                                 }
                               }}
-                              data-testid="input-deal-value"
+                              data-testid="input-budget-high"
                             />
                           </div>
                         </FormControl>
