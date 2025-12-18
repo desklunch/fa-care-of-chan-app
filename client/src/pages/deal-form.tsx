@@ -31,7 +31,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
-import { ChevronsUpDown, Loader2, Save, X } from "lucide-react";
+import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -40,7 +42,7 @@ import { dealStatuses, dealLocationSchema, dealServices } from "@shared/schema";
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
-  status: z.enum(dealStatuses).default("Inquiry"),
+  status: z.enum(dealStatuses).default("Prospecting"),
   clientId: z.string().min(1, "Client is required"),
   primaryContactId: z.string().optional().transform(val => val || undefined),
   locations: z.array(dealLocationSchema).default([]),
@@ -50,6 +52,10 @@ const dealFormSchema = z.object({
   notes: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
   dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
+  lowValue: z.number().int().min(1000, "Minimum low value is $1,000").nullable().optional(),
+  startedOn: z.string().nullable().optional(),
+  wonOn: z.string().nullable().optional(),
+  lastContactOn: z.string().nullable().optional(),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -77,7 +83,7 @@ export default function DealForm() {
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
       displayName: "",
-      status: "Inquiry",
+      status: "Prospecting",
       clientId: "",
       primaryContactId: "",
       locations: [],
@@ -87,6 +93,10 @@ export default function DealForm() {
       notes: "",
       ownerId: "",
       dealValue: null,
+      lowValue: null,
+      startedOn: null,
+      wonOn: null,
+      lastContactOn: null,
     },
   });
 
@@ -111,6 +121,10 @@ export default function DealForm() {
         notes: deal.notes || "",
         ownerId: deal.ownerId || "",
         dealValue: deal.dealValue ?? null,
+        lowValue: deal.lowValue ?? null,
+        startedOn: deal.startedOn ?? null,
+        wonOn: deal.wonOn ?? null,
+        lastContactOn: deal.lastContactOn ?? null,
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
@@ -526,46 +540,232 @@ export default function DealForm() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="dealValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deal Value</FormLabel>
-                      <FormControl>
-                        <div className="flex">
-                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
-                            $
-                          </span>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="0"
-                            className="rounded-l-none"
-                            value={field.value ? field.value.toLocaleString("en-US") : ""}
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/,/g, "");
-                              if (raw === "") {
-                                field.onChange(null);
-                              } else {
-                                const num = parseInt(raw, 10);
-                                if (!isNaN(num)) {
-                                  field.onChange(num);
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lowValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Low Value</FormLabel>
+                        <FormControl>
+                          <div className="flex">
+                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
+                              $
+                            </span>
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="0"
+                              className="rounded-l-none"
+                              value={field.value ? field.value.toLocaleString("en-US") : ""}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/,/g, "");
+                                if (raw === "") {
+                                  field.onChange(null);
+                                } else {
+                                  const num = parseInt(raw, 10);
+                                  if (!isNaN(num)) {
+                                    field.onChange(num);
+                                  }
                                 }
-                              }
-                            }}
-                            data-testid="input-deal-value"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Optional. Estimated value of this deal (minimum $1,000).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                              }}
+                              data-testid="input-low-value"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Optional range minimum.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dealValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Deal Value</FormLabel>
+                        <FormControl>
+                          <div className="flex">
+                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
+                              $
+                            </span>
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="0"
+                              className="rounded-l-none"
+                              value={field.value ? field.value.toLocaleString("en-US") : ""}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/,/g, "");
+                                if (raw === "") {
+                                  field.onChange(null);
+                                } else {
+                                  const num = parseInt(raw, 10);
+                                  if (!isNaN(num)) {
+                                    field.onChange(num);
+                                  }
+                                }
+                              }}
+                              data-testid="input-deal-value"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Estimated value (min $1,000).
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
+              </CardContent>
+            </Card>
+
+            {/* Card 3: Key Dates */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Key Dates</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startedOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Started On</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="w-full pl-3 text-left font-normal justify-start"
+                                data-testid="button-started-on"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="wonOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Won On</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="w-full pl-3 text-left font-normal justify-start"
+                                data-testid="button-won-on"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lastContactOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Last Contact</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="w-full pl-3 text-left font-normal justify-start"
+                                data-testid="button-last-contact"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
 

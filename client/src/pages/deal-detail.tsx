@@ -69,26 +69,40 @@ const statusColors: Record<
     className?: string;
   }
 > = {
-  Inquiry: { variant: "outline" },
-  Discovery: { variant: "secondary" },
-  "Internal Review": {
+  Prospecting: { variant: "outline" },
+  "Proposal Phase": { variant: "secondary" },
+  "Waiting for Feedback": {
     variant: "secondary",
     className:
       "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
-  Contracting: {
+  "Contracting Phase": {
     variant: "secondary",
     className:
       "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   },
-  Won: {
+  "In Progress": {
+    variant: "secondary",
+    className:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
+  },
+  "Final Invoicing": {
+    variant: "secondary",
+    className:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  },
+  Complete: {
     variant: "default",
     className:
       "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   },
-  Lost: { variant: "destructive" },
+  "No-Go": { variant: "destructive" },
   Canceled: { variant: "outline", className: "opacity-50" },
-  Declined: { variant: "outline", className: "opacity-50" },
+  "Warm Lead": {
+    variant: "secondary",
+    className:
+      "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  },
 };
 
 function FieldRow({
@@ -577,14 +591,44 @@ export default function DealDetail() {
                   </FieldRow>
                 )}
                 <FieldRow label="Deal Value" testId="field-deal-value">
-                  {deal.dealValue ? (
+                  {deal.dealValue || deal.lowValue ? (
                     <span className="font-medium">
-                      ${deal.dealValue.toLocaleString("en-US")}
+                      {deal.lowValue && deal.dealValue
+                        ? `$${deal.lowValue.toLocaleString("en-US")} - $${deal.dealValue.toLocaleString("en-US")}`
+                        : deal.dealValue
+                        ? `$${deal.dealValue.toLocaleString("en-US")}`
+                        : deal.lowValue
+                        ? `$${deal.lowValue.toLocaleString("en-US")}+`
+                        : null}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">Unconfirmed</span>
                   )}
                 </FieldRow>
+                {(deal.startedOn || deal.wonOn || deal.lastContactOn) && (
+                  <FieldRow label="Key Dates" testId="field-key-dates">
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      {deal.startedOn && (
+                        <div>
+                          <span className="text-muted-foreground mr-1">Started:</span>
+                          <span className="font-medium">{format(parseDateOnly(deal.startedOn), "MMM d, yyyy")}</span>
+                        </div>
+                      )}
+                      {deal.wonOn && (
+                        <div>
+                          <span className="text-muted-foreground mr-1">Won:</span>
+                          <span className="font-medium">{format(parseDateOnly(deal.wonOn), "MMM d, yyyy")}</span>
+                        </div>
+                      )}
+                      {deal.lastContactOn && (
+                        <div>
+                          <span className="text-muted-foreground mr-1">Last Contact:</span>
+                          <span className="font-medium">{format(parseDateOnly(deal.lastContactOn), "MMM d, yyyy")}</span>
+                        </div>
+                      )}
+                    </div>
+                  </FieldRow>
+                )}
 
                 {deal.concept && (
                   <FieldRow label="Concept" testId="field-concept">
