@@ -95,6 +95,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
+    id: "notes",
+    headerName: "Notes",
+    field: "notes",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+    },
+  },
+  {
     id: "owner",
     headerName: "Owner",
     field: "owner",

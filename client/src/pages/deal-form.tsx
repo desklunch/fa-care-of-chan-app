@@ -47,6 +47,7 @@ const dealFormSchema = z.object({
   eventSchedule: z.array(z.any()).default([]),
   services: z.array(z.enum(dealServices)).default([]),
   concept: z.string().optional().transform(val => val || undefined),
+  notes: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
   dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
 });
@@ -83,6 +84,7 @@ export default function DealForm() {
       eventSchedule: [],
       services: [],
       concept: "",
+      notes: "",
       ownerId: "",
       dealValue: null,
     },
@@ -106,6 +108,7 @@ export default function DealForm() {
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
         services: (deal.services as DealService[]) || [],
         concept: deal.concept || "",
+        notes: deal.notes || "",
         ownerId: deal.ownerId || "",
         dealValue: deal.dealValue ?? null,
       });
@@ -474,6 +477,28 @@ export default function DealForm() {
                       </FormControl>
                       <FormDescription>
                         Describe the concept and provide some context.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter notes..."
+                          className="min-h-[120px] resize-y"
+                          {...field}
+                          data-testid="textarea-notes"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Additional notes and internal comments.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

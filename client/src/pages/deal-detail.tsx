@@ -529,6 +529,14 @@ export default function DealDetail() {
             </FieldRow>
                 )}
 
+                {deal.notes && (
+            <FieldRow label="Notes" testId="field-notes">
+              <span className="">
+                {deal.notes}
+              </span>
+            </FieldRow>
+                )}
+
               </CardContent>
             </Card>
 
