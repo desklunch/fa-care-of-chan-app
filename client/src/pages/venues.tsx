@@ -37,7 +37,6 @@ import {
   NotepadText,
   DraftingCompass,
   AppWindow,
-  CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
@@ -394,22 +393,6 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
 ];
 
 const venueFilters: FilterConfig<VenueWithRelations>[] = [
-  {
-    id: "status",
-    label: "Status",
-    icon: CheckCircle2,
-    optionSource: {
-      type: "static",
-      options: [
-        { id: "active", label: "Active" },
-        { id: "inactive", label: "Inactive" },
-      ],
-    },
-    matchFn: (venue, selectedValues) => {
-      const status = venue.isActive ? "active" : "inactive";
-      return selectedValues.includes(status);
-    },
-  },
   {
     id: "venueType",
     label: "Type",
