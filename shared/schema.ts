@@ -1532,6 +1532,10 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   clientId: z.string().min(1, "Client is required"),
   locations: z.array(dealLocationSchema).default([]),
   dealValue: z.number().int().min(1000, "Minimum deal value is $1,000").nullable().optional(),
+  lowValue: z.number().int().min(1000, "Minimum low value is $1,000").nullable().optional(),
+  startedOn: z.string().nullable().optional(),
+  wonOn: z.string().nullable().optional(),
+  lastContactOn: z.string().nullable().optional(),
 });
 
 export const updateDealSchema = createInsertSchema(deals).pick({
@@ -1545,6 +1549,10 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   notes: true,
   ownerId: true,
   dealValue: true,
+  lowValue: true,
+  startedOn: true,
+  wonOn: true,
+  lastContactOn: true,
   services: true,
 }).partial();
 
