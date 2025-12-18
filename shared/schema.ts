@@ -621,6 +621,7 @@ export const deals = pgTable(
     ownerId: varchar("owner_id").references(() => users.id),
     budgetHigh: integer("budget_high"),
     budgetLow: integer("budget_low"),
+    budgetNotes: text("budget_notes"),
     startedOn: date("started_on"),
     wonOn: date("won_on"),
     lastContactOn: date("last_contact_on"),
