@@ -546,15 +546,15 @@ export const dealStatuses = [
 ] as const;
 export type DealStatus = (typeof dealStatuses)[number];
 
-// Deal location type for city assignments
+// Deal location type for city or country assignments
 export interface DealLocation {
   placeId: string;           // Google Place ID for deduplication
-  city: string;              // "Austin", "London"
-  state: string;             // "California", "England" (full name)
-  stateCode: string;         // "CA", "" (abbreviation, may be empty internationally)
+  city?: string;             // "Austin", "London" (optional for country-only)
+  state?: string;            // "California", "England" (optional)
+  stateCode?: string;        // "CA", "" (optional)
   country: string;           // "United States", "United Kingdom"
   countryCode: string;       // "US", "GB"
-  displayName: string;       // Pre-formatted: "Austin, TX" or "London, United Kingdom"
+  displayName: string;       // Pre-formatted: "Austin, TX", "London, United Kingdom", or "France"
 }
 
 // Event schedule types for deals
@@ -1500,9 +1500,9 @@ export type DealWithRelations = Deal & {
 // Deal location validation schema
 export const dealLocationSchema = z.object({
   placeId: z.string(),
-  city: z.string(),
-  state: z.string(),
-  stateCode: z.string(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  stateCode: z.string().optional(),
   country: z.string(),
   countryCode: z.string(),
   displayName: z.string(),

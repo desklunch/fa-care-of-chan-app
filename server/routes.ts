@@ -1526,6 +1526,147 @@ export async function registerRoutes(
     }
   });
 
+  // Google Places Location Search - Search for cities OR countries
+  app.post("/api/places/location-search", isAuthenticated, async (req, res) => {
+    try {
+      const { query } = req.body;
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ message: "Query is required" });
+      }
+
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Places API key not configured" });
+      }
+
+      const fieldMask = [
+        "places.id",
+        "places.displayName",
+        "places.formattedAddress",
+        "places.addressComponents",
+        "places.types",
+      ].join(",");
+
+      // Search for cities
+      const cityResponse = await fetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
+          body: JSON.stringify({
+            textQuery: `${query} city`,
+            includedType: "locality",
+            maxResultCount: 5,
+          }),
+        }
+      );
+
+      // Search for countries
+      const countryResponse = await fetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
+          body: JSON.stringify({
+            textQuery: query,
+            includedType: "country",
+            maxResultCount: 3,
+          }),
+        }
+      );
+
+      const cityData = cityResponse.ok ? await cityResponse.json() : { places: [] };
+      const countryData = countryResponse.ok ? await countryResponse.json() : { places: [] };
+
+      const parseLocation = (place: any, isCountry: boolean) => {
+        let city = "";
+        let state = "";
+        let stateCode = "";
+        let country = "";
+        let countryCode = "";
+
+        if (place.addressComponents) {
+          for (const component of place.addressComponents) {
+            const types = component.types || [];
+            if (types.includes("locality")) {
+              city = component.longText || "";
+            } else if (types.includes("sublocality_level_1") && !city) {
+              city = component.longText || "";
+            } else if (types.includes("administrative_area_level_1")) {
+              state = component.longText || "";
+              stateCode = component.shortText || "";
+            } else if (types.includes("country")) {
+              country = component.longText || "";
+              countryCode = component.shortText || "";
+            }
+          }
+        }
+
+        // For countries, use display name as country if not parsed
+        if (isCountry && !country && place.displayName?.text) {
+          country = place.displayName.text;
+          // Try to get country code from types or addressComponents
+          if (place.addressComponents?.length === 1) {
+            countryCode = place.addressComponents[0].shortText || "";
+          }
+        }
+
+        // For cities, use display name if locality not found
+        if (!isCountry && !city && place.displayName?.text) {
+          city = place.displayName.text;
+        }
+
+        // Format displayName based on type
+        let displayName: string;
+        if (isCountry) {
+          displayName = country;
+        } else if (countryCode === "US" && stateCode) {
+          displayName = `${city}, ${stateCode}`;
+        } else if (country) {
+          displayName = `${city}, ${country}`;
+        } else {
+          displayName = city;
+        }
+
+        return {
+          placeId: place.id || "",
+          city: isCountry ? undefined : city,
+          state: isCountry ? undefined : state,
+          stateCode: isCountry ? undefined : stateCode,
+          country,
+          countryCode,
+          displayName,
+          formattedAddress: place.formattedAddress || "",
+          type: isCountry ? "country" : "city",
+        };
+      };
+
+      const cities = (cityData.places || [])
+        .map((p: any) => parseLocation(p, false))
+        .filter((c: any) => c.city);
+
+      const countries = (countryData.places || [])
+        .map((p: any) => parseLocation(p, true))
+        .filter((c: any) => c.country);
+
+      // Combine results: countries first (if query matches), then cities
+      const locations = [...countries, ...cities];
+
+      res.json({ locations });
+    } catch (error) {
+      console.error("Error in location search:", error);
+      res.status(500).json({ message: "Failed to search locations" });
+    }
+  });
+
   // Google Places Refresh - Re-fetch full place details by placeId
   app.post("/api/places/refresh", isAuthenticated, async (req, res) => {
     try {

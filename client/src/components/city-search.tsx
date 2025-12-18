@@ -1,19 +1,20 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, X } from "lucide-react";
+import { Loader2, MapPin, Globe, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { DealLocation } from "@shared/schema";
 
-interface CityResult {
+interface LocationResult {
   placeId: string;
-  city: string;
-  state: string;
-  stateCode: string;
+  city?: string;
+  state?: string;
+  stateCode?: string;
   country: string;
   countryCode: string;
   displayName: string;
   formattedAddress: string;
+  type: "city" | "country";
 }
 
 interface CitySearchProps {
@@ -26,11 +27,11 @@ interface CitySearchProps {
 export function CitySearch({
   value,
   onChange,
-  placeholder = "Search for a city...",
+  placeholder = "Search for a city or country...",
   "data-testid": testId = "city-search",
 }: CitySearchProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<CityResult[]>([]);
+  const [results, setResults] = useState<LocationResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export function CitySearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchCities = useCallback(async (searchQuery: string) => {
+  const searchLocations = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([]);
       setIsOpen(false);
@@ -49,19 +50,19 @@ export function CitySearch({
     setError(null);
 
     try {
-      const response = await apiRequest("POST", "/api/places/city-search", {
+      const response = await apiRequest("POST", "/api/places/location-search", {
         query: searchQuery,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to search cities");
+        throw new Error("Failed to search locations");
       }
 
       const data = await response.json();
-      setResults(data.cities || []);
+      setResults(data.locations || []);
       setIsOpen(true);
     } catch (err) {
-      console.error("Error searching cities:", err);
+      console.error("Error searching locations:", err);
       setError("Failed to search. Please try again.");
       setResults([]);
     } finally {
@@ -81,7 +82,7 @@ export function CitySearch({
     }
 
     debounceRef.current = setTimeout(() => {
-      searchCities(query);
+      searchLocations(query);
     }, 350);
 
     return () => {
@@ -89,7 +90,7 @@ export function CitySearch({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [query, searchCities]);
+  }, [query, searchLocations]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -97,7 +98,7 @@ export function CitySearch({
     }
   };
 
-  const handleSelect = (result: CityResult) => {
+  const handleSelect = (result: LocationResult) => {
     const isDuplicate = value.some((loc) => loc.placeId === result.placeId);
     if (isDuplicate) {
       setIsOpen(false);
@@ -181,6 +182,7 @@ export function CitySearch({
         <div className="absolute z-50 w-full max-w-md mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
           {results.map((result, index) => {
             const isDuplicate = value.some((loc) => loc.placeId === result.placeId);
+            const Icon = result.type === "country" ? Globe : MapPin;
             return (
               <button
                 key={result.placeId || index}
@@ -192,11 +194,11 @@ export function CitySearch({
                 }`}
                 data-testid={`${testId}-result-${index}`}
               >
-                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
                   <div className="font-medium">{result.displayName}</div>
                   <div className="text-sm text-muted-foreground truncate">
-                    {result.formattedAddress}
+                    {result.type === "country" ? "Country" : result.formattedAddress}
                   </div>
                 </div>
                 {isDuplicate && (
@@ -210,31 +212,35 @@ export function CitySearch({
 
       {isOpen && results.length === 0 && !isLoading && query.trim() && (
         <div className="absolute z-50 w-full max-w-md mt-1 bg-popover border rounded-md shadow-lg p-3 text-center text-muted-foreground">
-          No cities found
+          No locations found
         </div>
       )}
 
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2" data-testid={`${testId}-chips`}>
-          {value.map((location) => (
-            <Badge
-              key={location.placeId}
-              variant="secondary"
-              className="gap-1 pr-1"
-              data-testid={`${testId}-chip-${location.placeId}`}
-            >
-              <MapPin className="h-3 w-3" />
-              {location.displayName}
-              <button
-                type="button"
-                onClick={() => handleRemove(location.placeId)}
-                className="ml-1 rounded-full p-0.5 hover:bg-muted"
-                data-testid={`${testId}-remove-${location.placeId}`}
+          {value.map((location) => {
+            const isCountry = !location.city;
+            const LocationIcon = isCountry ? Globe : MapPin;
+            return (
+              <Badge
+                key={location.placeId}
+                variant="secondary"
+                className="gap-1 pr-1"
+                data-testid={`${testId}-chip-${location.placeId}`}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+                <LocationIcon className="h-3 w-3" />
+                {location.displayName}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(location.placeId)}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted"
+                  data-testid={`${testId}-remove-${location.placeId}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            );
+          })}
         </div>
       )}
     </div>
