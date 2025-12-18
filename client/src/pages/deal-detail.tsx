@@ -607,6 +607,11 @@ export default function DealDetail() {
                     <span className="text-muted-foreground">Unconfirmed</span>
                   )}
                 </FieldRow>
+                {deal.budgetNotes && (
+                  <FieldRow label="Budget Notes" testId="field-budget-notes">
+                    <span className="">{deal.budgetNotes}</span>
+                  </FieldRow>
+                )}
                 {(deal.startedOn || deal.wonOn || deal.lastContactOn) && (
                   <FieldRow label="Key Dates" testId="field-key-dates">
                     <div className="flex flex-wrap gap-4 text-sm">

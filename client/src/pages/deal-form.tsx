@@ -53,6 +53,7 @@ const dealFormSchema = z.object({
   ownerId: z.string().optional().transform(val => val || undefined),
   budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
   budgetLow: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
+  budgetNotes: z.string().optional().transform(val => val || undefined),
   startedOn: z.string().nullable().optional(),
   wonOn: z.string().nullable().optional(),
   lastContactOn: z.string().nullable().optional(),
@@ -94,6 +95,7 @@ export default function DealForm() {
       ownerId: "",
       budgetHigh: null,
       budgetLow: null,
+      budgetNotes: "",
       startedOn: null,
       wonOn: null,
       lastContactOn: null,
@@ -122,6 +124,7 @@ export default function DealForm() {
         ownerId: deal.ownerId || "",
         budgetHigh: deal.budgetHigh ?? null,
         budgetLow: deal.budgetLow ?? null,
+        budgetNotes: deal.budgetNotes || "",
         startedOn: deal.startedOn ?? null,
         wonOn: deal.wonOn ?? null,
         lastContactOn: deal.lastContactOn ?? null,
@@ -620,6 +623,29 @@ export default function DealForm() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="budgetNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Budget Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter budget notes..."
+                          className="min-h-[80px] resize-y"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="textarea-budget-notes"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Additional details about budget or pricing.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
               </CardContent>
             </Card>

@@ -234,6 +234,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
+    id: "budgetNotes",
+    headerName: "Budget Notes",
+    field: "budgetNotes",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+    },
+  },
+  {
     id: "notes",
     headerName: "Notes",
     field: "notes",
