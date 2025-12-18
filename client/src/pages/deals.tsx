@@ -303,6 +303,7 @@ export default function Deals() {
         ]}
         searchPlaceholder="Search deals..."
         filters={dealFilters}
+        collapsibleFilters={true}
         onRowClick={(deal) => setLocation(`/deals/${deal.id}`)}
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"

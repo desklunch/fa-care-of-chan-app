@@ -452,7 +452,8 @@ export interface IStorage {
   getDealTasks(dealId: string): Promise<DealTaskWithRelations[]>;
   getDealTaskById(id: string): Promise<DealTask | undefined>;
   createDealTask(data: CreateDealTask, createdById: string): Promise<DealTask>;
-  updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null }): Promise<DealTask | undefined>;
+  updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null; title?: string }): Promise<DealTask | undefined>;
+  deleteDealTask(id: string): Promise<void>;
   
   // Client operations
   getClients(): Promise<Client[]>;
@@ -3757,8 +3758,8 @@ export class DatabaseStorage implements IStorage {
     return task;
   }
 
-  async updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null }): Promise<DealTask | undefined> {
-    const updateData: Partial<{ completed: boolean; completedAt: Date | null; assignedUserId: string | null; dueDate: string | null; updatedAt: Date }> = {
+  async updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null; title?: string }): Promise<DealTask | undefined> {
+    const updateData: Partial<{ completed: boolean; completedAt: Date | null; assignedUserId: string | null; dueDate: string | null; title: string; updatedAt: Date }> = {
       updatedAt: new Date(),
     };
     
@@ -3772,6 +3773,9 @@ export class DatabaseStorage implements IStorage {
     if (data.dueDate !== undefined) {
       updateData.dueDate = data.dueDate;
     }
+    if (data.title !== undefined) {
+      updateData.title = data.title;
+    }
 
     const [task] = await db
       .update(dealTasks)
@@ -3779,6 +3783,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dealTasks.id, id))
       .returning();
     return task;
+  }
+
+  async deleteDealTask(id: string): Promise<void> {
+    await db.delete(dealTasks).where(eq(dealTasks.id, id));
   }
 
   // Client operations

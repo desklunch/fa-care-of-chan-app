@@ -5065,6 +5065,26 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // DELETE /api/deals/:dealId/tasks/:taskId - Delete a task
+  app.delete("/api/deals/:dealId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingTask = await storage.getDealTaskById(req.params.taskId);
+      if (!existingTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (existingTask.dealId !== req.params.dealId) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      await storage.deleteDealTask(req.params.taskId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting deal task:", error);
+      res.status(500).json({ message: "Failed to delete deal task" });
+    }
+  });
+
   // GET /api/clients - Get all clients
   app.get("/api/clients", isAuthenticated, async (req, res) => {
     try {

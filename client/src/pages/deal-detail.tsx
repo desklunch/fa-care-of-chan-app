@@ -33,11 +33,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Pencil, Trash2, CalendarCheck, Users } from "lucide-react";
+import { Loader2, Pencil, Trash2, CalendarCheck, UserRound, MoreVertical, X, Check } from "lucide-react";
 import { getEventSummary } from "@/components/event-schedule";
 import { CommentList } from "@/components/ui/comments";
 import { cn } from "@/lib/utils";
@@ -101,7 +107,7 @@ function FieldRow({
       className={`flex py-4 border-b border-border/50 last:border-b-0 col-span-${colSpan}`}
       data-testid={testId}
     >
-      <div className="w-1/2 text-xs font-semibold shrink-0">{label}</div>
+      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
       <div className="flex-1 text-sm">{children}</div>
     </div>
   );
@@ -119,6 +125,13 @@ export default function DealDetail() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>();
   const [newTaskAssignee, setNewTaskAssignee] = useState<string>("");
+
+  // Task editing state
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState("");
+  const [editTaskDueDate, setEditTaskDueDate] = useState<Date | undefined>();
+  const [editTaskAssignee, setEditTaskAssignee] = useState<string>("");
+  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -184,7 +197,7 @@ export default function DealDetail() {
       data,
     }: {
       taskId: string;
-      data: { completed?: boolean };
+      data: { completed?: boolean; title?: string; dueDate?: string | null; assignedUserId?: string | null };
     }) => {
       return await apiRequest(
         "PATCH",
@@ -194,10 +207,29 @@ export default function DealDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "tasks"] });
+      setEditingTaskId(null);
     },
     onError: (error: Error) => {
       toast({
         title: "Failed to update task",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      return await apiRequest("DELETE", `/api/deals/${id}/tasks/${taskId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "tasks"] });
+      setDeleteTaskId(null);
+      toast({ title: "Task deleted" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete task",
         description: error.message,
         variant: "destructive",
       });
@@ -222,6 +254,32 @@ export default function DealDetail() {
     updateTaskMutation.mutate({
       taskId: task.id,
       data: { completed: !task.completed },
+    });
+  };
+
+  const handleStartEditTask = (task: DealTaskWithRelations) => {
+    setEditingTaskId(task.id);
+    setEditTaskTitle(task.title);
+    setEditTaskDueDate(task.dueDate ? parseDateOnly(task.dueDate) : undefined);
+    setEditTaskAssignee(task.assignedUserId || "");
+  };
+
+  const handleCancelEditTask = () => {
+    setEditingTaskId(null);
+    setEditTaskTitle("");
+    setEditTaskDueDate(undefined);
+    setEditTaskAssignee("");
+  };
+
+  const handleSaveEditTask = () => {
+    if (!editingTaskId || !editTaskTitle.trim()) return;
+    updateTaskMutation.mutate({
+      taskId: editingTaskId,
+      data: {
+        title: editTaskTitle.trim(),
+        dueDate: editTaskDueDate ? format(editTaskDueDate, "yyyy-MM-dd") : null,
+        assignedUserId: editTaskAssignee && editTaskAssignee !== "unassigned" ? editTaskAssignee : null,
+      },
     });
   };
 
@@ -331,15 +389,19 @@ export default function DealDetail() {
                   data-testid="badge-deal-status"
                 >
                   {deal.status}
-                  
                 </Badge>
                 <div>
-                  <span className="text-sm font-semibold">{deal.client?.name}</span>
-                  <h1 className="text-2xl font-bold" data-testid="text-deal-name">
+                  <span className="text-sm font-semibold">
+                    {deal.client?.name}
+                  </span>
+                  <h1
+                    className="text-2xl font-bold"
+                    data-testid="text-deal-name"
+                  >
                     {deal.displayName}
                   </h1>
                 </div>
-               
+
                 {ownerName ? (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-5 w-5 rounded-full">
@@ -354,12 +416,9 @@ export default function DealDetail() {
                     <span className="text-sm font-semibold">{ownerName}</span>
                   </div>
                 ) : (
-                  <span className="text-xs font-medium">
-                    Unassigned
-                  </span>
+                  <span className="text-xs font-medium">Unassigned</span>
                 )}
               </div>
-            
             </div>
 
             <TabsList data-testid="tabs-deal" className="px-4 md:px-6">
@@ -393,7 +452,6 @@ export default function DealDetail() {
                         data-testid="link-deal-client"
                       >
                         {deal.client.name}
- 
                       </span>
                     </Link>
                   ) : (
@@ -414,9 +472,7 @@ export default function DealDetail() {
                       >
                         {deal.primaryContact.firstName}{" "}
                         {deal.primaryContact.lastName}
-                       
                       </p>
- 
                     </Link>
                   ) : (
                     <span className="text-muted-foreground">
@@ -470,7 +526,7 @@ export default function DealDetail() {
                             className="flex flex-col gap-2"
                           >
                             {event.label && (
-                              <span className="">
+                              <span className="font-semibold">
                                 {event.label}
                               </span>
                             )}
@@ -478,13 +534,15 @@ export default function DealDetail() {
                               <span className="text-sm font-medium">
                                 {summary ? summary.text : "Date not specified"}
                               </span>
-                              {summary && summary.altCount > 0 && (
-                                <Badge variant="outline" className="px-1.5 w-fit text-xs ">
-                                  {summary.altCount} Alt
-                                </Badge>
-                              )}
                             </div>
-
+                            {summary && summary.altCount > 0 && (
+                              <Badge
+                                variant="outline"
+                                className="px-1.5 w-fit text-[10px] opacity-50 "
+                              >
+                                + {summary.altCount} Alternate Date
+                              </Badge>
+                            )}
                           </div>
                         );
                       })}
@@ -492,7 +550,11 @@ export default function DealDetail() {
                   </FieldRow>
                 )}
                 {services.length > 0 && (
-                  <FieldRow label="Services" testId="field-services" colSpan={2}>
+                  <FieldRow
+                    label="Services"
+                    testId="field-services"
+                    colSpan={2}
+                  >
                     <div
                       className="flex flex-wrap gap-2"
                       data-testid="deal-services"
@@ -522,21 +584,16 @@ export default function DealDetail() {
                 </FieldRow>
 
                 {deal.concept && (
-            <FieldRow label="Concept" testId="field-concept">
-              <span className="">
-                {deal.concept}
-              </span>
-            </FieldRow>
+                  <FieldRow label="Concept" testId="field-concept">
+                    <span className="">{deal.concept}</span>
+                  </FieldRow>
                 )}
 
                 {deal.notes && (
-            <FieldRow label="Notes" testId="field-notes">
-              <span className="">
-                {deal.notes}
-              </span>
-            </FieldRow>
+                  <FieldRow label="Notes" testId="field-notes">
+                    <span className="">{deal.notes}</span>
+                  </FieldRow>
                 )}
-
               </CardContent>
             </Card>
 
@@ -557,42 +614,80 @@ export default function DealDetail() {
 
               return (
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2 ">
                     <CardTitle className="text-lg">Next Steps</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-0">
                     {displayTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="flex items-center gap-3 py-6 bg-card  border-b"
+                        className="grid grid-cols-1 sm:grid-cols-2 items-center gap-y-1 gap-x-3 py-6 bg-card border-b"
                         data-testid={`preview-task-${task.id}`}
                       >
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => handleToggleTaskComplete(task)}
-                          disabled={updateTaskMutation.isPending}
-                          data-testid={`preview-checkbox-task-${task.id}`}
-                          className="w-4 h-4 rounded-full"
-                        />
-                        <div className="flex-1 flex justify-between items-center flex-wrap min-w-0">
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            checked={task.completed}
+                            onCheckedChange={() =>
+                              handleToggleTaskComplete(task)
+                            }
+                            disabled={updateTaskMutation.isPending}
+                            data-testid={`preview-checkbox-task-${task.id}`}
+                            className="w-4 h-4 rounded-full"
+                          />
                           <p className="text-sm font-medium">{task.title}</p>
+                        </div>
 
+                        <div className="ml-7 flex justify-between sm:justify-end items-center">
                           <div className="flex items-center gap-3 mt-1 text-xs">
+                            {task.dueDate && (
+                              <span className="flex items-center gap-1 text-primary">
+                                <CalendarCheck className="h-3 w-3" />
+                                {format(
+                                  parseDateOnly(task.dueDate),
+                                  "MMM d, yyyy",
+                                )}
+                              </span>
+                            )}
                             {task.assignedUser && (
                               <span className="text-xs font-medium flex items-center gap-1">
-
-                                {task.assignedUser.firstName} {task.assignedUser.lastName}
+                                <UserRound className="h-3 w-3" />
+                                {task.assignedUser.firstName}{" "}
+                                {task.assignedUser.lastName}
                               </span>
                             )}
-                            {task.dueDate && (
-                              <span className="flex items-center gap-1">
-                                <CalendarCheck className="h-3 w-3" />
-                                {format(parseDateOnly(task.dueDate), "MMM d, yyyy")}
-                              </span>
-                            )}
-   
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  data-testid={`preview-button-task-menu-${task.id}`}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    handleStartEditTask(task);
+                                    setActiveTab("tasks");
+                                  }}
+                                  data-testid={`preview-button-edit-task-${task.id}`}
+                                >
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => setDeleteTaskId(task.id)}
+                                  data-testid={`preview-button-delete-task-${task.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                    
                         </div>
                       </div>
                     ))}
@@ -600,17 +695,17 @@ export default function DealDetail() {
                       <button
                         type="button"
                         onClick={() => setActiveTab("tasks")}
-                        className="w-full text-xs text-primary hover:underline text-left py-4"
+                        className="w-full text-sm text-primary hover:underline text-left py-6"
                         data-testid="link-more-tasks"
                       >
-                        + {remainingCount} more incomplete task{remainingCount > 1 ? "s" : ""}
+                        + {remainingCount} more
+                        
                       </button>
                     )}
                   </CardContent>
                 </Card>
               );
             })()}
-
           </TabsContent>
 
           <TabsContent
@@ -618,7 +713,7 @@ export default function DealDetail() {
             className="space-y-4 p-4 md:p-6 pt-4 max-w-4xl"
           >
             <Card>
-              <CardContent className="flex items-center gap-2 p-4">
+              <CardContent className="flex items-center gap-2 p-4 ">
                 <div className="flex flex-1">
                   <Input
                     placeholder="Task title"
@@ -633,14 +728,13 @@ export default function DealDetail() {
                     data-testid="input-task-title"
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                      
                         className={cn(
-                          "min-w-12 w-fit h-12 justify-center text-left font-normal",
+                          "border-input min-w-12 w-fit h-12 justify-center text-left font-normal",
                           !newTaskDueDate && "",
                         )}
                         data-testid="button-task-due-date"
@@ -664,7 +758,7 @@ export default function DealDetail() {
                   >
                     <SelectTrigger
                       data-testid="select-task-assignee"
-                      className="w-[140px] text-sm"
+                      className="w-[140px] text-xs"
                     >
                       <SelectValue placeholder="Assignee" />
                     </SelectTrigger>
@@ -712,52 +806,340 @@ export default function DealDetail() {
                     No tasks yet
                   </p>
                 ) : (
-                  tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className={cn(
-                        "flex items-start gap-3 p-3 rounded-md border hover:bg-accent/50 transition-colors",
-                        task.completed && "opacity-60",
-                      )}
-                      data-testid={`task-item-${task.id}`}
-                    >
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => handleToggleTaskComplete(task)}
-                        disabled={updateTaskMutation.isPending}
-                        data-testid={`checkbox-task-${task.id}`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={cn(
-                            "text-sm font-medium",
-                            task.completed &&
-                              "line-through text-muted-foreground",
-                          )}
+                  <>
+                    {/* Incomplete tasks */}
+                    {tasks.filter((t) => !t.completed).map((task) => (
+                      editingTaskId === task.id ? (
+                        <div
+                          key={task.id}
+                          className="flex items-center gap-2 p-2 rounded-md border bg-accent/30"
+                          data-testid={`task-edit-${task.id}`}
                         >
-                          {task.title}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          {task.dueDate && (
-                            <span className="flex items-center gap-1">
-                              <CalendarCheck className="h-3 w-3" />
-                              {format(
-                                parseDateOnly(task.dueDate),
-                                "MMM d, yyyy",
-                              )}
-                            </span>
-                          )}
-                          {task.assignedUser && (
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {task.assignedUser.firstName}{" "}
-                              {task.assignedUser.lastName}
-                            </span>
-                          )}
+                          <div className="flex flex-1">
+                            <Input
+                              value={editTaskTitle}
+                              onChange={(e) => setEditTaskTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSaveEditTask();
+                                }
+                                if (e.key === "Escape") {
+                                  handleCancelEditTask();
+                                }
+                              }}
+                              data-testid={`input-edit-task-${task.id}`}
+                              autoFocus
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "border-input min-w-12 w-fit h-9 justify-center text-left font-normal",
+                                  )}
+                                  data-testid={`button-edit-task-due-date-${task.id}`}
+                                >
+                                  <CalendarCheck className="h-4 w-4" />
+                                  {editTaskDueDate ? format(editTaskDueDate, "MMM d") : ""}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={editTaskDueDate}
+                                  onSelect={setEditTaskDueDate}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <Select
+                              value={editTaskAssignee}
+                              onValueChange={setEditTaskAssignee}
+                            >
+                              <SelectTrigger
+                                data-testid={`select-edit-task-assignee-${task.id}`}
+                                className="w-[140px] text-xs"
+                              >
+                                <SelectValue placeholder="Assignee" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unassigned">Unassigned</SelectItem>
+                                {usersData.map((u) => (
+                                  <SelectItem key={u.id} value={u.id}>
+                                    {u.firstName} {u.lastName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button
+                            onClick={handleSaveEditTask}
+                            disabled={updateTaskMutation.isPending || !editTaskTitle.trim()}
+                            size="icon"
+                            variant="ghost"
+                            data-testid={`button-save-edit-task-${task.id}`}
+                          >
+                            {updateTaskMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            onClick={handleCancelEditTask}
+                            size="icon"
+                            variant="ghost"
+                            data-testid={`button-cancel-edit-task-${task.id}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-                    </div>
-                  ))
+                      ) : (
+                        <div
+                          key={task.id}
+                          className="flex flex-col sm:flex-row justify-between items-start gap-2 p-4 py-4 rounded-md border hover:bg-accent/50 transition-colors"
+                          data-testid={`task-item-${task.id}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => handleToggleTaskComplete(task)}
+                              disabled={updateTaskMutation.isPending}
+                              data-testid={`checkbox-task-${task.id}`}
+                              className="w-5 h-5 rounded-full"
+                            />
+                            <p className="text-sm font-medium">
+                              {task.title}
+                            </p>
+                          </div>
+                          <div className="ml-7 sm:ml-0 text-xs text-muted-foreground flex items-center gap-3">
+                            {task.dueDate && (
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CalendarCheck className="h-3 w-3" />
+                                {format(parseDateOnly(task.dueDate), "MMM d, yyyy")}
+                              </span>
+                            )}
+                            {task.assignedUser && (
+                              <span className="flex items-center justify-start sm:justify-end gap-2">
+                                <Avatar className="h-5 w-5 rounded-full">
+                                  <AvatarImage
+                                    src={task.assignedUser.profileImageUrl || undefined}
+                                    alt={`${task.assignedUser.firstName} ${task.assignedUser.lastName}`}
+                                  />
+                                  <AvatarFallback className="text-xs">
+                                    {`${task.assignedUser.firstName[0]}${task.assignedUser.lastName[0]}`.toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {task.assignedUser.firstName} {task.assignedUser.lastName[0]}.
+                              </span>
+                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  data-testid={`button-task-menu-${task.id}`}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleStartEditTask(task)}
+                                  data-testid={`button-edit-task-${task.id}`}
+                                >
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => setDeleteTaskId(task.id)}
+                                  data-testid={`button-delete-task-${task.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      )
+                    ))}
+
+                    {/* Completed tasks section */}
+                    {tasks.filter((t) => t.completed).length > 0 && (
+                      <>
+                        <div className="pt-4 pb-2">
+                          <h4 className="text-sm font-semibold text-muted-foreground">Completed</h4>
+                        </div>
+                        {tasks.filter((t) => t.completed).map((task) => (
+                          editingTaskId === task.id ? (
+                            <div
+                              key={task.id}
+                              className="flex items-center gap-2 p-2 rounded-md border bg-accent/30"
+                              data-testid={`task-edit-${task.id}`}
+                            >
+                              <div className="flex flex-1">
+                                <Input
+                                  value={editTaskTitle}
+                                  onChange={(e) => setEditTaskTitle(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                      e.preventDefault();
+                                      handleSaveEditTask();
+                                    }
+                                    if (e.key === "Escape") {
+                                      handleCancelEditTask();
+                                    }
+                                  }}
+                                  data-testid={`input-edit-task-${task.id}`}
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className={cn(
+                                        "border-input min-w-12 w-fit h-9 justify-center text-left font-normal",
+                                      )}
+                                      data-testid={`button-edit-task-due-date-${task.id}`}
+                                    >
+                                      <CalendarCheck className="h-4 w-4" />
+                                      {editTaskDueDate ? format(editTaskDueDate, "MMM d") : ""}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={editTaskDueDate}
+                                      onSelect={setEditTaskDueDate}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <Select
+                                  value={editTaskAssignee}
+                                  onValueChange={setEditTaskAssignee}
+                                >
+                                  <SelectTrigger
+                                    data-testid={`select-edit-task-assignee-${task.id}`}
+                                    className="w-[140px] text-xs"
+                                  >
+                                    <SelectValue placeholder="Assignee" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                                    {usersData.map((u) => (
+                                      <SelectItem key={u.id} value={u.id}>
+                                        {u.firstName} {u.lastName}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button
+                                onClick={handleSaveEditTask}
+                                disabled={updateTaskMutation.isPending || !editTaskTitle.trim()}
+                                size="icon"
+                                variant="ghost"
+                                data-testid={`button-save-edit-task-${task.id}`}
+                              >
+                                {updateTaskMutation.isPending ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button
+                                onClick={handleCancelEditTask}
+                                size="icon"
+                                variant="ghost"
+                                data-testid={`button-cancel-edit-task-${task.id}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              key={task.id}
+                              className="flex flex-col sm:flex-row justify-between items-start gap-2 p-4 py-4 rounded-md border hover:bg-accent/50 transition-colors opacity-60"
+                              data-testid={`task-item-${task.id}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  checked={task.completed}
+                                  onCheckedChange={() => handleToggleTaskComplete(task)}
+                                  disabled={updateTaskMutation.isPending}
+                                  data-testid={`checkbox-task-${task.id}`}
+                                  className="w-5 h-5 rounded-full"
+                                />
+                                <p className="text-sm font-medium line-through text-muted-foreground">
+                                  {task.title}
+                                </p>
+                              </div>
+                              <div className="ml-7 sm:ml-0 text-xs text-muted-foreground flex items-center gap-3">
+                                {task.dueDate && (
+                                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <CalendarCheck className="h-3 w-3" />
+                                    {format(parseDateOnly(task.dueDate), "MMM d, yyyy")}
+                                  </span>
+                                )}
+                                {task.assignedUser && (
+                                  <span className="flex items-center justify-start sm:justify-end gap-2">
+                                    <Avatar className="h-5 w-5 rounded-full">
+                                      <AvatarImage
+                                        src={task.assignedUser.profileImageUrl || undefined}
+                                        alt={`${task.assignedUser.firstName} ${task.assignedUser.lastName}`}
+                                      />
+                                      <AvatarFallback className="text-xs">
+                                        {`${task.assignedUser.firstName[0]}${task.assignedUser.lastName[0]}`.toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    {task.assignedUser.firstName} {task.assignedUser.lastName[0]}.
+                                  </span>
+                                )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      data-testid={`button-task-menu-${task.id}`}
+                                    >
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => handleStartEditTask(task)}
+                                      data-testid={`button-edit-task-${task.id}`}
+                                    >
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setDeleteTaskId(task.id)}
+                                      data-testid={`button-delete-task-${task.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -793,6 +1175,34 @@ export default function DealDetail() {
               data-testid="button-confirm-delete"
             >
               {deleteMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Task Confirmation Dialog */}
+      <AlertDialog open={!!deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this task? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-task">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTaskId && deleteTaskMutation.mutate(deleteTaskId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteTaskMutation.isPending}
+              data-testid="button-confirm-delete-task"
+            >
+              {deleteTaskMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Delete
