@@ -1527,6 +1527,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   displayName: true,
   status: true,
   clientId: true,
+  primaryContactId: true,
   locations: true,
   eventSchedule: true,
   concept: true,
