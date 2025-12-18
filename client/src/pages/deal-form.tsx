@@ -31,7 +31,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
-import { ChevronsUpDown, Loader2, X } from "lucide-react";
+import { ChevronsUpDown, Loader2, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -177,12 +177,32 @@ export default function DealForm() {
     );
   }
 
+  const handleHeaderSubmit = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  const handleCancel = () => {
+    setLocation(isEditing ? `/deals/${id}` : "/deals");
+  };
+
   return (
     <PageLayout
       breadcrumbs={[
         { label: "Deals", href: "/deals" },
         ...(isEditing && deal ? [{ label: deal.displayName, href: `/deals/${id}` }] : []),
         { label: isEditing ? "Edit" : "New Deal" },
+      ]}
+      primaryAction={{
+        label: isEditing ? "Update Deal" : "Create Deal",
+        icon: Save,
+        onClick: handleHeaderSubmit,
+      }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          icon: X,
+          onClick: handleCancel,
+        },
       ]}
     >
       <div className="max-w-2xl p-6">
