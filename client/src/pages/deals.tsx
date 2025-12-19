@@ -9,6 +9,7 @@ import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
+import { DealStatusBadge } from "@/components/deal-status-badge";
 
 const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner"];
 
@@ -118,6 +119,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex:1,
       minWidth: 190,
       maxWidth: 190,
+      cellRenderer: (params: { value: string }) => {
+        if (!params.value) return null;
+        return <DealStatusBadge status={params.value as DealWithRelations["status"]} />;
+      },
     },
   },
   {

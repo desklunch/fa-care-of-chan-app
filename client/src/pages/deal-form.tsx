@@ -36,6 +36,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact } from "@shared/schema";
 import { dealStatuses, dealLocationSchema, dealServices } from "@shared/schema";
@@ -335,7 +336,7 @@ export default function DealForm() {
                         <SelectContent>
                           {dealStatuses.map((status) => (
                             <SelectItem key={status} value={status}>
-                              {status}
+                              <DealStatusBadge status={status} />
                             </SelectItem>
                           ))}
                         </SelectContent>

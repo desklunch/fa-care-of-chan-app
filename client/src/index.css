@@ -289,4 +289,108 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* Deal Status Badges - Pattern 1: Transparent bg with border (text matches border) */
+  .deal-status-prospecting {
+    background: rgba(0, 105, 137, 0.2);
+    border: 1px solid #006989;
+    color: #006989;
+  }
+  .dark .deal-status-prospecting {
+    background: rgba(131, 226, 255, 0.2);
+    border-color: #83E2FF;
+    color: #83E2FF;
+  }
+
+  .deal-status-warm-lead {
+    background: rgba(94, 29, 178, 0.2);
+    border: 1px solid #5E1DB2;
+    color: #5E1DB2;
+  }
+  .dark .deal-status-warm-lead {
+    background: rgba(194, 147, 255, 0.2);
+    border-color: #C293FF;
+    color: #C293FF;
+  }
+
+  /* Deal Status Badges - Pattern 2: Solid bg with matching border (dark text) */
+  .deal-status-proposal {
+    background: #DE72BA;
+    border: 1px solid #DE72BA;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-proposal {
+    background: #FF93DB;
+    border-color: #FF93DB;
+    color: #1a1a1a;
+  }
+
+  .deal-status-waiting {
+    background: #BE8B51;
+    border: 1px solid #BE8B51;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-waiting {
+    background: #FFC583;
+    border-color: #FFC583;
+    color: #1a1a1a;
+  }
+
+  .deal-status-contracting {
+    background: #DB7052;
+    border: 1px solid #DB7052;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-contracting {
+    background: #FF9173;
+    border-color: #FF9173;
+    color: #1a1a1a;
+  }
+
+  .deal-status-in-progress {
+    background: #64A334;
+    border: 1px solid #64A334;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-in-progress {
+    background: #85CF36;
+    border-color: #85CF36;
+    color: #1a1a1a;
+  }
+
+  .deal-status-invoicing {
+    background: #608CD4;
+    border: 1px solid #608CD4;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-invoicing {
+    background: #5893F2;
+    border-color: #5893F2;
+    color: #1a1a1a;
+  }
+
+  /* Deal Status Badges - Pattern 3: Solid bg, no border */
+  .deal-status-complete {
+    background: #E2FF00;
+    color: #1a1a1a;
+  }
+  /* Complete is same in dark mode */
+
+  .deal-status-no-go {
+    background: #E6D5C1;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-no-go {
+    background: #292929;
+    color: #a0a0a0;
+  }
+
+  .deal-status-canceled {
+    background: #E6D5C1;
+    color: #1a1a1a;
+  }
+  .dark .deal-status-canceled {
+    background: #292929;
+    color: #a0a0a0;
+  }
 }

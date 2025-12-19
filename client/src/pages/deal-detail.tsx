@@ -48,6 +48,7 @@ import { getEventSummary } from "@/components/event-schedule";
 import { CommentList } from "@/components/ui/comments";
 import { cn } from "@/lib/utils";
 import { parseDateOnly } from "@/lib/date";
+import { DealStatusBadge } from "@/components/deal-status-badge";
 import type {
   DealWithRelations,
   DealStatus,
@@ -57,49 +58,6 @@ import type {
   DealTaskWithRelations,
   User as UserType,
 } from "@shared/schema";
-
-const statusColors: Record<
-  DealStatus,
-  {
-    variant: "default" | "secondary" | "outline" | "destructive";
-    className?: string;
-  }
-> = {
-  Prospecting: { variant: "outline" },
-  "Proposal Phase": { variant: "secondary" },
-  "Waiting for Feedback": {
-    variant: "secondary",
-    className:
-      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  "Contracting Phase": {
-    variant: "secondary",
-    className:
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  "In Progress": {
-    variant: "secondary",
-    className:
-      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
-  },
-  "Final Invoicing": {
-    variant: "secondary",
-    className:
-      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  },
-  Complete: {
-    variant: "default",
-    className:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  },
-  "No-Go": { variant: "destructive" },
-  Canceled: { variant: "outline", className: "opacity-50" },
-  "Warm Lead": {
-    variant: "secondary",
-    className:
-      "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-  },
-};
 
 function FieldRow({
   label,
@@ -332,9 +290,6 @@ export default function DealDetail() {
     );
   }
 
-  const statusConfig = statusColors[deal.status as DealStatus] || {
-    variant: "outline" as const,
-  };
   const createdByName = deal.createdBy
     ? [deal.createdBy.firstName, deal.createdBy.lastName]
         .filter(Boolean)
@@ -406,13 +361,7 @@ export default function DealDetail() {
                   </h1>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Badge
-                    variant={statusConfig.variant}
-                    className={statusConfig.className}
-                    data-testid="badge-deal-status"
-                  >
-                    {deal.status}
-                  </Badge>
+                  <DealStatusBadge status={deal.status as DealStatus} />
                   {ownerName ? (
                     <div className="flex items-center gap-2">
                       <Avatar className="h-5 w-5 rounded-full">
