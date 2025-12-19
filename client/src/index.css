@@ -11,8 +11,8 @@
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9%;
+  --background: #efe4d7;
+  --foreground:#0c140b;
   --border: 0 0% 90%;
   --card: rgb(246, 240, 233);
   --card-foreground: 0 0% 9%;
@@ -97,8 +97,8 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 0 0% 9%;
-  --foreground: 0 0% 98%;
+  --background: #171717;
+  --foreground: #fafafa;
   --border: 0 0% 16%;
   --card: 0 0% 11%;
   --card-foreground: 0 0% 98%;
@@ -292,9 +292,9 @@
 
   /* Deal Status Badges - Pattern 1: Transparent bg with border (text matches border) */
   .deal-status-prospecting {
-    background: rgba(0, 105, 137, 0.2);
-    border: 1px solid #006989;
-    color: #006989;
+    background: #0088B21A;
+    border: 1px solid #0088B288;
+    color: #0088B2;
   }
   .dark .deal-status-prospecting {
     background: rgba(131, 226, 255, 0.2);
@@ -304,7 +304,7 @@
 
   .deal-status-warm-lead {
     background: rgba(94, 29, 178, 0.2);
-    border: 1px solid #5E1DB2;
+    border: 1px solid #5E1DB288;
     color: #5E1DB2;
   }
   .dark .deal-status-warm-lead {
@@ -316,73 +316,77 @@
   /* Deal Status Badges - Pattern 2: Solid bg with matching border (dark text) */
   .deal-status-proposal {
     background: #DE72BA;
-    border: 1px solid #DE72BA;
-    color: #1a1a1a;
+    border: 1px solid #DE72BA88;
+    color: #efe4d7;
   }
   .dark .deal-status-proposal {
     background: #FF93DB;
     border-color: #FF93DB;
-    color: #1a1a1a;
+    color: #171717;
   }
 
   .deal-status-waiting {
     background: #BE8B51;
-    border: 1px solid #BE8B51;
-    color: #1a1a1a;
+    border: 1px solid #BE8B5188;
+    color: #efe4d7;
+
   }
   .dark .deal-status-waiting {
     background: #FFC583;
     border-color: #FFC583;
-    color: #1a1a1a;
+    color: #171717;
   }
 
   .deal-status-contracting {
     background: #DB7052;
-    border: 1px solid #DB7052;
-    color: #1a1a1a;
+    border: 1px solid #DB705288;
+    color: #efe4d7;
+
   }
   .dark .deal-status-contracting {
     background: #FF9173;
     border-color: #FF9173;
-    color: #1a1a1a;
+    color: #171717;
   }
 
   .deal-status-in-progress {
     background: #64A334;
-    border: 1px solid #64A334;
-    color: #1a1a1a;
+    border: 1px solid #64A33488;
+    color: #efe4d7;
+
   }
   .dark .deal-status-in-progress {
     background: #85CF36;
     border-color: #85CF36;
-    color: #1a1a1a;
+    color: #171717;
   }
 
   .deal-status-invoicing {
     background: #608CD4;
-    border: 1px solid #608CD4;
-    color: #1a1a1a;
+    border: 1px solid #608CD488;
+    color: #efe4d7;
+
   }
   .dark .deal-status-invoicing {
     background: #5893F2;
     border-color: #5893F2;
-    color: #1a1a1a;
+    color: #171717;
   }
 
   /* Deal Status Badges - Pattern 3: Solid bg, no border */
   .deal-status-complete {
     background: #E2FF00;
-    color: #1a1a1a;
+    color: #171717;
   }
   /* Complete is same in dark mode */
 
   .deal-status-no-go {
     background: #E6D5C1;
-    color: #1a1a1a;
+    color: #DC4D54;
   }
   .dark .deal-status-no-go {
     background: #292929;
-    color: #a0a0a0;
+    color: #C76165;
   }
 
   .deal-status-canceled {
@@ -397,6 +401,6 @@
   .deal-status-fallback {
     background: hsl(var(--muted));
     color: hsl(var(--muted-foreground));
-    border: 1px solid hsl(var(--border));
+    border: 1px solid hsl(88var(--border));
   }
 }

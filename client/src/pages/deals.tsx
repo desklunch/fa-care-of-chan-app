@@ -11,7 +11,7 @@ import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 
-const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner"];
+const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner", "eventSchedule", "locations"];
 
 // Filter configurations
 const dealFilters: FilterConfig<DealWithRelations>[] = [
