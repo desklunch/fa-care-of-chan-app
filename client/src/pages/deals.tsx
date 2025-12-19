@@ -7,6 +7,7 @@ import type { DealWithRelations, DealEvent, DealService, DealLocation } from "@s
 import { dealStatuses, dealServices } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
+import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner"];
@@ -92,29 +93,52 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
-    id: "id",
-    headerName: "ID",
-    field: "id",
-    category: "Details",
-    colDef: {
-      width: 120,
-    },
-  },
-  {
-    id: "dealNumber",
-    headerName: "#",
-    field: "dealNumber",
+    id: "owner",
+    headerName: "Owner",
+    field: "owner",
     category: "Basic Info",
     colDef: {
-      width: 80,
-      valueFormatter: (params: { value: number }) => {
-        return params.value ? `#${params.value}` : "";
+      flex: 1,
+      minWidth: 100,
+      maxWidth: 100,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const owner = params.data?.owner;
+        if (!owner) return "";
+        const initials = [owner.firstName?.[0], owner.lastName?.[0]].filter(Boolean).join("").toUpperCase();
+        return initials || "?";
       },
     },
   },
   {
+    id: "status",
+    headerName: "Status",
+    field: "status",
+    category: "Basic Info",
+    colDef: {
+      flex:1,
+      minWidth: 190,
+      maxWidth: 190,
+    },
+  },
+  {
+    id: "eventSchedule",
+    headerName: "Event Schedule",
+    field: "eventSchedule",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 180,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const events = params.data?.eventSchedule as DealEvent[] | null;
+        if (!events || events.length === 0) return "";
+        return getEventsSummaryText(events);
+      },
+    },
+  },
+
+  {
     id: "displayName",
-    headerName: "Name",
+    headerName: "Deal",
     field: "displayName",
     category: "Basic Info",
     colDef: {
@@ -184,7 +208,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 120,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
+        return formatDateOnly(params.value);
       },
     },
   },
@@ -197,7 +221,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 120,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
+        return formatDateOnly(params.value);
       },
     },
   },
@@ -210,7 +234,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 120,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
+        return formatDateOnly(params.value);
       },
     },
   },
@@ -223,16 +247,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 100,
     },
   },
-  {
-    id: "status",
-    headerName: "Status",
-    field: "status",
-    category: "Basic Info",
-    colDef: {
-      flex:1,
-      width: 140,
-    },
-  },
+
   {
     id: "budgetNotes",
     headerName: "Budget Notes",
@@ -253,37 +268,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 200,
     },
   },
-  {
-    id: "owner",
-    headerName: "Owner",
-    field: "owner",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (params: { data: DealWithRelations }) => {
-        const owner = params.data?.owner;
-        if (!owner) return "";
-        const initials = [owner.firstName?.[0], owner.lastName?.[0]].filter(Boolean).join("").toUpperCase();
-        return initials || "?";
-      },
-    },
-  },
-  {
-    id: "eventSchedule",
-    headerName: "Event Schedule",
-    field: "eventSchedule",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 180,
-      valueGetter: (params: { data: DealWithRelations }) => {
-        const events = params.data?.eventSchedule as DealEvent[] | null;
-        if (!events || events.length === 0) return "";
-        return getEventsSummaryText(events);
-      },
-    },
-  },
+
+
   {
     id: "services",
     headerName: "Services",

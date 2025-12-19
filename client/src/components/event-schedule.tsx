@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { CalendarPlus, Trash2, X, Calendar, Plus } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { parseDateOnly } from "@/lib/date";
 import type { DealEvent, EventScheduleItem, ScheduleMode } from "@shared/schema";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -73,7 +74,7 @@ export function getEventSummary(event: DealEvent): EventSummary | null {
       return null;
     }
     
-    const startDate = new Date(primary.startDate);
+    const startDate = parseDateOnly(primary.startDate);
     const altCount = alternatives.length;
     
     if (event.durationDays === 1) {
@@ -212,7 +213,7 @@ function EventRow({
 
   const summary = getEventSummary(event);
   const primarySchedule = getPrimarySchedule();
-  const primaryDate = primarySchedule?.startDate ? new Date(primarySchedule.startDate) : undefined;
+  const primaryDate = primarySchedule?.startDate ? parseDateOnly(primarySchedule.startDate) : undefined;
 
   return (
     <div className="border rounded-md p-3 space-y-3 pb-4" data-testid={`event-card-${event.id}`}>
@@ -293,7 +294,7 @@ function EventRow({
                 onSelect={(date) => {
                   const schedule = getPrimarySchedule();
                   if (schedule) {
-                    updateSchedule(schedule.id, { startDate: date?.toISOString() });
+                    updateSchedule(schedule.id, { startDate: date ? format(date, "yyyy-MM-dd") : undefined });
                   }
                 }}
                 placeholder="Select date"
@@ -308,9 +309,9 @@ function EventRow({
                   <Label className="text-xs">Alt Date {index + 1}</Label>
                   <div className="flex items-center gap-0 bg-background rounded-md border">
                     <DatePicker
-                      date={alt.startDate ? new Date(alt.startDate) : undefined}
+                      date={alt.startDate ? parseDateOnly(alt.startDate) : undefined}
                       onSelect={(date) => {
-                        updateSchedule(alt.id, { startDate: date?.toISOString() });
+                        updateSchedule(alt.id, { startDate: date ? format(date, "yyyy-MM-dd") : undefined });
                       }}
                       placeholder="Select date"
                       className="rounded-r-none border-none"

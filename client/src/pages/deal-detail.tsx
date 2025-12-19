@@ -47,6 +47,7 @@ import { Loader2, Pencil, Trash2, CalendarCheck, UserRound, MoreVertical, X, Che
 import { getEventSummary } from "@/components/event-schedule";
 import { CommentList } from "@/components/ui/comments";
 import { cn } from "@/lib/utils";
+import { parseDateOnly } from "@/lib/date";
 import type {
   DealWithRelations,
   DealStatus,
@@ -56,11 +57,6 @@ import type {
   DealTaskWithRelations,
   User as UserType,
 } from "@shared/schema";
-
-function parseDateOnly(dateStr: string): Date {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
 
 const statusColors: Record<
   DealStatus,
