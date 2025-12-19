@@ -14,6 +14,9 @@ import { DealStatusBadge } from "@/components/deal-status-badge";
 /**
  * Creates a comparator for date columns that pushes null/empty values to the bottom
  * regardless of whether sorting ascending or descending.
+ * 
+ * AG Grid inverts comparator results for descending sorts, so we need to account for that
+ * when handling nulls to ensure they always appear at the bottom.
  */
 function createDateComparator(getValue: (data: DealWithRelations | undefined) => string | null | undefined) {
   return (
@@ -26,13 +29,22 @@ function createDateComparator(getValue: (data: DealWithRelations | undefined) =>
     const dateA = getValue(nodeA.data);
     const dateB = getValue(nodeB.data);
     
-    // Handle nulls: always push to the bottom regardless of sort direction
     const aIsNull = !dateA;
     const bIsNull = !dateB;
     
+    // Both null - equal
     if (aIsNull && bIsNull) return 0;
-    if (aIsNull) return 1;  // Always push nulls to bottom
-    if (bIsNull) return -1; // Always push nulls to bottom
+    
+    // Handle nulls: push to bottom regardless of sort direction
+    // AG Grid inverts comparator result for descending, so we must counter that
+    if (aIsNull) {
+      // We want null at bottom: ascending needs +1, descending needs -1 (AG Grid will invert to +1)
+      return isDescending ? -1 : 1;
+    }
+    if (bIsNull) {
+      // We want null at bottom: ascending needs -1, descending needs +1 (AG Grid will invert to -1)
+      return isDescending ? 1 : -1;
+    }
     
     // Compare dates as strings (YYYY-MM-DD format sorts correctly lexicographically)
     if (dateA < dateB) return -1;
