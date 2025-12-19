@@ -75,6 +75,9 @@ export function getEventSummary(event: DealEvent): EventSummary | null {
     }
     
     const startDate = parseDateOnly(primary.startDate);
+    if (!startDate) {
+      return null;
+    }
     const altCount = alternatives.length;
     
     if (event.durationDays === 1) {
@@ -213,7 +216,7 @@ function EventRow({
 
   const summary = getEventSummary(event);
   const primarySchedule = getPrimarySchedule();
-  const primaryDate = primarySchedule?.startDate ? parseDateOnly(primarySchedule.startDate) : undefined;
+  const primaryDate = primarySchedule?.startDate ? parseDateOnly(primarySchedule.startDate) ?? undefined : undefined;
 
   return (
     <div className="border rounded-md p-3 space-y-3 pb-4" data-testid={`event-card-${event.id}`}>
@@ -309,7 +312,7 @@ function EventRow({
                   <Label className="text-xs">Alt Date {index + 1}</Label>
                   <div className="flex items-center gap-0 bg-background rounded-md border">
                     <DatePicker
-                      date={alt.startDate ? parseDateOnly(alt.startDate) : undefined}
+                      date={alt.startDate ? parseDateOnly(alt.startDate) ?? undefined : undefined}
                       onSelect={(date) => {
                         updateSchedule(alt.id, { startDate: date ? format(date, "yyyy-MM-dd") : undefined });
                       }}
