@@ -11,6 +11,36 @@ import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 
+/**
+ * Creates a comparator for date columns that pushes null/empty values to the bottom
+ * regardless of whether sorting ascending or descending.
+ */
+function createDateComparator(getValue: (data: DealWithRelations | undefined) => string | null | undefined) {
+  return (
+    valueA: unknown,
+    valueB: unknown,
+    nodeA: { data: DealWithRelations | undefined },
+    nodeB: { data: DealWithRelations | undefined },
+    isDescending: boolean
+  ): number => {
+    const dateA = getValue(nodeA.data);
+    const dateB = getValue(nodeB.data);
+    
+    // Handle nulls: always push to the bottom regardless of sort direction
+    const aIsNull = !dateA;
+    const bIsNull = !dateB;
+    
+    if (aIsNull && bIsNull) return 0;
+    if (aIsNull) return 1;  // Always push nulls to bottom
+    if (bIsNull) return -1; // Always push nulls to bottom
+    
+    // Compare dates as strings (YYYY-MM-DD format sorts correctly lexicographically)
+    if (dateA < dateB) return -1;
+    if (dateA > dateB) return 1;
+    return 0;
+  };
+}
+
 const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner", "eventSchedule", "locations"];
 
 // Filter configurations
@@ -138,26 +168,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!events || events.length === 0) return "";
         return getEventsSummaryText(events);
       },
-      comparator: (
-        _valueA: string,
-        _valueB: string,
-        nodeA: { data: DealWithRelations },
-        nodeB: { data: DealWithRelations },
-        isDescending: boolean
-      ) => {
-        const dateA = nodeA.data?.earliestEventDate;
-        const dateB = nodeB.data?.earliestEventDate;
-        
-        // Handle nulls: push deals without dates to the end
-        if (!dateA && !dateB) return 0;
-        if (!dateA) return isDescending ? -1 : 1;
-        if (!dateB) return isDescending ? 1 : -1;
-        
-        // Compare dates as strings (YYYY-MM-DD format sorts correctly)
-        if (dateA < dateB) return -1;
-        if (dateA > dateB) return 1;
-        return 0;
-      },
+      comparator: createDateComparator((data) => data?.earliestEventDate),
     },
   },
 
@@ -235,6 +246,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return "";
         return formatDateOnly(params.value);
       },
+      comparator: createDateComparator((data) => data?.startedOn),
     },
   },
   {
@@ -248,6 +260,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return "";
         return formatDateOnly(params.value);
       },
+      comparator: createDateComparator((data) => data?.wonOn),
     },
   },
   {
@@ -261,6 +274,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return "";
         return formatDateOnly(params.value);
       },
+      comparator: createDateComparator((data) => data?.lastContactOn),
     },
   },
   {

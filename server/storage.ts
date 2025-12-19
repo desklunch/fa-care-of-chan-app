@@ -3534,6 +3534,7 @@ export class DatabaseStorage implements IStorage {
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
+        earliestEventDate: deals.earliestEventDate,
         createdBy: {
           id: users.id,
           firstName: users.firstName,
