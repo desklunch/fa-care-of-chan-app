@@ -580,6 +580,48 @@ export interface DealEvent {
   schedules: EventScheduleItem[];
 }
 
+/**
+ * Computes the earliest date from an array of DealEvents.
+ * Considers both specific dates (startDate) and range dates (rangeStartMonth/Year).
+ * For ranges, uses the 1st of the month.
+ * @returns ISO date string (YYYY-MM-DD) or null if no dates found
+ */
+export function computeEarliestEventDate(events: DealEvent[] | null | undefined): string | null {
+  if (!events || events.length === 0) return null;
+  
+  let earliestDate: Date | null = null;
+  
+  for (const event of events) {
+    for (const schedule of event.schedules) {
+      let candidateDate: Date | null = null;
+      
+      // Check for specific date (startDate is ISO string like "2025-03-15")
+      if (schedule.startDate) {
+        candidateDate = new Date(schedule.startDate + "T00:00:00");
+      }
+      // Check for range date (use first of month)
+      else if (schedule.rangeStartYear && schedule.rangeStartMonth) {
+        // Month is 1-indexed in the data, but Date constructor expects 0-indexed
+        candidateDate = new Date(schedule.rangeStartYear, schedule.rangeStartMonth - 1, 1);
+      }
+      
+      if (candidateDate && !isNaN(candidateDate.getTime())) {
+        if (!earliestDate || candidateDate < earliestDate) {
+          earliestDate = candidateDate;
+        }
+      }
+    }
+  }
+  
+  if (!earliestDate) return null;
+  
+  // Format as YYYY-MM-DD for PostgreSQL DATE column
+  const year = earliestDate.getFullYear();
+  const month = String(earliestDate.getMonth() + 1).padStart(2, "0");
+  const day = String(earliestDate.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // Deal services options
 export const dealServices = [
   "Consulting",

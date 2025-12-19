@@ -147,8 +147,10 @@ import {
   type CreateDeal,
   type UpdateDeal,
   type DealStatus,
+  type DealEvent,
   dealStatuses,
   dealTasks,
+  computeEarliestEventDate,
   type DealTask,
   type DealTaskWithRelations,
   type CreateDealTask,
@@ -3676,10 +3678,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDeal(data: CreateDeal, createdById: string): Promise<Deal> {
+    const earliestEventDate = computeEarliestEventDate(data.eventSchedule as DealEvent[] | undefined);
     const [deal] = await db
       .insert(deals)
       .values({
         ...data,
+        earliestEventDate,
         createdById,
       })
       .returning();
@@ -3687,12 +3691,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined> {
+    // Compute earliest event date if eventSchedule is being updated
+    const updateData: Record<string, unknown> = {
+      ...data,
+      updatedAt: new Date(),
+    };
+    
+    if (data.eventSchedule !== undefined) {
+      updateData.earliestEventDate = computeEarliestEventDate(data.eventSchedule as DealEvent[] | undefined);
+    }
+    
     const [deal] = await db
       .update(deals)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(deals.id, id))
       .returning();
     return deal;
