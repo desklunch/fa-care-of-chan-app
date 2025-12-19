@@ -264,7 +264,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations }) => {
         const owner = params.data?.owner;
         if (!owner) return "";
-        return [owner.firstName, owner.lastName].filter(Boolean).join(" ") || "Unassigned";
+        const initials = [owner.firstName?.[0], owner.lastName?.[0]].filter(Boolean).join("").toUpperCase();
+        return initials || "?";
       },
     },
   },
