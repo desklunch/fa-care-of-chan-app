@@ -589,37 +589,34 @@ export interface DealEvent {
 export function computeEarliestEventDate(events: DealEvent[] | null | undefined): string | null {
   if (!events || events.length === 0) return null;
   
-  let earliestDate: Date | null = null;
+  let earliestDateStr: string | null = null;
   
   for (const event of events) {
     for (const schedule of event.schedules) {
-      let candidateDate: Date | null = null;
+      let candidateDateStr: string | null = null;
       
       // Check for specific date (startDate is ISO string like "2025-03-15")
       if (schedule.startDate) {
-        candidateDate = new Date(schedule.startDate + "T00:00:00");
+        // startDate is already YYYY-MM-DD format, use directly to avoid timezone issues
+        candidateDateStr = schedule.startDate;
       }
       // Check for range date (use first of month)
       else if (schedule.rangeStartYear && schedule.rangeStartMonth) {
-        // Month is 1-indexed in the data, but Date constructor expects 0-indexed
-        candidateDate = new Date(schedule.rangeStartYear, schedule.rangeStartMonth - 1, 1);
+        // Format as YYYY-MM-DD (first of month)
+        const month = String(schedule.rangeStartMonth).padStart(2, "0");
+        candidateDateStr = `${schedule.rangeStartYear}-${month}-01`;
       }
       
-      if (candidateDate && !isNaN(candidateDate.getTime())) {
-        if (!earliestDate || candidateDate < earliestDate) {
-          earliestDate = candidateDate;
+      if (candidateDateStr) {
+        // Compare as strings since YYYY-MM-DD format sorts lexicographically correctly
+        if (!earliestDateStr || candidateDateStr < earliestDateStr) {
+          earliestDateStr = candidateDateStr;
         }
       }
     }
   }
   
-  if (!earliestDate) return null;
-  
-  // Format as YYYY-MM-DD for PostgreSQL DATE column
-  const year = earliestDate.getFullYear();
-  const month = String(earliestDate.getMonth() + 1).padStart(2, "0");
-  const day = String(earliestDate.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return earliestDateStr;
 }
 
 // Deal services options
