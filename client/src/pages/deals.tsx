@@ -138,6 +138,26 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!events || events.length === 0) return "";
         return getEventsSummaryText(events);
       },
+      comparator: (
+        _valueA: string,
+        _valueB: string,
+        nodeA: { data: DealWithRelations },
+        nodeB: { data: DealWithRelations },
+        isDescending: boolean
+      ) => {
+        const dateA = nodeA.data?.earliestEventDate;
+        const dateB = nodeB.data?.earliestEventDate;
+        
+        // Handle nulls: push deals without dates to the end
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return isDescending ? -1 : 1;
+        if (!dateB) return isDescending ? 1 : -1;
+        
+        // Compare dates as strings (YYYY-MM-DD format sorts correctly)
+        if (dateA < dateB) return -1;
+        if (dateA > dateB) return 1;
+        return 0;
+      },
     },
   },
 
