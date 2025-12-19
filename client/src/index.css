@@ -393,4 +393,10 @@
     background: #292929;
     color: #a0a0a0;
   }
+
+  .deal-status-fallback {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+  }
 }

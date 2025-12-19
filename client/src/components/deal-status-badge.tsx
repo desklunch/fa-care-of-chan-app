@@ -2,11 +2,11 @@ import { cn } from "@/lib/utils";
 import type { DealStatus } from "@shared/schema";
 
 interface DealStatusBadgeProps {
-  status: DealStatus;
+  status: DealStatus | string;
   className?: string;
 }
 
-const statusStyleMap: Record<DealStatus, string> = {
+const statusStyleMap: Record<string, string> = {
   "Prospecting": "deal-status-prospecting",
   "Warm Lead": "deal-status-warm-lead",
   "Proposal Phase": "deal-status-proposal",
@@ -20,7 +20,7 @@ const statusStyleMap: Record<DealStatus, string> = {
 };
 
 export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
-  const statusClass = statusStyleMap[status] || "";
+  const statusClass = statusStyleMap[status] || "deal-status-fallback";
   
   return (
     <span
