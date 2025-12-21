@@ -911,6 +911,28 @@ export async function registerRoutes(
     }
   });
 
+  // Client-linked contacts (contacts that belong to at least one client)
+  app.get("/api/clients/contacts", isAuthenticated, async (req, res) => {
+    try {
+      const contacts = await storage.getClientLinkedContacts();
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching client-linked contacts:", error);
+      res.status(500).json({ message: "Failed to fetch client contacts" });
+    }
+  });
+
+  // Vendor-linked contacts (contacts that belong to at least one vendor)
+  app.get("/api/vendors/contacts", isAuthenticated, async (req, res) => {
+    try {
+      const contacts = await storage.getVendorLinkedContacts();
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching vendor-linked contacts:", error);
+      res.status(500).json({ message: "Failed to fetch vendor contacts" });
+    }
+  });
+
   app.get("/api/contacts/:id", isAuthenticated, async (req, res) => {
     try {
       const contact = await storage.getContactById(req.params.id);

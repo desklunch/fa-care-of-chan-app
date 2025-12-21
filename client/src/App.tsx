@@ -66,6 +66,8 @@ import DealDetail from "@/pages/deal-detail";
 import Clients from "@/pages/clients";
 import ClientForm from "@/pages/client-form";
 import ClientDetail from "@/pages/client-detail";
+import ClientContacts from "@/pages/client-contacts";
+import VendorContacts from "@/pages/vendor-contacts";
 import EventSchedulePrototype from "@/pages/event-schedule-prototype";
 import NotFound from "@/pages/not-found";
 import {
@@ -143,7 +145,27 @@ function useLayoutConfig() {
           },
         ],
       },
-
+      {
+        heading: "Sales",
+        allowedRoles: ["admin", "manager"],
+        items: [
+          {
+            name: "Deals",
+            href: "/deals",
+            icon: DollarSign,
+          },
+          {
+            name: "Clients",
+            href: "/clients",
+            icon: Building2,
+          },
+          {
+            name: "Client Contacts",
+            href: "/clients/contacts",
+            icon: Contact,
+          },
+        ],
+      },
       {
         heading: "Support",
         items: [
@@ -337,9 +359,11 @@ function AuthenticatedRoutes() {
           <Route path="/deals/:id/edit" component={DealForm} />
           <Route path="/deals/:id" component={DealDetail} />
           <Route path="/clients" component={Clients} />
+          <Route path="/clients/contacts" component={ClientContacts} />
           <Route path="/clients/new" component={ClientForm} />
           <Route path="/clients/:id/edit" component={ClientForm} />
           <Route path="/clients/:id" component={ClientDetail} />
+          <Route path="/vendors/contacts" component={VendorContacts} />
           <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />

@@ -245,6 +245,8 @@ export interface IStorage {
   // Contact operations
   getContacts(): Promise<Contact[]>;
   getContactsWithVendors(): Promise<ContactWithVendors[]>;
+  getClientLinkedContacts(): Promise<ContactWithVendors[]>;
+  getVendorLinkedContacts(): Promise<ContactWithVendors[]>;
   getContactById(id: string): Promise<Contact | undefined>;
   createContact(data: CreateContact): Promise<Contact>;
   updateContact(id: string, data: UpdateContact): Promise<Contact | undefined>;
@@ -1152,6 +1154,32 @@ export class DatabaseStorage implements IStorage {
       vendors: vendorsByContactId.get(contact.id) || [],
       clients: clientsByContactId.get(contact.id) || [],
     }));
+  }
+
+  async getClientLinkedContacts(): Promise<ContactWithVendors[]> {
+    // Get all contact IDs that have at least one client link
+    const linkedContactIds = await db
+      .selectDistinct({ contactId: clientContacts.contactId })
+      .from(clientContacts);
+    
+    const linkedIds = new Set(linkedContactIds.map(r => r.contactId));
+    
+    // Get all contacts with their vendors/clients, then filter to only those linked to clients
+    const allContactsWithRelations = await this.getContactsWithVendors();
+    return allContactsWithRelations.filter(contact => linkedIds.has(contact.id));
+  }
+
+  async getVendorLinkedContacts(): Promise<ContactWithVendors[]> {
+    // Get all contact IDs that have at least one vendor link
+    const linkedContactIds = await db
+      .selectDistinct({ contactId: vendorsContacts.contactId })
+      .from(vendorsContacts);
+    
+    const linkedIds = new Set(linkedContactIds.map(r => r.contactId));
+    
+    // Get all contacts with their vendors/clients, then filter to only those linked to vendors
+    const allContactsWithRelations = await this.getContactsWithVendors();
+    return allContactsWithRelations.filter(contact => linkedIds.has(contact.id));
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
