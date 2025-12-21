@@ -41,14 +41,30 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+/**
+ * Retry logic that only retries network/connection errors, not HTTP errors (4xx/5xx).
+ * This handles stale HTTP keep-alive connections gracefully.
+ */
+function shouldRetryQuery(failureCount: number, error: Error): boolean {
+  // Don't retry more than 2 times
+  if (failureCount >= 2) return false;
+  
+  // Don't retry HTTP errors (4xx, 5xx) - these are intentional server responses
+  const errorMessage = error?.message || "";
+  if (errorMessage.match(/^[45]\d{2}:/)) return false;
+  
+  // Retry network/connection errors (failed to fetch, connection reset, etc.)
+  return true;
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnWindowFocus: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: shouldRetryQuery,
     },
     mutations: {
       retry: false,

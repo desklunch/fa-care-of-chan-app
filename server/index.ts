@@ -114,6 +114,14 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
+  
+  // Configure HTTP keep-alive timeouts to prevent stale connection issues.
+  // Default Node.js keepAliveTimeout is only 5 seconds, which causes connections
+  // to close quickly and leads to failed requests when browser reuses stale connections.
+  // Setting to 61s ensures connections stay open longer than typical load balancer timeouts.
+  httpServer.keepAliveTimeout = 61 * 1000; // 61 seconds
+  httpServer.headersTimeout = 65 * 1000;   // 65 seconds (must be > keepAliveTimeout)
+  
   httpServer.listen(
     {
       port,
@@ -122,6 +130,7 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+      log(`keepAliveTimeout: ${httpServer.keepAliveTimeout}ms, headersTimeout: ${httpServer.headersTimeout}ms`);
     },
   );
 })();
