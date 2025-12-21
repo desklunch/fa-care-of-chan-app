@@ -55,6 +55,44 @@ function createDateComparator(getValue: (data: DealWithRelations | undefined) =>
 
 const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner", "eventSchedule", "locations"];
 
+/**
+ * Status priority order for sorting (lower number = higher priority in ascending sort)
+ */
+const STATUS_SORT_ORDER: Record<string, number> = {
+  "Prospecting": 1,
+  "Warm Lead": 2,
+  "Proposal": 3,
+  "Waiting for Feedback": 4,
+  "In Contracting": 5,
+  "In Progress": 6,
+  "Final Invoicing": 7,
+  "Complete": 8,
+  "No Go": 9,
+  "Cancelled": 10,
+};
+
+/**
+ * Creates a comparator for the status column that sorts by pipeline stage order
+ */
+function createStatusComparator() {
+  return (
+    valueA: unknown,
+    valueB: unknown,
+    nodeA: { data: DealWithRelations | undefined },
+    nodeB: { data: DealWithRelations | undefined },
+    isDescending: boolean
+  ): number => {
+    const statusA = nodeA.data?.status;
+    const statusB = nodeB.data?.status;
+    
+    // Get priority (unknown statuses get high number to sort to end)
+    const priorityA = statusA ? (STATUS_SORT_ORDER[statusA] ?? 999) : 999;
+    const priorityB = statusB ? (STATUS_SORT_ORDER[statusB] ?? 999) : 999;
+    
+    return priorityA - priorityB;
+  };
+}
+
 // Filter configurations
 const dealFilters: FilterConfig<DealWithRelations>[] = [
   {
@@ -161,6 +199,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex:1,
       minWidth: 190,
       maxWidth: 190,
+      comparator: createStatusComparator(),
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return <DealStatusBadge status={params.value as DealWithRelations["status"]} />;
