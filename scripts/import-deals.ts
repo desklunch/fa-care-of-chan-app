@@ -27,32 +27,48 @@ const log: ImportLog = {
   issues: [],
 };
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
+function parseCSV(content: string): string[][] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = "";
   let inQuotes = false;
   let i = 0;
 
-  while (i < line.length) {
-    const char = line[i];
+  while (i < content.length) {
+    const char = content[i];
 
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
+      if (inQuotes && content[i + 1] === '"') {
+        currentField += '"';
         i += 2;
         continue;
       }
       inQuotes = !inQuotes;
     } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
+      currentRow.push(currentField.trim());
+      currentField = "";
+    } else if ((char === "\n" || (char === "\r" && content[i + 1] === "\n")) && !inQuotes) {
+      currentRow.push(currentField.trim());
+      if (currentRow.some(f => f !== "")) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = "";
+      if (char === "\r") i++;
+    } else if (char !== "\r") {
+      currentField += char;
     }
     i++;
   }
-  result.push(current.trim());
-  return result;
+  
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some(f => f !== "")) {
+      rows.push(currentRow);
+    }
+  }
+  
+  return rows;
 }
 
 function parseDate(dateStr: string): string | null {
@@ -122,12 +138,12 @@ async function main() {
 
   const csvPath = path.resolve(
     __dirname,
-    "../attached_assets/Coco_Datat_TF_1_Deals_1766369712874.csv"
+    "../attached_assets/COC_Deals_Data_Import_Dec_22_2025_(1)_1766429069851.csv"
   );
   const csvContent = fs.readFileSync(csvPath, "utf-8");
-  const lines = csvContent.split("\n");
+  const rows = parseCSV(csvContent);
 
-  const headers = parseCSVLine(lines[0]);
+  const headers = rows[0];
   console.log("Headers:", headers);
 
   const unassignedClient = await db
@@ -153,12 +169,11 @@ async function main() {
   const existingContacts = await db.select({ id: contacts.id }).from(contacts);
   const contactIdSet = new Set(existingContacts.map((c) => c.id));
 
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  const dataRows = rows.slice(1);
+  for (let i = 0; i < dataRows.length; i++) {
+    const values = dataRows[i];
 
     log.totalRows++;
-    const values = parseCSVLine(line);
 
     const data: Record<string, string> = {};
     headers.forEach((header, index) => {
@@ -167,13 +182,14 @@ async function main() {
 
     const externalId = data["external_id"];
     const displayName = data["display_name"];
+    const rowNum = i + 2; // For logging (1-indexed, account for header)
 
     try {
       let clientId = data["client_id"]?.trim();
       if (!clientId || !clientIdSet.has(clientId)) {
         if (clientId && !clientIdSet.has(clientId)) {
           log.issues.push({
-            row: i + 1,
+            row: rowNum,
             externalId,
             displayName,
             issue: `Client ID "${clientId}" not found, using #Unassigned`,
@@ -185,7 +201,7 @@ async function main() {
       let ownerId: string | null = data["owner_id"]?.trim() || null;
       if (ownerId && !userIdSet.has(ownerId)) {
         log.issues.push({
-          row: i + 1,
+          row: rowNum,
           externalId,
           displayName,
           issue: `Owner ID "${ownerId}" not found in users table, setting to null`,
@@ -197,7 +213,7 @@ async function main() {
         data["primary_contact_id"]?.trim() || null;
       if (primaryContactId && !contactIdSet.has(primaryContactId)) {
         log.issues.push({
-          row: i + 1,
+          row: rowNum,
           externalId,
           displayName,
           issue: `Primary contact ID "${primaryContactId}" not found in contacts table, setting to null`,
@@ -211,7 +227,7 @@ async function main() {
       const proposalSentOn = parseDate(data["proposal_sent_on"]);
 
       const locations = parseJSON(data["locations"]);
-      const services = parseServices(data["services"]);
+      const services = parseJSON(data["services"]);
 
       await db.insert(deals).values({
         externalId: externalId,
@@ -233,16 +249,16 @@ async function main() {
       });
 
       log.successfulImports++;
-      console.log(`✓ Imported row ${i + 1}: ${displayName}`);
+      console.log(`✓ Imported row ${rowNum}: ${displayName}`);
     } catch (error: any) {
       log.failedImports++;
       log.issues.push({
-        row: i + 1,
+        row: rowNum,
         externalId,
         displayName,
         issue: `Import failed: ${error.message}`,
       });
-      console.error(`✗ Failed row ${i + 1}: ${displayName} - ${error.message}`);
+      console.error(`✗ Failed row ${rowNum}: ${displayName} - ${error.message}`);
     }
   }
 
