@@ -53,7 +53,7 @@ function createDateComparator(getValue: (data: DealWithRelations | undefined) =>
   };
 }
 
-const DEFAULT_VISIBLE_COLUMNS = [ "owner", "displayName", "status" , "client","startedOn", "wonOn", "lastContactOn", "concept", "services", "budgetNotes", "locations", "notes"];
+const DEFAULT_VISIBLE_COLUMNS = ["owner", "status", "projectDate", "client", "startedOn", "wonOn", "lastContactOn", "concept", "services", "locations", "notes"];
 
 /**
  * Status priority order for sorting (lower number = higher priority in ascending sort)
