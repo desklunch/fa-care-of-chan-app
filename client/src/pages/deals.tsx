@@ -13,7 +13,7 @@ import { dealStatuses, dealServices } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date";
-import { CircleFadingPlus, Flag, User, MapPin, Briefcase, Eye } from "lucide-react";
+import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -220,7 +220,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           <div className="flex items-center gap-2">
             <Link href={`/deals/${params.data.id}`}>
               <Button size="sm" variant="ghost" className="h-7 px-2">
-                <Eye className="h-4 w-4" />
+                <SquareArrowOutUpRight className="h-4 w-4" />
               </Button>
             </Link>
             <span>{params.value}</span>
