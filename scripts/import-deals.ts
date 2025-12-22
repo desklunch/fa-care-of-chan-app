@@ -76,6 +76,12 @@ function parseDate(dateStr: string): string | null {
 
   const trimmed = dateStr.trim();
 
+  // Handle YYYY-MM-DD format (ISO format) - check this FIRST
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    return trimmed;
+  }
+
   // Handle date ranges - take the first date
   if (trimmed.includes("-") && trimmed.includes("/")) {
     const parts = trimmed.split("-");
