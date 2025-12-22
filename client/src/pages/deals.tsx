@@ -365,6 +365,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createDateComparator((data) => data?.lastContactOn),
     },
   },
+  {
+    id: "concept",
+    headerName: "Concept",
+    field: "concept",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+    },
+  },
 
   {
     id: "externalId",
@@ -390,16 +400,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "concept",
-    headerName: "Concept",
-    field: "concept",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 200,
-    },
-  },
+
   {
     id: "budgetNotes",
     headerName: "Budget Notes",
