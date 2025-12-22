@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
+import ReactMarkdown from "react-markdown";
 
 /**
  * Creates a comparator for date columns that pushes null/empty values to the bottom
@@ -447,15 +448,13 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       sortable: false,
       wrapText: true,
       autoHeight: true,
-      cellStyle: {
-        whiteSpace: "normal",
-        lineHeight: "1.4",
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-        paddingTop: "8px",
-        paddingBottom: "8px",
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div className="prose prose-sm dark:prose-invert max-w-none py-2 [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 line-clamp-2">
+            <ReactMarkdown>{params.value}</ReactMarkdown>
+          </div>
+        );
       },
     },
   },
