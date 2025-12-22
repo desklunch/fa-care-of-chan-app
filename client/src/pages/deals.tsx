@@ -211,6 +211,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 2,
       width: 240,
       minWidth: 180,
+      sortable: false,
     },
   },
   {
@@ -373,6 +374,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 200,
+      sortable: false,
     },
   },
 
@@ -436,6 +438,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 200,
+      sortable: false,
     },
   },
 
