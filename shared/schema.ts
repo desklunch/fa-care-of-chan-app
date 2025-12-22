@@ -663,6 +663,7 @@ export const deals = pgTable(
     budgetNotes: text("budget_notes"),
     startedOn: date("started_on"),
     wonOn: date("won_on"),
+    proposalSentOn: date("proposal_sent_on"),
     lastContactOn: date("last_contact_on"),
     earliestEventDate: date("earliest_event_date"),
     projectDate: text("project_date"),

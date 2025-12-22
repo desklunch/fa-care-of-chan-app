@@ -5,328 +5,283 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { db } from "../server/db";
-import { deals, clients, contacts, clientContacts, users } from "../shared/schema";
-import { eq, and } from "drizzle-orm";
+import { deals, clients, contacts, users } from "../shared/schema";
+import { eq } from "drizzle-orm";
 
-interface CSVRow {
-  "deal.external_id": string;
-  "deals.owner_id": string;
-  "deals.status": string;
-  "deals.display_name": string;
-  "deals.started_on": string;
-  "deals.won_on": string;
-  "deals.last_contact_on": string;
-  "deals.concept": string;
-  "contacts.external_id": string;
-  "clients.industry": string;
-  "deals.services": string;
-  "deals.low_value": string;
-  "deals.value": string;
-  "deals.notes": string;
-  "deals.event_schedule": string;
-  "deals.locations": string;
-  "clients.name": string;
-  "clients.external_id": string;
-  "contacts.first_name": string;
-  "contacts.last_name": string;
-  "contacts.title": string;
-  "contacts.email": string;
+interface ImportLog {
+  totalRows: number;
+  successfulImports: number;
+  failedImports: number;
+  issues: Array<{
+    row: number;
+    externalId: string;
+    displayName: string;
+    issue: string;
+  }>;
 }
 
-interface ImportError {
-  row: number;
-  externalId: string;
-  type: "client" | "contact" | "deal";
-  error: string;
-}
+const log: ImportLog = {
+  totalRows: 0,
+  successfulImports: 0,
+  failedImports: 0,
+  issues: [],
+};
 
-const importErrors: ImportError[] = [];
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  let i = 0;
 
-function parseCSV(content: string): CSVRow[] {
-  const lines = content.split("\n");
-  const headers = lines[0].split(",").map((h) => h.trim());
-  const rows: CSVRow[] = [];
+  while (i < line.length) {
+    const char = line[i];
 
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-
-    const values: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (const char of lines[i]) {
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        values.push(current.trim());
-        current = "";
-      } else {
-        current += char;
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 2;
+        continue;
       }
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
     }
-    values.push(current.trim());
-
-    const row: any = {};
-    headers.forEach((header, index) => {
-      row[header] = values[index] || "";
-    });
-    rows.push(row);
+    i++;
   }
-
-  return rows;
+  result.push(current.trim());
+  return result;
 }
 
 function parseDate(dateStr: string): string | null {
   if (!dateStr || dateStr.trim() === "") return null;
-  
-  const cleaned = dateStr.trim();
-  
-  if (cleaned.includes("/")) {
-    const parts = cleaned.split("/");
-    if (parts.length === 3) {
-      const [month, day, year] = parts;
-      const fullYear = year.length === 2 ? `20${year}` : year;
-      return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+
+  const trimmed = dateStr.trim();
+
+  // Handle date ranges - take the first date
+  if (trimmed.includes("-") && trimmed.includes("/")) {
+    const parts = trimmed.split("-");
+    if (parts.length >= 1) {
+      return parseDate(parts[0].trim());
     }
   }
-  
-  return cleaned;
-}
 
-function parseCurrency(value: string): number | null {
-  if (!value || value.trim() === "" || value === "Not disclosed") return null;
-  const cleaned = value.replace(/[$,]/g, "").trim();
-  const num = parseInt(cleaned, 10);
-  return isNaN(num) ? null : num;
-}
+  // Handle MM/DD/YYYY format
+  const fullDateMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (fullDateMatch) {
+    const [, month, day, year] = fullDateMatch;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
 
-function parseServices(servicesStr: string): string[] {
-  if (!servicesStr || servicesStr.trim() === "") return [];
-  return servicesStr.split(",").map((s) => s.trim()).filter(Boolean);
+  // Handle MM/YYYY format - use first of month
+  const monthYearMatch = trimmed.match(/^(\d{1,2})\/(\d{4})$/);
+  if (monthYearMatch) {
+    const [, month, year] = monthYearMatch;
+    return `${year}-${month.padStart(2, "0")}-01`;
+  }
+
+  // Handle YYYY format - use first of year
+  const yearMatch = trimmed.match(/^(\d{4})$/);
+  if (yearMatch) {
+    return `${yearMatch[1]}-01-01`;
+  }
+
+  // Handle "MM/DD/YYYY, YYYY" format (e.g., "02/14/2026, 2026")
+  if (trimmed.includes(",")) {
+    const firstPart = trimmed.split(",")[0].trim();
+    return parseDate(firstPart);
+  }
+
+  return null;
 }
 
 function parseJSON(jsonStr: string): any {
   if (!jsonStr || jsonStr.trim() === "") return [];
+
   try {
     return JSON.parse(jsonStr);
-  } catch {
+  } catch (e) {
+    console.error("Failed to parse JSON:", jsonStr.substring(0, 100));
     return [];
   }
 }
 
-async function importData() {
-  console.log("Starting import...\n");
+function parseServices(servicesStr: string): string[] {
+  if (!servicesStr || servicesStr.trim() === "") return [];
 
-  const csvPath = path.resolve(__dirname, "../attached_assets/CoC_Deals_Data_with_Locations_(2)_1766082509216.csv");
-  const content = fs.readFileSync(csvPath, "utf-8");
-  const rows = parseCSV(content);
-
-  console.log(`Parsed ${rows.length} rows from CSV\n`);
-
-  const clientMap = new Map<string, string>();
-  const contactMap = new Map<string, string>();
-
-  let clientsImported = 0;
-  let clientsSkipped = 0;
-  let contactsImported = 0;
-  let contactsSkipped = 0;
-  let dealsImported = 0;
-  let dealsSkipped = 0;
-
-  console.log("Phase 1: Importing clients...");
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const clientExternalId = row["clients.external_id"]?.trim();
-    const clientName = row["clients.name"]?.trim();
-
-    if (!clientExternalId || !clientName) continue;
-    if (clientMap.has(clientExternalId)) continue;
-
-    try {
-      const existing = await db.select().from(clients).where(eq(clients.externalId, clientExternalId)).limit(1);
-      
-      if (existing.length > 0) {
-        clientMap.set(clientExternalId, existing[0].id);
-        clientsSkipped++;
-      } else {
-        const [newClient] = await db.insert(clients).values({
-          externalId: clientExternalId,
-          name: clientName,
-          industry: row["clients.industry"]?.trim() || null,
-        }).returning();
-        
-        clientMap.set(clientExternalId, newClient.id);
-        clientsImported++;
-      }
-    } catch (error: any) {
-      importErrors.push({
-        row: i + 2,
-        externalId: clientExternalId,
-        type: "client",
-        error: error.message,
-      });
-    }
-  }
-  console.log(`  Imported: ${clientsImported}, Skipped: ${clientsSkipped}\n`);
-
-  console.log("Phase 2: Importing contacts...");
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const contactExternalId = row["contacts.external_id"]?.trim();
-    const firstName = row["contacts.first_name"]?.trim();
-    const lastName = row["contacts.last_name"]?.trim();
-
-    if (!contactExternalId || !firstName || !lastName) continue;
-    if (contactMap.has(contactExternalId)) continue;
-
-    try {
-      const existing = await db.select().from(contacts).where(eq(contacts.externalId, contactExternalId)).limit(1);
-      
-      if (existing.length > 0) {
-        contactMap.set(contactExternalId, existing[0].id);
-        contactsSkipped++;
-      } else {
-        const email = row["contacts.email"]?.trim();
-        const [newContact] = await db.insert(contacts).values({
-          externalId: contactExternalId,
-          firstName,
-          lastName,
-          jobTitle: row["contacts.title"]?.trim() || null,
-          emailAddresses: email ? [email] : [],
-        }).returning();
-        
-        contactMap.set(contactExternalId, newContact.id);
-        contactsImported++;
-
-        const clientExternalId = row["clients.external_id"]?.trim();
-        if (clientExternalId && clientMap.has(clientExternalId)) {
-          const clientId = clientMap.get(clientExternalId)!;
-          const existingLink = await db.select().from(clientContacts)
-            .where(and(eq(clientContacts.clientId, clientId), eq(clientContacts.contactId, newContact.id)))
-            .limit(1);
-          
-          if (existingLink.length === 0) {
-            await db.insert(clientContacts).values({
-              clientId,
-              contactId: newContact.id,
-            });
-          }
-        }
-      }
-    } catch (error: any) {
-      importErrors.push({
-        row: i + 2,
-        externalId: contactExternalId,
-        type: "contact",
-        error: error.message,
-      });
-    }
-  }
-  console.log(`  Imported: ${contactsImported}, Skipped: ${contactsSkipped}\n`);
-
-  console.log("Phase 3: Importing deals...");
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const dealExternalId = row["deal.external_id"]?.trim();
-    const displayName = row["deals.display_name"]?.trim();
-    const clientExternalId = row["clients.external_id"]?.trim();
-
-    if (!dealExternalId || !displayName) {
-      importErrors.push({
-        row: i + 2,
-        externalId: dealExternalId || "UNKNOWN",
-        type: "deal",
-        error: "Missing deal external_id or display_name",
-      });
-      continue;
-    }
-
-    try {
-      const existing = await db.select().from(deals).where(eq(deals.externalId, dealExternalId)).limit(1);
-      
-      if (existing.length > 0) {
-        dealsSkipped++;
-        continue;
-      }
-
-      const clientId = clientExternalId ? clientMap.get(clientExternalId) : null;
-      if (!clientId) {
-        importErrors.push({
-          row: i + 2,
-          externalId: dealExternalId,
-          type: "deal",
-          error: `Client not found: ${clientExternalId}`,
-        });
-        continue;
-      }
-
-      const ownerId = row["deals.owner_id"]?.trim() || null;
-      let validOwnerId: string | null = null;
-      if (ownerId) {
-        const ownerExists = await db.select().from(users).where(eq(users.id, ownerId)).limit(1);
-        if (ownerExists.length > 0) {
-          validOwnerId = ownerId;
-        }
-      }
-
-      const contactExternalId = row["contacts.external_id"]?.trim();
-      const primaryContactId = contactExternalId ? contactMap.get(contactExternalId) : null;
-
-      const status = row["deals.status"]?.trim() || "Prospecting";
-      const eventSchedule = parseJSON(row["deals.event_schedule"]);
-      const locations = parseJSON(row["deals.locations"]);
-
-      await db.insert(deals).values({
-        externalId: dealExternalId,
-        displayName,
-        status,
-        clientId,
-        ownerId: validOwnerId,
-        primaryContactId: primaryContactId || null,
-        concept: row["deals.concept"]?.trim() || null,
-        notes: row["deals.notes"]?.trim() || null,
-        services: parseServices(row["deals.services"]),
-        dealValue: parseCurrency(row["deals.value"]),
-        lowValue: parseCurrency(row["deals.low_value"]),
-        startedOn: parseDate(row["deals.started_on"]),
-        wonOn: parseDate(row["deals.won_on"]),
-        lastContactOn: parseDate(row["deals.last_contact_on"]),
-        eventSchedule,
-        locations,
-      });
-
-      dealsImported++;
-    } catch (error: any) {
-      importErrors.push({
-        row: i + 2,
-        externalId: dealExternalId,
-        type: "deal",
-        error: error.message,
-      });
-    }
-  }
-  console.log(`  Imported: ${dealsImported}, Skipped: ${dealsSkipped}\n`);
-
-  console.log("=== Import Summary ===");
-  console.log(`Clients: ${clientsImported} imported, ${clientsSkipped} skipped`);
-  console.log(`Contacts: ${contactsImported} imported, ${contactsSkipped} skipped`);
-  console.log(`Deals: ${dealsImported} imported, ${dealsSkipped} skipped`);
-  console.log(`Errors: ${importErrors.length}`);
-
-  if (importErrors.length > 0) {
-    const logPath = path.resolve(__dirname, "../import-errors.log");
-    const logContent = importErrors.map((e) => 
-      `Row ${e.row} | ${e.type} | ${e.externalId} | ${e.error}`
-    ).join("\n");
-    fs.writeFileSync(logPath, `Import Errors - ${new Date().toISOString()}\n\n${logContent}`);
-    console.log(`\nError log written to: ${logPath}`);
-  }
-
-  console.log("\nImport complete!");
-  process.exit(0);
+  return servicesStr
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
-importData().catch((err) => {
-  console.error("Import failed:", err);
-  process.exit(1);
-});
+async function main() {
+  console.log("Starting deals import...");
+
+  const csvPath = path.resolve(
+    __dirname,
+    "../attached_assets/Coco_Datat_TF_1_Deals_1766369712874.csv"
+  );
+  const csvContent = fs.readFileSync(csvPath, "utf-8");
+  const lines = csvContent.split("\n");
+
+  const headers = parseCSVLine(lines[0]);
+  console.log("Headers:", headers);
+
+  const unassignedClient = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.name, "#Unassigned"))
+    .limit(1);
+
+  if (unassignedClient.length === 0) {
+    console.error("#Unassigned client not found!");
+    process.exit(1);
+  }
+
+  const unassignedClientId = unassignedClient[0].id;
+  console.log("Using #Unassigned client ID:", unassignedClientId);
+
+  const existingClients = await db.select({ id: clients.id }).from(clients);
+  const clientIdSet = new Set(existingClients.map((c) => c.id));
+
+  const existingUsers = await db.select({ id: users.id }).from(users);
+  const userIdSet = new Set(existingUsers.map((u) => u.id));
+
+  const existingContacts = await db.select({ id: contacts.id }).from(contacts);
+  const contactIdSet = new Set(existingContacts.map((c) => c.id));
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    log.totalRows++;
+    const values = parseCSVLine(line);
+
+    const data: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      data[header] = values[index] || "";
+    });
+
+    const externalId = data["external_id"];
+    const displayName = data["display_name"];
+
+    try {
+      let clientId = data["client_id"]?.trim();
+      if (!clientId || !clientIdSet.has(clientId)) {
+        if (clientId && !clientIdSet.has(clientId)) {
+          log.issues.push({
+            row: i + 1,
+            externalId,
+            displayName,
+            issue: `Client ID "${clientId}" not found, using #Unassigned`,
+          });
+        }
+        clientId = unassignedClientId;
+      }
+
+      let ownerId: string | null = data["owner_id"]?.trim() || null;
+      if (ownerId && !userIdSet.has(ownerId)) {
+        log.issues.push({
+          row: i + 1,
+          externalId,
+          displayName,
+          issue: `Owner ID "${ownerId}" not found in users table, setting to null`,
+        });
+        ownerId = null;
+      }
+
+      let primaryContactId: string | null =
+        data["primary_contact_id"]?.trim() || null;
+      if (primaryContactId && !contactIdSet.has(primaryContactId)) {
+        log.issues.push({
+          row: i + 1,
+          externalId,
+          displayName,
+          issue: `Primary contact ID "${primaryContactId}" not found in contacts table, setting to null`,
+        });
+        primaryContactId = null;
+      }
+
+      const startedOn = parseDate(data["started_on"]);
+      const lastContactOn = parseDate(data["last_contact"]);
+      const wonOn = parseDate(data["won_on"]);
+      const proposalSentOn = parseDate(data["proposal_sent_on"]);
+
+      const locations = parseJSON(data["locations"]);
+      const services = parseServices(data["services"]);
+
+      await db.insert(deals).values({
+        externalId: externalId,
+        displayName: displayName,
+        status: data["status"] || "Prospecting",
+        clientId: clientId,
+        locations: locations,
+        services: services,
+        concept: data["concept"] || null,
+        notes: data["notes"] || null,
+        ownerId: ownerId,
+        primaryContactId: primaryContactId,
+        budgetNotes: data["budget_notes"] || null,
+        projectDate: data["project_date"] || null,
+        startedOn: startedOn,
+        lastContactOn: lastContactOn,
+        wonOn: wonOn,
+        proposalSentOn: proposalSentOn,
+      });
+
+      log.successfulImports++;
+      console.log(`✓ Imported row ${i + 1}: ${displayName}`);
+    } catch (error: any) {
+      log.failedImports++;
+      log.issues.push({
+        row: i + 1,
+        externalId,
+        displayName,
+        issue: `Import failed: ${error.message}`,
+      });
+      console.error(`✗ Failed row ${i + 1}: ${displayName} - ${error.message}`);
+    }
+  }
+
+  const logContent = `# Deals Import Log
+
+## Summary
+- **Total Rows:** ${log.totalRows}
+- **Successful Imports:** ${log.successfulImports}
+- **Failed Imports:** ${log.failedImports}
+- **Issues Found:** ${log.issues.length}
+
+## Issues
+
+${
+  log.issues.length === 0
+    ? "No issues found."
+    : log.issues
+        .map(
+          (issue) =>
+            `### Row ${issue.row}: ${issue.displayName} (External ID: ${issue.externalId})
+- ${issue.issue}
+`
+        )
+        .join("\n")
+}
+`;
+
+  fs.writeFileSync(path.resolve(__dirname, "../deals-import-log.md"), logContent);
+  console.log("\n=== Import Complete ===");
+  console.log(`Total: ${log.totalRows}`);
+  console.log(`Successful: ${log.successfulImports}`);
+  console.log(`Failed: ${log.failedImports}`);
+  console.log(`Issues: ${log.issues.length}`);
+  console.log("\nLog saved to: deals-import-log.md");
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+  });

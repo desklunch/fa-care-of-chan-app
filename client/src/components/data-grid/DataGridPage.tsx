@@ -451,8 +451,10 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (gridApi) {
-        const scrollTop = gridApi.getVerticalPixelRange().top;
-        saveScrollToSession(window.location.pathname, scrollTop);
+        const scrollTop = gridApi.getVerticalPixelRange()?.top;
+        if (scrollTop !== undefined) {
+          saveScrollToSession(window.location.pathname, scrollTop);
+        }
       }
     };
     
@@ -461,8 +463,10 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       window.removeEventListener("beforeunload", handleBeforeUnload);
       // Also save on unmount (navigation within app)
       if (gridApi) {
-        const scrollTop = gridApi.getVerticalPixelRange().top;
-        saveScrollToSession(window.location.pathname, scrollTop);
+        const scrollTop = gridApi.getVerticalPixelRange()?.top;
+        if (scrollTop !== undefined) {
+          saveScrollToSession(window.location.pathname, scrollTop);
+        }
       }
     };
   }, [gridApi]);
