@@ -329,6 +329,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
+    id: "projectDate",
+    headerName: "Project Date",
+    field: "projectDate",
+    category: "Dates",
+    colDef: {
+      width: 150,
+      minWidth: 120,
+    },
+  },
+  {
     id: "externalId",
     headerName: "External ID",
     field: "externalId",

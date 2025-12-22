@@ -665,6 +665,7 @@ export const deals = pgTable(
     wonOn: date("won_on"),
     lastContactOn: date("last_contact_on"),
     earliestEventDate: date("earliest_event_date"),
+    projectDate: text("project_date"),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -1578,6 +1579,7 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   startedOn: z.string().nullable().optional(),
   wonOn: z.string().nullable().optional(),
   lastContactOn: z.string().nullable().optional(),
+  projectDate: z.string().nullable().optional(),
 });
 
 export const updateDealSchema = createInsertSchema(deals).pick({
@@ -1597,6 +1599,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   wonOn: true,
   lastContactOn: true,
   services: true,
+  projectDate: true,
 }).partial();
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;

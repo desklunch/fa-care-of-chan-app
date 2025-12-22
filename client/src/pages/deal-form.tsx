@@ -57,6 +57,7 @@ const dealFormSchema = z.object({
   startedOn: z.string().nullable().optional(),
   wonOn: z.string().nullable().optional(),
   lastContactOn: z.string().nullable().optional(),
+  projectDate: z.string().optional().transform(val => val || undefined),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -99,6 +100,7 @@ export default function DealForm() {
       startedOn: null,
       wonOn: null,
       lastContactOn: null,
+      projectDate: "",
     },
   });
 
@@ -128,6 +130,7 @@ export default function DealForm() {
         startedOn: deal.startedOn ?? null,
         wonOn: deal.wonOn ?? null,
         lastContactOn: deal.lastContactOn ?? null,
+        projectDate: deal.projectDate || "",
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
@@ -792,6 +795,28 @@ export default function DealForm() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="projectDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Q2 2025, Summer 2025, TBD..."
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-project-date"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Freeform text to describe the project timing.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
