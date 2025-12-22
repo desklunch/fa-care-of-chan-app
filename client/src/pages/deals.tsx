@@ -53,7 +53,7 @@ function createDateComparator(getValue: (data: DealWithRelations | undefined) =>
   };
 }
 
-const DEFAULT_VISIBLE_COLUMNS = [ "displayName", "client", "budget", "status", "owner", "eventSchedule", "locations"];
+const DEFAULT_VISIBLE_COLUMNS = [ "owner", "displayName", "status" , "client","startedOn", "wonOn", "lastContactOn", "concept", "services", "budgetNotes", "locations", "notes"];
 
 /**
  * Status priority order for sorting (lower number = higher priority in ascending sort)
@@ -96,16 +96,6 @@ function createStatusComparator() {
 // Filter configurations
 const dealFilters: FilterConfig<DealWithRelations>[] = [
   {
-    id: "status",
-    label: "Status",
-    icon: Flag,
-    optionSource: {
-      type: "static",
-      options: dealStatuses.map((status) => ({ id: status, label: status })),
-    },
-    matchFn: (deal, selectedValues) => selectedValues.includes(deal.status),
-  },
-  {
     id: "owner",
     label: "Owner",
     icon: User,
@@ -129,6 +119,17 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
       return selectedValues.includes(deal.ownerId);
     },
   },
+  {
+    id: "status",
+    label: "Status",
+    icon: Flag,
+    optionSource: {
+      type: "static",
+      options: dealStatuses.map((status) => ({ id: status, label: status })),
+    },
+    matchFn: (deal, selectedValues) => selectedValues.includes(deal.status),
+  },
+
   {
     id: "location",
     label: "Location",
@@ -246,21 +247,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "locations",
-    headerName: "Locations",
-    field: "locations",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 250,
-      valueGetter: (params: { data: DealWithRelations }) => {
-        const locations = params.data?.locations as Array<{ displayName: string }> | null;
-        if (!locations || locations.length === 0) return "";
-        return locations.map((loc) => loc.displayName).join(" | ");
-      },
-    },
-  },
+
   {
     id: "budget",
     headerName: "Budget",
@@ -347,29 +334,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 100,
     },
   },
-
-  {
-    id: "budgetNotes",
-    headerName: "Budget Notes",
-    field: "budgetNotes",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 200,
-    },
-  },
-  {
-    id: "notes",
-    headerName: "Notes",
-    field: "notes",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 200,
-    },
-  },
-
-
   {
     id: "services",
     headerName: "Services",
@@ -385,6 +349,44 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
+  {
+    id: "budgetNotes",
+    headerName: "Budget Notes",
+    field: "budgetNotes",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+    },
+  },
+  {
+    id: "locations",
+    headerName: "Locations",
+    field: "locations",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 250,
+      valueGetter: (params: { data: DealWithRelations }) => {
+        const locations = params.data?.locations as Array<{ displayName: string }> | null;
+        if (!locations || locations.length === 0) return "";
+        return locations.map((loc) => loc.displayName).join(" | ");
+      },
+    },
+  },
+  {
+    id: "notes",
+    headerName: "NextSteps",
+    field: "notes",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+    },
+  },
+
+
+
 
 
   {

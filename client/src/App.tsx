@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,66 +11,75 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { TabVisibilityHandler } from "@/hooks/useTabVisibility";
 import type { LayoutConfig } from "@/framework/types/layout";
-import Landing from "@/pages/landing";
-import InviteActivation from "@/pages/invite-activation";
-import AuthError from "@/pages/auth-error";
-import TeamPage from "@/pages/team";
-import TeamProfile from "@/pages/team-profile";
-import Profile from "@/pages/profile";
-import ProfileEdit from "@/pages/profile-edit";
-import AdminInvites from "@/pages/admin-invites";
-import AdminLogs from "@/pages/admin-logs";
-import AppFeatures from "@/pages/app-features";
-import AppFeatureDetail from "@/pages/app-feature-detail";
-import AppFeatureForm from "@/pages/app-feature-form";
-import AdminAppFeatures from "@/pages/admin-app-features";
-import Contacts from "@/pages/contacts";
-import ContactDetail from "@/pages/contact-detail";
-import ContactForm from "@/pages/contact-form";
-import Vendors from "@/pages/vendors";
-import VendorDetail from "@/pages/vendor-detail";
-import VendorForm from "@/pages/vendor-form";
-import Venues from "@/pages/venues";
-import VenueForm from "@/pages/venue-form";
-import VenueDetail from "@/pages/venue-detail";
-import VenueCollections from "@/pages/venue-collections";
-import VenueCollectionForm from "@/pages/venue-collection-form";
-import VenueCollectionDetail from "@/pages/venue-collection-detail";
-import Amenities from "@/pages/amenities";
-import TagsPage from "@/pages/tags";
-import AdminVendorServices from "@/pages/admin-vendor-services";
-import AdminThemeEditor from "@/pages/admin-theme-editor";
-import AdminVendorTokens from "@/pages/admin-vendor-tokens";
-import VendorUpdateForm from "@/pages/vendor-update-form";
-import AppIssues from "@/pages/app-issues";
-import AppIssueForm from "@/pages/app-issue-form";
-import AppIssueDetail from "@/pages/app-issue-detail";
-import FormTemplates from "@/pages/form-templates";
-import FormTemplateForm from "@/pages/form-template-form";
-import FormTemplateDetail from "@/pages/form-template-detail";
-import FormRequests from "@/pages/form-requests";
-import FormRequestForm from "@/pages/form-request-form";
-import FormRequestDetail from "@/pages/form-request-detail";
-import PublicForm from "@/pages/public-form";
-import FormPreview from "@/pages/form-preview";
-import CommentsPage from "@/pages/comments";
-import AdminAnalytics from "@/pages/admin-analytics";
-import AdminReleases from "@/pages/admin-releases";
-import AdminReleaseDetail from "@/pages/admin-release-detail";
-import Guide from "@/pages/guide";
-import Feedback from "@/pages/feedback";
-import PublicVenueDetail from "@/pages/public-venue-detail";
-import PublicVenueCollection from "@/pages/public-venue-collection";
-import Deals from "@/pages/deals";
-import DealForm from "@/pages/deal-form";
-import DealDetail from "@/pages/deal-detail";
-import Clients from "@/pages/clients";
-import ClientForm from "@/pages/client-form";
-import ClientDetail from "@/pages/client-detail";
-import ClientContacts from "@/pages/client-contacts";
-import VendorContacts from "@/pages/vendor-contacts";
-import EventSchedulePrototype from "@/pages/event-schedule-prototype";
-import NotFound from "@/pages/not-found";
+
+const Landing = lazy(() => import("@/pages/landing"));
+const InviteActivation = lazy(() => import("@/pages/invite-activation"));
+const AuthError = lazy(() => import("@/pages/auth-error"));
+const TeamPage = lazy(() => import("@/pages/team"));
+const TeamProfile = lazy(() => import("@/pages/team-profile"));
+const Profile = lazy(() => import("@/pages/profile"));
+const ProfileEdit = lazy(() => import("@/pages/profile-edit"));
+const AdminInvites = lazy(() => import("@/pages/admin-invites"));
+const AdminLogs = lazy(() => import("@/pages/admin-logs"));
+const AppFeatures = lazy(() => import("@/pages/app-features"));
+const AppFeatureDetail = lazy(() => import("@/pages/app-feature-detail"));
+const AppFeatureForm = lazy(() => import("@/pages/app-feature-form"));
+const AdminAppFeatures = lazy(() => import("@/pages/admin-app-features"));
+const Contacts = lazy(() => import("@/pages/contacts"));
+const ContactDetail = lazy(() => import("@/pages/contact-detail"));
+const ContactForm = lazy(() => import("@/pages/contact-form"));
+const Vendors = lazy(() => import("@/pages/vendors"));
+const VendorDetail = lazy(() => import("@/pages/vendor-detail"));
+const VendorForm = lazy(() => import("@/pages/vendor-form"));
+const Venues = lazy(() => import("@/pages/venues"));
+const VenueForm = lazy(() => import("@/pages/venue-form"));
+const VenueDetail = lazy(() => import("@/pages/venue-detail"));
+const VenueCollections = lazy(() => import("@/pages/venue-collections"));
+const VenueCollectionForm = lazy(() => import("@/pages/venue-collection-form"));
+const VenueCollectionDetail = lazy(() => import("@/pages/venue-collection-detail"));
+const Amenities = lazy(() => import("@/pages/amenities"));
+const TagsPage = lazy(() => import("@/pages/tags"));
+const AdminVendorServices = lazy(() => import("@/pages/admin-vendor-services"));
+const AdminThemeEditor = lazy(() => import("@/pages/admin-theme-editor"));
+const AdminVendorTokens = lazy(() => import("@/pages/admin-vendor-tokens"));
+const VendorUpdateForm = lazy(() => import("@/pages/vendor-update-form"));
+const AppIssues = lazy(() => import("@/pages/app-issues"));
+const AppIssueForm = lazy(() => import("@/pages/app-issue-form"));
+const AppIssueDetail = lazy(() => import("@/pages/app-issue-detail"));
+const FormTemplates = lazy(() => import("@/pages/form-templates"));
+const FormTemplateForm = lazy(() => import("@/pages/form-template-form"));
+const FormTemplateDetail = lazy(() => import("@/pages/form-template-detail"));
+const FormRequests = lazy(() => import("@/pages/form-requests"));
+const FormRequestForm = lazy(() => import("@/pages/form-request-form"));
+const FormRequestDetail = lazy(() => import("@/pages/form-request-detail"));
+const PublicForm = lazy(() => import("@/pages/public-form"));
+const FormPreview = lazy(() => import("@/pages/form-preview"));
+const CommentsPage = lazy(() => import("@/pages/comments"));
+const AdminAnalytics = lazy(() => import("@/pages/admin-analytics"));
+const AdminReleases = lazy(() => import("@/pages/admin-releases"));
+const AdminReleaseDetail = lazy(() => import("@/pages/admin-release-detail"));
+const Guide = lazy(() => import("@/pages/guide"));
+const Feedback = lazy(() => import("@/pages/feedback"));
+const PublicVenueDetail = lazy(() => import("@/pages/public-venue-detail"));
+const PublicVenueCollection = lazy(() => import("@/pages/public-venue-collection"));
+const Deals = lazy(() => import("@/pages/deals"));
+const DealForm = lazy(() => import("@/pages/deal-form"));
+const DealDetail = lazy(() => import("@/pages/deal-detail"));
+const Clients = lazy(() => import("@/pages/clients"));
+const ClientForm = lazy(() => import("@/pages/client-form"));
+const ClientDetail = lazy(() => import("@/pages/client-detail"));
+const ClientContacts = lazy(() => import("@/pages/client-contacts"));
+const VendorContacts = lazy(() => import("@/pages/vendor-contacts"));
+const EventSchedulePrototype = lazy(() => import("@/pages/event-schedule-prototype"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[200px]">
+      <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+    </div>
+  );
+}
 import {
   CircleUserRound,
   UserPlus,
@@ -321,8 +331,9 @@ function AuthenticatedRoutes() {
   return (
     <LayoutProvider config={layoutConfig}>
       <AppShell>
-        <Switch>
-          <Route path="/" component={Venues} />
+        <Suspense fallback={<PageLoader />}>
+          <Switch>
+            <Route path="/" component={Venues} />
           <Route path="/team" component={TeamPage} />
           <Route path="/team/:id" component={TeamProfile} />
           <Route path="/profile" component={Profile} />
@@ -386,7 +397,8 @@ function AuthenticatedRoutes() {
           <Route path="/app/feedback" component={Feedback} />
           <Route component={NotFound} />
         </Switch>
-      </AppShell>
+      </Suspense>
+    </AppShell>
     </LayoutProvider>
   );
 }
@@ -411,37 +423,39 @@ function Router() {
   }
 
   return (
-    <Switch>
-      <Route path="/invite" component={InviteActivation} />
-      <Route path="/auth-error" component={AuthError} />
-      <Route path="/vendor-update/:token" component={VendorUpdateForm} />
-      <Route path="/form/:token" component={PublicForm} />
-      <Route path="/form/preview/:requestId" component={FormPreview} />
-      <Route path="/public/venues/:id" component={PublicVenueDetail} />
-      <Route path="/public/venues/collections/:id" component={PublicVenueCollection} />
-      {isAuthenticated ? (
-        <Route>
-          <AuthenticatedRoutes />
-        </Route>
-      ) : (
-        <>
-          <Route path="/venues/:id">
-            {(params) => {
-              window.location.replace(`/public/venues/${params.id}`);
-              return null;
-            }}
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/invite" component={InviteActivation} />
+        <Route path="/auth-error" component={AuthError} />
+        <Route path="/vendor-update/:token" component={VendorUpdateForm} />
+        <Route path="/form/:token" component={PublicForm} />
+        <Route path="/form/preview/:requestId" component={FormPreview} />
+        <Route path="/public/venues/:id" component={PublicVenueDetail} />
+        <Route path="/public/venues/collections/:id" component={PublicVenueCollection} />
+        {isAuthenticated ? (
+          <Route>
+            <AuthenticatedRoutes />
           </Route>
-          <Route path="/venues/collections/:id">
-            {(params) => {
-              window.location.replace(`/public/venues/collections/${params.id}`);
-              return null;
-            }}
-          </Route>
-          <Route path="/" component={Landing} />
-          <Route component={NotFound} />
-        </>
-      )}
-    </Switch>
+        ) : (
+          <>
+            <Route path="/venues/:id">
+              {(params) => {
+                window.location.replace(`/public/venues/${params.id}`);
+                return null;
+              }}
+            </Route>
+            <Route path="/venues/collections/:id">
+              {(params) => {
+                window.location.replace(`/public/venues/collections/${params.id}`);
+                return null;
+              }}
+            </Route>
+            <Route path="/" component={Landing} />
+            <Route component={NotFound} />
+          </>
+        )}
+      </Switch>
+    </Suspense>
   );
 }
 
