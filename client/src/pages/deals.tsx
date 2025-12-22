@@ -444,12 +444,22 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 250,
-      valueGetter: (params: { data: DealWithRelations }) => {
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: (params: { data: DealWithRelations }) => {
         const locations = params.data?.locations as Array<{
           displayName: string;
         }> | null;
-        if (!locations || locations.length === 0) return "";
-        return locations.map((loc) => loc.displayName).join(" | ");
+        if (!locations || locations.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-1">
+            {locations.map((loc, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {loc.displayName}
+              </Badge>
+            ))}
+          </div>
+        );
       },
     },
   },
