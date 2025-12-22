@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
+import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 
 /**
@@ -209,6 +210,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 280,
+      maxWidth: 360,
       sortable: false,
     },
   },
@@ -368,7 +370,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 200,
+      minWidth: 300,
+      
       sortable: false,
       wrapText: true,
       autoHeight: true,
@@ -402,10 +405,20 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 180,
-      valueGetter: (params: { data: DealWithRelations }) => {
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: (params: { data: DealWithRelations }) => {
         const services = params.data?.services as DealService[] | null;
-        if (!services || services.length === 0) return "";
-        return services.join(", ");
+        if (!services || services.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-1">
+            {services.map((service, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {service}
+              </Badge>
+            ))}
+          </div>
+        );
       },
     },
   },
@@ -444,14 +457,14 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 200,
+      minWidth: 300,
       sortable: false,
       wrapText: true,
       autoHeight: true,
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-2 [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 line-clamp-2">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-2 [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown>{params.value}</ReactMarkdown>
           </div>
         );
@@ -537,7 +550,7 @@ export default function Deals() {
         searchPlaceholder="Search deals..."
         filters={dealFilters}
         collapsibleFilters={true}
-        onRowClick={(deal) => setLocation(`/deals/${deal.id}`)}
+        
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"
         emptyDescription="Start tracking your sales pipeline by creating a deal."
@@ -545,3 +558,4 @@ export default function Deals() {
     </PageLayout>
   );
 }
+// onRowClick={(deal) => setLocation(`/deals/${deal.id}`)}
