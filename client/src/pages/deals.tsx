@@ -65,9 +65,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "owner",
   "status",
   "projectDate",
-  "startedOn",
-  "wonOn",
-  "lastContactOn",
+
   "concept",
   "services",
   "locations",
@@ -209,8 +207,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 2,
-      width: 240,
-      minWidth: 180,
+      minWidth: 280,
       sortable: false,
     },
   },
@@ -328,7 +325,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Dates",
     colDef: {
       minWidth: 130,
-      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yyyy");
@@ -343,7 +339,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Dates",
     colDef: {
       minWidth: 130,
-      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yyyy");
@@ -358,7 +353,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Dates",
     colDef: {
       minWidth: 130,
-      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yyyy");
@@ -432,7 +426,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "notes",
-    headerName: "NextSteps",
+    headerName: "Next Steps",
     field: "notes",
     category: "Basic Info",
     colDef: {
