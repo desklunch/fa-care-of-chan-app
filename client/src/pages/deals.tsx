@@ -3,7 +3,12 @@ import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { getEventsSummaryText } from "@/components/event-schedule";
-import type { DealWithRelations, DealEvent, DealService, DealLocation } from "@shared/schema";
+import type {
+  DealWithRelations,
+  DealEvent,
+  DealService,
+  DealLocation,
+} from "@shared/schema";
 import { dealStatuses, dealServices } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
@@ -14,27 +19,29 @@ import { DealStatusBadge } from "@/components/deal-status-badge";
 /**
  * Creates a comparator for date columns that pushes null/empty values to the bottom
  * regardless of whether sorting ascending or descending.
- * 
+ *
  * AG Grid inverts comparator results for descending sorts, so we need to account for that
  * when handling nulls to ensure they always appear at the bottom.
  */
-function createDateComparator(getValue: (data: DealWithRelations | undefined) => string | null | undefined) {
+function createDateComparator(
+  getValue: (data: DealWithRelations | undefined) => string | null | undefined,
+) {
   return (
     valueA: unknown,
     valueB: unknown,
     nodeA: { data: DealWithRelations | undefined },
     nodeB: { data: DealWithRelations | undefined },
-    isDescending: boolean
+    isDescending: boolean,
   ): number => {
     const dateA = getValue(nodeA.data);
     const dateB = getValue(nodeB.data);
-    
+
     const aIsNull = !dateA;
     const bIsNull = !dateB;
-    
+
     // Both null - equal
     if (aIsNull && bIsNull) return 0;
-    
+
     // Handle nulls: push to bottom regardless of sort direction
     // AG Grid inverts comparator result for descending, so we must counter that
     if (aIsNull) {
@@ -45,7 +52,7 @@ function createDateComparator(getValue: (data: DealWithRelations | undefined) =>
       // We want null at bottom: ascending needs -1, descending needs +1 (AG Grid will invert to -1)
       return isDescending ? 1 : -1;
     }
-    
+
     // Compare dates as strings (YYYY-MM-DD format sorts correctly lexicographically)
     if (dateA < dateB) return -1;
     if (dateA > dateB) return 1;
@@ -53,22 +60,35 @@ function createDateComparator(getValue: (data: DealWithRelations | undefined) =>
   };
 }
 
-const DEFAULT_VISIBLE_COLUMNS = ["owner", "status", "projectDate", "client", "startedOn", "wonOn", "lastContactOn", "concept", "services", "locations", "notes"];
+const DEFAULT_VISIBLE_COLUMNS = [
+  "displayName", 
+  "owner",
+  "status",
+  "projectDate",
+  "client",
+  "startedOn",
+  "wonOn",
+  "lastContactOn",
+  "concept",
+  "services",
+  "locations",
+  "notes",
+];
 
 /**
  * Status priority order for sorting (lower number = higher priority in ascending sort)
  */
 const STATUS_SORT_ORDER: Record<string, number> = {
-  "Prospecting": 1,
+  Prospecting: 1,
   "Warm Lead": 2,
-  "Proposal": 3,
+  Proposal: 3,
   "Waiting for Feedback": 4,
   "In Contracting": 5,
   "In Progress": 6,
   "Final Invoicing": 7,
-  "Complete": 8,
+  Complete: 8,
   "No Go": 9,
-  "Cancelled": 10,
+  Cancelled: 10,
 };
 
 /**
@@ -80,15 +100,15 @@ function createStatusComparator() {
     valueB: unknown,
     nodeA: { data: DealWithRelations | undefined },
     nodeB: { data: DealWithRelations | undefined },
-    isDescending: boolean
+    isDescending: boolean,
   ): number => {
     const statusA = nodeA.data?.status;
     const statusB = nodeB.data?.status;
-    
+
     // Get priority (unknown statuses get high number to sort to end)
     const priorityA = statusA ? (STATUS_SORT_ORDER[statusA] ?? 999) : 999;
     const priorityB = statusB ? (STATUS_SORT_ORDER[statusB] ?? 999) : 999;
-    
+
     return priorityA - priorityB;
   };
 }
@@ -105,13 +125,19 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
         const ownerMap = new Map<string, string>();
         data.forEach((deal) => {
           if (deal.owner && deal.ownerId) {
-            const fullName = [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ") || "Unknown";
+            const fullName =
+              [deal.owner.firstName, deal.owner.lastName]
+                .filter(Boolean)
+                .join(" ") || "Unknown";
             if (!ownerMap.has(deal.ownerId)) {
               ownerMap.set(deal.ownerId, fullName);
             }
           }
         });
-        return Array.from(ownerMap.entries()).map(([id, label]) => ({ id, label }));
+        return Array.from(ownerMap.entries()).map(([id, label]) => ({
+          id,
+          label,
+        }));
       },
     },
     matchFn: (deal, selectedValues) => {
@@ -148,7 +174,10 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
             });
           }
         });
-        return Array.from(locationSet.entries()).map(([id, label]) => ({ id, label }));
+        return Array.from(locationSet.entries()).map(([id, label]) => ({
+          id,
+          label,
+        }));
       },
     },
     matchFn: (deal, selectedValues) => {
@@ -175,6 +204,16 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
+    id: "displayName",
+    headerName: "Deal",
+    field: "displayName",
+    category: "Basic Info",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+    },
+  },
+  {
     id: "owner",
     headerName: "Owner",
     field: "owner",
@@ -186,7 +225,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations }) => {
         const owner = params.data?.owner;
         if (!owner) return "";
-        const initials = [owner.firstName?.[0], owner.lastName?.[0]].filter(Boolean).join("").toUpperCase();
+        const initials = [owner.firstName?.[0], owner.lastName?.[0]]
+          .filter(Boolean)
+          .join("")
+          .toUpperCase();
         return initials || "?";
       },
     },
@@ -197,14 +239,28 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "status",
     category: "Basic Info",
     colDef: {
-      flex:1,
+      flex: 1,
       minWidth: 190,
       maxWidth: 190,
       comparator: createStatusComparator(),
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
-        return <DealStatusBadge status={params.value as DealWithRelations["status"]} />;
+        return (
+          <DealStatusBadge
+            status={params.value as DealWithRelations["status"]}
+          />
+        );
       },
+    },
+  },
+  {
+    id: "projectDate",
+    headerName: "Project Date",
+    field: "projectDate",
+    category: "Dates",
+    colDef: {
+      width: 150,
+      minWidth: 120,
     },
   },
   {
@@ -224,16 +280,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
-  {
-    id: "displayName",
-    headerName: "Deal",
-    field: "displayName",
-    category: "Basic Info",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-    },
-  },
+
   {
     id: "client",
     headerName: "Client",
@@ -241,7 +288,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1.5,
-      minWidth: 150,
+      minWidth: 180,
       valueGetter: (params: { data: DealWithRelations }) => {
         return params.data?.client?.name || "";
       },
@@ -279,7 +326,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "startedOn",
     category: "Dates",
     colDef: {
-      width: 120,
+      minWidth: 130,
+      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yyyy");
@@ -293,7 +341,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "wonOn",
     category: "Dates",
     colDef: {
-      width: 120,
+      minWidth: 130,
+      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yyyy");
@@ -307,7 +356,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "lastContactOn",
     category: "Dates",
     colDef: {
-      width: 120,
+      minWidth: 130,
+      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yyyy");
@@ -315,16 +365,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createDateComparator((data) => data?.lastContactOn),
     },
   },
-  {
-    id: "projectDate",
-    headerName: "Project Date",
-    field: "projectDate",
-    category: "Dates",
-    colDef: {
-      width: 150,
-      minWidth: 120,
-    },
-  },
+
   {
     id: "externalId",
     headerName: "External ID",
@@ -368,7 +409,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 1,
       minWidth: 250,
       valueGetter: (params: { data: DealWithRelations }) => {
-        const locations = params.data?.locations as Array<{ displayName: string }> | null;
+        const locations = params.data?.locations as Array<{
+          displayName: string;
+        }> | null;
         if (!locations || locations.length === 0) return "";
         return locations.map((loc) => loc.displayName).join(" | ");
       },
@@ -385,10 +428,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
-
-
-
-
   {
     id: "createdBy",
     headerName: "Created By",
@@ -400,7 +439,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations }) => {
         const createdBy = params.data?.createdBy;
         if (!createdBy) return "";
-        return [createdBy.firstName, createdBy.lastName].filter(Boolean).join(" ") || "Unknown";
+        return (
+          [createdBy.firstName, createdBy.lastName].filter(Boolean).join(" ") ||
+          "Unknown"
+        );
       },
     },
   },
@@ -455,7 +497,9 @@ export default function Deals() {
           "status",
           (deal) => deal.client?.name || "",
           (deal) => {
-            const locations = deal.locations as Array<{ displayName: string }> | null;
+            const locations = deal.locations as Array<{
+              displayName: string;
+            }> | null;
             return locations?.map((loc) => loc.displayName).join(" ") || "";
           },
         ]}
