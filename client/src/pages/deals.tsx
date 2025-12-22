@@ -217,13 +217,13 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2 w-full">
+            <span>{params.value}</span>
             <Link href={`/deals/${params.data.id}`}>
               <Button size="sm" variant="ghost" className="h-7 px-2">
                 <SquareArrowOutUpRight className="h-4 w-4" />
               </Button>
             </Link>
-            <span>{params.value}</span>
           </div>
         );
       },
