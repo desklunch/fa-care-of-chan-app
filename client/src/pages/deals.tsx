@@ -65,7 +65,6 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "owner",
   "status",
   "projectDate",
-  "client",
   "startedOn",
   "wonOn",
   "lastContactOn",
@@ -210,7 +209,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 2,
-      minWidth: 200,
+      width: 240,
+      minWidth: 180,
     },
   },
   {
@@ -388,6 +388,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!services || services.length === 0) return "";
         return services.join(", ");
       },
+    },
+  },
+  {
+    id: "concept",
+    headerName: "Concept",
+    field: "concept",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
     },
   },
   {
