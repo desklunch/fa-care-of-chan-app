@@ -8,7 +8,7 @@ import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { Building2, CircleFadingPlus, Contact } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "clients", "vendors", "emailAddresses", "phoneNumbers"];
+const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "clients", "emailAddresses", "phoneNumbers"];
 
 const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   {
@@ -113,45 +113,7 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
       },
     },
   },
-  {
-    id: "vendors",
-    headerName: "Vendors",
-    field: "vendors",
-    category: "Work",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { value: Vendor[] | undefined }) => {
-        const vendors = params.value;
-        if (!vendors || vendors.length === 0) return null;
-        return (
-          <div className="flex items-center gap-1 h-full overflow-hidden">
-            {vendors.slice(0, 2).map((vendor) => (
-              <Link 
-                key={vendor.id} 
-                href={`/vendors/${vendor.id}`}
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                <Badge 
-                  variant="outline" 
-                  className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
-                  data-testid={`badge-vendor-${vendor.id}`}
-                >
-                  <Building2 className="w-3 h-3" />
-                  {vendor.businessName}
-                </Badge>
-              </Link>
-            ))}
-            {vendors.length > 2 && (
-              <Badge variant="outline" className="text-xs shrink-0">
-                +{vendors.length - 2}
-              </Badge>
-            )}
-          </div>
-        );
-      },
-    },
-  },
+ 
   {
     id: "emailAddresses",
     headerName: "Email",
