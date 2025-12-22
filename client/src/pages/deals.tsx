@@ -327,7 +327,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "startedOn",
     category: "Dates",
     colDef: {
-      minWidth: 110,
+      minWidth: 150,
+      maxWidth: 150,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -341,7 +342,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "wonOn",
     category: "Dates",
     colDef: {
-      minWidth: 110,
+      minWidth: 130,
+      maxWidth: 130,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -355,7 +357,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "lastContactOn",
     category: "Dates",
     colDef: {
-      minWidth: 110,
+      minWidth: 160,
+      maxWidth: 160,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -369,7 +372,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "concept",
     category: "Basic Info",
     colDef: {
-      flex: 1,
+      flex: 3,
       minWidth: 300,
       
       sortable: false,
@@ -456,7 +459,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "notes",
     category: "Basic Info",
     colDef: {
-      flex: 1,
+      flex: 3,
       minWidth: 300,
       sortable: false,
       wrapText: true,
