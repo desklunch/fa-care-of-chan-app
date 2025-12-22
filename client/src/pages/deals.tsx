@@ -468,7 +468,17 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return null;
         return (
           <div className="prose prose-sm dark:prose-invert max-w-none py-2 [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
-            <ReactMarkdown>{params.value}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {params.value}
+            </ReactMarkdown>
           </div>
         );
       },
