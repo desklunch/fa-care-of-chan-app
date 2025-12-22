@@ -327,10 +327,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "startedOn",
     category: "Dates",
     colDef: {
-      minWidth: 130,
+      minWidth: 110,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yyyy");
+        return formatDateOnly(params.value, "MM/dd/yy");
       },
       comparator: createDateComparator((data) => data?.startedOn),
     },
@@ -341,10 +341,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "wonOn",
     category: "Dates",
     colDef: {
-      minWidth: 130,
+      minWidth: 110,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yyyy");
+        return formatDateOnly(params.value, "MM/dd/yy");
       },
       comparator: createDateComparator((data) => data?.wonOn),
     },
@@ -355,10 +355,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "lastContactOn",
     category: "Dates",
     colDef: {
-      minWidth: 130,
+      minWidth: 110,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yyyy");
+        return formatDateOnly(params.value, "MM/dd/yy");
       },
       comparator: createDateComparator((data) => data?.lastContactOn),
     },
