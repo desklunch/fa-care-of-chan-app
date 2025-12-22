@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent, RowClickedEvent } from "ag-grid-community";
+import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent, RowClickedEvent, SortChangedEvent, ColumnMovedEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { ExpandableSearch } from "./expandable-search";
@@ -14,13 +13,41 @@ import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// Helper functions for URL params and session storage
+// ============================================
+// URL PARAM HELPERS
+// ============================================
+
+function getUrlParams(): URLSearchParams {
+  return new URLSearchParams(window.location.search);
+}
+
+function updateUrlParams(updates: Record<string, string | null>) {
+  const params = getUrlParams();
+  
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value === null || value === "") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+  });
+  
+  const newUrl = params.toString() 
+    ? `${window.location.pathname}?${params.toString()}`
+    : window.location.pathname;
+  window.history.replaceState({}, "", newUrl);
+}
+
+// ============================================
+// FILTER HELPERS
+// ============================================
+
 function getFiltersFromUrl(): Record<string, string[]> {
-  const params = new URLSearchParams(window.location.search);
+  const params = getUrlParams();
   const filters: Record<string, string[]> = {};
   params.forEach((value, key) => {
-    if (key.startsWith("filter_")) {
-      const filterId = key.replace("filter_", "");
+    if (key.startsWith("f_")) {
+      const filterId = key.replace("f_", "");
       filters[filterId] = value.split(",").filter(Boolean);
     }
   });
@@ -28,16 +55,15 @@ function getFiltersFromUrl(): Record<string, string[]> {
 }
 
 function getSearchFromUrl(): string {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("search") || "";
+  return getUrlParams().get("q") || "";
 }
 
 function setFiltersToUrl(filterState: Record<string, string[]>, searchText?: string) {
-  const params = new URLSearchParams(window.location.search);
+  const params = getUrlParams();
   
   // Remove existing filter params
   Array.from(params.keys()).forEach((key) => {
-    if (key.startsWith("filter_")) {
+    if (key.startsWith("f_")) {
       params.delete(key);
     }
   });
@@ -45,16 +71,16 @@ function setFiltersToUrl(filterState: Record<string, string[]>, searchText?: str
   // Add current filter params
   Object.entries(filterState).forEach(([filterId, values]) => {
     if (values.length > 0) {
-      params.set(`filter_${filterId}`, values.join(","));
+      params.set(`f_${filterId}`, values.join(","));
     }
   });
   
   // Handle search param
   if (searchText !== undefined) {
     if (searchText.trim()) {
-      params.set("search", searchText.trim());
+      params.set("q", searchText.trim());
     } else {
-      params.delete("search");
+      params.delete("q");
     }
   }
   
@@ -88,29 +114,37 @@ function saveFiltersToSession(pathname: string, filterState: Record<string, stri
   }
 }
 
-// Helper functions for column visibility URL params and session storage
-function getColumnsFromUrl(): string[] | null {
-  const params = new URLSearchParams(window.location.search);
-  const cols = params.get("columns");
+// ============================================
+// COLUMN VISIBILITY HELPERS (using numeric indices)
+// ============================================
+
+function indicesToColumnIds(indices: number[], allColumnIds: string[]): string[] {
+  return indices
+    .filter(i => i >= 0 && i < allColumnIds.length)
+    .map(i => allColumnIds[i]);
+}
+
+function columnIdsToIndices(columnIds: string[], allColumnIds: string[]): number[] {
+  return columnIds
+    .map(id => allColumnIds.indexOf(id))
+    .filter(i => i !== -1);
+}
+
+function getColumnsFromUrl(allColumnIds: string[]): string[] | null {
+  const params = getUrlParams();
+  const cols = params.get("c");
   if (cols) {
-    return cols.split(",").filter(Boolean);
+    const indices = cols.split(",").map(s => parseInt(s, 10)).filter(n => !isNaN(n));
+    if (indices.length > 0) {
+      return indicesToColumnIds(indices, allColumnIds);
+    }
   }
   return null;
 }
 
-function setColumnsToUrl(visibleColumns: string[]) {
-  const params = new URLSearchParams(window.location.search);
-  
-  if (visibleColumns.length > 0) {
-    params.set("columns", visibleColumns.join(","));
-  } else {
-    params.delete("columns");
-  }
-  
-  const newUrl = params.toString() 
-    ? `${window.location.pathname}?${params.toString()}`
-    : window.location.pathname;
-  window.history.replaceState({}, "", newUrl);
+function setColumnsToUrl(visibleColumns: string[], allColumnIds: string[]) {
+  const indices = columnIdsToIndices(visibleColumns, allColumnIds);
+  updateUrlParams({ c: indices.length > 0 ? indices.join(",") : null });
 }
 
 function getColumnSessionStorageKey(pathname: string): string {
@@ -137,6 +171,143 @@ function saveColumnsToSession(pathname: string, visibleColumns: string[]) {
   }
 }
 
+// ============================================
+// SORT ORDER HELPERS
+// ============================================
+
+interface SortState {
+  colIndex: number;
+  dir: "asc" | "desc";
+}
+
+function getSortFromUrl(): SortState | null {
+  const params = getUrlParams();
+  const sort = params.get("s");
+  if (sort) {
+    const match = sort.match(/^(\d+)(a|d)$/);
+    if (match) {
+      return {
+        colIndex: parseInt(match[1], 10),
+        dir: match[2] === "a" ? "asc" : "desc",
+      };
+    }
+  }
+  return null;
+}
+
+function setSortToUrl(sort: SortState | null) {
+  if (sort) {
+    const dir = sort.dir === "asc" ? "a" : "d";
+    updateUrlParams({ s: `${sort.colIndex}${dir}` });
+  } else {
+    updateUrlParams({ s: null });
+  }
+}
+
+function getSortSessionStorageKey(pathname: string): string {
+  return `datagrid_sort_${pathname}`;
+}
+
+function getSortFromSession(pathname: string): SortState | null {
+  try {
+    const stored = sessionStorage.getItem(getSortSessionStorageKey(pathname));
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to parse session storage sort:", e);
+  }
+  return null;
+}
+
+function saveSortToSession(pathname: string, sort: SortState | null) {
+  try {
+    if (sort) {
+      sessionStorage.setItem(getSortSessionStorageKey(pathname), JSON.stringify(sort));
+    } else {
+      sessionStorage.removeItem(getSortSessionStorageKey(pathname));
+    }
+  } catch (e) {
+    console.error("Failed to save sort to session storage:", e);
+  }
+}
+
+// ============================================
+// SCROLL POSITION HELPERS (session storage only)
+// ============================================
+
+function getScrollSessionStorageKey(pathname: string): string {
+  return `datagrid_scroll_${pathname}`;
+}
+
+function getScrollFromSession(pathname: string): number | null {
+  try {
+    const stored = sessionStorage.getItem(getScrollSessionStorageKey(pathname));
+    if (stored) {
+      return parseInt(stored, 10);
+    }
+  } catch (e) {
+    console.error("Failed to parse session storage scroll:", e);
+  }
+  return null;
+}
+
+function saveScrollToSession(pathname: string, scrollTop: number) {
+  try {
+    sessionStorage.setItem(getScrollSessionStorageKey(pathname), String(Math.round(scrollTop)));
+  } catch (e) {
+    console.error("Failed to save scroll to session storage:", e);
+  }
+}
+
+// ============================================
+// COLUMN ORDER HELPERS
+// ============================================
+
+function getColumnOrderFromUrl(): number[] | null {
+  const params = getUrlParams();
+  const order = params.get("o");
+  if (order) {
+    const indices = order.split(",").map(s => parseInt(s, 10)).filter(n => !isNaN(n));
+    if (indices.length > 0) {
+      return indices;
+    }
+  }
+  return null;
+}
+
+function setColumnOrderToUrl(orderIndices: number[] | null) {
+  updateUrlParams({ o: orderIndices && orderIndices.length > 0 ? orderIndices.join(",") : null });
+}
+
+function getColumnOrderSessionStorageKey(pathname: string): string {
+  return `datagrid_order_${pathname}`;
+}
+
+function getColumnOrderFromSession(pathname: string): number[] | null {
+  try {
+    const stored = sessionStorage.getItem(getColumnOrderSessionStorageKey(pathname));
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to parse session storage column order:", e);
+  }
+  return null;
+}
+
+function saveColumnOrderToSession(pathname: string, orderIndices: number[] | null) {
+  try {
+    if (orderIndices && orderIndices.length > 0) {
+      sessionStorage.setItem(getColumnOrderSessionStorageKey(pathname), JSON.stringify(orderIndices));
+    } else {
+      sessionStorage.removeItem(getColumnOrderSessionStorageKey(pathname));
+    }
+  } catch (e) {
+    console.error("Failed to save column order to session storage:", e);
+  }
+}
+
 export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   queryKey,
   columns,
@@ -159,21 +330,23 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   filters = [],
   collapsibleFilters = false,
 }: DataGridPageProps<T, C>) {
-  const [location] = useLocation();
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState(() => getSearchFromUrl());
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [isFilterInitialized, setIsFilterInitialized] = useState(false);
+  const [isGridInitialized, setIsGridInitialized] = useState(false);
+  const scrollRestoredRef = useRef(false);
+
+  // Get all column IDs for index mapping
+  const allColumnIds = useMemo(() => columns.map((col) => col.id), [columns]);
 
   // Initialize filterState from URL params or session storage
   const [filterState, setFilterState] = useState<Record<string, string[]>>(() => {
-    // First check URL params
     const urlFilters = getFiltersFromUrl();
     if (Object.keys(urlFilters).length > 0) {
       return urlFilters;
     }
-    // Then check session storage
     const sessionFilters = getFiltersFromSession(window.location.pathname);
     if (sessionFilters && Object.keys(sessionFilters).length > 0) {
       return sessionFilters;
@@ -196,43 +369,54 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   // Initialize visibleColumns from URL params or session storage
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    // First check URL params
-    const urlColumns = getColumnsFromUrl();
+    const urlColumns = getColumnsFromUrl(allColumnIds);
     if (urlColumns && urlColumns.length > 0) {
       return urlColumns;
     }
-    // Then check session storage
     const sessionColumns = getColumnsFromSession(window.location.pathname);
     if (sessionColumns && sessionColumns.length > 0) {
       return sessionColumns;
     }
-    // Fall back to defaults
     return defaultVisibleColumns;
   });
   const [isColumnInitialized, setIsColumnInitialized] = useState(false);
+
+  // Initialize sort state from URL params or session storage
+  const [sortState, setSortState] = useState<SortState | null>(() => {
+    const urlSort = getSortFromUrl();
+    if (urlSort) return urlSort;
+    return getSortFromSession(window.location.pathname);
+  });
+  const [isSortInitialized, setIsSortInitialized] = useState(false);
+
+  // Initialize column order from URL params or session storage
+  const [columnOrder, setColumnOrder] = useState<number[] | null>(() => {
+    const urlOrder = getColumnOrderFromUrl();
+    if (urlOrder) return urlOrder;
+    return getColumnOrderFromSession(window.location.pathname);
+  });
+  const [isOrderInitialized, setIsOrderInitialized] = useState(false);
 
   // Sync visibleColumns to URL and session storage when they change
   useEffect(() => {
     if (!isColumnInitialized) {
       setIsColumnInitialized(true);
-      // On initial load, sync to URL if not using defaults
-      const urlColumns = getColumnsFromUrl();
+      const urlColumns = getColumnsFromUrl(allColumnIds);
       const sessionColumns = getColumnsFromSession(window.location.pathname);
       if (urlColumns || sessionColumns) {
-        setColumnsToUrl(visibleColumns);
+        setColumnsToUrl(visibleColumns, allColumnIds);
       }
       return;
     }
     
-    setColumnsToUrl(visibleColumns);
-    saveColumnsToSession(location, visibleColumns);
-  }, [visibleColumns, location, isColumnInitialized]);
+    setColumnsToUrl(visibleColumns, allColumnIds);
+    saveColumnsToSession(window.location.pathname, visibleColumns);
+  }, [visibleColumns, isColumnInitialized, allColumnIds]);
 
   // Sync filterState and searchText to URL and session storage when they change
   useEffect(() => {
     if (!isFilterInitialized) {
       setIsFilterInitialized(true);
-      // On initial load, sync session storage filters to URL
       if (Object.keys(filterState).length > 0 || searchText) {
         setFiltersToUrl(filterState, searchText);
       }
@@ -240,8 +424,48 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     }
     
     setFiltersToUrl(filterState, searchText);
-    saveFiltersToSession(location, filterState);
-  }, [filterState, searchText, location, isFilterInitialized]);
+    saveFiltersToSession(window.location.pathname, filterState);
+  }, [filterState, searchText, isFilterInitialized]);
+
+  // Sync sort state to URL and session storage
+  useEffect(() => {
+    if (!isSortInitialized) {
+      setIsSortInitialized(true);
+      return;
+    }
+    setSortToUrl(sortState);
+    saveSortToSession(window.location.pathname, sortState);
+  }, [sortState, isSortInitialized]);
+
+  // Sync column order to URL and session storage
+  useEffect(() => {
+    if (!isOrderInitialized) {
+      setIsOrderInitialized(true);
+      return;
+    }
+    setColumnOrderToUrl(columnOrder);
+    saveColumnOrderToSession(window.location.pathname, columnOrder);
+  }, [columnOrder, isOrderInitialized]);
+
+  // Save scroll position before navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (gridApi) {
+        const scrollTop = gridApi.getVerticalPixelRange().top;
+        saveScrollToSession(window.location.pathname, scrollTop);
+      }
+    };
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      // Also save on unmount (navigation within app)
+      if (gridApi) {
+        const scrollTop = gridApi.getVerticalPixelRange().top;
+        saveScrollToSession(window.location.pathname, scrollTop);
+      }
+    };
+  }, [gridApi]);
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
@@ -336,7 +560,79 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   const onGridReady = useCallback((params: GridReadyEvent<T>) => {
     setGridApi(params.api);
-  }, []);
+    
+    // Restore sort state
+    if (sortState && sortState.colIndex < allColumnIds.length) {
+      const colId = allColumnIds[sortState.colIndex];
+      params.api.applyColumnState({
+        state: [{ colId, sort: sortState.dir }],
+        defaultState: { sort: null },
+      });
+    }
+
+    // Restore column order
+    if (columnOrder && columnOrder.length > 0) {
+      const orderedColIds = columnOrder
+        .filter(i => i >= 0 && i < allColumnIds.length)
+        .map(i => allColumnIds[i]);
+      if (orderedColIds.length > 0) {
+        params.api.moveColumns(orderedColIds, 0);
+      }
+    }
+
+    // Restore scroll position after a short delay to ensure data is rendered
+    const savedScroll = getScrollFromSession(window.location.pathname);
+    if (savedScroll && savedScroll > 0 && !scrollRestoredRef.current) {
+      scrollRestoredRef.current = true;
+      setTimeout(() => {
+        params.api.ensureIndexVisible(0);
+        const viewportEl = document.querySelector('.ag-body-viewport');
+        if (viewportEl) {
+          viewportEl.scrollTop = savedScroll;
+        }
+      }, 100);
+    }
+
+    setIsGridInitialized(true);
+  }, [sortState, columnOrder, allColumnIds]);
+
+  // Handle sort changes from AG Grid
+  const handleSortChanged = useCallback((event: SortChangedEvent<T>) => {
+    if (!isGridInitialized) return;
+    
+    const columnState = event.api.getColumnState();
+    const sortedColumn = columnState.find(col => col.sort);
+    
+    if (sortedColumn && sortedColumn.colId) {
+      const colIndex = allColumnIds.indexOf(sortedColumn.colId);
+      if (colIndex !== -1) {
+        setSortState({
+          colIndex,
+          dir: sortedColumn.sort as "asc" | "desc",
+        });
+      }
+    } else {
+      setSortState(null);
+    }
+  }, [allColumnIds, isGridInitialized]);
+
+  // Handle column order changes from AG Grid
+  const handleColumnMoved = useCallback((event: ColumnMovedEvent<T>) => {
+    if (!isGridInitialized || !event.finished) return;
+    
+    const columnState = event.api.getColumnState();
+    const currentOrder = columnState.map(col => allColumnIds.indexOf(col.colId || ""));
+    
+    // Check if order differs from default
+    const defaultOrder = allColumnIds.map((_, i) => i);
+    const isDefaultOrder = currentOrder.every((v, i) => v === defaultOrder[i]);
+    
+    if (isDefaultOrder) {
+      setColumnOrder(null);
+    } else {
+      setColumnOrder(currentOrder.filter(i => i !== -1));
+    }
+  }, [allColumnIds, isGridInitialized]);
 
   const handleRowClick = useCallback(
     (event: RowClickedEvent<T>) => {
@@ -412,13 +708,27 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   const handleResetToDefaults = useCallback(() => {
     if (!gridApi) return;
-    const allColumnIds = columns.map((col) => col.id);
+    
+    // Reset column visibility
     allColumnIds.forEach((colId) => {
       const shouldBeVisible = defaultVisibleColumns.includes(colId);
       gridApi.setColumnsVisible([colId], shouldBeVisible);
     });
     setVisibleColumns([...defaultVisibleColumns]);
-  }, [gridApi, columns, defaultVisibleColumns]);
+    
+    // Reset sort
+    gridApi.applyColumnState({
+      defaultState: { sort: null },
+    });
+    setSortState(null);
+    
+    // Reset column order
+    gridApi.moveColumns(allColumnIds, 0);
+    setColumnOrder(null);
+    
+    // Clear scroll position
+    sessionStorage.removeItem(getScrollSessionStorageKey(window.location.pathname));
+  }, [gridApi, allColumnIds, defaultVisibleColumns]);
 
   const defaultEmptyIconHtml = `
     <svg class="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -539,6 +849,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           theme={gridTheme}
           onGridReady={onGridReady}
           onRowClicked={handleRowClick}
+          onSortChanged={handleSortChanged}
+          onColumnMoved={handleColumnMoved}
           suppressCellFocus={true}
           pagination={false}
           domLayout="normal"
