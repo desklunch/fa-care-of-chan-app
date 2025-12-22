@@ -7,32 +7,48 @@ const __dirname = path.dirname(__filename);
 import { db } from "../server/db";
 import { clients, contacts, users } from "../shared/schema";
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
+function parseCSV(content: string): string[][] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = "";
   let inQuotes = false;
   let i = 0;
 
-  while (i < line.length) {
-    const char = line[i];
+  while (i < content.length) {
+    const char = content[i];
 
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
+      if (inQuotes && content[i + 1] === '"') {
+        currentField += '"';
         i += 2;
         continue;
       }
       inQuotes = !inQuotes;
     } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
+      currentRow.push(currentField.trim());
+      currentField = "";
+    } else if ((char === "\n" || (char === "\r" && content[i + 1] === "\n")) && !inQuotes) {
+      currentRow.push(currentField.trim());
+      if (currentRow.some(f => f !== "")) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = "";
+      if (char === "\r") i++;
+    } else if (char !== "\r") {
+      currentField += char;
     }
     i++;
   }
-  result.push(current.trim());
-  return result;
+  
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some(f => f !== "")) {
+      rows.push(currentRow);
+    }
+  }
+  
+  return rows;
 }
 
 function parseDate(dateStr: string): string | null {
@@ -74,9 +90,9 @@ async function main() {
     "../attached_assets/COC_Deals_Data_Import_Dec_22_2025_(1)_1766429069851.csv"
   );
   const csvContent = fs.readFileSync(csvPath, "utf-8");
-  const lines = csvContent.split("\n");
+  const rows = parseCSV(csvContent);
 
-  const headers = parseCSVLine(lines[0]);
+  const headers = rows[0];
   console.log("CSV Headers:", headers.join(", "));
   console.log("");
 
@@ -94,8 +110,8 @@ async function main() {
   console.log(`Found ${existingContacts.length} contacts in database`);
 
   // Select 10 random rows (excluding header)
-  const dataLines = lines.slice(1).filter(line => line.trim() !== "");
-  const totalRows = dataLines.length;
+  const dataRows = rows.slice(1);
+  const totalRows = dataRows.length;
   console.log(`\nTotal data rows in CSV: ${totalRows}`);
   
   // Pick 10 random indices
@@ -112,8 +128,7 @@ async function main() {
   console.log("=".repeat(80));
 
   for (const idx of randomIndices) {
-    const line = dataLines[idx];
-    const values = parseCSVLine(line);
+    const values = dataRows[idx];
 
     const data: Record<string, string> = {};
     headers.forEach((header, index) => {
