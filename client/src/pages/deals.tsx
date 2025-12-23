@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -563,14 +564,20 @@ export default function Deals() {
   usePageTitle("Deals");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Key to force grid remount after reorder
+  const [gridKey, setGridKey] = useState(0);
 
   // Mutation to reorder deals
   const reorderMutation = useMutation({
     mutationFn: async (dealIds: string[]) => {
       return apiRequest("POST", "/api/deals/reorder", { dealIds });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    onSuccess: async () => {
+      // Invalidate and wait for refetch to complete
+      await queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      // Force grid remount to reset internal row order
+      setGridKey(k => k + 1);
     },
     onError: (error) => {
       toast({
@@ -598,6 +605,7 @@ export default function Deals() {
       }}
     >
       <DataGridPage
+        key={gridKey}
         queryKey="/api/deals"
         columns={dealColumns}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}

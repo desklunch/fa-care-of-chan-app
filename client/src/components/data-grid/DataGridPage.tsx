@@ -586,10 +586,11 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   // When row drag is enabled and data changes (e.g., after reorder mutation),
   // force AG Grid to reset its internal row order to match the server order
+  // We use setGridOption with a new array reference to ensure AG Grid rebuilds its internal indices
   useEffect(() => {
     if (enableRowDrag && gridApi && filteredData.length > 0) {
-      // Use setRowData to force AG Grid to respect the new array order
-      gridApi.setGridOption('rowData', filteredData);
+      // Use setGridOption with a cloned array to force AG Grid to rebuild row order
+      gridApi.setGridOption('rowData', [...filteredData]);
     }
   }, [enableRowDrag, gridApi, filteredData]);
 
