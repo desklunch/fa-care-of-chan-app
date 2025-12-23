@@ -667,6 +667,7 @@ export const deals = pgTable(
     lastContactOn: date("last_contact_on"),
     earliestEventDate: date("earliest_event_date"),
     projectDate: text("project_date"),
+    sortOrder: integer("sort_order"),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -681,6 +682,7 @@ export const deals = pgTable(
     index("idx_deals_created_at").on(table.createdAt),
     index("idx_deals_primary_contact").on(table.primaryContactId),
     index("idx_deals_earliest_event_date").on(table.earliestEventDate),
+    index("idx_deals_sort_order").on(table.sortOrder),
   ],
 );
 
