@@ -277,7 +277,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const user = users.find((u) => u.id === ownerId);
         return getUserFullName(user);
       },
-      valueFormatter: (params: { value: string }) => {
+      cellRenderer: (params: { value: string }) => {
         return getInitials(params.value);
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
