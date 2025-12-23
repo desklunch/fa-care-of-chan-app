@@ -3753,8 +3753,22 @@ export class DatabaseStorage implements IStorage {
   async reorderDeals(orderedDealIds: string[]): Promise<void> {
     // Update deal_number for each deal based on its position in the array
     // First item gets the highest deal_number (newest), last item gets 1 (oldest)
+    // Use two-pass approach to avoid unique constraint violations:
+    // 1. First, set all deal_numbers to negative temporary values
+    // 2. Then, set them to the final positive values
+    
     const totalDeals = orderedDealIds.length;
     
+    // Pass 1: Set to negative temporary values to avoid conflicts
+    for (let i = 0; i < orderedDealIds.length; i++) {
+      const dealId = orderedDealIds[i];
+      await db
+        .update(deals)
+        .set({ dealNumber: -(i + 1) })
+        .where(eq(deals.id, dealId));
+    }
+    
+    // Pass 2: Set to final positive values
     for (let i = 0; i < orderedDealIds.length; i++) {
       const dealId = orderedDealIds[i];
       const newDealNumber = totalDeals - i; // First item gets highest number
