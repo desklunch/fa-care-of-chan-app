@@ -361,13 +361,13 @@ export default function DealDetail() {
 
                 {deal.concept && (
                   <FieldRow label="Concept" testId="field-concept">
-                    <span className="">{deal.concept}</span>
+                    <span className="whitespace-pre-wrap">{deal.concept}</span>
                   </FieldRow>
                 )}
 
                 {deal.notes && (
                   <FieldRow label="Notes" testId="field-notes">
-                    <span className="">{deal.notes}</span>
+                    <span className="whitespace-pre-wrap">{deal.notes}</span>
                   </FieldRow>
                 )}
               </CardContent>

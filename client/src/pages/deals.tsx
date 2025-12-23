@@ -428,7 +428,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         wrapText: true,
         autoHeight: true,
       cellStyle: {
-        whiteSpace: "normal",
+        whiteSpace: "pre-wrap",
         lineHeight: "1.4",
         display: "-webkit-box",
         WebkitLineClamp: 2,
