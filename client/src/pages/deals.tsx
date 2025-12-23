@@ -29,6 +29,14 @@ function getUserFullName(user: Pick<UserType, "firstName" | "lastName"> | null |
   return [user.firstName, user.lastName].filter(Boolean).join(" ") || "";
 }
 
+// Helper to get initials from a full name
+function getInitials(fullName: string): string {
+  if (!fullName) return "";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
 // Context type for the grid - provides user list for Owner dropdown
 interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
@@ -268,6 +276,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
         return getUserFullName(user);
+      },
+      valueFormatter: (params: { value: string }) => {
+        return getInitials(params.value);
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
         if (params.newValue === "") {
