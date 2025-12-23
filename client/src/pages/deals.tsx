@@ -262,18 +262,30 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
-          values: ["", ...users.map((u) => u.id)],
+          values: ["", ...users.map((u) => getUserFullName(u))],
         };
       },
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.ownerId || "";
-      },
-      valueFormatter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
         const ownerId = params.data?.ownerId;
         if (!ownerId) return "";
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
         return getUserFullName(user);
+      },
+      valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
+        if (params.newValue === "") {
+          params.data.ownerId = null;
+          params.data.owner = null;
+          return true;
+        }
+        const users = params.context?.users || [];
+        const user = users.find((u) => getUserFullName(u) === params.newValue);
+        if (user) {
+          params.data.ownerId = user.id;
+          params.data.owner = { ...user } as typeof params.data.owner;
+          return true;
+        }
+        return false;
       },
       cellEditorPopup: false,
     },
@@ -312,6 +324,13 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 150,
       minWidth: 120,
       editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 500,
+        rows: 3,
+        cols: 30,
+      },
     },
   },
   {
@@ -571,6 +590,13 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 1,
       minWidth: 200,
       editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 5000,
+        rows: 8,
+        cols: 50,
+      },
     },
   },
   {
@@ -698,6 +724,14 @@ export default function Deals() {
     const field = colDef.field as string;
     let processedValue: unknown = newValue;
 
+    // Handle owner field - valueSetter already updated data.ownerId, so use that
+    if (field === "ownerId") {
+      processedValue = data.ownerId;
+      if (processedValue === "") {
+        processedValue = null;
+      }
+    }
+
     // Handle empty strings as null for date fields
     const dateFields = ["startedOn", "wonOn", "lastContactOn", "proposalSentOn", "projectDate"];
     if (dateFields.includes(field)) {
@@ -705,7 +739,7 @@ export default function Deals() {
     }
 
     // Handle empty strings as null for nullable ID fields (foreign keys)
-    const nullableIdFields = ["ownerId", "clientId"];
+    const nullableIdFields = ["clientId"];
     if (nullableIdFields.includes(field) && newValue === "") {
       processedValue = null;
     }
