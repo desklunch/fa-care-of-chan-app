@@ -1,6 +1,6 @@
-import { themeQuartz, iconSetMaterial } from "ag-grid-community";
+import { themeQuartz, iconSetAlpine, iconSetMaterial } from "ag-grid-community";
 
-export const gridTheme = themeQuartz.withPart(iconSetMaterial).withParams({
+export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   browserColorScheme: "dark",
   headerFontSize: 14,
   spacing: 12,

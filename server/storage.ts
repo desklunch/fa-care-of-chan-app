@@ -3762,19 +3762,31 @@ export class DatabaseStorage implements IStorage {
   async reorderDeals(orderedDealIds: string[]): Promise<void> {
     // Update sortOrder for each deal based on its position in the array
     // First item gets the highest sortOrder (newest), last item gets 1 (oldest)
-    // sortOrder has no unique constraint, so we can update directly without conflicts
+    // Uses a single batched CASE/WHEN UPDATE for performance (vs individual updates)
+    
+    if (orderedDealIds.length === 0) return;
     
     const totalDeals = orderedDealIds.length;
+    const now = new Date();
     
-    for (let i = 0; i < orderedDealIds.length; i++) {
-      const dealId = orderedDealIds[i];
-      const newSortOrder = totalDeals - i; // First item gets highest number
-      
-      await db
-        .update(deals)
-        .set({ sortOrder: newSortOrder, updatedAt: new Date() })
-        .where(eq(deals.id, dealId));
-    }
+    // Build CASE/WHEN clause for sortOrder
+    // Each deal gets: totalDeals - index (first item = highest number)
+    const caseStatements = orderedDealIds.map((dealId, index) => {
+      const newSortOrder = totalDeals - index;
+      return sql`WHEN ${dealId} THEN ${newSortOrder}`;
+    });
+    
+    // Combine all CASE statements
+    const caseClause = sql.join(caseStatements, sql` `);
+    
+    // Execute single UPDATE with CASE/WHEN
+    await db.execute(sql`
+      UPDATE deals 
+      SET 
+        sort_order = CASE id ${caseClause} END,
+        updated_at = ${now}
+      WHERE id IN ${orderedDealIds}
+    `);
   }
 
   // Deal task operations
