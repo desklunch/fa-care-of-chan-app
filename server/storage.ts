@@ -3565,6 +3565,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
         earliestEventDate: deals.earliestEventDate,
+        sortOrder: deals.sortOrder,
         createdBy: {
           id: users.id,
           firstName: users.firstName,
@@ -3592,7 +3593,7 @@ export class DatabaseStorage implements IStorage {
       query = query.where(inArray(deals.status, options.status)) as any;
     }
 
-    const results = await query.orderBy(desc(deals.dealNumber));
+    const results = await query.orderBy(desc(deals.sortOrder), desc(deals.dealNumber));
     return results as DealWithRelations[];
   }
 
@@ -3716,11 +3717,19 @@ export class DatabaseStorage implements IStorage {
 
   async createDeal(data: CreateDeal, createdById: string): Promise<Deal> {
     const earliestEventDate = computeEarliestEventDate(data.eventSchedule as DealEvent[] | undefined);
+    
+    // Get max sortOrder to place new deal at the top
+    const [maxResult] = await db
+      .select({ maxSortOrder: sql<number>`COALESCE(MAX(${deals.sortOrder}), 0)` })
+      .from(deals);
+    const nextSortOrder = (maxResult?.maxSortOrder ?? 0) + 1;
+    
     const [deal] = await db
       .insert(deals)
       .values({
         ...data,
         earliestEventDate,
+        sortOrder: nextSortOrder,
         createdById,
       })
       .returning();
@@ -3751,31 +3760,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reorderDeals(orderedDealIds: string[]): Promise<void> {
-    // Update deal_number for each deal based on its position in the array
-    // First item gets the highest deal_number (newest), last item gets 1 (oldest)
-    // Use two-pass approach to avoid unique constraint violations:
-    // 1. First, set all deal_numbers to negative temporary values
-    // 2. Then, set them to the final positive values
+    // Update sortOrder for each deal based on its position in the array
+    // First item gets the highest sortOrder (newest), last item gets 1 (oldest)
+    // sortOrder has no unique constraint, so we can update directly without conflicts
     
     const totalDeals = orderedDealIds.length;
     
-    // Pass 1: Set to negative temporary values to avoid conflicts
     for (let i = 0; i < orderedDealIds.length; i++) {
       const dealId = orderedDealIds[i];
-      await db
-        .update(deals)
-        .set({ dealNumber: -(i + 1) })
-        .where(eq(deals.id, dealId));
-    }
-    
-    // Pass 2: Set to final positive values
-    for (let i = 0; i < orderedDealIds.length; i++) {
-      const dealId = orderedDealIds[i];
-      const newDealNumber = totalDeals - i; // First item gets highest number
+      const newSortOrder = totalDeals - i; // First item gets highest number
       
       await db
         .update(deals)
-        .set({ dealNumber: newDealNumber, updatedAt: new Date() })
+        .set({ sortOrder: newSortOrder, updatedAt: new Date() })
         .where(eq(deals.id, dealId));
     }
   }
