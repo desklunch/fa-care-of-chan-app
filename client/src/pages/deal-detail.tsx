@@ -442,7 +442,7 @@ export default function DealDetail() {
                     </span>
                   )}
                 </FieldRow>
-                {deal.externalId && (
+                {deal.externalId != null && (
                   <FieldRow label="External ID" testId="field-external-id">
                     <span className="font-mono text-muted-foreground">{deal.externalId}</span>
                   </FieldRow>
