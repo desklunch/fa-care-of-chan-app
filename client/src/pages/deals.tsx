@@ -549,6 +549,14 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         rows: 8,
         cols: 50,
       },
+      wrapText: true,
+      autoHeight: true,
+      cellStyle: {
+        whiteSpace: "pre-wrap",
+        lineHeight: "1.4",
+        paddingTop: "8px",
+        paddingBottom: "8px",
+      },
     },
   },
 ];

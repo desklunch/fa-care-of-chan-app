@@ -325,7 +325,7 @@ export default function DealDetail() {
                 )}
                 {deal.budgetNotes && (
                   <FieldRow label="Budget Notes" testId="field-budget-notes">
-                    <span className="">{deal.budgetNotes}</span>
+                    <span className="whitespace-pre-wrap">{deal.budgetNotes}</span>
                   </FieldRow>
                 )}
                 {(deal.startedOn || deal.wonOn || deal.lastContactOn || deal.projectDate) && (
