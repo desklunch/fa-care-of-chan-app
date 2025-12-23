@@ -584,6 +584,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     return result;
   }, [data, searchText, searchFields, pagination, filters, filterState]);
 
+  // When row drag is enabled and data changes (e.g., after reorder mutation),
+  // force AG Grid to reset its internal row order to match the server order
+  useEffect(() => {
+    if (enableRowDrag && gridApi && filteredData.length > 0) {
+      // Use setRowData to force AG Grid to respect the new array order
+      gridApi.setGridOption('rowData', filteredData);
+    }
+  }, [enableRowDrag, gridApi, filteredData]);
+
   const onGridReady = useCallback((params: GridReadyEvent<T>) => {
     setGridApi(params.api);
     
