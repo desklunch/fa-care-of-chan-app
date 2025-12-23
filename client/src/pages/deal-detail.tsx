@@ -44,7 +44,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { Loader2, Pencil, Trash2, CalendarCheck, UserRound, MoreVertical, X, Check, PenBox } from "lucide-react";
-import { getEventSummary } from "@/components/event-schedule";
 import { CommentList } from "@/components/ui/comments";
 import { cn } from "@/lib/utils";
 import { parseDateOnly } from "@/lib/date";
@@ -316,7 +315,6 @@ export default function DealDetail() {
     : "";
 
   const locations = (deal.locations as DealLocation[]) || [];
-  const eventSchedule = (deal.eventSchedule as DealEvent[]) || [];
   const services = (deal.services as DealService[]) || [];
 
   return (
@@ -442,11 +440,6 @@ export default function DealDetail() {
                     </span>
                   )}
                 </FieldRow>
-                {deal.externalId != null && (
-                  <FieldRow label="External ID" testId="field-external-id">
-                    <span className="font-mono text-muted-foreground">{deal.externalId}</span>
-                  </FieldRow>
-                )}
                 {locations.length > 0 && (
                   <FieldRow
                     label="Locations"
@@ -468,48 +461,6 @@ export default function DealDetail() {
                           {location.displayName}
                         </Badge>
                       ))}
-                    </div>
-                  </FieldRow>
-                )}
-                {eventSchedule.length > 0 && (
-                  <FieldRow
-                    label="Event Schedule"
-                    testId="field-event-schedule"
-                    colSpan={2}
-                  >
-                    <div
-                      className="space-y-4"
-                      data-testid="deal-event-schedule"
-                    >
-                      {eventSchedule.map((event) => {
-                        const summary = getEventSummary(event);
-                        return (
-                          <div
-                            key={event.id}
-                            data-testid={`event-schedule-item-${event.id}`}
-                            className="flex flex-col gap-2"
-                          >
-                            {event.label && (
-                              <span className="font-semibold">
-                                {event.label}
-                              </span>
-                            )}
-                            <div className="flex gap-2">
-                              <span className="text-sm font-medium">
-                                {summary ? summary.text : "Date not specified"}
-                              </span>
-                            </div>
-                            {summary && summary.altCount > 0 && (
-                              <Badge
-                                variant="outline"
-                                className="px-1.5 w-fit text-[10px] opacity-50 "
-                              >
-                                + {summary.altCount} Alternate Date
-                              </Badge>
-                            )}
-                          </div>
-                        );
-                      })}
                     </div>
                   </FieldRow>
                 )}
@@ -537,21 +488,6 @@ export default function DealDetail() {
                     </div>
                   </FieldRow>
                 )}
-                <FieldRow label="Budget" testId="field-budget">
-                  {deal.budgetHigh || deal.budgetLow ? (
-                    <span className="font-medium">
-                      {deal.budgetLow && deal.budgetHigh
-                        ? `$${deal.budgetLow.toLocaleString("en-US")} - $${deal.budgetHigh.toLocaleString("en-US")}`
-                        : deal.budgetHigh
-                        ? `$${deal.budgetHigh.toLocaleString("en-US")}`
-                        : deal.budgetLow
-                        ? `$${deal.budgetLow.toLocaleString("en-US")}+`
-                        : null}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">Unconfirmed</span>
-                  )}
-                </FieldRow>
                 {deal.budgetNotes && (
                   <FieldRow label="Budget Notes" testId="field-budget-notes">
                     <span className="">{deal.budgetNotes}</span>
