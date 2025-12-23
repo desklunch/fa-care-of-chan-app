@@ -30,7 +30,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { CitySearch } from "@/components/city-search";
-import { EventScheduleEditor } from "@/components/event-schedule";
 import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -482,28 +481,6 @@ export default function DealForm() {
 
                 <FormField
                   control={form.control}
-                  name="eventSchedule"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Schedule</FormLabel>
-
-                      <FormControl>
-                        <EventScheduleEditor
-                          value={field.value as DealEvent[]}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Add confirmed or tentative event dates.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-
-                <FormField
-                  control={form.control}
                   name="concept"
                   render={({ field }) => (
                     <FormItem>
@@ -545,87 +522,6 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="budgetLow"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Budget Low</FormLabel>
-                        <FormControl>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
-                              $
-                            </span>
-                            <Input
-                              type="text"
-                              inputMode="numeric"
-                              placeholder="0"
-                              className="rounded-l-none"
-                              value={field.value ? field.value.toLocaleString("en-US") : ""}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/,/g, "");
-                                if (raw === "") {
-                                  field.onChange(null);
-                                } else {
-                                  const num = parseInt(raw, 10);
-                                  if (!isNaN(num)) {
-                                    field.onChange(num);
-                                  }
-                                }
-                              }}
-                              data-testid="input-budget-low"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Optional range minimum.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="budgetHigh"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Budget High</FormLabel>
-                        <FormControl>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
-                              $
-                            </span>
-                            <Input
-                              type="text"
-                              inputMode="numeric"
-                              placeholder="0"
-                              className="rounded-l-none"
-                              value={field.value ? field.value.toLocaleString("en-US") : ""}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/,/g, "");
-                                if (raw === "") {
-                                  field.onChange(null);
-                                } else {
-                                  const num = parseInt(raw, 10);
-                                  if (!isNaN(num)) {
-                                    field.onChange(num);
-                                  }
-                                }
-                              }}
-                              data-testid="input-budget-high"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Estimated value (min $1,000).
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 <FormField
                   control={form.control}
