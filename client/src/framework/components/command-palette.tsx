@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/command";
 import { useLayout } from "../hooks/layout-context";
 import type { NavItem, NavSection } from "../types/layout";
-import type { VenueWithRelations, VenueCollectionWithCreator } from "@shared/schema";
-import { MapPin, FolderOpen } from "lucide-react";
+import type { VenueWithRelations, VenueCollectionWithCreator, Deal } from "@shared/schema";
+import { MapPin, FolderOpen, Ticket } from "lucide-react";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -34,6 +34,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   // Fetch collections for global search
   const { data: collections = [] } = useQuery<VenueCollectionWithCreator[]>({
     queryKey: ["/api/venue-collections"],
+    enabled: open,
+  });
+
+  // Fetch deals for global search
+  const { data: deals = [] } = useQuery<Deal[]>({
+    queryKey: ["/api/deals"],
     enabled: open,
   });
 
@@ -87,6 +93,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       .slice(0, 10);
   }, [collections, search]);
 
+  // Filter deals based on search
+  const filteredDeals = useMemo(() => {
+    if (!search.trim()) return deals.slice(0, 5);
+    const searchLower = search.toLowerCase();
+    return deals
+      .filter((deal) =>
+        deal.displayName?.toLowerCase().includes(searchLower)
+      )
+      .slice(0, 10);
+  }, [deals, search]);
+
   const handleSelect = useCallback((href: string) => {
     navigate(href);
     onOpenChange(false);
@@ -102,12 +119,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const hasVenueResults = filteredVenues.length > 0;
   const hasCollectionResults = filteredCollections.length > 0;
-  const hasSearchResults = search.trim() && (hasVenueResults || hasCollectionResults);
+  const hasDealResults = filteredDeals.length > 0;
+  const hasSearchResults = search.trim() && (hasVenueResults || hasCollectionResults || hasDealResults);
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput 
-        placeholder="Search pages, venues, and collections..." 
+        placeholder="Search pages, venues, collections, and deals..." 
         data-testid="input-command-search"
         value={search}
         onValueChange={setSearch}
@@ -186,6 +204,34 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     <span className="text-xs text-muted-foreground">
                       {collection.venueCount} {collection.venueCount === 1 ? "venue" : "venues"}
                     </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {/* Deals */}
+        {hasDealResults && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Deals">
+              {filteredDeals.map((deal) => (
+                <CommandItem
+                  key={deal.id}
+                  value={`deal-${deal.displayName}-${deal.id}`}
+                  onSelect={() => handleSelect(`/deals/${deal.id}`)}
+                  className="cursor-pointer"
+                  data-testid={`command-item-deal-${deal.id}`}
+                >
+                  <Ticket className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span>{deal.displayName}</span>
+                    {deal.status && (
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {deal.status.replace(/_/g, " ")}
+                      </span>
+                    )}
                   </div>
                 </CommandItem>
               ))}
