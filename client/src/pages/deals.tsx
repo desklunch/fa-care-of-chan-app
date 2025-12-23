@@ -1,5 +1,7 @@
+import { useCallback } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CellValueChangedEvent } from "ag-grid-community";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -9,6 +11,7 @@ import type {
   DealEvent,
   DealService,
   DealLocation,
+  User as UserType,
 } from "@shared/schema";
 import { dealStatuses, dealServices } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
@@ -22,6 +25,17 @@ import { Link } from "wouter";
 import ReactMarkdown from "react-markdown";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+// Helper to get full name from user
+function getUserFullName(user: Pick<UserType, "firstName" | "lastName"> | null | undefined): string {
+  if (!user) return "";
+  return [user.firstName, user.lastName].filter(Boolean).join(" ") || "";
+}
+
+// Context type for the grid - provides user list for Owner dropdown
+interface DealsGridContext {
+  users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
+}
 
 /**
  * Creates a comparator for date columns that pushes null/empty values to the bottom
@@ -77,6 +91,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "services",
   "locations",
   "notes",
+  "budgetNotes",
 ];
 
 /**
@@ -217,6 +232,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 280,
       maxWidth: 360,
       sortable: false,
+      editable: true,
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
@@ -235,21 +251,31 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
     id: "owner",
     headerName: "Owner",
-    field: "owner",
+    field: "ownerId",
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 100,
-      maxWidth: 100,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const owner = params.data?.owner;
-        if (!owner) return "";
-        const initials = [owner.firstName?.[0], owner.lastName?.[0]]
-          .filter(Boolean)
-          .join("")
-          .toUpperCase();
-        return initials || "?";
+      minWidth: 150,
+      maxWidth: 180,
+      editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: (params: { context: DealsGridContext }) => {
+        const users = params.context?.users || [];
+        return {
+          values: ["", ...users.map((u) => u.id)],
+        };
       },
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        return params.data?.ownerId || "";
+      },
+      valueFormatter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        const ownerId = params.data?.ownerId;
+        if (!ownerId) return "";
+        const users = params.context?.users || [];
+        const user = users.find((u) => u.id === ownerId);
+        return getUserFullName(user);
+      },
+      cellEditorPopup: false,
     },
   },
   {
@@ -261,6 +287,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 1,
       minWidth: 190,
       maxWidth: 190,
+      editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: dealStatuses,
+      },
       comparator: createStatusComparator(),
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
@@ -280,6 +311,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       width: 150,
       minWidth: 120,
+      editable: true,
     },
   },
   {
@@ -347,6 +379,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       minWidth: 150,
       maxWidth: 150,
+      editable: true,
+      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -362,6 +396,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       minWidth: 130,
       maxWidth: 130,
+      editable: true,
+      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -377,11 +413,30 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       minWidth: 160,
       maxWidth: 160,
+      editable: true,
+      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
       },
       comparator: createDateComparator((data) => data?.lastContactOn),
+    },
+  },
+  {
+    id: "proposalSentOn",
+    headerName: "Proposal Sent",
+    field: "proposalSentOn",
+    category: "Dates",
+    colDef: {
+      minWidth: 150,
+      maxWidth: 150,
+      editable: true,
+      cellEditor: "agDateStringCellEditor",
+      valueFormatter: (params: { value: string | null }) => {
+        if (!params.value) return "";
+        return formatDateOnly(params.value, "MM/dd/yy");
+      },
+      comparator: createDateComparator((data) => data?.proposalSentOn),
     },
   },
   {
@@ -392,7 +447,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 3,
       minWidth: 300,
-      
+      editable: true,
       sortable: false,
       wrapText: true,
       autoHeight: true,
@@ -444,16 +499,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
-  {
-    id: "budgetNotes",
-    headerName: "Budget Notes",
-    field: "budgetNotes",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 200,
-    },
-  },
+
   {
     id: "locations",
     headerName: "Locations",
@@ -490,6 +536,14 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 3,
       minWidth: 300,
       sortable: false,
+      editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 10000,
+        rows: 10,
+        cols: 60,
+      },
       wrapText: true,
       autoHeight: true,
       cellRenderer: (params: { value: string | null }) => {
@@ -512,7 +566,17 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-
+  {
+    id: "budgetNotes",
+    headerName: "Budget Notes",
+    field: "budgetNotes",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 200,
+      editable: true,
+    },
+  },
   {
     id: "createdBy",
     headerName: "Created By",
@@ -563,6 +627,53 @@ export default function Deals() {
   usePageTitle("Deals");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Fetch users for the Owner dropdown
+  const { data: users = [] } = useQuery<Array<Pick<UserType, "id" | "firstName" | "lastName">>>({
+    queryKey: ["/api/users"],
+  });
+
+  // Context for the grid - provides user list for Owner dropdown
+  const gridContext: DealsGridContext = {
+    users,
+  };
+
+  // Mutation to update a single deal field
+  const updateDealMutation = useMutation({
+    mutationFn: async ({ dealId, updates }: { dealId: string; updates: Record<string, unknown> }) => {
+      return apiRequest("PATCH", `/api/deals/${dealId}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to save changes",
+        description: "Your changes could not be saved. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error updating deal:", error);
+      // Refresh to revert the cell to server state
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    },
+  });
+
+  // Handle cell value changes - persist to server
+  const handleCellValueChanged = useCallback((event: CellValueChangedEvent<DealWithRelations>) => {
+    const { data, colDef, newValue, oldValue } = event;
+    if (!data?.id || !colDef.field) return;
+    if (newValue === oldValue) return;
+
+    const field = colDef.field as string;
+    const updates: Record<string, unknown> = { [field]: newValue };
+
+    // Handle empty strings as null for date fields
+    if (["startedOn", "wonOn", "lastContactOn", "proposalSentOn", "projectDate"].includes(field)) {
+      updates[field] = newValue === "" ? null : newValue;
+    }
+
+    updateDealMutation.mutate({ dealId: data.id, updates });
+  }, [updateDealMutation]);
 
   // Mutation to reorder deals with optimistic cache updates
   // rowDragManaged=true handles instant visual feedback; we just sync cache & persist
@@ -621,7 +732,7 @@ export default function Deals() {
         icon: CircleFadingPlus,
       }}
     >
-      <DataGridPage
+      <DataGridPage<DealWithRelations, DealsGridContext>
         queryKey="/api/deals"
         columns={dealColumns}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
@@ -640,12 +751,13 @@ export default function Deals() {
         searchPlaceholder="Search deals..."
         filters={dealFilters}
         collapsibleFilters={true}
-        
+        context={gridContext}
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"
         emptyDescription="Start tracking your sales pipeline by creating a deal."
         enableRowDrag={true}
         onRowDragEnd={handleRowDragEnd}
+        onCellValueChanged={handleCellValueChanged}
       />
     </PageLayout>
   );

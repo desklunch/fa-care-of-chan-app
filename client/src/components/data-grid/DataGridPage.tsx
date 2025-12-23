@@ -331,6 +331,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   collapsibleFilters = false,
   enableRowDrag = false,
   onRowDragEnd,
+  onCellValueChanged,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
@@ -906,6 +907,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           rowDragManaged={enableRowDrag}
           suppressMoveWhenRowDragging={enableRowDrag}
           onRowDragEnd={enableRowDrag ? handleRowDragEnd : undefined}
+          onCellValueChanged={onCellValueChanged}
         />
       </div>
 

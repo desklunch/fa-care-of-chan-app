@@ -13,4 +13,6 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   borderColor: "hsl(var(--border))",
   chromeBackgroundColor: "hsl(var(--secondary))",
   pinnedColumnBorder: false,
+  cellHorizontalPaddingScale: 0.5,
+
 });

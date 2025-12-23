@@ -1,4 +1,4 @@
-import { ColDef } from "ag-grid-community";
+import { ColDef, CellValueChangedEvent } from "ag-grid-community";
 import { LucideIcon } from "lucide-react";
 
 export interface FilterOptionSource<T> {
@@ -83,6 +83,9 @@ export interface DataGridPageProps<T, C = unknown> {
   // Row dragging props
   enableRowDrag?: boolean;
   onRowDragEnd?: (reorderedData: T[]) => void;
+  
+  // Cell editing props
+  onCellValueChanged?: (event: CellValueChangedEvent<T>) => void;
 }
 
 export interface ColumnSelectorProps {

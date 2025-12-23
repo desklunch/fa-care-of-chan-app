@@ -1601,6 +1601,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   startedOn: true,
   wonOn: true,
   lastContactOn: true,
+  proposalSentOn: true,
   services: true,
   projectDate: true,
 }).partial();
