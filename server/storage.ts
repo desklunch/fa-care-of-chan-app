@@ -3592,7 +3592,7 @@ export class DatabaseStorage implements IStorage {
       query = query.where(inArray(deals.status, options.status)) as any;
     }
 
-    const results = await query.orderBy(desc(deals.createdAt));
+    const results = await query.orderBy(desc(deals.dealNumber));
     return results as DealWithRelations[];
   }
 
