@@ -646,7 +646,7 @@ export const deals = pgTable(
   "deals",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    externalId: varchar("external_id", { length: 50 }),
+    externalId: integer("external_id"),
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("Prospecting"),
