@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -564,28 +563,46 @@ export default function Deals() {
   usePageTitle("Deals");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
-  // Key to force grid remount after reorder
-  const [gridKey, setGridKey] = useState(0);
 
-  // Mutation to reorder deals
+  // Mutation to reorder deals with optimistic cache updates
+  // rowDragManaged=true handles instant visual feedback; we just sync cache & persist
   const reorderMutation = useMutation({
     mutationFn: async (dealIds: string[]) => {
       return apiRequest("POST", "/api/deals/reorder", { dealIds });
     },
-    onSuccess: async () => {
-      // Invalidate and wait for refetch to complete
-      await queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
-      // Force grid remount to reset internal row order
-      setGridKey(k => k + 1);
+    onMutate: async (dealIds: string[]) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ["/api/deals"] });
+      
+      // Snapshot current cache for rollback
+      const previousDeals = queryClient.getQueryData<DealWithRelations[]>(["/api/deals"]);
+      
+      // Optimistically update cache to match the new order
+      if (previousDeals) {
+        const dealMap = new Map(previousDeals.map(d => [d.id, d]));
+        const reorderedDeals = dealIds
+          .map(id => dealMap.get(id))
+          .filter((d): d is DealWithRelations => d !== undefined);
+        queryClient.setQueryData(["/api/deals"], reorderedDeals);
+      }
+      
+      return { previousDeals };
     },
-    onError: (error) => {
+    onError: (error, _dealIds, context) => {
+      // Rollback to previous order on error
+      if (context?.previousDeals) {
+        queryClient.setQueryData(["/api/deals"], context.previousDeals);
+      }
       toast({
         title: "Failed to save order",
         description: "Your changes could not be saved. Please try again.",
         variant: "destructive",
       });
       console.error("Error reordering deals:", error);
+    },
+    onSettled: () => {
+      // Refetch in background to ensure server/client sync (silent, no UI disruption)
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
     },
   });
 
@@ -605,7 +622,6 @@ export default function Deals() {
       }}
     >
       <DataGridPage
-        key={gridKey}
         queryKey="/api/deals"
         columns={dealColumns}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}

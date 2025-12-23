@@ -584,15 +584,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     return result;
   }, [data, searchText, searchFields, pagination, filters, filterState]);
 
-  // When row drag is enabled and data changes (e.g., after reorder mutation),
-  // force AG Grid to reset its internal row order to match the server order
-  // We use setGridOption with a new array reference to ensure AG Grid rebuilds its internal indices
-  useEffect(() => {
-    if (enableRowDrag && gridApi && filteredData.length > 0) {
-      // Use setGridOption with a cloned array to force AG Grid to rebuild row order
-      gridApi.setGridOption('rowData', [...filteredData]);
-    }
-  }, [enableRowDrag, gridApi, filteredData]);
+  // Note: With rowDragManaged=true, AG Grid handles visual reordering internally.
+  // We only sync rowData when drag is NOT in progress to avoid conflicts.
 
   const onGridReady = useCallback((params: GridReadyEvent<T>) => {
     setGridApi(params.api);
