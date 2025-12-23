@@ -172,14 +172,13 @@ export function CitySearch({
             <X className="h-4 w-4" />
           </button>
         ) : null}
-      </div>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+        {error && (
+          <p className="text-sm text-destructive mt-1">{error}</p>
+        )}
 
-      {isOpen && results.length > 0 && (
-        <div className="absolute z-50 w-full max-w-md mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
+        {isOpen && results.length > 0 && (
+          <div className="absolute left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
           {results.map((result, index) => {
             const isDuplicate = value.some((loc) => loc.placeId === result.placeId);
             const Icon = result.type === "country" ? Globe : result.type === "state" ? Map : MapPin;
@@ -207,14 +206,15 @@ export function CitySearch({
               </button>
             );
           })}
-        </div>
-      )}
+          </div>
+        )}
 
-      {isOpen && results.length === 0 && !isLoading && query.trim() && (
-        <div className="absolute z-50 w-full max-w-md mt-1 bg-popover border rounded-md shadow-lg p-3 text-center text-muted-foreground">
-          No locations found
-        </div>
-      )}
+        {isOpen && results.length === 0 && !isLoading && query.trim() && (
+          <div className="absolute left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg p-3 text-center text-muted-foreground">
+            No locations found
+          </div>
+        )}
+      </div>
 
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2" data-testid={`${testId}-chips`}>
