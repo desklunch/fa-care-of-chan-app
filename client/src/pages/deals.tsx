@@ -5,17 +5,14 @@ import { CellValueChangedEvent } from "ag-grid-community";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { getEventsSummaryText } from "@/components/event-schedule";
 import type {
   DealWithRelations,
-  DealEvent,
   DealService,
   DealLocation,
   User as UserType,
 } from "@shared/schema";
 import { dealStatuses, dealServices } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -334,24 +331,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
-    id: "eventSchedule",
-    headerName: "Event Schedule",
-    field: "eventSchedule",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 180,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const events = params.data?.eventSchedule as DealEvent[] | null;
-        if (!events || events.length === 0) return "";
-        return getEventsSummaryText(events);
-      },
-      comparator: createDateComparator((data) => data?.earliestEventDate),
-    },
-  },
-
-
-  {
     id: "client",
     headerName: "Client",
     field: "client",
@@ -365,31 +344,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
-  {
-    id: "budget",
-    headerName: "Budget",
-    field: "budgetHigh",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      width: 150,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const deal = params.data;
-        if (!deal) return "";
-        if (!deal.budgetHigh && !deal.budgetLow) return "";
-        if (deal.budgetLow && deal.budgetHigh) {
-          return `$${deal.budgetLow.toLocaleString("en-US")} - $${deal.budgetHigh.toLocaleString("en-US")}`;
-        }
-        if (deal.budgetHigh) {
-          return `$${deal.budgetHigh.toLocaleString("en-US")}`;
-        }
-        if (deal.budgetLow) {
-          return `$${deal.budgetLow.toLocaleString("en-US")}+`;
-        }
-        return "Unconfirmed";
-      },
-    },
-  },
   {
     id: "startedOn",
     headerName: "Started On",
@@ -479,15 +433,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
-  {
-    id: "externalId",
-    headerName: "External ID",
-    field: "externalId",
-    category: "Details",
-    colDef: {
-      width: 100,
-    },
-  },
   {
     id: "services",
     headerName: "Services",
@@ -596,50 +541,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         maxLength: 5000,
         rows: 8,
         cols: 50,
-      },
-    },
-  },
-  {
-    id: "createdBy",
-    headerName: "Created By",
-    field: "createdBy",
-    category: "Details",
-    colDef: {
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const createdBy = params.data?.createdBy;
-        if (!createdBy) return "";
-        return (
-          [createdBy.firstName, createdBy.lastName].filter(Boolean).join(" ") ||
-          "Unknown"
-        );
-      },
-    },
-  },
-  {
-    id: "createdAt",
-    headerName: "Created",
-    field: "createdAt",
-    category: "Details",
-    colDef: {
-      width: 130,
-      valueFormatter: (params: { value: string | Date | null }) => {
-        if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
-      },
-    },
-  },
-  {
-    id: "updatedAt",
-    headerName: "Updated",
-    field: "updatedAt",
-    category: "Details",
-    colDef: {
-      width: 130,
-      valueFormatter: (params: { value: string | Date | null }) => {
-        if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
       },
     },
   },
