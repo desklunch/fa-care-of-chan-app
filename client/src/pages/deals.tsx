@@ -278,7 +278,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         return getUserFullName(user);
       },
       cellRenderer: (params: { value: string }) => {
-        return getInitials(params.value);
+        return <div>{getInitials(params.value)}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
         if (params.newValue === "") {

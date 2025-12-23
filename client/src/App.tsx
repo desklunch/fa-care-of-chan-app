@@ -105,7 +105,7 @@ import {
   BookOpen,
   Users,
   Rocket,
-  Ticket,
+  Tickets,
   Building2,
 } from "lucide-react";
 
@@ -162,7 +162,7 @@ function useLayoutConfig() {
           {
             name: "Deals",
             href: "/deals",
-            icon: Ticket,
+            icon: Tickets,
           },
           {
             name: "Clients",
@@ -170,7 +170,7 @@ function useLayoutConfig() {
             icon: Building2,
           },
           {
-            name: "Client Contacts",
+            name: "Contacts",
             href: "/clients/contacts",
             icon: Contact,
           },
@@ -237,7 +237,7 @@ function useLayoutConfig() {
           {
             name: "Deals",
             href: "/deals",
-            icon: Ticket,
+            icon: Tickets,
           },
           {
             name: "Clients",
