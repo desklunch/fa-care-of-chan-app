@@ -68,10 +68,17 @@ async function updateEventSchedules() {
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    const externalId = row[externalIdIdx]?.trim();
+    const externalIdStr = row[externalIdIdx]?.trim();
     const eventScheduleStr = row[eventScheduleIdx]?.trim();
 
-    if (!externalId) {
+    if (!externalIdStr) {
+      skipped++;
+      continue;
+    }
+
+    // Parse external_id as integer
+    const externalId = parseInt(externalIdStr, 10);
+    if (isNaN(externalId)) {
       skipped++;
       continue;
     }

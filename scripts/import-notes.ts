@@ -88,11 +88,19 @@ async function main() {
   let skipped = 0;
 
   for (const row of dataRows) {
-    const externalId = row[externalIdIndex];
+    const externalIdStr = row[externalIdIndex];
     const notes = row[notesIndex];
 
-    if (!externalId) {
+    if (!externalIdStr) {
       skipped++;
+      continue;
+    }
+
+    // Parse external_id as integer
+    const externalId = parseInt(externalIdStr, 10);
+    if (isNaN(externalId)) {
+      skipped++;
+      console.log(`Invalid external_id (non-numeric): ${externalIdStr}`);
       continue;
     }
 
