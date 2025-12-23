@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -19,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import ReactMarkdown from "react-markdown";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Creates a comparator for date columns that pushes null/empty values to the bottom
@@ -238,7 +241,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 1,
       minWidth: 100,
       maxWidth: 100,
-      valueGetter: (params: { data: DealWithRelations }) => {
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
         const owner = params.data?.owner;
         if (!owner) return "";
         const initials = [owner.firstName?.[0], owner.lastName?.[0]]
@@ -287,7 +290,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 180,
-      valueGetter: (params: { data: DealWithRelations }) => {
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
         const events = params.data?.eventSchedule as DealEvent[] | null;
         if (!events || events.length === 0) return "";
         return getEventsSummaryText(events);
@@ -305,7 +308,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 180,
-      valueGetter: (params: { data: DealWithRelations }) => {
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
         return params.data?.client?.name || "";
       },
     },
@@ -518,7 +521,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 150,
-      valueGetter: (params: { data: DealWithRelations }) => {
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
         const createdBy = params.data?.createdBy;
         if (!createdBy) return "";
         return (
@@ -559,6 +562,31 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
 export default function Deals() {
   usePageTitle("Deals");
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  // Mutation to reorder deals
+  const reorderMutation = useMutation({
+    mutationFn: async (dealIds: string[]) => {
+      return apiRequest("POST", "/api/deals/reorder", { dealIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to save order",
+        description: "Your changes could not be saved. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error reordering deals:", error);
+    },
+  });
+
+  // Handle row drag end - save the new order
+  const handleRowDragEnd = (reorderedData: DealWithRelations[]) => {
+    const dealIds = reorderedData.map((deal) => deal.id);
+    reorderMutation.mutate(dealIds);
+  };
 
   return (
     <PageLayout
@@ -592,6 +620,8 @@ export default function Deals() {
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"
         emptyDescription="Start tracking your sales pipeline by creating a deal."
+        enableRowDrag={true}
+        onRowDragEnd={handleRowDragEnd}
       />
     </PageLayout>
   );

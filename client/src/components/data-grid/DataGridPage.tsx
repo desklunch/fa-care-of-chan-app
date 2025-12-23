@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent, RowClickedEvent, SortChangedEvent, ColumnMovedEvent } from "ag-grid-community";
+import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent, RowClickedEvent, SortChangedEvent, ColumnMovedEvent, RowDragEndEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import { ColumnSelector } from "./column-selector";
 import { ExpandableSearch } from "./expandable-search";
@@ -329,6 +329,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   selectionToolbar,
   filters = [],
   collapsibleFilters = false,
+  enableRowDrag = false,
+  onRowDragEnd,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
@@ -482,11 +484,31 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const data = useExternalData ? externalData : queryData;
   const isLoading = useExternalData ? (externalLoading ?? false) : queryLoading;
 
+  // Determine if dragging should be suppressed (when sorting, filters, or search are active)
+  const hasActiveFilters = Object.values(filterState).some((v) => v.length > 0);
+  const hasActiveSearch = searchText.trim().length > 0;
+  const isDragSuppressed = sortState !== null || hasActiveFilters || hasActiveSearch;
+
   const columnDefs = useMemo(() => {
     const cols: ColDef<T>[] = [];
     
-    // Row selection is handled via rowSelection prop in AG-Grid v32+
-    // No need for a separate checkbox column
+    // Add drag handle column if row dragging is enabled
+    if (enableRowDrag) {
+      cols.push({
+        colId: "_dragHandle",
+        headerName: "",
+        width: 50,
+        maxWidth: 50,
+        minWidth: 50,
+        rowDrag: !isDragSuppressed,
+        sortable: false,
+        filter: false,
+        resizable: false,
+        suppressHeaderMenuButton: true,
+        lockPosition: "left",
+        cellClass: "ag-drag-handle-cell",
+      } as ColDef<T>);
+    }
     
     // Add data columns
     columns.forEach((col) => {
@@ -505,7 +527,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     });
     
     return cols;
-  }, [columns, visibleColumns, enableRowSelection]);
+  }, [columns, visibleColumns, enableRowSelection, enableRowDrag, isDragSuppressed, filterState, searchText]);
 
   const defaultColDef: ColDef = useMemo(
     () => ({
@@ -637,6 +659,21 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       setColumnOrder(currentOrder.filter(i => i !== -1));
     }
   }, [allColumnIds, isGridInitialized]);
+
+  // Handle row drag end - get new order and call callback
+  const handleRowDragEnd = useCallback((event: RowDragEndEvent<T>) => {
+    if (!onRowDragEnd || !gridApi) return;
+    
+    // Get all rows in their new order
+    const reorderedData: T[] = [];
+    gridApi.forEachNodeAfterFilterAndSort((node) => {
+      if (node.data) {
+        reorderedData.push(node.data);
+      }
+    });
+    
+    onRowDragEnd(reorderedData);
+  }, [onRowDragEnd, gridApi]);
 
   const handleRowClick = useCallback(
     (event: RowClickedEvent<T>) => {
@@ -863,6 +900,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           overlayNoRowsTemplate={emptyOverlay}
           rowSelection={enableRowSelection ? { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false } : undefined}
           onSelectionChanged={enableRowSelection ? handleSelectionChanged : undefined}
+          rowDragManaged={enableRowDrag}
+          onRowDragEnd={enableRowDrag ? handleRowDragEnd : undefined}
         />
       </div>
 

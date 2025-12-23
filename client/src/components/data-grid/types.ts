@@ -79,6 +79,10 @@ export interface DataGridPageProps<T, C = unknown> {
   
   // Collapsible filters - when true, filters are hidden behind a toggle button
   collapsibleFilters?: boolean;
+  
+  // Row dragging props
+  enableRowDrag?: boolean;
+  onRowDragEnd?: (reorderedData: T[]) => void;
 }
 
 export interface ColumnSelectorProps {

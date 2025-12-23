@@ -3750,6 +3750,22 @@ export class DatabaseStorage implements IStorage {
     await db.delete(deals).where(eq(deals.id, id));
   }
 
+  async reorderDeals(orderedDealIds: string[]): Promise<void> {
+    // Update deal_number for each deal based on its position in the array
+    // First item gets the highest deal_number (newest), last item gets 1 (oldest)
+    const totalDeals = orderedDealIds.length;
+    
+    for (let i = 0; i < orderedDealIds.length; i++) {
+      const dealId = orderedDealIds[i];
+      const newDealNumber = totalDeals - i; // First item gets highest number
+      
+      await db
+        .update(deals)
+        .set({ dealNumber: newDealNumber, updatedAt: new Date() })
+        .where(eq(deals.id, dealId));
+    }
+  }
+
   // Deal task operations
   async getDealTaskById(id: string): Promise<DealTask | undefined> {
     const [task] = await db

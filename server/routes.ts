@@ -5173,6 +5173,31 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // POST /api/deals/reorder - Reorder deals by updating deal_number
+  app.post("/api/deals/reorder", isAuthenticated, async (req: any, res) => {
+    try {
+      const { dealIds } = req.body;
+      
+      if (!Array.isArray(dealIds) || dealIds.length === 0) {
+        return res.status(400).json({ message: "dealIds must be a non-empty array" });
+      }
+      
+      await storage.reorderDeals(dealIds);
+      
+      await logAuditEvent(req, {
+        action: "reorder",
+        entityType: "deals",
+        entityId: "bulk",
+        metadata: { count: dealIds.length },
+      });
+      
+      res.json({ success: true, reorderedCount: dealIds.length });
+    } catch (error) {
+      console.error("Error reordering deals:", error);
+      res.status(500).json({ message: "Failed to reorder deals" });
+    }
+  });
+
   // DELETE /api/deals/:id - Delete a deal
   app.delete("/api/deals/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
     try {
