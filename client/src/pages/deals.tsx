@@ -418,8 +418,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 300,
       editable: true,
       sortable: false,
-      wrapText: true,
-      autoHeight: true,
+      cellEditor: "agLargeTextCellEditor",
+        cellEditorPopup: true,
+        cellEditorParams: {
+          maxLength: 10000,
+          rows: 10,
+          cols: 60,
+        },
+        wrapText: true,
+        autoHeight: true,
       cellStyle: {
         whiteSpace: "normal",
         lineHeight: "1.4",
