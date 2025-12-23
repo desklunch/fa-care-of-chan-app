@@ -3773,7 +3773,7 @@ export class DatabaseStorage implements IStorage {
     // Each deal gets: totalDeals - index (first item = highest number)
     const caseStatements = orderedDealIds.map((dealId, index) => {
       const newSortOrder = totalDeals - index;
-      return sql`WHEN ${dealId} THEN ${newSortOrder}`;
+      return sql`WHEN ${dealId} THEN ${newSortOrder}::integer`;
     });
     
     // Combine all CASE statements
