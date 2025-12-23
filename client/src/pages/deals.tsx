@@ -380,7 +380,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 150,
       maxWidth: 150,
       editable: true,
-      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -397,7 +396,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 130,
       maxWidth: 130,
       editable: true,
-      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -414,7 +412,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 160,
       maxWidth: 160,
       editable: true,
-      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -431,7 +428,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 150,
       maxWidth: 150,
       editable: true,
-      cellEditor: "agDateStringCellEditor",
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -638,22 +634,57 @@ export default function Deals() {
     users,
   };
 
-  // Mutation to update a single deal field
+  // Mutation to update a single deal field with optimistic updates
   const updateDealMutation = useMutation({
     mutationFn: async ({ dealId, updates }: { dealId: string; updates: Record<string, unknown> }) => {
       return apiRequest("PATCH", `/api/deals/${dealId}`, updates);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    onMutate: async ({ dealId, updates }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/deals"] });
+      
+      // Snapshot the previous value
+      const previousDeals = queryClient.getQueryData<DealWithRelations[]>(["/api/deals"]);
+      
+      // Optimistically update the cache
+      if (previousDeals) {
+        queryClient.setQueryData<DealWithRelations[]>(["/api/deals"], (old) => {
+          if (!old) return old;
+          return old.map((deal) => {
+            if (deal.id === dealId) {
+              const updatedDeal = { ...deal, ...updates };
+              // For owner changes, also update the owner object for display
+              if (updates.ownerId !== undefined) {
+                const user = users.find((u) => u.id === updates.ownerId);
+                if (user) {
+                  updatedDeal.owner = { ...user } as typeof deal.owner;
+                } else if (updates.ownerId === "" || updates.ownerId === null) {
+                  updatedDeal.owner = null;
+                }
+              }
+              return updatedDeal as DealWithRelations;
+            }
+            return deal;
+          });
+        });
+      }
+      
+      return { previousDeals };
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousDeals) {
+        queryClient.setQueryData(["/api/deals"], context.previousDeals);
+      }
       toast({
         title: "Failed to save changes",
         description: "Your changes could not be saved. Please try again.",
         variant: "destructive",
       });
       console.error("Error updating deal:", error);
-      // Refresh to revert the cell to server state
+    },
+    onSettled: () => {
+      // Refetch to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
     },
   });
@@ -665,13 +696,27 @@ export default function Deals() {
     if (newValue === oldValue) return;
 
     const field = colDef.field as string;
-    const updates: Record<string, unknown> = { [field]: newValue };
+    let processedValue: unknown = newValue;
 
     // Handle empty strings as null for date fields
-    if (["startedOn", "wonOn", "lastContactOn", "proposalSentOn", "projectDate"].includes(field)) {
-      updates[field] = newValue === "" ? null : newValue;
+    const dateFields = ["startedOn", "wonOn", "lastContactOn", "proposalSentOn", "projectDate"];
+    if (dateFields.includes(field)) {
+      processedValue = newValue === "" ? null : newValue;
     }
 
+    // Handle empty strings as null for nullable ID fields (foreign keys)
+    const nullableIdFields = ["ownerId", "clientId"];
+    if (nullableIdFields.includes(field) && newValue === "") {
+      processedValue = null;
+    }
+
+    // Handle empty strings as null for nullable text fields
+    const nullableTextFields = ["concept", "notes", "budgetNotes"];
+    if (nullableTextFields.includes(field) && newValue === "") {
+      processedValue = null;
+    }
+
+    const updates: Record<string, unknown> = { [field]: processedValue };
     updateDealMutation.mutate({ dealId: data.id, updates });
   }, [updateDealMutation]);
 
@@ -732,7 +777,7 @@ export default function Deals() {
         icon: CircleFadingPlus,
       }}
     >
-      <DataGridPage<DealWithRelations, DealsGridContext>
+      <DataGridPage
         queryKey="/api/deals"
         columns={dealColumns}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
