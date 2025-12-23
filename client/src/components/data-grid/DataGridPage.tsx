@@ -904,6 +904,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           rowSelection={enableRowSelection ? { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false } : undefined}
           onSelectionChanged={enableRowSelection ? handleSelectionChanged : undefined}
           rowDragManaged={enableRowDrag}
+          suppressMoveWhenRowDragging={enableRowDrag}
           onRowDragEnd={enableRowDrag ? handleRowDragEnd : undefined}
         />
       </div>
