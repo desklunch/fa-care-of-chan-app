@@ -341,6 +341,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         rows: 3,
         cols: 30,
       },
+
     },
   },
   {
@@ -371,6 +372,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         return formatDateOnly(params.value, "MM/dd/yy");
       },
       comparator: createDateComparator((data) => data?.startedOn),
+      
     },
   },
   {
@@ -432,23 +434,31 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       editable: true,
       sortable: false,
       cellEditor: "agLargeTextCellEditor",
-        cellEditorPopup: true,
-        cellEditorParams: {
-          maxLength: 10000,
-          rows: 10,
-          cols: 60,
-        },
-        wrapText: true,
-        autoHeight: true,
-      cellStyle: {
-        whiteSpace: "pre-wrap",
-        lineHeight: "1.4",
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-        paddingTop: "8px",
-        paddingBottom: "8px",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 10000,
+        rows: 10,
+        cols: 60,
+      },
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {params.value}
+            </ReactMarkdown>
+          </div>
+        );
       },
     },
   },
@@ -467,7 +477,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const services = params.data?.services as DealService[] | null;
         if (!services || services.length === 0) return null;
         return (
-          <div className="flex flex-wrap gap-1 pt-2 bg-white/20">
+          <div className="flex flex-wrap gap-1 pt-2.5">
             {services.map((service, index) => (
               <Badge key={index} variant="secondary" className="text-xs">
                 {service}
@@ -497,15 +507,23 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
       wrapText: true,
       autoHeight: true,
-      cellStyle: {
-        whiteSpace: "pre-wrap",
-        lineHeight: "1.4",
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-        paddingTop: "8px",
-        paddingBottom: "8px",
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {params.value}
+            </ReactMarkdown>
+          </div>
+        );
       },
     },
   },
@@ -531,7 +549,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-2 [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -566,11 +584,23 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
       wrapText: true,
       autoHeight: true,
-      cellStyle: {
-        whiteSpace: "pre-wrap",
-        lineHeight: "1.4",
-        paddingTop: "8px",
-        paddingBottom: "8px",
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {params.value}
+            </ReactMarkdown>
+          </div>
+        );
       },
     },
   },
