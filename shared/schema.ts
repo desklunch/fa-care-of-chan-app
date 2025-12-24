@@ -654,6 +654,7 @@ export const deals = pgTable(
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
     services: text("services").array().$type<DealService[]>().default([]),
+    locationsText: text("locations_text"),
     concept: text("concept"),
     notes: text("notes"),
     primaryContactId: varchar("primary_contact_id").references(() => contacts.id),

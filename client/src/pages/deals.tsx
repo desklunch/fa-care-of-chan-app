@@ -467,7 +467,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const services = params.data?.services as DealService[] | null;
         if (!services || services.length === 0) return null;
         return (
-          <div className="flex flex-wrap gap-1 py-1">
+          <div className="flex flex-wrap gap-1 pt-2 bg-white/20">
             {services.map((service, index) => (
               <Badge key={index} variant="secondary" className="text-xs">
                 {service}
@@ -496,7 +496,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         }> | null;
         if (!locations || locations.length === 0) return null;
         return (
-          <div className="flex flex-wrap gap-1 py-1">
+          <div className="flex flex-wrap gap-1 pt-2">
             {locations.map((loc, index) => (
               <Badge key={index} variant="secondary" className="text-xs">
                 {loc.displayName}
