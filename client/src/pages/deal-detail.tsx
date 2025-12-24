@@ -385,13 +385,14 @@ function EditableTitle({
   if (isEditing) {
     return (
       <div className="flex items-center gap-2">
-        <Input
+        <input
           ref={inputRef}
+          type="text"
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
-          className="text-3xl font-bold h-auto py-0 px-0 border-0 shadow-none focus-visible:ring-0 bg-transparent"
+          className="text-3xl font-bold w-full bg-transparent border-b-2 border-primary outline-none"
           data-testid={`input-${testId}`}
         />
       </div>
