@@ -391,7 +391,7 @@ function EditableTitle({
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
-          className="text-3xl font-bold h-auto py-1 px-2"
+          className="text-3xl font-bold h-auto py-0 px-0 border-0 shadow-none focus-visible:ring-0 bg-transparent"
           data-testid={`input-${testId}`}
         />
       </div>
