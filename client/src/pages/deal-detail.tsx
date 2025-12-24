@@ -181,7 +181,7 @@ export default function DealDetail() {
         <Tabs defaultValue="overview" className="w-full">
           <div className="sticky top-0 bg-background z-10">
             <div className="p-4 md:p-6 pb-2 md:pb-2">
-              <div className="flex flex-col gap-2 ">
+              <div className="flex flex-col gap-3 ">
 
                 <div>
                   <span className="text-sm font-semibold">
@@ -194,25 +194,7 @@ export default function DealDetail() {
                     {deal.displayName}
                   </h1>
                 </div>
-                <div className="flex items-center gap-4">
-                  <DealStatusBadge status={deal.status as DealStatus} />
-                  {ownerName ? (
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-5 w-5 rounded-full">
-                        <AvatarImage
-                          src={deal.owner?.profileImageUrl || undefined}
-                          alt={ownerName}
-                        />
-                        <AvatarFallback className="text-xs">
-                          {ownerInitials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs font-medium  ">{ownerName}</span>
-                    </div>
-                  ) : (
-                    <span className="text-xs font-medium">Unassigned</span>
-                  )}
-                </div>
+  
 
               </div>
             </div>
@@ -233,10 +215,31 @@ export default function DealDetail() {
           >
             {/* Deal Information Card */}
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Deal Information</CardTitle>
-              </CardHeader>
-              <CardContent>
+
+              <CardContent className="py-2">
+                <FieldRow label="Status" testId="field-status">
+                  {ownerName ? (
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8 rounded-full">
+                        <AvatarImage
+                          src={deal.owner?.profileImageUrl || undefined}
+                          alt={ownerName}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {ownerInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium  ">{ownerName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-medium">Unassigned</span>
+                  )}
+                </FieldRow>
+    
+                <FieldRow label="Status" testId="field-status">
+                  <DealStatusBadge status={deal.status as DealStatus} />
+
+                </FieldRow>
                 <FieldRow label="Client" testId="field-client">
                   {deal.client ? (
                     <Link href={`/clients/${deal.client.id}`}>
@@ -273,6 +276,12 @@ export default function DealDetail() {
                     </span>
                   )}
                 </FieldRow>
+                {deal.projectDate && (
+                  <FieldRow label="Project Date" testId="field-project-date">
+                    <span className="font-medium">{deal.projectDate}</span>
+                  </FieldRow>
+                )}
+                
                 {deal.locationsText && (
                   <FieldRow
                     label="Locations"
@@ -282,6 +291,12 @@ export default function DealDetail() {
                     <span className="whitespace-pre-wrap">{deal.locationsText}</span>
                   </FieldRow>
                 )}
+                {deal.concept && (
+                  <FieldRow label="Concept" testId="field-concept">
+                    <span className="leading-[1.6em] whitespace-pre-wrap">{deal.concept}</span>
+                  </FieldRow>
+                )}
+
                 {services.length > 0 && (
                   <FieldRow
                     label="Services"
@@ -311,11 +326,7 @@ export default function DealDetail() {
                     <span className="whitespace-pre-wrap">{deal.budgetNotes}</span>
                   </FieldRow>
                 )}
-                {deal.projectDate && (
-                  <FieldRow label="Project Date" testId="field-project-date">
-                    <span className="font-medium">{deal.projectDate}</span>
-                  </FieldRow>
-                )}
+    
                 {deal.startedOn && (
                   <FieldRow label="Started" testId="field-started-on">
                     <span className="font-medium">{format(parseDateOnly(deal.startedOn), "MMM d, yyyy")}</span>
@@ -332,15 +343,10 @@ export default function DealDetail() {
                   </FieldRow>
                 )}
 
-                {deal.concept && (
-                  <FieldRow label="Concept" testId="field-concept">
-                    <span className="whitespace-pre-wrap">{deal.concept}</span>
-                  </FieldRow>
-                )}
-
+  
                 {deal.notes && (
-                  <FieldRow label="Notes" testId="field-notes">
-                    <span className="whitespace-pre-wrap">{deal.notes}</span>
+                  <FieldRow label="Next Steps" testId="field-notes">
+                    <span className="leading-[1.6em] whitespace-pre-wrap">{deal.notes}</span>
                   </FieldRow>
                 )}
               </CardContent>

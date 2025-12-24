@@ -87,10 +87,10 @@ function createDateComparator(
 }
 
 const DEFAULT_VISIBLE_COLUMNS = [
+  "displayName",
   "owner",
   "status",
   "projectDate",
-  "client",
   "concept",
   "services",
   "locationsText",
