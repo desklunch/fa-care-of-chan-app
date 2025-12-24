@@ -498,9 +498,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       cols.push({
         colId: "_dragHandle",
         headerName: "",
-        width: 50,
-        maxWidth: 50,
-        minWidth: 50,
+        width: 30,
+        maxWidth: 30,
+        minWidth: 30,
         rowDrag: !isDragSuppressed,
         sortable: false,
         filter: false,

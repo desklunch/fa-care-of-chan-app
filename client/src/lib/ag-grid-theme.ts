@@ -2,17 +2,18 @@ import { themeQuartz, iconSetAlpine, iconSetMaterial } from "ag-grid-community";
 
 export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   browserColorScheme: "dark",
-  headerFontSize: 14,
   spacing: 12,
   foregroundColor: "hsl(var(--foreground))",
   backgroundColor: "hsl(var(--background))",
   headerColumnResizeHandleColor: "hsl(var(--border))",
-  oddRowBackgroundColor: "#00000008",
+  oddRowBackgroundColor: "#8888880F",
   rowBorder: false,
-  iconColor: "#f00",
+  iconColor: "hsl(var(--muted-foreground))",
   borderColor: "hsl(var(--border))",
   chromeBackgroundColor: "hsl(var(--secondary))",
   pinnedColumnBorder: false,
-  cellHorizontalPaddingScale: 0.5,
+  cellHorizontalPaddingScale: 0.75,
+  headerFontSize: 12,
+  dragHandleColor: "hsl(var(--muted-foreground))",
 
 });

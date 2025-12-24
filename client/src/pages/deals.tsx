@@ -87,11 +87,10 @@ function createDateComparator(
 }
 
 const DEFAULT_VISIBLE_COLUMNS = [
-  "displayName", 
   "owner",
   "status",
   "projectDate",
-
+  "client",
   "concept",
   "services",
   "locationsText",
@@ -364,8 +363,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "startedOn",
     category: "Dates",
     colDef: {
-      minWidth: 150,
-      maxWidth: 150,
+      minWidth: 130,
+      maxWidth: 130,
       editable: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
@@ -397,8 +396,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "lastContactOn",
     category: "Dates",
     colDef: {
-      minWidth: 160,
-      maxWidth: 160,
+      minWidth: 130,
+      maxWidth: 130,
       editable: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
@@ -413,8 +412,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "proposalSentOn",
     category: "Dates",
     colDef: {
-      minWidth: 150,
-      maxWidth: 150,
+      minWidth: 130,
+      maxWidth: 130,
       editable: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
@@ -445,7 +444,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -510,7 +509,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -549,7 +548,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -587,7 +586,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-2 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
