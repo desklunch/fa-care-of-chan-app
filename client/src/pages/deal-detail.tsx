@@ -166,17 +166,15 @@ function EditableFieldRow({
       case "select":
         const selectValue = editValue || "__none__";
         return (
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex flex-col gap-2 w-full">
             <Select
               value={selectValue}
               onValueChange={(val) => {
                 const actualValue = val === "__none__" ? "" : val;
                 setEditValue(actualValue);
-                onSave(field, actualValue);
-                setIsEditing(false);
               }}
             >
-              <SelectTrigger className="flex-1" data-testid={`select-${field}`}>
+              <SelectTrigger className="w-full" data-testid={`select-${field}`}>
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
               <SelectContent>
@@ -187,22 +185,27 @@ function EditableFieldRow({
                 ))}
               </SelectContent>
             </Select>
-            <Button size="icon" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+                <X className="h-4 w-4" />
+              </Button>
+              <Button size="sm" onClick={() => { onSave(field, editValue); setIsEditing(false); }} data-testid={`button-save-${field}`}>
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         );
 
       case "date":
         const parsedDate = editValue ? parseDateOnly(editValue) : null;
         return (
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex flex-col gap-2 w-full">
             <Popover open={dateOpen} onOpenChange={setDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "flex-1 justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal",
                     !editValue && "text-muted-foreground"
                   )}
                   data-testid={`datepicker-${field}`}
@@ -219,20 +222,23 @@ function EditableFieldRow({
                     if (date) {
                       const formatted = format(date, "yyyy-MM-dd");
                       setEditValue(formatted);
-                      onSave(field, formatted);
                     } else {
-                      onSave(field, null);
+                      setEditValue("");
                     }
                     setDateOpen(false);
-                    setIsEditing(false);
                   }}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
-            <Button size="icon" variant="ghost" onClick={() => { onSave(field, null); setIsEditing(false); }} data-testid={`button-clear-${field}`}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+                <X className="h-4 w-4" />
+              </Button>
+              <Button size="sm" onClick={() => { onSave(field, editValue || null); setIsEditing(false); }} data-testid={`button-save-${field}`}>
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         );
 
@@ -265,16 +271,23 @@ function EditableFieldRow({
 
       default:
         return (
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex flex-col gap-2 w-full">
             <Input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              onBlur={handleSave}
-              className="flex-1 text-sm"
+              className="w-full text-sm"
               data-testid={`input-${field}`}
             />
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+                <X className="h-4 w-4" />
+              </Button>
+              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         );
     }
