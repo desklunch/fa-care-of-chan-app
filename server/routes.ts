@@ -56,6 +56,8 @@ import {
   updateDealTaskSchema,
   insertClientSchema,
   updateClientSchema,
+  insertBrandSchema,
+  updateBrandSchema,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -5545,6 +5547,111 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     } catch (error) {
       console.error("Error unlinking client from contact:", error);
       res.status(500).json({ message: "Failed to unlink client from contact" });
+    }
+  });
+
+  // ==========================================
+  // BRANDS
+  // ==========================================
+
+  // GET /api/brands - Get all brands
+  app.get("/api/brands", isAuthenticated, async (req, res) => {
+    try {
+      const brands = await storage.getBrands();
+      res.json(brands);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      res.status(500).json({ message: "Failed to fetch brands" });
+    }
+  });
+
+  // GET /api/brands/:id - Get a single brand
+  app.get("/api/brands/:id", isAuthenticated, async (req, res) => {
+    try {
+      const brand = await storage.getBrandById(req.params.id);
+      if (!brand) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      res.json(brand);
+    } catch (error) {
+      console.error("Error fetching brand:", error);
+      res.status(500).json({ message: "Failed to fetch brand" });
+    }
+  });
+
+  // POST /api/brands - Create a new brand
+  app.post("/api/brands", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertBrandSchema.parse(req.body);
+      const brand = await storage.createBrand(validatedData);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "brand",
+        entityId: brand.id,
+        metadata: { name: brand.name },
+      });
+      
+      res.status(201).json(brand);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating brand:", error);
+      res.status(500).json({ message: "Failed to create brand" });
+    }
+  });
+
+  // PATCH /api/brands/:id - Update a brand
+  app.patch("/api/brands/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingBrand = await storage.getBrandById(req.params.id);
+      if (!existingBrand) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      const validatedData = updateBrandSchema.parse(req.body);
+      const brand = await storage.updateBrand(req.params.id, validatedData);
+      
+      const changes = getChangedFields(existingBrand, brand);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "brand",
+        entityId: req.params.id,
+        changes,
+      });
+      
+      res.json(brand);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error updating brand:", error);
+      res.status(500).json({ message: "Failed to update brand" });
+    }
+  });
+
+  // DELETE /api/brands/:id - Delete a brand
+  app.delete("/api/brands/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
+    try {
+      const brand = await storage.getBrandById(req.params.id);
+      if (!brand) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      await storage.deleteBrand(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "brand",
+        entityId: req.params.id,
+        metadata: { name: brand.name },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting brand:", error);
+      res.status(500).json({ message: "Failed to delete brand" });
     }
   });
 
