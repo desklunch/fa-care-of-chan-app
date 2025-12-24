@@ -275,28 +275,13 @@ export default function DealDetail() {
                     </span>
                   )}
                 </FieldRow>
-                {locations.length > 0 && (
+                {deal.locationsText && (
                   <FieldRow
                     label="Locations"
-                    testId="field-locations"
+                    testId="field-locations-text"
                     colSpan={2}
                   >
-                    <div
-                      className="flex flex-wrap gap-3"
-                      data-testid="deal-locations"
-                    >
-                      {locations.map((location) => (
-                        <Badge
-                          key={location.placeId}
-                          variant="default"
-                          data-testid={`badge-location-${location.placeId}`}
-                          size="lg"
-                          className="py-1 px-2 text-xs text-background"
-                        >
-                          {location.displayName}
-                        </Badge>
-                      ))}
-                    </div>
+                    <span className="whitespace-pre-wrap">{deal.locationsText}</span>
                   </FieldRow>
                 )}
                 {services.length > 0 && (
