@@ -2323,7 +2323,7 @@ export const insertBrandSchema = createInsertSchema(brands).omit({
   updatedAt: true,
 }).extend({
   name: z.string().min(1, "Name is required").max(255),
-  industry: z.string().max(100).optional(),
+  industry: z.string().max(100).nullish(),
   externalId: z.number().int().optional(),
 });
 

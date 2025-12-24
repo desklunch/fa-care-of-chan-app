@@ -122,9 +122,10 @@ function BrandFormDialog({
   });
 
   const onSubmit = (data: BrandFormValues) => {
+    const trimmedIndustry = data.industry?.trim();
     const submitData: CreateBrand = {
       name: data.name,
-      industry: data.industry || undefined,
+      industry: trimmedIndustry || null,
     };
     if (isEdit) {
       updateMutation.mutate(submitData);
