@@ -69,6 +69,7 @@ const Clients = lazy(() => import("@/pages/clients"));
 const ClientForm = lazy(() => import("@/pages/client-form"));
 const ClientDetail = lazy(() => import("@/pages/client-detail"));
 const ClientContacts = lazy(() => import("@/pages/client-contacts"));
+const Brands = lazy(() => import("@/pages/brands"));
 const VendorContacts = lazy(() => import("@/pages/vendor-contacts"));
 const EventSchedulePrototype = lazy(() => import("@/pages/event-schedule-prototype"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -168,6 +169,11 @@ function useLayoutConfig() {
             name: "Clients",
             href: "/clients",
             icon: Building2,
+          },
+          {
+            name: "Brands",
+            href: "/brands",
+            icon: Tag,
           },
           {
             name: "Contacts",
@@ -374,6 +380,7 @@ function AuthenticatedRoutes() {
           <Route path="/clients/new" component={ClientForm} />
           <Route path="/clients/:id/edit" component={ClientForm} />
           <Route path="/clients/:id" component={ClientDetail} />
+          <Route path="/brands" component={Brands} />
           <Route path="/vendors/contacts" component={VendorContacts} />
           <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/admin/invites" component={AdminInvites} />
