@@ -227,6 +227,34 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
+    id: "openDetail",
+    headerName: "",
+    field: "id",
+    category: "Basic Info",
+    toggleable: false,
+    colDef: {
+      width: 44,
+      minWidth: 44,
+      maxWidth: 44,
+      sortable: false,
+      filter: false,
+      resizable: false,
+      pinned: "left",
+      lockPosition: "left",
+      suppressHeaderMenuButton: true,
+      cellRenderer: (params: { data: DealWithRelations }) => {
+        if (!params.data) return null;
+        return (
+          <Link href={`/deals/${params.data.id}`} data-testid={`link-deal-detail-${params.data.id}`}>
+            <Button size="icon" variant="ghost" className="h-7 w-7">
+              <SquareArrowOutUpRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
+        );
+      },
+    },
+  },
+  {
     id: "displayName",
     headerName: "Deal",
     field: "displayName",
@@ -237,19 +265,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       maxWidth: 360,
       sortable: false,
       editable: true,
-      cellRenderer: (params: { data: DealWithRelations; value: string }) => {
-        if (!params.data) return null;
-        return (
-          <span className="flex items-a  gap-3 w-full">
-            <span className="flex-1 truncate">{params.value}</span>
-            <Link href={`/deals/${params.data.id}`} className="flex-shrink-0">
-              <Button size="sm" variant="ghost" className="bg-foreground/5 h-7 px-2">
-                <SquareArrowOutUpRight className="h-3 w-3 " />
-              </Button>
-            </Link>
-          </span>
-        );
-      },
     },
   },
   {
