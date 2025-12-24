@@ -341,6 +341,87 @@ function FieldRow({
   );
 }
 
+function EditableTitle({
+  value,
+  onSave,
+  testId,
+}: {
+  value: string;
+  onSave: (value: string) => void;
+  testId?: string;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const handleSave = () => {
+    if (editValue.trim() && editValue !== value) {
+      onSave(editValue.trim());
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === "Escape") {
+      setEditValue(value);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <Input
+          ref={inputRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleSave}
+          className="text-3xl font-bold h-auto py-1 px-2"
+          data-testid={`input-${testId}`}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="group flex items-center gap-2"
+      onDoubleClick={() => setIsEditing(true)}
+    >
+      <h1
+        className="text-3xl font-bold"
+        data-testid={testId}
+      >
+        {value}
+      </h1>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+        onClick={() => setIsEditing(true)}
+        data-testid={`button-edit-${testId}`}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -507,12 +588,11 @@ export default function DealDetail() {
                   {deal.client?.name}
                 </span>
 
-                <h1
-                  className="text-3xl font-bold"
-                  data-testid="text-deal-name"
-                >
-                  {deal.displayName}
-                </h1>
+                <EditableTitle
+                  value={deal.displayName}
+                  onSave={(value) => handleFieldSave("displayName", value)}
+                  testId="text-deal-name"
+                />
   
 
               </div>
