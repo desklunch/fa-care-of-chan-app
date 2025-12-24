@@ -159,6 +159,10 @@ import {
   type Client,
   type CreateClient,
   type UpdateClient,
+  brands,
+  type Brand,
+  type CreateBrand,
+  type UpdateBrand,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -471,6 +475,13 @@ export interface IStorage {
   getClientsForContact(contactId: string): Promise<Client[]>;
   linkClientContact(clientId: string, contactId: string): Promise<void>;
   unlinkClientContact(clientId: string, contactId: string): Promise<void>;
+  
+  // Brand operations
+  getBrands(): Promise<Brand[]>;
+  getBrandById(id: string): Promise<Brand | undefined>;
+  createBrand(data: CreateBrand): Promise<Brand>;
+  updateBrand(id: string, data: UpdateBrand): Promise<Brand | undefined>;
+  deleteBrand(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3974,6 +3985,46 @@ export class DatabaseStorage implements IStorage {
           eq(clientContacts.contactId, contactId)
         )
       );
+  }
+
+  // Brand operations
+  async getBrands(): Promise<Brand[]> {
+    return await db
+      .select()
+      .from(brands)
+      .orderBy(desc(brands.createdAt));
+  }
+
+  async getBrandById(id: string): Promise<Brand | undefined> {
+    const [brand] = await db
+      .select()
+      .from(brands)
+      .where(eq(brands.id, id));
+    return brand;
+  }
+
+  async createBrand(data: CreateBrand): Promise<Brand> {
+    const [brand] = await db
+      .insert(brands)
+      .values(data)
+      .returning();
+    return brand;
+  }
+
+  async updateBrand(id: string, data: UpdateBrand): Promise<Brand | undefined> {
+    const [brand] = await db
+      .update(brands)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(brands.id, id))
+      .returning();
+    return brand;
+  }
+
+  async deleteBrand(id: string): Promise<void> {
+    await db.delete(brands).where(eq(brands.id, id));
   }
 }
 
