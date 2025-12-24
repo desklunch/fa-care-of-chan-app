@@ -149,7 +149,7 @@ function EditableFieldRow({
               onKeyDown={(e) => {
                 if (e.key === "Escape") handleCancel();
               }}
-              className="min-h-[100px] text-base"
+              className="min-h-[150px] text-base leading-[1.6em]"
               data-testid={`input-${field}`}
             />
             <div className="flex gap-2 justify-end">
@@ -651,7 +651,7 @@ export default function DealDetail() {
                   type="textarea"
                   onSave={handleFieldSave}
                   placeholder="Enter concept description"
-                  valueClassName="text-base"
+                  valueClassName="text-base prose dark:prose-invert "
                 />
 
                 <EditableFieldRow
@@ -739,6 +739,21 @@ export default function DealDetail() {
                 />
 
                 <EditableFieldRow
+                  label="Proposal Sent"
+                  value={deal.proposalSentOn || ""}
+                  field="proposalSentOn"
+                  testId="field-proposal-sent-on"
+                  type="date"
+                  onSave={handleFieldSave}
+                  displayValue={
+                    deal.proposalSentOn && parseDateOnly(deal.proposalSentOn) ? (
+                      <span className="font-medium">{format(parseDateOnly(deal.proposalSentOn)!, "MMM d, yyyy")}</span>
+                    ) : undefined
+                  }
+                  placeholder="Select date"
+                />
+
+                <EditableFieldRow
                   label="Next Steps"
                   value={deal.notes || ""}
                   field="notes"
@@ -746,7 +761,7 @@ export default function DealDetail() {
                   type="textarea"
                   onSave={handleFieldSave}
                   placeholder="Enter next steps"
-                  valueClassName="text-base"
+                  valueClassName="text-base prose dark:prose-invert "
                 />
               </CardContent>
             </Card>
