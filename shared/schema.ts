@@ -2293,3 +2293,41 @@ export const insertAppReleaseChangeSchema = createInsertSchema(appReleaseChanges
 export type CreateAppRelease = z.infer<typeof insertAppReleaseSchema>;
 export type UpdateAppRelease = z.infer<typeof updateAppReleaseSchema>;
 export type CreateAppReleaseChange = z.infer<typeof insertAppReleaseChangeSchema>;
+
+// Brands table
+export const brands = pgTable(
+  "brands",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: integer("external_id"),
+    name: varchar("name", { length: 255 }).notNull().unique(),
+    industry: varchar("industry", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_brands_name").on(table.name),
+    index("idx_brands_industry").on(table.industry),
+    index("idx_brands_created_at").on(table.createdAt),
+  ],
+);
+
+// Types for brands
+export type Brand = typeof brands.$inferSelect;
+export type InsertBrand = typeof brands.$inferInsert;
+
+// Insert schema for brands
+export const insertBrandSchema = createInsertSchema(brands).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(255),
+  industry: z.string().max(100).optional(),
+  externalId: z.number().int().optional(),
+});
+
+export const updateBrandSchema = insertBrandSchema.partial();
+
+export type CreateBrand = z.infer<typeof insertBrandSchema>;
+export type UpdateBrand = z.infer<typeof updateBrandSchema>;
