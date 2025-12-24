@@ -29,7 +29,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
-import { CitySearch } from "@/components/city-search";
 import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -47,6 +46,7 @@ const dealFormSchema = z.object({
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
   services: z.array(z.enum(dealServices)).default([]),
+  locationsText: z.string().optional().transform(val => val || undefined),
   concept: z.string().optional().transform(val => val || undefined),
   notes: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
@@ -90,6 +90,7 @@ export default function DealForm() {
       locations: [],
       eventSchedule: [],
       services: [],
+      locationsText: "",
       concept: "",
       notes: "",
       ownerId: "",
@@ -120,6 +121,7 @@ export default function DealForm() {
         locations: (deal.locations as DealLocation[]) || [],
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
         services: (deal.services as DealService[]) || [],
+        locationsText: deal.locationsText || "",
         concept: deal.concept || "",
         notes: deal.notes || "",
         ownerId: deal.ownerId || "",
@@ -384,25 +386,7 @@ export default function DealForm() {
                 <CardTitle>Deal Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="locations"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Locations</FormLabel>
-                      <FormControl>
-                        <CitySearch
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="Search for a city..."
-                          data-testid="city-search"
-                        />
-                      </FormControl>
-  
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Hidden - Locations field temporarily disabled */}
 
                 <FormField
                   control={form.control}
@@ -478,6 +462,28 @@ export default function DealForm() {
                   )}
                 />
 
+
+                <FormField
+                  control={form.control}
+                  name="locationsText"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Locations</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter locations..."
+                          className="min-h-[80px] resize-y"
+                          {...field}
+                          data-testid="textarea-locations-text"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Event locations (e.g., "New York, Los Angeles").
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

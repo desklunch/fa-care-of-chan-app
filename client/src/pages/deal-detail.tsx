@@ -29,7 +29,6 @@ import { DealStatusBadge } from "@/components/deal-status-badge";
 import type {
   DealWithRelations,
   DealStatus,
-  DealLocation,
   DealService,
 } from "@shared/schema";
 
@@ -152,7 +151,6 @@ export default function DealDetail() {
         .slice(0, 2)
     : "";
 
-  const locations = (deal.locations as DealLocation[]) || [];
   const services = (deal.services as DealService[]) || [];
 
   return (
