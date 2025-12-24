@@ -311,34 +311,24 @@ export default function DealDetail() {
                     <span className="whitespace-pre-wrap">{deal.budgetNotes}</span>
                   </FieldRow>
                 )}
-                {(deal.startedOn || deal.wonOn || deal.lastContactOn || deal.projectDate) && (
-                  <FieldRow label="Key Dates" testId="field-key-dates">
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      {deal.projectDate && (
-                        <div>
-                          <span className="text-muted-foreground mr-1">Project Date:</span>
-                          <span className="font-medium">{deal.projectDate}</span>
-                        </div>
-                      )}
-                      {deal.startedOn && (
-                        <div>
-                          <span className="text-muted-foreground mr-1">Started:</span>
-                          <span className="font-medium">{format(parseDateOnly(deal.startedOn), "MMM d, yyyy")}</span>
-                        </div>
-                      )}
-                      {deal.wonOn && (
-                        <div>
-                          <span className="text-muted-foreground mr-1">Won:</span>
-                          <span className="font-medium">{format(parseDateOnly(deal.wonOn), "MMM d, yyyy")}</span>
-                        </div>
-                      )}
-                      {deal.lastContactOn && (
-                        <div>
-                          <span className="text-muted-foreground mr-1">Last Contact:</span>
-                          <span className="font-medium">{format(parseDateOnly(deal.lastContactOn), "MMM d, yyyy")}</span>
-                        </div>
-                      )}
-                    </div>
+                {deal.projectDate && (
+                  <FieldRow label="Project Date" testId="field-project-date">
+                    <span className="font-medium">{deal.projectDate}</span>
+                  </FieldRow>
+                )}
+                {deal.startedOn && (
+                  <FieldRow label="Started" testId="field-started-on">
+                    <span className="font-medium">{format(parseDateOnly(deal.startedOn), "MMM d, yyyy")}</span>
+                  </FieldRow>
+                )}
+                {deal.lastContactOn && (
+                  <FieldRow label="Last Contact" testId="field-last-contact">
+                    <span className="font-medium">{format(parseDateOnly(deal.lastContactOn), "MMM d, yyyy")}</span>
+                  </FieldRow>
+                )}
+                {deal.wonOn && (
+                  <FieldRow label="Won" testId="field-won-on">
+                    <span className="font-medium">{format(parseDateOnly(deal.wonOn), "MMM d, yyyy")}</span>
                   </FieldRow>
                 )}
 

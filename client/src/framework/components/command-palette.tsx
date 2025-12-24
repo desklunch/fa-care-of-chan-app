@@ -13,7 +13,7 @@ import {
 import { useLayout } from "../hooks/layout-context";
 import type { NavItem, NavSection } from "../types/layout";
 import type { VenueWithRelations, VenueCollectionWithCreator, Deal } from "@shared/schema";
-import { MapPin, FolderOpen, Ticket } from "lucide-react";
+import { MapPin, FolderOpen, Tickets } from "lucide-react";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -224,7 +224,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   className="cursor-pointer"
                   data-testid={`command-item-deal-${deal.id}`}
                 >
-                  <Ticket className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <Tickets className="mr-2 h-4 w-4 text-muted-foreground" />
                   <div className="flex flex-col">
                     <span>{deal.displayName}</span>
                     {deal.status && (
