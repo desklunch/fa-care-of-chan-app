@@ -260,14 +260,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 150,
-      maxWidth: 180,
+      minWidth: 100,
+      maxWidth: 100,
       editable: true,
       cellEditor: "agSelectCellEditor",
+      cellEditorPopup: true,
+
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
-          values: ["", ...users.map((u) => getUserFullName(u))],
+          values: ["", ...users.map((u) => getInitials(getUserFullName(u)))],
         };
       },
       valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
@@ -275,10 +277,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!ownerId) return "";
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
-        return getUserFullName(user);
+        return getInitials(getUserFullName(user));
       },
       cellRenderer: (params: { value: string }) => {
-        return <div>{getInitials(params.value)}</div>;
+        return <div>{params.value}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
         if (params.newValue === "") {
@@ -287,7 +289,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           return true;
         }
         const users = params.context?.users || [];
-        const user = users.find((u) => getUserFullName(u) === params.newValue);
+        const user = users.find((u) => getInitials(getUserFullName(u)) === params.newValue);
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
@@ -295,7 +297,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         }
         return false;
       },
-      cellEditorPopup: false,
     },
   },
   {
@@ -329,8 +330,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "projectDate",
     category: "Dates",
     colDef: {
+      flex: 1.5,
       width: 150,
-      minWidth: 120,
+      minWidth: 130,
       editable: true,
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
