@@ -391,10 +391,28 @@ function EditableTitle({
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={handleSave}
-          className="text-3xl font-bold w-full bg-transparent border-b-2 border-primary outline-none"
+          className="text-3xl font-bold flex-1 bg-transparent border-b-2 border-primary outline-none"
           data-testid={`input-${testId}`}
         />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setEditValue(value);
+            setIsEditing(false);
+          }}
+          data-testid={`button-cancel-${testId}`}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleSave}
+          data-testid={`button-save-${testId}`}
+        >
+          <Check className="h-5 w-5" />
+        </Button>
       </div>
     );
   }
