@@ -61,6 +61,7 @@ interface EditableFieldRowProps {
   displayValue?: React.ReactNode;
   placeholder?: string;
   disabled?: boolean;
+  valueClassName?: string;
 }
 
 function EditableFieldRow({
@@ -75,6 +76,7 @@ function EditableFieldRow({
   displayValue,
   placeholder = "Not set",
   disabled = false,
+  valueClassName,
 }: EditableFieldRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
@@ -147,7 +149,7 @@ function EditableFieldRow({
               onKeyDown={(e) => {
                 if (e.key === "Escape") handleCancel();
               }}
-              className="min-h-[100px] text-sm"
+              className="min-h-[100px] text-base"
               data-testid={`input-${field}`}
             />
             <div className="flex gap-2 justify-end">
@@ -293,7 +295,7 @@ function EditableFieldRow({
             <div className="flex-1">
               {displayValue !== undefined ? displayValue : (
                 value ? (
-                  <span className="whitespace-pre-wrap">{value}</span>
+                  <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
                 ) : (
                   <span className="text-muted-foreground">{placeholder}</span>
                 )
@@ -500,19 +502,17 @@ export default function DealDetail() {
         <Tabs defaultValue="overview" className="w-full">
           <div className="sticky top-0 bg-background z-10">
             <div className="p-4 md:p-6 pb-2 md:pb-2">
-              <div className="flex flex-col gap-3 ">
+              <div className="flex flex-col gap-2 ">
+                <span className="text-sm font-semibold">
+                  {deal.client?.name}
+                </span>
 
-                <div>
-                  <span className="text-sm font-semibold">
-                    {deal.client?.name}
-                  </span>
-                  <h1
-                    className="text-2xl font-bold"
-                    data-testid="text-deal-name"
-                  >
-                    {deal.displayName}
-                  </h1>
-                </div>
+                <h1
+                  className="text-3xl font-bold"
+                  data-testid="text-deal-name"
+                >
+                  {deal.displayName}
+                </h1>
   
 
               </div>
@@ -651,6 +651,7 @@ export default function DealDetail() {
                   type="textarea"
                   onSave={handleFieldSave}
                   placeholder="Enter concept description"
+                  valueClassName="text-base"
                 />
 
                 <EditableFieldRow
@@ -745,6 +746,7 @@ export default function DealDetail() {
                   type="textarea"
                   onSave={handleFieldSave}
                   placeholder="Enter next steps"
+                  valueClassName="text-base"
                 />
               </CardContent>
             </Card>
