@@ -94,7 +94,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
 
   "concept",
   "services",
-  "locations",
+  "locationsText",
   "notes",
   "budgetNotes",
 ];
@@ -478,32 +478,34 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-
-
   {
-    id: "locations",
+    id: "locationsText",
     headerName: "Locations",
-    field: "locations",
+    field: "locationsText",
     category: "Basic Info",
     colDef: {
-      flex: 1,
-      minWidth: 250,
+      flex: 3,
+      minWidth: 300,
+      editable: true,
+      sortable: false,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 10000,
+        rows: 10,
+        cols: 60,
+      },
       wrapText: true,
       autoHeight: true,
-      cellRenderer: (params: { data: DealWithRelations }) => {
-        const locations = params.data?.locations as Array<{
-          displayName: string;
-        }> | null;
-        if (!locations || locations.length === 0) return null;
-        return (
-          <div className="flex flex-wrap gap-1 pt-2">
-            {locations.map((loc, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {loc.displayName}
-              </Badge>
-            ))}
-          </div>
-        );
+      cellStyle: {
+        whiteSpace: "pre-wrap",
+        lineHeight: "1.4",
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+        paddingTop: "8px",
+        paddingBottom: "8px",
       },
     },
   },
