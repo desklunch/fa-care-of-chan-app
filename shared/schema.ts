@@ -2302,6 +2302,7 @@ export const brands = pgTable(
     externalId: integer("external_id"),
     name: varchar("name", { length: 255 }).notNull().unique(),
     industry: varchar("industry", { length: 100 }),
+    notes: text("notes"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -2324,6 +2325,7 @@ export const insertBrandSchema = createInsertSchema(brands).omit({
 }).extend({
   name: z.string().min(1, "Name is required").max(255),
   industry: z.string().max(100).nullish(),
+  notes: z.string().nullish(),
   externalId: z.number().int().optional(),
 });
 

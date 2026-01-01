@@ -6,6 +6,7 @@ import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -48,6 +49,7 @@ import { z } from "zod";
 const brandFormSchema = insertBrandSchema.extend({
   name: z.string().min(1, "Brand name is required").max(255),
   industry: z.string().max(100).optional(),
+  notes: z.string().optional(),
 });
 
 type BrandFormValues = z.infer<typeof brandFormSchema>;
@@ -69,10 +71,12 @@ function BrandFormDialog({
     defaultValues: {
       name: brand?.name || "",
       industry: brand?.industry || "",
+      notes: brand?.notes || "",
     },
     values: brand ? {
       name: brand.name,
       industry: brand.industry || "",
+      notes: brand.notes || "",
     } : undefined,
   });
 
@@ -123,9 +127,11 @@ function BrandFormDialog({
 
   const onSubmit = (data: BrandFormValues) => {
     const trimmedIndustry = data.industry?.trim();
+    const trimmedNotes = data.notes?.trim();
     const submitData: CreateBrand = {
       name: data.name,
       industry: trimmedIndustry || null,
+      notes: trimmedNotes || null,
     };
     if (isEdit) {
       updateMutation.mutate(submitData);
@@ -174,6 +180,27 @@ function BrandFormDialog({
                     <Input
                       placeholder="e.g., Technology, Hospitality, Retail"
                       data-testid="input-brand-industry"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Additional notes about this brand..."
+                      className="resize-none"
+                      rows={3}
+                      data-testid="input-brand-notes"
                       {...field}
                       value={field.value || ""}
                     />
