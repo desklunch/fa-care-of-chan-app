@@ -651,6 +651,7 @@ export const deals = pgTable(
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("Prospecting"),
     clientId: varchar("client_id").notNull(),
+    brandId: varchar("brand_id").references(() => brands.id),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
     services: text("services").array().$type<DealService[]>().default([]),
