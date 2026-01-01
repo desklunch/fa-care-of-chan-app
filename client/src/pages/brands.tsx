@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageLayout } from "@/framework";
+import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,9 +41,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertBrandSchema, type Brand, type CreateBrand } from "@shared/schema";
-import { CircleFadingPlus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
-import { AgGridReact } from "ag-grid-react";
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import { CircleFadingPlus, MoreHorizontal, Pencil, Trash2, Loader2, Factory } from "lucide-react";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { z } from "zod";
 
@@ -53,6 +53,165 @@ const brandFormSchema = insertBrandSchema.extend({
 });
 
 type BrandFormValues = z.infer<typeof brandFormSchema>;
+
+const DEFAULT_VISIBLE_COLUMNS = ["name", "industry", "notes", "createdAt", "actions"];
+
+interface BrandActionsContext {
+  onEdit: (brand: Brand) => void;
+  onDelete: (brand: Brand) => void;
+}
+
+const brandColumns: ColumnConfig<Brand>[] = [
+  {
+    id: "id",
+    headerName: "ID",
+    field: "id",
+    category: "Details",
+    colDef: {
+      width: 120,
+    },
+  },
+  {
+    id: "externalId",
+    headerName: "External ID",
+    field: "externalId",
+    category: "Details",
+    colDef: {
+      width: 100,
+    },
+  },
+  {
+    id: "name",
+    headerName: "Name",
+    field: "name",
+    category: "Basic Info",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+    },
+  },
+  {
+    id: "industry",
+    headerName: "Industry",
+    field: "industry",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 150,
+    },
+  },
+  {
+    id: "notes",
+    headerName: "Notes",
+    field: "notes",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 200,
+    },
+  },
+  {
+    id: "createdAt",
+    headerName: "Created",
+    field: "createdAt",
+    category: "Details",
+    colDef: {
+      width: 130,
+      valueFormatter: (params: { value: string | Date | null }) => {
+        if (!params.value) return "";
+        return format(new Date(params.value), "MMM d, yyyy");
+      },
+    },
+  },
+  {
+    id: "updatedAt",
+    headerName: "Updated",
+    field: "updatedAt",
+    category: "Details",
+    colDef: {
+      width: 130,
+      valueFormatter: (params: { value: string | Date | null }) => {
+        if (!params.value) return "";
+        return format(new Date(params.value), "MMM d, yyyy");
+      },
+    },
+  },
+  {
+    id: "actions",
+    headerName: "",
+    category: "Actions",
+    toggleable: false,
+    colDef: {
+      width: 60,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: { data: Brand; context: BrandActionsContext }) => {
+        const brand = params.data;
+        const context = params.context;
+        if (!brand || !context) return null;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid={`button-brand-actions-${brand.id}`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => context.onEdit(brand)}
+                data-testid={`button-edit-brand-${brand.id}`}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => context.onDelete(brand)}
+                className="text-destructive focus:text-destructive"
+                data-testid={`button-delete-brand-${brand.id}`}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  },
+];
+
+const brandFilters: FilterConfig<Brand>[] = [
+  {
+    id: "industry",
+    label: "Industry",
+    icon: Factory,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const industrySet = new Map<string, string>();
+        data.forEach((brand) => {
+          if (brand.industry) {
+            if (!industrySet.has(brand.industry)) {
+              industrySet.set(brand.industry, brand.industry);
+            }
+          }
+        });
+        return Array.from(industrySet.entries())
+          .map(([id, label]) => ({ id, label }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+      },
+    },
+    matchFn: (brand, selectedValues) => {
+      if (!brand.industry) return false;
+      return selectedValues.includes(brand.industry);
+    },
+  },
+];
 
 function BrandFormDialog({
   open,
@@ -235,48 +394,6 @@ function BrandFormDialog({
   );
 }
 
-function ActionsCell({
-  data,
-  onEdit,
-  onDelete,
-}: ICellRendererParams<Brand> & {
-  onEdit: (brand: Brand) => void;
-  onDelete: (brand: Brand) => void;
-}) {
-  if (!data) return null;
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          data-testid={`button-brand-actions-${data.id}`}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => onEdit(data)}
-          data-testid={`button-edit-brand-${data.id}`}
-        >
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => onDelete(data)}
-          className="text-destructive focus:text-destructive"
-          data-testid={`button-delete-brand-${data.id}`}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
 export default function Brands() {
   usePageTitle("Brands");
   const { toast } = useToast();
@@ -284,10 +401,6 @@ export default function Brands() {
   const [editingBrand, setEditingBrand] = useState<Brand | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState<Brand | undefined>();
-
-  const { data: brands = [], isLoading } = useQuery<Brand[]>({
-    queryKey: ["/api/brands"],
-  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -328,45 +441,9 @@ export default function Brands() {
     }
   };
 
-  const columnDefs: ColDef<Brand>[] = [
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 2,
-      minWidth: 200,
-      filter: "agTextColumnFilter",
-    },
-    {
-      field: "industry",
-      headerName: "Industry",
-      flex: 1,
-      minWidth: 150,
-      filter: "agTextColumnFilter",
-    },
-    {
-      field: "createdAt",
-      headerName: "Created",
-      width: 130,
-      valueFormatter: (params) => {
-        if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
-      },
-      sort: "desc",
-    },
-    {
-      headerName: "",
-      width: 60,
-      cellRenderer: (params: ICellRendererParams<Brand>) => (
-        <ActionsCell {...params} onEdit={handleEdit} onDelete={handleDelete} />
-      ),
-      sortable: false,
-      filter: false,
-    },
-  ];
-
-  const defaultColDef: ColDef = {
-    sortable: true,
-    resizable: true,
+  const gridContext: BrandActionsContext = {
+    onEdit: handleEdit,
+    onDelete: handleDelete,
   };
 
   return (
@@ -381,18 +458,18 @@ export default function Brands() {
         icon: CircleFadingPlus,
       }}
     >
-      <div className="h-[calc(100vh-180px)] w-full ag-theme-alpine">
-        <AgGridReact<Brand>
-          rowData={brands}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          loading={isLoading}
-          getRowId={(params) => params.data.id}
-          animateRows
-          suppressRowClickSelection
-          domLayout="normal"
-        />
-      </div>
+      <DataGridPage<Brand, BrandActionsContext>
+        queryKey="/api/brands"
+        columns={brandColumns}
+        defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
+        searchFields={["name", "industry", "notes"]}
+        searchPlaceholder="Search brands..."
+        filters={brandFilters}
+        getRowId={(brand) => brand.id}
+        emptyMessage="No brands found"
+        emptyDescription="Start building your brand directory by adding a brand."
+        context={gridContext}
+      />
 
       <BrandFormDialog
         open={dialogOpen}
