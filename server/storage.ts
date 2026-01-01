@@ -3558,6 +3558,7 @@ export class DatabaseStorage implements IStorage {
         displayName: deals.displayName,
         status: deals.status,
         clientId: deals.clientId,
+        brandId: deals.brandId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
         budgetNotes: deals.budgetNotes,
@@ -3589,6 +3590,11 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industry: clients.industry,
         },
+        brand: {
+          id: brands.id,
+          name: brands.name,
+          industry: brands.industry,
+        },
         owner: {
           id: ownerUsers.id,
           firstName: ownerUsers.firstName,
@@ -3599,6 +3605,7 @@ export class DatabaseStorage implements IStorage {
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id));
 
     if (options?.status && options.status.length > 0) {
@@ -3619,6 +3626,7 @@ export class DatabaseStorage implements IStorage {
         displayName: deals.displayName,
         status: deals.status,
         clientId: deals.clientId,
+        brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
@@ -3650,6 +3658,11 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industry: clients.industry,
         },
+        brand: {
+          id: brands.id,
+          name: brands.name,
+          industry: brands.industry,
+        },
         owner: {
           id: ownerUsers.id,
           firstName: ownerUsers.firstName,
@@ -3667,6 +3680,7 @@ export class DatabaseStorage implements IStorage {
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
       .where(eq(deals.id, id));
@@ -3683,6 +3697,7 @@ export class DatabaseStorage implements IStorage {
         displayName: deals.displayName,
         status: deals.status,
         clientId: deals.clientId,
+        brandId: deals.brandId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
         budgetNotes: deals.budgetNotes,
@@ -3713,6 +3728,11 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industry: clients.industry,
         },
+        brand: {
+          id: brands.id,
+          name: brands.name,
+          industry: brands.industry,
+        },
         owner: {
           id: ownerUsers.id,
           firstName: ownerUsers.firstName,
@@ -3723,6 +3743,7 @@ export class DatabaseStorage implements IStorage {
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .where(eq(deals.clientId, clientId))
       .orderBy(desc(deals.createdAt));
