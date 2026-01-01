@@ -44,6 +44,7 @@ import type {
   DealService,
   User,
   Client,
+  Brand,
 } from "@shared/schema";
 import { dealStatuses, dealServices } from "@shared/schema";
 
@@ -475,6 +476,10 @@ export default function DealDetail() {
     queryKey: ["/api/clients"],
   });
 
+  const { data: brands = [] } = useQuery<Pick<Brand, "id" | "name" | "industry">[]>({
+    queryKey: ["/api/brands"],
+  });
+
   usePageTitle(deal?.displayName || "Deal");
 
   const updateMutation = useMutation({
@@ -497,7 +502,7 @@ export default function DealDetail() {
 
   const handleFieldSave = (field: string, value: unknown) => {
     let processedValue = value;
-    if (value === "" && (field === "ownerId" || field === "clientId" || field === "primaryContactId")) {
+    if (value === "" && (field === "ownerId" || field === "clientId" || field === "brandId" || field === "primaryContactId")) {
       processedValue = null;
     }
     updateMutation.mutate({ [field]: processedValue });
@@ -719,6 +724,39 @@ export default function DealDetail() {
                   }
                   placeholder="Select client"
                 />
+
+                <EditableFieldRow
+                  label="Brand"
+                  value={deal.brandId || ""}
+                  field="brandId"
+                  testId="field-brand"
+                  type="select"
+                  options={brands.map((b) => ({ value: b.id, label: b.name }))}
+                  onSave={handleFieldSave}
+                  displayValue={
+                    deal.brand ? (
+                      <Link href={`/brands`}>
+                        <span
+                          className="text-primary hover:underline cursor-pointer"
+                          data-testid="link-deal-brand"
+                        >
+                          {deal.brand.name}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground">No brand assigned</span>
+                    )
+                  }
+                  placeholder="Select brand"
+                />
+
+                <FieldRow label="Industry" testId="field-brand-industry">
+                  {deal.brand?.industry ? (
+                    <span data-testid="text-brand-industry">{deal.brand.industry}</span>
+                  ) : (
+                    <span className="text-muted-foreground">No industry</span>
+                  )}
+                </FieldRow>
 
                 <FieldRow label="Primary Contact" testId="field-primary-contact">
                   {deal.primaryContact ? (
