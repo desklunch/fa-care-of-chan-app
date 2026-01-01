@@ -356,6 +356,32 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
+  {
+    id: "brand",
+    headerName: "Brand",
+    field: "brand",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 160,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        return params.data?.brand?.name || "";
+      },
+    },
+  },
+  {
+    id: "brandIndustry",
+    headerName: "Industry",
+    field: "brand",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 140,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        return params.data?.brand?.industry || "";
+      },
+    },
+  },
 
   {
     id: "startedOn",
