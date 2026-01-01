@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
+import { BrandSearch } from "@/components/brand-search";
 import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -42,6 +43,7 @@ const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
   status: z.enum(dealStatuses).default("Prospecting"),
   clientId: z.string().min(1, "Client is required"),
+  brandId: z.string().optional().nullable().transform(val => val || null),
   primaryContactId: z.string().optional().transform(val => val || undefined),
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
@@ -67,6 +69,7 @@ export default function DealForm() {
   const { toast } = useToast();
   const isEditing = Boolean(id);
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<{ id: string; name: string } | null>(null);
   const [initialClientId, setInitialClientId] = useState<string | null>(null);
 
   const { data: deal, isLoading: isLoadingDeal } = useQuery<DealWithRelations>({
@@ -86,6 +89,7 @@ export default function DealForm() {
       displayName: "",
       status: "Prospecting",
       clientId: "",
+      brandId: null,
       primaryContactId: "",
       locations: [],
       eventSchedule: [],
@@ -117,6 +121,7 @@ export default function DealForm() {
         displayName: deal.displayName,
         status: deal.status as DealStatus,
         clientId: deal.clientId || "",
+        brandId: deal.brandId || null,
         primaryContactId: deal.primaryContactId || "",
         locations: (deal.locations as DealLocation[]) || [],
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
@@ -135,6 +140,9 @@ export default function DealForm() {
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
+      }
+      if (deal.brand) {
+        setSelectedBrand({ id: deal.brand.id, name: deal.brand.name });
       }
       setInitialClientId(deal.clientId || null);
     }
@@ -283,6 +291,35 @@ export default function DealForm() {
                           }}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <FormControl>
+                        <BrandSearch
+                          selectedBrandId={field.value || null}
+                          selectedBrandName={selectedBrand?.name || null}
+                          onSelect={(brand) => {
+                            if (brand) {
+                              field.onChange(brand.id);
+                              setSelectedBrand(brand);
+                            } else {
+                              field.onChange(null);
+                              setSelectedBrand(null);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The brand associated with this deal (optional).
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
