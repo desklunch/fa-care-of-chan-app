@@ -91,9 +91,10 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "owner",
   "status",
   "projectDate",
-  "brand",
+  "client",
   "concept",
   "brandIndustry",
+  "primaryContact",
   "services",
   "locationsText",
   "notes",
@@ -357,21 +358,23 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         return params.data?.client?.name || "";
       },
-    },
-  },
-  {
-    id: "brand",
-    headerName: "Brand",
-    field: "brand",
-    category: "Basic Info",
-    colDef: {
-      flex: 1.5,
-      minWidth: 160,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.brand?.name || "";
+      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
+        const client = params.data?.client;
+        if (!client) return null;
+        return (
+          <Link
+            href={`/clients/${client.id}`}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            className="text-primary hover:underline font-medium"
+            data-testid={`link-client-${client.id}`}
+          >
+            {client.name}
+          </Link>
+        );
       },
     },
   },
+
 
 
   {
@@ -499,6 +502,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 180,
+      autoHeight: true,
+
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         const contact = params.data?.primaryContact;
         if (!contact) return "";
@@ -509,12 +514,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!contact) return null;
         const fullName = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
         return (
-          <div className="flex flex-col py-2">
-            <span className="font-medium">{fullName}</span>
+          <span className="flex flex-col py-[16px] gap-0.5">
+            <Link
+              href={`/contacts/${contact.id}`}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="text-primary hover:underline font-medium text-sm"
+              data-testid={`link-contact-${contact.id}`}
+            >
+              {fullName}
+            </Link>
             {contact.jobTitle && (
-              <span className="text-xs text-muted-foreground">{contact.jobTitle}</span>
+              <span className="text-xs text-muted-foreground truncate">{contact.jobTitle}</span>
             )}
-          </div>
+          </span>
         );
       },
     },
