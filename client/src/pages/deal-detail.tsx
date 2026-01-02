@@ -472,7 +472,7 @@ export default function DealDetail() {
     queryKey: ["/api/users"],
   });
 
-  const { data: clients = [] } = useQuery<Pick<Client, "id" | "name">[]>({
+  const { data: clients = [] } = useQuery<Pick<Client, "id" | "name" | "industry">[]>({
     queryKey: ["/api/clients"],
   });
 
@@ -725,7 +725,7 @@ export default function DealDetail() {
                   placeholder="Select client"
                 />
 
-                <EditableFieldRow
+                {/* <EditableFieldRow
                   label="Brand"
                   value={deal.brandId || ""}
                   field="brandId"
@@ -748,11 +748,11 @@ export default function DealDetail() {
                     )
                   }
                   placeholder="Select brand"
-                />
+                /> */}
 
-                <FieldRow label="Industry" testId="field-brand-industry">
-                  {deal.brand?.industry ? (
-                    <span data-testid="text-brand-industry">{deal.brand.industry}</span>
+                <FieldRow label="Industry" testId="field-client-industry">
+                  {deal.client?.industry ? (
+                    <span data-testid="text-client-industry">{deal.client.industry}</span>
                   ) : (
                     <span className="text-muted-foreground">No industry</span>
                   )}

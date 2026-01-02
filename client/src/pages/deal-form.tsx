@@ -296,7 +296,7 @@ export default function DealForm() {
                   )}
                 />
 
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="brandId"
                   render={({ field }) => (
@@ -323,7 +323,7 @@ export default function DealForm() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 {watchedClientId && (
                   <FormField

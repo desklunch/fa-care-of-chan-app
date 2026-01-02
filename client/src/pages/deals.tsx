@@ -97,7 +97,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "lastContactOn",
    "proposalSentOn",
   "concept",
-  "brandIndustry",
+  "clientIndustry",
   "primaryContact",
   "services",
   "locationsText",
@@ -396,8 +396,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-sm">
-            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -421,8 +420,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-sm">
-            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -446,8 +444,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-sm">
-            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -471,8 +468,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-sm">
-            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -520,15 +516,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
-    id: "brandIndustry",
+    id: "clientIndustry",
     headerName: "Industry",
-    field: "brand",
+    field: "client",
     category: "Basic Info",
     colDef: {
       flex: 1,
       minWidth: 140,
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.brand?.industry || "";
+        return params.data?.client?.industry || "";
       },
     },
   },
