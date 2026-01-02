@@ -14,7 +14,7 @@ import type {
 import { dealStatuses, dealServices } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { formatDateOnly } from "@/lib/date";
-import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight } from "lucide-react";
+import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight, Calendar } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,10 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "status",
   "projectDate",
   "client",
+  "startedOn",
+  "wonOn",
+  "lastContactOn",
+   "proposalSentOn",
   "concept",
   "brandIndustry",
   "primaryContact",
@@ -334,8 +338,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Dates",
     colDef: {
       flex: 1.5,
-      width: 150,
-      minWidth: 130,
+      minWidth: 150,
       editable: true,
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
@@ -365,7 +368,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           <Link
             href={`/clients/${client.id}`}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            className="text-primary hover:underline font-medium"
+            className="text-foreground hover:underline truncate"
             data-testid={`link-client-${client.id}`}
           >
             {client.name}
@@ -390,8 +393,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
       },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-sm">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+          </span>
+        );
+      },
       comparator: createDateComparator((data) => data?.startedOn),
-      
     },
   },
   {
@@ -406,6 +417,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-sm">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+          </span>
+        );
       },
       comparator: createDateComparator((data) => data?.wonOn),
     },
@@ -423,6 +443,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
       },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-sm">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+          </span>
+        );
+      },
       comparator: createDateComparator((data) => data?.lastContactOn),
     },
   },
@@ -438,6 +467,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-sm">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+          </span>
+        );
       },
       comparator: createDateComparator((data) => data?.proposalSentOn),
     },
@@ -518,7 +556,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
             <Link
               href={`/contacts/${contact.id}`}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="text-primary hover:underline font-medium text-sm"
+              className="text-foreground hover:underline  text-sm"
               data-testid={`link-contact-${contact.id}`}
             >
               {fullName}

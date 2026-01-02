@@ -13,7 +13,7 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   chromeBackgroundColor: "hsl(var(--secondary))",
   pinnedColumnBorder: false,
   cellHorizontalPaddingScale: 0.75,
-  headerFontSize: 12,
+  headerFontSize: 13,
   dragHandleColor: "hsl(var(--muted-foreground))",
 
 });
