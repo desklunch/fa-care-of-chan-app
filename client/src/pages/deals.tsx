@@ -91,7 +91,9 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "owner",
   "status",
   "projectDate",
+  "brand",
   "concept",
+  "brandIndustry",
   "services",
   "locationsText",
   "notes",
@@ -226,6 +228,7 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
 ];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
+
   {
     id: "displayName",
     headerName: "Deal",
@@ -369,19 +372,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "brandIndustry",
-    headerName: "Industry",
-    field: "brand",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 140,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.brand?.industry || "";
-      },
-    },
-  },
+
 
   {
     id: "startedOn",
@@ -487,7 +478,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-
+  {
+    id: "brandIndustry",
+    headerName: "Industry",
+    field: "brand",
+    category: "Basic Info",
+    colDef: {
+      flex: 1,
+      minWidth: 140,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        return params.data?.brand?.industry || "";
+      },
+    },
+  },
   {
     id: "services",
     headerName: "Services",
@@ -520,7 +523,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 3,
-      minWidth: 300,
+      minWidth: 220,
       editable: true,
       sortable: false,
       cellEditor: "agLargeTextCellEditor",
