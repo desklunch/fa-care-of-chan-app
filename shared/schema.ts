@@ -1554,7 +1554,7 @@ export type DealWithRelations = Deal & {
   client?: Pick<Client, "id" | "name" | "industry"> | null;
   brand?: Pick<Brand, "id" | "name" | "industry"> | null;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
-  primaryContact?: Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers"> | null;
+  primaryContact?: Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers" | "jobTitle"> | null;
 };
 
 // Deal location validation schema

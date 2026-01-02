@@ -3601,12 +3601,21 @@ export class DatabaseStorage implements IStorage {
           lastName: ownerUsers.lastName,
           profileImageUrl: ownerUsers.profileImageUrl,
         },
+        primaryContact: {
+          id: contacts.id,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          emailAddresses: contacts.emailAddresses,
+          phoneNumbers: contacts.phoneNumbers,
+          jobTitle: contacts.jobTitle,
+        },
       })
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(brands, eq(deals.brandId, brands.id))
-      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id));
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
+      .leftJoin(contacts, eq(deals.primaryContactId, contacts.id));
 
     if (options?.status && options.status.length > 0) {
       query = query.where(inArray(deals.status, options.status)) as any;
@@ -3675,6 +3684,7 @@ export class DatabaseStorage implements IStorage {
           lastName: contacts.lastName,
           emailAddresses: contacts.emailAddresses,
           phoneNumbers: contacts.phoneNumbers,
+          jobTitle: contacts.jobTitle,
         },
       })
       .from(deals)

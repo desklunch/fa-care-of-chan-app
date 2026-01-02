@@ -492,6 +492,34 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
+    id: "primaryContact",
+    headerName: "Primary Contact",
+    field: "primaryContact",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 180,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        const contact = params.data?.primaryContact;
+        if (!contact) return "";
+        return [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
+        const contact = params.data?.primaryContact;
+        if (!contact) return null;
+        const fullName = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+        return (
+          <div className="flex flex-col py-2">
+            <span className="font-medium">{fullName}</span>
+            {contact.jobTitle && (
+              <span className="text-xs text-muted-foreground">{contact.jobTitle}</span>
+            )}
+          </div>
+        );
+      },
+    },
+  },
+  {
     id: "services",
     headerName: "Services",
     field: "services",
