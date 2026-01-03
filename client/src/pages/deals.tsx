@@ -111,9 +111,9 @@ const DEFAULT_VISIBLE_COLUMNS = [
 const STATUS_SORT_ORDER: Record<string, number> = {
   Prospecting: 1,
   "Warm Lead": 2,
-  Proposal: 3,
+  "Proposal": 3,
   "Feedback": 4,
-  "In Contracting": 5,
+  "Contracting": 5,
   "In Progress": 6,
   "Final Invoicing": 7,
   Complete: 8,

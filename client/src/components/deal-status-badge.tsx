@@ -9,9 +9,9 @@ interface DealStatusBadgeProps {
 const statusStyleMap: Record<string, string> = {
   "Prospecting": "deal-status-prospecting",
   "Warm Lead": "deal-status-warm-lead",
-  "Proposal Phase": "deal-status-proposal",
+  "Proposal": "deal-status-proposal",
   "Feedback": "deal-status-waiting",
-  "Contracting Phase": "deal-status-contracting",
+  "Contracting": "deal-status-contracting",
   "In Progress": "deal-status-in-progress",
   "Final Invoicing": "deal-status-invoicing",
   "Complete": "deal-status-complete",

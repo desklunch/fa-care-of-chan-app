@@ -536,9 +536,9 @@ export const vendorUpdateTokens = pgTable(
 // Deal status enum values
 export const dealStatuses = [
   "Prospecting",
-  "Proposal Phase",
+  "Proposal",
   "Feedback",
-  "Contracting Phase",
+  "Contracting",
   "In Progress",
   "Final Invoicing",
   "Complete",
