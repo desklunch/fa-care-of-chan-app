@@ -170,14 +170,10 @@ function useLayoutConfig() {
             href: "/clients",
             icon: Building2,
           },
-          {
-            name: "Brands",
-            href: "/brands",
-            icon: Tag,
-          },
+
           {
             name: "Contacts",
-            href: "/clients/contacts",
+            href: "/contacts",
             icon: Contact,
           },
         ],

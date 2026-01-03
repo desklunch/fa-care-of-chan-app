@@ -16,29 +16,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, DealWithRelations, DealStatus, Contact } from "@shared/schema";
-import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Plus, Users } from "lucide-react";
+import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Users, UserPlus, X } from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
 
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
-  "Inquiry": { variant: "outline" },
-  "Discovery": { variant: "secondary" },
-  "Internal Review": { variant: "secondary", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  "Contracting": { variant: "secondary", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  "Won": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
-  "Lost": { variant: "destructive" },
+  "Prospecting": { variant: "outline" },
+  "Warm Lead": { variant: "secondary" },
+  "Proposal Phase": { variant: "secondary", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  "Waiting for Feedback": { variant: "secondary" },
+  "Contracting Phase": { variant: "secondary", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  "In Progress": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  "Final Invoicing": { variant: "default" },
+  "Complete": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  "No-Go": { variant: "destructive" },
   "Canceled": { variant: "outline", className: "opacity-50" },
-  "Declined": { variant: "outline", className: "opacity-50" },
 };
+
+function FieldRow({
+  label,
+  children,
+  testId,
+}: {
+  label: string;
+  children: React.ReactNode;
+  testId?: string;
+}) {
+  return (
+    <div
+      className="flex py-4 border-b border-border/50 last:border-b-0"
+      data-testid={testId}
+    >
+      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
+      <div className="flex-1 text-sm">{children}</div>
+    </div>
+  );
+}
 
 export default function ClientDetail() {
   const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showLinkContactDialog, setShowLinkContactDialog] = useState(false);
 
   const { data: client, isLoading } = useQuery<Client>({
     queryKey: ["/api/clients", params.id],
@@ -62,6 +91,7 @@ export default function ClientDetail() {
 
   const handleLinkContact = (contact: Contact) => {
     setLocalLinkedContacts(prev => [...prev, contact]);
+    setShowLinkContactDialog(false);
   };
 
   const handleUnlinkContact = (contactId: string) => {
@@ -144,61 +174,41 @@ export default function ClientDetail() {
         },
       ]}
     >
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-4xl space-y-6 p-4 md:p-6">
+        <h1 className="text-3xl font-bold" data-testid="text-client-name">
+          {client.name}
+        </h1>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <CardTitle data-testid="text-client-name">{client.name}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              {client.industry && (
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Industry</p>
-                    <p data-testid="text-client-industry">{client.industry}</p>
-                  </div>
+          <CardContent className="pt-6">
+            <FieldRow label="Industry" testId="field-client-industry">
+              {client.industry ? (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span>{client.industry}</span>
                 </div>
+              ) : (
+                <span className="text-muted-foreground">Not set</span>
               )}
-
-              {client.website && (
-                <div className="flex items-start gap-3">
-                  <Globe className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Website</p>
-                    <a
-                      href={client.website.startsWith("http") ? client.website : `https://${client.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                      data-testid="link-client-website"
-                    >
-                      {client.website}
-                    </a>
-                  </div>
+            </FieldRow>
+            <FieldRow label="Website" testId="field-client-website">
+              {client.website ? (
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <a
+                    href={client.website.startsWith("http") ? client.website : `https://${client.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                    data-testid="link-client-website"
+                  >
+                    {client.website}
+                  </a>
                 </div>
+              ) : (
+                <span className="text-muted-foreground">Not set</span>
               )}
-            </div>
-
-            <div className="border-t pt-4">
-              <div className="flex gap-6 text-sm text-muted-foreground">
-                {client.externalId && (
-                  <span data-testid="text-client-external-id">
-                    External ID: <span className="font-mono">{client.externalId}</span>
-                  </span>
-                )}
-                {client.createdAt && (
-                  <span data-testid="text-client-created">
-                    Created {format(new Date(client.createdAt), "MMM d, yyyy")}
-                  </span>
-                )}
-                {client.updatedAt && (
-                  <span data-testid="text-client-updated">
-                    Updated {format(new Date(client.updatedAt), "MMM d, yyyy")}
-                  </span>
-                )}
-              </div>
-            </div>
+            </FieldRow>
           </CardContent>
         </Card>
 
@@ -213,19 +223,56 @@ export default function ClientDetail() {
                 {localLinkedContacts.length} contact{localLinkedContacts.length !== 1 ? "s" : ""} linked to this client
               </CardDescription>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLinkContactDialog(true)}
+              data-testid="button-link-contact"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Link Contact
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoadingContacts ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
+            ) : localLinkedContacts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No contacts linked yet</p>
+                <p className="text-sm">Click "Link Contact" to add contacts to this client.</p>
+              </div>
             ) : (
-              <ContactLinkSearch
-                clientId={params.id!}
-                linkedContacts={localLinkedContacts}
-                onLink={handleLinkContact}
-                onUnlink={handleUnlinkContact}
-              />
+              <div className="space-y-2">
+                {localLinkedContacts.map((contact) => (
+                  <div
+                    key={contact.id}
+                    className="flex items-center justify-between p-3 rounded-md border"
+                    data-testid={`contact-item-${contact.id}`}
+                  >
+                    <Link href={`/contacts/${contact.id}`}>
+                      <div className="flex flex-col cursor-pointer hover:underline">
+                        <span className="font-medium text-primary">
+                          {[contact.firstName, contact.lastName].filter(Boolean).join(" ")}
+                        </span>
+                        {contact.jobTitle && (
+                          <span className="text-sm text-muted-foreground">{contact.jobTitle}</span>
+                        )}
+                      </div>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleUnlinkContact(contact.id)}
+                      data-testid={`button-unlink-contact-${contact.id}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -234,19 +281,13 @@ export default function ClientDetail() {
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Handshake className="h-5 w-5" />
                 Deals
               </CardTitle>
               <CardDescription>
                 {deals.length} deal{deals.length !== 1 ? "s" : ""} associated with this client
               </CardDescription>
             </div>
-            <Link href={`/deals/new?clientId=${params.id}`}>
-              <Button size="sm" data-testid="button-add-deal">
-                <Plus className="h-4 w-4 mr-1" />
-                Add Deal
-              </Button>
-            </Link>
+
           </CardHeader>
           <CardContent>
             {isLoadingDeals ? (
@@ -286,6 +327,21 @@ export default function ClientDetail() {
         </Card>
 
       </div>
+
+      <Dialog open={showLinkContactDialog} onOpenChange={setShowLinkContactDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Link Contact</DialogTitle>
+          </DialogHeader>
+          <ContactLinkSearch
+            clientId={params.id!}
+            linkedContacts={localLinkedContacts}
+            onLink={handleLinkContact}
+            onUnlink={handleUnlinkContact}
+            showLinkedContacts={false}
+          />
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

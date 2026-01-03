@@ -14,6 +14,7 @@ interface ContactLinkSearchProps {
   onLink: (contact: Contact) => void;
   onUnlink: (contactId: string) => void;
   disabled?: boolean;
+  showLinkedContacts?: boolean;
 }
 
 export function ContactLinkSearch({
@@ -22,6 +23,7 @@ export function ContactLinkSearch({
   onLink,
   onUnlink,
   disabled = false,
+  showLinkedContacts = true,
 }: ContactLinkSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -107,7 +109,7 @@ export function ContactLinkSearch({
 
   return (
     <div className="space-y-3">
-      {linkedContacts.length > 0 && (
+      {showLinkedContacts && linkedContacts.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {linkedContacts.map((contact) => (
             <Badge
