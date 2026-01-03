@@ -239,12 +239,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     headerName: "Deal",
     field: "displayName",
     category: "Basic Info",
+    toggleable: false,
     colDef: {
       flex: 2,
       minWidth: 280,
       maxWidth: 360,
       sortable: false,
       editable: true,
+      pinned: "left",
+      lockPinned: true,
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
@@ -272,6 +275,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorPopup: true,
+      pinned: "left",
+      lockPinned: true,
 
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
@@ -321,6 +326,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         values: dealStatuses,
       },
       comparator: createStatusComparator(),
+      pinned: "left",
+      lockPinned: true,
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (

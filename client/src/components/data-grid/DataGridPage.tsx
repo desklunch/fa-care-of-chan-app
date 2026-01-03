@@ -507,6 +507,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         resizable: false,
         suppressHeaderMenuButton: true,
         lockPosition: "left",
+        pinned: "left",
+        lockPinned: true,
         cellClass: "ag-drag-handle-cell",
       } as ColDef<T>);
     }
