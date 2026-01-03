@@ -70,9 +70,11 @@ function EditableFieldRow({
   }, [isEditing]);
 
   useEffect(() => {
-    setEditValue(value || "");
-    setEditArray(arrayValue);
-  }, [value, arrayValue]);
+    if (!isEditing) {
+      setEditValue(value || "");
+      setEditArray(arrayValue);
+    }
+  }, [value, arrayValue, isEditing]);
 
   const handleSave = () => {
     if (type === "array") {
@@ -508,14 +510,7 @@ export default function ContactDetail() {
                 contact.emailAddresses && contact.emailAddresses.length > 0 ? (
                   <div className="space-y-1">
                     {contact.emailAddresses.map((email, index) => (
-                      <a
-                        key={index}
-                        href={`mailto:${email}`}
-                        className="flex items-center gap-2 text-primary hover:underline"
-                        data-testid={`link-email-${index}`}
-                      >
-                        <span>{email}</span>
-                      </a>
+                    <span>{email}</span>
                     ))}
                   </div>
                 ) : undefined

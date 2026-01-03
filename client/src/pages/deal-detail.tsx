@@ -95,9 +95,11 @@ function EditableFieldRow({
   }, [isEditing]);
 
   useEffect(() => {
-    setEditValue(value || "");
-    setSelectedMulti(multiSelectValues);
-  }, [value, multiSelectValues]);
+    if (!isEditing) {
+      setEditValue(value || "");
+      setSelectedMulti(multiSelectValues);
+    }
+  }, [value, multiSelectValues, isEditing]);
 
   const handleSave = () => {
     if (type === "multiselect") {
