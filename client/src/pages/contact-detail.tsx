@@ -2,18 +2,14 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Building2,
   Calendar,
   Loader2,
   MapPin,
-  Mail,
   Phone,
   Pencil,
-  User,
-  Briefcase,
   X,
   UserPlus,
   Globe,
@@ -54,7 +50,7 @@ export default function ContactDetail() {
     enabled: !!id,
   });
 
-  const { data: linkedClients = [], isLoading: isLoadingClients } = useQuery<Client[]>({
+  const { data: linkedClients = [] } = useQuery<Client[]>({
     queryKey: ["/api/contacts", id, "clients"],
     enabled: !!id,
   });
@@ -130,10 +126,81 @@ export default function ContactDetail() {
 
         <Card>
           <CardContent className="pt-6">
+            
+            {localLinkedClients.length > 0 ? (
+              localLinkedClients.map((client, index) => (
+                <FieldRow 
+                  key={client.id} 
+                  label={index === 0 ? "Client" : ""} 
+                  testId={`field-linked-client-${client.id}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Link 
+                      href={`/clients/${client.id}`}
+                      className="text-primary hover:underline"
+                      data-testid={`link-client-${client.id}`}
+                    >
+                      {client.name}
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleUnlinkClient(client.id)}
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      data-testid={`button-unlink-client-${client.id}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </FieldRow>
+              ))
+            ) : !showClientSearch ? (
+              <FieldRow label="Client" testId="field-linked-client-empty">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowClientSearch(true)}
+                  className="h-auto p-0 text-muted-foreground hover:text-primary"
+                  data-testid="button-link-client-inline"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Link Client
+                </Button>
+              </FieldRow>
+            ) : null}
+
+            {showClientSearch && (
+              <FieldRow label={localLinkedClients.length === 0 ? "Client" : ""} testId="field-client-search">
+                <ClientLinkSearch
+                  contactId={id!}
+                  linkedClients={localLinkedClients}
+                  onLink={handleLinkClient}
+                  onUnlink={handleUnlinkClient}
+                  showLinkedClients={false}
+                  autoFocus
+                  onClose={() => setShowClientSearch(false)}
+                />
+              </FieldRow>
+            )}
+
+            {localLinkedClients.length > 0 && !showClientSearch && (
+              <FieldRow label="" testId="field-add-another-client">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowClientSearch(true)}
+                  className="h-auto p-0 text-muted-foreground hover:text-primary"
+                  data-testid="button-link-another-client"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Link Another Client
+                </Button>
+              </FieldRow>
+            )}
+
             <FieldRow label="Job Title" testId="field-contact-job-title">
               {contact.jobTitle ? (
                 <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
                   <span>{contact.jobTitle}</span>
                 </div>
               ) : (
@@ -150,7 +217,6 @@ export default function ContactDetail() {
                       className="flex items-center gap-2 text-primary hover:underline"
                       data-testid={`link-email-${index}`}
                     >
-                      <Mail className="h-4 w-4 text-muted-foreground" />
                       <span>{email}</span>
                     </a>
                   ))}
@@ -242,87 +308,6 @@ export default function ContactDetail() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Clients
-              </CardTitle>
-              <CardDescription>
-                {localLinkedClients.length} client{localLinkedClients.length !== 1 ? "s" : ""} linked to this contact
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowClientSearch(true)}
-              disabled={showClientSearch}
-              data-testid="button-link-client"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Link Client
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {isLoadingClients ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {showClientSearch && (
-                  <ClientLinkSearch
-                    contactId={id!}
-                    linkedClients={localLinkedClients}
-                    onLink={handleLinkClient}
-                    onUnlink={handleUnlinkClient}
-                    showLinkedClients={false}
-                    autoFocus
-                    onClose={() => setShowClientSearch(false)}
-                  />
-                )}
-
-                {localLinkedClients.length === 0 && !showClientSearch ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No clients linked yet</p>
-                    <p className="text-sm">Click "Link Client" to add clients to this contact.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {localLinkedClients.map((client) => (
-                      <div
-                        key={client.id}
-                        className="flex items-center justify-between p-3 rounded-md border"
-                        data-testid={`client-item-${client.id}`}
-                      >
-                        <Link href={`/clients/${client.id}`}>
-                          <div className="flex flex-col cursor-pointer hover:underline">
-                            <span className="font-medium text-primary">
-                              {client.name}
-                            </span>
-                            {client.industry && (
-                              <span className="text-sm text-muted-foreground">{client.industry}</span>
-                            )}
-                          </div>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUnlinkClient(client.id)}
-                          data-testid={`button-unlink-client-${client.id}`}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </PageLayout>
   );
