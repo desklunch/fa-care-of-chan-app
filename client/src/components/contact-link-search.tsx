@@ -160,9 +160,10 @@ export function ContactLinkSearch({
             {onClose && (
               <Button
                 variant="ghost"
-                size="icon"
+                size="lg"
                 onClick={onClose}
                 data-testid="button-close-contact-search"
+                className="h-12 w-12 p-0"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -185,7 +186,6 @@ export function ContactLinkSearch({
                         onClick={() => handleSelectContact(contact)}
                         data-testid={`option-contact-${contact.id}`}
                       >
-                        <User className="h-4 w-4 text-muted-foreground" />
                         <span>{contact.firstName} {contact.lastName}</span>
                         {contact.jobTitle && (
                           <span className="ml-auto text-xs text-muted-foreground">

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Client } from "@shared/schema";
@@ -13,6 +14,9 @@ interface ClientLinkSearchProps {
   onLink: (client: Client) => void;
   onUnlink: (clientId: string) => void;
   disabled?: boolean;
+  showLinkedClients?: boolean;
+  autoFocus?: boolean;
+  onClose?: () => void;
 }
 
 export function ClientLinkSearch({
@@ -21,9 +25,11 @@ export function ClientLinkSearch({
   onLink,
   onUnlink,
   disabled = false,
+  showLinkedClients = true,
+  autoFocus = false,
+  onClose,
 }: ClientLinkSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -52,7 +58,6 @@ export function ClientLinkSearch({
       }
       queryClient.invalidateQueries({ queryKey: ["/api/contacts", contactId, "clients"] });
       setSearchQuery("");
-      setShowDropdown(false);
       toast({
         title: "Client linked",
         description: "Client has been linked to this contact.",
@@ -90,22 +95,26 @@ export function ClientLinkSearch({
   });
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [autoFocus]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape" && onClose) {
+      onClose();
+    }
+  };
 
   const handleSelectClient = (client: Client) => {
     linkMutation.mutate(client.id);
   };
 
+  const showSuggestions = searchQuery.length > 0;
+
   return (
     <div className="space-y-3">
-      {linkedClients.length > 0 && (
+      {showLinkedClients && linkedClients.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {linkedClients.map((client) => (
             <Badge
@@ -134,20 +143,32 @@ export function ClientLinkSearch({
 
       {!disabled && (
         <div className="relative" ref={containerRef}>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              ref={inputRef}
-              placeholder="Search clients to link..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setShowDropdown(true)}
-              className="pl-9"
-              data-testid="input-client-link-search"
-            />
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                placeholder="Search clients to link..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-9"
+                data-testid="input-client-link-search"
+              />
+            </div>
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                data-testid="button-close-client-search"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
-          {showDropdown && (
+          {showSuggestions && (
             <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto">
               {isLoading || linkMutation.isPending ? (
                 <div className="flex items-center justify-center p-4">
@@ -174,13 +195,9 @@ export function ClientLinkSearch({
                     </li>
                   ))}
                 </ul>
-              ) : searchQuery ? (
-                <div className="p-3 text-sm text-muted-foreground">
-                  No clients found matching "{searchQuery}"
-                </div>
               ) : (
                 <div className="p-3 text-sm text-muted-foreground">
-                  Start typing to search clients
+                  No clients found matching "{searchQuery}"
                 </div>
               )}
             </div>

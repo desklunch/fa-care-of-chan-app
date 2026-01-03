@@ -19,7 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, DealWithRelations, DealStatus, Contact } from "@shared/schema";
-import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Users, UserPlus, X } from "lucide-react";
+import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Users, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
 
@@ -174,11 +174,10 @@ export default function ClientDetail() {
         </h1>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="py-4">
             <FieldRow label="Industry" testId="field-client-industry">
               {client.industry ? (
                 <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span>{client.industry}</span>
                 </div>
               ) : (
@@ -210,12 +209,9 @@ export default function ClientDetail() {
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Contacts
+                Contacts <span className="text-muted-foreground">{localLinkedContacts.length}</span>
               </CardTitle>
-              <CardDescription>
-                {localLinkedContacts.length} contact{localLinkedContacts.length !== 1 ? "s" : ""} linked to this client
-              </CardDescription>
+    
             </div>
             <Button
               variant="outline"
@@ -224,8 +220,8 @@ export default function ClientDetail() {
               disabled={showContactSearch}
               data-testid="button-link-contact"
             >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Link Contact
+              <Plus className="h-4 w-4" />
+              Add
             </Button>
           </CardHeader>
           <CardContent>
@@ -254,30 +250,37 @@ export default function ClientDetail() {
                     <p className="text-sm">Click "Link Contact" to add contacts to this client.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {localLinkedContacts.map((contact) => (
                       <div
                         key={contact.id}
-                        className="flex items-center justify-between p-3 rounded-md border"
+                        className="flex items-center justify-between p-3 pl-4 rounded-lg border"
                         data-testid={`contact-item-${contact.id}`}
                       >
-                        <Link href={`/contacts/${contact.id}`}>
-                          <div className="flex flex-col cursor-pointer hover:underline">
-                            <span className="font-medium text-primary">
+                        <div>
+                          <div className="flex flex-col  ">
+                            <Link href={`/contacts/${contact.id}`}>
+
+                            <span className="font-medium text-primary hover:underline cursor-pointer">
                               {[contact.firstName, contact.lastName].filter(Boolean).join(" ")}
                             </span>
+                              </Link>
+
                             {contact.jobTitle && (
                               <span className="text-sm text-muted-foreground">{contact.jobTitle}</span>
                             )}
                           </div>
-                        </Link>
+       
+                        </div>
+    
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleUnlinkContact(contact.id)}
                           data-testid={`button-unlink-contact-${contact.id}`}
+                          className="bg-foreground/5 text-foreground/50 w-9 h-9 rounded-full hover:bg-foreground hover:text-background"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3" />
                         </Button>
                       </div>
                     ))}
@@ -292,15 +295,13 @@ export default function ClientDetail() {
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                Deals
+                Deals<span className="text-muted-foreground">{deals.length}</span>
               </CardTitle>
-              <CardDescription>
-                {deals.length} deal{deals.length !== 1 ? "s" : ""} associated with this client
-              </CardDescription>
+    
             </div>
 
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {isLoadingDeals ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -312,7 +313,7 @@ export default function ClientDetail() {
                 <p className="text-sm">Create a deal to start tracking opportunities with this client.</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-4">
                 {deals.map((deal) => {
                   const statusConfig = statusColors[deal.status as DealStatus] || { variant: "outline" as const };
                   return (
@@ -322,7 +323,7 @@ export default function ClientDetail() {
                         data-testid={`link-deal-${deal.id}`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-sm text-muted-foreground">#{deal.dealNumber}</span>
+                    
                           <span className="font-medium">{deal.displayName}</span>
                         </div>
                         <Badge variant={statusConfig.variant} className={statusConfig.className}>
