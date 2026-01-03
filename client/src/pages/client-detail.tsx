@@ -16,12 +16,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, DealWithRelations, DealStatus, Contact } from "@shared/schema";
@@ -67,7 +61,7 @@ export default function ClientDetail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showLinkContactDialog, setShowLinkContactDialog] = useState(false);
+  const [showContactSearch, setShowContactSearch] = useState(false);
 
   const { data: client, isLoading } = useQuery<Client>({
     queryKey: ["/api/clients", params.id],
@@ -91,7 +85,7 @@ export default function ClientDetail() {
 
   const handleLinkContact = (contact: Contact) => {
     setLocalLinkedContacts(prev => [...prev, contact]);
-    setShowLinkContactDialog(false);
+    setShowContactSearch(false);
   };
 
   const handleUnlinkContact = (contactId: string) => {
@@ -226,7 +220,8 @@ export default function ClientDetail() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowLinkContactDialog(true)}
+              onClick={() => setShowContactSearch(true)}
+              disabled={showContactSearch}
               data-testid="button-link-contact"
             >
               <UserPlus className="h-4 w-4 mr-2" />
@@ -238,40 +233,56 @@ export default function ClientDetail() {
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : localLinkedContacts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No contacts linked yet</p>
-                <p className="text-sm">Click "Link Contact" to add contacts to this client.</p>
-              </div>
             ) : (
-              <div className="space-y-2">
-                {localLinkedContacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="flex items-center justify-between p-3 rounded-md border"
-                    data-testid={`contact-item-${contact.id}`}
-                  >
-                    <Link href={`/contacts/${contact.id}`}>
-                      <div className="flex flex-col cursor-pointer hover:underline">
-                        <span className="font-medium text-primary">
-                          {[contact.firstName, contact.lastName].filter(Boolean).join(" ")}
-                        </span>
-                        {contact.jobTitle && (
-                          <span className="text-sm text-muted-foreground">{contact.jobTitle}</span>
-                        )}
-                      </div>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleUnlinkContact(contact.id)}
-                      data-testid={`button-unlink-contact-${contact.id}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+              <div className="space-y-3">
+                {showContactSearch && (
+                  <ContactLinkSearch
+                    clientId={params.id!}
+                    linkedContacts={localLinkedContacts}
+                    onLink={handleLinkContact}
+                    onUnlink={handleUnlinkContact}
+                    showLinkedContacts={false}
+                    autoFocus
+                    onClose={() => setShowContactSearch(false)}
+                  />
+                )}
+
+                {localLinkedContacts.length === 0 && !showContactSearch ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No contacts linked yet</p>
+                    <p className="text-sm">Click "Link Contact" to add contacts to this client.</p>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-2">
+                    {localLinkedContacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        className="flex items-center justify-between p-3 rounded-md border"
+                        data-testid={`contact-item-${contact.id}`}
+                      >
+                        <Link href={`/contacts/${contact.id}`}>
+                          <div className="flex flex-col cursor-pointer hover:underline">
+                            <span className="font-medium text-primary">
+                              {[contact.firstName, contact.lastName].filter(Boolean).join(" ")}
+                            </span>
+                            {contact.jobTitle && (
+                              <span className="text-sm text-muted-foreground">{contact.jobTitle}</span>
+                            )}
+                          </div>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleUnlinkContact(contact.id)}
+                          data-testid={`button-unlink-contact-${contact.id}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -327,21 +338,6 @@ export default function ClientDetail() {
         </Card>
 
       </div>
-
-      <Dialog open={showLinkContactDialog} onOpenChange={setShowLinkContactDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Link Contact</DialogTitle>
-          </DialogHeader>
-          <ContactLinkSearch
-            clientId={params.id!}
-            linkedContacts={localLinkedContacts}
-            onLink={handleLinkContact}
-            onUnlink={handleUnlinkContact}
-            showLinkedContacts={false}
-          />
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

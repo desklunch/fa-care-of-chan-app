@@ -15,6 +15,8 @@ interface ContactLinkSearchProps {
   onUnlink: (contactId: string) => void;
   disabled?: boolean;
   showLinkedContacts?: boolean;
+  autoFocus?: boolean;
+  onClose?: () => void;
 }
 
 export function ContactLinkSearch({
@@ -24,9 +26,10 @@ export function ContactLinkSearch({
   onUnlink,
   disabled = false,
   showLinkedContacts = true,
+  autoFocus = false,
+  onClose,
 }: ContactLinkSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -56,7 +59,6 @@ export function ContactLinkSearch({
       }
       queryClient.invalidateQueries({ queryKey: ["/api/clients", clientId, "contacts"] });
       setSearchQuery("");
-      setShowDropdown(false);
       toast({
         title: "Contact linked",
         description: "Contact has been linked to this client.",
@@ -94,18 +96,22 @@ export function ContactLinkSearch({
   });
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [autoFocus]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape" && onClose) {
+      onClose();
+    }
+  };
 
   const handleSelectContact = (contact: Contact) => {
     linkMutation.mutate(contact.id);
   };
+
+  const showSuggestions = searchQuery.length > 0;
 
   return (
     <div className="space-y-3">
@@ -138,20 +144,32 @@ export function ContactLinkSearch({
 
       {!disabled && (
         <div className="relative" ref={containerRef}>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              ref={inputRef}
-              placeholder="Search contacts to link..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setShowDropdown(true)}
-              className="pl-9"
-              data-testid="input-contact-link-search"
-            />
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                placeholder="Search contacts to link..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-9"
+                data-testid="input-contact-link-search"
+              />
+            </div>
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                data-testid="button-close-contact-search"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
-          {showDropdown && (
+          {showSuggestions && (
             <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto">
               {isLoading || linkMutation.isPending ? (
                 <div className="flex items-center justify-center p-4">
@@ -178,13 +196,9 @@ export function ContactLinkSearch({
                     </li>
                   ))}
                 </ul>
-              ) : searchQuery ? (
-                <div className="p-3 text-sm text-muted-foreground">
-                  No contacts found matching "{searchQuery}"
-                </div>
               ) : (
                 <div className="p-3 text-sm text-muted-foreground">
-                  Start typing to search contacts
+                  No contacts found matching "{searchQuery}"
                 </div>
               )}
             </div>
