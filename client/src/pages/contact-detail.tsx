@@ -11,9 +11,7 @@ import {
   MapPin,
   Phone,
   Pencil,
-  X,
   UserPlus,
-  Globe,
   Trash2,
 } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
@@ -203,20 +201,6 @@ export default function ContactDetail() {
               </FieldRow>
             )}
 
-            {localLinkedClients.length > 0 && !showClientSearch && (
-              <FieldRow label="" testId="field-add-another-client">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowClientSearch(true)}
-                  className="h-auto p-0 text-muted-foreground hover:text-primary"
-                  data-testid="button-link-another-client"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Link Another Client
-                </Button>
-              </FieldRow>
-            )}
 
             <FieldRow label="Job Title" testId="field-contact-job-title">
               {contact.jobTitle ? (
@@ -264,6 +248,38 @@ export default function ContactDetail() {
                 <span className="text-muted-foreground">Not set</span>
               )}
             </FieldRow>
+            <FieldRow label="Instagram" testId="field-contact-instagram">
+              {contact.instagramUsername ? (
+                <a
+                  href={`https://instagram.com/${contact.instagramUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-primary hover:underline"
+                  data-testid="link-instagram"
+                >
+                  <SiInstagram className="h-4 w-4 text-muted-foreground" />
+                  <span>@{contact.instagramUsername}</span>
+                </a>
+              ) : (
+                <span className="text-muted-foreground">Not set</span>
+              )}
+            </FieldRow>
+            <FieldRow label="LinkedIn" testId="field-contact-linkedin">
+              {contact.linkedinUsername ? (
+                <a
+                  href={`https://linkedin.com/in/${contact.linkedinUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-primary hover:underline"
+                  data-testid="link-linkedin"
+                >
+                  <SiLinkedin className="h-4 w-4 text-muted-foreground" />
+                  <span>{contact.linkedinUsername}</span>
+                </a>
+              ) : (
+                <span className="text-muted-foreground">Not set</span>
+              )}
+            </FieldRow>
             <FieldRow label="Address" testId="field-contact-address">
               {contact.homeAddress ? (
                 <div className="flex items-start gap-2">
@@ -290,47 +306,6 @@ export default function ContactDetail() {
             </FieldRow>
           </CardContent>
         </Card>
-
-        {(contact.instagramUsername || contact.linkedinUsername) && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Social
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {contact.instagramUsername && (
-                <FieldRow label="Instagram" testId="field-contact-instagram">
-                  <a
-                    href={`https://instagram.com/${contact.instagramUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                    data-testid="link-instagram"
-                  >
-                    <SiInstagram className="h-4 w-4 text-muted-foreground" />
-                    <span>@{contact.instagramUsername}</span>
-                  </a>
-                </FieldRow>
-              )}
-              {contact.linkedinUsername && (
-                <FieldRow label="LinkedIn" testId="field-contact-linkedin">
-                  <a
-                    href={`https://linkedin.com/in/${contact.linkedinUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                    data-testid="link-linkedin"
-                  >
-                    <SiLinkedin className="h-4 w-4 text-muted-foreground" />
-                    <span>{contact.linkedinUsername}</span>
-                  </a>
-                </FieldRow>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </PageLayout>
   );
