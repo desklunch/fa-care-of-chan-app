@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   X,
   UserPlus,
   Globe,
+  Trash2,
 } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import type { Contact, Client } from "@shared/schema";
@@ -45,7 +47,11 @@ export default function ContactDetail() {
   const [, setLocation] = useLocation();
   const [showClientSearch, setShowClientSearch] = useState(false);
 
-  const { data: contact, isLoading, error } = useQuery<Contact>({
+  const {
+    data: contact,
+    isLoading,
+    error,
+  } = useQuery<Contact>({
     queryKey: ["/api/contacts", id],
     enabled: !!id,
   });
@@ -56,21 +62,33 @@ export default function ContactDetail() {
   });
 
   const [localLinkedClients, setLocalLinkedClients] = useState<Client[]>([]);
-  
+
   useEffect(() => {
     setLocalLinkedClients(linkedClients);
   }, [linkedClients]);
 
+  const unlinkClientMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      await apiRequest("DELETE", `/api/contacts/${id}/clients/${clientId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "clients"] });
+    },
+  });
+
   const handleLinkClient = (client: Client) => {
-    setLocalLinkedClients(prev => [...prev, client]);
+    setLocalLinkedClients((prev) => [...prev, client]);
     setShowClientSearch(false);
   };
 
   const handleUnlinkClient = (clientId: string) => {
-    setLocalLinkedClients(prev => prev.filter(c => c.id !== clientId));
+    setLocalLinkedClients((prev) => prev.filter((c) => c.id !== clientId));
+    unlinkClientMutation.mutate(clientId);
   };
 
-  usePageTitle(contact ? `${contact.firstName} ${contact.lastName}` : "Contact");
+  usePageTitle(
+    contact ? `${contact.firstName} ${contact.lastName}` : "Contact",
+  );
 
   if (isLoading) {
     return (
@@ -126,16 +144,15 @@ export default function ContactDetail() {
 
         <Card>
           <CardContent className="pt-6">
-            
             {localLinkedClients.length > 0 ? (
               localLinkedClients.map((client, index) => (
-                <FieldRow 
-                  key={client.id} 
-                  label={index === 0 ? "Client" : ""} 
+                <FieldRow
+                  key={client.id}
+                  label={index === 0 ? "Company" : ""}
                   testId={`field-linked-client-${client.id}`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <Link 
+                    <Link
                       href={`/clients/${client.id}`}
                       className="text-primary hover:underline"
                       data-testid={`link-client-${client.id}`}
@@ -149,13 +166,13 @@ export default function ContactDetail() {
                       className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                       data-testid={`button-unlink-client-${client.id}`}
                     >
-                      <X className="h-3 w-3" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </FieldRow>
               ))
             ) : !showClientSearch ? (
-              <FieldRow label="Client" testId="field-linked-client-empty">
+              <FieldRow label="Company" testId="field-linked-client-empty">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -164,13 +181,16 @@ export default function ContactDetail() {
                   data-testid="button-link-client-inline"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Link Client
+                  Add Company
                 </Button>
               </FieldRow>
             ) : null}
 
             {showClientSearch && (
-              <FieldRow label={localLinkedClients.length === 0 ? "Client" : ""} testId="field-client-search">
+              <FieldRow
+                label={localLinkedClients.length === 0 ? "Client" : ""}
+                testId="field-client-search"
+              >
                 <ClientLinkSearch
                   contactId={id!}
                   linkedClients={localLinkedClients}
@@ -248,7 +268,9 @@ export default function ContactDetail() {
               {contact.homeAddress ? (
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <span className="whitespace-pre-wrap">{contact.homeAddress}</span>
+                  <span className="whitespace-pre-wrap">
+                    {contact.homeAddress}
+                  </span>
                 </div>
               ) : (
                 <span className="text-muted-foreground">Not set</span>
@@ -258,7 +280,9 @@ export default function ContactDetail() {
               {contact.dateOfBirth ? (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{format(new Date(contact.dateOfBirth), "MMMM d, yyyy")}</span>
+                  <span>
+                    {format(new Date(contact.dateOfBirth), "MMMM d, yyyy")}
+                  </span>
                 </div>
               ) : (
                 <span className="text-muted-foreground">Not set</span>
@@ -307,7 +331,6 @@ export default function ContactDetail() {
             </CardContent>
           </Card>
         )}
-
       </div>
     </PageLayout>
   );
