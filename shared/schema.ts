@@ -537,7 +537,7 @@ export const vendorUpdateTokens = pgTable(
 export const dealStatuses = [
   "Prospecting",
   "Proposal Phase",
-  "Waiting for Feedback",
+  "Feedback",
   "Contracting Phase",
   "In Progress",
   "Final Invoicing",

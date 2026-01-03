@@ -112,7 +112,7 @@ const STATUS_SORT_ORDER: Record<string, number> = {
   Prospecting: 1,
   "Warm Lead": 2,
   Proposal: 3,
-  "Waiting for Feedback": 4,
+  "Feedback": 4,
   "In Contracting": 5,
   "In Progress": 6,
   "Final Invoicing": 7,
