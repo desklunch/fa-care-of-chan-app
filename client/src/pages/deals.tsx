@@ -318,8 +318,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1,
-      minWidth: 190,
-      maxWidth: 190,
+      minWidth: 140,
+      maxWidth: 140,
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: {
