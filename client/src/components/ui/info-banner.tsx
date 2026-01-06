@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { X, Info, DraftingCompass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,11 +33,20 @@ export function InfoBanner({
   const [isDismissed, setIsDismissed] = useState(() => 
     getInitialDismissedState(id, userId)
   );
+  const [, setLocation] = useLocation();
 
-  const handleDismiss = () => {
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     const storageKey = getStorageKey(id, userId);
     localStorage.setItem(storageKey, "true");
     setIsDismissed(true);
+  };
+
+  const handleBannerClick = () => {
+    if (ctaUrl) {
+      setLocation(ctaUrl);
+    }
   };
 
   if (isDismissed) {
@@ -46,8 +55,9 @@ export function InfoBanner({
 
   return (
     <div
-      className="relative flex items-center gap-3 border border-accent bg-primary text-primary-foreground p-3 text-sm"
+      className={`relative flex items-center gap-3 border border-accent bg-primary text-primary-foreground p-3 text-sm ${ctaUrl ? "cursor-pointer hover-elevate" : ""}`}
       data-testid={`banner-${id}`}
+      onClick={handleBannerClick}
     >
       <Info className="h-5 w-5 shrink-0 " />
       <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-2">
@@ -56,17 +66,10 @@ export function InfoBanner({
           <span className="ml-1 font-medium">{description}</span>
         </div>
         {ctaLabel && ctaUrl && (
-          <Link href={ctaUrl}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1 shrink-0 "
-              data-testid={`button-banner-cta-${id}`}
-            >
-              <DraftingCompass className="h-4 w-4" />
-              {ctaLabel}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-1 shrink-0 text-xs font-medium opacity-75">
+            <DraftingCompass className="h-4 w-4" />
+            {ctaLabel}
+          </div>
         )}
       </div>
       <Button

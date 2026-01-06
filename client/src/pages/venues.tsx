@@ -639,11 +639,11 @@ export default function VenuesPage() {
       >
         <div className="flex flex-col  h-full">
           <InfoBanner
-            id="venue-features-tip"
-            title="Need a change or new feature?"
-            description="Submit requests on the Features page."
-            ctaLabel="App Features"
-            ctaUrl="/app/features"
+            id="feedback"
+            title="Got Feeback?"
+            description="Report issues, request features, and get answers to questions→" 
+  
+            ctaUrl="/app/feedback"
             userId={user?.id}
           />
           <div className="flex-1 min-h-0 ">
