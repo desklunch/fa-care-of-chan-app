@@ -34,7 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const REPORT_TABS = [
   { id: "snapshot-14", label: "30 Day Table" },
-  { id: "snapshot-30", label: "30 Day Board" },
+  { id: "snapshot-30", label: "Susana's Deals" },
 ] as const;
 
 type ReportTab = (typeof REPORT_TABS)[number]["id"];
@@ -68,24 +68,21 @@ function SnapshotView30() {
     return new Map(dealServices.map((s) => [s.id, s.name]));
   }, [dealServices]);
 
-  const thirtyDaysAgo = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date;
-  }, []);
+  const SUSANA_USER_ID = "117918891533678026073";
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
+      // Filter by owner (Susana)
+      if (deal.ownerId !== SUSANA_USER_ID) {
+        return false;
+      }
+      // Filter by status
       if (!SNAPSHOT_STATUSES.includes(deal.status as DealStatus)) {
         return false;
       }
-      if (!deal.lastContactOn) {
-        return false;
-      }
-      const lastContact = new Date(deal.lastContactOn);
-      return lastContact >= thirtyDaysAgo;
+      return true;
     });
-  }, [deals, thirtyDaysAgo]);
+  }, [deals]);
 
   const columns: KanbanColumn<Deal>[] = useMemo(() => {
     return SNAPSHOT_STATUSES.map((status) => ({
