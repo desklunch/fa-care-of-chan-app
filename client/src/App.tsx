@@ -236,16 +236,6 @@ function useLayoutConfig() {
         defaultCollapsed: true,
         items: [
           {
-            name: "Deals",
-            href: "/deals",
-            icon: Tickets,
-          },
-          {
-            name: "Clients",
-            href: "/clients",
-            icon: Building2,
-          },
-          {
             name: "Vendors",
             href: "/vendors",
             icon: Handshake,
@@ -259,11 +249,6 @@ function useLayoutConfig() {
             name: "Forms",
             href: "/forms/templates",
             icon: FileText,
-          }, 
-          {
-            name: "Contacts",
-            href: "/contacts",
-            icon: Contact,
           },
           {
             name: "Comments",
