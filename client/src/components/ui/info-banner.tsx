@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { X, Info, DraftingCompass } from "lucide-react";
+import { X, Info, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface InfoBannerProps {
@@ -55,22 +55,16 @@ export function InfoBanner({
 
   return (
     <div
-      className={`relative flex items-center gap-3 border border-accent bg-primary text-primary-foreground p-3 text-sm ${ctaUrl ? "cursor-pointer hover-elevate" : ""}`}
+      className={`relative flex items-center gap-2 border border-accent bg-primary text-primary-foreground p-3 text-sm ${ctaUrl ? "cursor-pointer hover-elevate" : ""}`}
       data-testid={`banner-${id}`}
       onClick={handleBannerClick}
     >
-      <Info className="h-5 w-5 shrink-0 " />
+      <MessageCircle className="h-6 w-6 shrink-0 stroke-[1.75px]" />
       <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="flex-1 min-w-0">
-          <span className="font-bold">{title}</span>
-          <span className="ml-1 font-medium">{description}</span>
+        <div className="flex-1 min-w-0 hover:underline prose-sm">
+          <span className="font-semibold">{title}</span>
+          <span className="ml-1 font-normal">{description}</span>
         </div>
-        {ctaLabel && ctaUrl && (
-          <div className="flex items-center gap-1 shrink-0 text-xs font-medium opacity-75">
-            <DraftingCompass className="h-4 w-4" />
-            {ctaLabel}
-          </div>
-        )}
       </div>
       <Button
         variant="ghost"

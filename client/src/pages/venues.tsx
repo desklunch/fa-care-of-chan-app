@@ -640,9 +640,9 @@ export default function VenuesPage() {
         <div className="flex flex-col  h-full">
           <InfoBanner
             id="feedback"
-            title="Got Feeback?"
-            description="Report issues, request features, and get answers to questions→" 
-  
+            title="Need support?"
+            description="Report issues, request features, and ask questions in the Feedback section." 
+            ctaLabel="Feedback"
             ctaUrl="/app/feedback"
             userId={user?.id}
           />
