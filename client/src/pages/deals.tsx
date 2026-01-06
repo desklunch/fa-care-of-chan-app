@@ -862,10 +862,23 @@ export default function Deals() {
   const handleCellValueChanged = useCallback((event: CellValueChangedEvent<DealWithRelations>) => {
     const { data, colDef, newValue, oldValue } = event;
     if (!data?.id || !colDef.field) return;
-    if (newValue === oldValue) return;
-
+    
     const field = colDef.field as string;
     let processedValue: unknown = newValue;
+
+    // For serviceIds (array), check if values actually changed
+    if (field === "serviceIds") {
+      const oldIds = (oldValue as number[] | null) || [];
+      const newIds = (newValue as number[] | null) || [];
+      // Check if arrays are equal
+      if (oldIds.length === newIds.length && oldIds.every((id, i) => id === newIds[i])) {
+        return; // No change
+      }
+      processedValue = newIds;
+    } else {
+      // For non-array fields, check equality normally
+      if (newValue === oldValue) return;
+    }
 
     // Handle owner field - valueSetter already updated data.ownerId, so use that
     if (field === "ownerId") {
