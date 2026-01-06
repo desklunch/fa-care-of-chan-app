@@ -20,7 +20,7 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
     <Link href={`/deals/${deal.id}`}>
       <Card
         className={cn(
-          "p-3 hover-elevate cursor-pointer transition-shadow",
+          "p-3 bg-foreground/5 hover-elevate cursor-pointer transition-shadow",
           className
         )}
         data-testid={`kanban-card-${deal.id}`}

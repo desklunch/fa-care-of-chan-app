@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const REPORT_TABS = [
-  { id: "snapshot", label: "30 Day Snapshot" },
+  { id: "snapshot", label: "14 Day Snapshot" },
 ] as const;
 
 type ReportTab = (typeof REPORT_TABS)[number]["id"];
@@ -39,7 +39,7 @@ function SnapshotView() {
 
   const thirtyDaysAgo = useMemo(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 30);
+    date.setDate(date.getDate() - 14);
     return date;
   }, []);
 
@@ -100,17 +100,9 @@ export default function DealReports() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 p-4 md:p-6 border-b">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Deal Reports</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              View and analyze your deals pipeline
-            </p>
-          </div>
-        </div>
+      <div className="flex-shrink-0 px-4 md:px-6 border-b">
 
-        {REPORT_TABS.length > 1 && (
+        {REPORT_TABS.length > 0 && (
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">
             <TabsList>
               {REPORT_TABS.map((tab) => (

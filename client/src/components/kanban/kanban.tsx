@@ -138,15 +138,15 @@ export function Kanban<T>({
   return (
     <div className={cn("flex flex-col h-full", className)}>
       {(canScrollLeft || canScrollRight || hasHiddenColumns) && !isMobile && (
-        <div className="flex justify-end gap-2 pb-3">
+        <div className="flex justify-start gap-4 pb-3">
           <Button
             variant="outline"
             size="icon"
             onClick={handleScrollLeft}
             disabled={!canScrollLeft}
             className={cn(
-              "bg-background/80 backdrop-blur-sm shadow-md",
-              !canScrollLeft && "opacity-50"
+              "",
+              !canScrollLeft && "opacity-50 bg-background border border-muted-foreground/50 text-muted-foreground"
             )}
             data-testid="button-kanban-scroll-left"
           >
@@ -158,8 +158,8 @@ export function Kanban<T>({
             onClick={handleScrollRight}
             disabled={!canScrollRight}
             className={cn(
-              "bg-background/80 backdrop-blur-sm shadow-md",
-              !canScrollRight && "opacity-50"
+              "",
+              !canScrollRight && "opacity-50 bg-background border border-muted-foreground/50 text-muted-foreground"
             )}
             data-testid="button-kanban-scroll-right"
           >
@@ -181,7 +181,7 @@ export function Kanban<T>({
           <div
             key={column.id}
             className={cn(
-              "flex-shrink-0 flex flex-col h-full",
+              "bg-foreground/[2%] rounded-lg flex-shrink-0 flex flex-col h-full",
               "snap-start"
             )}
             style={{
@@ -190,7 +190,7 @@ export function Kanban<T>({
             }}
             data-testid={`kanban-column-${column.id}`}
           >
-            <div className="flex items-center gap-2 px-3 py-2 mb-2">
+            <div className="flex items-center gap-2 px-4 py-4 mb-4 rounded-t-lg bg-foreground/5">
               <span
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: column.color }}
@@ -203,7 +203,7 @@ export function Kanban<T>({
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-1 space-y-2 pb-4">
+            <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
               {column.items.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-sm text-muted-foreground border border-dashed rounded-md mx-2">
                   {emptyMessage}
