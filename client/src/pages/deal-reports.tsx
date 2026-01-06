@@ -33,8 +33,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const REPORT_TABS = [
-  { id: "snapshot-14", label: "30 Day New Biz" },
-  { id: "snapshot-30", label: "Susana's Deals" },
+  { id: "snapshot-30", label: "30 Day New Biz" },
+  { id: "susanas-deals", label: "Susana's Deals" },
 ] as const;
 
 type ReportTab = (typeof REPORT_TABS)[number]["id"];
@@ -55,7 +55,7 @@ function getInitials(fullName: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-function SnapshotView30() {
+function SnapshotViewSusana() {
   const { data: deals = [], isLoading } = useQuery<Deal[]>({
     queryKey: ["/api/deals"],
   });
@@ -113,7 +113,7 @@ function SnapshotView30() {
   );
 }
 
-function SnapshotView14() {
+function SnapshotView30() {
   const gridRef = useRef<AgGridReact<DealWithRelations>>(null);
 
   const { data: deals = [], isLoading } = useQuery<DealWithRelations[]>({
@@ -153,7 +153,7 @@ function SnapshotView14() {
       field: "displayName" as const,
       flex: 2,
       minWidth: 240,
-      maxWidth: 240,
+      maxWidth: 400,
       sortable: false,
       editable: false,
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
@@ -438,7 +438,7 @@ export default function DealReports() {
 
       <div className="flex-1 overflow-auto p-4 md:p-6">
         {activeTab === "snapshot-30" && <SnapshotView30 />}
-        {activeTab === "snapshot-14" && <SnapshotView14 />}
+        {activeTab === "susanas-deals" && <SnapshotViewSusana />}
       </div>
     </div>
   );
