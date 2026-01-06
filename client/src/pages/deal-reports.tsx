@@ -365,14 +365,14 @@ function SnapshotView30() {
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="flex-1 min-h-0 overflow-hidden">
       <AgGridReact
         ref={gridRef}
         rowData={filteredDeals}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
         theme={gridTheme}
-        domLayout="autoHeight"
+        domLayout="normal"
         onGridReady={onGridReady}
         suppressMovableColumns={true}
         suppressColumnVirtualisation={true}
@@ -436,7 +436,7 @@ export default function DealReports() {
         )}
       </div>
 
-      <div className="flex-1 overflow-auto p-4 md:p-6">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-4 md:p-6">
         {activeTab === "snapshot-30" && <SnapshotView30 />}
         {activeTab === "susanas-deals" && <SnapshotViewSusana />}
       </div>
