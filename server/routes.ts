@@ -5677,6 +5677,21 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // GET /api/contacts/:id/deals - Get deals where contact is primary contact
+  app.get("/api/contacts/:id/deals", isAuthenticated, async (req, res) => {
+    try {
+      const contact = await storage.getContactById(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      const deals = await storage.getDealsByPrimaryContactId(req.params.id);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching contact deals:", error);
+      res.status(500).json({ message: "Failed to fetch contact deals" });
+    }
+  });
+
   // POST /api/contacts/:id/clients/:clientId - Link a client to a contact
   app.post("/api/contacts/:id/clients/:clientId", isAuthenticated, async (req: any, res) => {
     try {

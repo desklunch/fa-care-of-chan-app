@@ -3,7 +3,8 @@ import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,14 +19,50 @@ import {
   Trash2,
   Check,
   X,
+  Handshake,
 } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
-import type { Contact, Client } from "@shared/schema";
+import type { Contact, Client, DealWithRelations, DealStatus } from "@shared/schema";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { ClientLinkSearch } from "@/components/client-link-search";
 import { parseDateOnly } from "@/lib/date";
 import { cn } from "@/lib/utils";
+
+const statusColors: Record<
+  DealStatus,
+  {
+    variant: "default" | "secondary" | "outline" | "destructive";
+    className?: string;
+  }
+> = {
+  Prospecting: { variant: "outline" },
+  "Warm Lead": { variant: "secondary" },
+  Proposal: {
+    variant: "secondary",
+    className:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  Feedback: { variant: "secondary" },
+  Contracting: {
+    variant: "secondary",
+    className:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  "In Progress": {
+    variant: "default",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  },
+  "Final Invoicing": { variant: "default" },
+  Complete: {
+    variant: "default",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  },
+  "No-Go": { variant: "destructive" },
+  Canceled: { variant: "outline", className: "opacity-50" },
+};
 
 type EditableFieldType = "text" | "textarea" | "date" | "array";
 
@@ -335,6 +372,11 @@ export default function ContactDetail() {
     enabled: !!id,
   });
 
+  const { data: deals = [], isLoading: isLoadingDeals } = useQuery<DealWithRelations[]>({
+    queryKey: ["/api/contacts", id, "deals"],
+    enabled: !!id,
+  });
+
   const [localLinkedClients, setLocalLinkedClients] = useState<Client[]>([]);
 
   useEffect(() => {
@@ -630,6 +672,60 @@ export default function ContactDetail() {
                 ) : undefined
               }
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
+                Deals
+                <span className="text-muted-foreground text-sm font-medium">{deals.length}</span>
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoadingDeals ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : deals.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Handshake className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No deals yet</p>
+                <p className="text-sm">
+                  This contact is not assigned as the primary contact on any deals.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {deals.map((deal) => {
+                  const statusConfig = statusColors[
+                    deal.status as DealStatus
+                  ] || { variant: "outline" as const };
+                  return (
+                    <Link href={`/deals/${deal.id}`} key={deal.id}>
+                      <div
+                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer border bg-foreground/[3%]"
+                        data-testid={`link-deal-${deal.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium">
+                            {deal.displayName}
+                          </span>
+                        </div>
+                        <Badge
+                          variant={statusConfig.variant}
+                          className={statusConfig.className}
+                        >
+                          {deal.status}
+                        </Badge>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

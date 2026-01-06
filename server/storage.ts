@@ -473,6 +473,7 @@ export interface IStorage {
   getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]>;
   getDealById(id: string): Promise<DealWithRelations | undefined>;
   getDealsByClientId(clientId: string): Promise<DealWithRelations[]>;
+  getDealsByPrimaryContactId(contactId: string): Promise<DealWithRelations[]>;
   createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
   updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
   deleteDeal(id: string): Promise<void>;
@@ -3860,6 +3861,71 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .where(eq(deals.clientId, clientId))
+      .orderBy(desc(deals.createdAt));
+    return results as DealWithRelations[];
+  }
+
+  async getDealsByPrimaryContactId(contactId: string): Promise<DealWithRelations[]> {
+    const ownerUsers = alias(users, "owner_users");
+    const results = await db
+      .select({
+        id: deals.id,
+        externalId: deals.externalId,
+        dealNumber: deals.dealNumber,
+        displayName: deals.displayName,
+        status: deals.status,
+        clientId: deals.clientId,
+        brandId: deals.brandId,
+        primaryContactId: deals.primaryContactId,
+        budgetHigh: deals.budgetHigh,
+        budgetLow: deals.budgetLow,
+        budgetNotes: deals.budgetNotes,
+        startedOn: deals.startedOn,
+        wonOn: deals.wonOn,
+        lastContactOn: deals.lastContactOn,
+        proposalSentOn: deals.proposalSentOn,
+        projectDate: deals.projectDate,
+        earliestEventDate: deals.earliestEventDate,
+        locations: deals.locations,
+        eventSchedule: deals.eventSchedule,
+        serviceIds: deals.serviceIds,
+        locationsText: deals.locationsText,
+        concept: deals.concept,
+        notes: deals.notes,
+        ownerId: deals.ownerId,
+        createdById: deals.createdById,
+        createdAt: deals.createdAt,
+        updatedAt: deals.updatedAt,
+        sortOrder: deals.sortOrder,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+        client: {
+          id: clients.id,
+          name: clients.name,
+          industryId: clients.industryId,
+        },
+        brand: {
+          id: brands.id,
+          name: brands.name,
+          industry: brands.industry,
+        },
+        owner: {
+          id: ownerUsers.id,
+          firstName: ownerUsers.firstName,
+          lastName: ownerUsers.lastName,
+          profileImageUrl: ownerUsers.profileImageUrl,
+        },
+      })
+      .from(deals)
+      .leftJoin(users, eq(deals.createdById, users.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(brands, eq(deals.brandId, brands.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
+      .where(eq(deals.primaryContactId, contactId))
       .orderBy(desc(deals.createdAt));
     return results as DealWithRelations[];
   }
