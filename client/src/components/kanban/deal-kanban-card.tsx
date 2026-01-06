@@ -32,25 +32,18 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
         )}
         data-testid={`kanban-card-${deal.id}`}
       >
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm leading-tight line-clamp-2">
+        <div className="space-y-3">
+
+          <h4 className="font-medium text-base leading-tight truncate">
             {deal.displayName}
           </h4>
-
-          {formattedDate && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3 flex-shrink-0" />
-              <span>{formattedDate}</span>
-            </div>
-          )}
-
           {services.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mx-[-2px]">
               {services.slice(0, 3).map((service) => (
                 <Badge
                   key={service}
                   variant="secondary"
-                  className="text-[10px] px-1.5 py-0"
+                  className="text-xs px-1 py-0 rounded-sm"
                 >
                   {service}
                 </Badge>
@@ -58,7 +51,7 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
               {services.length > 3 && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0"
+                  className="text-xs px-1.5 py-0"
                 >
                   +{services.length - 3}
                 </Badge>
@@ -66,6 +59,14 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
             </div>
           )}
 
+          {formattedDate && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3 flex-shrink-0" />
+              <span>{formattedDate}</span>
+            </div>
+          )}
+
+  
           {locationsText && (
             <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" />
@@ -75,7 +76,6 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
 
           {budgetNotes && (
             <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <DollarSign className="h-3 w-3 flex-shrink-0 mt-0.5" />
               <span className="line-clamp-2">{budgetNotes}</span>
             </div>
           )}
