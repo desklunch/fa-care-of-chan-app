@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { IconPicker } from "@/components/ui/icon-picker";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleFadingPlus, Trash2 } from "lucide-react";
@@ -49,17 +50,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import * as LucideIcons from "lucide-react";
 import type { ManagePageProps, ManageSectionConfig, FormFieldConfig } from "./types";
-
-function DynamicIcon({ name, className }: { name: string; className?: string }) {
-  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
-  const IconComponent = icons[name];
-  if (!IconComponent) {
-    return <LucideIcons.HelpCircle className={className} />;
-  }
-  return <IconComponent className={className} />;
-}
 
 interface FormDialogProps<T extends { id: string }> {
   open: boolean;
@@ -190,19 +181,11 @@ function FormDialog<T extends { id: string }>({
                   </SelectContent>
                 </Select>
               ) : fieldConfig.type === "icon" ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder={fieldConfig.placeholder}
-                    {...field}
-                    value={String(field.value ?? "")}
-                    data-testid={`input-${fieldConfig.name}`}
-                  />
-                  {field.value ? (
-                    <div className="flex items-center justify-center w-10 h-10 border rounded-md bg-muted">
-                      <DynamicIcon name={String(field.value)} className="w-5 h-5" />
-                    </div>
-                  ) : null}
-                </div>
+                <IconPicker
+                  value={field.value as string || ""}
+                  onValueChange={field.onChange}
+                  placeholder={fieldConfig.placeholder || "Select an icon"}
+                />
               ) : (
                 <Input
                   placeholder={fieldConfig.placeholder}
@@ -391,10 +374,10 @@ export function ManagePage({ title, sections, breadcrumbs = [] }: ManagePageProp
       }}
     >
       <div className="flex flex-col h-full">
-        <div className="border-b px-4 py-2">
+        <div className="border-b px-4 md:px-6 pt-2">
           <ScrollArea className="w-full">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="inline-flex h-9 w-auto">
+              <TabsList className="inline-flex h- w-auto">
                 {sections.map((section) => {
                   const Icon = section.icon;
                   return (
