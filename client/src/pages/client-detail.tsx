@@ -5,7 +5,13 @@ import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,22 +24,60 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Client, DealWithRelations, DealStatus, Contact, Industry } from "@shared/schema";
-import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Users, Plus, X } from "lucide-react";
+import type {
+  Client,
+  DealWithRelations,
+  DealStatus,
+  Contact,
+  Industry,
+} from "@shared/schema";
+import {
+  Loader2,
+  Pencil,
+  Trash2,
+  Globe,
+  Building2,
+  Handshake,
+  Users,
+  Plus,
+  Trash,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
 
-const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
-  "Prospecting": { variant: "outline" },
+const statusColors: Record<
+  DealStatus,
+  {
+    variant: "default" | "secondary" | "outline" | "destructive";
+    className?: string;
+  }
+> = {
+  Prospecting: { variant: "outline" },
   "Warm Lead": { variant: "secondary" },
-  "Proposal": { variant: "secondary", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  "Feedback": { variant: "secondary" },
-  "Contracting": { variant: "secondary", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  "In Progress": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  Proposal: {
+    variant: "secondary",
+    className:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  Feedback: { variant: "secondary" },
+  Contracting: {
+    variant: "secondary",
+    className:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  "In Progress": {
+    variant: "default",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  },
   "Final Invoicing": { variant: "default" },
-  "Complete": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  Complete: {
+    variant: "default",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  },
   "No-Go": { variant: "destructive" },
-  "Canceled": { variant: "outline", className: "opacity-50" },
+  Canceled: { variant: "outline", className: "opacity-50" },
 };
 
 function FieldRow({
@@ -67,7 +111,9 @@ export default function ClientDetail() {
     queryKey: ["/api/clients", params.id],
   });
 
-  const { data: deals = [], isLoading: isLoadingDeals } = useQuery<DealWithRelations[]>({
+  const { data: deals = [], isLoading: isLoadingDeals } = useQuery<
+    DealWithRelations[]
+  >({
     queryKey: ["/api/clients", params.id, "deals"],
     enabled: Boolean(params.id),
   });
@@ -78,26 +124,28 @@ export default function ClientDetail() {
   });
 
   // Create industries lookup map
-  const industriesMap = new Map(industries.map(i => [i.id, i]));
+  const industriesMap = new Map(industries.map((i) => [i.id, i]));
 
-  const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<Contact[]>({
+  const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<
+    Contact[]
+  >({
     queryKey: ["/api/clients", params.id, "contacts"],
     enabled: Boolean(params.id),
   });
 
   const [localLinkedContacts, setLocalLinkedContacts] = useState<Contact[]>([]);
-  
+
   useEffect(() => {
     setLocalLinkedContacts(linkedContacts);
   }, [linkedContacts]);
 
   const handleLinkContact = (contact: Contact) => {
-    setLocalLinkedContacts(prev => [...prev, contact]);
+    setLocalLinkedContacts((prev) => [...prev, contact]);
     setShowContactSearch(false);
   };
 
   const handleUnlinkContact = (contactId: string) => {
-    setLocalLinkedContacts(prev => prev.filter(c => c.id !== contactId));
+    setLocalLinkedContacts((prev) => prev.filter((c) => c.id !== contactId));
   };
 
   usePageTitle(client?.name || "Client Details");
@@ -187,7 +235,8 @@ export default function ClientDetail() {
               {client.industryId ? (
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">
-                    {industriesMap.get(client.industryId)?.name || client.industryId}
+                    {industriesMap.get(client.industryId)?.name ||
+                      client.industryId}
                   </Badge>
                 </div>
               ) : (
@@ -199,7 +248,11 @@ export default function ClientDetail() {
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
                   <a
-                    href={client.website.startsWith("http") ? client.website : `https://${client.website}`}
+                    href={
+                      client.website.startsWith("http")
+                        ? client.website
+                        : `https://${client.website}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
@@ -216,12 +269,14 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                Contacts <span className="text-muted-foreground">{localLinkedContacts.length}</span>
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
+                Contacts{" "}
+                <span className="text-muted-foreground">
+                  {localLinkedContacts.length}
+                </span>
               </CardTitle>
-    
             </div>
             <Button
               variant="outline"
@@ -257,7 +312,9 @@ export default function ClientDetail() {
                   <div className="text-center py-8 text-muted-foreground">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>No contacts linked yet</p>
-                    <p className="text-sm">Click "Link Contact" to add contacts to this client.</p>
+                    <p className="text-sm">
+                      Click "Link Contact" to add contacts to this client.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -270,27 +327,29 @@ export default function ClientDetail() {
                         <div>
                           <div className="flex flex-col  ">
                             <Link href={`/contacts/${contact.id}`}>
-
-                            <span className="font-medium text-primary hover:underline cursor-pointer">
-                              {[contact.firstName, contact.lastName].filter(Boolean).join(" ")}
-                            </span>
-                              </Link>
+                              <span className="font-medium text-primary hover:underline cursor-pointer">
+                                {[contact.firstName, contact.lastName]
+                                  .filter(Boolean)
+                                  .join(" ")}
+                              </span>
+                            </Link>
 
                             {contact.jobTitle && (
-                              <span className="text-sm text-muted-foreground">{contact.jobTitle}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {contact.jobTitle}
+                              </span>
                             )}
                           </div>
-       
                         </div>
-    
+
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleUnlinkContact(contact.id)}
                           data-testid={`button-unlink-contact-${contact.id}`}
-                          className="bg-foreground/5 text-foreground/50 w-9 h-9 rounded-full hover:bg-foreground hover:text-background"
+                          className="text-foreground/50 w-9 h-9 rounded-full hover:bg-foreground hover:text-background"
                         >
-                          <X className="h-3 w-3" />
+                          <Trash className="!h-5 !w-5" />
                         </Button>
                       </div>
                     ))}
@@ -302,14 +361,13 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                Deals<span className="text-muted-foreground">{deals.length}</span>
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
+                Deals
+                <span className="text-muted-foreground">{deals.length}</span>
               </CardTitle>
-    
             </div>
-
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoadingDeals ? (
@@ -320,23 +378,32 @@ export default function ClientDetail() {
               <div className="text-center py-8 text-muted-foreground">
                 <Handshake className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No deals yet</p>
-                <p className="text-sm">Create a deal to start tracking opportunities with this client.</p>
+                <p className="text-sm">
+                  Create a deal to start tracking opportunities with this
+                  client.
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
                 {deals.map((deal) => {
-                  const statusConfig = statusColors[deal.status as DealStatus] || { variant: "outline" as const };
+                  const statusConfig = statusColors[
+                    deal.status as DealStatus
+                  ] || { variant: "outline" as const };
                   return (
                     <Link href={`/deals/${deal.id}`} key={deal.id}>
                       <div
-                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer border"
+                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer border bg-foreground/[3%]"
                         data-testid={`link-deal-${deal.id}`}
                       >
                         <div className="flex items-center gap-3">
-                    
-                          <span className="font-medium">{deal.displayName}</span>
+                          <span className="text-sm font-medium">
+                            {deal.displayName}
+                          </span>
                         </div>
-                        <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                        <Badge
+                          variant={statusConfig.variant}
+                          className={statusConfig.className}
+                        >
                           {deal.status}
                         </Badge>
                       </div>
@@ -347,7 +414,6 @@ export default function ClientDetail() {
             )}
           </CardContent>
         </Card>
-
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -355,11 +421,14 @@ export default function ClientDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete client?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{client.name}"? This action cannot be undone.
+              Are you sure you want to delete "{client.name}"? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteMutation.mutate()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
