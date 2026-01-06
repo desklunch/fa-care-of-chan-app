@@ -12,15 +12,6 @@ const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "clients", "emai
 
 const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   {
-    id: "id",
-    headerName: "ID",
-    field: "id",
-    category: "Basic Info",
-    colDef: {
-      width: 120,
-    },
-  },
-  {
     id: "name",
     headerName: "Name",
     field: "firstName",
@@ -267,24 +258,6 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
         return (
           <div className="flex items-center h-full">
             <span className="truncate text-muted-foreground">{params.value}</span>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "createdAt",
-    headerName: "Created At",
-    field: "createdAt",
-    category: "Details",
-    colDef: {
-      width: 130,
-      cellRenderer: (params: { value: string | Date | null }) => {
-        if (!params.value) return null;
-        const date = new Date(params.value);
-        return (
-          <div className="flex items-center h-full text-muted-foreground">
-            {format(date, "MMM d, yyyy")}
           </div>
         );
       },
