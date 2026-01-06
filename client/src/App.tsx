@@ -225,11 +225,6 @@ function useLayoutConfig() {
             href: "/admin/analytics",
             icon: BarChart3,
           },
-          {
-            name: "Theme Editor",
-            href: "/admin/theme",
-            icon: Palette,
-          },
         ],
       },
       {
@@ -237,6 +232,11 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
+          {
+            name: "Theme Editor",
+            href: "/admin/theme",
+            icon: Palette,
+          },
           {
             name: "Vendors",
             href: "/vendors",
