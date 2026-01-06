@@ -11,7 +11,7 @@ import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import ReactMarkdown from "react-markdown";
-import type { Deal, DealStatus, DealWithRelations, DealService, User as UserType, Service } from "@shared/schema";
+import type { Deal, DealStatus, DealWithRelations, DealService, User as UserType } from "@shared/schema";
 import { usePageHeader } from "@/framework/hooks/page-header-context";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -60,13 +60,13 @@ function SnapshotView30() {
     queryKey: ["/api/deals"],
   });
 
-  const { data: services = [] } = useQuery<Service[]>({
-    queryKey: ["/api/services"],
+  const { data: dealServices = [] } = useQuery<DealService[]>({
+    queryKey: ["/api/deal-services"],
   });
 
   const servicesMap = useMemo(() => {
-    return new Map(services.map((s) => [s.id, s.name]));
-  }, [services]);
+    return new Map(dealServices.map((s) => [s.id, s.name]));
+  }, [dealServices]);
 
   const thirtyDaysAgo = useMemo(() => {
     const date = new Date();
@@ -123,13 +123,13 @@ function SnapshotView14() {
     queryKey: ["/api/deals"],
   });
 
-  const { data: services = [] } = useQuery<Service[]>({
-    queryKey: ["/api/services"],
+  const { data: dealServices = [] } = useQuery<DealService[]>({
+    queryKey: ["/api/deal-services"],
   });
 
   const servicesMap = useMemo(() => {
-    return new Map(services.map((s) => [s.id, s.name]));
-  }, [services]);
+    return new Map(dealServices.map((s) => [s.id, s.name]));
+  }, [dealServices]);
 
   const fourteenDaysAgo = useMemo(() => {
     const date = new Date();
