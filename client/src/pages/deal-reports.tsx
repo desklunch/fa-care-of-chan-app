@@ -31,8 +31,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const REPORT_TABS = [
-  { id: "snapshot-30", label: "30 Day Snapshot" },
-  { id: "snapshot-14", label: "14 Day Snapshot" },
+  { id: "snapshot-14", label: "30 Day Table" },
+  { id: "snapshot-30", label: "30 Day Board" },
 ] as const;
 
 type ReportTab = (typeof REPORT_TABS)[number]["id"];
@@ -115,7 +115,7 @@ function SnapshotView14() {
 
   const fourteenDaysAgo = useMemo(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 14);
+    date.setDate(date.getDate() - 30);
     return date;
   }, []);
 
@@ -137,8 +137,8 @@ function SnapshotView14() {
       headerName: "Deal",
       field: "displayName" as const,
       flex: 2,
-      minWidth: 280,
-      maxWidth: 360,
+      minWidth: 240,
+      maxWidth: 240,
       sortable: false,
       editable: false,
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
@@ -146,11 +146,7 @@ function SnapshotView14() {
         return (
           <span className="flex items-start gap-3 w-full">
             <span className="flex-1 truncate">{params.value}</span>
-            <Link href={`/deals/${params.data.id}`} className="flex-shrink-0">
-              <Button size="sm" variant="ghost" className="bg-foreground/5 text-muted-foreground p-2">
-                <SquareArrowOutUpRight className="h-3 w-3" />
-              </Button>
-            </Link>
+
           </span>
         );
       },
@@ -159,8 +155,8 @@ function SnapshotView14() {
       headerName: "Status",
       field: "status" as const,
       flex: 1,
-      minWidth: 140,
-      maxWidth: 140,
+      minWidth: 130,
+      maxWidth: 130,
       sortable: false,
       editable: false,
       cellRenderer: (params: { value: string }) => {
@@ -174,8 +170,8 @@ function SnapshotView14() {
       headerName: "Owner",
       field: "ownerId" as const,
       flex: 1,
-      minWidth: 100,
-      maxWidth: 100,
+      minWidth: 90,
+      maxWidth: 90,
       sortable: false,
       editable: false,
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
@@ -191,7 +187,7 @@ function SnapshotView14() {
       headerName: "Project Date",
       field: "projectDate" as const,
       flex: 1.5,
-      minWidth: 150,
+      minWidth: 130,
       sortable: false,
       editable: false,
     },
@@ -250,7 +246,7 @@ function SnapshotView14() {
       headerName: "Budget Notes",
       field: "budgetNotes" as const,
       flex: 1,
-      minWidth: 200,
+      minWidth: 150,
       sortable: false,
       editable: false,
       wrapText: true,
@@ -278,7 +274,7 @@ function SnapshotView14() {
       headerName: "Locations",
       field: "locationsText" as const,
       flex: 3,
-      minWidth: 220,
+      minWidth: 130,
       sortable: false,
       editable: false,
       wrapText: true,
