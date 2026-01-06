@@ -1584,14 +1584,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined> {
-    // Optimized: Single query with LEFT JOINs instead of 5 sequential queries
-    // This reduces latency from ~400ms to ~100ms by eliminating round-trips
+    // Execute relation queries in parallel to reduce total latency
+    // Note: Neon serverless may have connection pooling limits, but for 4 small
+    // queries the parallel approach is typically faster than sequential
     
     const [venue] = await db.select().from(venues).where(eq(venues.id, id));
     if (!venue) return undefined;
     
-    // Fetch all related data in a single batch of queries that can be connection-pooled
-    // Using a single connection for all queries is more efficient than parallel with Neon
+    // Run all relation queries in parallel
     const [venueAmenitiesResult, venueTagsResult, venueFilesResult, venuePhotosResult] = await Promise.all([
       db
         .select({ amenity: amenities })
