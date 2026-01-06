@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
+import { gridTheme } from "@/lib/ag-grid-theme";
 import ReactMarkdown from "react-markdown";
 import type { Deal, DealStatus, DealWithRelations, DealService, User as UserType } from "@shared/schema";
+import { usePageHeader } from "@/framework/hooks/page-header-context";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -334,19 +336,6 @@ function SnapshotView14() {
     editable: false,
   }), []);
 
-  const gridTheme = useMemo(() => {
-    return themeQuartz.withParams({
-      backgroundColor: "transparent",
-      foregroundColor: "var(--foreground)",
-      headerBackgroundColor: "transparent",
-      headerTextColor: "var(--muted-foreground)",
-      oddRowBackgroundColor: "transparent",
-      rowHoverColor: "var(--elevate-1)",
-      borderColor: "hsl(var(--border))",
-      wrapperBorderRadius: "0",
-    });
-  }, []);
-
   const onGridReady = useCallback(() => {
     if (gridRef.current?.api) {
       gridRef.current.api.sizeColumnsToFit();
@@ -382,6 +371,13 @@ function SnapshotView14() {
 export default function DealReports() {
   const [location, setLocation] = useLocation();
   
+  usePageHeader({
+    breadcrumbs: [
+      { label: "Deals", href: "/deals" },
+      { label: "Reports" },
+    ],
+  });
+
   const getInitialTab = (): ReportTab => {
     const searchParams = new URLSearchParams(window.location.search);
     const tabParam = searchParams.get("tab");

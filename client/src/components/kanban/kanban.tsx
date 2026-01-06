@@ -90,7 +90,13 @@ export function Kanban<T>({
       const newIndex = Math.max(0, currentIndex - 1);
       scrollToColumn(newIndex);
     } else {
-      setStartColumnIndex((prev) => Math.max(0, prev - 1));
+      const newIndex = Math.max(0, startColumnIndex - 1);
+      setStartColumnIndex(newIndex);
+      const container = scrollContainerRef.current;
+      if (container) {
+        const targetScroll = newIndex * (COLUMN_WIDTH + COLUMN_GAP);
+        container.scrollTo({ left: targetScroll, behavior: "smooth" });
+      }
     }
   };
 
@@ -99,15 +105,19 @@ export function Kanban<T>({
       const newIndex = Math.min(columns.length - 1, currentIndex + 1);
       scrollToColumn(newIndex);
     } else {
-      setStartColumnIndex((prev) => Math.min(columns.length - visibleColumns, prev + 1));
+      const newIndex = Math.min(columns.length - visibleColumns, startColumnIndex + 1);
+      setStartColumnIndex(newIndex);
+      const container = scrollContainerRef.current;
+      if (container) {
+        const targetScroll = newIndex * (COLUMN_WIDTH + COLUMN_GAP);
+        container.scrollTo({ left: targetScroll, behavior: "smooth" });
+      }
     }
   };
 
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleScroll = () => {
-    if (!isMobile) return;
-    
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
@@ -116,9 +126,17 @@ export function Kanban<T>({
       const container = scrollContainerRef.current;
       if (!container) return;
 
-      const columnWidth = container.scrollWidth / columns.length;
-      const newIndex = Math.round(container.scrollLeft / columnWidth);
-      setCurrentIndex(Math.min(Math.max(0, newIndex), columns.length - 1));
+      if (isMobile) {
+        const columnWidth = container.scrollWidth / columns.length;
+        const newIndex = Math.round(container.scrollLeft / columnWidth);
+        setCurrentIndex(Math.min(Math.max(0, newIndex), columns.length - 1));
+      } else {
+        const newStartIndex = Math.round(container.scrollLeft / (COLUMN_WIDTH + COLUMN_GAP));
+        const clampedIndex = Math.min(Math.max(0, newStartIndex), Math.max(0, columns.length - visibleColumns));
+        if (clampedIndex !== startColumnIndex) {
+          setStartColumnIndex(clampedIndex);
+        }
+      }
     }, 100);
   };
 
@@ -130,10 +148,12 @@ export function Kanban<T>({
     };
   }, []);
 
-  const displayedColumns = isMobile 
-    ? columns 
-    : columns.slice(startColumnIndex, startColumnIndex + visibleColumns);
   const hasHiddenColumns = !isMobile && visibleColumns < columns.length;
+
+  const isColumnInViewport = (index: number): boolean => {
+    if (isMobile) return true;
+    return index >= startColumnIndex && index < startColumnIndex + visibleColumns;
+  };
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -172,57 +192,61 @@ export function Kanban<T>({
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className={cn(
-          "flex-1 flex overflow-x-hidden overflow-y-hidden",
-          isMobile && "overflow-x-auto scroll-smooth snap-x snap-mandatory"
+          "flex-1 flex overflow-x-auto overflow-y-hidden",
+          isMobile && "scroll-smooth snap-x snap-mandatory"
         )}
         style={{ scrollSnapType: isMobile ? "x mandatory" : "none" }}
       >
-        {displayedColumns.map((column, index) => (
-          <div
-            key={column.id}
-            className={cn(
-              "bg-foreground/[2%] rounded-lg flex-shrink-0 flex flex-col h-full",
-              "snap-start"
-            )}
-            style={{
-              width: isMobile ? "100%" : `${COLUMN_WIDTH}px`,
-              marginRight: index < displayedColumns.length - 1 ? `${COLUMN_GAP}px` : undefined,
-            }}
-            data-testid={`kanban-column-${column.id}`}
-          >
-            <div className="flex items-center gap-2 px-4 py-4 mb-4 rounded-t-lg bg-foreground/5">
-              <span
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: column.color }}
-              />
-              <h3 className="text-sm font-medium text-foreground truncate">
-                {column.title}
-              </h3>
-              <span className="text-xs text-muted-foreground ml-auto">
-                {column.items.length}
-              </span>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
-              {column.items.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-sm text-muted-foreground border border-dashed rounded-md mx-2">
-                  {emptyMessage}
-                </div>
-              ) : (
-                column.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="px-2">
-                    {renderCard(item, column.id)}
-                  </div>
-                ))
+        {columns.map((column, index) => {
+          const inViewport = isColumnInViewport(index);
+          return (
+            <div
+              key={column.id}
+              className={cn(
+                "bg-foreground/[2%] rounded-lg flex-shrink-0 flex flex-col h-full transition-opacity duration-200",
+                "snap-start",
+                !inViewport && "opacity-50"
               )}
+              style={{
+                width: isMobile ? "100%" : `${COLUMN_WIDTH}px`,
+                marginRight: index < columns.length - 1 ? `${COLUMN_GAP}px` : undefined,
+              }}
+              data-testid={`kanban-column-${column.id}`}
+            >
+              <div className="flex items-center gap-2 px-4 py-4 mb-4 rounded-t-lg bg-foreground/5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: column.color }}
+                />
+                <h3 className="text-sm font-medium text-foreground truncate">
+                  {column.title}
+                </h3>
+                <span className="text-xs text-muted-foreground ml-auto">
+                  {column.items.length}
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
+                {column.items.length === 0 ? (
+                  <div className="flex items-center justify-center h-24 text-sm text-muted-foreground border border-dashed rounded-md mx-2">
+                    {emptyMessage}
+                  </div>
+                ) : (
+                  column.items.map((item, itemIndex) => (
+                    <div key={itemIndex} className="px-2">
+                      {renderCard(item, column.id)}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {isMobile && columns.length > 1 && (
         <div className="flex justify-center gap-1.5 py-2">
-          {displayedColumns.map((column, index) => (
+          {columns.map((column, index) => (
             <button
               key={column.id}
               onClick={() => scrollToColumn(index)}
