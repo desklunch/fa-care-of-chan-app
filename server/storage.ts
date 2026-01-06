@@ -3669,7 +3669,7 @@ export class DatabaseStorage implements IStorage {
         projectDate: deals.projectDate,
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
-        services: deals.services,
+        serviceIds: deals.serviceIds,
         locationsText: deals.locationsText,
         concept: deals.concept,
         notes: deals.notes,
@@ -3679,6 +3679,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: deals.updatedAt,
         earliestEventDate: deals.earliestEventDate,
         sortOrder: deals.sortOrder,
+        primaryContactId: deals.primaryContactId,
         createdBy: {
           id: users.id,
           firstName: users.firstName,
@@ -3688,7 +3689,7 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industry: clients.industry,
+          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
@@ -3748,7 +3749,7 @@ export class DatabaseStorage implements IStorage {
         earliestEventDate: deals.earliestEventDate,
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
-        services: deals.services,
+        serviceIds: deals.serviceIds,
         locationsText: deals.locationsText,
         concept: deals.concept,
         notes: deals.notes,
@@ -3756,6 +3757,7 @@ export class DatabaseStorage implements IStorage {
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
+        sortOrder: deals.sortOrder,
         createdBy: {
           id: users.id,
           firstName: users.firstName,
@@ -3765,7 +3767,7 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industry: clients.industry,
+          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
@@ -3808,6 +3810,7 @@ export class DatabaseStorage implements IStorage {
         status: deals.status,
         clientId: deals.clientId,
         brandId: deals.brandId,
+        primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
         budgetNotes: deals.budgetNotes,
@@ -3819,7 +3822,7 @@ export class DatabaseStorage implements IStorage {
         earliestEventDate: deals.earliestEventDate,
         locations: deals.locations,
         eventSchedule: deals.eventSchedule,
-        services: deals.services,
+        serviceIds: deals.serviceIds,
         locationsText: deals.locationsText,
         concept: deals.concept,
         notes: deals.notes,
@@ -3827,6 +3830,7 @@ export class DatabaseStorage implements IStorage {
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
+        sortOrder: deals.sortOrder,
         createdBy: {
           id: users.id,
           firstName: users.firstName,
@@ -3836,7 +3840,7 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industry: clients.industry,
+          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
