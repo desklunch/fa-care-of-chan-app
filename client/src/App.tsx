@@ -39,6 +39,7 @@ const VenueCollectionForm = lazy(() => import("@/pages/venue-collection-form"));
 const VenueCollectionDetail = lazy(() => import("@/pages/venue-collection-detail"));
 const Amenities = lazy(() => import("@/pages/amenities"));
 const Industries = lazy(() => import("@/pages/industries"));
+const ManageSalesPage = lazy(() => import("@/pages/manage"));
 const TagsPage = lazy(() => import("@/pages/tags"));
 const ManageVenuesPage = lazy(() => import("@/pages/manage-venues"));
 const AdminVendorServices = lazy(() => import("@/pages/admin-vendor-services"));
@@ -180,9 +181,9 @@ function useLayoutConfig() {
             icon: Contact,
           },
           {
-            name: "Industries",
-            href: "/industries",
-            icon: Building2,
+            name: "Manage",
+            href: "/sales/manage",
+            icon: Settings2,
           },
         ],
       },
@@ -360,6 +361,7 @@ function AuthenticatedRoutes() {
           <Route path="/manage/venues" component={ManageVenuesPage} />
           <Route path="/amenities" component={Amenities} />
           <Route path="/industries" component={Industries} />
+          <Route path="/sales/manage" component={ManageSalesPage} />
           <Route path="/tags" component={TagsPage} />
           <Route path="/deals" component={Deals} />
           <Route path="/deals/reports" component={DealReports} />
