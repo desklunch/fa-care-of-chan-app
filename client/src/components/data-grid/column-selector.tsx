@@ -55,7 +55,10 @@ export function ColumnSelector<T>({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onShowAll}
+            onClick={(e) => {
+              e.preventDefault();
+              onShowAll();
+            }}
             className="w-full text-xs h-8"
             data-testid="button-show-all-columns"
           >
@@ -64,7 +67,10 @@ export function ColumnSelector<T>({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onResetToDefaults}
+            onClick={(e) => {
+              e.preventDefault();
+              onResetToDefaults();
+            }}
             className="w-full text-xs h-8"
             data-testid="button-reset-columns"
           >
@@ -80,6 +86,7 @@ export function ColumnSelector<T>({
               key={col.id}
               checked={getColumnVisibility(col.id)}
               onCheckedChange={() => onToggleColumn(col.id)}
+              onSelect={(e) => e.preventDefault()}
               data-testid={`checkbox-column-${col.id}`}
             >
               {col.headerName}
