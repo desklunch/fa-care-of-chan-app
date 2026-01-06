@@ -62,6 +62,7 @@ import {
   updateIndustrySchema,
   insertTagSchema,
   updateTagSchema,
+  insertDealServiceSchema,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -3573,6 +3574,83 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting industry:", error);
       res.status(500).json({ message: "Failed to delete industry" });
+    }
+  });
+
+  // ===== DEAL SERVICE ROUTES =====
+
+  // Get all deal services
+  app.get("/api/deal-services", isAuthenticated, async (req, res) => {
+    try {
+      const services = await storage.getDealServices();
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching deal services:", error);
+      res.status(500).json({ message: "Failed to fetch deal services" });
+    }
+  });
+
+  // Get single deal service
+  app.get("/api/deal-services/:id", isAuthenticated, async (req, res) => {
+    try {
+      const service = await storage.getDealServiceById(parseInt(req.params.id));
+      if (!service) {
+        return res.status(404).json({ message: "Deal service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error fetching deal service:", error);
+      res.status(500).json({ message: "Failed to fetch deal service" });
+    }
+  });
+
+  // Create new deal service
+  app.post("/api/deal-services", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertDealServiceSchema.safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validatedData.error.errors 
+        });
+      }
+      const service = await storage.createDealService(validatedData.data);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating deal service:", error);
+      res.status(500).json({ message: "Failed to create deal service" });
+    }
+  });
+
+  // Update deal service
+  app.patch("/api/deal-services/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertDealServiceSchema.partial().safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validatedData.error.errors 
+        });
+      }
+      const service = await storage.updateDealService(parseInt(req.params.id), validatedData.data);
+      if (!service) {
+        return res.status(404).json({ message: "Deal service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating deal service:", error);
+      res.status(500).json({ message: "Failed to update deal service" });
+    }
+  });
+
+  // Delete deal service
+  app.delete("/api/deal-services/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteDealService(parseInt(req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting deal service:", error);
+      res.status(500).json({ message: "Failed to delete deal service" });
     }
   });
 

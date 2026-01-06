@@ -1609,7 +1609,7 @@ export type InsertDeal = typeof deals.$inferInsert;
 // Deal with relations
 export type DealWithRelations = Deal & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
-  client?: Pick<Client, "id" | "name" | "industry"> | null;
+  client?: Pick<Client, "id" | "name" | "industryId"> | null;
   brand?: Pick<Brand, "id" | "name" | "industry"> | null;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   primaryContact?: Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers" | "jobTitle"> | null;
@@ -1664,7 +1664,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   wonOn: true,
   lastContactOn: true,
   proposalSentOn: true,
-  services: true,
+  serviceIds: true,
   projectDate: true,
 }).partial();
 
@@ -1710,13 +1710,13 @@ export const insertClientSchema = createInsertSchema(clients).omit({
 }).extend({
   name: z.string().min(1, "Client name is required").max(255),
   website: z.string().max(255).optional().nullable(),
-  industry: z.string().max(255).optional().nullable(),
+  industryId: z.string().optional().nullable(),
 });
 
 export const updateClientSchema = createInsertSchema(clients).pick({
   name: true,
   website: true,
-  industry: true,
+  industryId: true,
 }).partial();
 
 export type CreateClient = z.infer<typeof insertClientSchema>;

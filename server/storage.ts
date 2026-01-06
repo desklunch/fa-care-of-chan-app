@@ -31,6 +31,9 @@ import {
   formResponses,
   comments,
   deals,
+  dealServices,
+  type DealService,
+  type InsertDealService,
   type User,
   type UpsertUser,
   type Invite,
@@ -343,6 +346,13 @@ export interface IStorage {
   createIndustry(data: CreateIndustry): Promise<Industry>;
   updateIndustry(id: string, data: UpdateIndustry): Promise<Industry | undefined>;
   deleteIndustry(id: string): Promise<void>;
+  
+  // Deal service operations
+  getDealServices(): Promise<DealService[]>;
+  getDealServiceById(id: number): Promise<DealService | undefined>;
+  createDealService(data: InsertDealService): Promise<DealService>;
+  updateDealService(id: number, data: Partial<InsertDealService>): Promise<DealService | undefined>;
+  deleteDealService(id: number): Promise<void>;
   
   // Tag operations
   getTags(category?: string): Promise<Tag[]>;
@@ -2144,6 +2154,45 @@ export class DatabaseStorage implements IStorage {
   
   async deleteIndustry(id: string): Promise<void> {
     await db.delete(industries).where(eq(industries.id, id));
+  }
+  
+  // Deal service operations
+  async getDealServices(): Promise<DealService[]> {
+    return db.select().from(dealServices).orderBy(dealServices.sortOrder, dealServices.name);
+  }
+  
+  async getDealServiceById(id: number): Promise<DealService | undefined> {
+    const [service] = await db.select().from(dealServices).where(eq(dealServices.id, id));
+    return service;
+  }
+  
+  async createDealService(data: InsertDealService): Promise<DealService> {
+    const [service] = await db
+      .insert(dealServices)
+      .values({
+        name: data.name,
+        description: data.description,
+        isActive: data.isActive ?? true,
+        sortOrder: data.sortOrder ?? 0,
+      })
+      .returning();
+    return service;
+  }
+  
+  async updateDealService(id: number, data: Partial<InsertDealService>): Promise<DealService | undefined> {
+    const [service] = await db
+      .update(dealServices)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(dealServices.id, id))
+      .returning();
+    return service;
+  }
+  
+  async deleteDealService(id: number): Promise<void> {
+    await db.delete(dealServices).where(eq(dealServices.id, id));
   }
   
   // Tag operations
