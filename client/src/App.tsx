@@ -40,6 +40,7 @@ const VenueCollectionDetail = lazy(() => import("@/pages/venue-collection-detail
 const Amenities = lazy(() => import("@/pages/amenities"));
 const Industries = lazy(() => import("@/pages/industries"));
 const TagsPage = lazy(() => import("@/pages/tags"));
+const ManageVenuesPage = lazy(() => import("@/pages/manage-venues"));
 const AdminVendorServices = lazy(() => import("@/pages/admin-vendor-services"));
 const AdminThemeEditor = lazy(() => import("@/pages/admin-theme-editor"));
 const AdminVendorTokens = lazy(() => import("@/pages/admin-vendor-tokens"));
@@ -109,6 +110,7 @@ import {
   Rocket,
   Tickets,
   Building2,
+  Settings2,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -144,16 +146,10 @@ function useLayoutConfig() {
             href: "/venues/collections",
             icon: FolderOpen,
           },
-
           {
-            name: "Amenities",
-            href: "/amenities",
-            icon: Sparkles,
-          },
-          {
-            name: "Tags",
-            href: "/tags",
-            icon: Tags,
+            name: "Manage",
+            href: "/manage/venues",
+            icon: Settings2,
           },
         ],
       },
@@ -230,19 +226,9 @@ function useLayoutConfig() {
             icon: Palette,
           },
           {
-            name: "Amenities",
-            href: "/amenities",
-            icon: Sparkles,
-          },
-          {
             name: "Industries",
             href: "/industries",
             icon: Building2,
-          },
-          {
-            name: "Tags",
-            href: "/tags",
-            icon: Tag,
           },
         ],
       },
@@ -365,6 +351,7 @@ function AuthenticatedRoutes() {
           <Route path="/venues/:id/edit" component={VenueForm} />
           <Route path="/venues/:id" component={VenueDetail} />
           <Route path="/comments" component={CommentsPage} />
+          <Route path="/manage/venues" component={ManageVenuesPage} />
           <Route path="/amenities" component={Amenities} />
           <Route path="/industries" component={Industries} />
           <Route path="/tags" component={TagsPage} />
