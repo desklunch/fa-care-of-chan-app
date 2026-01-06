@@ -36,8 +36,51 @@ type GuideSection = {
 };
 
 const guideSections: GuideSection[] = [
-
-  
+  {
+    id: "deals",
+    title: "Deals",
+    icon: Briefcase,
+    subsections: [
+      { id: "deals-overview", title: "Overview" },
+      { id: "deals-grid", title: "Deals Data Grid" },
+      { id: "deals-columns", title: "Column Visibility & Repositioning" },
+      { id: "deals-sorting", title: "Sorting" },
+      { id: "deals-search-filters", title: "Search & Filters" },
+      { id: "deals-inline-editing", title: "Inline Editing" },
+      { id: "deals-creating", title: "Creating Deals" },
+      { id: "deals-detail", title: "Deal Detail Page" },
+      { id: "deals-editing", title: "Editing Deals" },
+      { id: "deals-deleting", title: "Deleting Deals" },
+    ],
+  },
+  {
+    id: "clients",
+    title: "Clients",
+    icon: Users,
+    subsections: [
+      { id: "clients-overview", title: "Overview" },
+      { id: "clients-grid", title: "Clients Data Grid" },
+      { id: "clients-search-filters", title: "Search & Filters" },
+      { id: "clients-detail", title: "Client Detail Page" },
+      { id: "clients-contacts", title: "Linking Contacts" },
+      { id: "clients-editing", title: "Editing Clients" },
+      { id: "clients-deleting", title: "Deleting Clients" },
+    ],
+  },
+  {
+    id: "contacts",
+    title: "Contacts",
+    icon: Contact,
+    subsections: [
+      { id: "contacts-overview", title: "Overview" },
+      { id: "contacts-grid", title: "Contacts Data Grid" },
+      { id: "contacts-search-filters", title: "Search & Filters" },
+      { id: "contacts-detail", title: "Contact Detail Page" },
+      { id: "contacts-clients", title: "Linking Clients" },
+      { id: "contacts-editing", title: "Editing Contacts" },
+      { id: "contacts-deleting", title: "Deleting Contacts" },
+    ],
+  },
   {
     id: "venues",
     title: "Venues",
@@ -54,7 +97,6 @@ const guideSections: GuideSection[] = [
       { id: "venues-amenities-tags", title: "Amenities & Tags" },
     ],
   },
-
 ];
 
 function StubContent({ title }: { title: string }) {
@@ -68,6 +110,736 @@ function StubContent({ title }: { title: string }) {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function DealsGuideContent() {
+  return (
+    <div className="space-y-12">
+      <section id="deals-overview" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deals Overview</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Deals module is your central hub for managing your sales pipeline. Track opportunities from initial lead through to closed deals, with comprehensive tools for managing budgets, proposals, contacts, and more.
+            </p>
+            <h4>Key Features</h4>
+            <ul>
+              <li><strong>Pipeline Management</strong> - Track deals through customizable status stages</li>
+              <li><strong>Budget Tracking</strong> - Monitor deal values and compare to proposals</li>
+              <li><strong>Client & Contact Linking</strong> - Associate deals with clients and their contacts</li>
+              <li><strong>Service Selection</strong> - Specify which services each deal includes</li>
+              <li><strong>Location Management</strong> - Track venue locations for each deal</li>
+              <li><strong>Notes & Documentation</strong> - Add markdown-formatted notes to each deal</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-grid" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deals Data Grid</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Deals page displays all your deals in a powerful data grid powered by AG Grid. This provides a spreadsheet-like experience for viewing and managing your deals.
+            </p>
+            <h4>Grid Features</h4>
+            <ul>
+              <li><strong>Resizable Columns</strong> - Drag column borders to adjust width</li>
+              <li><strong>Row Selection</strong> - Click any row to view deal details</li>
+              <li><strong>Status Badges</strong> - Color-coded status indicators for quick scanning</li>
+              <li><strong>Responsive Layout</strong> - Grid adapts to your screen size</li>
+            </ul>
+            <h4>Available Columns</h4>
+            <p>The grid can display the following information:</p>
+            <ul>
+              <li>Deal name and client</li>
+              <li>Status, owner, and creation date</li>
+              <li>Budget and proposal amounts</li>
+              <li>Services and locations</li>
+              <li>Event dates and notes</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-columns" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Column Visibility & Repositioning</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Showing/Hiding Columns</h4>
+            <p>
+              Click the "Columns" button in the toolbar to open the column visibility panel. From here you can:
+            </p>
+            <ul>
+              <li>Toggle individual columns on or off using the checkboxes</li>
+              <li>See columns organized by category (Basic Info, Financial, etc.)</li>
+              <li>Quickly identify which columns are currently visible</li>
+            </ul>
+            <p>Your column preferences are saved automatically and persist across sessions.</p>
+            
+            <h4>Repositioning Columns</h4>
+            <p>
+              Rearrange columns by dragging their headers to a new position:
+            </p>
+            <ol>
+              <li>Click and hold a column header</li>
+              <li>Drag it left or right to the desired position</li>
+              <li>Release to drop the column in place</li>
+            </ol>
+            <p>Column order is saved automatically.</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-sorting" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Sorting</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Sorting by Column</h4>
+            <p>
+              Click any column header to sort the grid by that column:
+            </p>
+            <ul>
+              <li>First click: Sort ascending (A-Z, lowest to highest)</li>
+              <li>Second click: Sort descending (Z-A, highest to lowest)</li>
+              <li>Third click: Clear sort</li>
+            </ul>
+            <p>The sort indicator arrow shows the current sort direction.</p>
+            
+            <h4>Manual Sorting with Drag & Drop</h4>
+            <p>
+              For custom ordering, use the drag handle on the left side of each row:
+            </p>
+            <ol>
+              <li>Hover over a row to see the drag handle (grip icon)</li>
+              <li>Click and hold the drag handle</li>
+              <li>Drag the row up or down to reposition it</li>
+              <li>Release to drop the row in its new position</li>
+            </ol>
+            <p>
+              Manual sort order is saved automatically. Note that when using manual sorting, column-based sorting is temporarily disabled to preserve your custom order.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-search-filters" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Quick Search</h4>
+            <p>
+              Use the search box in the toolbar to find deals by name, client, or other text fields. Results update in real-time as you type.
+            </p>
+            
+            <h4>Filter Options</h4>
+            <p>Click the filter buttons in the toolbar to filter deals by:</p>
+            <ul>
+              <li><strong>Owner</strong> - Filter by deal owner/assignee</li>
+              <li><strong>Status</strong> - Show only deals in specific pipeline stages</li>
+              <li><strong>Location</strong> - Filter by venue location</li>
+              <li><strong>Services</strong> - Show deals with specific services</li>
+            </ul>
+            
+            <h4>Using Filters</h4>
+            <ol>
+              <li>Click a filter button to open the selection dropdown</li>
+              <li>Check one or more options to filter by</li>
+              <li>Active filters show as badges on the button</li>
+              <li>Click the X on a filter badge to clear it</li>
+            </ol>
+            <p>Multiple filters combine to show only deals matching all criteria.</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-inline-editing" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Inline Editing</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Edit deal information directly in the grid without opening the detail page. This enables rapid updates when working through multiple deals.
+            </p>
+            
+            <h4>How to Edit Inline</h4>
+            <ol>
+              <li>Double-click on any editable cell in the grid</li>
+              <li>The cell enters edit mode with a text input or dropdown</li>
+              <li>Make your changes</li>
+              <li>Press Enter to save, or Escape to cancel</li>
+              <li>Click outside the cell to save changes</li>
+            </ol>
+            
+            <h4>Editable Fields</h4>
+            <p>The following fields can be edited inline:</p>
+            <ul>
+              <li>Deal name</li>
+              <li>Status (dropdown selection)</li>
+              <li>Budget and proposal amounts</li>
+              <li>Event dates</li>
+            </ul>
+            
+            <h4>Tips</h4>
+            <ul>
+              <li>Tab between cells to move quickly through edits</li>
+              <li>Changes save automatically when you leave the cell</li>
+              <li>A brief confirmation indicates successful save</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-creating" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Creating Deals</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Create new deals to track opportunities through your pipeline.
+            </p>
+            
+            <h4>Creating a New Deal</h4>
+            <ol>
+              <li>Click the "New Deal" button in the top right</li>
+              <li>Fill in the deal information in the form</li>
+              <li>Click "Create Deal" to save</li>
+            </ol>
+            
+            <h4>Required Fields</h4>
+            <ul>
+              <li><strong>Name</strong> - A descriptive name for the deal</li>
+              <li><strong>Status</strong> - Initial pipeline stage</li>
+            </ul>
+            
+            <h4>Optional Fields</h4>
+            <ul>
+              <li><strong>Client</strong> - Link to an existing client</li>
+              <li><strong>Owner</strong> - Assign a team member</li>
+              <li><strong>Budget</strong> - Expected deal value</li>
+              <li><strong>Services</strong> - Services included in the deal</li>
+              <li><strong>Locations</strong> - Venue locations for the deal</li>
+              <li><strong>Event Dates</strong> - When the event will occur</li>
+              <li><strong>Notes</strong> - Additional details (supports markdown)</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-detail" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deal Detail Page</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Click any row in the deals grid to open the full detail page for that deal.
+            </p>
+            
+            <h4>Page Layout</h4>
+            <p>The detail page shows comprehensive deal information:</p>
+            <ul>
+              <li><strong>Header</strong> - Deal name, status badge, and action buttons</li>
+              <li><strong>Details Section</strong> - All deal properties with inline editing</li>
+              <li><strong>Client Information</strong> - Linked client with quick access</li>
+              <li><strong>Contacts</strong> - Associated contacts for this deal</li>
+              <li><strong>Services</strong> - Selected services displayed as badges</li>
+              <li><strong>Locations</strong> - Venue information</li>
+              <li><strong>Notes</strong> - Markdown-rendered notes section</li>
+            </ul>
+            
+            <h4>Quick Actions</h4>
+            <p>From the detail page you can:</p>
+            <ul>
+              <li>Edit the deal using the Edit button</li>
+              <li>Delete the deal (with confirmation)</li>
+              <li>Navigate to linked client or contacts</li>
+              <li>Update individual fields with inline editing</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-editing" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Editing Deals</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>There are multiple ways to edit deal information:</p>
+            
+            <h4>Inline Editing on Detail Page</h4>
+            <p>
+              On the deal detail page, hover over any field to see an edit icon. Click the icon or double-click the field value to enter edit mode:
+            </p>
+            <ul>
+              <li>Text fields open an inline input</li>
+              <li>Dropdowns show a selection menu</li>
+              <li>Press Enter to save or Escape to cancel</li>
+            </ul>
+            
+            <h4>Full Edit Form</h4>
+            <p>
+              For comprehensive editing, click the "Edit" button to open the full edit form. This provides access to all fields including:
+            </p>
+            <ul>
+              <li>All basic deal properties</li>
+              <li>Client and contact associations</li>
+              <li>Multi-select for services</li>
+              <li>Location management</li>
+              <li>Rich text notes editor</li>
+            </ul>
+            
+            <h4>Grid Inline Editing</h4>
+            <p>
+              As described in the Inline Editing section, you can also edit directly in the data grid by double-clicking cells.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="deals-deleting" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deleting Deals</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Deals can be deleted when they're no longer needed. This action is permanent.
+            </p>
+            
+            <h4>How to Delete</h4>
+            <ol>
+              <li>Open the deal detail page</li>
+              <li>Click the "Delete" button (or trash icon)</li>
+              <li>Confirm the deletion in the dialog that appears</li>
+            </ol>
+            
+            <h4>What Happens When You Delete</h4>
+            <ul>
+              <li>The deal is permanently removed from the system</li>
+              <li>Associations with clients and contacts are removed</li>
+              <li>This action cannot be undone</li>
+            </ul>
+            
+            <h4>Alternative: Changing Status</h4>
+            <p>
+              Instead of deleting, consider changing the deal status to "Cancelled" or "No Go" to preserve the record for historical reference and reporting.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  );
+}
+
+function ClientsGuideContent() {
+  return (
+    <div className="space-y-12">
+      <section id="clients-overview" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Clients Overview</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Clients module helps you manage your business relationships. Clients represent companies or organizations you work with, and can be linked to multiple contacts and deals.
+            </p>
+            <h4>Key Features</h4>
+            <ul>
+              <li><strong>Client Directory</strong> - Browse and search all clients</li>
+              <li><strong>Industry Tracking</strong> - Categorize clients by industry</li>
+              <li><strong>Contact Associations</strong> - Link multiple contacts to each client</li>
+              <li><strong>Deal Relationships</strong> - See all deals associated with a client</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-grid" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Clients Data Grid</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Clients page displays all your clients in a data grid format, making it easy to browse, search, and manage your client base.
+            </p>
+            
+            <h4>Grid Columns</h4>
+            <ul>
+              <li><strong>Name</strong> - Client/company name</li>
+              <li><strong>Industry</strong> - Business sector</li>
+              <li><strong>Website</strong> - Company website</li>
+              <li><strong>Updated</strong> - Last modification date</li>
+            </ul>
+            
+            <h4>Grid Features</h4>
+            <ul>
+              <li>Click any row to view the full client details</li>
+              <li>Resize columns by dragging column borders</li>
+              <li>Sort by clicking column headers</li>
+              <li>Customize visible columns via the Columns button</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-search-filters" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Quick Search</h4>
+            <p>
+              Use the search box to find clients by name, industry, or website. Results update instantly as you type.
+            </p>
+            
+            <h4>Industry Filter</h4>
+            <p>
+              Click the "Industry" filter button to show only clients in specific industries:
+            </p>
+            <ol>
+              <li>Click the Industry filter button</li>
+              <li>Select one or more industries from the list</li>
+              <li>The grid updates to show matching clients</li>
+              <li>Clear the filter by clicking X on the badge</li>
+            </ol>
+            <p>
+              The industry filter automatically shows all industries present in your client data.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-detail" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Client Detail Page</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Click any client row to open the detail page with comprehensive information.
+            </p>
+            
+            <h4>Page Sections</h4>
+            <ul>
+              <li><strong>Header</strong> - Client name and action buttons</li>
+              <li><strong>Basic Information</strong> - Name, industry, website</li>
+              <li><strong>Contacts</strong> - All contacts associated with this client</li>
+              <li><strong>Deals</strong> - Deals linked to this client</li>
+            </ul>
+            
+            <h4>Inline Editing</h4>
+            <p>
+              Edit client fields directly on the detail page by hovering over a field and clicking the edit icon, or by double-clicking the field value. Changes save automatically.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-contacts" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Linking Contacts</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Clients can have multiple contacts associated with them. This helps you track all the people you work with at each company.
+            </p>
+            
+            <h4>Adding a Contact to a Client</h4>
+            <ol>
+              <li>Open the client detail page</li>
+              <li>Find the Contacts section</li>
+              <li>Click "Link Contact" or the add button</li>
+              <li>Search for and select an existing contact</li>
+              <li>The contact is now linked to this client</li>
+            </ol>
+            
+            <h4>Removing a Contact Link</h4>
+            <ol>
+              <li>In the Contacts section, find the contact to unlink</li>
+              <li>Click the unlink or remove button next to the contact</li>
+              <li>Confirm the action</li>
+            </ol>
+            <p>
+              Note: Unlinking a contact does not delete the contact itself, it only removes the association with this client.
+            </p>
+            
+            <h4>Creating New Contacts</h4>
+            <p>
+              You can also create a new contact directly from the client page. The new contact will automatically be linked to the current client.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-editing" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Editing Clients</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Inline Editing</h4>
+            <p>
+              On the client detail page, hover over any field to see an edit icon:
+            </p>
+            <ul>
+              <li>Click the icon or double-click the value to edit</li>
+              <li>Make your changes in the input field</li>
+              <li>Press Enter to save, Escape to cancel</li>
+            </ul>
+            
+            <h4>Full Edit Form</h4>
+            <p>
+              Click the "Edit" button to open the complete edit form with all fields:
+            </p>
+            <ul>
+              <li>Client name</li>
+              <li>Industry</li>
+              <li>Website</li>
+              <li>Any other client properties</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-deleting" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deleting Clients</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>How to Delete a Client</h4>
+            <ol>
+              <li>Open the client detail page</li>
+              <li>Click the "Delete" button</li>
+              <li>Confirm the deletion in the dialog</li>
+            </ol>
+            
+            <h4>Important Considerations</h4>
+            <ul>
+              <li>Deleting a client is permanent and cannot be undone</li>
+              <li>Associated contacts will be unlinked but not deleted</li>
+              <li>Deals linked to this client may need to be updated</li>
+            </ul>
+            
+            <h4>Before Deleting</h4>
+            <p>
+              Consider whether you need to preserve any associated data. You may want to reassign deals to a different client before deletion.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  );
+}
+
+function ContactsGuideContent() {
+  return (
+    <div className="space-y-12">
+      <section id="contacts-overview" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Contacts Overview</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Contacts module helps you manage individual people you work with. Contacts can be associated with clients and linked to deals for comprehensive relationship management.
+            </p>
+            <h4>Key Features</h4>
+            <ul>
+              <li><strong>Contact Directory</strong> - Searchable list of all contacts</li>
+              <li><strong>Contact Details</strong> - Store names, titles, emails, phones</li>
+              <li><strong>Client Associations</strong> - Link contacts to their companies</li>
+              <li><strong>Social Profiles</strong> - Track LinkedIn, Twitter, and other profiles</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="contacts-grid" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Contacts Data Grid</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Contacts page displays all contacts in a data grid for easy browsing and management.
+            </p>
+            
+            <h4>Grid Columns</h4>
+            <ul>
+              <li><strong>Name</strong> - Contact's full name</li>
+              <li><strong>Title</strong> - Job title or role</li>
+              <li><strong>Email</strong> - Primary email address</li>
+              <li><strong>Phone</strong> - Contact phone number</li>
+              <li><strong>Client</strong> - Associated company (if linked)</li>
+            </ul>
+            
+            <h4>Grid Features</h4>
+            <ul>
+              <li>Click rows to view full contact details</li>
+              <li>Sort by any column header</li>
+              <li>Resize and reorder columns</li>
+              <li>Customize visible columns</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="contacts-search-filters" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Quick Search</h4>
+            <p>
+              Use the search box to find contacts by name, email, title, or company. Search results update in real-time.
+            </p>
+            
+            <h4>Filtering Contacts</h4>
+            <p>
+              Use the available filter buttons to narrow your view:
+            </p>
+            <ul>
+              <li>Select filter criteria from the dropdowns</li>
+              <li>Multiple filters combine to refine results</li>
+              <li>Clear filters by clicking X on filter badges</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="contacts-detail" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Contact Detail Page</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Click any contact to open their full detail page.
+            </p>
+            
+            <h4>Page Sections</h4>
+            <ul>
+              <li><strong>Header</strong> - Contact name and action buttons</li>
+              <li><strong>Personal Info</strong> - Name, title, and other details</li>
+              <li><strong>Contact Methods</strong> - Email, phone, and other ways to reach them</li>
+              <li><strong>Social Profiles</strong> - LinkedIn, Twitter, and other social links</li>
+              <li><strong>Associated Clients</strong> - Companies this contact is linked to</li>
+              <li><strong>Related Deals</strong> - Deals this contact is involved with</li>
+            </ul>
+            
+            <h4>Inline Editing</h4>
+            <p>
+              Edit contact fields directly on the page by hovering over a field and clicking the edit icon, or double-clicking the field value.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="contacts-clients" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Linking Clients</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Contacts can be associated with one or more clients, helping you track which people work at which companies.
+            </p>
+            
+            <h4>Linking to a Client</h4>
+            <ol>
+              <li>Open the contact detail page</li>
+              <li>Find the Clients section</li>
+              <li>Click "Link Client" or the add button</li>
+              <li>Search for and select an existing client</li>
+              <li>The contact is now linked to that client</li>
+            </ol>
+            
+            <h4>Unlinking a Client</h4>
+            <ol>
+              <li>In the Clients section, find the client to unlink</li>
+              <li>Click the unlink or remove button</li>
+              <li>Confirm the action</li>
+            </ol>
+            <p>
+              Unlinking removes the association but does not delete the client.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="contacts-editing" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Editing Contacts</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Inline Editing</h4>
+            <p>
+              On the contact detail page, hover over any field to see an edit icon:
+            </p>
+            <ul>
+              <li>Click the icon or double-click the value to edit</li>
+              <li>Make your changes in the input field</li>
+              <li>Press Enter to save, Escape to cancel</li>
+            </ul>
+            
+            <h4>Full Edit Form</h4>
+            <p>
+              Click the "Edit" button to access the complete edit form:
+            </p>
+            <ul>
+              <li>First and last name</li>
+              <li>Job title</li>
+              <li>Email and phone</li>
+              <li>Social profile URLs</li>
+              <li>Notes about this contact</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="contacts-deleting" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deleting Contacts</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>How to Delete a Contact</h4>
+            <ol>
+              <li>Open the contact detail page</li>
+              <li>Click the "Delete" button</li>
+              <li>Confirm the deletion in the dialog</li>
+            </ol>
+            
+            <h4>Important Considerations</h4>
+            <ul>
+              <li>Deleting a contact is permanent and cannot be undone</li>
+              <li>The contact will be unlinked from all associated clients</li>
+              <li>Deal associations will be removed</li>
+            </ul>
+            
+            <h4>Before Deleting</h4>
+            <p>
+              Make sure you no longer need the contact's information. Consider whether they have any active deals or important client associations before proceeding.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
   );
 }
 
@@ -486,7 +1258,7 @@ function VenuesGuideContent() {
 
 export default function GuidePage() {
   usePageTitle("Guide");
-  const [activeSection, setActiveSection] = useState("venues");
+  const [activeSection, setActiveSection] = useState("deals");
 
   const currentSection = guideSections.find((s) => s.id === activeSection);
 
@@ -588,9 +1360,11 @@ export default function GuidePage() {
               </div>
 
               {/* Section Content */}
+              {activeSection === "deals" && <DealsGuideContent />}
+              {activeSection === "clients" && <ClientsGuideContent />}
+              {activeSection === "contacts" && <ContactsGuideContent />}
               {activeSection === "venues" && <VenuesGuideContent />}
               {activeSection === "team" && <StubContent title="Team Directory Documentation" />}
-              {activeSection === "contacts" && <StubContent title="Contacts Documentation" />}
               {activeSection === "vendors" && <StubContent title="Vendors Documentation" />}
               {activeSection === "features" && <StubContent title="Feature Requests Documentation" />}
               {activeSection === "admin" && <StubContent title="Admin Settings Documentation" />}
