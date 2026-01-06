@@ -48,6 +48,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "cuisineTags",
   "styleTags",
   "location",
+  "amenities",
 ];
 
 function getIconComponent(iconName: string): LucideIcon {
