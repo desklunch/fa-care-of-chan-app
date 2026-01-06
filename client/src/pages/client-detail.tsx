@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -40,7 +48,8 @@ import {
   Handshake,
   Users,
   Plus,
-  Trash,
+  UserPlus,
+
 } from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
@@ -269,23 +278,23 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pt-2 pb-4">
             <div>
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
+              <CardTitle className="flex items-center gap-2 text-base font-bold pt-2">
                 Contacts{" "}
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground text-sm font-medium">
                   {localLinkedContacts.length}
                 </span>
               </CardTitle>
             </div>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setShowContactSearch(true)}
               disabled={showContactSearch}
               data-testid="button-link-contact"
             >
-              <Plus className="h-4 w-4" />
+              <UserPlus className="h-4 w-4" />
               Add
             </Button>
           </CardHeader>
@@ -321,7 +330,7 @@ export default function ClientDetail() {
                     {localLinkedContacts.map((contact) => (
                       <div
                         key={contact.id}
-                        className="flex items-center justify-between p-3 pl-4 rounded-lg border"
+                        className="flex items-center justify-between p-3 pl-4 rounded-lg border bg-foreground/[3%]"
                         data-testid={`contact-item-${contact.id}`}
                       >
                         <div>
@@ -347,9 +356,9 @@ export default function ClientDetail() {
                           size="icon"
                           onClick={() => handleUnlinkContact(contact.id)}
                           data-testid={`button-unlink-contact-${contact.id}`}
-                          className="text-foreground/50 w-9 h-9 rounded-full hover:bg-foreground hover:text-background"
+                          className=" w-9 h-9 text-muted-foreground hover:text-destructive"
                         >
-                          <Trash className="!h-5 !w-5" />
+                          <Trash2 className="!h-[18px] !w-[18px] !stroke-[1.5px]" />
                         </Button>
                       </div>
                     ))}
@@ -361,11 +370,11 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
             <div>
               <CardTitle className="flex items-center gap-2 text-base font-bold">
                 Deals
-                <span className="text-muted-foreground">{deals.length}</span>
+                <span className="text-muted-foreground text-sm font-medium">{deals.length}</span>
               </CardTitle>
             </div>
           </CardHeader>
