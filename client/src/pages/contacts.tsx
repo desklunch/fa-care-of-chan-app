@@ -19,6 +19,7 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 180,
+      sort: "asc",
       cellRenderer: (params: { data: ContactWithVendors }) => {
         const contact = params.data;
         if (!contact) return null;
