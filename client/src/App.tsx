@@ -191,17 +191,6 @@ function useLayoutConfig() {
             href: "/app/feedback",
             icon: MessageCircleQuestion,
           },
-          {
-            name: "Features",
-            href: "/app/features",
-            icon: DraftingCompass,
-          },
-          {
-            name: "Issues",
-            href: "/app/issues",
-            icon: Bug,
-          },
-
         ],
       },
       {
@@ -213,6 +202,16 @@ function useLayoutConfig() {
             name: "Team",
             href: "/team",
             icon: Users,
+          },
+          {
+            name: "Features",
+            href: "/app/features",
+            icon: DraftingCompass,
+          },
+          {
+            name: "Issues",
+            href: "/app/issues",
+            icon: Bug,
           },
           {
             name: "Logs",
