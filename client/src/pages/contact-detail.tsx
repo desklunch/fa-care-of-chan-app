@@ -430,7 +430,7 @@ export default function ContactDetail() {
         </h1>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="py-2">
             {localLinkedClients.length > 0 ? (
               localLinkedClients.map((client, index) => (
                 <FieldRow
