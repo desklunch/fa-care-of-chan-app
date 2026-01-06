@@ -480,12 +480,12 @@ export default function VenuesPage() {
   // Welcome dialog state
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
-  // Check if user has seen welcome dialog
+  // Check if user has seen welcome dialog (disabled for now)
   useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem(VENUES_WELCOME_KEY);
-    if (!hasSeenWelcome) {
-      setShowWelcomeDialog(true);
-    }
+    // const hasSeenWelcome = localStorage.getItem(VENUES_WELCOME_KEY);
+    // if (!hasSeenWelcome) {
+    //   setShowWelcomeDialog(true);
+    // }
   }, []);
 
   const handleDismissWelcome = useCallback(() => {

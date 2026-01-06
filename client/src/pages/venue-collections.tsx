@@ -22,11 +22,12 @@ export default function VenueCollectionsPage() {
   // Welcome dialog state
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
+  // Welcome dialog disabled for now
   useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem(COLLECTIONS_WELCOME_KEY);
-    if (!hasSeenWelcome) {
-      setShowWelcomeDialog(true);
-    }
+    // const hasSeenWelcome = localStorage.getItem(COLLECTIONS_WELCOME_KEY);
+    // if (!hasSeenWelcome) {
+    //   setShowWelcomeDialog(true);
+    // }
   }, []);
 
   const handleDismissWelcome = useCallback(() => {
