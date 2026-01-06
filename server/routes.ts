@@ -3578,10 +3578,11 @@ export async function registerRoutes(
 
   // ===== TAG ROUTES =====
   
-  // Get all tags
+  // Get all tags (optionally filtered by category)
   app.get("/api/tags", isAuthenticated, async (req, res) => {
     try {
-      const tags = await storage.getTags();
+      const category = req.query.category as string | undefined;
+      const tags = await storage.getTags(category);
       res.json(tags);
     } catch (error) {
       console.error("Error fetching tags:", error);

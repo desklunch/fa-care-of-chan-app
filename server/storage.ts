@@ -345,7 +345,7 @@ export interface IStorage {
   deleteIndustry(id: string): Promise<void>;
   
   // Tag operations
-  getTags(): Promise<Tag[]>;
+  getTags(category?: string): Promise<Tag[]>;
   getTagById(id: string): Promise<Tag | undefined>;
   createTag(data: CreateTag): Promise<Tag>;
   updateTag(id: string, data: UpdateTag): Promise<Tag | undefined>;
@@ -2147,7 +2147,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Tag operations
-  async getTags(): Promise<Tag[]> {
+  async getTags(category?: string): Promise<Tag[]> {
+    if (category) {
+      return db.select().from(tags).where(eq(tags.category, category)).orderBy(tags.name);
+    }
     return db.select().from(tags).orderBy(tags.category, tags.name);
   }
   
