@@ -17,6 +17,9 @@ interface KanbanProps<T> {
   className?: string;
 }
 
+const COLUMN_WIDTH = 320;
+const COLUMN_GAP = 12;
+
 export function Kanban<T>({
   columns,
   renderCard,
@@ -25,43 +28,43 @@ export function Kanban<T>({
 }: KanbanProps<T>) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
-  const checkScrollability = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  }, []);
+  const [visibleColumns, setVisibleColumns] = useState(columns.length);
+  const [startColumnIndex, setStartColumnIndex] = useState(0);
 
   const checkMobile = useCallback(() => {
     setIsMobile(window.innerWidth < 768);
   }, []);
 
+  const calculateVisibleColumns = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || isMobile) {
+      setVisibleColumns(columns.length);
+      return;
+    }
+    const containerWidth = container.clientWidth;
+    const columnsCount = Math.floor((containerWidth + COLUMN_GAP) / (COLUMN_WIDTH + COLUMN_GAP));
+    setVisibleColumns(Math.max(1, Math.min(columnsCount, columns.length)));
+  }, [columns.length, isMobile]);
+
   useEffect(() => {
     checkMobile();
-    checkScrollability();
+    calculateVisibleColumns();
     
     const handleResize = () => {
       checkMobile();
-      checkScrollability();
+      calculateVisibleColumns();
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [checkMobile, checkScrollability]);
+  }, [checkMobile, calculateVisibleColumns]);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener("scroll", checkScrollability);
-    return () => container.removeEventListener("scroll", checkScrollability);
-  }, [checkScrollability]);
+    if (startColumnIndex > 0 && startColumnIndex + visibleColumns > columns.length) {
+      setStartColumnIndex(Math.max(0, columns.length - visibleColumns));
+    }
+  }, [visibleColumns, columns.length, startColumnIndex]);
 
   const scrollToColumn = (index: number) => {
     const container = scrollContainerRef.current;
@@ -77,15 +80,17 @@ export function Kanban<T>({
     setCurrentIndex(index);
   };
 
+  const canScrollLeft = isMobile ? currentIndex > 0 : startColumnIndex > 0;
+  const canScrollRight = isMobile 
+    ? currentIndex < columns.length - 1 
+    : startColumnIndex + visibleColumns < columns.length;
+
   const handleScrollLeft = () => {
     if (isMobile) {
       const newIndex = Math.max(0, currentIndex - 1);
       scrollToColumn(newIndex);
     } else {
-      const container = scrollContainerRef.current;
-      if (!container) return;
-      const columnWidth = container.scrollWidth / columns.length;
-      container.scrollBy({ left: -columnWidth, behavior: "auto" });
+      setStartColumnIndex((prev) => Math.max(0, prev - 1));
     }
   };
 
@@ -94,10 +99,7 @@ export function Kanban<T>({
       const newIndex = Math.min(columns.length - 1, currentIndex + 1);
       scrollToColumn(newIndex);
     } else {
-      const container = scrollContainerRef.current;
-      if (!container) return;
-      const columnWidth = container.scrollWidth / columns.length;
-      container.scrollBy({ left: columnWidth, behavior: "auto" });
+      setStartColumnIndex((prev) => Math.min(columns.length - visibleColumns, prev + 1));
     }
   };
 
@@ -128,18 +130,23 @@ export function Kanban<T>({
     };
   }, []);
 
+  const displayedColumns = isMobile 
+    ? columns 
+    : columns.slice(startColumnIndex, startColumnIndex + visibleColumns);
+  const hasHiddenColumns = !isMobile && visibleColumns < columns.length;
+
   return (
-    <div className={cn("relative flex flex-col h-full", className)}>
-      {(canScrollLeft || canScrollRight) && (
-        <div className="absolute top-0 left-0 right-0 z-10 flex justify-between pointer-events-none p-2 md:p-4">
+    <div className={cn("flex flex-col h-full", className)}>
+      {(canScrollLeft || canScrollRight || hasHiddenColumns) && !isMobile && (
+        <div className="flex justify-end gap-2 pb-3">
           <Button
             variant="outline"
             size="icon"
             onClick={handleScrollLeft}
             disabled={!canScrollLeft}
             className={cn(
-              "pointer-events-auto bg-background/80 backdrop-blur-sm shadow-md",
-              !canScrollLeft && "opacity-0"
+              "bg-background/80 backdrop-blur-sm shadow-md",
+              !canScrollLeft && "opacity-50"
             )}
             data-testid="button-kanban-scroll-left"
           >
@@ -151,8 +158,8 @@ export function Kanban<T>({
             onClick={handleScrollRight}
             disabled={!canScrollRight}
             className={cn(
-              "pointer-events-auto bg-background/80 backdrop-blur-sm shadow-md",
-              !canScrollRight && "opacity-0"
+              "bg-background/80 backdrop-blur-sm shadow-md",
+              !canScrollRight && "opacity-50"
             )}
             data-testid="button-kanban-scroll-right"
           >
@@ -165,21 +172,22 @@ export function Kanban<T>({
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className={cn(
-          "flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth",
-          "md:snap-none snap-x snap-mandatory",
-          "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+          "flex-1 flex overflow-x-hidden overflow-y-hidden",
+          isMobile && "overflow-x-auto scroll-smooth snap-x snap-mandatory"
         )}
         style={{ scrollSnapType: isMobile ? "x mandatory" : "none" }}
       >
-        {columns.map((column, index) => (
+        {displayedColumns.map((column, index) => (
           <div
             key={column.id}
             className={cn(
               "flex-shrink-0 flex flex-col h-full",
-              "w-full md:w-[280px] lg:w-[300px]",
-              "snap-start",
-              index < columns.length - 1 && "md:mr-3"
+              "snap-start"
             )}
+            style={{
+              width: isMobile ? "100%" : `${COLUMN_WIDTH}px`,
+              marginRight: index < displayedColumns.length - 1 ? `${COLUMN_GAP}px` : undefined,
+            }}
             data-testid={`kanban-column-${column.id}`}
           >
             <div className="flex items-center gap-2 px-3 py-2 mb-2">
@@ -214,7 +222,7 @@ export function Kanban<T>({
 
       {isMobile && columns.length > 1 && (
         <div className="flex justify-center gap-1.5 py-2">
-          {columns.map((column, index) => (
+          {displayedColumns.map((column, index) => (
             <button
               key={column.id}
               onClick={() => scrollToColumn(index)}

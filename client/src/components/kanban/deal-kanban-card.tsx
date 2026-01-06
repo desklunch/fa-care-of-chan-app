@@ -11,17 +11,10 @@ interface DealKanbanCardProps {
 }
 
 export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
-  const formattedDate = deal.projectDate
-    ? new Date(deal.projectDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
-
   const services = deal.services || [];
   const locationsText = deal.locationsText || "";
-  const budgetNotes = deal.budgetNotes || "";
+  const budgetNotes = deal.budgetNotes;
+  const showBudgetNotes = budgetNotes && budgetNotes !== "Not disclosed";
 
   return (
     <Link href={`/deals/${deal.id}`}>
@@ -59,10 +52,10 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
             </div>
           )}
 
-          {formattedDate && (
+          {deal.projectDate && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3 flex-shrink-0" />
-              <span>{formattedDate}</span>
+              <span>{deal.projectDate}</span>
             </div>
           )}
 
@@ -74,7 +67,7 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
             </div>
           )}
 
-          {budgetNotes && (
+          {showBudgetNotes && (
             <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <span className="line-clamp-2">{budgetNotes}</span>
             </div>
