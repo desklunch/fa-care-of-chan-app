@@ -289,7 +289,7 @@ function SnapshotView14() {
     {
       headerName: "Locations",
       field: "locationsText" as const,
-      flex: 3,
+      flex: 2,
       minWidth: 130,
       sortable: false,
       editable: false,
