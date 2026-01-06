@@ -634,8 +634,8 @@ export function computeEarliestEventDate(events: DealEvent[] | null | undefined)
   return earliestDateStr;
 }
 
-// Deal services options
-export const dealServices = [
+// Legacy deal services list (used for migration reference)
+export const legacyDealServices = [
   "Consulting",
   "Creative Direction",
   "Culinary Programming",
@@ -654,7 +654,33 @@ export const dealServices = [
   "Referral Agreement",
 ] as const;
 
-export type DealService = (typeof dealServices)[number];
+// Deal services table for managing available services
+export const dealServices = pgTable(
+  "deal_services",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_deal_services_name").on(table.name),
+    index("idx_deal_services_sort_order").on(table.sortOrder),
+    index("idx_deal_services_is_active").on(table.isActive),
+  ],
+);
+
+export type DealService = typeof dealServices.$inferSelect;
+export type InsertDealService = typeof dealServices.$inferInsert;
+
+export const insertDealServiceSchema = createInsertSchema(dealServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 // Deals for tracking sales pipeline
 export const deals = pgTable(
@@ -669,7 +695,7 @@ export const deals = pgTable(
     brandId: varchar("brand_id").references(() => brands.id),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
-    services: text("services").array().$type<DealService[]>().default([]),
+    serviceIds: integer("service_ids").array().default([]),
     locationsText: text("locations_text"),
     concept: text("concept"),
     notes: text("notes"),
@@ -738,13 +764,13 @@ export const clients = pgTable(
     externalId: varchar("external_id", { length: 50 }),
     name: varchar("name", { length: 255 }).notNull(),
     website: varchar("website", { length: 255 }),
-    industry: varchar("industry", { length: 255 }),
+    industryId: varchar("industry_id").references(() => industries.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("idx_clients_name").on(table.name),
-    index("idx_clients_industry").on(table.industry),
+    index("idx_clients_industry_id").on(table.industryId),
     index("idx_clients_created_at").on(table.createdAt),
     index("idx_clients_external_id").on(table.externalId),
   ],
