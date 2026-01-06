@@ -11,6 +11,7 @@ import {
   venues,
   amenities,
   venueAmenities,
+  industries,
   tags,
   venueTags,
   venueFloorplans,
@@ -73,6 +74,9 @@ import {
   type Amenity,
   type CreateAmenity,
   type UpdateAmenity,
+  type Industry,
+  type CreateIndustry,
+  type UpdateIndustry,
   type Tag,
   type CreateTag,
   type UpdateTag,
@@ -332,6 +336,13 @@ export interface IStorage {
   createAmenity(data: CreateAmenity): Promise<Amenity>;
   updateAmenity(id: string, data: UpdateAmenity): Promise<Amenity | undefined>;
   deleteAmenity(id: string): Promise<void>;
+  
+  // Industry operations
+  getIndustries(): Promise<Industry[]>;
+  getIndustryById(id: string): Promise<Industry | undefined>;
+  createIndustry(data: CreateIndustry): Promise<Industry>;
+  updateIndustry(id: string, data: UpdateIndustry): Promise<Industry | undefined>;
+  deleteIndustry(id: string): Promise<void>;
   
   // Tag operations
   getTags(): Promise<Tag[]>;
@@ -2096,6 +2107,43 @@ export class DatabaseStorage implements IStorage {
   
   async deleteAmenity(id: string): Promise<void> {
     await db.delete(amenities).where(eq(amenities.id, id));
+  }
+  
+  // Industry operations
+  async getIndustries(): Promise<Industry[]> {
+    return db.select().from(industries).orderBy(industries.name);
+  }
+  
+  async getIndustryById(id: string): Promise<Industry | undefined> {
+    const [industry] = await db.select().from(industries).where(eq(industries.id, id));
+    return industry;
+  }
+  
+  async createIndustry(data: CreateIndustry): Promise<Industry> {
+    const [industry] = await db
+      .insert(industries)
+      .values({
+        name: data.name,
+        description: data.description,
+      })
+      .returning();
+    return industry;
+  }
+  
+  async updateIndustry(id: string, data: UpdateIndustry): Promise<Industry | undefined> {
+    const [industry] = await db
+      .update(industries)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(industries.id, id))
+      .returning();
+    return industry;
+  }
+  
+  async deleteIndustry(id: string): Promise<void> {
+    await db.delete(industries).where(eq(industries.id, id));
   }
   
   // Tag operations

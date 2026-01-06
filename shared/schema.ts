@@ -352,6 +352,21 @@ export const venueAmenities = pgTable(
   ],
 );
 
+// Industries for categorizing clients
+export const industries = pgTable(
+  "industries",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_industries_name").on(table.name),
+  ],
+);
+
 // Tags for categorizing venues
 export const tags = pgTable(
   "tags",
@@ -891,6 +906,8 @@ export type Amenity = typeof amenities.$inferSelect;
 export type InsertAmenity = typeof amenities.$inferInsert;
 export type VenueAmenity = typeof venueAmenities.$inferSelect;
 export type InsertVenueAmenity = typeof venueAmenities.$inferInsert;
+export type Industry = typeof industries.$inferSelect;
+export type InsertIndustry = typeof industries.$inferInsert;
 export type Tag = typeof tags.$inferSelect;
 export type InsertTag = typeof tags.$inferInsert;
 export type VenueTag = typeof venueTags.$inferSelect;
@@ -1282,6 +1299,21 @@ export const updateAmenitySchema = insertAmenitySchema.partial();
 
 export type CreateAmenity = z.infer<typeof insertAmenitySchema>;
 export type UpdateAmenity = z.infer<typeof updateAmenitySchema>;
+
+// Industry schemas
+export const insertIndustrySchema = createInsertSchema(industries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(255),
+  description: z.string().optional().nullable(),
+});
+
+export const updateIndustrySchema = insertIndustrySchema.partial();
+
+export type CreateIndustry = z.infer<typeof insertIndustrySchema>;
+export type UpdateIndustry = z.infer<typeof updateIndustrySchema>;
 
 // Tag insert/update schemas
 export const insertTagSchema = createInsertSchema(tags).omit({

@@ -14,10 +14,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { insertClientSchema, type Client, type CreateClient } from "@shared/schema";
+import { insertClientSchema, type Client, type CreateClient, type Industry } from "@shared/schema";
 import { z } from "zod";
 import { Loader2, Save, X } from "lucide-react";
 
@@ -37,6 +44,10 @@ export default function ClientForm() {
   const { data: client, isLoading: clientLoading } = useQuery<Client>({
     queryKey: ["/api/clients", params.id],
     enabled: isEdit,
+  });
+
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
   });
 
   usePageTitle(isEdit ? (client?.name || "Edit Client") : "New Client");
@@ -193,14 +204,24 @@ export default function ClientForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Industry</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Technology, Healthcare, Finance"
-                          data-testid="input-client-industry"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-client-industry">
+                            <SelectValue placeholder="Select an industry..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No industry</SelectItem>
+                          {industries.map((industry) => (
+                            <SelectItem key={industry.id} value={industry.name}>
+                              {industry.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormDescription>
                         The industry or sector the client operates in.
                       </FormDescription>

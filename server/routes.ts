@@ -58,6 +58,10 @@ import {
   updateClientSchema,
   insertBrandSchema,
   updateBrandSchema,
+  insertIndustrySchema,
+  updateIndustrySchema,
+  insertTagSchema,
+  updateTagSchema,
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
@@ -3495,6 +3499,83 @@ export async function registerRoutes(
     }
   });
 
+  // ===== INDUSTRY ROUTES =====
+
+  // Get all industries
+  app.get("/api/industries", isAuthenticated, async (req, res) => {
+    try {
+      const industries = await storage.getIndustries();
+      res.json(industries);
+    } catch (error) {
+      console.error("Error fetching industries:", error);
+      res.status(500).json({ message: "Failed to fetch industries" });
+    }
+  });
+
+  // Get single industry
+  app.get("/api/industries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const industry = await storage.getIndustryById(req.params.id);
+      if (!industry) {
+        return res.status(404).json({ message: "Industry not found" });
+      }
+      res.json(industry);
+    } catch (error) {
+      console.error("Error fetching industry:", error);
+      res.status(500).json({ message: "Failed to fetch industry" });
+    }
+  });
+
+  // Create new industry
+  app.post("/api/industries", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertIndustrySchema.safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validatedData.error.errors 
+        });
+      }
+      const industry = await storage.createIndustry(validatedData.data);
+      res.status(201).json(industry);
+    } catch (error) {
+      console.error("Error creating industry:", error);
+      res.status(500).json({ message: "Failed to create industry" });
+    }
+  });
+
+  // Update industry
+  app.patch("/api/industries/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = updateIndustrySchema.safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validatedData.error.errors 
+        });
+      }
+      const industry = await storage.updateIndustry(req.params.id, validatedData.data);
+      if (!industry) {
+        return res.status(404).json({ message: "Industry not found" });
+      }
+      res.json(industry);
+    } catch (error) {
+      console.error("Error updating industry:", error);
+      res.status(500).json({ message: "Failed to update industry" });
+    }
+  });
+
+  // Delete industry
+  app.delete("/api/industries/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteIndustry(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting industry:", error);
+      res.status(500).json({ message: "Failed to delete industry" });
+    }
+  });
+
   // ===== TAG ROUTES =====
   
   // Get all tags
@@ -3525,7 +3606,14 @@ export async function registerRoutes(
   // Create new tag
   app.post("/api/tags", isAuthenticated, async (req: any, res) => {
     try {
-      const tag = await storage.createTag(req.body);
+      const validatedData = insertTagSchema.safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validatedData.error.errors 
+        });
+      }
+      const tag = await storage.createTag(validatedData.data);
       res.status(201).json(tag);
     } catch (error) {
       console.error("Error creating tag:", error);
@@ -3536,7 +3624,14 @@ export async function registerRoutes(
   // Update tag
   app.patch("/api/tags/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const tag = await storage.updateTag(req.params.id, req.body);
+      const validatedData = updateTagSchema.safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validatedData.error.errors 
+        });
+      }
+      const tag = await storage.updateTag(req.params.id, validatedData.data);
       if (!tag) {
         return res.status(404).json({ message: "Tag not found" });
       }
