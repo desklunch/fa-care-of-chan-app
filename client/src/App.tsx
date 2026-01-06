@@ -173,6 +173,11 @@ function useLayoutConfig() {
             href: "/contacts",
             icon: Contact,
           },
+          {
+            name: "Industries",
+            href: "/industries",
+            icon: Building2,
+          },
         ],
       },
       {
@@ -224,11 +229,6 @@ function useLayoutConfig() {
             name: "Theme Editor",
             href: "/admin/theme",
             icon: Palette,
-          },
-          {
-            name: "Industries",
-            href: "/industries",
-            icon: Building2,
           },
         ],
       },
