@@ -1,17 +1,21 @@
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, DollarSign } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Deal } from "@shared/schema";
 
 interface DealKanbanCardProps {
   deal: Deal;
+  servicesMap?: Map<number, string>;
   className?: string;
 }
 
-export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
-  const services = deal.services || [];
+export function DealKanbanCard({ deal, servicesMap, className }: DealKanbanCardProps) {
+  const serviceIds = deal.serviceIds || [];
+  const serviceNames = servicesMap 
+    ? serviceIds.map(id => servicesMap.get(id)).filter(Boolean) as string[]
+    : [];
   const locationsText = deal.locationsText || "";
   const budgetNotes = deal.budgetNotes;
   const showBudgetNotes = budgetNotes && budgetNotes !== "Not disclosed";
@@ -30,23 +34,23 @@ export function DealKanbanCard({ deal, className }: DealKanbanCardProps) {
           <h4 className="font-medium text-base leading-tight truncate">
             {deal.displayName}
           </h4>
-          {services.length > 0 && (
+          {serviceNames.length > 0 && (
             <div className="flex flex-wrap gap-1 mx-[-2px]">
-              {services.slice(0, 3).map((service) => (
+              {serviceNames.slice(0, 3).map((service, index) => (
                 <Badge
-                  key={service}
+                  key={index}
                   variant="secondary"
                   className="text-xs px-1 py-0 rounded-sm"
                 >
                   {service}
                 </Badge>
               ))}
-              {services.length > 3 && (
+              {serviceNames.length > 3 && (
                 <Badge
                   variant="outline"
                   className="text-xs px-1.5 py-0"
                 >
-                  +{services.length - 3}
+                  +{serviceNames.length - 3}
                 </Badge>
               )}
             </div>

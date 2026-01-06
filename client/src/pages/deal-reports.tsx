@@ -11,7 +11,7 @@ import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import ReactMarkdown from "react-markdown";
-import type { Deal, DealStatus, DealWithRelations, DealService, User as UserType } from "@shared/schema";
+import type { Deal, DealStatus, DealWithRelations, DealService, User as UserType, Service } from "@shared/schema";
 import { usePageHeader } from "@/framework/hooks/page-header-context";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -60,6 +60,14 @@ function SnapshotView30() {
     queryKey: ["/api/deals"],
   });
 
+  const { data: services = [] } = useQuery<Service[]>({
+    queryKey: ["/api/services"],
+  });
+
+  const servicesMap = useMemo(() => {
+    return new Map(services.map((s) => [s.id, s.name]));
+  }, [services]);
+
   const thirtyDaysAgo = useMemo(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -100,7 +108,7 @@ function SnapshotView30() {
     <div className="h-full">
       <Kanban
         columns={columns}
-        renderCard={(deal) => <DealKanbanCard deal={deal} />}
+        renderCard={(deal) => <DealKanbanCard deal={deal} servicesMap={servicesMap} />}
         emptyMessage="No deals"
         className="h-full"
       />
@@ -114,6 +122,14 @@ function SnapshotView14() {
   const { data: deals = [], isLoading } = useQuery<DealWithRelations[]>({
     queryKey: ["/api/deals"],
   });
+
+  const { data: services = [] } = useQuery<Service[]>({
+    queryKey: ["/api/services"],
+  });
+
+  const servicesMap = useMemo(() => {
+    return new Map(services.map((s) => [s.id, s.name]));
+  }, [services]);
 
   const fourteenDaysAgo = useMemo(() => {
     const date = new Date();
@@ -223,7 +239,7 @@ function SnapshotView14() {
     },
     {
       headerName: "Services",
-      field: "services" as const,
+      field: "serviceIds" as const,
       flex: 1,
       minWidth: 180,
       sortable: false,
@@ -231,11 +247,12 @@ function SnapshotView14() {
       wrapText: true,
       autoHeight: true,
       cellRenderer: (params: { data: DealWithRelations }) => {
-        const services = params.data?.services as DealService[] | null;
-        if (!services || services.length === 0) return null;
+        const serviceIds = params.data?.serviceIds || [];
+        if (serviceIds.length === 0) return null;
+        const serviceNames = serviceIds.map(id => servicesMap.get(id)).filter(Boolean) as string[];
         return (
           <div className="flex flex-wrap gap-1 pt-2.5">
-            {services.map((service, index) => (
+            {serviceNames.map((service, index) => (
               <Badge key={index} variant="secondary" className="text-xs">
                 {service}
               </Badge>
@@ -328,7 +345,7 @@ function SnapshotView14() {
         );
       },
     },
-  ], []);
+  ], [servicesMap]);
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
