@@ -4,11 +4,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertClientSchema, type Client, type CreateClient } from "@shared/schema";
 import { z } from "zod";
+import { Loader2, Save, X } from "lucide-react";
 
 const clientFormSchema = insertClientSchema.extend({
   website: z.string().optional().refine(
@@ -26,7 +27,6 @@ const clientFormSchema = insertClientSchema.extend({
     { message: "Please enter a valid URL (e.g., https://example.com)" }
   ),
 });
-import { Loader2 } from "lucide-react";
 
 export default function ClientForm() {
   const params = useParams<{ id?: string }>();
@@ -125,29 +125,53 @@ export default function ClientForm() {
     );
   }
 
+  const handleHeaderSubmit = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  const handleCancel = () => {
+    setLocation(isEdit ? `/clients/${params.id}` : "/clients");
+  };
+
   return (
     <PageLayout
       breadcrumbs={[
         { label: "Clients", href: "/clients" },
-        { label: isEdit ? (client?.name || "Edit") : "New Client" },
+        ...(isEdit && client ? [{ label: client.name, href: `/clients/${params.id}` }] : []),
+        { label: isEdit ? "Edit" : "New Client" },
+      ]}
+      primaryAction={{
+        label: isEdit ? "Save Changes" : "Create Client",
+        icon: Save,
+        onClick: handleHeaderSubmit,
+      }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          icon: X,
+          onClick: handleCancel,
+        },
       ]}
     >
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle data-testid="text-form-title">
-              {isEdit ? "Edit Client" : "New Client"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="max-w-2xl p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle data-testid="text-form-title">
+                  {isEdit ? "Edit Client" : "Client Info"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name *</FormLabel>
+                      <div className="w-full flex justify-between items-center">
+                        <FormLabel>Name</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
                       <FormControl>
                         <Input
                           placeholder="Company name"
@@ -155,6 +179,9 @@ export default function ClientForm() {
                           {...field}
                         />
                       </FormControl>
+                      <FormDescription>
+                        The company or organization name.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -174,6 +201,9 @@ export default function ClientForm() {
                           value={field.value || ""}
                         />
                       </FormControl>
+                      <FormDescription>
+                        The industry or sector the client operates in.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -193,33 +223,17 @@ export default function ClientForm() {
                           value={field.value || ""}
                         />
                       </FormControl>
+                      <FormDescription>
+                        The client's website URL.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <div className="flex gap-3">
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    data-testid="button-submit-client"
-                  >
-                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isEdit ? "Save Changes" : "Create Client"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setLocation(isEdit ? `/clients/${params.id}` : "/clients")}
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </form>
+        </Form>
       </div>
     </PageLayout>
   );

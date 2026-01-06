@@ -1,30 +1,18 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, useLocation, Link } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ArrowLeft, Save, Trash2, Plus, X } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Save, Plus, X, Loader2 } from "lucide-react";
 import type { Contact } from "@shared/schema";
 import { insertContactSchema } from "@shared/schema";
 import { z } from "zod";
@@ -123,24 +111,6 @@ export default function ContactForm() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("DELETE", `/api/contacts/${contactId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
-      toast({ title: "Contact deleted successfully!" });
-      setLocation("/contacts");
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to delete contact", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
   const onSubmit = (data: FormData) => {
     const filteredPhones = phoneNumbers.filter(p => p.trim() !== "");
     const filteredEmails = emailAddresses.filter(e => e.trim() !== "");
@@ -190,7 +160,7 @@ export default function ContactForm() {
     setEmailAddresses(updated);
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending;
   const isLoading = isEditMode && contactLoading;
 
   if (isLoading) {
@@ -201,25 +171,24 @@ export default function ContactForm() {
           { label: isEditMode ? "Edit Contact" : "New Contact" }
         ]}
       >
-        <div className="p-6 max-w-2xl mx-auto">
-          <Skeleton className="h-10 w-64 mb-6" />
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       </PageLayout>
     );
   }
 
-  const backUrl = isEditMode && contactId ? `/contacts/${contactId}` : "/contacts";
   const fullName = isEditMode && existingContact 
     ? `${existingContact.firstName} ${existingContact.lastName}` 
     : "";
+
+  const handleHeaderSubmit = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  const handleCancel = () => {
+    setLocation(isEditMode && contactId ? `/contacts/${contactId}` : "/contacts");
+  };
 
   return (
     <PageLayout 
@@ -228,37 +197,37 @@ export default function ContactForm() {
         ...(isEditMode && existingContact ? [{ label: fullName, href: `/contacts/${contactId}` }] : []),
         { label: isEditMode ? "Edit" : "New Contact" }
       ]}
+      primaryAction={{
+        label: isEditMode ? "Save Changes" : "Create Contact",
+        icon: Save,
+        onClick: handleHeaderSubmit,
+      }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          icon: X,
+          onClick: handleCancel,
+        },
+      ]}
     >
-      <div className="p-6 max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Link href={backUrl}>
-            <Button variant="ghost" size="sm" data-testid="button-back">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{isEditMode ? "Edit Contact" : "Add New Contact"}</CardTitle>
-            <CardDescription>
-              {isEditMode 
-                ? "Update the contact's information."
-                : "Enter the details for the new contact."
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="max-w-2xl p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{isEditMode ? "Edit Contact" : "Contact Info"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name *</FormLabel>
+                        <div className="w-full flex justify-between items-center">
+                          <FormLabel>First Name</FormLabel>
+                          <span className="text-xs font-medium text-muted-foreground">Required</span>
+                        </div>
                         <FormControl>
                           <Input 
                             placeholder="John" 
@@ -276,7 +245,10 @@ export default function ContactForm() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name *</FormLabel>
+                        <div className="w-full flex justify-between items-center">
+                          <FormLabel>Last Name</FormLabel>
+                          <span className="text-xs font-medium text-muted-foreground">Required</span>
+                        </div>
                         <FormControl>
                           <Input 
                             placeholder="Doe" 
@@ -304,11 +276,21 @@ export default function ContactForm() {
                           data-testid="input-job-title"
                         />
                       </FormControl>
+                      <FormDescription>
+                        The contact's role or position.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Methods</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-3">
                   <FormLabel>Email Addresses</FormLabel>
                   {emailAddresses.map((email, index) => (
@@ -390,17 +372,27 @@ export default function ContactForm() {
                       <FormControl>
                         <Textarea 
                           placeholder="123 Main St, City, State 12345"
-                          className="min-h-[80px]"
+                          className="min-h-[80px] resize-y"
                           {...field} 
                           value={field.value || ""}
                           data-testid="textarea-address"
                         />
                       </FormControl>
+                      <FormDescription>
+                        Physical mailing address.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Profiles</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -440,68 +432,10 @@ export default function ContactForm() {
                     )}
                   />
                 </div>
-
-                <div className="flex gap-3 pt-4 justify-between">
-                  <div className="flex gap-3">
-                    <Link href={backUrl}>
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        data-testid="button-cancel"
-                      >
-                        Cancel
-                      </Button>
-                    </Link>
-                    <Button 
-                      type="submit" 
-                      disabled={isPending}
-                      data-testid="button-save"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {isPending 
-                        ? (isEditMode ? "Saving..." : "Creating...") 
-                        : (isEditMode ? "Save Changes" : "Create Contact")
-                      }
-                    </Button>
-                  </div>
-                  {isEditMode && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          type="button" 
-                          variant="destructive"
-                          disabled={isPending}
-                          data-testid="button-delete"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Contact</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this contact? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate()}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            data-testid="button-confirm-delete"
-                          >
-                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </form>
+        </Form>
       </div>
     </PageLayout>
   );
