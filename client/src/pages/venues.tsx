@@ -621,6 +621,7 @@ export default function VenuesPage() {
         }}
       >
         <div className="flex flex-col  h-full">
+          {/* InfoBanner disabled for now
           <InfoBanner
             id="feedback"
             title="Need support?"
@@ -629,6 +630,7 @@ export default function VenuesPage() {
             ctaUrl="/app/feedback"
             userId={user?.id}
           />
+          */}
           <div className="flex-1 min-h-0 ">
             <DataGridPage {...dataGridProps} />
           </div>
