@@ -205,7 +205,7 @@ export function Kanban<T>({
               className={cn(
                 "bg-foreground/[2%] rounded-lg flex-shrink-0 flex flex-col h-full transition-opacity duration-200",
                 "snap-start",
-                !inViewport && "opacity-50"
+                !inViewport && "opacity-30"
               )}
               style={{
                 width: isMobile ? "100%" : `${COLUMN_WIDTH}px`,
