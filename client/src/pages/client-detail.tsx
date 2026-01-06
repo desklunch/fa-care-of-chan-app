@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Client, DealWithRelations, DealStatus, Contact } from "@shared/schema";
+import type { Client, DealWithRelations, DealStatus, Contact, Industry } from "@shared/schema";
 import { Loader2, Pencil, Trash2, Globe, Building2, Handshake, Users, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
@@ -26,9 +26,9 @@ import { ContactLinkSearch } from "@/components/contact-link-search";
 const statusColors: Record<DealStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className?: string }> = {
   "Prospecting": { variant: "outline" },
   "Warm Lead": { variant: "secondary" },
-  "Proposal Phase": { variant: "secondary", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  "Waiting for Feedback": { variant: "secondary" },
-  "Contracting Phase": { variant: "secondary", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  "Proposal": { variant: "secondary", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  "Feedback": { variant: "secondary" },
+  "Contracting": { variant: "secondary", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
   "In Progress": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
   "Final Invoicing": { variant: "default" },
   "Complete": { variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
@@ -71,6 +71,14 @@ export default function ClientDetail() {
     queryKey: ["/api/clients", params.id, "deals"],
     enabled: Boolean(params.id),
   });
+
+  // Fetch industries for lookup
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+  });
+
+  // Create industries lookup map
+  const industriesMap = new Map(industries.map(i => [i.id, i]));
 
   const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<Contact[]>({
     queryKey: ["/api/clients", params.id, "contacts"],
@@ -176,9 +184,11 @@ export default function ClientDetail() {
         <Card>
           <CardContent className="py-4">
             <FieldRow label="Industry" testId="field-client-industry">
-              {client.industry ? (
+              {client.industryId ? (
                 <div className="flex items-center gap-2">
-                  <span>{client.industry}</span>
+                  <Badge variant="secondary">
+                    {industriesMap.get(client.industryId)?.name || client.industryId}
+                  </Badge>
                 </div>
               ) : (
                 <span className="text-muted-foreground">Not set</span>

@@ -1,13 +1,21 @@
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Client } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import type { Client, Industry } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { CircleFadingPlus, Building2 } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "industry", "website"];
+
+// Context type for the grid
+interface ClientsGridContext {
+  industries: Industry[];
+  industriesMap: Map<string, Industry>;
+}
 
 const clientColumns: ColumnConfig<Client>[] = [
   {
@@ -23,11 +31,21 @@ const clientColumns: ColumnConfig<Client>[] = [
   {
     id: "industry",
     headerName: "Industry",
-    field: "industry",
+    field: "industryId",
     category: "Basic Info",
     colDef: {
       flex: 1,
       minWidth: 150,
+      cellRenderer: (params: { data: Client; context: ClientsGridContext }) => {
+        const industryId = params.data?.industryId;
+        if (!industryId) return null;
+        const industry = params.context?.industriesMap?.get(industryId);
+        return (
+          <Badge variant="secondary" className="text-xs">
+            {industry?.name || industryId}
+          </Badge>
+        );
+      },
     },
   },
   {
@@ -62,21 +80,17 @@ const clientFilters: FilterConfig<Client>[] = [
     icon: Building2,
     optionSource: {
       type: "deriveFromData",
-      deriveOptions: (data) => {
-        const industrySet = new Set<string>();
-        data.forEach((client) => {
-          if (client.industry) {
-            industrySet.add(client.industry);
-          }
-        });
-        return Array.from(industrySet)
-          .sort()
-          .map((industry) => ({ id: industry, label: industry }));
+      deriveOptions: (_data, context) => {
+        const ctx = context as ClientsGridContext | undefined;
+        if (!ctx?.industries) return [];
+        return ctx.industries
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((industry) => ({ id: industry.id, label: industry.name }));
       },
     },
     matchFn: (client, selectedValues) => {
-      if (!client.industry) return false;
-      return selectedValues.includes(client.industry);
+      if (!client.industryId) return false;
+      return selectedValues.includes(client.industryId);
     },
   },
 ];
@@ -84,6 +98,20 @@ const clientFilters: FilterConfig<Client>[] = [
 export default function Clients() {
   usePageTitle("Clients");
   const [, setLocation] = useLocation();
+
+  // Fetch industries for lookup
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+  });
+
+  // Create industries lookup map
+  const industriesMap = new Map(industries.map(i => [i.id, i]));
+
+  // Grid context
+  const gridContext: ClientsGridContext = {
+    industries,
+    industriesMap,
+  };
 
   return (
     <PageLayout
@@ -99,12 +127,13 @@ export default function Clients() {
         columns={clientColumns}
         filters={clientFilters}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
-        searchFields={["name", "industry", "website"]}
+        searchFields={["name", "website"]}
         searchPlaceholder="Search clients..."
         onRowClick={(client) => setLocation(`/clients/${client.id}`)}
         getRowId={(client) => client.id || ""}
         emptyMessage="No clients found"
         emptyDescription="Start building your client directory by adding a client."
+        context={gridContext}
       />
     </PageLayout>
   );

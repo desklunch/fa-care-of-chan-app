@@ -57,12 +57,12 @@ export default function ClientForm() {
     defaultValues: {
       name: "",
       website: "",
-      industry: "",
+      industryId: null,
     },
     values: client ? {
       name: client.name,
       website: client.website || "",
-      industry: client.industry || "",
+      industryId: client.industryId || null,
     } : undefined,
   });
 
@@ -200,12 +200,12 @@ export default function ClientForm() {
 
                 <FormField
                   control={form.control}
-                  name="industry"
+                  name="industryId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Industry</FormLabel>
                       <Select 
-                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? null : val)} 
                         value={field.value || "__none__"}
                       >
                         <FormControl>
@@ -216,7 +216,7 @@ export default function ClientForm() {
                         <SelectContent>
                           <SelectItem value="__none__">No industry</SelectItem>
                           {industries.map((industry) => (
-                            <SelectItem key={industry.id} value={industry.name}>
+                            <SelectItem key={industry.id} value={industry.id}>
                               {industry.name}
                             </SelectItem>
                           ))}

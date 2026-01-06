@@ -10,11 +10,12 @@ import type {
   DealService,
   DealLocation,
   User as UserType,
+  Industry,
 } from "@shared/schema";
 import { dealStatuses } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { formatDateOnly } from "@/lib/date";
-import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight, Calendar } from "lucide-react";
+import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight, Calendar, Building2 } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { Link } from "wouter";
 import ReactMarkdown from "react-markdown";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
 
 // Helper to get full name from user
 function getUserFullName(user: Pick<UserType, "firstName" | "lastName"> | null | undefined): string {
@@ -37,11 +39,13 @@ function getInitials(fullName: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-// Context type for the grid - provides user list for Owner dropdown and services
+// Context type for the grid - provides user list for Owner dropdown, services, and industries
 interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
   services: DealService[];
   servicesMap: Map<number, DealService>;
+  industries: Industry[];
+  industriesMap: Map<string, Industry>;
 }
 
 /**
@@ -237,6 +241,26 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
       const serviceIds = deal.serviceIds as number[] | null;
       if (!serviceIds || serviceIds.length === 0) return false;
       return serviceIds.some((id) => selectedValues.includes(String(id)));
+    },
+  },
+  {
+    id: "industry",
+    label: "Industry",
+    icon: Building2,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (_data, context) => {
+        const ctx = context as DealsGridContext | undefined;
+        if (!ctx?.industries) return [];
+        return ctx.industries
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((industry) => ({ id: industry.id, label: industry.name }));
+      },
+    },
+    matchFn: (deal, selectedValues) => {
+      const industryId = deal.client?.industryId;
+      if (!industryId) return false;
+      return selectedValues.includes(industryId);
     },
   },
 ];
@@ -542,6 +566,16 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         return params.data?.client?.industryId || "";
       },
+      cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        const industryId = params.data?.client?.industryId;
+        if (!industryId) return null;
+        const industry = params.context?.industriesMap?.get(industryId);
+        return (
+          <Badge variant="secondary" className="text-xs">
+            {industry?.name || industryId}
+          </Badge>
+        );
+      },
     },
   },
   {
@@ -591,6 +625,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 180,
       wrapText: true,
       autoHeight: true,
+      editable: true,
+      cellEditor: ServicesCellEditor,
+      cellEditorPopup: true,
       cellRenderer: (params: { data: DealWithRelations; context: DealsGridContext }) => {
         const serviceIds = params.data?.serviceIds as number[] | null;
         if (!serviceIds || serviceIds.length === 0) return null;
@@ -746,11 +783,21 @@ export default function Deals() {
   // Create a services lookup map
   const servicesMap = new Map(dealServices.map(s => [s.id, s]));
 
-  // Context for the grid - provides user list for Owner dropdown and services
+  // Fetch industries for the Industry column and filter
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+  });
+
+  // Create industries lookup map
+  const industriesMap = new Map(industries.map(i => [i.id, i]));
+
+  // Context for the grid - provides user list for Owner dropdown, services, and industries
   const gridContext: DealsGridContext = {
     users,
     services: dealServices,
     servicesMap,
+    industries,
+    industriesMap,
   };
 
   // Mutation to update a single deal field with optimistic updates
