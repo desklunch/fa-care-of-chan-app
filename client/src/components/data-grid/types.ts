@@ -1,13 +1,13 @@
 import { ColDef, CellValueChangedEvent } from "ag-grid-community";
 import { LucideIcon } from "lucide-react";
 
-export interface FilterOptionSource<T> {
+export interface FilterOptionSource<T, C = unknown> {
   type: "deriveFromData" | "query" | "static";
   queryKey?: string;
   labelField?: string;
   valueField?: string;
   filterFn?: (item: unknown) => boolean;
-  deriveOptions?: (data: T[]) => Array<{ id: string; label: string }>;
+  deriveOptions?: (data: T[], context?: C) => Array<{ id: string; label: string }>;
   options?: Array<{ id: string; label: string }>;
 }
 

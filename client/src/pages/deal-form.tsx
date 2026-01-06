@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact } from "@shared/schema";
-import { dealStatuses, dealLocationSchema, dealServices } from "@shared/schema";
+import { dealStatuses, dealLocationSchema } from "@shared/schema";
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
@@ -47,7 +47,7 @@ const dealFormSchema = z.object({
   primaryContactId: z.string().optional().transform(val => val || undefined),
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
-  services: z.array(z.enum(dealServices)).default([]),
+  serviceIds: z.array(z.number()).default([]),
   locationsText: z.string().optional().transform(val => val || undefined),
   concept: z.string().optional().transform(val => val || undefined),
   notes: z.string().optional().transform(val => val || undefined),
@@ -81,6 +81,10 @@ export default function DealForm() {
     queryKey: ["/api/users"],
   });
 
+  const { data: dealServices = [] } = useQuery<DealService[]>({
+    queryKey: ["/api/deal-services"],
+  });
+
   usePageTitle(isEditing ? (deal?.displayName ? `Edit ${deal.displayName}` : "Edit Deal") : "New Deal");
 
   const form = useForm<DealFormValues>({
@@ -93,7 +97,7 @@ export default function DealForm() {
       primaryContactId: "",
       locations: [],
       eventSchedule: [],
-      services: [],
+      serviceIds: [],
       locationsText: "",
       concept: "",
       notes: "",
@@ -125,7 +129,7 @@ export default function DealForm() {
         primaryContactId: deal.primaryContactId || "",
         locations: (deal.locations as DealLocation[]) || [],
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
-        services: (deal.services as DealService[]) || [],
+        serviceIds: (deal.serviceIds as number[]) || [],
         locationsText: deal.locationsText || "",
         concept: deal.concept || "",
         notes: deal.notes || "",
@@ -427,7 +431,7 @@ export default function DealForm() {
 
                 <FormField
                   control={form.control}
-                  name="services"
+                  name="serviceIds"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Services</FormLabel>
@@ -446,23 +450,23 @@ export default function DealForm() {
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-0" align="start">
                               <div className="max-h-64 overflow-y-auto p-2">
-                                {dealServices.map((service) => {
-                                  const isSelected = field.value.includes(service);
+                                {dealServices.filter(s => s.isActive).map((service) => {
+                                  const isSelected = field.value.includes(service.id);
                                   return (
                                     <div
-                                      key={service}
+                                      key={service.id}
                                       className="flex items-center gap-2 p-2 rounded-md hover-elevate cursor-pointer"
                                       onClick={() => {
                                         if (isSelected) {
-                                          field.onChange(field.value.filter((s) => s !== service));
+                                          field.onChange(field.value.filter((id) => id !== service.id));
                                         } else {
-                                          field.onChange([...field.value, service]);
+                                          field.onChange([...field.value, service.id]);
                                         }
                                       }}
-                                      data-testid={`checkbox-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                                      data-testid={`checkbox-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
                                     >
                                       <Checkbox checked={isSelected} />
-                                      <span className="text-sm">{service}</span>
+                                      <span className="text-sm">{service.name}</span>
                                     </div>
                                   );
                                 })}
@@ -471,24 +475,28 @@ export default function DealForm() {
                           </Popover>
                           {field.value.length > 0 && (
                             <div className="flex flex-wrap gap-1">
-                              {field.value.map((service) => (
-                                <Badge
-                                  key={service}
-                                  variant="secondary"
-                                  className="text-xs gap-1 pr-1"
-                                  data-testid={`badge-selected-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
-                                >
-                                  {service}
-                                  <button
-                                    type="button"
-                                    onClick={() => field.onChange(field.value.filter((s) => s !== service))}
-                                    className="ml-1 rounded-full hover:bg-muted p-0.5"
-                                    data-testid={`button-remove-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                              {field.value.map((serviceId) => {
+                                const service = dealServices.find(s => s.id === serviceId);
+                                if (!service) return null;
+                                return (
+                                  <Badge
+                                    key={serviceId}
+                                    variant="secondary"
+                                    className="text-xs gap-1 pr-1"
+                                    data-testid={`badge-selected-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
                                   >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>
-                              ))}
+                                    {service.name}
+                                    <button
+                                      type="button"
+                                      onClick={() => field.onChange(field.value.filter((id) => id !== serviceId))}
+                                      className="ml-1 rounded-full hover:bg-muted p-0.5"
+                                      data-testid={`button-remove-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </Badge>
+                                );
+                              })}
                             </div>
                           )}
                         </div>

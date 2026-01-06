@@ -830,6 +830,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
               data={data}
               filterState={filterState}
               onFilterChange={handleFilterChange}
+              context={context}
             />
           )}
           {filters.length > 0 && collapsibleFilters && (
@@ -880,6 +881,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
             data={data}
             filterState={filterState}
             onFilterChange={handleFilterChange}
+            context={context}
           />
         </div>
       )}

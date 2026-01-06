@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { MultiSelect } from "@/components/ui/multi-select";
 import type { FilterConfig } from "./types";
 
-interface FilterBarProps<T> {
+interface FilterBarProps<T, C = unknown> {
   filters: FilterConfig<T>[];
   data: T[];
   filterState: Record<string, string[]>;
   onFilterChange: (filterId: string, values: string[]) => void;
+  context?: C;
 }
 
 interface FilterOption {
@@ -15,16 +16,18 @@ interface FilterOption {
   label: string;
 }
 
-function FilterControl<T>({
+function FilterControl<T, C = unknown>({
   filter,
   data,
   selectedValues,
   onSelectionChange,
+  context,
 }: {
   filter: FilterConfig<T>;
   data: T[];
   selectedValues: string[];
   onSelectionChange: (values: (string | number)[]) => void;
+  context?: C;
 }) {
   const { optionSource } = filter;
 
@@ -39,7 +42,7 @@ function FilterControl<T>({
     }
 
     if (optionSource.type === "deriveFromData" && optionSource.deriveOptions) {
-      return optionSource.deriveOptions(data);
+      return optionSource.deriveOptions(data, context);
     }
 
     if (optionSource.type === "query" && queryData.length > 0) {
@@ -58,7 +61,7 @@ function FilterControl<T>({
     }
 
     return [];
-  }, [optionSource, data, queryData]);
+  }, [optionSource, data, queryData, context]);
 
   const labels = useMemo(() => {
     const labelMap: Record<string, string> = {};
@@ -86,12 +89,13 @@ function FilterControl<T>({
   );
 }
 
-export function FilterBar<T>({
+export function FilterBar<T, C = unknown>({
   filters,
   data,
   filterState,
   onFilterChange,
-}: FilterBarProps<T>) {
+  context,
+}: FilterBarProps<T, C>) {
   if (filters.length === 0) {
     return null;
   }
@@ -105,6 +109,7 @@ export function FilterBar<T>({
           data={data}
           selectedValues={filterState[filter.id] || []}
           onSelectionChange={(values) => onFilterChange(filter.id, values.map(String))}
+          context={context}
         />
       ))}
     </div>

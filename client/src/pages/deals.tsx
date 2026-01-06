@@ -11,7 +11,7 @@ import type {
   DealLocation,
   User as UserType,
 } from "@shared/schema";
-import { dealStatuses, dealServices } from "@shared/schema";
+import { dealStatuses } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { formatDateOnly } from "@/lib/date";
 import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight, Calendar } from "lucide-react";
@@ -37,9 +37,11 @@ function getInitials(fullName: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-// Context type for the grid - provides user list for Owner dropdown
+// Context type for the grid - provides user list for Owner dropdown and services
 interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
+  services: DealService[];
+  servicesMap: Map<number, DealService>;
 }
 
 /**
@@ -221,13 +223,20 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
     label: "Services",
     icon: Briefcase,
     optionSource: {
-      type: "static",
-      options: dealServices.map((service) => ({ id: service, label: service })),
+      type: "deriveFromData",
+      deriveOptions: (_data, context) => {
+        const ctx = context as DealsGridContext | undefined;
+        if (!ctx?.services) return [];
+        return ctx.services.filter(s => s.isActive).map((service) => ({ 
+          id: String(service.id), 
+          label: service.name 
+        }));
+      },
     },
     matchFn: (deal, selectedValues) => {
-      const services = deal.services as DealService[] | null;
-      if (!services || services.length === 0) return false;
-      return services.some((service) => selectedValues.includes(service));
+      const serviceIds = deal.serviceIds as number[] | null;
+      if (!serviceIds || serviceIds.length === 0) return false;
+      return serviceIds.some((id) => selectedValues.includes(String(id)));
     },
   },
 ];
@@ -531,7 +540,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 1,
       minWidth: 140,
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.client?.industry || "";
+        return params.data?.client?.industryId || "";
       },
     },
   },
@@ -575,23 +584,27 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
     id: "services",
     headerName: "Services",
-    field: "services",
+    field: "serviceIds",
     category: "Basic Info",
     colDef: {
       flex: 1,
       minWidth: 180,
       wrapText: true,
       autoHeight: true,
-      cellRenderer: (params: { data: DealWithRelations }) => {
-        const services = params.data?.services as DealService[] | null;
-        if (!services || services.length === 0) return null;
+      cellRenderer: (params: { data: DealWithRelations; context: DealsGridContext }) => {
+        const serviceIds = params.data?.serviceIds as number[] | null;
+        if (!serviceIds || serviceIds.length === 0) return null;
+        const servicesMap = params.context?.servicesMap;
         return (
           <div className="flex flex-wrap gap-1 pt-2.5">
-            {services.map((service, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {service}
-              </Badge>
-            ))}
+            {serviceIds.map((serviceId) => {
+              const service = servicesMap?.get(serviceId);
+              return (
+                <Badge key={serviceId} variant="secondary" className="text-xs">
+                  {service?.name || `Service ${serviceId}`}
+                </Badge>
+              );
+            })}
           </div>
         );
       },
@@ -725,9 +738,19 @@ export default function Deals() {
     queryKey: ["/api/users"],
   });
 
-  // Context for the grid - provides user list for Owner dropdown
+  // Fetch deal services for the Services column and filter
+  const { data: dealServices = [] } = useQuery<DealService[]>({
+    queryKey: ["/api/deal-services"],
+  });
+
+  // Create a services lookup map
+  const servicesMap = new Map(dealServices.map(s => [s.id, s]));
+
+  // Context for the grid - provides user list for Owner dropdown and services
   const gridContext: DealsGridContext = {
     users,
+    services: dealServices,
+    servicesMap,
   };
 
   // Mutation to update a single deal field with optimistic updates

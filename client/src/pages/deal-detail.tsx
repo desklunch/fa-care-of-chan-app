@@ -45,8 +45,10 @@ import type {
   User,
   Client,
   Brand,
+  Industry,
 } from "@shared/schema";
-import { dealStatuses, dealServices } from "@shared/schema";
+import { dealStatuses } from "@shared/schema";
+import type { DealService as DealServiceType } from "@shared/schema";
 
 type EditableFieldType = "text" | "textarea" | "select" | "date" | "multiselect";
 
@@ -474,13 +476,29 @@ export default function DealDetail() {
     queryKey: ["/api/users"],
   });
 
-  const { data: clients = [] } = useQuery<Pick<Client, "id" | "name" | "industry">[]>({
+  const { data: clients = [] } = useQuery<Pick<Client, "id" | "name" | "industryId">[]>({
     queryKey: ["/api/clients"],
   });
+
+  // Fetch deal services from API
+  const { data: dealServices = [] } = useQuery<DealServiceType[]>({
+    queryKey: ["/api/deal-services"],
+  });
+
+  // Create a services lookup map
+  const servicesMap = new Map(dealServices.map(s => [s.id, s]));
 
   const { data: brands = [] } = useQuery<Pick<Brand, "id" | "name" | "industry">[]>({
     queryKey: ["/api/brands"],
   });
+
+  // Fetch industries for lookup
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+  });
+
+  // Create an industries lookup map
+  const industriesMap = new Map(industries.map(i => [i.id, i]));
 
   usePageTitle(deal?.displayName || "Deal");
 
@@ -592,7 +610,7 @@ export default function DealDetail() {
         .slice(0, 2)
     : "";
 
-  const services = (deal.services as DealService[]) || [];
+  const serviceIds = (deal.serviceIds as number[]) || [];
 
   return (
     <PageLayout
@@ -753,8 +771,10 @@ export default function DealDetail() {
                 /> */}
 
                 <FieldRow label="Industry" testId="field-client-industry">
-                  {deal.client?.industry ? (
-                    <span data-testid="text-client-industry">{deal.client.industry}</span>
+                  {deal.client?.industryId ? (
+                    <span data-testid="text-client-industry">
+                      {industriesMap.get(deal.client.industryId)?.name || deal.client.industryId}
+                    </span>
                   ) : (
                     <span className="text-muted-foreground">No industry</span>
                   )}
@@ -809,26 +829,34 @@ export default function DealDetail() {
                 <EditableFieldRow
                   label="Services"
                   value=""
-                  field="services"
+                  field="serviceIds"
                   testId="field-services"
                   type="multiselect"
-                  options={dealServices.map((s) => ({ value: s, label: s }))}
-                  multiSelectValues={services}
-                  onSave={handleFieldSave}
+                  options={dealServices.filter(s => s.isActive).map((s) => ({ value: String(s.id), label: s.name }))}
+                  multiSelectValues={serviceIds.map(String)}
+                  onSave={(field, value) => {
+                    // Convert string array back to number array
+                    const ids = (value as string[]).map(Number);
+                    handleFieldSave(field, ids);
+                  }}
                   displayValue={
-                    services.length > 0 ? (
+                    serviceIds.length > 0 ? (
                       <div className="flex flex-wrap gap-2" data-testid="deal-services">
-                        {services.map((service) => (
-                          <Badge
-                            key={service}
-                            variant="secondary"
-                            data-testid={`badge-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
-                            size="lg"
-                            className="py-1 px-2 text-xs"
-                          >
-                            {service}
-                          </Badge>
-                        ))}
+                        {serviceIds.map((serviceId) => {
+                          const service = servicesMap.get(serviceId);
+                          const serviceName = service?.name || `Service ${serviceId}`;
+                          return (
+                            <Badge
+                              key={serviceId}
+                              variant="secondary"
+                              data-testid={`badge-service-${serviceId}`}
+                              size="lg"
+                              className="py-1 px-2 text-xs"
+                            >
+                              {serviceName}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     ) : undefined
                   }
