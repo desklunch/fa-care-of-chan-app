@@ -431,6 +431,22 @@ export default function ContactDetail() {
 
         <Card>
           <CardContent className="py-2">
+            <EditableFieldRow
+              label="First Name"
+              value={contact.firstName}
+              field="firstName"
+              testId="field-contact-first-name"
+              onSave={handleFieldSave}
+              placeholder="Enter first name"
+            />
+            <EditableFieldRow
+              label="Last Name"
+              value={contact.lastName}
+              field="lastName"
+              testId="field-contact-last-name"
+              onSave={handleFieldSave}
+              placeholder="Enter last name"
+            />
             {localLinkedClients.length > 0 ? (
               localLinkedClients.map((client, index) => (
                 <FieldRow
