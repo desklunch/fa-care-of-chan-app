@@ -325,7 +325,20 @@ export function ManagePage({ title, sections, breadcrumbs = [] }: ManagePageProp
   const searchParams = new URLSearchParams(searchString);
   const tabFromUrl = searchParams.get("tab");
   const defaultTab = sections[0]?.id || "";
-  const [activeTab, setActiveTab] = useState(tabFromUrl || defaultTab);
+  const isValidTab = (tab: string | null): tab is string => 
+    tab !== null && sections.some(s => s.id === tab);
+  const [activeTab, setActiveTab] = useState(isValidTab(tabFromUrl) ? tabFromUrl : defaultTab);
+  
+  useEffect(() => {
+    const currentTab = searchParams.get("tab");
+    if (isValidTab(currentTab)) {
+      if (currentTab !== activeTab) {
+        setActiveTab(currentTab);
+      }
+    } else if (currentTab !== null && activeTab !== defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [searchString, sections, defaultTab]);
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
