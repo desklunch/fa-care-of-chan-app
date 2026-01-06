@@ -699,7 +699,7 @@ export default function ManagePage() {
       }}
     >
       <div className="flex flex-col h-full">
-        <div className="px-6 pt-4 pb-2 border-b">
+        <div className="px-4 md:px-6 pt-2 border-b">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList>
               <TabsTrigger value="industries" className="gap-2" data-testid="tab-industries">

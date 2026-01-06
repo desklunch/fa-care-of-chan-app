@@ -40,7 +40,7 @@ export function DealKanbanCard({ deal, servicesMap, className }: DealKanbanCardP
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="text-xs px-1 py-0 rounded-sm"
+                  className="text-xs px-1 py-0 rounded-sm bg-foreground/10"
                 >
                   {service}
                 </Badge>
@@ -56,26 +56,31 @@ export function DealKanbanCard({ deal, servicesMap, className }: DealKanbanCardP
             </div>
           )}
 
-          {deal.projectDate && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3 flex-shrink-0" />
-              <span>{deal.projectDate}</span>
-            </div>
-          )}
 
-  
-          {locationsText && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" />
-              <span className="line-clamp-1">{locationsText}</span>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {deal.projectDate && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3 flex-shrink-0" />
+                <span>{deal.projectDate}</span>
+              </div>
+            )}
 
-          {showBudgetNotes && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <span className="line-clamp-2">{budgetNotes}</span>
-            </div>
-          )}
+
+            {locationsText && (
+              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                <span className="line-clamp-1">{locationsText}</span>
+              </div>
+            )}
+
+            {showBudgetNotes && (
+              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <span className="line-clamp-2">{budgetNotes}</span>
+              </div>
+            )}
+          </div>
+          
+
         </div>
       </Card>
     </Link>

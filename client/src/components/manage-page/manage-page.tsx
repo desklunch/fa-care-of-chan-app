@@ -384,7 +384,7 @@ export function ManagePage({ title, sections, breadcrumbs = [] }: ManagePageProp
                     <TabsTrigger
                       key={section.id}
                       value={section.id}
-                      className="gap-2 px-4"
+                      className="gap-2"
                       data-testid={`tab-${section.id}`}
                     >
                       <Icon className="h-4 w-4" />

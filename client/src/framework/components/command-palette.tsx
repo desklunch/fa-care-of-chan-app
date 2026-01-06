@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/command";
 import { useLayout } from "../hooks/layout-context";
 import type { NavItem, NavSection } from "../types/layout";
-import type { VenueWithRelations, VenueCollectionWithCreator, Deal } from "@shared/schema";
-import { MapPin, FolderOpen, Tickets } from "lucide-react";
+import type { VenueWithRelations, VenueCollectionWithCreator, Deal, Client, Contact, Industry } from "@shared/schema";
+import { MapPin, FolderOpen, Tickets, Building2, User } from "lucide-react";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -42,6 +42,29 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     queryKey: ["/api/deals"],
     enabled: open,
   });
+
+  // Fetch clients for global search
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["/api/clients"],
+    enabled: open,
+  });
+
+  // Fetch contacts for global search
+  const { data: contacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/contacts"],
+    enabled: open,
+  });
+
+  // Fetch industries for client industry lookup
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+    enabled: open,
+  });
+
+  // Create industry lookup map
+  const industryMap = useMemo(() => {
+    return new Map(industries.map((i) => [i.id, i.name]));
+  }, [industries]);
 
   const filterByRole = useCallback((items: NavItem[]) => {
     if (!user?.role) return items;
@@ -104,6 +127,31 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       .slice(0, 10);
   }, [deals, search]);
 
+  // Filter clients based on search
+  const filteredClients = useMemo(() => {
+    if (!search.trim()) return clients.slice(0, 5);
+    const searchLower = search.toLowerCase();
+    return clients
+      .filter((client) =>
+        client.name.toLowerCase().includes(searchLower)
+      )
+      .slice(0, 10);
+  }, [clients, search]);
+
+  // Filter contacts based on search
+  const filteredContacts = useMemo(() => {
+    if (!search.trim()) return contacts.slice(0, 5);
+    const searchLower = search.toLowerCase();
+    return contacts
+      .filter((contact) => {
+        const fullName = `${contact.firstName} ${contact.lastName}`.toLowerCase();
+        return fullName.includes(searchLower) ||
+          contact.firstName.toLowerCase().includes(searchLower) ||
+          contact.lastName.toLowerCase().includes(searchLower);
+      })
+      .slice(0, 10);
+  }, [contacts, search]);
+
   const handleSelect = useCallback((href: string) => {
     navigate(href);
     onOpenChange(false);
@@ -120,12 +168,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const hasVenueResults = filteredVenues.length > 0;
   const hasCollectionResults = filteredCollections.length > 0;
   const hasDealResults = filteredDeals.length > 0;
-  const hasSearchResults = search.trim() && (hasVenueResults || hasCollectionResults || hasDealResults);
+  const hasClientResults = filteredClients.length > 0;
+  const hasContactResults = filteredContacts.length > 0;
+  const hasSearchResults = search.trim() && (hasVenueResults || hasCollectionResults || hasDealResults || hasClientResults || hasContactResults);
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput 
-        placeholder="Search pages, venues, collections, and deals..." 
+        placeholder="Search pages, venues, collections, deals, clients, and contacts..." 
         data-testid="input-command-search"
         value={search}
         onValueChange={setSearch}
@@ -230,6 +280,62 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     {deal.status && (
                       <span className="text-xs text-muted-foreground capitalize">
                         {deal.status.replace(/_/g, " ")}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {/* Clients */}
+        {hasClientResults && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Clients">
+              {filteredClients.map((client) => (
+                <CommandItem
+                  key={client.id}
+                  value={`client-${client.name}-${client.id}`}
+                  onSelect={() => handleSelect(`/clients/${client.id}`)}
+                  className="cursor-pointer"
+                  data-testid={`command-item-client-${client.id}`}
+                >
+                  <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span>{client.name}</span>
+                    {client.industryId && industryMap.get(client.industryId) && (
+                      <span className="text-xs text-muted-foreground">
+                        {industryMap.get(client.industryId)}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {/* Contacts */}
+        {hasContactResults && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Contacts">
+              {filteredContacts.map((contact) => (
+                <CommandItem
+                  key={contact.id}
+                  value={`contact-${contact.firstName}-${contact.lastName}-${contact.id}`}
+                  onSelect={() => handleSelect(`/contacts/${contact.id}`)}
+                  className="cursor-pointer"
+                  data-testid={`command-item-contact-${contact.id}`}
+                >
+                  <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span>{contact.firstName} {contact.lastName}</span>
+                    {contact.jobTitle && (
+                      <span className="text-xs text-muted-foreground">
+                        {contact.jobTitle}
                       </span>
                     )}
                   </div>
