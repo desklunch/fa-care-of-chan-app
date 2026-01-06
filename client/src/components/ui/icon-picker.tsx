@@ -10,16 +10,63 @@ import Fuse from "fuse.js";
 
 type IconComponent = React.ComponentType<{ className?: string }>;
 
-const ICON_NAMES = Object.keys(LucideIcons).filter(
-  (key) =>
-    key !== "createLucideIcon" &&
-    key !== "default" &&
-    key !== "icons" &&
-    !key.startsWith("Lucide") &&
-    typeof (LucideIcons as Record<string, unknown>)[key] === "function"
-);
+const COMMON_ICONS = [
+  "Accessibility", "Activity", "AirVent", "Alarm", "Album", "AlertCircle", "AlertTriangle",
+  "AlignCenter", "AlignLeft", "AlignRight", "Anchor", "Aperture", "Apple", "Archive",
+  "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowUp", "AtSign", "Award",
+  "Baby", "Backpack", "Badge", "BadgeCheck", "Ban", "Banknote", "BarChart",
+  "Battery", "BedDouble", "Beer", "Bell", "Bike", "Binary", "Bird", "Bitcoin",
+  "Bluetooth", "Bold", "Bomb", "Book", "Bookmark", "Bot", "Box", "Brain",
+  "Briefcase", "Brush", "Bug", "Building", "Bus", "Cake", "Calculator",
+  "Calendar", "Camera", "Car", "CaseSensitive", "Cat", "Check", "CheckCircle",
+  "ChefHat", "Cherry", "ChevronDown", "ChevronLeft", "ChevronRight", "ChevronUp",
+  "Chrome", "Circle", "Citrus", "Clipboard", "Clock", "Cloud", "Clover", "Code",
+  "Coffee", "Cog", "Coins", "Columns", "Command", "Compass", "Computer",
+  "Contact", "Cookie", "Copy", "Copyright", "CreditCard", "Croissant", "Crown",
+  "Cup", "Database", "Delete", "Diamond", "Dice", "Dna", "Dog", "DollarSign",
+  "Download", "Droplet", "Drum", "Dumbbell", "Ear", "Edit", "Egg", "ExternalLink",
+  "Eye", "EyeOff", "Facebook", "FastForward", "Feather", "File", "FileText",
+  "Film", "Filter", "Fingerprint", "Fire", "Fish", "Flag", "Flame", "Flashlight",
+  "FlipHorizontal", "Flower", "Focus", "Folder", "Footprints", "Fork",
+  "Forklift", "Forward", "Frame", "Frown", "Fuel", "Gamepad", "Gauge", "Gem",
+  "Ghost", "Gift", "GitBranch", "Github", "Glasses", "Globe", "Goal", "Grab",
+  "GraduationCap", "Grape", "Grid", "Grip", "Guitar", "Hammer", "Hand",
+  "HandHeart", "HandMetal", "Handshake", "HardDrive", "Hash", "Headphones",
+  "Heart", "HeartPulse", "HelpCircle", "Hexagon", "Highlighter", "History",
+  "Home", "Hotel", "Hourglass", "IceCream", "Image", "Inbox", "Infinity", "Info",
+  "Instagram", "Italic", "Key", "Keyboard", "Lamp", "Landmark", "Languages",
+  "Laptop", "Laugh", "Layers", "Layout", "Leaf", "Library", "Lightbulb", "Link",
+  "Linkedin", "List", "Loader", "Lock", "LogIn", "LogOut", "Lollipop", "Luggage",
+  "Magnet", "Mail", "Map", "MapPin", "Maximize", "Medal", "Megaphone", "Meh",
+  "Menu", "MessageCircle", "Mic", "Microscope", "Microwave", "Milestone", "Milk",
+  "Minimize", "Minus", "Monitor", "Moon", "MoreHorizontal", "Mountain", "Mouse",
+  "Move", "Music", "Navigation", "Network", "Newspaper", "NotepadText", "Nut",
+  "Octagon", "Option", "Orbit", "Package", "Paintbrush", "Palette", "Palmtree",
+  "Paperclip", "PartyPopper", "Pause", "PawPrint", "Pen", "Pencil", "Pentagon",
+  "Percent", "Phone", "Piano", "PieChart", "Pill", "Pin", "Pizza", "Plane",
+  "Play", "Plug", "Plus", "Pocket", "Podcast", "Popcorn", "Power", "Printer",
+  "Projector", "Puzzle", "QrCode", "Quote", "Radio", "Rainbow", "Receipt",
+  "Recycle", "Redo", "Refrigerator", "Repeat", "Reply", "Rewind", "Ribbon",
+  "Rocket", "RockingChair", "Rotate", "Ruler", "Sailboat", "Salad", "Sandwich",
+  "Satellite", "Save", "Scale", "Scan", "School", "Scissors", "ScreenShare",
+  "Scroll", "Search", "Send", "Server", "Settings", "Shapes", "Share", "Sheet",
+  "Shield", "Ship", "Shirt", "ShoppingBag", "ShoppingCart", "Shovel", "Shower",
+  "Shrub", "Shuffle", "Sigma", "Signal", "Signpost", "SlidersHorizontal",
+  "Smartphone", "Smile", "Snowflake", "Sofa", "Soup", "Sparkle", "Sparkles",
+  "Speaker", "Spline", "Split", "Sprout", "Square", "Stamp", "Star", "Stethoscope",
+  "Sticker", "StickyNote", "Stop", "Stopwatch", "Store", "StretchHorizontal",
+  "Strikethrough", "Subscript", "Sun", "Sunrise", "Sunset", "Superscript", "Sword",
+  "Syringe", "Table", "Tablet", "Tag", "Target", "Tent", "Terminal", "TestTube",
+  "Text", "Thermometer", "ThumbsDown", "ThumbsUp", "Ticket", "Timer", "ToggleLeft",
+  "ToggleRight", "Tornado", "Tractor", "TrafficCone", "Train", "Trash", "TreePine",
+  "Trees", "Triangle", "Trophy", "Truck", "Tv", "Twitch", "Twitter", "Umbrella",
+  "Underline", "Undo", "Unlink", "Unlock", "Upload", "Usb", "User", "Users",
+  "Utensils", "UtensilsCrossed", "Vault", "Vegan", "Video", "Voicemail", "Volume",
+  "Wallet", "Wand", "Watch", "Waves", "Webcam", "Weight", "Wifi", "Wind", "Wine",
+  "Workflow", "Wrench", "X", "Youtube", "Zap", "ZoomIn", "ZoomOut",
+];
 
-const iconEntries = ICON_NAMES.map((name) => ({
+const iconEntries = COMMON_ICONS.map((name) => ({
   name,
   searchName: name.toLowerCase().replace(/([A-Z])/g, " $1").trim(),
 }));
@@ -51,7 +98,7 @@ export function IconPicker({
 
   const filteredIcons = useMemo(() => {
     if (!search.trim()) {
-      return ICON_NAMES;
+      return COMMON_ICONS;
     }
     return fuse.search(search).map((result) => result.item.name);
   }, [search]);
