@@ -238,24 +238,6 @@ function StyleTagsCellRenderer({ data }: { data: VenueWithRelations }) {
 
 const venueColumns: ColumnConfig<VenueWithRelations>[] = [
   {
-    id: "id",
-    headerName: "ID",
-    field: "id",
-    colDef: {
-      flex: 1,
-      minWidth: 100,
-    },
-  },
-  {
-    id: "externalId",
-    headerName: "External ID",
-    field: "externalId",
-    colDef: {
-      flex: 0.5,
-      minWidth: 80,
-    },
-  },
-  {
     id: "name",
     headerName: "Name",
     field: "name",
