@@ -112,7 +112,7 @@ import {
   Rocket,
   Tickets,
   Building2,
-  Settings2,
+  SlidersHorizontal,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -151,7 +151,7 @@ function useLayoutConfig() {
           {
             name: "Manage",
             href: "/manage/venues",
-            icon: Settings2,
+            icon: SlidersHorizontal,
           },
         ],
       },
@@ -183,7 +183,7 @@ function useLayoutConfig() {
           {
             name: "Manage",
             href: "/sales/manage",
-            icon: Settings2,
+            icon: SlidersHorizontal,
           },
         ],
       },

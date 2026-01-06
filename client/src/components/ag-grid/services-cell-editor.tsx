@@ -63,6 +63,7 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
                   onCheckedChange={(checked) =>
                     handleToggle(service.id, checked === true)
                   }
+                  className="border-input"
                 />
                 <span className="text-sm">{service.name}</span>
               </label>
@@ -70,7 +71,7 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
           </div>
         </ScrollArea>
         <div className="pt-2 border-t mt-2">
-          <Button size="sm" onClick={handleDone} className="w-full">
+          <Button variant="secondary" size="sm" onClick={handleDone} className="w-full">
             Done
           </Button>
         </div>

@@ -571,9 +571,12 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!industryId) return null;
         const industry = params.context?.industriesMap?.get(industryId);
         return (
-          <Badge variant="secondary" className="text-xs">
-            {industry?.name || industryId}
-          </Badge>
+          <div className="flex flex-wrap gap-1 pt-2.5">
+            <Badge variant="secondary" className="text-xs">
+              {industry?.name || industryId}
+            </Badge>
+          </div>
+          
         );
       },
     },
@@ -633,7 +636,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!serviceIds || serviceIds.length === 0) return null;
         const servicesMap = params.context?.servicesMap;
         return (
-          <div className="flex flex-wrap gap-1 pt-2.5">
+          <div className="flex flex-wrap gap-1 py-2.5">
             {serviceIds.map((serviceId) => {
               const service = servicesMap?.get(serviceId);
               return (
