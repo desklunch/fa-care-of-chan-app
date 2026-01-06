@@ -41,9 +41,12 @@ const clientColumns: ColumnConfig<Client>[] = [
         if (!industryId) return null;
         const industry = params.context?.industriesMap?.get(industryId);
         return (
-          <Badge variant="secondary" className="text-xs">
-            {industry?.name || industryId}
-          </Badge>
+            <div className="flex flex-wrap gap-1 py-2.5">
+            <Badge variant="secondary" className="text-xs">
+              {industry?.name || industryId}
+            </Badge>
+          </div>
+          
         );
       },
     },
