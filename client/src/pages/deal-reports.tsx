@@ -1,4 +1,4 @@
-import { useMemo, useRef, useCallback } from "react";
+import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -386,12 +386,25 @@ function SnapshotView14() {
 export default function DealReports() {
   const [location, setLocation] = useLocation();
   
-  const searchParams = new URLSearchParams(location.split("?")[1] || "");
-  const tabParam = searchParams.get("tab");
-  const activeTab: ReportTab = isValidTab(tabParam) ? tabParam : "snapshot-30";
+  const getInitialTab = (): ReportTab => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tabParam = searchParams.get("tab");
+    return isValidTab(tabParam) ? tabParam : "snapshot-30";
+  };
+
+  const [activeTab, setActiveTab] = useState<ReportTab>(getInitialTab);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tabParam = searchParams.get("tab");
+    if (isValidTab(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   const handleTabChange = (value: string) => {
     if (isValidTab(value)) {
+      setActiveTab(value);
       setLocation(`/deals/reports?tab=${value}`);
     }
   };
