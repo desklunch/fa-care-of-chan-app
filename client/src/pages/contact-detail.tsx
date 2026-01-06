@@ -499,7 +499,7 @@ export default function ContactDetail() {
                   <div className="flex items-center justify-between gap-2">
                     <Link
                       href={`/clients/${client.id}`}
-                      className="text-primary hover:underline"
+                      className="text-primary font-medium hover:underline"
                       data-testid={`link-client-${client.id}`}
                     >
                       {client.name}
@@ -706,7 +706,7 @@ export default function ContactDetail() {
                   return (
                     <Link href={`/deals/${deal.id}`} key={deal.id}>
                       <div
-                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer border bg-foreground/[3%]"
+                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer  bg-background/[50%] dark:bg-foreground/[4%]"
                         data-testid={`link-deal-${deal.id}`}
                       >
                         <div className="flex items-center gap-3">

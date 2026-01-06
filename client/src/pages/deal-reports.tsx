@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const REPORT_TABS = [
-  { id: "snapshot-14", label: "30 Day Table" },
+  { id: "snapshot-14", label: "30 Day New Biz" },
   { id: "snapshot-30", label: "Susana's Deals" },
 ] as const;
 
@@ -388,7 +388,7 @@ export default function DealReports() {
   usePageHeader({
     breadcrumbs: [
       { label: "Deals", href: "/deals" },
-      { label: "Reports" },
+      { label: "Views" },
     ],
   });
 

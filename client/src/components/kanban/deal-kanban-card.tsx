@@ -35,12 +35,12 @@ export function DealKanbanCard({ deal, servicesMap, className }: DealKanbanCardP
             {deal.displayName}
           </h4>
           {serviceNames.length > 0 && (
-            <div className="flex flex-wrap gap-1 mx-[-2px]">
+            <div className="flex flex-wrap gap-2 mx-[-2px]">
               {serviceNames.slice(0, 3).map((service, index) => (
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="text-xs px-1 py-0 rounded-sm bg-foreground/10"
+                  className="text-[11px] px-1 py-0 rounded-sm text-foreground/80 font-normal bg-foreground/10"
                 >
                   {service}
                 </Badge>

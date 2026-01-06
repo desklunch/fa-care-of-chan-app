@@ -106,7 +106,7 @@ import {
   FolderOpen,
   MessageSquare,
   MessageCircleQuestion,
-  BarChart3,
+  ScanEye,
   BookOpen,
   Users,
   Rocket,
@@ -156,7 +156,7 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Sales",
+        heading: "New Business",
         allowedRoles: ["admin", "manager"],
         items: [
           {
@@ -165,9 +165,9 @@ function useLayoutConfig() {
             icon: Tickets,
           },
           {
-            name: "Reports",
+            name: "Views",
             href: "/deals/reports",
-            icon: BarChart3,
+            icon: ScanEye,
           },
           {
             name: "Clients",
@@ -230,7 +230,7 @@ function useLayoutConfig() {
           {
             name: "Analytics",
             href: "/admin/analytics",
-            icon: BarChart3,
+            icon: ScanEye,
           },
         ],
       },

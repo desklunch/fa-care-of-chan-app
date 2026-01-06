@@ -160,7 +160,7 @@ export function Kanban<T>({
       {(canScrollLeft || canScrollRight || hasHiddenColumns) && !isMobile && (
         <div className="flex justify-start gap-4 pb-3">
           <Button
-            variant="outline"
+            variant="secondary"
             size="icon"
             onClick={handleScrollLeft}
             disabled={!canScrollLeft}
@@ -173,7 +173,7 @@ export function Kanban<T>({
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             size="icon"
             onClick={handleScrollRight}
             disabled={!canScrollRight}
@@ -228,7 +228,7 @@ export function Kanban<T>({
 
               <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
                 {column.items.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 text-sm text-muted-foreground border border-dashed rounded-md mx-2">
+                  <div className="flex items-center justify-center h-24 text-sm text-muted-foreground/80 border border-dashed rounded-md mx-2">
                     {emptyMessage}
                   </div>
                 ) : (

@@ -192,17 +192,29 @@ function EditableFieldRow({
             </SelectTrigger>
             <SelectContent>
               {options.map((opt) => (
-                <SelectItem key={opt.value || "__none__"} value={opt.value || "__none__"}>
+                <SelectItem
+                  key={opt.value || "__none__"}
+                  value={opt.value || "__none__"}
+                >
                   {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <div className="flex gap-2 justify-end">
-            <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleCancel}
+              data-testid={`button-cancel-${field}`}
+            >
               <X className="h-4 w-4" />
             </Button>
-            <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              data-testid={`button-save-${field}`}
+            >
               <Check className="h-4 w-4" />
             </Button>
           </div>
@@ -220,10 +232,19 @@ function EditableFieldRow({
           data-testid={`input-${field}`}
         />
         <div className="flex gap-2 justify-end">
-          <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleCancel}
+            data-testid={`button-cancel-${field}`}
+          >
             <X className="h-4 w-4" />
           </Button>
-          <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            data-testid={`button-save-${field}`}
+          >
             <Check className="h-4 w-4" />
           </Button>
         </div>
@@ -246,7 +267,12 @@ function EditableFieldRow({
             onDoubleClick={handleDoubleClick}
           >
             <div className="flex-1">
-              {displayValue || (value ? value : <span className="text-muted-foreground">{placeholder}</span>)}
+              {displayValue ||
+                (value ? (
+                  value
+                ) : (
+                  <span className="text-muted-foreground">{placeholder}</span>
+                ))}
             </div>
             <Button
               size="icon"
@@ -345,10 +371,7 @@ function EditableTitle({
       className="group flex items-center gap-2"
       onDoubleClick={() => setIsEditing(true)}
     >
-      <h1
-        className="text-3xl font-bold"
-        data-testid={testId}
-      >
+      <h1 className="text-3xl font-bold" data-testid={testId}>
         {value}
       </h1>
       <Button
@@ -537,7 +560,8 @@ export default function ClientDetail() {
               displayValue={
                 client.industryId ? (
                   <Badge variant="secondary">
-                    {industriesMap.get(client.industryId)?.name || client.industryId}
+                    {industriesMap.get(client.industryId)?.name ||
+                      client.industryId}
                   </Badge>
                 ) : undefined
               }
@@ -553,7 +577,6 @@ export default function ClientDetail() {
               displayValue={
                 client.website ? (
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
                     <a
                       href={
                         client.website.startsWith("http")
@@ -577,7 +600,7 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pt-2 pb-4">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pt-4 pb-4">
             <div>
               <CardTitle className="flex items-center gap-2 text-base font-bold pt-2">
                 Contacts{" "}
@@ -629,7 +652,7 @@ export default function ClientDetail() {
                     {localLinkedContacts.map((contact) => (
                       <div
                         key={contact.id}
-                        className="flex items-center justify-between p-3 pl-4 rounded-lg border bg-foreground/[3%]"
+                        className="flex items-center justify-between p-3 pl-4 rounded-lg bg-background/50 dark:bg-foreground/[4%]"
                         data-testid={`contact-item-${contact.id}`}
                       >
                         <div>
@@ -673,7 +696,9 @@ export default function ClientDetail() {
             <div>
               <CardTitle className="flex items-center gap-2 text-base font-bold">
                 Deals
-                <span className="text-muted-foreground text-sm font-medium">{deals.length}</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  {deals.length}
+                </span>
               </CardTitle>
             </div>
           </CardHeader>
@@ -700,7 +725,7 @@ export default function ClientDetail() {
                   return (
                     <Link href={`/deals/${deal.id}`} key={deal.id}>
                       <div
-                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer border bg-foreground/[3%]"
+                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
                         data-testid={`link-deal-${deal.id}`}
                       >
                         <div className="flex items-center gap-3">
