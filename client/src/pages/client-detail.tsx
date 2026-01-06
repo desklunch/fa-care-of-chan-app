@@ -49,7 +49,8 @@ import {
   Users,
   Plus,
   UserPlus,
-
+  Check,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
@@ -105,6 +106,260 @@ function FieldRow({
     >
       <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
       <div className="flex-1 text-sm">{children}</div>
+    </div>
+  );
+}
+
+type EditableFieldType = "text" | "select";
+
+interface EditableFieldRowProps {
+  label: string;
+  value: string | null | undefined;
+  field: string;
+  testId?: string;
+  type?: EditableFieldType;
+  options?: { value: string; label: string }[];
+  onSave: (field: string, value: unknown) => void;
+  displayValue?: React.ReactNode;
+  placeholder?: string;
+}
+
+function EditableFieldRow({
+  label,
+  value,
+  field,
+  testId,
+  type = "text",
+  options = [],
+  onSave,
+  displayValue,
+  placeholder = "Not set",
+}: EditableFieldRowProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value || "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setEditValue(value || "");
+    }
+  }, [value, isEditing]);
+
+  const handleSave = () => {
+    onSave(field, editValue || null);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(value || "");
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === "Escape") {
+      handleCancel();
+    }
+  };
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const renderEditor = () => {
+    if (type === "select") {
+      const selectValue = editValue || "__none__";
+      return (
+        <div className="flex flex-col gap-2 w-full">
+          <Select
+            value={selectValue}
+            onValueChange={(val) => {
+              const actualValue = val === "__none__" ? "" : val;
+              setEditValue(actualValue);
+            }}
+          >
+            <SelectTrigger className="w-full" data-testid={`select-${field}`}>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((opt) => (
+                <SelectItem key={opt.value || "__none__"} value={opt.value || "__none__"}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+              <X className="h-4 w-4" />
+            </Button>
+            <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
+              <Check className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-2 w-full">
+        <Input
+          ref={inputRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          data-testid={`input-${field}`}
+        />
+        <div className="flex gap-2 justify-end">
+          <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
+            <X className="h-4 w-4" />
+          </Button>
+          <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
+            <Check className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="flex py-4 border-b border-border/50 last:border-b-0"
+      data-testid={testId}
+    >
+      <div className="w-2/5 text-sm font-semibold shrink-0 pt-2">{label}</div>
+      <div className="flex-1 text-sm">
+        {isEditing ? (
+          renderEditor()
+        ) : (
+          <div
+            className="group flex items-center gap-2 cursor-pointer min-h-[36px]"
+            onDoubleClick={handleDoubleClick}
+          >
+            <div className="flex-1">
+              {displayValue || (value ? value : <span className="text-muted-foreground">{placeholder}</span>)}
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+              onClick={() => setIsEditing(true)}
+              data-testid={`button-edit-${field}`}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EditableTitle({
+  value,
+  onSave,
+  testId,
+}: {
+  value: string;
+  onSave: (value: string) => void;
+  testId?: string;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const handleSave = () => {
+    if (editValue.trim() && editValue !== value) {
+      onSave(editValue.trim());
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === "Escape") {
+      setEditValue(value);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="text-3xl font-bold flex-1 bg-transparent border-b-2 border-primary outline-none"
+          data-testid={`input-${testId}`}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setEditValue(value);
+            setIsEditing(false);
+          }}
+          data-testid={`button-cancel-${testId}`}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleSave}
+          data-testid={`button-save-${testId}`}
+        >
+          <Check className="h-5 w-5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="group flex items-center gap-2"
+      onDoubleClick={() => setIsEditing(true)}
+    >
+      <h1
+        className="text-3xl font-bold"
+        data-testid={testId}
+      >
+        {value}
+      </h1>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+        onClick={() => setIsEditing(true)}
+        data-testid={`button-edit-${testId}`}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
@@ -180,6 +435,32 @@ export default function ClientDetail() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (updates: Record<string, unknown>) => {
+      return apiRequest("PATCH", `/api/clients/${params.id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", params.id] });
+      toast({ title: "Client updated" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update client",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFieldSave = (field: string, value: unknown) => {
+    let processedValue = value;
+    if (value === "" && field === "industryId") {
+      processedValue = null;
+    }
+    updateMutation.mutate({ [field]: processedValue });
+  };
+
   if (isLoading) {
     return (
       <PageLayout
@@ -234,46 +515,64 @@ export default function ClientDetail() {
       ]}
     >
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
-        <h1 className="text-3xl font-bold" data-testid="text-client-name">
-          {client.name}
-        </h1>
+        <EditableTitle
+          value={client.name}
+          onSave={(value) => handleFieldSave("name", value)}
+          testId="text-client-name"
+        />
 
         <Card>
           <CardContent className="py-4">
-            <FieldRow label="Industry" testId="field-client-industry">
-              {client.industryId ? (
-                <div className="flex items-center gap-2">
+            <EditableFieldRow
+              label="Industry"
+              value={client.industryId || ""}
+              field="industryId"
+              testId="field-client-industry"
+              type="select"
+              options={[
+                { value: "", label: "Not set" },
+                ...industries.map((i) => ({ value: i.id, label: i.name })),
+              ]}
+              onSave={handleFieldSave}
+              displayValue={
+                client.industryId ? (
                   <Badge variant="secondary">
-                    {industriesMap.get(client.industryId)?.name ||
-                      client.industryId}
+                    {industriesMap.get(client.industryId)?.name || client.industryId}
                   </Badge>
-                </div>
-              ) : (
-                <span className="text-muted-foreground">Not set</span>
-              )}
-            </FieldRow>
-            <FieldRow label="Website" testId="field-client-website">
-              {client.website ? (
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={
-                      client.website.startsWith("http")
-                        ? client.website
-                        : `https://${client.website}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                    data-testid="link-client-website"
-                  >
-                    {client.website}
-                  </a>
-                </div>
-              ) : (
-                <span className="text-muted-foreground">Not set</span>
-              )}
-            </FieldRow>
+                ) : undefined
+              }
+              placeholder="Select industry"
+            />
+            <EditableFieldRow
+              label="Website"
+              value={client.website || ""}
+              field="website"
+              testId="field-client-website"
+              type="text"
+              onSave={handleFieldSave}
+              displayValue={
+                client.website ? (
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <a
+                      href={
+                        client.website.startsWith("http")
+                          ? client.website
+                          : `https://${client.website}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                      data-testid="link-client-website"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {client.website}
+                    </a>
+                  </div>
+                ) : undefined
+              }
+              placeholder="Enter website URL"
+            />
           </CardContent>
         </Card>
 
