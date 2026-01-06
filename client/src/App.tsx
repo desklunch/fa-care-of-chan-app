@@ -67,6 +67,7 @@ const PublicVenueCollection = lazy(() => import("@/pages/public-venue-collection
 const Deals = lazy(() => import("@/pages/deals"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
+const DealReports = lazy(() => import("@/pages/deal-reports"));
 const Clients = lazy(() => import("@/pages/clients"));
 const ClientForm = lazy(() => import("@/pages/client-form"));
 const ClientDetail = lazy(() => import("@/pages/client-detail"));
@@ -161,6 +162,11 @@ function useLayoutConfig() {
             name: "Deals",
             href: "/deals",
             icon: Tickets,
+          },
+          {
+            name: "Reports",
+            href: "/deals/reports",
+            icon: BarChart3,
           },
           {
             name: "Clients",
@@ -356,6 +362,7 @@ function AuthenticatedRoutes() {
           <Route path="/industries" component={Industries} />
           <Route path="/tags" component={TagsPage} />
           <Route path="/deals" component={Deals} />
+          <Route path="/deals/reports" component={DealReports} />
           <Route path="/deals/new" component={DealForm} />
           <Route path="/deals/:id/edit" component={DealForm} />
           <Route path="/deals/:id" component={DealDetail} />
