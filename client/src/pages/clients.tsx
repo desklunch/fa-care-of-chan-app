@@ -103,7 +103,7 @@ export default function Clients() {
   const [, setLocation] = useLocation();
 
   // Fetch industries for lookup
-  const { data: industries = [] } = useQuery<Industry[]>({
+  const { data: industries = [], isLoading: industriesLoading } = useQuery<Industry[]>({
     queryKey: ["/api/industries"],
   });
 
@@ -137,6 +137,7 @@ export default function Clients() {
         emptyMessage="No clients found"
         emptyDescription="Start building your client directory by adding a client."
         context={gridContext}
+        isExternalDataLoading={industriesLoading}
       />
     </PageLayout>
   );

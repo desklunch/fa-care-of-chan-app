@@ -60,6 +60,9 @@ export interface DataGridPageProps<T, C = unknown> {
   externalData?: T[];
   externalLoading?: boolean;
   
+  // When true, shows loading state while external context data (like lookup tables) is loading
+  isExternalDataLoading?: boolean;
+  
   // Pagination props
   pagination?: {
     page: number;

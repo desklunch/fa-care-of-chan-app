@@ -332,6 +332,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   enableRowDrag = false,
   onRowDragEnd,
   onCellValueChanged,
+  isExternalDataLoading = false,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
@@ -483,7 +484,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   });
   
   const data = useExternalData ? externalData : queryData;
-  const isLoading = useExternalData ? (externalLoading ?? false) : queryLoading;
+  const isLoading = (useExternalData ? (externalLoading ?? false) : queryLoading) || isExternalDataLoading;
 
   // Determine if dragging should be suppressed (when sorting, filters, or search are active)
   const hasActiveFilters = Object.values(filterState).some((v) => v.length > 0);
