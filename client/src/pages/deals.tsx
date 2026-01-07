@@ -315,7 +315,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const users = params.context?.users || [];
         return {
           options: users.map((u) => ({
-            value: u.id,
+            value: String(u.id),
             label: getInitials(getUserFullName(u)),
           })),
           placeholder: "Select owner",

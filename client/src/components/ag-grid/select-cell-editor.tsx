@@ -25,14 +25,22 @@ export interface SelectCellEditorRef {
 
 const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorParams>(
   (props, ref) => {
-    const { value, options, placeholder = "Select...", stopEditing } = props;
-    const [selectedValue, setSelectedValue] = useState<string>(value ?? "");
+    const { options, placeholder = "Select...", stopEditing, column, node } = props;
+    // Get the actual field value from the row data, not the display value from valueGetter
+    const fieldName = column.getColDef().field;
+    const initialValue = fieldName && node?.data ? node.data[fieldName] : null;
+    const [selectedValue, setSelectedValue] = useState<string>(
+      initialValue != null ? String(initialValue) : ""
+    );
     const [open, setOpen] = useState(true);
     const containerRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
       getValue: () => {
-        return selectedValue === "" ? null : selectedValue;
+        if (selectedValue === "" || selectedValue === "__empty__") {
+          return null;
+        }
+        return selectedValue;
       },
       isCancelAfterEnd: () => false,
     }));
