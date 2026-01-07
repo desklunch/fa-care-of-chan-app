@@ -12,13 +12,13 @@ export default function Feedback() {
 
   return (
     <PageLayout breadcrumbs={[{ label: "App" },{ label: "Feedback" }]}>
-              <InfoBanner
+              {/* <InfoBanner
             id="feedback-features-tip"
             title="Have a specific request?"
             description="Visit the Features page."
             ctaLabel="App Features"
             ctaUrl="/app/features"
-          />
+          /> */}
       <Card className="rounded-none border-none" >
         <CardHeader className="pb-4">
 
