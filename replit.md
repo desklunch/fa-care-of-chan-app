@@ -52,3 +52,25 @@ The system includes modules for:
 -   **Image Processing:** Sharp (for thumbnail generation).
 -   **Object Storage:** Google Cloud Storage (via Replit App Storage).
 -   **Drag-and-Drop:** `@dnd-kit/core` and `@dnd-kit/sortable`.
+
+## Documentation Requirements
+
+### Mandatory Documentation Files
+
+The following documentation files MUST be maintained as part of development:
+
+| File | Purpose | Update Frequency |
+|------|---------|------------------|
+| `ai-mcp.md` | AI/MCP implementation plan and progress tracking | Update after completing each phase, or when implementation diverges from plan |
+| `replit.md` | Project overview, architecture, and preferences | Update when adding major features or changing architecture |
+| `audit-*.md` | Technical audit reports | Create new file for each audit |
+
+### ai-mcp.md Maintenance Requirements
+
+**STRICT REQUIREMENT:** The `ai-mcp.md` file must be updated:
+1. After completing each phase of the AI/MCP implementation
+2. When implementation details diverge from the original plan
+3. When design decisions are made that affect the architecture
+4. To log progress with dates in the Progress Log section
+
+The file serves as the source of truth for AI/MCP readiness work and must accurately reflect the current state of implementation.
