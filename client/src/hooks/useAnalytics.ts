@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 
 const ANALYTICS_SESSION_KEY = "analytics_session_token";
 const ANALYTICS_SESSION_ID_KEY = "analytics_session_id";
+const DEBOUNCE_MS = 100;
 
 function generateSessionToken(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
@@ -23,107 +24,118 @@ function getEnvironment(): string {
   return "production";
 }
 
-async function createOrGetSession(): Promise<{ sessionId: string; sessionToken: string }> {
-  let sessionToken = sessionStorage.getItem(ANALYTICS_SESSION_KEY);
-  let sessionId = sessionStorage.getItem(ANALYTICS_SESSION_ID_KEY);
-  const environment = getEnvironment();
-
-  if (sessionToken && sessionId) {
-    try {
-      const res = await fetch("/api/activity/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionToken,
-          userAgent: navigator.userAgent,
-          deviceType: getDeviceType(),
-          environment,
-        }),
-      });
-      if (res.ok) {
-        const session = await res.json();
-        return { sessionId: session.id, sessionToken };
-      }
-    } catch (e) {
-      // Silently fail - tracking is non-critical
-    }
+function sendDurationBeacon(pageViewId: string, durationMs: number): void {
+  const url = `/api/activity/pageview/${pageViewId}/duration`;
+  const data = JSON.stringify({ durationMs });
+  
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(url, data);
+  } else {
+    fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: data,
+      keepalive: true,
+    }).catch(() => {});
   }
+}
 
-  sessionToken = generateSessionToken();
-  sessionStorage.setItem(ANALYTICS_SESSION_KEY, sessionToken);
-
-  try {
-    const res = await fetch("/api/activity/session", {
+function initSession(): void {
+  const sessionToken = sessionStorage.getItem(ANALYTICS_SESSION_KEY);
+  const sessionId = sessionStorage.getItem(ANALYTICS_SESSION_ID_KEY);
+  
+  if (sessionToken && sessionId) {
+    fetch("/api/activity/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionToken,
         userAgent: navigator.userAgent,
         deviceType: getDeviceType(),
-        environment,
+        environment: getEnvironment(),
       }),
-    });
-    if (res.ok) {
-      const session = await res.json();
-      sessionStorage.setItem(ANALYTICS_SESSION_ID_KEY, session.id);
-      return { sessionId: session.id, sessionToken };
-    }
-  } catch (e) {
-    // Silently fail - tracking is non-critical
+    }).catch(() => {});
+    return;
   }
 
-  return { sessionId: "", sessionToken };
+  const newToken = generateSessionToken();
+  sessionStorage.setItem(ANALYTICS_SESSION_KEY, newToken);
+
+  fetch("/api/activity/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sessionToken: newToken,
+      userAgent: navigator.userAgent,
+      deviceType: getDeviceType(),
+      environment: getEnvironment(),
+    }),
+  })
+    .then((res) => res.ok ? res.json() : null)
+    .then((session) => {
+      if (session?.id) {
+        sessionStorage.setItem(ANALYTICS_SESSION_ID_KEY, session.id);
+      }
+    })
+    .catch(() => {});
+}
+
+function getSessionId(): string {
+  return sessionStorage.getItem(ANALYTICS_SESSION_ID_KEY) || "";
 }
 
 export function useAnalytics() {
   const [location] = useLocation();
-  const sessionRef = useRef<{ sessionId: string; sessionToken: string } | null>(null);
   const currentPageViewRef = useRef<{ id: string; startTime: number } | null>(null);
   const lastPathRef = useRef<string>("");
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionInitializedRef = useRef(false);
 
-  const trackPageView = useCallback(async (path: string) => {
+  const trackPageView = useCallback((path: string) => {
     if (path === lastPathRef.current) return;
-    lastPathRef.current = path;
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
 
-    if (currentPageViewRef.current) {
-      const duration = Date.now() - currentPageViewRef.current.startTime;
-      try {
-        await fetch(`/api/activity/pageview/${currentPageViewRef.current.id}/duration`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ durationMs: duration }),
-        });
-      } catch (e) {
-        // Ignore errors for duration updates
+    debounceTimerRef.current = setTimeout(() => {
+      if (path === lastPathRef.current) return;
+      
+      if (currentPageViewRef.current) {
+        const duration = Date.now() - currentPageViewRef.current.startTime;
+        sendDurationBeacon(currentPageViewRef.current.id, duration);
+        currentPageViewRef.current = null;
       }
-    }
 
-    if (!sessionRef.current) {
-      sessionRef.current = await createOrGetSession();
-    }
+      lastPathRef.current = path;
 
-    try {
-      const res = await fetch("/api/activity/pageview", {
+      if (!sessionInitializedRef.current) {
+        initSession();
+        sessionInitializedRef.current = true;
+      }
+
+      fetch("/api/activity/pageview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: sessionRef.current.sessionId || null,
+          sessionId: getSessionId() || null,
           path,
           title: document.title,
           referrer: document.referrer,
           environment: getEnvironment(),
         }),
-      });
-      if (res.ok) {
-        const pageView = await res.json();
-        currentPageViewRef.current = { id: pageView.id, startTime: Date.now() };
-      }
-    } catch (e) {
-      // Silently fail - tracking is non-critical
-    }
+      })
+        .then((res) => res.ok ? res.json() : null)
+        .then((pageView) => {
+          if (pageView?.id) {
+            currentPageViewRef.current = { id: pageView.id, startTime: Date.now() };
+          }
+        })
+        .catch(() => {});
+    }, DEBOUNCE_MS);
   }, []);
 
-  const trackEvent = useCallback(async (
+  const trackEvent = useCallback((
     eventType: string,
     eventName: string,
     options?: {
@@ -132,28 +144,25 @@ export function useAnalytics() {
       metadata?: Record<string, unknown>;
     }
   ) => {
-    if (!sessionRef.current) {
-      sessionRef.current = await createOrGetSession();
+    if (!sessionInitializedRef.current) {
+      initSession();
+      sessionInitializedRef.current = true;
     }
 
-    try {
-      await fetch("/api/activity/event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: sessionRef.current.sessionId || null,
-          eventType,
-          eventName,
-          eventCategory: options?.eventCategory,
-          path: window.location.pathname,
-          elementId: options?.elementId,
-          metadata: options?.metadata,
-          environment: getEnvironment(),
-        }),
-      });
-    } catch (e) {
-      // Silently fail - tracking is non-critical
-    }
+    fetch("/api/activity/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: getSessionId() || null,
+        eventType,
+        eventName,
+        eventCategory: options?.eventCategory,
+        path: window.location.pathname,
+        elementId: options?.elementId,
+        metadata: options?.metadata,
+        environment: getEnvironment(),
+      }),
+    }).catch(() => {});
   }, []);
 
   const trackClick = useCallback((eventName: string, elementId?: string, metadata?: Record<string, unknown>) => {
@@ -168,21 +177,21 @@ export function useAnalytics() {
     const handleBeforeUnload = () => {
       if (currentPageViewRef.current) {
         const duration = Date.now() - currentPageViewRef.current.startTime;
-        navigator.sendBeacon(
-          `/api/activity/pageview/${currentPageViewRef.current.id}/duration`,
-          JSON.stringify({ durationMs: duration })
-        );
+        sendDurationBeacon(currentPageViewRef.current.id, duration);
       }
-      if (sessionRef.current?.sessionId) {
-        navigator.sendBeacon(
-          `/api/activity/session/${sessionRef.current.sessionId}/end`,
-          ""
-        );
+      const sessionId = getSessionId();
+      if (sessionId) {
+        navigator.sendBeacon(`/api/activity/session/${sessionId}/end`, "");
       }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, []);
 
   return { trackEvent, trackClick, trackPageView };
