@@ -306,6 +306,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 76,
       editable: true,
       cellEditor: "agSelectCellEditor",
+      cellEditorPopup: true,
+
       pinned: "left",
       lockPinned: true,
       autoHeight: true,
@@ -316,12 +318,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const users = params.context?.users || [];
         return {
           values: [
-            "(None)", // Empty option displayed as "(None)"
-            ...users.map((u) => {
-              const fullName = getUserFullName(u);
-              const initials = getInitials(fullName);
-              return `${initials} - ${fullName}`;
-            }),
+            "(None)",
+            ...users.map((u) => getInitials(getUserFullName(u))),
           ],
         };
       },
@@ -331,15 +329,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
         if (!user) return "(None)";
-        const fullName = getUserFullName(user);
-        const initials = getInitials(fullName);
-        return `${initials} - ${fullName}`;
+        return getInitials(getUserFullName(user));
       },
       cellRenderer: (params: { value: string }) => {
         if (!params.value || params.value === "(None)") return <div className="">-</div>;
-        // Extract just the initials from "XX - Full Name" format
-        const initials = params.value.split(" - ")[0];
-        return <div className="">{initials}</div>;
+        return <div className="">{params.value}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
         // Handle empty/none selection
@@ -348,14 +342,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           params.data.owner = null;
           return true;
         }
-        // Parse the display value to find the matching user
-        // Format is "XX - Full Name" where XX are initials
+        // Find user by matching initials
         const users = params.context?.users || [];
-        const user = users.find((u) => {
-          const fullName = getUserFullName(u);
-          const initials = getInitials(fullName);
-          return params.newValue === `${initials} - ${fullName}`;
-        });
+        const user = users.find((u) => getInitials(getUserFullName(u)) === params.newValue);
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
