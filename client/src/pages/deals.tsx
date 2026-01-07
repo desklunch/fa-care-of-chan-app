@@ -15,7 +15,16 @@ import type {
 import { dealStatuses } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { formatDateOnly } from "@/lib/date";
-import { CircleFadingPlus, Flag, User, MapPin, Briefcase, SquareArrowOutUpRight, Calendar, Building2 } from "lucide-react";
+import {
+  CircleFadingPlus,
+  Flag,
+  User,
+  MapPin,
+  Briefcase,
+  SquareArrowOutUpRight,
+  Calendar,
+  Building2,
+} from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +35,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
 
 // Helper to get full name from user
-function getUserFullName(user: Pick<UserType, "firstName" | "lastName"> | null | undefined): string {
+function getUserFullName(
+  user: Pick<UserType, "firstName" | "lastName"> | null | undefined,
+): string {
   if (!user) return "";
   return [user.firstName, user.lastName].filter(Boolean).join(" ") || "";
 }
@@ -101,7 +112,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "startedOn",
   "wonOn",
   "lastContactOn",
-   "proposalSentOn",
+  "proposalSentOn",
   "concept",
   "industry",
   "primaryContact",
@@ -117,9 +128,9 @@ const DEFAULT_VISIBLE_COLUMNS = [
 const STATUS_SORT_ORDER: Record<string, number> = {
   Prospecting: 1,
   "Warm Lead": 2,
-  "Proposal": 3,
-  "Feedback": 4,
-  "Contracting": 5,
+  Proposal: 3,
+  Feedback: 4,
+  Contracting: 5,
   "In Progress": 6,
   "Final Invoicing": 7,
   Complete: 8,
@@ -231,10 +242,12 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
       deriveOptions: (_data, context) => {
         const ctx = context as DealsGridContext | undefined;
         if (!ctx?.services) return [];
-        return ctx.services.filter(s => s.isActive).map((service) => ({ 
-          id: String(service.id), 
-          label: service.name 
-        }));
+        return ctx.services
+          .filter((s) => s.isActive)
+          .map((service) => ({
+            id: String(service.id),
+            label: service.name,
+          }));
       },
     },
     matchFn: (deal, selectedValues) => {
@@ -266,7 +279,6 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
 ];
 
 const dealColumns: ColumnConfig<DealWithRelations>[] = [
-
   {
     id: "displayName",
     headerName: "Deal",
@@ -276,7 +288,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 240,
-      
+
       sortable: false,
       editable: true,
       pinned: "left",
@@ -287,7 +299,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           <span className="flex items-start  gap-3 w-full">
             <span className="flex-1 truncate">{params.value}</span>
             <Link href={`/deals/${params.data.id}`} className="flex-shrink-0">
-              <Button size="sm" variant="ghost" className="bg-foreground/5 text-muted-foreground p-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="bg-foreground/5 text-muted-foreground p-2"
+              >
                 <SquareArrowOutUpRight className="h-3 w-3 " />
               </Button>
             </Link>
@@ -318,33 +334,47 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const users = params.context?.users || [];
         return {
           values: [
-            "(None)",
+            "none",
             ...users.map((u) => getInitials(getUserFullName(u))),
           ],
         };
       },
-      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+      valueGetter: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
         const ownerId = params.data?.ownerId;
-        if (!ownerId) return "(None)";
+        if (!ownerId) return "none";
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
-        if (!user) return "(None)";
+        if (!user) return "none";
         return getInitials(getUserFullName(user));
       },
       cellRenderer: (params: { value: string }) => {
-        if (!params.value || params.value === "(None)") return <div className="">-</div>;
+        if (!params.value || params.value === "none")
+          return <div className="">-</div>;
         return <div className="">{params.value}</div>;
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: string | null;
+        context: DealsGridContext;
+      }) => {
         // Handle empty/none selection
-        if (params.newValue === null || params.newValue === "" || params.newValue === "(None)") {
+        if (
+          params.newValue === null ||
+          params.newValue === "" ||
+          params.newValue === "none"
+        ) {
           params.data.ownerId = null;
           params.data.owner = null;
           return true;
         }
         // Find user by matching initials
         const users = params.context?.users || [];
-        const user = users.find((u) => getInitials(getUserFullName(u)) === params.newValue);
+        const user = users.find(
+          (u) => getInitials(getUserFullName(u)) === params.newValue,
+        );
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
@@ -361,7 +391,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       width: 140,
-    
+
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: {
@@ -397,7 +427,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         rows: 3,
         cols: 30,
       },
-
     },
   },
   {
@@ -427,8 +456,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-
-
 
   {
     id: "startedOn",
@@ -582,26 +609,38 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 140,
       editable: true,
       cellEditor: "agSelectCellEditor",
+      cellEditorPopup: true,
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const industries = params.context?.industries || [];
         return {
           values: [
-            "(None)", // Empty option displayed as "(None)"
+            "(None)",
             ...industries
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((industry) => industry.name),
           ],
         };
       },
-      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+      valueGetter: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
         const industryId = params.data?.industryId;
         if (!industryId) return "(None)";
         const industry = params.context?.industriesMap?.get(industryId);
         return industry?.name || "(None)";
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: string | null;
+        context: DealsGridContext;
+      }) => {
         // Handle empty/none selection
-        if (params.newValue === null || params.newValue === "" || params.newValue === "(None)") {
+        if (
+          params.newValue === null ||
+          params.newValue === "" ||
+          params.newValue === "(None)"
+        ) {
           params.data.industryId = null;
           return true;
         }
@@ -614,7 +653,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         }
         return false;
       },
-      cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+      cellRenderer: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
         const industryId = params.data?.industryId;
         if (!industryId) return null;
         const industry = params.context?.industriesMap?.get(industryId);
@@ -646,7 +688,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { data: DealWithRelations | undefined }) => {
         const contact = params.data?.primaryContact;
         if (!contact) return null;
-        const fullName = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+        const fullName = [contact.firstName, contact.lastName]
+          .filter(Boolean)
+          .join(" ");
         return (
           <span className="flex flex-col py-[16px] gap-0.5">
             <Link
@@ -658,7 +702,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               {fullName}
             </Link>
             {contact.jobTitle && (
-              <span className="text-xs text-muted-foreground truncate">{contact.jobTitle}</span>
+              <span className="text-xs text-muted-foreground truncate">
+                {contact.jobTitle}
+              </span>
             )}
           </span>
         );
@@ -678,7 +724,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       editable: true,
       cellEditor: ServicesCellEditor,
       cellEditorPopup: true,
-      cellRenderer: (params: { data: DealWithRelations; context: DealsGridContext }) => {
+      cellRenderer: (params: {
+        data: DealWithRelations;
+        context: DealsGridContext;
+      }) => {
         const serviceIds = params.data?.serviceIds as number[] | null;
         if (!serviceIds || serviceIds.length === 0) return null;
         const servicesMap = params.context?.servicesMap;
@@ -821,7 +870,9 @@ export default function Deals() {
   const { toast } = useToast();
 
   // Fetch users for the Owner dropdown
-  const { data: users = [] } = useQuery<Array<Pick<UserType, "id" | "firstName" | "lastName">>>({
+  const { data: users = [] } = useQuery<
+    Array<Pick<UserType, "id" | "firstName" | "lastName">>
+  >({
     queryKey: ["/api/users"],
   });
 
@@ -831,7 +882,7 @@ export default function Deals() {
   });
 
   // Create a services lookup map
-  const servicesMap = new Map(dealServices.map(s => [s.id, s]));
+  const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
 
   // Fetch industries for the Industry column and filter
   const { data: industries = [] } = useQuery<Industry[]>({
@@ -839,7 +890,7 @@ export default function Deals() {
   });
 
   // Create industries lookup map
-  const industriesMap = new Map(industries.map(i => [i.id, i]));
+  const industriesMap = new Map(industries.map((i) => [i.id, i]));
 
   // Context for the grid - provides user list for Owner dropdown, services, and industries
   const gridContext: DealsGridContext = {
@@ -852,16 +903,24 @@ export default function Deals() {
 
   // Mutation to update a single deal field with optimistic updates
   const updateDealMutation = useMutation({
-    mutationFn: async ({ dealId, updates }: { dealId: string; updates: Record<string, unknown> }) => {
+    mutationFn: async ({
+      dealId,
+      updates,
+    }: {
+      dealId: string;
+      updates: Record<string, unknown>;
+    }) => {
       return apiRequest("PATCH", `/api/deals/${dealId}`, updates);
     },
     onMutate: async ({ dealId, updates }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["/api/deals"] });
-      
+
       // Snapshot the previous value
-      const previousDeals = queryClient.getQueryData<DealWithRelations[]>(["/api/deals"]);
-      
+      const previousDeals = queryClient.getQueryData<DealWithRelations[]>([
+        "/api/deals",
+      ]);
+
       // Optimistically update the cache
       if (previousDeals) {
         queryClient.setQueryData<DealWithRelations[]>(["/api/deals"], (old) => {
@@ -884,7 +943,7 @@ export default function Deals() {
           });
         });
       }
-      
+
       return { previousDeals };
     },
     onError: (error, _variables, context) => {
@@ -906,70 +965,82 @@ export default function Deals() {
   });
 
   // Handle cell value changes - persist to server
-  const handleCellValueChanged = useCallback((event: CellValueChangedEvent<DealWithRelations>) => {
-    const { data, colDef, newValue, oldValue } = event;
-    console.log('[DealsGrid] onCellValueChanged:', { 
-      field: colDef.field, 
-      newValue, 
-      oldValue, 
-      dataId: data?.id 
-    });
-    if (!data?.id || !colDef.field) return;
-    
-    const field = colDef.field as string;
-    let processedValue: unknown = newValue;
+  const handleCellValueChanged = useCallback(
+    (event: CellValueChangedEvent<DealWithRelations>) => {
+      const { data, colDef, newValue, oldValue } = event;
+      console.log("[DealsGrid] onCellValueChanged:", {
+        field: colDef.field,
+        newValue,
+        oldValue,
+        dataId: data?.id,
+      });
+      if (!data?.id || !colDef.field) return;
 
-    // For serviceIds (array), check if values actually changed
-    if (field === "serviceIds") {
-      const oldIds = (oldValue as number[] | null) || [];
-      const newIds = (newValue as number[] | null) || [];
-      // Check if arrays are equal
-      if (oldIds.length === newIds.length && oldIds.every((id, i) => id === newIds[i])) {
-        return; // No change
+      const field = colDef.field as string;
+      let processedValue: unknown = newValue;
+
+      // For serviceIds (array), check if values actually changed
+      if (field === "serviceIds") {
+        const oldIds = (oldValue as number[] | null) || [];
+        const newIds = (newValue as number[] | null) || [];
+        // Check if arrays are equal
+        if (
+          oldIds.length === newIds.length &&
+          oldIds.every((id, i) => id === newIds[i])
+        ) {
+          return; // No change
+        }
+        processedValue = newIds;
+      } else {
+        // For non-array fields, check equality normally
+        if (newValue === oldValue) return;
       }
-      processedValue = newIds;
-    } else {
-      // For non-array fields, check equality normally
-      if (newValue === oldValue) return;
-    }
 
-    // Handle owner field - valueSetter already updated data.ownerId, so use that
-    if (field === "ownerId") {
-      processedValue = data.ownerId;
-      if (processedValue === "") {
+      // Handle owner field - valueSetter already updated data.ownerId, so use that
+      if (field === "ownerId") {
+        processedValue = data.ownerId;
+        if (processedValue === "") {
+          processedValue = null;
+        }
+      }
+
+      // Handle industry field - valueSetter already updated data.industryId, so use that
+      if (field === "industryId") {
+        processedValue = data.industryId;
+        if (processedValue === "") {
+          processedValue = null;
+        }
+      }
+
+      // Handle empty strings as null for date fields
+      const dateFields = [
+        "startedOn",
+        "wonOn",
+        "lastContactOn",
+        "proposalSentOn",
+        "projectDate",
+      ];
+      if (dateFields.includes(field)) {
+        processedValue = newValue === "" ? null : newValue;
+      }
+
+      // Handle empty strings as null for nullable ID fields (foreign keys)
+      const nullableIdFields = ["clientId", "industryId"];
+      if (nullableIdFields.includes(field) && newValue === "") {
         processedValue = null;
       }
-    }
 
-    // Handle industry field - valueSetter already updated data.industryId, so use that
-    if (field === "industryId") {
-      processedValue = data.industryId;
-      if (processedValue === "") {
+      // Handle empty strings as null for nullable text fields
+      const nullableTextFields = ["concept", "notes", "budgetNotes"];
+      if (nullableTextFields.includes(field) && newValue === "") {
         processedValue = null;
       }
-    }
 
-    // Handle empty strings as null for date fields
-    const dateFields = ["startedOn", "wonOn", "lastContactOn", "proposalSentOn", "projectDate"];
-    if (dateFields.includes(field)) {
-      processedValue = newValue === "" ? null : newValue;
-    }
-
-    // Handle empty strings as null for nullable ID fields (foreign keys)
-    const nullableIdFields = ["clientId", "industryId"];
-    if (nullableIdFields.includes(field) && newValue === "") {
-      processedValue = null;
-    }
-
-    // Handle empty strings as null for nullable text fields
-    const nullableTextFields = ["concept", "notes", "budgetNotes"];
-    if (nullableTextFields.includes(field) && newValue === "") {
-      processedValue = null;
-    }
-
-    const updates: Record<string, unknown> = { [field]: processedValue };
-    updateDealMutation.mutate({ dealId: data.id, updates });
-  }, [updateDealMutation]);
+      const updates: Record<string, unknown> = { [field]: processedValue };
+      updateDealMutation.mutate({ dealId: data.id, updates });
+    },
+    [updateDealMutation],
+  );
 
   // Mutation to reorder deals with optimistic cache updates
   // rowDragManaged=true handles instant visual feedback; we just sync cache & persist
@@ -980,19 +1051,21 @@ export default function Deals() {
     onMutate: async (dealIds: string[]) => {
       // Cancel any outgoing refetches to avoid overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ["/api/deals"] });
-      
+
       // Snapshot current cache for rollback
-      const previousDeals = queryClient.getQueryData<DealWithRelations[]>(["/api/deals"]);
-      
+      const previousDeals = queryClient.getQueryData<DealWithRelations[]>([
+        "/api/deals",
+      ]);
+
       // Optimistically update cache to match the new order
       if (previousDeals) {
-        const dealMap = new Map(previousDeals.map(d => [d.id, d]));
+        const dealMap = new Map(previousDeals.map((d) => [d.id, d]));
         const reorderedDeals = dealIds
-          .map(id => dealMap.get(id))
+          .map((id) => dealMap.get(id))
           .filter((d): d is DealWithRelations => d !== undefined);
         queryClient.setQueryData(["/api/deals"], reorderedDeals);
       }
-      
+
       return { previousDeals };
     },
     onError: (error, _dealIds, context) => {
