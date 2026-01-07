@@ -24,6 +24,7 @@ This plan improves how the application tracks and records important actions. Thi
 - Errors and failed attempts will be logged for security
 - We can trace any action back to a specific user session
 - The system will automatically record actions without developers needing to add manual tracking code
+- **Scalability safeguards** ensure new features are automatically covered (automated tests catch gaps)
 
 ### What This Enables
 
@@ -39,8 +40,9 @@ This plan improves how the application tracks and records important actions. Thi
 |------|-------|-------------|
 | **Temporary performance impact** | Low | Database writes happen in the background, won't slow down users |
 | **Migration complexity** | Low | Database changes are backward-compatible; existing features continue working |
-| **Development time** | Medium | Estimated 5-7 days of development work across 6 phases |
+| **Development time** | Medium | Estimated 6-7 days of development work across 7 phases |
 | **Testing requirements** | Medium | Each phase needs verification before moving to the next |
+| **Future maintenance** | Low | Scalability safeguards (Phase 3A) prevent silent gaps as system grows |
 
 ### Rollback Safety
 
@@ -470,6 +472,220 @@ initializeAuditBridge();
 
 ---
 
+## Phase 3A: Scalability Safeguards
+
+**Effort:** 0.5 days  
+**Risk:** Low  
+**Dependencies:** Phase 3
+
+### Objective
+Ensure the event-to-audit system remains maintainable as new entity types are added. Without safeguards, each new entity requires 3 coordinated updates (service, event type, bridge mapping) which can lead to silent audit gaps.
+
+### Problem Statement
+
+As the system grows (Vendors, Contracts, Invoices, etc.), developers could:
+- Add a service that emits events but forget the bridge mapping → **silent audit gap**
+- Define event types with inconsistent payload shapes → **runtime errors**
+- Have no visibility into which events are/aren't being audited → **compliance risk**
+
+### Implementation
+
+#### 1. Event Registry (`server/lib/event-registry.ts`)
+
+Single source of truth for all domain events with required audit mappings:
+
+```typescript
+import type { AuditAction, AuditEntityType } from "@shared/schema";
+
+export interface EventDefinition<T = unknown> {
+  type: string;
+  audit: {
+    action: AuditAction;
+    entityType: AuditEntityType;
+    extractEntityId: (payload: T) => string | null;
+    extractChanges?: (payload: T) => Record<string, unknown> | null;
+  };
+}
+
+// Central registry - add new events here
+export const EVENT_REGISTRY = {
+  // Deals
+  "deal:created": {
+    type: "deal:created",
+    audit: {
+      action: "create" as const,
+      entityType: "deal" as const,
+      extractEntityId: (e: any) => e.deal?.id,
+    },
+  },
+  "deal:updated": {
+    type: "deal:updated",
+    audit: {
+      action: "update" as const,
+      entityType: "deal" as const,
+      extractEntityId: (e: any) => e.deal?.id,
+      extractChanges: (e: any) => ({ after: e.changes }),
+    },
+  },
+  "deal:deleted": {
+    type: "deal:deleted",
+    audit: {
+      action: "delete" as const,
+      entityType: "deal" as const,
+      extractEntityId: (e: any) => e.dealId,
+    },
+  },
+  "deal:stage_changed": {
+    type: "deal:stage_changed",
+    audit: {
+      action: "update" as const,
+      entityType: "deal" as const,
+      extractEntityId: (e: any) => e.deal?.id,
+      extractChanges: (e: any) => ({
+        before: { status: e.fromStage },
+        after: { status: e.toStage },
+      }),
+    },
+  },
+  // Add new entity events here...
+} as const;
+
+export type RegisteredEventType = keyof typeof EVENT_REGISTRY;
+
+// Helper for type-safe event emission
+export function isRegisteredEvent(type: string): type is RegisteredEventType {
+  return type in EVENT_REGISTRY;
+}
+```
+
+#### 2. Update Audit Bridge to Use Registry
+
+```typescript
+// server/lib/audit-bridge.ts
+import { EVENT_REGISTRY, isRegisteredEvent } from "./event-registry";
+
+export function initializeAuditBridge(): void {
+  domainEvents.on("*", (event: DomainEvent) => {
+    if (!isRegisteredEvent(event.type)) {
+      // SAFEGUARD: Log unknown events instead of silently ignoring
+      console.warn(`[AuditBridge] Unregistered event type: ${event.type}`, {
+        eventType: event.type,
+        actorId: event.actorId,
+        timestamp: event.timestamp,
+      });
+      
+      // Optionally: still persist with generic mapping
+      void persistUnknownEvent(event);
+      return;
+    }
+
+    const definition = EVENT_REGISTRY[event.type];
+    // ... rest of persistence logic using definition.audit
+  });
+}
+
+async function persistUnknownEvent(event: DomainEvent): Promise<void> {
+  // Fallback: log unknown events with minimal info
+  await storage.createAuditLog({
+    action: "unknown",
+    entityType: "system",
+    entityId: null,
+    performedBy: event.actorId,
+    status: "success",
+    metadata: { 
+      eventType: event.type,
+      warning: "Event not in registry - add to EVENT_REGISTRY",
+    },
+    source: "event",
+  }).catch(console.error);
+}
+```
+
+#### 3. Coverage Test (`server/lib/__tests__/event-coverage.test.ts`)
+
+Automated test that fails if any emitted event lacks a registry entry:
+
+```typescript
+import { EVENT_REGISTRY } from "../event-registry";
+
+describe("Event Registry Coverage", () => {
+  it("should have audit mappings for all known event types", () => {
+    const requiredEvents = [
+      // Deals
+      "deal:created", "deal:updated", "deal:deleted", "deal:stage_changed",
+      // Tasks
+      "deal:task_created", "deal:task_completed",
+      // Venues (Phase 5)
+      "venue:created", "venue:updated", "venue:deleted",
+      // Contacts (Phase 5)
+      "contact:created", "contact:updated", "contact:deleted",
+      // Photos (Phase 6)
+      "venue:photo_uploaded", "venue:photo_deleted",
+      // Files (Phase 6)
+      "venue:file_uploaded", "venue:file_deleted",
+    ];
+
+    const missingEvents = requiredEvents.filter(
+      (e) => !(e in EVENT_REGISTRY)
+    );
+
+    expect(missingEvents).toEqual([]);
+  });
+
+  it("should have valid audit action for each event", () => {
+    const validActions = ["create", "update", "delete", "login", "logout", "upload", "unknown"];
+    
+    for (const [eventType, def] of Object.entries(EVENT_REGISTRY)) {
+      expect(validActions).toContain(def.audit.action);
+    }
+  });
+});
+```
+
+#### 4. Developer Documentation
+
+Add to `README.md` or create `docs/adding-new-entities.md`:
+
+```markdown
+## Adding a New Entity to the System
+
+When adding a new entity (e.g., Vendors), follow these 3 steps:
+
+### Step 1: Create Service Layer
+Create `server/services/vendors.service.ts` following DealsService pattern:
+- Emit events for create, update, delete operations
+- Include actorId in all event payloads
+
+### Step 2: Register Events
+Add event definitions to `server/lib/event-registry.ts`:
+```typescript
+"vendor:created": {
+  type: "vendor:created",
+  audit: {
+    action: "create",
+    entityType: "vendor",
+    extractEntityId: (e) => e.vendor?.id,
+  },
+},
+```
+
+### Step 3: Run Coverage Test
+```bash
+npm test -- event-coverage
+```
+Test will fail if events are emitted but not registered.
+```
+
+### Acceptance Criteria
+
+- [ ] Event registry created with all existing event types
+- [ ] Audit bridge updated to use registry
+- [ ] Unknown events logged with warning (not silently ignored)
+- [ ] Coverage test created and passing
+- [ ] Developer documentation added
+
+---
+
 ## Phase 4: Authentication Event Logging
 
 **Effort:** 0.5 days  
@@ -737,6 +953,8 @@ export interface VenueFileUploadedEvent {
 | Node.js version incompatibility | Very Low | High | Require Node ≥18.16 (already in use) |
 | Unhandled promise rejections from fire-and-forget | Low | Medium | Explicit `.catch()` with structured error logging |
 | AsyncLocalStorage unavailable in edge runtime | Very Low | High | Only applies to Node.js server; edge deployments not planned |
+| **Silent audit gaps as system grows** | Medium | High | Event registry + coverage tests (Phase 3A) |
+| **Maintenance burden with many entity types** | Medium | Medium | Centralized registry; developer docs; 3-step recipe |
 
 ### Detailed Mitigations
 
@@ -777,10 +995,12 @@ Week 1:
 │   └── Checkpoint after migration
 ├── Phase 2: Request Context Middleware (0.5 days)
 │   └── Verify context available in routes
-├── Phase 4: Auth Event Logging (0.5 days)
-│   └── Test login/logout logging
-└── Phase 3: Event-to-Audit Bridge (1 day)
-    └── Verify deal events persisted
+├── Phase 3: Event-to-Audit Bridge (1 day)
+│   └── Verify deal events persisted
+├── Phase 3A: Scalability Safeguards (0.5 days)
+│   └── Event registry, coverage tests, fallback logging
+└── Phase 4: Auth Event Logging (0.5 days)
+    └── Test login/logout logging
 
 Week 2:
 ├── Phase 5A: VenuesService (1 day)
@@ -789,6 +1009,8 @@ Week 2:
 │   └── Test contact operations logged
 └── Phase 6: Photo/File Operations (1-1.5 days)
     └── Test photo/file operations logged
+
+Total: ~6-7 days (was 5-7 days)
 ```
 
 ---
@@ -802,6 +1024,7 @@ After full implementation:
 3. **Forensics**: Every audit log has requestId for tracing
 4. **Performance**: No measurable latency increase
 5. **Reliability**: Zero audit logging failures blocking operations
+6. **Maintainability**: Coverage test catches missing event mappings before deployment
 
 ---
 
@@ -811,11 +1034,15 @@ After full implementation:
 |------|---------|
 | `shared/schema.ts` | Add audit_logs fields, types |
 | `server/storage.ts` | Update createAuditLog signature |
+| `server/audit.ts` | Update logAuditEvent to use request context |
 | `server/lib/request-context.ts` | New file |
+| `server/lib/event-registry.ts` | New file (Phase 3A) |
 | `server/lib/audit-bridge.ts` | New file |
+| `server/lib/__tests__/event-coverage.test.ts` | New file (Phase 3A) |
 | `server/lib/events.ts` | Add venue/contact/photo event types |
 | `server/googleAuth.ts` | Add auth logging calls |
 | `server/services/venues.service.ts` | New file |
 | `server/services/contacts.service.ts` | New file |
 | `server/routes.ts` | Delegate to new services |
 | `server/mcp/transport.ts` | Wrap with request context |
+| `docs/adding-new-entities.md` | New file - developer documentation (Phase 3A) |
