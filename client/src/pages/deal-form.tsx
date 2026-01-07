@@ -36,7 +36,7 @@ import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry } from "@shared/schema";
 import { dealStatuses, dealLocationSchema } from "@shared/schema";
 
 const dealFormSchema = z.object({
@@ -52,6 +52,7 @@ const dealFormSchema = z.object({
   concept: z.string().optional().transform(val => val || undefined),
   notes: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
+  industryId: z.string().optional().transform(val => val || undefined),
   budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
   budgetLow: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
   budgetNotes: z.string().optional().transform(val => val || undefined),
@@ -85,6 +86,10 @@ export default function DealForm() {
     queryKey: ["/api/deal-services"],
   });
 
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+  });
+
   usePageTitle(isEditing ? (deal?.displayName ? `Edit ${deal.displayName}` : "Edit Deal") : "New Deal");
 
   const form = useForm<DealFormValues>({
@@ -102,6 +107,7 @@ export default function DealForm() {
       concept: "",
       notes: "",
       ownerId: "",
+      industryId: "",
       budgetHigh: null,
       budgetLow: null,
       budgetNotes: "",
@@ -134,6 +140,7 @@ export default function DealForm() {
         concept: deal.concept || "",
         notes: deal.notes || "",
         ownerId: deal.ownerId || "",
+        industryId: deal.industryId || "",
         budgetHigh: deal.budgetHigh ?? null,
         budgetLow: deal.budgetLow ?? null,
         budgetNotes: deal.budgetNotes || "",
@@ -412,6 +419,37 @@ export default function DealForm() {
                               {user.firstName} {user.lastName}
                             </SelectItem>
                           ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="industryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industry</FormLabel>
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-deal-industry">
+                            <SelectValue placeholder="Select industry..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No industry</SelectItem>
+                          {industries
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((industry) => (
+                              <SelectItem key={industry.id} value={industry.id}>
+                                {industry.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -259,7 +259,7 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
       },
     },
     matchFn: (deal, selectedValues) => {
-      const industryId = deal.client?.industryId;
+      const industryId = deal.industryId;
       if (!industryId) return false;
       return selectedValues.includes(industryId);
     },
@@ -574,18 +574,34 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
-    id: "clientIndustry",
+    id: "industry",
     headerName: "Industry",
-    field: "client",
+    field: "industryId",
     category: "Basic Info",
     colDef: {
       flex: 1,
       minWidth: 140,
+      editable: true,
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: (context: DealsGridContext) => {
+          const industries = context?.industries || [];
+          return [
+            { value: "", label: "No Industry" },
+            ...industries
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((industry) => ({
+                value: industry.id,
+                label: industry.name,
+              })),
+          ];
+        },
+      },
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.client?.industryId || "";
+        return params.data?.industryId || "";
       },
       cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
-        const industryId = params.data?.client?.industryId;
+        const industryId = params.data?.industryId;
         if (!industryId) return null;
         const industry = params.context?.industriesMap?.get(industryId);
         return (
@@ -594,7 +610,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               {industry?.name || industryId}
             </Badge>
           </div>
-          
         );
       },
     },

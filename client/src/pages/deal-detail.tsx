@@ -770,15 +770,25 @@ export default function DealDetail() {
                   placeholder="Select brand"
                 /> */}
 
-                <FieldRow label="Industry" testId="field-client-industry">
-                  {deal.client?.industryId ? (
-                    <span data-testid="text-client-industry">
-                      {industriesMap.get(deal.client.industryId)?.name || deal.client.industryId}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">No industry</span>
-                  )}
-                </FieldRow>
+                <EditableFieldRow
+                  label="Industry"
+                  value={deal.industryId || ""}
+                  field="industryId"
+                  testId="field-industry"
+                  type="select"
+                  options={industries.map((i) => ({ value: i.id, label: i.name }))}
+                  onSave={handleFieldSave}
+                  displayValue={
+                    deal.industryId ? (
+                      <span data-testid="text-industry">
+                        {industriesMap.get(deal.industryId)?.name || deal.industryId}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">No industry</span>
+                    )
+                  }
+                  placeholder="Select industry"
+                />
 
                 <FieldRow label="Primary Contact" testId="field-primary-contact">
                   {deal.primaryContact ? (
