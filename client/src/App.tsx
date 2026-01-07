@@ -239,11 +239,7 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
-          {
-            name: "Theme Editor",
-            href: "/admin/theme",
-            icon: Palette,
-          },
+
           {
             name: "Vendors",
             href: "/vendors",
@@ -269,11 +265,7 @@ function useLayoutConfig() {
             href: "/admin/invites",
             icon: UserPlus,
           },
-          {
-            name: "Feature Categories",
-            href: "/admin/app/features",
-            icon: Tags,
-          },
+
           {
             name: "Vendor Services",
             href: "/admin/vendors/services",
@@ -292,6 +284,11 @@ function useLayoutConfig() {
         allowedRoles: ["admin"],
         defaultCollapsed: true,
         items: [
+          {
+            name: "Theme Editor",
+            href: "/admin/theme",
+            icon: Palette,
+          },
           {
             name: "Feature Categories",
             href: "/admin/app/features",
