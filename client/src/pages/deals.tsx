@@ -322,7 +322,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 76,
       editable: true,
       cellEditor: "agSelectCellEditor",
-      cellEditorPopup: true,
 
       pinned: "left",
       lockPinned: true,
@@ -609,7 +608,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 140,
       editable: true,
       cellEditor: "agSelectCellEditor",
-      cellEditorPopup: true,
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const industries = params.context?.industries || [];
         return {
