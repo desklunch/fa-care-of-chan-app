@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
+import { forwardRef, useImperativeHandle, useState, useRef, useEffect, useCallback } from "react";
 import type { ICellEditorParams } from "ag-grid-community";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check } from "lucide-react";
@@ -16,46 +16,65 @@ interface SelectCellEditorProps extends ICellEditorParams {
 
 export interface SelectCellEditorRef {
   getValue: () => string | null;
+  isPopup: () => boolean;
+  focusIn: () => void;
 }
 
+/**
+ * Custom cell editor following AG Grid's documented popup editor pattern.
+ * 
+ * Key requirements for undo/redo compatibility:
+ * 1. Store value in a ref (not just state) so getValue() returns the latest value synchronously
+ * 2. Expose getValue() via useImperativeHandle - AG Grid calls this to get the final value
+ * 3. Use setTimeout(0) to queue stopEditing() - ensures value is set before AG Grid queries it
+ * 4. Call stopEditing() with no arguments (or false) - true means "cancel" which discards changes
+ * 5. Set isPopup() to return true for popup editors
+ */
 const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
   (props, ref) => {
-    const { options = [], stopEditing, column, node } = props;
+    const { options = [], column, node } = props;
     
     // Get the actual field value from the row data
     const fieldName = column.getColDef().field;
     const initialValue = fieldName && node?.data ? node.data[fieldName] : null;
     
     // Use ref to store value immediately (React state updates are async)
+    // This ensures getValue() always returns the latest selected value
     const valueRef = useRef<string | null>(
       initialValue != null ? String(initialValue) : null
     );
     const [selectedValue, setSelectedValue] = useState<string | null>(valueRef.current);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // Expose methods to AG Grid
     useImperativeHandle(ref, () => ({
+      // AG Grid calls this to get the final value when editing stops
       getValue: () => valueRef.current,
-      isCancelAfterEnd: () => false,
+      // Mark this as a popup editor
+      isPopup: () => true,
+      // Focus handler for the editor
+      focusIn: () => {
+        containerRef.current?.focus();
+      },
     }));
 
     useEffect(() => {
       containerRef.current?.focus();
     }, []);
 
-    const handleSelect = (value: string | null) => {
+    const handleSelect = useCallback((value: string | null) => {
+      // Update the ref immediately (synchronous) so getValue() returns correct value
       valueRef.current = value;
+      // Update state for UI re-render
       setSelectedValue(value);
       
-      // Stop editing with false to NOT cancel - this allows AG Grid to call getValue()
-      // and properly track the change for undo/redo
-      requestAnimationFrame(() => {
-        if (props.api) {
-          props.api.stopEditing(false);
-        } else {
-          stopEditing();
-        }
-      });
-    };
+      // Queue stopEditing in the next event loop tick
+      // This ensures the value is fully set before AG Grid calls getValue()
+      // Using setTimeout(0) creates a macrotask that runs after React's state updates
+      setTimeout(() => {
+        props.api?.stopEditing();
+      }, 0);
+    }, [props.api]);
 
     return (
       <div

@@ -901,7 +901,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           onRowClicked={handleRowClick}
           onSortChanged={handleSortChanged}
           onColumnMoved={handleColumnMoved}
-          cellSelection={true}
           undoRedoCellEditing={true}
           undoRedoCellEditingLimit={20}
           pagination={false}
