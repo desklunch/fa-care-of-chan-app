@@ -22,8 +22,7 @@ export interface ServicesCellEditorRef {
 /**
  * Custom cell editor for multi-select services.
  * Follows AG Grid's documented popup editor pattern for undo/redo compatibility.
- * Uses a ref to store value synchronously so getValue() always returns the latest.
- * Uses __ag_Grid_Stop_Propagation flag to prevent clicks inside popup from closing the editor.
+ * Uses native DOM event listeners with { capture: true } to intercept events before AG Grid.
  */
 export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCellEditorProps>(
   (props, ref) => {
@@ -48,19 +47,26 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
       },
     }));
 
+    // Add native DOM event listeners with { capture: true } to intercept events before AG Grid
+    // Set the __ag_Grid_Stop_Propagation flag to tell AG Grid to ignore this event
+    // IMPORTANT: Don't call stopPropagation() or it will block our React click handlers!
     useEffect(() => {
-      containerRef.current?.focus();
+      const handleDocumentMouseDown = (event: MouseEvent) => {
+        if (containerRef.current?.contains(event.target as Node)) {
+          (event as any).__ag_Grid_Stop_Propagation = true;
+          console.log('[ServicesCellEditor] Set __ag_Grid_Stop_Propagation flag on mousedown');
+        }
+      };
+
+      document.addEventListener('mousedown', handleDocumentMouseDown, { capture: true });
+
+      return () => {
+        document.removeEventListener('mousedown', handleDocumentMouseDown, { capture: true });
+      };
     }, []);
 
-    /**
-     * Prevents AG Grid from treating mouse events inside this popup as "outside" clicks.
-     * AG Grid checks for __ag_Grid_Stop_Propagation flag on events to determine if
-     * the event should be ignored for edit-closing purposes.
-     */
-    const preventAgGridClose = useCallback((event: React.MouseEvent) => {
-      // Set the internal AG Grid flag to prevent this event from closing the editor
-      (event.nativeEvent as any).__ag_Grid_Stop_Propagation = true;
-      event.stopPropagation();
+    useEffect(() => {
+      containerRef.current?.focus();
     }, []);
 
     const handleToggle = useCallback((serviceId: number, checked: boolean) => {
@@ -74,24 +80,31 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
     }, []);
 
     const handleDone = useCallback((event: React.MouseEvent) => {
-      // Prevent AG Grid from treating this as an outside click
-      preventAgGridClose(event);
+      event.preventDefault();
+      event.stopPropagation();
       
-      // Queue stopEditing in the next event loop tick
-      // stopEditing() with no arguments commits the edit and calls getValue()
-      setTimeout(() => {
-        console.log('[ServicesCellEditor] Calling stopEditing, getValue will return:', valueRef.current);
-        props.api?.stopEditing();
-      }, 0);
-    }, [props.api, preventAgGridClose]);
+      console.log('[ServicesCellEditor] handleDone called, value:', valueRef.current);
+      
+      // Use setDataValue directly instead of relying on getValue()
+      // AG Grid's popup editor handling has a bug where it doesn't call getValue()
+      // when the user clicks inside the popup. setDataValue bypasses this issue
+      // and still triggers onCellValueChanged for server persistence.
+      const field = props.column.getColId();
+      if (props.node && field) {
+        console.log('[ServicesCellEditor] Using setDataValue to update:', { field, value: valueRef.current });
+        props.node.setDataValue(field, valueRef.current);
+      }
+      
+      // Stop editing (this will cancel without calling getValue, which is fine
+      // since we already updated the value via setDataValue)
+      props.api?.stopEditing();
+    }, [props.api, props.column, props.node]);
 
     return (
       <div
         ref={containerRef}
         className="ag-custom-component-popup bg-background border rounded-md shadow-lg p-2 min-w-[200px]"
         tabIndex={0}
-        onMouseDown={preventAgGridClose}
-        onClick={preventAgGridClose}
       >
         <ScrollArea className="h-[200px]">
           <div className="space-y-2 pr-2">
@@ -99,8 +112,6 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
               <label
                 key={service.id}
                 className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 p-1 rounded"
-                onMouseDown={preventAgGridClose}
-                onClick={preventAgGridClose}
               >
                 <Checkbox
                   checked={selectedIds.includes(service.id)}
