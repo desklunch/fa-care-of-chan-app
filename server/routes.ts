@@ -65,6 +65,7 @@ import { logAuditEvent, getChangedFields } from "./audit";
 import { DealsService } from "./services/deals.service";
 import { ServiceError } from "./services/base.service";
 import aiRoutes from "./routes/ai.routes";
+import mcpRoutes from "./mcp/transport";
 
 const dealsService = new DealsService(storage);
 
@@ -5806,6 +5807,9 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
 
   // AI Context endpoints for MCP readiness
   app.use("/api/ai", aiRoutes);
+
+  // MCP Server endpoints
+  app.use("/api/mcp", mcpRoutes);
 
   return httpServer;
 }
