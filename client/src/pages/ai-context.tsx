@@ -62,7 +62,7 @@ export default function AIContextPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { data: deals } = useQuery<DealWithRelations[]>({
-    queryKey: ["/api/deals", { limit: 25, sort: "updatedAt", order: "desc" }],
+    queryKey: ["/api/deals"],
   });
 
   const handleTrigger = async (endpoint: EndpointConfig) => {
