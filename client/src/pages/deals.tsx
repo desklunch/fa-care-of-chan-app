@@ -24,7 +24,6 @@ import ReactMarkdown from "react-markdown";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
-import SelectCellEditor from "@/components/ag-grid/select-cell-editor";
 
 // Helper to get full name from user
 function getUserFullName(user: Pick<UserType, "firstName" | "lastName"> | null | undefined): string {
@@ -306,8 +305,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 0,
       width: 76,
       editable: true,
-      cellEditor: SelectCellEditor,
-      cellEditorPopup: true,
+      cellEditor: "agSelectCellEditor",
       pinned: "left",
       lockPinned: true,
       autoHeight: true,
@@ -317,15 +315,10 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
-          options: users.map((u) => {
-            const fullName = getUserFullName(u);
-            const initials = getInitials(fullName);
-            return {
-              value: String(u.id),
-              label: `${initials} - ${fullName}`,
-            };
-          }),
-          placeholder: "Select owner",
+          values: [
+            "", // Empty option for "None"
+            ...users.map((u) => String(u.id)),
+          ],
         };
       },
       valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
@@ -339,7 +332,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         return <div className="">{params.value}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
-        if (params.newValue === null || params.newValue === "__empty__") {
+        if (params.newValue === null || params.newValue === "" || params.newValue === "__empty__") {
           params.data.ownerId = null;
           params.data.owner = null;
           return true;
@@ -582,19 +575,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 1,
       minWidth: 140,
       editable: true,
-      cellEditor: SelectCellEditor,
-      cellEditorPopup: true,
+      cellEditor: "agSelectCellEditor",
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const industries = params.context?.industries || [];
         return {
-          options: [
-   
+          values: [
+            "", // Empty option for "None"
             ...industries
               .sort((a, b) => a.name.localeCompare(b.name))
-              .map((industry) => ({
-                value: industry.id,
-                label: industry.name,
-              })),
+              .map((industry) => industry.id),
           ],
         };
       },
