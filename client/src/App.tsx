@@ -76,6 +76,7 @@ const ClientContacts = lazy(() => import("@/pages/client-contacts"));
 const Brands = lazy(() => import("@/pages/brands"));
 const VendorContacts = lazy(() => import("@/pages/vendor-contacts"));
 const EventSchedulePrototype = lazy(() => import("@/pages/event-schedule-prototype"));
+const AIContext = lazy(() => import("@/pages/ai-context"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 function PageLoader() {
@@ -113,6 +114,7 @@ import {
   Tickets,
   Building2,
   SlidersHorizontal,
+  Bot,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -301,6 +303,18 @@ function useLayoutConfig() {
           },
         ],
       },
+      {
+        heading: "AI",
+        allowedRoles: ["admin"],
+        defaultCollapsed: true,
+        items: [
+          {
+            name: "Context",
+            href: "/ai/context",
+            icon: Bot,
+          },
+        ],
+      },
     ],
     onSignOut: async () => {
       try {
@@ -373,6 +387,7 @@ function AuthenticatedRoutes() {
           <Route path="/brands" component={Brands} />
           <Route path="/vendors/contacts" component={VendorContacts} />
           <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
+          <Route path="/ai/context" component={AIContext} />
           <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
           <Route path="/admin/vendors/services" component={AdminVendorServices} />
