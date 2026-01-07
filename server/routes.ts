@@ -64,6 +64,7 @@ import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from
 import { logAuditEvent, getChangedFields } from "./audit";
 import { DealsService } from "./services/deals.service";
 import { ServiceError } from "./services/base.service";
+import aiRoutes from "./routes/ai.routes";
 
 const dealsService = new DealsService(storage);
 
@@ -5802,6 +5803,9 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
       res.status(500).json({ message: "Failed to delete brand" });
     }
   });
+
+  // AI Context endpoints for MCP readiness
+  app.use("/api/ai", aiRoutes);
 
   return httpServer;
 }
