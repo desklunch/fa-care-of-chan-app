@@ -316,8 +316,12 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const users = params.context?.users || [];
         return {
           values: [
-            "", // Empty option for "None"
-            ...users.map((u) => String(u.id)),
+            "(None)", // Empty option displayed as "(None)"
+            ...users.map((u) => {
+              const fullName = getUserFullName(u);
+              const initials = getInitials(fullName);
+              return `${initials} - ${fullName}`;
+            }),
           ],
         };
       },
@@ -332,13 +336,20 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         return <div className="">{params.value}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
-        if (params.newValue === null || params.newValue === "" || params.newValue === "__empty__") {
+        // Handle empty/none selection
+        if (params.newValue === null || params.newValue === "" || params.newValue === "(None)") {
           params.data.ownerId = null;
           params.data.owner = null;
           return true;
         }
+        // Parse the display value to find the matching user
+        // Format is "XX - Full Name" where XX are initials
         const users = params.context?.users || [];
-        const user = users.find((u) => String(u.id) === params.newValue);
+        const user = users.find((u) => {
+          const fullName = getUserFullName(u);
+          const initials = getInitials(fullName);
+          return params.newValue === `${initials} - ${fullName}`;
+        });
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
@@ -580,15 +591,30 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const industries = params.context?.industries || [];
         return {
           values: [
-            "", // Empty option for "None"
+            "(None)", // Empty option displayed as "(None)"
             ...industries
               .sort((a, b) => a.name.localeCompare(b.name))
-              .map((industry) => industry.id),
+              .map((industry) => industry.name),
           ],
         };
       },
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         return params.data?.industryId || "";
+      },
+      valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
+        // Handle empty/none selection
+        if (params.newValue === null || params.newValue === "" || params.newValue === "(None)") {
+          params.data.industryId = null;
+          return true;
+        }
+        // Look up the industry by name to get the ID
+        const industries = params.context?.industries || [];
+        const industry = industries.find((i) => i.name === params.newValue);
+        if (industry) {
+          params.data.industryId = industry.id;
+          return true;
+        }
+        return false;
       },
       cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
         const industryId = params.data?.industryId;
