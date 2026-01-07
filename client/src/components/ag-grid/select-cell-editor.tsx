@@ -1,96 +1,90 @@
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
-import type { ICellEditorParams, ICellEditorComp } from "ag-grid-community";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import type { ICellEditorParams } from "ag-grid-community";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectCellEditorParams extends ICellEditorParams {
+interface SelectCellEditorProps extends ICellEditorParams {
   options: SelectOption[];
   placeholder?: string;
 }
 
 export interface SelectCellEditorRef {
   getValue: () => string | null;
-  isCancelAfterEnd: () => boolean;
 }
 
-const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorParams>(
+const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
   (props, ref) => {
-    const { options, placeholder = "Select...", stopEditing, column, node } = props;
-    // Get the actual field value from the row data, not the display value from valueGetter
+    const { options, stopEditing, column, node } = props;
+    
+    // Get the actual field value from the row data
     const fieldName = column.getColDef().field;
     const initialValue = fieldName && node?.data ? node.data[fieldName] : null;
-    const [selectedValue, setSelectedValue] = useState<string>(
-      initialValue != null ? String(initialValue) : ""
+    const [selectedValue, setSelectedValue] = useState<string | null>(
+      initialValue != null ? String(initialValue) : null
     );
-    const [open, setOpen] = useState(true);
     const containerRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
-      getValue: () => {
-        if (selectedValue === "" || selectedValue === "__empty__") {
-          return null;
-        }
-        return selectedValue;
-      },
-      isCancelAfterEnd: () => false,
+      getValue: () => selectedValue,
     }));
 
-    const handleValueChange = (newValue: string) => {
-      setSelectedValue(newValue);
-      setOpen(false);
+    useEffect(() => {
+      containerRef.current?.focus();
+    }, []);
+
+    const handleSelect = (value: string | null) => {
+      setSelectedValue(value);
       setTimeout(() => {
         stopEditing();
       }, 0);
     };
 
-    const handleOpenChange = (isOpen: boolean) => {
-      setOpen(isOpen);
-      if (!isOpen) {
-        setTimeout(() => {
-          stopEditing();
-        }, 0);
-      }
-    };
-
     return (
-      <div ref={containerRef} className="w-full h-full flex items-center">
-        <Select
-          value={selectedValue}
-          onValueChange={handleValueChange}
-          open={open}
-          onOpenChange={handleOpenChange}
-        >
-          <SelectTrigger 
-            className="h-8 w-full border-0 bg-transparent focus:ring-0 focus:ring-offset-0"
-            data-testid="select-cell-editor-trigger"
-          >
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__empty__" data-testid="select-option-empty">
+      <div
+        ref={containerRef}
+        className="bg-background border rounded-md shadow-lg min-w-[140px]"
+        tabIndex={0}
+        data-testid="select-cell-editor"
+      >
+        <ScrollArea className="max-h-[200px]">
+          <div className="p-1">
+            <div
+              className={cn(
+                "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm text-sm",
+                selectedValue === null && "bg-accent"
+              )}
+              onClick={() => handleSelect(null)}
+              data-testid="select-option-empty"
+            >
+              <span className="w-4 h-4 flex items-center justify-center">
+                {selectedValue === null && <Check className="h-4 w-4" />}
+              </span>
               <span className="text-muted-foreground">None</span>
-            </SelectItem>
+            </div>
             {options.map((option) => (
-              <SelectItem
+              <div
                 key={option.value}
-                value={option.value}
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm text-sm",
+                  selectedValue === option.value && "bg-accent"
+                )}
+                onClick={() => handleSelect(option.value)}
                 data-testid={`select-option-${option.value}`}
               >
-                {option.label}
-              </SelectItem>
+                <span className="w-4 h-4 flex items-center justify-center">
+                  {selectedValue === option.value && <Check className="h-4 w-4" />}
+                </span>
+                <span>{option.label}</span>
+              </div>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </ScrollArea>
       </div>
     );
   }
