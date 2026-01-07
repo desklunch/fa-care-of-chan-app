@@ -3715,6 +3715,7 @@ export class DatabaseStorage implements IStorage {
         concept: deals.concept,
         notes: deals.notes,
         ownerId: deals.ownerId,
+        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3730,12 +3731,10 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
           name: brands.name,
-          industry: brands.industry,
         },
         owner: {
           id: ownerUsers.id,
@@ -3795,6 +3794,7 @@ export class DatabaseStorage implements IStorage {
         concept: deals.concept,
         notes: deals.notes,
         ownerId: deals.ownerId,
+        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3808,12 +3808,10 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
           name: brands.name,
-          industry: brands.industry,
         },
         owner: {
           id: ownerUsers.id,
@@ -3868,6 +3866,7 @@ export class DatabaseStorage implements IStorage {
         concept: deals.concept,
         notes: deals.notes,
         ownerId: deals.ownerId,
+        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3881,12 +3880,10 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
           name: brands.name,
-          industry: brands.industry,
         },
         owner: {
           id: ownerUsers.id,
@@ -3933,6 +3930,7 @@ export class DatabaseStorage implements IStorage {
         concept: deals.concept,
         notes: deals.notes,
         ownerId: deals.ownerId,
+        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -3946,12 +3944,10 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-          industryId: clients.industryId,
         },
         brand: {
           id: brands.id,
           name: brands.name,
-          industry: brands.industry,
         },
         owner: {
           id: ownerUsers.id,

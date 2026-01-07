@@ -1612,8 +1612,8 @@ export type InsertDeal = typeof deals.$inferInsert;
 // Deal with relations
 export type DealWithRelations = Deal & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
-  client?: Pick<Client, "id" | "name" | "industryId"> | null;
-  brand?: Pick<Brand, "id" | "name" | "industry"> | null;
+  client?: Pick<Client, "id" | "name"> | null;
+  brand?: Pick<Brand, "id" | "name"> | null;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   primaryContact?: Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers" | "jobTitle"> | null;
 };
