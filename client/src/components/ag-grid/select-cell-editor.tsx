@@ -25,13 +25,16 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     // Get the actual field value from the row data
     const fieldName = column.getColDef().field;
     const initialValue = fieldName && node?.data ? node.data[fieldName] : null;
-    const [selectedValue, setSelectedValue] = useState<string | null>(
+    
+    // Use ref to store value immediately (React state updates are async)
+    const valueRef = useRef<string | null>(
       initialValue != null ? String(initialValue) : null
     );
+    const [selectedValue, setSelectedValue] = useState<string | null>(valueRef.current);
     const containerRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
-      getValue: () => selectedValue,
+      getValue: () => valueRef.current,
     }));
 
     useEffect(() => {
@@ -39,7 +42,8 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     }, []);
 
     const handleSelect = (value: string | null) => {
-      setSelectedValue(value);
+      valueRef.current = value; // Update ref immediately
+      setSelectedValue(value);  // Update state for UI
       setTimeout(() => {
         stopEditing();
       }, 0);
@@ -48,7 +52,7 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     return (
       <div
         ref={containerRef}
-        className="bg-background border rounded-md shadow-lg min-w-[200px]"
+        className="bg-background border rounded-md shadow-lg min-w-[240px]"
         tabIndex={0}
         data-testid="select-cell-editor"
       >
