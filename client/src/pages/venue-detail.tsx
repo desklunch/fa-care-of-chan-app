@@ -80,10 +80,8 @@ export default function VenueDetailPage() {
     queryKey: ["/api/venues", id, "full"],
   });
 
-  const { data: venueCollections = [] } = useQuery<VenueCollectionWithCreator[]>({
-    queryKey: ["/api/venues", id, "collections"],
-    enabled: !!id,
-  });
+  // Collections are now included in the /full endpoint response
+  const venueCollections = venue?.collections || [];
 
   usePageTitle(venue?.name || "Venue");
 

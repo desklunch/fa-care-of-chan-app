@@ -69,7 +69,7 @@ export function AddToCollectionDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/venue-collections"] });
       venueIds.forEach(id => {
-        queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "collections"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
       });
       toast({ 
         title: "Collection created!", 
@@ -97,7 +97,7 @@ export function AddToCollectionDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/venue-collections"] });
       queryClient.invalidateQueries({ queryKey: ["/api/venue-collections", selectedCollectionId] });
       venueIds.forEach(id => {
-        queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "collections"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
       });
       const selectedCollection = collections.find(c => c.id === selectedCollectionId);
       toast({ 
