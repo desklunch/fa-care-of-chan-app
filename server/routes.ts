@@ -66,6 +66,8 @@ import { DealsService } from "./services/deals.service";
 import { ServiceError } from "./services/base.service";
 import aiRoutes from "./routes/ai.routes";
 import mcpRoutes from "./mcp/transport";
+import { requestContextMiddleware, updateRequestContext } from "./lib/request-context";
+import { initializeAuditBridge } from "./lib/audit-bridge";
 
 const dealsService = new DealsService(storage);
 
@@ -91,6 +93,20 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Request context middleware - must come after auth so we have user info
+  app.use(requestContextMiddleware);
+  
+  // Update context with user info after authentication
+  app.use((req: any, res, next) => {
+    if (req.user?.claims?.sub) {
+      updateRequestContext({ userId: req.user.claims.sub });
+    }
+    next();
+  });
+
+  // Initialize audit bridge - domain events will be persisted to audit_logs
+  initializeAuditBridge();
 
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {

@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { storage } from "./storage";
-import type { AuditAction, AuditEntityType, AuditStatus } from "@shared/schema";
+import type { AuditAction, AuditEntityType, AuditStatus, AuditSource } from "@shared/schema";
+import { getRequestContext } from "./lib/request-context";
 
 interface AuditLogOptions {
   action: AuditAction;
@@ -13,6 +14,7 @@ interface AuditLogOptions {
     after?: Record<string, unknown>;
   };
   metadata?: Record<string, unknown>;
+  source?: AuditSource;
 }
 
 function getClientIp(req: Request): string | null {
@@ -96,17 +98,23 @@ export async function logAuditEvent(
 ): Promise<void> {
   try {
     const userId = options.performedBy || getUserId(req);
+    const ctx = getRequestContext();
+    const session = req.session as any;
 
     await storage.createAuditLog({
       action: options.action,
       entityType: options.entityType,
       entityId: options.entityId || null,
       performedBy: userId || null,
-      ipAddress: getClientIp(req),
-      userAgent: req.headers["user-agent"] || null,
+      ipAddress: ctx?.ipAddress || getClientIp(req),
+      userAgent: ctx?.userAgent || req.headers["user-agent"] || null,
       status: options.status || "success",
       changes: sanitizeChanges(options.changes),
       metadata: sanitizeMetadata(options.metadata),
+      sessionId: ctx?.sessionId || session?.id || req.sessionID || null,
+      requestId: ctx?.requestId || null,
+      durationMs: ctx ? Date.now() - ctx.startTime : null,
+      source: options.source || ctx?.source || 'api',
     });
   } catch (error) {
     console.error("Failed to create audit log:", error);

@@ -58,6 +58,10 @@ export const invites = pgTable("invites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Audit log source enum values
+export const auditSources = ['api', 'mcp', 'system', 'event'] as const;
+export type AuditSource = (typeof auditSources)[number];
+
 // Audit logs for tracking all CRUD operations
 export const auditLogs = pgTable(
   "audit_logs",
@@ -73,11 +77,18 @@ export const auditLogs = pgTable(
     status: varchar("status", { length: 20 }).default("success").notNull(), // 'success' | 'failure'
     changes: jsonb("changes"), // { before: {...}, after: {...} } for updates
     metadata: jsonb("metadata"), // Additional context (error messages, etc.)
+    // Phase 1 additions - forensic completeness fields
+    sessionId: varchar("session_id"), // Express session ID for correlating actions
+    requestId: varchar("request_id"), // UUID per HTTP request for distributed tracing
+    durationMs: integer("duration_ms"), // Request duration for performance forensics
+    source: varchar("source", { length: 20 }), // Origin: 'api' | 'mcp' | 'system' | 'event'
   },
   (table) => [
     index("idx_audit_logs_performed_at").on(table.performedAt),
     index("idx_audit_logs_entity_type").on(table.entityType),
     index("idx_audit_logs_performed_by").on(table.performedBy),
+    index("idx_audit_logs_request_id").on(table.requestId),
+    index("idx_audit_logs_session_id").on(table.sessionId),
   ],
 );
 
@@ -1013,8 +1024,8 @@ export type ProductFeature = AppFeature;
 export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
-export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release';
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
