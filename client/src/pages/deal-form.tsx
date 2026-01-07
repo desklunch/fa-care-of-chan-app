@@ -418,13 +418,105 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startedOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Started On</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="w-full pl-3 text-left font-normal justify-start"
+                                data-testid="button-started-on"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lastContactOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Last Contact</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="w-full pl-3 text-left font-normal justify-start"
+                                data-testid="button-last-contact"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
 
-            {/* Card 2: Deal Details */}
+            {/* Card 2: Project Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Deal Details</CardTitle>
+                <CardTitle>Project Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Hidden - Locations field temporarily disabled */}
@@ -532,6 +624,28 @@ export default function DealForm() {
 
                 <FormField
                   control={form.control}
+                  name="projectDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Q2 2025, Summer 2025, TBD..."
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-project-date"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Freeform text to describe the project timing.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="concept"
                   render={({ field }) => (
                     <FormItem>
@@ -557,17 +671,17 @@ export default function DealForm() {
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes</FormLabel>
+                      <FormLabel>Next Steps</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter notes..."
+                          placeholder="Enter next steps..."
                           className="min-h-[120px] resize-y"
                           {...field}
                           data-testid="textarea-notes"
                         />
                       </FormControl>
                       <FormDescription>
-                        Additional notes and internal comments.
+                        What are the next steps for this deal?
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -579,10 +693,10 @@ export default function DealForm() {
                   name="budgetNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget Notes</FormLabel>
+                      <FormLabel>Budget</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter budget notes..."
+                          placeholder="Enter budget details..."
                           className="min-h-[80px] resize-y"
                           {...field}
                           value={field.value || ""}
@@ -590,135 +704,13 @@ export default function DealForm() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Additional details about budget or pricing.
+                        Budget range or pricing details.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-              </CardContent>
-            </Card>
-
-            {/* Card 3: Key Dates */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Key Dates</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="startedOn"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Started On</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className="w-full pl-3 text-left font-normal justify-start"
-                                data-testid="button-started-on"
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value ? parseISO(field.value) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
-                              initialFocus
-                            />
-                            {field.value && (
-                              <div className="p-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => field.onChange(null)}
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lastContactOn"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Last Contact</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className="w-full pl-3 text-left font-normal justify-start"
-                                data-testid="button-last-contact"
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value ? parseISO(field.value) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
-                              initialFocus
-                            />
-                            {field.value && (
-                              <div className="p-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => field.onChange(null)}
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="projectDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Q2 2025, Summer 2025, TBD..."
-                          {...field}
-                          value={field.value || ""}
-                          data-testid="input-project-date"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Freeform text to describe the project timing.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
 
