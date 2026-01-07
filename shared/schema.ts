@@ -987,6 +987,7 @@ export type VenueWithRelations = Venue & {
   floorplans: VenueFileWithUploader[];
   attachments: VenueFileWithUploader[];
   photos: VenuePhoto[];
+  collections?: VenueCollectionWithCreator[];
 };
 
 // Venue collection types
