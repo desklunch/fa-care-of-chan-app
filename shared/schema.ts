@@ -1661,6 +1661,7 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   concept: true,
   notes: true,
   ownerId: true,
+  industryId: true,
   budgetHigh: true,
   budgetLow: true,
   budgetNotes: true,

@@ -104,7 +104,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "lastContactOn",
    "proposalSentOn",
   "concept",
-  "clientIndustry",
+  "industry",
   "primaryContact",
   "services",
   "locationsText",
@@ -928,7 +928,7 @@ export default function Deals() {
     }
 
     // Handle empty strings as null for nullable ID fields (foreign keys)
-    const nullableIdFields = ["clientId"];
+    const nullableIdFields = ["clientId", "industryId"];
     if (nullableIdFields.includes(field) && newValue === "") {
       processedValue = null;
     }
