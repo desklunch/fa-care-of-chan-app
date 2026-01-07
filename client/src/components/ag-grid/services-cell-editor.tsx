@@ -68,7 +68,7 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
     return (
       <div
         ref={containerRef}
-        className="bg-background border rounded-md shadow-lg p-2 min-w-[200px]"
+        className="ag-custom-component-popup bg-background border rounded-md shadow-lg p-2 min-w-[200px]"
         tabIndex={0}
       >
         <ScrollArea className="h-[200px]">

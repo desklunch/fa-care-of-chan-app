@@ -895,6 +895,12 @@ export default function Deals() {
   // Handle cell value changes - persist to server
   const handleCellValueChanged = useCallback((event: CellValueChangedEvent<DealWithRelations>) => {
     const { data, colDef, newValue, oldValue } = event;
+    console.log('[DealsGrid] onCellValueChanged:', { 
+      field: colDef.field, 
+      newValue, 
+      oldValue, 
+      dataId: data?.id 
+    });
     if (!data?.id || !colDef.field) return;
     
     const field = colDef.field as string;

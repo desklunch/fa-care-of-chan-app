@@ -49,7 +49,10 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     // Expose methods to AG Grid
     useImperativeHandle(ref, () => ({
       // AG Grid calls this to get the final value when editing stops
-      getValue: () => valueRef.current,
+      getValue: () => {
+        console.log('[SelectCellEditor] getValue called, returning:', valueRef.current);
+        return valueRef.current;
+      },
       // Mark this as a popup editor
       isPopup: () => true,
       // Focus handler for the editor
@@ -62,24 +65,43 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
       containerRef.current?.focus();
     }, []);
 
-    const handleSelect = useCallback((value: string | null) => {
+    const handleSelect = useCallback((value: string | null, event: React.MouseEvent) => {
+      // Prevent the click from bubbling up to AG Grid's document click handler
+      event.stopPropagation();
+      event.preventDefault();
+      
       // Update the ref immediately (synchronous) so getValue() returns correct value
+      const previousValue = valueRef.current;
       valueRef.current = value;
-      // Update state for UI re-render
       setSelectedValue(value);
       
-      // Queue stopEditing in the next event loop tick
-      // This ensures the value is fully set before AG Grid calls getValue()
-      // Using setTimeout(0) creates a macrotask that runs after React's state updates
-      setTimeout(() => {
-        props.api?.stopEditing();
-      }, 0);
-    }, [props.api]);
+      console.log('[SelectCellEditor] handleSelect called:', { 
+        previousValue, 
+        newValue: value, 
+        fieldName,
+        valueRefAfterSet: valueRef.current 
+      });
+      
+      // Directly update the cell value using setDataValue
+      // This is a workaround because AG Grid's getValue() isn't being called properly for popup editors
+      // Note: This approach may not work with undo/redo - need to investigate further
+      const field = column.getColId();
+      if (node && field && props.api) {
+        console.log('[SelectCellEditor] Setting data value directly:', { field, value });
+        node.setDataValue(field, value);
+      }
+      
+      // Stop editing immediately after setting the value
+      requestAnimationFrame(() => {
+        console.log('[SelectCellEditor] Calling stopEditing');
+        props.api?.stopEditing(true); // true = cancel, since we already set the value
+      });
+    }, [props.api, fieldName, column, node]);
 
     return (
       <div
         ref={containerRef}
-        className="bg-background border rounded-md shadow-lg min-w-[240px]"
+        className="ag-custom-component-popup bg-background border rounded-md shadow-lg min-w-[240px]"
         tabIndex={0}
         data-testid="select-cell-editor"
       >
@@ -90,7 +112,7 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
                 "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm text-sm",
                 selectedValue === null && "bg-accent"
               )}
-              onClick={() => handleSelect(null)}
+              onClick={(e) => handleSelect(null, e)}
               data-testid="select-option-empty"
             >
               <span className="w-4 h-4 flex items-center justify-center">
@@ -105,7 +127,7 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
                   "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm text-sm",
                   selectedValue === option.value && "bg-accent"
                 )}
-                onClick={() => handleSelect(option.value)}
+                onClick={(e) => handleSelect(option.value, e)}
                 data-testid={`select-option-${option.value}`}
               >
                 <span className="w-4 h-4 flex items-center justify-center">
