@@ -24,6 +24,7 @@ import ReactMarkdown from "react-markdown";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
+import SelectCellEditor from "@/components/ag-grid/select-cell-editor";
 
 // Helper to get full name from user
 function getUserFullName(user: Pick<UserType, "firstName" | "lastName"> | null | undefined): string {
@@ -305,18 +306,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       flex: 0,
       width: 100,
       editable: true,
-      cellEditor: "agSelectCellEditor",
+      cellEditor: SelectCellEditor,
       cellEditorPopup: true,
       pinned: "left",
       lockPinned: true,
       autoHeight: true,
-
-
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
-          values: ["", ...users.map((u) => getInitials(getUserFullName(u)))],
-          valueListGap: 0,
+          options: users.map((u) => ({
+            value: u.id,
+            label: getInitials(getUserFullName(u)),
+          })),
+          placeholder: "Select owner",
         };
       },
       valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
@@ -329,14 +331,14 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string }) => {
         return <div className="">{params.value}</div>;
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
-        if (params.newValue === "") {
+      valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
+        if (params.newValue === null || params.newValue === "__empty__") {
           params.data.ownerId = null;
           params.data.owner = null;
           return true;
         }
         const users = params.context?.users || [];
-        const user = users.find((u) => getInitials(getUserFullName(u)) === params.newValue);
+        const user = users.find((u) => u.id === params.newValue);
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
