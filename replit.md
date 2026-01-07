@@ -42,6 +42,27 @@ The system includes modules for:
 -   **Optimistic UI Updates:** TanStack Query is configured for optimistic updates in features like voting to enhance user experience.
 -   **Migration Scripts:** Provided for data migration, e.g., for moving existing venue photos to the new storage system.
 
+### Audit Logging Architecture
+
+The system uses a comprehensive audit logging infrastructure with two complementary patterns:
+
+1. **Manual Audit Logging (`logAuditEvent`)**: Most routes call `logAuditEvent()` directly for audit trail persistence. This handles venues, contacts, photos, files, and other CRUD operations.
+
+2. **Event-to-Audit Bridge**: Domain events (deals, auth) are automatically persisted to audit_logs via the bridge in `server/lib/audit-bridge.ts`. This pattern is preferred for new service-layer code.
+
+**Key Infrastructure Files:**
+- `server/lib/request-context.ts` - AsyncLocalStorage for request context propagation
+- `server/lib/event-registry.ts` - Single source of truth for event-to-audit mappings (22 event types)
+- `server/lib/audit-bridge.ts` - Auto-persists domain events to audit_logs table
+- `server/lib/events.ts` - Domain event type definitions
+- `server/audit.ts` - Manual audit logging helper with request context integration
+
+**Developer Guidelines:**
+- For new service layers: Emit domain events, let the bridge handle audit persistence
+- For existing routes: Continue using `logAuditEvent()` 
+- Add new event types to both `events.ts` AND `event-registry.ts` to avoid silent audit gaps
+- Reference `audit-logging-plan.md` for detailed implementation documentation
+
 ## External Dependencies
 
 -   **Authentication:** Replit OIDC provider.
