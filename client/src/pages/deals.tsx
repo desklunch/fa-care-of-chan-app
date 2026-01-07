@@ -943,6 +943,14 @@ export default function Deals() {
       }
     }
 
+    // Handle industry field - valueSetter already updated data.industryId, so use that
+    if (field === "industryId") {
+      processedValue = data.industryId;
+      if (processedValue === "") {
+        processedValue = null;
+      }
+    }
+
     // Handle empty strings as null for date fields
     const dateFields = ["startedOn", "wonOn", "lastContactOn", "proposalSentOn", "projectDate"];
     if (dateFields.includes(field)) {
