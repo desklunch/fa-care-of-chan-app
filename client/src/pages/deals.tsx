@@ -277,7 +277,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 240,
-      maxWidth: 360,
+      
       sortable: false,
       editable: true,
       pinned: "left",
@@ -304,7 +304,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 0,
-      width: 100,
+      width: 76,
       editable: true,
       cellEditor: SelectCellEditor,
       cellEditorPopup: true,
@@ -588,7 +588,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const industries = params.context?.industries || [];
         return {
           options: [
-            { value: "", label: "No Industry" },
+   
             ...industries
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((industry) => ({

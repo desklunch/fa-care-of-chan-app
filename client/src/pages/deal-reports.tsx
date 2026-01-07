@@ -417,11 +417,11 @@ export default function DealReports() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 px-4 md:px-6 border-b">
+      <div className="flex-shrink-0  ">
 
         {REPORT_TABS.length > 0 && (
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">
-            <TabsList>
+          <Tabs value={activeTab} onValueChange={handleTabChange} >
+            <TabsList className="px-4 md:px-6 pt-4">
               {REPORT_TABS.map((tab) => (
                 <TabsTrigger
                   key={tab.id}

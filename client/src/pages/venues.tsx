@@ -163,7 +163,7 @@ function StatusCellRenderer({ data }: { data: VenueWithRelations }) {
 function DescriptionCellRenderer({ data }: { data: VenueWithRelations }) {
   if (!data?.shortDescription) return null;
   return (
-    <span className="truncate text-muted-foreground text-sm">
+    <span className="truncate  prose-sm">
       {data.shortDescription}
     </span>
   );

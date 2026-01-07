@@ -240,10 +240,10 @@ export default function AdminThemeEditor() {
       primaryAction={primaryAction}
       additionalActions={additionalActions}
     >
-      <div className="p-6 space-y-6">
+      <div className="">
         <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "light" | "dark")} data-testid="tabs-theme-mode">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList data-testid="tabs-list-theme-mode">
+        <div className="flex items-center justify-between ">
+          <TabsList data-testid="tabs-list-theme-mode" className="px-4 md:px-6 pt-4">
             <TabsTrigger value="light" className="gap-2" data-testid="tab-light-mode">
               <Sun className="h-4 w-4" />
               Light Mode
@@ -253,6 +253,10 @@ export default function AdminThemeEditor() {
               Dark Mode
             </TabsTrigger>
           </TabsList>
+
+        </div>
+        
+        <TabsContent value="light" className="mt-0 space-y-4">
           <Button
             variant="ghost"
             size="sm"
@@ -262,16 +266,22 @@ export default function AdminThemeEditor() {
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset {activeMode === "light" ? "Light" : "Dark"} Mode
           </Button>
-        </div>
-        
-        <TabsContent value="light" className="mt-0">
           <ThemeColorEditor
             vars={localTheme.light}
             onChange={(key, value) => updateColor("light", key, value)}
           />
         </TabsContent>
         
-        <TabsContent value="dark" className="mt-0">
+        <TabsContent value="dark" className="mt-0 space-y-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => resetModeToDefaults(activeMode)}
+            data-testid="button-reset-mode"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset {activeMode === "light" ? "Light" : "Dark"} Mode
+          </Button>
           <ThemeColorEditor
             vars={localTheme.dark}
             onChange={(key, value) => updateColor("dark", key, value)}
