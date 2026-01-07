@@ -583,10 +583,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 140,
       editable: true,
       cellEditor: SelectCellEditor,
-      cellEditorParams: {
-        options: (context: DealsGridContext) => {
-          const industries = context?.industries || [];
-          return [
+      cellEditorPopup: true,
+      cellEditorParams: (params: { context: DealsGridContext }) => {
+        const industries = params.context?.industries || [];
+        return {
+          options: [
             { value: "", label: "No Industry" },
             ...industries
               .sort((a, b) => a.name.localeCompare(b.name))
@@ -594,8 +595,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
                 value: industry.id,
                 label: industry.name,
               })),
-          ];
-        },
+          ],
+        };
       },
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         return params.data?.industryId || "";
