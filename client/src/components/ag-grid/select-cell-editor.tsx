@@ -34,14 +34,8 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     const containerRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
-      getValue: () => {
-        console.log("SelectCellEditor getValue called, returning:", valueRef.current);
-        return valueRef.current;
-      },
-      isCancelAfterEnd: () => {
-        console.log("SelectCellEditor isCancelAfterEnd called");
-        return false;
-      },
+      getValue: () => valueRef.current,
+      isCancelAfterEnd: () => false,
     }));
 
     useEffect(() => {
@@ -49,22 +43,19 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     }, []);
 
     const handleSelect = (value: string | null) => {
-      console.log("SelectCellEditor handleSelect:", value);
-      valueRef.current = value; // Update ref immediately
-      setSelectedValue(value);  // Update state for UI
+      valueRef.current = value;
+      setSelectedValue(value);
       
       // Directly update the cell value since AG Grid's getValue isn't being called
       const field = column.getColId();
       if (node && field) {
-        console.log("Directly setting data value:", field, "=", value);
         node.setDataValue(field, value);
       }
       
       // Then stop editing
       requestAnimationFrame(() => {
-        console.log("SelectCellEditor calling stopEditing");
         if (props.api) {
-          props.api.stopEditing(true); // true = don't fire cellValueChanged again
+          props.api.stopEditing(true);
         } else {
           stopEditing();
         }
