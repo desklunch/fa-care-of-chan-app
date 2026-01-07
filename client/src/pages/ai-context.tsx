@@ -78,7 +78,7 @@ export default function AIContextPage() {
 
     try {
       const url = endpoint.getUrl(selectedDealId);
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: "include" });
       const data = await res.json();
 
       if (!res.ok) {
