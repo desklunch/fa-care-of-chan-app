@@ -52,7 +52,7 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
         tabIndex={0}
         data-testid="select-cell-editor"
       >
-        <ScrollArea className="max-h-[200px]">
+        <ScrollArea className="h-[280px]">
           <div className="p-1">
             <div
               className={cn(

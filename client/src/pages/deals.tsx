@@ -341,8 +341,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           return true;
         }
         const users = params.context?.users || [];
-        const newOwnerId = parseInt(params.newValue, 10);
-        const user = users.find((u) => u.id === newOwnerId);
+        const user = users.find((u) => String(u.id) === params.newValue);
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
