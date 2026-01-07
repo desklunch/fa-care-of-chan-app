@@ -52,14 +52,20 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
       console.log("SelectCellEditor handleSelect:", value);
       valueRef.current = value; // Update ref immediately
       setSelectedValue(value);  // Update state for UI
-      // Use requestAnimationFrame to ensure the ref is updated before stopEditing
+      
+      // Directly update the cell value since AG Grid's getValue isn't being called
+      const field = column.getColId();
+      if (node && field) {
+        console.log("Directly setting data value:", field, "=", value);
+        node.setDataValue(field, value);
+      }
+      
+      // Then stop editing
       requestAnimationFrame(() => {
-        console.log("SelectCellEditor calling stopEditing, valueRef:", valueRef.current);
+        console.log("SelectCellEditor calling stopEditing");
         if (props.api) {
-          console.log("Using api.stopEditing()");
-          props.api.stopEditing();
+          props.api.stopEditing(true); // true = don't fire cellValueChanged again
         } else {
-          console.log("Using props.stopEditing()");
           stopEditing();
         }
       });
