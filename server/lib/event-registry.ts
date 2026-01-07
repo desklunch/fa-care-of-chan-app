@@ -88,6 +88,39 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).taskId ?? null,
     },
   },
+  "user:logged_in": {
+    type: "user:logged_in",
+    audit: {
+      action: "login",
+      entityType: "user",
+      extractEntityId: (e) => (e as any).userId ?? null,
+      extractChanges: (e) => (e as any).metadata ?? null,
+    },
+  },
+  "user:logged_out": {
+    type: "user:logged_out",
+    audit: {
+      action: "logout",
+      entityType: "user",
+      extractEntityId: (e) => (e as any).userId ?? null,
+    },
+  },
+  "session:created": {
+    type: "session:created",
+    audit: {
+      action: "create",
+      entityType: "session",
+      extractEntityId: (e) => (e as any).sessionId ?? null,
+    },
+  },
+  "session:destroyed": {
+    type: "session:destroyed",
+    audit: {
+      action: "delete",
+      entityType: "session",
+      extractEntityId: (e) => (e as any).sessionId ?? null,
+    },
+  },
 };
 
 export type RegisteredEventType = keyof typeof EVENT_REGISTRY;

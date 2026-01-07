@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { domainEvents } from "./lib/events";
 
 const getOidcConfig = memoize(
   async () => {
@@ -165,12 +166,39 @@ export async function setupAuth(app: Express) {
         delete (req.session as any).inviteToken;
       }
       
+      // Emit login event
+      const userId = claims?.sub;
+      if (userId) {
+        domainEvents.emit({
+          type: "user:logged_in",
+          userId,
+          actorId: userId,
+          timestamp: new Date(),
+          metadata: {
+            provider: "replit",
+            isNewUser: false,
+          },
+        });
+      }
+      
       res.redirect("/");
     });
   });
 
   app.get("/api/logout", (req, res) => {
+    const userId = (req.user as any)?.claims?.sub;
+    
     req.logout(() => {
+      // Emit logout event
+      if (userId) {
+        domainEvents.emit({
+          type: "user:logged_out",
+          userId,
+          actorId: userId,
+          timestamp: new Date(),
+        });
+      }
+      
       res.redirect(
         client.buildEndSessionUrl(config, {
           client_id: process.env.REPL_ID!,

@@ -67,6 +67,40 @@ export interface DealTaskDeletedEvent {
   timestamp: Date;
 }
 
+export interface UserLoggedInEvent {
+  type: "user:logged_in";
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+  metadata?: {
+    provider?: string;
+    isNewUser?: boolean;
+  };
+}
+
+export interface UserLoggedOutEvent {
+  type: "user:logged_out";
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface SessionCreatedEvent {
+  type: "session:created";
+  sessionId: string;
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface SessionDestroyedEvent {
+  type: "session:destroyed";
+  sessionId: string;
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export type DomainEvent =
   | DealCreatedEvent
   | DealUpdatedEvent
@@ -75,7 +109,11 @@ export type DomainEvent =
   | DealOwnerAssignedEvent
   | DealTaskCreatedEvent
   | DealTaskUpdatedEvent
-  | DealTaskDeletedEvent;
+  | DealTaskDeletedEvent
+  | UserLoggedInEvent
+  | UserLoggedOutEvent
+  | SessionCreatedEvent
+  | SessionDestroyedEvent;
 
 type EventMap = {
   "deal:created": DealCreatedEvent;
@@ -86,6 +124,10 @@ type EventMap = {
   "deal:task_created": DealTaskCreatedEvent;
   "deal:task_updated": DealTaskUpdatedEvent;
   "deal:task_deleted": DealTaskDeletedEvent;
+  "user:logged_in": UserLoggedInEvent;
+  "user:logged_out": UserLoggedOutEvent;
+  "session:created": SessionCreatedEvent;
+  "session:destroyed": SessionDestroyedEvent;
   "*": DomainEvent;
 };
 
