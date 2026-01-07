@@ -23,6 +23,7 @@ export interface ServicesCellEditorRef {
  * Custom cell editor for multi-select services.
  * Follows AG Grid's documented popup editor pattern for undo/redo compatibility.
  * Uses a ref to store value synchronously so getValue() always returns the latest.
+ * Uses __ag_Grid_Stop_Propagation flag to prevent clicks inside popup from closing the editor.
  */
 export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCellEditorProps>(
   (props, ref) => {
@@ -37,7 +38,10 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
 
     // Expose methods to AG Grid
     useImperativeHandle(ref, () => ({
-      getValue: () => valueRef.current,
+      getValue: () => {
+        console.log('[ServicesCellEditor] getValue called, returning:', valueRef.current);
+        return valueRef.current;
+      },
       isPopup: () => true,
       focusIn: () => {
         containerRef.current?.focus();
@@ -46,6 +50,17 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
 
     useEffect(() => {
       containerRef.current?.focus();
+    }, []);
+
+    /**
+     * Prevents AG Grid from treating mouse events inside this popup as "outside" clicks.
+     * AG Grid checks for __ag_Grid_Stop_Propagation flag on events to determine if
+     * the event should be ignored for edit-closing purposes.
+     */
+    const preventAgGridClose = useCallback((event: React.MouseEvent) => {
+      // Set the internal AG Grid flag to prevent this event from closing the editor
+      (event.nativeEvent as any).__ag_Grid_Stop_Propagation = true;
+      event.stopPropagation();
     }, []);
 
     const handleToggle = useCallback((serviceId: number, checked: boolean) => {
@@ -58,18 +73,25 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
       }
     }, []);
 
-    const handleDone = useCallback(() => {
+    const handleDone = useCallback((event: React.MouseEvent) => {
+      // Prevent AG Grid from treating this as an outside click
+      preventAgGridClose(event);
+      
       // Queue stopEditing in the next event loop tick
+      // stopEditing() with no arguments commits the edit and calls getValue()
       setTimeout(() => {
+        console.log('[ServicesCellEditor] Calling stopEditing, getValue will return:', valueRef.current);
         props.api?.stopEditing();
       }, 0);
-    }, [props.api]);
+    }, [props.api, preventAgGridClose]);
 
     return (
       <div
         ref={containerRef}
         className="ag-custom-component-popup bg-background border rounded-md shadow-lg p-2 min-w-[200px]"
         tabIndex={0}
+        onMouseDown={preventAgGridClose}
+        onClick={preventAgGridClose}
       >
         <ScrollArea className="h-[200px]">
           <div className="space-y-2 pr-2">
@@ -77,6 +99,8 @@ export const ServicesCellEditor = forwardRef<ServicesCellEditorRef, ServicesCell
               <label
                 key={service.id}
                 className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 p-1 rounded"
+                onMouseDown={preventAgGridClose}
+                onClick={preventAgGridClose}
               >
                 <Checkbox
                   checked={selectedIds.includes(service.id)}

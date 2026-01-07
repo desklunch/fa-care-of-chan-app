@@ -23,11 +23,12 @@ export interface SelectCellEditorRef {
 /**
  * Custom cell editor following AG Grid's documented popup editor pattern.
  * 
- * Key requirements for undo/redo compatibility:
+ * Key implementation details for undo/redo compatibility:
  * 1. Store value in a ref (not just state) so getValue() returns the latest value synchronously
  * 2. Expose getValue() via useImperativeHandle - AG Grid calls this to get the final value
- * 3. Use setTimeout(0) to queue stopEditing() - ensures value is set before AG Grid queries it
- * 4. Call stopEditing() with no arguments (or false) - true means "cancel" which discards changes
+ * 3. Set __ag_Grid_Stop_Propagation flag on mouse events to prevent AG Grid from treating
+ *    clicks inside the popup as "outside" clicks that would cancel the edit
+ * 4. Call stopEditing() with no arguments (false) - this commits the changes and calls getValue()
  * 5. Set isPopup() to return true for popup editors
  */
 const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
@@ -65,9 +66,20 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
       containerRef.current?.focus();
     }, []);
 
-    const handleSelect = useCallback((value: string | null, event: React.MouseEvent) => {
-      // Prevent the click from bubbling up to AG Grid's document click handler
+    /**
+     * Prevents AG Grid from treating mouse events inside this popup as "outside" clicks.
+     * AG Grid checks for __ag_Grid_Stop_Propagation flag on events to determine if
+     * the event should be ignored for edit-closing purposes.
+     */
+    const preventAgGridClose = useCallback((event: React.MouseEvent) => {
+      // Set the internal AG Grid flag to prevent this event from closing the editor
+      (event.nativeEvent as any).__ag_Grid_Stop_Propagation = true;
       event.stopPropagation();
+    }, []);
+
+    const handleSelect = useCallback((value: string | null, event: React.MouseEvent) => {
+      // Prevent AG Grid from treating this as an outside click
+      preventAgGridClose(event);
       event.preventDefault();
       
       // Update the ref immediately (synchronous) so getValue() returns correct value
@@ -82,21 +94,13 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
         valueRefAfterSet: valueRef.current 
       });
       
-      // Directly update the cell value using setDataValue
-      // This is a workaround because AG Grid's getValue() isn't being called properly for popup editors
-      // Note: This approach may not work with undo/redo - need to investigate further
-      const field = column.getColId();
-      if (node && field && props.api) {
-        console.log('[SelectCellEditor] Setting data value directly:', { field, value });
-        node.setDataValue(field, value);
-      }
-      
-      // Stop editing immediately after setting the value
-      requestAnimationFrame(() => {
-        console.log('[SelectCellEditor] Calling stopEditing');
-        props.api?.stopEditing(true); // true = cancel, since we already set the value
-      });
-    }, [props.api, fieldName, column, node]);
+      // Use setTimeout to ensure state is updated before AG Grid calls getValue()
+      // stopEditing() with no arguments (or false) commits the edit and calls getValue()
+      setTimeout(() => {
+        console.log('[SelectCellEditor] Calling stopEditing, getValue will return:', valueRef.current);
+        props.api?.stopEditing();
+      }, 0);
+    }, [props.api, fieldName, preventAgGridClose]);
 
     return (
       <div
@@ -104,6 +108,8 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
         className="ag-custom-component-popup bg-background border rounded-md shadow-lg min-w-[240px]"
         tabIndex={0}
         data-testid="select-cell-editor"
+        onMouseDown={preventAgGridClose}
+        onClick={preventAgGridClose}
       >
         <ScrollArea className="h-[280px]">
           <div className="p-1">
