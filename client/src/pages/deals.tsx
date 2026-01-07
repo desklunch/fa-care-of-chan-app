@@ -428,8 +428,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "startedOn",
     category: "Dates",
     colDef: {
-      minWidth: 130,
-      maxWidth: 130,
+      width: 130,
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
@@ -629,7 +628,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
-    id: "services",
+    id: "z",
     headerName: "Services",
     field: "serviceIds",
     category: "Basic Info",
