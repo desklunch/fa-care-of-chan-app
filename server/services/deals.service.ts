@@ -11,7 +11,7 @@ import type {
   DealTaskWithRelations,
   CreateDealTask,
 } from "@shared/schema";
-import { insertDealSchema, updateDealSchema, insertDealTaskSchema } from "@shared/schema";
+import { insertDealSchema, updateDealSchema, insertDealTaskSchema, updateDealTaskSchema } from "@shared/schema";
 
 export interface ListDealsOptions {
   status?: DealStatus[];
@@ -238,6 +238,13 @@ export class DealsService extends BaseService {
     data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null; title?: string },
     actorId: string
   ): Promise<DealTask> {
+    const parsed = updateDealTaskSchema.safeParse(data);
+    if (!parsed.success) {
+      throw ServiceError.validation("Invalid task update data", {
+        errors: parsed.error.flatten(),
+      });
+    }
+
     const existingTask = this.ensureExists(
       await this.storage.getDealTaskById(taskId),
       "Task",
@@ -248,7 +255,7 @@ export class DealsService extends BaseService {
       throw ServiceError.validation("Task does not belong to the specified deal");
     }
 
-    const updatedTask = await this.storage.updateDealTask(taskId, data);
+    const updatedTask = await this.storage.updateDealTask(taskId, parsed.data);
     if (!updatedTask) {
       throw ServiceError.notFound("Task", taskId);
     }
@@ -257,7 +264,7 @@ export class DealsService extends BaseService {
       type: "deal:task_updated",
       task: updatedTask,
       dealId,
-      changes: data,
+      changes: parsed.data,
       actorId,
       timestamp: new Date(),
     });

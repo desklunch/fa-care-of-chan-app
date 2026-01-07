@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isManagerOrAdmin } from "./googleAuth";
@@ -48,12 +48,8 @@ import {
   type ReleaseStatus,
   insertVenueSchema,
   updateVenueSchema,
-  insertDealSchema,
-  updateDealSchema,
   dealStatuses,
   type DealStatus,
-  insertDealTaskSchema,
-  updateDealTaskSchema,
   insertClientSchema,
   updateClientSchema,
   insertBrandSchema,
@@ -66,6 +62,26 @@ import {
 } from "@shared/schema";
 import { sendInvitationEmail, sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
+import { DealsService } from "./services/deals.service";
+import { ServiceError } from "./services/base.service";
+
+const dealsService = new DealsService(storage);
+
+function handleServiceError(res: Response, error: unknown, fallbackMessage: string): void {
+  if (error instanceof ServiceError) {
+    const statusMap: Record<string, number> = {
+      NOT_FOUND: 404,
+      VALIDATION_ERROR: 400,
+      FORBIDDEN: 403,
+      CONFLICT: 409,
+    };
+    const status = statusMap[error.code] || 500;
+    res.status(status).json({ message: error.message, details: error.details });
+    return;
+  }
+  console.error(fallbackMessage, error);
+  res.status(500).json({ message: fallbackMessage });
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -5275,33 +5291,28 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         statusFilter = statusArray.filter(s => dealStatuses.includes(s as DealStatus)) as DealStatus[];
       }
       
-      const deals = await storage.getDeals({ status: statusFilter });
+      const deals = await dealsService.list({ status: statusFilter });
       res.json(deals);
     } catch (error) {
-      console.error("Error fetching deals:", error);
-      res.status(500).json({ message: "Failed to fetch deals" });
+      handleServiceError(res, error, "Failed to fetch deals");
     }
   });
 
   // GET /api/deals/:id - Get a single deal
   app.get("/api/deals/:id", isAuthenticated, async (req, res) => {
     try {
-      const deal = await storage.getDealById(req.params.id);
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
+      const deal = await dealsService.getById(req.params.id);
       res.json(deal);
     } catch (error) {
-      console.error("Error fetching deal:", error);
-      res.status(500).json({ message: "Failed to fetch deal" });
+      handleServiceError(res, error, "Failed to fetch deal");
     }
   });
 
   // POST /api/deals - Create a new deal
   app.post("/api/deals", isAuthenticated, async (req: any, res) => {
     try {
-      const validatedData = insertDealSchema.parse(req.body);
-      const deal = await storage.createDeal(validatedData, req.user.claims.sub);
+      const actorId = req.user.claims.sub;
+      const deal = await dealsService.create(req.body, actorId);
       
       await logAuditEvent(req, {
         action: "create",
@@ -5311,41 +5322,27 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
       });
       
       res.status(201).json(deal);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      console.error("Error creating deal:", error);
-      res.status(500).json({ message: "Failed to create deal" });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to create deal");
     }
   });
 
   // PATCH /api/deals/:id - Update a deal
   app.patch("/api/deals/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const existingDeal = await storage.getDealById(req.params.id);
-      if (!existingDeal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
+      const actorId = req.user.claims.sub;
+      const deal = await dealsService.update(req.params.id, req.body, actorId);
       
-      const validatedData = updateDealSchema.parse(req.body);
-      const deal = await storage.updateDeal(req.params.id, validatedData);
-      
-      const changes = getChangedFields(existingDeal, deal);
       await logAuditEvent(req, {
         action: "update",
         entityType: "deal",
         entityId: req.params.id,
-        changes,
+        changes: req.body,
       });
       
       res.json(deal);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      console.error("Error updating deal:", error);
-      res.status(500).json({ message: "Failed to update deal" });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to update deal");
     }
   });
 
@@ -5353,36 +5350,30 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
   app.post("/api/deals/reorder", isAuthenticated, async (req: any, res) => {
     try {
       const { dealIds } = req.body;
+      const actorId = req.user.claims.sub;
       
-      if (!Array.isArray(dealIds) || dealIds.length === 0) {
-        return res.status(400).json({ message: "dealIds must be a non-empty array" });
-      }
-      
-      await storage.reorderDeals(dealIds);
+      await dealsService.reorder(dealIds, actorId);
       
       await logAuditEvent(req, {
         action: "reorder",
         entityType: "deals",
         entityId: "bulk",
-        metadata: { count: dealIds.length },
+        metadata: { count: dealIds?.length || 0 },
       });
       
-      res.json({ success: true, reorderedCount: dealIds.length });
+      res.json({ success: true, reorderedCount: dealIds?.length || 0 });
     } catch (error) {
-      console.error("Error reordering deals:", error);
-      res.status(500).json({ message: "Failed to reorder deals" });
+      handleServiceError(res, error, "Failed to reorder deals");
     }
   });
 
   // DELETE /api/deals/:id - Delete a deal
   app.delete("/api/deals/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
     try {
-      const deal = await storage.getDealById(req.params.id);
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
+      const actorId = req.user.claims.sub;
+      const deal = await dealsService.getById(req.params.id);
       
-      await storage.deleteDeal(req.params.id);
+      await dealsService.delete(req.params.id, actorId);
       
       await logAuditEvent(req, {
         action: "delete",
@@ -5393,90 +5384,58 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
       
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting deal:", error);
-      res.status(500).json({ message: "Failed to delete deal" });
+      handleServiceError(res, error, "Failed to delete deal");
     }
   });
 
   // GET /api/deals/:dealId/tasks - Get tasks for a deal
   app.get("/api/deals/:dealId/tasks", isAuthenticated, async (req, res) => {
     try {
-      const deal = await storage.getDealById(req.params.dealId);
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      const tasks = await storage.getDealTasks(req.params.dealId);
+      const tasks = await dealsService.getTasks(req.params.dealId);
       res.json(tasks);
     } catch (error) {
-      console.error("Error fetching deal tasks:", error);
-      res.status(500).json({ message: "Failed to fetch deal tasks" });
+      handleServiceError(res, error, "Failed to fetch deal tasks");
     }
   });
 
   // POST /api/deals/:dealId/tasks - Create a task for a deal
   app.post("/api/deals/:dealId/tasks", isAuthenticated, async (req: any, res) => {
     try {
-      const deal = await storage.getDealById(req.params.dealId);
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      const validatedData = insertDealTaskSchema.parse({
-        ...req.body,
-        dealId: req.params.dealId,
-      });
-      const task = await storage.createDealTask(validatedData, req.user.claims.sub);
+      const actorId = req.user.claims.sub;
+      const task = await dealsService.createTask(
+        { ...req.body, dealId: req.params.dealId },
+        actorId
+      );
       res.status(201).json(task);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      console.error("Error creating deal task:", error);
-      res.status(500).json({ message: "Failed to create deal task" });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to create deal task");
     }
   });
 
   // PATCH /api/deals/:dealId/tasks/:taskId - Update a task
   app.patch("/api/deals/:dealId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
     try {
-      const existingTask = await storage.getDealTaskById(req.params.taskId);
-      if (!existingTask) {
-        return res.status(404).json({ message: "Task not found" });
-      }
-      
-      if (existingTask.dealId !== req.params.dealId) {
-        return res.status(404).json({ message: "Task not found" });
-      }
-      
-      const validatedData = updateDealTaskSchema.parse(req.body);
-      const task = await storage.updateDealTask(req.params.taskId, validatedData);
+      const actorId = req.user.claims.sub;
+      const task = await dealsService.updateTask(
+        req.params.dealId,
+        req.params.taskId,
+        req.body,
+        actorId
+      );
       res.json(task);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      console.error("Error updating deal task:", error);
-      res.status(500).json({ message: "Failed to update deal task" });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to update deal task");
     }
   });
 
   // DELETE /api/deals/:dealId/tasks/:taskId - Delete a task
   app.delete("/api/deals/:dealId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
     try {
-      const existingTask = await storage.getDealTaskById(req.params.taskId);
-      if (!existingTask) {
-        return res.status(404).json({ message: "Task not found" });
-      }
-      
-      if (existingTask.dealId !== req.params.dealId) {
-        return res.status(404).json({ message: "Task not found" });
-      }
-      
-      await storage.deleteDealTask(req.params.taskId);
+      const actorId = req.user.claims.sub;
+      await dealsService.deleteTask(req.params.dealId, req.params.taskId, actorId);
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting deal task:", error);
-      res.status(500).json({ message: "Failed to delete deal task" });
+      handleServiceError(res, error, "Failed to delete deal task");
     }
   });
 
