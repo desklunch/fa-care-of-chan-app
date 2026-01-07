@@ -46,16 +46,11 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
       valueRef.current = value;
       setSelectedValue(value);
       
-      // Directly update the cell value since AG Grid's getValue isn't being called
-      const field = column.getColId();
-      if (node && field) {
-        node.setDataValue(field, value);
-      }
-      
-      // Then stop editing
+      // Stop editing with false to NOT cancel - this allows AG Grid to call getValue()
+      // and properly track the change for undo/redo
       requestAnimationFrame(() => {
         if (props.api) {
-          props.api.stopEditing(true);
+          props.api.stopEditing(false);
         } else {
           stopEditing();
         }
