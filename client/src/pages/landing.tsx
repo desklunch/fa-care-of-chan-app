@@ -9,6 +9,7 @@ import {
 import { Building2, Users, Shield, Loader2, KeyboardMusic } from "lucide-react";
 import Logo from "@/framework/components/logo";
 import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleAuth } from "@/lib/google-auth";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -19,6 +20,7 @@ const isDevelopment = import.meta.env.DEV;
 export default function Landing() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isGoogleAuthAvailable } = useGoogleAuth();
 
   const loginMutation = useMutation({
     mutationFn: async (credential: string) => {
@@ -87,7 +89,7 @@ export default function Landing() {
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Signing in...
             </Button>
-          ) : (
+          ) : isGoogleAuthAvailable ? (
             <GoogleLogin
               onSuccess={(credentialResponse) => {
                 if (credentialResponse.credential) {
@@ -106,6 +108,8 @@ export default function Landing() {
               text="signin_with"
               shape="pill"
             />
+          ) : (
+            <p className="text-sm text-muted-foreground">Google sign-in is not configured</p>
           )}
 
           <p className="text-xs max-w-64 text-muted-foreground leading-[1.5em]">

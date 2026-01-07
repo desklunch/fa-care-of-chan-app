@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleAuth } from "@/lib/google-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
@@ -13,6 +14,7 @@ export default function InviteActivation() {
   const search = useSearch();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isGoogleAuthAvailable } = useGoogleAuth();
   const params = new URLSearchParams(search);
   const token = params.get("token");
 
@@ -150,7 +152,7 @@ export default function InviteActivation() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Signing in...
               </Button>
-            ) : (
+            ) : isGoogleAuthAvailable ? (
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
@@ -169,6 +171,8 @@ export default function InviteActivation() {
                 text="signin_with"
                 width="300"
               />
+            ) : (
+              <p className="text-sm text-muted-foreground">Google sign-in is not configured</p>
             )}
           </div>
         </CardContent>

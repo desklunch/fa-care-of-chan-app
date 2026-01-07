@@ -1,5 +1,15 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+
+interface GoogleAuthContextValue {
+  isGoogleAuthAvailable: boolean;
+}
+
+const GoogleAuthContext = createContext<GoogleAuthContextValue>({ isGoogleAuthAvailable: false });
+
+export function useGoogleAuth() {
+  return useContext(GoogleAuthContext);
+}
 
 interface GoogleAuthProviderWrapperProps {
   children: ReactNode;
@@ -10,12 +20,18 @@ export function GoogleAuthProviderWrapper({ children }: GoogleAuthProviderWrappe
   
   if (!clientId) {
     console.error("VITE_GOOGLE_CLIENT_ID is not set");
-    return <>{children}</>;
+    return (
+      <GoogleAuthContext.Provider value={{ isGoogleAuthAvailable: false }}>
+        {children}
+      </GoogleAuthContext.Provider>
+    );
   }
 
   return (
-    <GoogleOAuthProvider clientId={clientId}>
-      {children}
-    </GoogleOAuthProvider>
+    <GoogleAuthContext.Provider value={{ isGoogleAuthAvailable: true }}>
+      <GoogleOAuthProvider clientId={clientId}>
+        {children}
+      </GoogleOAuthProvider>
+    </GoogleAuthContext.Provider>
   );
 }
