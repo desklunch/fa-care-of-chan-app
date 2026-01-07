@@ -327,13 +327,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
       valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
         const ownerId = params.data?.ownerId;
-        if (!ownerId) return "-";
+        if (!ownerId) return "(None)";
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
-        return getInitials(getUserFullName(user));
+        if (!user) return "(None)";
+        const fullName = getUserFullName(user);
+        const initials = getInitials(fullName);
+        return `${initials} - ${fullName}`;
       },
       cellRenderer: (params: { value: string }) => {
-        return <div className="">{params.value}</div>;
+        if (!params.value || params.value === "(None)") return <div className="">-</div>;
+        // Extract just the initials from "XX - Full Name" format
+        const initials = params.value.split(" - ")[0];
+        return <div className="">{initials}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
         // Handle empty/none selection
@@ -598,8 +604,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           ],
         };
       },
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.industryId || "";
+      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        const industryId = params.data?.industryId;
+        if (!industryId) return "(None)";
+        const industry = params.context?.industriesMap?.get(industryId);
+        return industry?.name || "(None)";
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
         // Handle empty/none selection
