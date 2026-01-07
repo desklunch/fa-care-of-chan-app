@@ -38,6 +38,10 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
         console.log("SelectCellEditor getValue called, returning:", valueRef.current);
         return valueRef.current;
       },
+      isCancelAfterEnd: () => {
+        console.log("SelectCellEditor isCancelAfterEnd called");
+        return false;
+      },
     }));
 
     useEffect(() => {
@@ -48,10 +52,17 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
       console.log("SelectCellEditor handleSelect:", value);
       valueRef.current = value; // Update ref immediately
       setSelectedValue(value);  // Update state for UI
-      setTimeout(() => {
-        console.log("SelectCellEditor calling stopEditing");
-        stopEditing();
-      }, 0);
+      // Use requestAnimationFrame to ensure the ref is updated before stopEditing
+      requestAnimationFrame(() => {
+        console.log("SelectCellEditor calling stopEditing, valueRef:", valueRef.current);
+        if (props.api) {
+          console.log("Using api.stopEditing()");
+          props.api.stopEditing();
+        } else {
+          console.log("Using props.stopEditing()");
+          stopEditing();
+        }
+      });
     };
 
     return (
