@@ -105,9 +105,9 @@ export default function DealForm() {
       budgetHigh: null,
       budgetLow: null,
       budgetNotes: "",
-      startedOn: null,
+      startedOn: format(new Date(), "yyyy-MM-dd"),
       wonOn: null,
-      lastContactOn: null,
+      lastContactOn: format(new Date(), "yyyy-MM-dd"),
       projectDate: "",
     },
   });
@@ -620,51 +620,6 @@ export default function DealForm() {
                                 variant="outline"
                                 className="w-full pl-3 text-left font-normal justify-start"
                                 data-testid="button-started-on"
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value ? parseISO(field.value) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
-                              initialFocus
-                            />
-                            {field.value && (
-                              <div className="p-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => field.onChange(null)}
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="wonOn"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Won On</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className="w-full pl-3 text-left font-normal justify-start"
-                                data-testid="button-won-on"
                               >
                                 <Calendar className="mr-2 h-4 w-4" />
                                 {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
