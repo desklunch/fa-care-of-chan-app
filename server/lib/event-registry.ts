@@ -121,6 +121,88 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).sessionId ?? null,
     },
   },
+  "venue:created": {
+    type: "venue:created",
+    audit: {
+      action: "create",
+      entityType: "venue",
+      extractEntityId: (e) => (e as any).venueId ?? null,
+    },
+  },
+  "venue:updated": {
+    type: "venue:updated",
+    audit: {
+      action: "update",
+      entityType: "venue",
+      extractEntityId: (e) => (e as any).venueId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "venue:deleted": {
+    type: "venue:deleted",
+    audit: {
+      action: "delete",
+      entityType: "venue",
+      extractEntityId: (e) => (e as any).venueId ?? null,
+    },
+  },
+  "venue:photo_uploaded": {
+    type: "venue:photo_uploaded",
+    audit: {
+      action: "upload",
+      entityType: "venue_photo",
+      extractEntityId: (e) => (e as any).photoId ?? null,
+    },
+  },
+  "venue:photo_deleted": {
+    type: "venue:photo_deleted",
+    audit: {
+      action: "delete",
+      entityType: "venue_photo",
+      extractEntityId: (e) => (e as any).photoId ?? null,
+    },
+  },
+  "venue:file_uploaded": {
+    type: "venue:file_uploaded",
+    audit: {
+      action: "upload",
+      entityType: "venue_file",
+      extractEntityId: (e) => (e as any).fileId ?? null,
+    },
+  },
+  "venue:file_deleted": {
+    type: "venue:file_deleted",
+    audit: {
+      action: "delete",
+      entityType: "venue_file",
+      extractEntityId: (e) => (e as any).fileId ?? null,
+    },
+  },
+  "contact:created": {
+    type: "contact:created",
+    audit: {
+      action: "create",
+      entityType: "contact",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+    },
+  },
+  "contact:updated": {
+    type: "contact:updated",
+    audit: {
+      action: "update",
+      entityType: "contact",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "contact:deleted": {
+    type: "contact:deleted",
+    audit: {
+      action: "delete",
+      entityType: "contact",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+    },
+  },
 };
 
 export type RegisteredEventType = keyof typeof EVENT_REGISTRY;

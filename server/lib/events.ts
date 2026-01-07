@@ -101,6 +101,88 @@ export interface SessionDestroyedEvent {
   timestamp: Date;
 }
 
+export interface VenueCreatedEvent {
+  type: "venue:created";
+  venueId: string;
+  venueName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueUpdatedEvent {
+  type: "venue:updated";
+  venueId: string;
+  venueName: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueDeletedEvent {
+  type: "venue:deleted";
+  venueId: string;
+  venueName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenuePhotoUploadedEvent {
+  type: "venue:photo_uploaded";
+  venueId: string;
+  photoId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenuePhotoDeletedEvent {
+  type: "venue:photo_deleted";
+  venueId: string;
+  photoId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueFileUploadedEvent {
+  type: "venue:file_uploaded";
+  venueId: string;
+  fileId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueFileDeletedEvent {
+  type: "venue:file_deleted";
+  venueId: string;
+  fileId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ContactCreatedEvent {
+  type: "contact:created";
+  contactId: string;
+  contactName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ContactUpdatedEvent {
+  type: "contact:updated";
+  contactId: string;
+  contactName: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ContactDeletedEvent {
+  type: "contact:deleted";
+  contactId: string;
+  contactName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export type DomainEvent =
   | DealCreatedEvent
   | DealUpdatedEvent
@@ -113,7 +195,17 @@ export type DomainEvent =
   | UserLoggedInEvent
   | UserLoggedOutEvent
   | SessionCreatedEvent
-  | SessionDestroyedEvent;
+  | SessionDestroyedEvent
+  | VenueCreatedEvent
+  | VenueUpdatedEvent
+  | VenueDeletedEvent
+  | VenuePhotoUploadedEvent
+  | VenuePhotoDeletedEvent
+  | VenueFileUploadedEvent
+  | VenueFileDeletedEvent
+  | ContactCreatedEvent
+  | ContactUpdatedEvent
+  | ContactDeletedEvent;
 
 type EventMap = {
   "deal:created": DealCreatedEvent;
@@ -128,6 +220,16 @@ type EventMap = {
   "user:logged_out": UserLoggedOutEvent;
   "session:created": SessionCreatedEvent;
   "session:destroyed": SessionDestroyedEvent;
+  "venue:created": VenueCreatedEvent;
+  "venue:updated": VenueUpdatedEvent;
+  "venue:deleted": VenueDeletedEvent;
+  "venue:photo_uploaded": VenuePhotoUploadedEvent;
+  "venue:photo_deleted": VenuePhotoDeletedEvent;
+  "venue:file_uploaded": VenueFileUploadedEvent;
+  "venue:file_deleted": VenueFileDeletedEvent;
+  "contact:created": ContactCreatedEvent;
+  "contact:updated": ContactUpdatedEvent;
+  "contact:deleted": ContactDeletedEvent;
   "*": DomainEvent;
 };
 
