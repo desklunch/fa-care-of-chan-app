@@ -317,10 +317,14 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
-          options: users.map((u) => ({
-            value: String(u.id),
-            label: getInitials(getUserFullName(u)),
-          })),
+          options: users.map((u) => {
+            const fullName = getUserFullName(u);
+            const initials = getInitials(fullName);
+            return {
+              value: String(u.id),
+              label: `${initials} - ${fullName}`,
+            };
+          }),
           placeholder: "Select owner",
         };
       },

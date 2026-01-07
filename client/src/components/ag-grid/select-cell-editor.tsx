@@ -48,7 +48,7 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     return (
       <div
         ref={containerRef}
-        className="bg-background border rounded-md shadow-lg min-w-[140px]"
+        className="bg-background border rounded-md shadow-lg min-w-[200px]"
         tabIndex={0}
         data-testid="select-cell-editor"
       >
