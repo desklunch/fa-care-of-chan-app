@@ -7,7 +7,9 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   backgroundColor: "hsl(var(--background))",
   headerColumnResizeHandleColor: "hsl(var(--border))",
   oddRowBackgroundColor: "#8888880F",
-  rowBorder: false,
+  rowBorder: true,
+  columnBorder: true,
+
   iconColor: "hsl(var(--muted-foreground))",
   borderColor: "hsl(var(--border))",
   chromeBackgroundColor: "hsl(var(--secondary))",

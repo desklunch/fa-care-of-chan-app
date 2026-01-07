@@ -302,30 +302,32 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "ownerId",
     category: "Basic Info",
     colDef: {
-      flex: 1,
-      minWidth: 100,
-      maxWidth: 100,
+      flex: 0,
+      width: 100,
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorPopup: true,
       pinned: "left",
       lockPinned: true,
+      autoHeight: true,
+
 
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
           values: ["", ...users.map((u) => getInitials(getUserFullName(u)))],
+          valueListGap: 0,
         };
       },
       valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
         const ownerId = params.data?.ownerId;
-        if (!ownerId) return "";
+        if (!ownerId) return "-";
         const users = params.context?.users || [];
         const user = users.find((u) => u.id === ownerId);
         return getInitials(getUserFullName(user));
       },
       cellRenderer: (params: { value: string }) => {
-        return <div>{params.value}</div>;
+        return <div className="">{params.value}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string; context: DealsGridContext }) => {
         if (params.newValue === "") {
@@ -429,6 +431,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 130,
       maxWidth: 130,
       editable: true,
+      cellEditor: "agDateCellEditor",
+      cellEditorPopup: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -453,6 +457,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 130,
       maxWidth: 130,
       editable: true,
+      cellEditor: "agDateCellEditor",
+      cellEditorPopup: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -477,6 +483,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 130,
       maxWidth: 130,
       editable: true,
+      cellEditor: "agDateCellEditor",
+      cellEditorPopup: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
@@ -501,6 +509,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       minWidth: 130,
       maxWidth: 130,
       editable: true,
+      cellEditor: "agDateCellEditor",
+      cellEditorPopup: true,
       valueFormatter: (params: { value: string | null }) => {
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
