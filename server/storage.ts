@@ -477,6 +477,7 @@ export interface IStorage {
   createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
   updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
   deleteDeal(id: string): Promise<void>;
+  reorderDeals(orderedDealIds: string[]): Promise<void>;
   
   // Deal task operations
   getDealTasks(dealId: string): Promise<DealTaskWithRelations[]>;
