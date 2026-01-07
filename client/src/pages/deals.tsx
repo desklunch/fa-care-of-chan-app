@@ -339,18 +339,23 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         return <div className="">{params.value}</div>;
       },
       valueSetter: (params: { data: DealWithRelations; newValue: string | null; context: DealsGridContext }) => {
+        console.log("Owner valueSetter called:", { newValue: params.newValue, currentOwnerId: params.data?.ownerId });
         if (params.newValue === null || params.newValue === "__empty__") {
+          console.log("Setting owner to null");
           params.data.ownerId = null;
           params.data.owner = null;
           return true;
         }
         const users = params.context?.users || [];
+        console.log("Available users:", users.length, users.map(u => ({ id: u.id, idType: typeof u.id })));
         const user = users.find((u) => String(u.id) === params.newValue);
+        console.log("Found user:", user);
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
           return true;
         }
+        console.log("User not found, returning false");
         return false;
       },
     },
@@ -879,6 +884,7 @@ export default function Deals() {
   // Handle cell value changes - persist to server
   const handleCellValueChanged = useCallback((event: CellValueChangedEvent<DealWithRelations>) => {
     const { data, colDef, newValue, oldValue } = event;
+    console.log("handleCellValueChanged:", { field: colDef.field, newValue, oldValue, dataId: data?.id });
     if (!data?.id || !colDef.field) return;
     
     const field = colDef.field as string;

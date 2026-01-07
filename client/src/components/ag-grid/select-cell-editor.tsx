@@ -34,7 +34,10 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     const containerRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
-      getValue: () => valueRef.current,
+      getValue: () => {
+        console.log("SelectCellEditor getValue called, returning:", valueRef.current);
+        return valueRef.current;
+      },
     }));
 
     useEffect(() => {
@@ -42,9 +45,11 @@ const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
     }, []);
 
     const handleSelect = (value: string | null) => {
+      console.log("SelectCellEditor handleSelect:", value);
       valueRef.current = value; // Update ref immediately
       setSelectedValue(value);  // Update state for UI
       setTimeout(() => {
+        console.log("SelectCellEditor calling stopEditing");
         stopEditing();
       }, 0);
     };
