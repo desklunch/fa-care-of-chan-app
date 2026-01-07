@@ -20,7 +20,7 @@ export interface SelectCellEditorRef {
 
 const SelectCellEditor = forwardRef<SelectCellEditorRef, SelectCellEditorProps>(
   (props, ref) => {
-    const { options, stopEditing, column, node } = props;
+    const { options = [], stopEditing, column, node } = props;
     
     // Get the actual field value from the row data
     const fieldName = column.getColDef().field;

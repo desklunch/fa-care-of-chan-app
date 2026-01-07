@@ -276,7 +276,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     toggleable: false,
     colDef: {
       flex: 2,
-      minWidth: 280,
+      minWidth: 240,
       maxWidth: 360,
       sortable: false,
       editable: true,
@@ -311,6 +311,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       pinned: "left",
       lockPinned: true,
       autoHeight: true,
+      resizable: false,
+      sortable: false,
+
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = params.context?.users || [];
         return {
@@ -338,7 +341,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           return true;
         }
         const users = params.context?.users || [];
-        const user = users.find((u) => u.id === params.newValue);
+        const newOwnerId = parseInt(params.newValue, 10);
+        const user = users.find((u) => u.id === newOwnerId);
         if (user) {
           params.data.ownerId = user.id;
           params.data.owner = { ...user } as typeof params.data.owner;
@@ -354,9 +358,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "status",
     category: "Basic Info",
     colDef: {
-      flex: 1,
-      minWidth: 140,
-      maxWidth: 140,
+      width: 140,
+    
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: {
@@ -365,6 +368,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createStatusComparator(),
       pinned: "left",
       lockPinned: true,
+      resizable: false,
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
