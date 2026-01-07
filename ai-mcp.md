@@ -262,6 +262,10 @@ type DealEvents = {
   - Implemented workspace_summary tool for workspace state
   - All tools return structured JSON responses with error handling
   - MCP endpoints mounted at `/api/mcp` prefix (health, tools, sse, message)
+  - **Security hardening**: 
+    - Session IDs now use cryptographically secure randomBytes(32) from Node crypto
+    - Session IDs are server-generated only (client-supplied IDs ignored)
+    - Proper ServiceError unwrapping for structured error responses
 
 ### January 7, 2026 (Phase 3)
 - **Phase 3 Complete**: AI Context Endpoints

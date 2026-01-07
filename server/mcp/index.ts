@@ -2,11 +2,26 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { storage } from "../storage";
 import { DealsService } from "../services/deals.service";
+import { ServiceError } from "../services/base.service";
 import { dealStatuses, type DealStatus } from "@shared/schema";
 
 const dealsService = new DealsService(storage);
 
 const MCP_ACTOR_ID = "mcp-system";
+
+function formatError(error: unknown): string {
+  if (error instanceof ServiceError) {
+    return JSON.stringify({
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -44,7 +59,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error listing deals: ${error}` }],
+          content: [{ type: "text" as const, text: `Error listing deals: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -91,7 +106,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error fetching deal: ${error}` }],
+          content: [{ type: "text" as const, text: `Error fetching deal: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -136,7 +151,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error creating deal: ${error}` }],
+          content: [{ type: "text" as const, text: `Error creating deal: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -176,7 +191,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error updating deal: ${error}` }],
+          content: [{ type: "text" as const, text: `Error updating deal: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -208,7 +223,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error moving deal stage: ${error}` }],
+          content: [{ type: "text" as const, text: `Error moving deal stage: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -239,7 +254,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error assigning owner: ${error}` }],
+          content: [{ type: "text" as const, text: `Error assigning owner: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -281,7 +296,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error searching venues: ${error}` }],
+          content: [{ type: "text" as const, text: `Error searching venues: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -321,7 +336,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error fetching venue: ${error}` }],
+          content: [{ type: "text" as const, text: `Error fetching venue: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -366,7 +381,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error searching contacts: ${error}` }],
+          content: [{ type: "text" as const, text: `Error searching contacts: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -403,7 +418,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error fetching contact: ${error}` }],
+          content: [{ type: "text" as const, text: `Error fetching contact: ${formatError(error)}` }],
           isError: true,
         };
       }
@@ -438,7 +453,7 @@ export function createMcpServer(): McpServer {
         };
       } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Error fetching workspace summary: ${error}` }],
+          content: [{ type: "text" as const, text: `Error fetching workspace summary: ${formatError(error)}` }],
           isError: true,
         };
       }

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { randomBytes } from "crypto";
 import { createMcpServer } from "./index";
 import { mcpRateLimit, getRateLimitStats } from "./rate-limit";
 
@@ -11,16 +12,22 @@ const mcpServer = createMcpServer();
 
 const transports = new Map<string, SSEServerTransport>();
 
-router.get("/sse", async (req: Request, res: Response) => {
-  const sessionId = req.query.sessionId as string || `session-${Date.now()}`;
+function generateSecureSessionId(): string {
+  return randomBytes(32).toString("hex");
+}
+
+router.get("/sse", async (_req: Request, res: Response) => {
+  const sessionId = generateSecureSessionId();
   
-  console.log(`[MCP] New SSE connection: ${sessionId}`);
+  console.log(`[MCP] New SSE connection: ${sessionId.substring(0, 8)}...`);
+  
+  res.setHeader("X-Session-Id", sessionId);
   
   const transport = new SSEServerTransport("/api/mcp/message", res);
   transports.set(sessionId, transport);
   
   res.on("close", () => {
-    console.log(`[MCP] SSE connection closed: ${sessionId}`);
+    console.log(`[MCP] SSE connection closed: ${sessionId.substring(0, 8)}...`);
     transports.delete(sessionId);
   });
   
