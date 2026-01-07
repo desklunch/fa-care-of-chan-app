@@ -22,9 +22,11 @@
 
 1. **Hybrid Audit Approach**: Rather than refactoring all routes to use service layers, existing routes retain their manual `logAuditEvent` calls. The event-to-audit bridge handles new service-based flows (DealsService) and auth events. This avoids duplicate audit entries while maintaining comprehensive coverage.
 
-2. **Event Registry Scope**: The EVENT_REGISTRY includes 22 event types covering deals, auth, venues, contacts, photos, and files. Unknown events are logged with warnings rather than silently dropped.
+2. **Event Registry Scope**: The EVENT_REGISTRY includes 22 event types covering deals, auth, venues, contacts, photos, and files. Unknown events trigger console errors (no audit rows) to surface coverage gaps during development.
 
 3. **No VenuesService/ContactsService Refactor**: Creating new service layers would require significant refactoring. Existing routes already have audit coverage via `logAuditEvent`. Domain event types are defined for future service migration.
+
+4. **Duplicate Prevention**: Venue/contact/photo event types are registered but NOT emitted from current routes. Routes use manual `logAuditEvent()`. When migrating to service layers, remove `logAuditEvent()` calls before emitting events to prevent duplicates.
 
 ### Key Implementation Files
 

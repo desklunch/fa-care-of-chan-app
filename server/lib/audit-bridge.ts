@@ -10,7 +10,8 @@ async function persistAuditLog(
   mapping: EventAuditMapping
 ): Promise<void> {
   const ctx = getRequestContext();
-  const durationMs = ctx ? Date.now() - ctx.startTime : null;
+  const hasContext = ctx !== null && ctx.startTime > 0;
+  const durationMs = hasContext ? Date.now() - ctx.startTime : null;
 
   await storage.createAuditLog({
     action: mapping.action,
@@ -22,32 +23,19 @@ async function persistAuditLog(
     sessionId: ctx?.sessionId ?? null,
     requestId: ctx?.requestId ?? null,
     durationMs,
-    source: "event",
+    source: hasContext ? "event" : "event_no_ctx",
     ipAddress: ctx?.ipAddress ?? null,
     userAgent: ctx?.userAgent ?? null,
     metadata: { eventType: event.type },
   });
 }
 
-async function persistUnknownEvent(event: DomainEvent): Promise<void> {
-  const ctx = getRequestContext();
-
-  await storage.createAuditLog({
-    action: "unknown",
-    entityType: "system",
-    entityId: null,
-    performedBy: event.actorId,
-    status: "success",
-    metadata: {
-      eventType: event.type,
-      warning: "Event not in registry - add to EVENT_REGISTRY",
-    },
-    sessionId: ctx?.sessionId ?? null,
-    requestId: ctx?.requestId ?? null,
-    durationMs: null,
-    source: "event",
-    ipAddress: ctx?.ipAddress ?? null,
-    userAgent: ctx?.userAgent ?? null,
+function handleUnknownEvent(event: DomainEvent): void {
+  console.error(`[AuditBridge] UNREGISTERED EVENT - add to EVENT_REGISTRY:`, {
+    eventType: event.type,
+    actorId: event.actorId,
+    timestamp: event.timestamp,
+    action: "Add this event type to server/lib/event-registry.ts to enable audit persistence",
   });
 }
 
@@ -59,18 +47,7 @@ export function initializeAuditBridge(): void {
 
   domainEvents.on("*", (event: DomainEvent) => {
     if (!isRegisteredEvent(event.type)) {
-      console.warn(`[AuditBridge] Unregistered event type: ${event.type}`, {
-        eventType: event.type,
-        actorId: event.actorId,
-        timestamp: event.timestamp,
-      });
-
-      void persistUnknownEvent(event).catch((err) => {
-        console.error("[AuditBridge] Failed to persist unknown event:", {
-          error: err.message,
-          eventType: event.type,
-        });
-      });
+      handleUnknownEvent(event);
       return;
     }
 
