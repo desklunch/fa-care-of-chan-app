@@ -701,6 +701,7 @@ export const deals = pgTable(
     notes: text("notes"),
     primaryContactId: varchar("primary_contact_id").references(() => contacts.id),
     ownerId: varchar("owner_id").references(() => users.id),
+    industryId: varchar("industry_id").references(() => industries.id),
     budgetHigh: integer("budget_high"),
     budgetLow: integer("budget_low"),
     budgetNotes: text("budget_notes"),
@@ -726,6 +727,7 @@ export const deals = pgTable(
     index("idx_deals_primary_contact").on(table.primaryContactId),
     index("idx_deals_earliest_event_date").on(table.earliestEventDate),
     index("idx_deals_sort_order").on(table.sortOrder),
+    index("idx_deals_industry").on(table.industryId),
   ],
 );
 
