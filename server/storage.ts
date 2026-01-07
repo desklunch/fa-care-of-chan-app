@@ -1585,14 +1585,14 @@ export class DatabaseStorage implements IStorage {
   
   async getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined> {
     // Execute relation queries in parallel to reduce total latency
-    // Note: Neon serverless may have connection pooling limits, but for 4 small
+    // Note: Neon serverless may have connection pooling limits, but for small
     // queries the parallel approach is typically faster than sequential
     
     const [venue] = await db.select().from(venues).where(eq(venues.id, id));
     if (!venue) return undefined;
     
-    // Run all relation queries in parallel
-    const [venueAmenitiesResult, venueTagsResult, venueFilesResult, venuePhotosResult] = await Promise.all([
+    // Run all relation queries in parallel (including collections)
+    const [venueAmenitiesResult, venueTagsResult, venueFilesResult, venuePhotosResult, venueCollectionsResult] = await Promise.all([
       db
         .select({ amenity: amenities })
         .from(venueAmenities)
@@ -1621,6 +1621,7 @@ export class DatabaseStorage implements IStorage {
         .from(venuePhotos)
         .where(eq(venuePhotos.venueId, id))
         .orderBy(asc(venuePhotos.sortOrder)),
+      this.getCollectionsForVenue(id),
     ]);
     
     const venueAmenitiesList = venueAmenitiesResult.map(r => r.amenity);
@@ -1639,6 +1640,7 @@ export class DatabaseStorage implements IStorage {
       floorplans: venueFilesList.filter(f => f.category === 'floorplan'),
       attachments: venueFilesList.filter(f => f.category === 'attachment'),
       photos: venuePhotosList,
+      collections: venueCollectionsResult,
     };
   }
   
