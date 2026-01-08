@@ -5658,7 +5658,7 @@ export async function registerRoutes(
         entityType: "release",
         entityId: req.params.id,
         status: "failure",
-        metadata: { error: (error as Error).message },
+        metadata: { featureId: req.body.featureId, error: (error as Error).message },
       });
       if (error.code === "23505") {
         return res.status(400).json({ message: "Feature already added to this release" });
@@ -5738,7 +5738,7 @@ export async function registerRoutes(
         entityType: "release",
         entityId: req.params.id,
         status: "failure",
-        metadata: { error: (error as Error).message },
+        metadata: { issueId: req.body.issueId, error: (error as Error).message },
       });
       if (error.code === "23505") {
         return res.status(400).json({ message: "Issue already added to this release" });
@@ -5822,7 +5822,7 @@ export async function registerRoutes(
         entityType: "release",
         entityId: req.params.id,
         status: "failure",
-        metadata: { error: (error as Error).message },
+        metadata: { title: req.body.title, category: req.body.category, error: (error as Error).message },
       });
       res.status(500).json({ message: "Failed to add change to release" });
     }
