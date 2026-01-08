@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
+import { PermissionGate } from "@/components/permission-gate";
 
 const statusColors: Record<
   DealStatus,
@@ -691,62 +692,64 @@ export default function ClientDetail() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
-                Deals
-                <span className="text-muted-foreground text-sm font-medium">
-                  {deals.length}
-                </span>
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isLoadingDeals ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <PermissionGate permission="deals.read">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base font-bold">
+                  Deals
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {deals.length}
+                  </span>
+                </CardTitle>
               </div>
-            ) : deals.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Handshake className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No deals yet</p>
-                <p className="text-sm">
-                  Create a deal to start tracking opportunities with this
-                  client.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {deals.map((deal) => {
-                  const statusConfig = statusColors[
-                    deal.status as DealStatus
-                  ] || { variant: "outline" as const };
-                  return (
-                    <Link href={`/deals/${deal.id}`} key={deal.id}>
-                      <div
-                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
-                        data-testid={`link-deal-${deal.id}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium">
-                            {deal.displayName}
-                          </span>
-                        </div>
-                        <Badge
-                          variant={statusConfig.variant}
-                          className={statusConfig.className}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isLoadingDeals ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : deals.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Handshake className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No deals yet</p>
+                  <p className="text-sm">
+                    Create a deal to start tracking opportunities with this
+                    client.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {deals.map((deal) => {
+                    const statusConfig = statusColors[
+                      deal.status as DealStatus
+                    ] || { variant: "outline" as const };
+                    return (
+                      <Link href={`/deals/${deal.id}`} key={deal.id}>
+                        <div
+                          className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
+                          data-testid={`link-deal-${deal.id}`}
                         >
-                          {deal.status}
-                        </Badge>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium">
+                              {deal.displayName}
+                            </span>
+                          </div>
+                          <Badge
+                            variant={statusConfig.variant}
+                            className={statusConfig.className}
+                          >
+                            {deal.status}
+                          </Badge>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </PermissionGate>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
