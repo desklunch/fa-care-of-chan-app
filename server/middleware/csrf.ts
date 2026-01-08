@@ -8,6 +8,7 @@ const EXCLUDED_PATHS = [
   "/api/auth/callback",
   "/api/auth/replit/callback", 
   "/api/auth/google/callback",
+  "/api/auth/google",  // Google OAuth login endpoint (pre-auth, no CSRF needed)
   "/api/auth/dev-login",
   "/api/activity/",
   "/api/places/",
