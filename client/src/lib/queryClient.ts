@@ -2,19 +2,40 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 let csrfToken: string | null = null;
 
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function fetchCsrfToken(): Promise<string> {
   if (csrfToken) {
     return csrfToken;
   }
   
-  const res = await fetch("/api/csrf-token", {
-    credentials: "include",
-  });
+  // Retry with exponential backoff for session establishment race condition
+  const maxRetries = 3;
+  const baseDelay = 500; // 500ms, 1000ms, 2000ms
   
-  if (res.ok) {
-    const data = await res.json();
-    csrfToken = data.csrfToken;
-    return csrfToken!;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fetch("/api/csrf-token", {
+      credentials: "include",
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      csrfToken = data.csrfToken;
+      return csrfToken!;
+    }
+    
+    // If 401, session might not be established yet - retry with backoff
+    if (res.status === 401 && attempt < maxRetries - 1) {
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`CSRF token fetch failed (401), retrying in ${delay}ms...`);
+      await sleep(delay);
+      continue;
+    }
+    
+    // Non-401 error or final attempt - throw
+    break;
   }
   
   throw new Error("Failed to fetch CSRF token");
