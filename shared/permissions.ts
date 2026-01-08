@@ -116,11 +116,11 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 // ============================================
 
 // Base permissions for each tier
-// Tier 1 (employee) permissions
+// Tier 1 (employee) permissions - basic CRUD for general entities
 const TIER_1_PERMISSIONS: Permission[] = [
   'venues.read',
   'venues.write',
-  'venues.delete',
+  // Note: venues.delete is tier 2+ (manager/admin only)
   'clients.read',
   'clients.write',
   'clients.delete',
@@ -128,16 +128,16 @@ const TIER_1_PERMISSIONS: Permission[] = [
   'contacts.write',
   'contacts.delete',
   'vendors.read',
-  'vendors.write',
-  'vendors.delete',
+  // Note: vendors.write and vendors.delete are admin only
   'team.read',
   'app_features.read',
   'app_features.vote',
 ];
 
-// Tier 2 (manager) permissions - includes all tier 1
+// Tier 2 (manager) permissions - includes all tier 1 + deals and venue deletion
 const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
+  'venues.delete', // Managers can delete venues
   'deals.read',
   'deals.write',
   'deals.delete',
@@ -149,6 +149,8 @@ const TIER_2_PERMISSIONS: Permission[] = [
 // Tier 3 (admin) permissions - includes all lower tiers
 const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
+  'vendors.write', // Admin-only: Create/update vendors
+  'vendors.delete', // Admin-only: Delete vendors
   'team.manage',
   'invites.read',
   'invites.manage',

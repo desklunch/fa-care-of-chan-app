@@ -2,6 +2,7 @@ import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isManagerOrAdmin } from "./googleAuth";
+import { requirePermission, requireAnyPermission } from "./middleware/permissions";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import OpenAI from "openai";
 import sharp from "sharp";
@@ -166,7 +167,7 @@ export async function registerRoutes(
   });
 
   // Update user role (admin only)
-  app.patch("/api/team/:id/role", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch("/api/team/:id/role", isAuthenticated, requirePermission("team.manage"), async (req: any, res) => {
     try {
       const { id } = req.params;
       const { role } = req.body;
@@ -260,7 +261,7 @@ export async function registerRoutes(
   });
 
   // Admin routes
-  app.get("/api/admin/stats", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/stats", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
     try {
       const stats = await storage.getStats();
       res.json(stats);
@@ -270,7 +271,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/recent-employees", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/recent-employees", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
     try {
       const employees = await storage.getRecentEmployees(5);
       res.json(employees);
@@ -281,7 +282,7 @@ export async function registerRoutes(
   });
 
   // Invite routes
-  app.get("/api/invites", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/invites", isAuthenticated, requirePermission("invites.read"), async (req, res) => {
     try {
       const allInvites = await storage.getAllInvites();
       res.json(allInvites);
@@ -291,7 +292,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/invites/pending", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/invites/pending", isAuthenticated, requirePermission("invites.read"), async (req, res) => {
     try {
       const pendingInvites = await storage.getPendingInvites();
       res.json(pendingInvites);
@@ -325,7 +326,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/invites", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/invites", isAuthenticated, requirePermission("invites.manage"), async (req: any, res) => {
     try {
       const result = insertInviteSchema.safeParse(req.body);
       
@@ -385,7 +386,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/invites/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/invites/:id", isAuthenticated, requirePermission("invites.manage"), async (req: any, res) => {
     try {
       const invite = await storage.getInviteById(req.params.id);
       if (!invite) {
@@ -423,7 +424,7 @@ export async function registerRoutes(
   });
 
   // Send invitation email
-  app.post("/api/invites/:id/send-email", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/invites/:id/send-email", isAuthenticated, requirePermission("invites.manage"), async (req: any, res) => {
     try {
       const invite = await storage.getInviteById(req.params.id);
       
@@ -477,7 +478,7 @@ export async function registerRoutes(
   });
 
   // Admin audit logs endpoint
-  app.get("/api/admin/logs", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/logs", isAuthenticated, requirePermission("audit.read"), async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const pageSize = Math.min(parseInt(req.query.pageSize as string) || 50, 100);
@@ -528,7 +529,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/categories", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/admin/categories", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const result = insertFeatureCategorySchema.safeParse(req.body);
       if (!result.success) {
@@ -560,7 +561,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch("/api/admin/categories/:id", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const result = updateFeatureCategorySchema.safeParse(req.body);
       if (!result.success) {
@@ -603,7 +604,7 @@ export async function registerRoutes(
   });
 
   // Update category order (for drag-and-drop reordering)
-  app.put("/api/admin/categories/order", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.put("/api/admin/categories/order", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const { orderedIds } = req.body;
       if (!Array.isArray(orderedIds)) {
@@ -708,7 +709,7 @@ export async function registerRoutes(
   });
 
   // Feature Reordering (for roadmap drag and drop) - MUST be before /:id route
-  app.patch("/api/features/reorder", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch("/api/features/reorder", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const { updates } = req.body;
       
@@ -820,7 +821,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/features/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/features/:id", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const feature = await storage.getFeatureById(req.params.id);
       if (!feature) {
@@ -1156,7 +1157,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/vendor-services", isAdmin, async (req: any, res) => {
+  app.post("/api/vendor-services", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
     try {
       const parsed = insertVendorServiceSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -1186,7 +1187,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/vendor-services/:id", isAdmin, async (req: any, res) => {
+  app.patch("/api/vendor-services/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
     try {
       const parsed = updateVendorServiceSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -1220,7 +1221,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/vendor-services/:id", isAdmin, async (req: any, res) => {
+  app.delete("/api/vendor-services/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
     try {
       const service = await storage.getVendorServiceById(req.params.id);
       if (!service) {
@@ -2428,7 +2429,7 @@ export async function registerRoutes(
   });
 
   // Vendor CRUD routes
-  app.post("/api/vendors", isAdmin, async (req: any, res) => {
+  app.post("/api/vendors", isAuthenticated, requirePermission("vendors.write"), async (req: any, res) => {
     try {
       const parsed = insertVendorSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -2459,7 +2460,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/vendors/:id", isAdmin, async (req: any, res) => {
+  app.patch("/api/vendors/:id", isAuthenticated, requirePermission("vendors.write"), async (req: any, res) => {
     try {
       const existingVendor = await storage.getVendorById(req.params.id);
       if (!existingVendor) {
@@ -2505,7 +2506,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/vendors/:id", isAdmin, async (req: any, res) => {
+  app.delete("/api/vendors/:id", isAuthenticated, requirePermission("vendors.delete"), async (req: any, res) => {
     try {
       const existingVendor = await storage.getVendorById(req.params.id);
       if (!existingVendor) {
@@ -2537,7 +2538,7 @@ export async function registerRoutes(
   });
 
   // Generate vendor update link (admin only)
-  app.post("/api/vendors/:id/generate-update-link", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/vendors/:id/generate-update-link", isAuthenticated, requirePermission("vendor_tokens.manage"), async (req: any, res) => {
     try {
       const vendorId = req.params.id;
       const userId = req.user.id;
@@ -2577,7 +2578,7 @@ export async function registerRoutes(
   });
   
   // Batch generate vendor update links and send emails (admin only)
-  app.post("/api/vendors/batch-update-links", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/vendors/batch-update-links", isAuthenticated, requirePermission("vendor_tokens.manage"), async (req: any, res) => {
     try {
       const { vendorIds, sendEmail = true, expiresInHours = 720 } = req.body;
       const userId = req.user.id;
@@ -2674,7 +2675,7 @@ export async function registerRoutes(
   });
 
   // Get all vendor update tokens (admin only)
-  app.get("/api/vendor-update-tokens", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get("/api/vendor-update-tokens", isAuthenticated, requirePermission("vendor_tokens.manage"), async (req: any, res) => {
     try {
       const tokens = await storage.getAllVendorUpdateTokens();
       res.json(tokens);
@@ -2945,7 +2946,7 @@ export async function registerRoutes(
   });
 
   // Delete venue (manager or admin only)
-  app.delete("/api/venues/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
+  app.delete("/api/venues/:id", isAuthenticated, requirePermission("venues.delete"), async (req: any, res) => {
     try {
       const existingVenue = await storage.getVenueById(req.params.id);
       if (!existingVenue) {
@@ -4426,7 +4427,7 @@ export async function registerRoutes(
   });
 
   // Delete issue (admin only)
-  app.delete("/api/app-issues/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/app-issues/:id", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const issue = await storage.getIssueById(req.params.id);
       if (!issue) {
@@ -4469,7 +4470,7 @@ export async function registerRoutes(
   });
   
   // PATCH /api/settings/theme - update theme (admin only)
-  app.patch("/api/settings/theme", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch("/api/settings/theme", isAuthenticated, requirePermission("theme.manage"), async (req: any, res) => {
     try {
       const result = themeConfigSchema.safeParse(req.body);
       if (!result.success) {
@@ -5273,7 +5274,7 @@ export async function registerRoutes(
   });
 
   // GET /api/admin/activity - Get analytics summary (admin only)
-  app.get("/api/admin/activity", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get("/api/admin/activity", isAuthenticated, requirePermission("admin.analytics"), async (req: any, res) => {
     try {
       const { startDate, endDate, environment } = req.query;
       
@@ -5292,7 +5293,7 @@ export async function registerRoutes(
   });
 
   // GET /api/admin/activity/pageviews/recent - Get recent page views (admin only)
-  app.get("/api/admin/activity/pageviews/recent", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get("/api/admin/activity/pageviews/recent", isAuthenticated, requirePermission("admin.analytics"), async (req: any, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
       const environment = req.query.environment as string | undefined;
@@ -5514,7 +5515,7 @@ export async function registerRoutes(
   });
 
   // POST /api/releases - Create new release (admin only)
-  app.post("/api/releases", isAdmin, async (req: any, res) => {
+  app.post("/api/releases", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const result = insertAppReleaseSchema.safeParse(req.body);
       if (!result.success) {
@@ -5545,7 +5546,7 @@ export async function registerRoutes(
   });
 
   // PUT /api/releases/:id - Update release (admin only)
-  app.put("/api/releases/:id", isAdmin, async (req: any, res) => {
+  app.put("/api/releases/:id", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const existing = await storage.getReleaseById(req.params.id);
       if (!existing) {
@@ -5584,7 +5585,7 @@ export async function registerRoutes(
   });
 
   // POST /api/releases/:id/publish - Publish release (admin only)
-  app.post("/api/releases/:id/publish", isAdmin, async (req: any, res) => {
+  app.post("/api/releases/:id/publish", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const existing = await storage.getReleaseById(req.params.id);
       if (!existing) {
@@ -5612,7 +5613,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/releases/:id - Delete release (admin only)
-  app.delete("/api/releases/:id", isAdmin, async (req: any, res) => {
+  app.delete("/api/releases/:id", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const existing = await storage.getReleaseById(req.params.id);
       if (!existing) {
@@ -5640,7 +5641,7 @@ export async function registerRoutes(
   });
 
   // POST /api/releases/:id/features - Add feature to release (admin only)
-  app.post("/api/releases/:id/features", isAdmin, async (req: any, res) => {
+  app.post("/api/releases/:id/features", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const release = await storage.getReleaseById(req.params.id);
       if (!release) {
@@ -5684,7 +5685,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/releases/:id/features/:featureId - Remove feature from release
-  app.delete("/api/releases/:id/features/:featureId", isAdmin, async (req: any, res) => {
+  app.delete("/api/releases/:id/features/:featureId", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const release = await storage.getReleaseById(req.params.id);
       if (!release) {
@@ -5720,7 +5721,7 @@ export async function registerRoutes(
   });
 
   // POST /api/releases/:id/issues - Add issue to release (admin only)
-  app.post("/api/releases/:id/issues", isAdmin, async (req: any, res) => {
+  app.post("/api/releases/:id/issues", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const release = await storage.getReleaseById(req.params.id);
       if (!release) {
@@ -5764,7 +5765,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/releases/:id/issues/:issueId - Remove issue from release
-  app.delete("/api/releases/:id/issues/:issueId", isAdmin, async (req: any, res) => {
+  app.delete("/api/releases/:id/issues/:issueId", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const release = await storage.getReleaseById(req.params.id);
       if (!release) {
@@ -5800,7 +5801,7 @@ export async function registerRoutes(
   });
 
   // POST /api/releases/:id/changes - Add manual change to release (admin only)
-  app.post("/api/releases/:id/changes", isAdmin, async (req: any, res) => {
+  app.post("/api/releases/:id/changes", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const release = await storage.getReleaseById(req.params.id);
       if (!release) {
@@ -5845,7 +5846,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/releases/:id/changes/:changeId - Remove change from release
-  app.delete("/api/releases/:id/changes/:changeId", isAdmin, async (req: any, res) => {
+  app.delete("/api/releases/:id/changes/:changeId", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const release = await storage.getReleaseById(req.params.id);
       if (!release) {
@@ -5881,7 +5882,7 @@ export async function registerRoutes(
   });
 
   // GET /api/releases/suggestions/features - Get suggested features for release
-  app.get("/api/releases/suggestions/features", isAdmin, async (req: any, res) => {
+  app.get("/api/releases/suggestions/features", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const lastRelease = await storage.getLatestReleasedVersion();
       const sinceDate = lastRelease?.releaseDate || undefined;
@@ -5894,7 +5895,7 @@ export async function registerRoutes(
   });
 
   // GET /api/releases/suggestions/issues - Get suggested issues for release
-  app.get("/api/releases/suggestions/issues", isAdmin, async (req: any, res) => {
+  app.get("/api/releases/suggestions/issues", isAuthenticated, requirePermission("releases.manage"), async (req: any, res) => {
     try {
       const lastRelease = await storage.getLatestReleasedVersion();
       const sinceDate = lastRelease?.releaseDate || undefined;
@@ -6057,7 +6058,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
   });
 
   // DELETE /api/deals/:id - Delete a deal
-  app.delete("/api/deals/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
+  app.delete("/api/deals/:id", isAuthenticated, requirePermission("deals.delete"), async (req: any, res) => {
     try {
       const actorId = req.user.claims.sub;
       const deal = await dealsService.getById(req.params.id);
