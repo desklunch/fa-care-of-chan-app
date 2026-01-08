@@ -159,6 +159,31 @@ function useLayoutConfig() {
         ],
       },
       {
+        heading: "New Business",
+        requiredPermission: "deals.read",
+        items: [
+          {
+            name: "Deals",
+            href: "/deals",
+            icon: Tickets,
+            requiredPermission: "deals.read",
+          },
+          {
+            name: "Views",
+            href: "/deals/reports",
+            icon: ScanEye,
+            requiredPermission: "deals.read",
+          },
+
+          {
+            name: "Manage",
+            href: "/sales/manage",
+            icon: SlidersHorizontal,
+            requiredPermission: "sales.manage",
+          },
+        ],
+      },
+      {
         heading: "Directory",
         items: [
           {
@@ -176,32 +201,21 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "New Business",
-        requiredPermission: "deals.read",
+        heading: "Settings",
+        requiredPermission: "team.read",
+        defaultCollapsed: true,
         items: [
           {
-            name: "Deals",
-            href: "/deals",
-            icon: Tickets,
-            requiredPermission: "deals.read",
-          },
-          {
-            name: "Views",
-            href: "/deals/reports",
-            icon: ScanEye,
-            requiredPermission: "deals.read",
-          },
- 
-          {
-            name: "Manage",
-            href: "/sales/manage",
-            icon: SlidersHorizontal,
-            requiredPermission: "sales.manage",
+            name: "Team",
+            href: "/team",
+            icon: Users,
+            requiredPermission: "team.read",
           },
         ],
       },
       {
         heading: "Support",
+        defaultCollapsed: true,
         items: [
           {
             name: "Guide",
@@ -215,19 +229,7 @@ function useLayoutConfig() {
           },
         ],
       },
-      {
-        heading: "Team",
-        requiredPermission: "team.read",
-        defaultCollapsed: false,
-        items: [
-          {
-            name: "Directory",
-            href: "/team",
-            icon: Users,
-            requiredPermission: "team.read",
-          },
-        ],
-      },
+ 
       {
         heading: "Admin",
         requiredPermission: "admin.settings",
@@ -264,6 +266,12 @@ function useLayoutConfig() {
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
+          {
+            name: "Context",
+            href: "/ai/context",
+            icon: Bot,
+            requiredPermission: "admin.settings",
+          },
 
           {
             name: "Vendors",
@@ -336,19 +344,7 @@ function useLayoutConfig() {
           },
         ],
       },
-      {
-        heading: "AI",
-        requiredPermission: "admin.settings",
-        defaultCollapsed: true,
-        items: [
-          {
-            name: "Context",
-            href: "/ai/context",
-            icon: Bot,
-            requiredPermission: "admin.settings",
-          },
-        ],
-      },
+    
     ],
     onSignOut: async () => {
       try {
