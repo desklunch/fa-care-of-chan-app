@@ -95,7 +95,7 @@ function MultiSelectContent({
 
 
         {showSearch && (
-          <div className="col-span-2 relative">
+          <div className="flex items-center gap-2 col-span-2 relative">
             <Search className="absolute left-3 md:left-2 top-1/2 -translate-y-1/2 h-5 md:h-4 w-5 md:w-4 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
@@ -108,7 +108,7 @@ function MultiSelectContent({
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 md:right-2 top-1/2 -translate-y-1/2 h-8 md:h-6 w-8 md:w-6 p-0"
+                className="h-10"
                 onClick={() => setSearchQuery("")}
               >
                 <X className="h-3 w-3" />

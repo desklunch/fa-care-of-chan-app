@@ -86,6 +86,7 @@ function EditableFieldRow({
   const [selectedMulti, setSelectedMulti] = useState<string[]>(multiSelectValues);
   const [dateOpen, setDateOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -99,7 +100,12 @@ function EditableFieldRow({
   useEffect(() => {
     if (!isEditing) {
       setEditValue(value || "");
-      setSelectedMulti(multiSelectValues);
+      // Only update multiselect if values actually changed (compare by content, not reference)
+      const currentMultiStr = JSON.stringify(multiSelectValues);
+      if (prevMultiRef.current !== currentMultiStr) {
+        prevMultiRef.current = currentMultiStr;
+        setSelectedMulti(multiSelectValues);
+      }
     }
   }, [value, multiSelectValues, isEditing]);
 

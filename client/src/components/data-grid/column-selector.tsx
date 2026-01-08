@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import type { ColumnConfig } from "./types";
+import { ListRestart, PanelTopClose } from "lucide-react";
 
 interface ColumnSelectorProps<T> {
   columns: ColumnConfig<T>[];
@@ -64,18 +65,7 @@ export function ColumnSelector<T>({
           >
             Show All
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault();
-              onResetToDefaults();
-            }}
-            className="w-full text-xs h-8"
-            data-testid="button-reset-columns"
-          >
-            Reset
-          </Button>
+   
         </div>
 
         <DropdownMenuSeparator />
@@ -96,7 +86,21 @@ export function ColumnSelector<T>({
 
         <DropdownMenuSeparator />
 
-        <div className="p-2">
+        <div className="flex gap-2 p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault();
+              onResetToDefaults();
+            }}
+            className="w-full text-xs h-8"
+            data-testid="button-reset-columns"
+          >
+            <ListRestart className="h-4 w-4"/>
+
+            Reset
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -104,6 +108,8 @@ export function ColumnSelector<T>({
             onClick={() => setMenuOpen(false)}
             data-testid="button-close-column-selector"
           >
+            <PanelTopClose className="h-4 w-4" />
+
             Close
           </Button>
         </div>
