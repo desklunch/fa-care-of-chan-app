@@ -1140,47 +1140,96 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/vendor-services", isAdmin, async (req, res) => {
+  app.post("/api/vendor-services", isAdmin, async (req: any, res) => {
     try {
       const parsed = insertVendorServiceSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const service = await storage.createVendorService(parsed.data);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_service",
+        entityId: service.id,
+        status: "success",
+        metadata: { name: service.name },
+      });
+      
       res.status(201).json(service);
     } catch (error) {
       console.error("Error creating vendor service:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_service",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create vendor service" });
     }
   });
 
-  app.patch("/api/vendor-services/:id", isAdmin, async (req, res) => {
+  app.patch("/api/vendor-services/:id", isAdmin, async (req: any, res) => {
     try {
       const parsed = updateVendorServiceSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
+      const original = await storage.getVendorServiceById(req.params.id);
       const service = await storage.updateVendorService(req.params.id, parsed.data);
       if (!service) {
         return res.status(404).json({ message: "Vendor service not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, service),
+      });
+      
       res.json(service);
     } catch (error) {
       console.error("Error updating vendor service:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update vendor service" });
     }
   });
 
-  app.delete("/api/vendor-services/:id", isAdmin, async (req, res) => {
+  app.delete("/api/vendor-services/:id", isAdmin, async (req: any, res) => {
     try {
       const service = await storage.getVendorServiceById(req.params.id);
       if (!service) {
         return res.status(404).json({ message: "Vendor service not found" });
       }
       await storage.deleteVendorService(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: service.name },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting vendor service:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete vendor service" });
     }
   });
@@ -4748,9 +4797,24 @@ export async function registerRoutes(
       // Fetch the comment with author info to return
       const commentWithAuthor = await storage.getEntityCommentById(comment.id);
       
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "comment",
+        entityId: comment.id,
+        status: "success",
+        metadata: { targetEntityType: result.data.entityType, targetEntityId: result.data.entityId },
+      });
+      
       res.status(201).json(commentWithAuthor);
     } catch (error) {
       console.error("Error creating comment:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "comment",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create comment" });
     }
   });
@@ -4786,9 +4850,24 @@ export async function registerRoutes(
       // Fetch updated comment with author info
       const commentWithAuthor = await storage.getEntityCommentById(commentId);
       
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "comment",
+        entityId: commentId,
+        status: "success",
+        changes: getChangedFields(existingComment, updatedComment),
+      });
+      
       res.json(commentWithAuthor);
     } catch (error) {
       console.error("Error updating comment:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "comment",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update comment" });
     }
   });
@@ -4820,9 +4899,28 @@ export async function registerRoutes(
 
       await storage.softDeleteEntityComment(commentId);
       
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "comment",
+        entityId: commentId,
+        status: "success",
+        metadata: { 
+          targetEntityType: existingComment.entityType, 
+          targetEntityId: existingComment.entityId,
+          deletedByAdmin: existingComment.createdById !== userId
+        },
+      });
+      
       res.json({ message: "Comment deleted successfully" });
     } catch (error) {
       console.error("Error deleting comment:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "comment",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete comment" });
     }
   });
