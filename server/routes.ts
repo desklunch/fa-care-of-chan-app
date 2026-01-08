@@ -116,7 +116,15 @@ export async function registerRoutes(
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json(user);
+      
+      // Include permission context in response for frontend caching
+      const { createPermissionContext, Role } = await import("../shared/permissions");
+      const permissionContext = createPermissionContext(user.role as Role);
+      
+      res.json({
+        ...user,
+        permissionContext,
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -185,6 +193,14 @@ export async function registerRoutes(
         changes: { before: { role: userBefore.role }, after: { role } },
         metadata: { changedBy: req.user.claims.sub },
       });
+
+      // Clear permission cache for the affected user's session
+      // Note: This affects future requests; the user may need to re-login for full effect
+      const { clearPermissionCache } = await import("./middleware/permissions");
+      // If updating self, clear own session cache
+      if (id === req.user.claims.sub) {
+        clearPermissionCache(req.session);
+      }
 
       res.json(updatedUser);
     } catch (error) {
