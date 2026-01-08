@@ -899,7 +899,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
 
 
-      <div className="flex-1 min-h-[400px] overflow-hidden" data-testid="data-grid">
+      <div className="flex-1 min-h-[400px] overflow-hidden" style={{ contain: 'layout style paint' }} data-testid="data-grid">
         <AgGridReact
           ref={gridRef}
           rowData={filteredData}
