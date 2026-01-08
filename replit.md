@@ -63,6 +63,14 @@ The system uses a comprehensive audit logging infrastructure with two complement
 - Add new event types to both `events.ts` AND `event-registry.ts` to avoid silent audit gaps
 - Reference `audit-logging-plan.md` for detailed implementation documentation
 
+**Audit Coverage Status (January 2026):**
+- 110 of 120 mutating routes now have audit logging (92% coverage)
+- 10 routes intentionally excluded (analytics, search operations)
+- All core business data routes covered: venues, collections, floorplans, photos, files, comments, deals, contacts
+- All reference data management covered: amenities, industries, tags, vendor services, deal services
+- Release management includes custom actions: link_feature, unlink_feature, link_issue, unlink_issue, add_change, remove_change
+- See `audit-coverage-report.md` for complete implementation status
+
 ## External Dependencies
 
 -   **Authentication:** Replit OIDC provider.
