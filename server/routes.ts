@@ -3812,9 +3812,25 @@ export async function registerRoutes(
   app.post("/api/amenities", isAuthenticated, async (req: any, res) => {
     try {
       const amenity = await storage.createAmenity(req.body);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "amenity",
+        entityId: amenity.id,
+        status: "success",
+        metadata: { name: amenity.name },
+      });
+      
       res.status(201).json(amenity);
     } catch (error) {
       console.error("Error creating amenity:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "amenity",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create amenity" });
     }
   });
@@ -3822,13 +3838,30 @@ export async function registerRoutes(
   // Update amenity
   app.patch("/api/amenities/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const original = await storage.getAmenityById(req.params.id);
       const amenity = await storage.updateAmenity(req.params.id, req.body);
       if (!amenity) {
         return res.status(404).json({ message: "Amenity not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "amenity",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, amenity),
+      });
+      
       res.json(amenity);
     } catch (error) {
       console.error("Error updating amenity:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "amenity",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update amenity" });
     }
   });
@@ -3836,10 +3869,27 @@ export async function registerRoutes(
   // Delete amenity
   app.delete("/api/amenities/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const amenity = await storage.getAmenityById(req.params.id);
       await storage.deleteAmenity(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "amenity",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: amenity?.name },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting amenity:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "amenity",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete amenity" });
     }
   });
@@ -3882,9 +3932,25 @@ export async function registerRoutes(
         });
       }
       const industry = await storage.createIndustry(validatedData.data);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "industry",
+        entityId: industry.id,
+        status: "success",
+        metadata: { name: industry.name },
+      });
+      
       res.status(201).json(industry);
     } catch (error) {
       console.error("Error creating industry:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "industry",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create industry" });
     }
   });
@@ -3899,13 +3965,30 @@ export async function registerRoutes(
           errors: validatedData.error.errors 
         });
       }
+      const original = await storage.getIndustryById(req.params.id);
       const industry = await storage.updateIndustry(req.params.id, validatedData.data);
       if (!industry) {
         return res.status(404).json({ message: "Industry not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "industry",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, industry),
+      });
+      
       res.json(industry);
     } catch (error) {
       console.error("Error updating industry:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "industry",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update industry" });
     }
   });
@@ -3913,10 +3996,27 @@ export async function registerRoutes(
   // Delete industry
   app.delete("/api/industries/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const industry = await storage.getIndustryById(req.params.id);
       await storage.deleteIndustry(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "industry",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: industry?.name },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting industry:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "industry",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete industry" });
     }
   });
@@ -3959,9 +4059,25 @@ export async function registerRoutes(
         });
       }
       const service = await storage.createDealService(validatedData.data);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_service",
+        entityId: String(service.id),
+        status: "success",
+        metadata: { name: service.name },
+      });
+      
       res.status(201).json(service);
     } catch (error) {
       console.error("Error creating deal service:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_service",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create deal service" });
     }
   });
@@ -3976,13 +4092,30 @@ export async function registerRoutes(
           errors: validatedData.error.errors 
         });
       }
+      const original = await storage.getDealServiceById(parseInt(req.params.id));
       const service = await storage.updateDealService(parseInt(req.params.id), validatedData.data);
       if (!service) {
         return res.status(404).json({ message: "Deal service not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_service",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, service),
+      });
+      
       res.json(service);
     } catch (error) {
       console.error("Error updating deal service:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_service",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update deal service" });
     }
   });
@@ -3990,10 +4123,27 @@ export async function registerRoutes(
   // Delete deal service
   app.delete("/api/deal-services/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const service = await storage.getDealServiceById(parseInt(req.params.id));
       await storage.deleteDealService(parseInt(req.params.id));
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_service",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: service?.name },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting deal service:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_service",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete deal service" });
     }
   });
@@ -4037,9 +4187,25 @@ export async function registerRoutes(
         });
       }
       const tag = await storage.createTag(validatedData.data);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "tag",
+        entityId: tag.id,
+        status: "success",
+        metadata: { name: tag.name, category: tag.category },
+      });
+      
       res.status(201).json(tag);
     } catch (error) {
       console.error("Error creating tag:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "tag",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create tag" });
     }
   });
@@ -4054,13 +4220,30 @@ export async function registerRoutes(
           errors: validatedData.error.errors 
         });
       }
+      const original = await storage.getTagById(req.params.id);
       const tag = await storage.updateTag(req.params.id, validatedData.data);
       if (!tag) {
         return res.status(404).json({ message: "Tag not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "tag",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, tag),
+      });
+      
       res.json(tag);
     } catch (error) {
       console.error("Error updating tag:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "tag",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update tag" });
     }
   });
@@ -4068,10 +4251,27 @@ export async function registerRoutes(
   // Delete tag
   app.delete("/api/tags/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const tag = await storage.getTagById(req.params.id);
       await storage.deleteTag(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "tag",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: tag?.name, category: tag?.category },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting tag:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "tag",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete tag" });
     }
   });
@@ -5441,9 +5641,25 @@ export async function registerRoutes(
       }
 
       const releaseFeature = await storage.addFeatureToRelease(req.params.id, featureId, notes);
+      
+      await logAuditEvent(req, {
+        action: "link_feature",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { featureId, releaseVersion: release.versionLabel },
+      });
+      
       res.status(201).json(releaseFeature);
     } catch (error: any) {
       console.error("Error adding feature to release:", error);
+      await logAuditEvent(req, {
+        action: "link_feature",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       if (error.code === "23505") {
         return res.status(400).json({ message: "Feature already added to this release" });
       }
@@ -5464,9 +5680,25 @@ export async function registerRoutes(
       }
 
       await storage.removeFeatureFromRelease(req.params.id, req.params.featureId);
+      
+      await logAuditEvent(req, {
+        action: "unlink_feature",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { featureId: req.params.featureId, releaseVersion: release.versionLabel },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error removing feature from release:", error);
+      await logAuditEvent(req, {
+        action: "unlink_feature",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { featureId: req.params.featureId, error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to remove feature from release" });
     }
   });
@@ -5489,9 +5721,25 @@ export async function registerRoutes(
       }
 
       const releaseIssue = await storage.addIssueToRelease(req.params.id, issueId, notes);
+      
+      await logAuditEvent(req, {
+        action: "link_issue",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { issueId, releaseVersion: release.versionLabel },
+      });
+      
       res.status(201).json(releaseIssue);
     } catch (error: any) {
       console.error("Error adding issue to release:", error);
+      await logAuditEvent(req, {
+        action: "link_issue",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       if (error.code === "23505") {
         return res.status(400).json({ message: "Issue already added to this release" });
       }
@@ -5512,9 +5760,25 @@ export async function registerRoutes(
       }
 
       await storage.removeIssueFromRelease(req.params.id, req.params.issueId);
+      
+      await logAuditEvent(req, {
+        action: "unlink_issue",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { issueId: req.params.issueId, releaseVersion: release.versionLabel },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error removing issue from release:", error);
+      await logAuditEvent(req, {
+        action: "unlink_issue",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { issueId: req.params.issueId, error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to remove issue from release" });
     }
   });
@@ -5541,9 +5805,25 @@ export async function registerRoutes(
 
       const userId = req.user.claims.sub;
       const change = await storage.addChangeToRelease(req.params.id, result.data, userId);
+      
+      await logAuditEvent(req, {
+        action: "add_change",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { changeId: change.id, title: change.title, releaseVersion: release.versionLabel },
+      });
+      
       res.status(201).json(change);
     } catch (error) {
       console.error("Error adding change to release:", error);
+      await logAuditEvent(req, {
+        action: "add_change",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to add change to release" });
     }
   });
@@ -5561,9 +5841,25 @@ export async function registerRoutes(
       }
 
       await storage.removeChangeFromRelease(req.params.changeId);
+      
+      await logAuditEvent(req, {
+        action: "remove_change",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { changeId: req.params.changeId, releaseVersion: release.versionLabel },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error removing change from release:", error);
+      await logAuditEvent(req, {
+        action: "remove_change",
+        entityType: "release",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { changeId: req.params.changeId, error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to remove change from release" });
     }
   });
@@ -5783,8 +6079,24 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         { ...req.body, dealId: req.params.dealId },
         actorId
       );
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_task",
+        entityId: task.id,
+        status: "success",
+        metadata: { dealId: req.params.dealId, title: task.title },
+      });
+      
       res.status(201).json(task);
     } catch (error) {
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_task",
+        entityId: null,
+        status: "failure",
+        metadata: { dealId: req.params.dealId, error: (error as Error).message },
+      });
       handleServiceError(res, error, "Failed to create deal task");
     }
   });
@@ -5799,8 +6111,24 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         req.body,
         actorId
       );
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_task",
+        entityId: req.params.taskId,
+        status: "success",
+        metadata: { dealId: req.params.dealId },
+      });
+      
       res.json(task);
     } catch (error) {
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_task",
+        entityId: req.params.taskId,
+        status: "failure",
+        metadata: { dealId: req.params.dealId, error: (error as Error).message },
+      });
       handleServiceError(res, error, "Failed to update deal task");
     }
   });
@@ -5810,8 +6138,24 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     try {
       const actorId = req.user.claims.sub;
       await dealsService.deleteTask(req.params.dealId, req.params.taskId, actorId);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_task",
+        entityId: req.params.taskId,
+        status: "success",
+        metadata: { dealId: req.params.dealId },
+      });
+      
       res.status(204).send();
     } catch (error) {
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_task",
+        entityId: req.params.taskId,
+        status: "failure",
+        metadata: { dealId: req.params.dealId, error: (error as Error).message },
+      });
       handleServiceError(res, error, "Failed to delete deal task");
     }
   });
