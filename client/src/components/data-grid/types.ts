@@ -83,6 +83,10 @@ export interface DataGridPageProps<T, C = unknown> {
   // Collapsible filters - when true, filters are hidden behind a toggle button
   collapsibleFilters?: boolean;
   
+  // External filter state (for server-side filtering with pagination)
+  filterState?: Record<string, string[]>;
+  onFilterChange?: (filterId: string, values: string[]) => void;
+  
   // Row dragging props
   enableRowDrag?: boolean;
   onRowDragEnd?: (reorderedData: T[]) => void;

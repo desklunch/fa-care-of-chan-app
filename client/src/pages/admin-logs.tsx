@@ -466,6 +466,8 @@ export default function AdminLogs() {
         getRowId={(log) => log.id}
         filters={filters}
         collapsibleFilters={false}
+        filterState={filterState}
+        onFilterChange={handleFilterChange}
         searchFields={["entityId", searchInChanges]}
         searchPlaceholder="Search entity ID or changes..."
         pagination={data ? {

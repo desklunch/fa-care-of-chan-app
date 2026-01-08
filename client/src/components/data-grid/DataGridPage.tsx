@@ -329,6 +329,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   selectionToolbar,
   filters = [],
   collapsibleFilters = false,
+  filterState: externalFilterState,
+  onFilterChange: externalOnFilterChange,
   enableRowDrag = false,
   onRowDragEnd,
   onCellValueChanged,
@@ -345,8 +347,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   // Get all column IDs for index mapping
   const allColumnIds = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  // Initialize filterState from URL params or session storage
-  const [filterState, setFilterState] = useState<Record<string, string[]>>(() => {
+  // Use external filter state if provided, otherwise initialize from URL/session
+  const [internalFilterState, setInternalFilterState] = useState<Record<string, string[]>>(() => {
+    if (externalFilterState) return externalFilterState;
     const urlFilters = getFiltersFromUrl();
     if (Object.keys(urlFilters).length > 0) {
       return urlFilters;
@@ -357,6 +360,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     }
     return {};
   });
+  
+  // Use external filter state if provided, otherwise use internal
+  const filterState = externalFilterState ?? internalFilterState;
 
   // Expand filter bar if there are active filters
   const [showFilters, setShowFilters] = useState(() => {
@@ -544,11 +550,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   );
 
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
-    setFilterState((prev) => ({
-      ...prev,
-      [filterId]: values,
-    }));
-  }, []);
+    if (externalOnFilterChange) {
+      externalOnFilterChange(filterId, values);
+    } else {
+      setInternalFilterState((prev) => ({
+        ...prev,
+        [filterId]: values,
+      }));
+    }
+  }, [externalOnFilterChange]);
 
   const filteredData = useMemo(() => {
     // Disable client-side filtering when using server-side pagination
