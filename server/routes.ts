@@ -2175,6 +2175,14 @@ export async function registerRoutes(
       const thumbnailContentType = contentType === "image/gif" ? "image/gif" : "image/webp";
       const thumbObjectPath = await objectStorageService.uploadBuffer(thumbnailBuffer, thumbPath, thumbnailContentType);
 
+      await logAuditEvent(req, {
+        action: "upload",
+        entityType: "photo",
+        entityId: null,
+        status: "success",
+        metadata: { venueId, originalUrl: url, size: buffer.length },
+      });
+      
       res.json({
         photoUrl: photoObjectPath,
         thumbnailUrl: thumbObjectPath,
@@ -2184,6 +2192,13 @@ export async function registerRoutes(
       });
     } catch (error) {
       console.error("Error uploading photo from URL:", error);
+      await logAuditEvent(req, {
+        action: "upload",
+        entityType: "photo",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to upload photo from URL" });
     }
   });
@@ -2230,6 +2245,14 @@ export async function registerRoutes(
       const thumbnailContentType = contentType === "image/gif" ? "image/gif" : "image/webp";
       const thumbObjectPath = await objectStorageService.uploadBuffer(thumbnailBuffer, thumbPath, thumbnailContentType);
 
+      await logAuditEvent(req, {
+        action: "upload",
+        entityType: "photo",
+        entityId: null,
+        status: "success",
+        metadata: { venueId, filename, size: buffer.length },
+      });
+      
       res.json({
         photoUrl: photoObjectPath,
         thumbnailUrl: thumbObjectPath,
@@ -2239,6 +2262,13 @@ export async function registerRoutes(
       });
     } catch (error) {
       console.error("Error uploading photo:", error);
+      await logAuditEvent(req, {
+        action: "upload",
+        entityType: "photo",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to upload photo" });
     }
   });
@@ -2264,9 +2294,24 @@ export async function registerRoutes(
         await objectStorageService.deleteObject(thumbnailUrl);
       }
 
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "photo",
+        entityId: null,
+        status: "success",
+        metadata: { photoUrl, thumbnailUrl },
+      });
+
       res.json({ success: true });
     } catch (error) {
       console.error("Error deleting photo:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "photo",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete photo" });
     }
   });
@@ -3451,9 +3496,25 @@ export async function registerRoutes(
           uploadedById: req.user?.id,
         });
         
+        await logAuditEvent(req, {
+          action: "upload",
+          entityType: "venue_file",
+          entityId: file.id,
+          status: "success",
+          metadata: { venueId, category, filename },
+        });
+        
         res.status(201).json(file);
       } else {
         // Return file info for staging (no database record created)
+        await logAuditEvent(req, {
+          action: "upload_staged",
+          entityType: "venue_file",
+          entityId: null,
+          status: "success",
+          metadata: { category, filename },
+        });
+        
         res.status(201).json({
           fileUrl,
           thumbnailUrl,
@@ -3466,6 +3527,13 @@ export async function registerRoutes(
       }
     } catch (error) {
       console.error("Error uploading venue file:", error);
+      await logAuditEvent(req, {
+        action: "upload",
+        entityType: "venue_file",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to upload venue file" });
     }
   });
@@ -3500,9 +3568,25 @@ export async function registerRoutes(
         sortOrder: sortOrder ?? 0,
         uploadedById: req.user?.id,
       });
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_file",
+        entityId: file.id,
+        status: "success",
+        metadata: { venueId: req.params.venueId, category, title },
+      });
+      
       res.status(201).json(file);
     } catch (error) {
       console.error("Error creating venue file:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_file",
+        entityId: null,
+        status: "failure",
+        metadata: { venueId: req.params.venueId, error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create venue file" });
     }
   });
@@ -3551,6 +3635,7 @@ export async function registerRoutes(
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
+      const original = await storage.getVenueFileById(req.params.id);
       const file = await storage.updateVenueFile(req.params.id, {
         title,
         caption,
@@ -3561,9 +3646,25 @@ export async function registerRoutes(
       if (!file) {
         return res.status(404).json({ message: "File not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue_file",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, file),
+      });
+      
       res.json(file);
     } catch (error) {
       console.error("Error updating venue file:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue_file",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update venue file" });
     }
   });
@@ -3597,9 +3698,25 @@ export async function registerRoutes(
       }
       
       await storage.deleteVenueFile(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue_file",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { venueId: file.venueId, category: file.category, title: file.title },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting venue file:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue_file",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete venue file" });
     }
   });
