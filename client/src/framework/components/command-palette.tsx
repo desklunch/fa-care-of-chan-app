@@ -11,6 +11,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { useLayout } from "../hooks/layout-context";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { NavItem, NavSection } from "../types/layout";
 import type { VenueWithRelations, VenueCollectionWithCreator, Deal, Client, Contact, Industry } from "@shared/schema";
 import { MapPin, FolderOpen, Tickets, Building2, User } from "lucide-react";
@@ -24,6 +25,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const { navigation, user } = useLayout();
+  const { can } = usePermissions();
 
   // Fetch venues for global search
   const { data: venues = [] } = useQuery<VenueWithRelations[]>({
@@ -37,22 +39,27 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     enabled: open,
   });
 
-  // Fetch deals for global search
+  // Permission-based visibility for search result sections
+  const canViewDeals = can("deals.read");
+  const canViewClients = can("clients.read");
+  const canViewContacts = can("contacts.read");
+
+  // Fetch deals for global search (only if user has permission)
   const { data: deals = [] } = useQuery<Deal[]>({
     queryKey: ["/api/deals"],
-    enabled: open,
+    enabled: open && canViewDeals,
   });
 
-  // Fetch clients for global search
+  // Fetch clients for global search (only if user has permission)
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
-    enabled: open,
+    enabled: open && canViewClients,
   });
 
-  // Fetch contacts for global search
+  // Fetch contacts for global search (only if user has permission)
   const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
-    enabled: open,
+    enabled: open && canViewContacts,
   });
 
   // Fetch industries for client industry lookup
@@ -67,16 +74,26 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   }, [industries]);
 
   const filterByRole = useCallback((items: NavItem[]) => {
-    if (!user?.role) return items;
     return items.filter((item) => {
+      // New permission-based check takes priority
+      if (item.requiredPermission) {
+        return can(item.requiredPermission);
+      }
+      // Legacy role-based check for backward compatibility
       if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
+      if (!user?.role) return false;
       return item.allowedRoles.includes(user.role!);
     });
-  }, [user?.role]);
+  }, [user?.role, can]);
 
   const filterSections = useCallback((sections: NavSection[]) => {
     return sections
       .filter((section) => {
+        // New permission-based check takes priority
+        if (section.requiredPermission) {
+          return can(section.requiredPermission);
+        }
+        // Legacy role-based check for backward compatibility
         if (!section.allowedRoles || section.allowedRoles.length === 0) return true;
         if (!user?.role) return false;
         return section.allowedRoles.includes(user.role);
@@ -86,7 +103,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         items: filterByRole(section.items).filter(item => item.active !== false),
       }))
       .filter((section) => section.items.length > 0);
-  }, [user?.role, filterByRole]);
+  }, [user?.role, filterByRole, can]);
 
   const visibleNavigation = filterSections(navigation);
 
@@ -167,9 +184,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const hasVenueResults = filteredVenues.length > 0;
   const hasCollectionResults = filteredCollections.length > 0;
-  const hasDealResults = filteredDeals.length > 0;
-  const hasClientResults = filteredClients.length > 0;
-  const hasContactResults = filteredContacts.length > 0;
+  const hasDealResults = canViewDeals && filteredDeals.length > 0;
+  const hasClientResults = canViewClients && filteredClients.length > 0;
+  const hasContactResults = canViewContacts && filteredContacts.length > 0;
   const hasSearchResults = search.trim() && (hasVenueResults || hasCollectionResults || hasDealResults || hasClientResults || hasContactResults);
 
   return (
