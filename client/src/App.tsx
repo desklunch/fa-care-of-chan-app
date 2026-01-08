@@ -216,27 +216,34 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Admin",
+        heading: "Team",
         requiredPermission: "team.read",
-        defaultCollapsed: true,
+        defaultCollapsed: false,
         items: [
           {
-            name: "Team",
+            name: "Directory",
             href: "/team",
             icon: Users,
             requiredPermission: "team.read",
           },
+        ],
+      },
+      {
+        heading: "Admin",
+        requiredPermission: "admin.settings",
+        defaultCollapsed: true,
+        items: [
           {
             name: "Features",
             href: "/app/features",
             icon: DraftingCompass,
-            requiredPermission: "app_features.read",
+            requiredPermission: "app_features.manage",
           },
           {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
-            requiredPermission: "app_features.read",
+            requiredPermission: "app_features.manage",
           },
           {
             name: "Logs",

@@ -129,15 +129,16 @@ const TIER_1_PERMISSIONS: Permission[] = [
   'contacts.delete',
   'vendors.read',
   // Note: vendors.write and vendors.delete are admin only
-  'team.read',
+  // Note: team.read is tier 2+ (manager/admin only)
   'app_features.read',
   'app_features.vote',
 ];
 
-// Tier 2 (manager) permissions - includes all tier 1 + deals and venue deletion
+// Tier 2 (manager) permissions - includes all tier 1 + deals, venue deletion, and team access
 const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
   'venues.delete', // Managers can delete venues
+  'team.read', // Managers can view team directory
   'deals.read',
   'deals.write',
   'deals.delete',

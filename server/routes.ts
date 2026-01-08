@@ -132,8 +132,8 @@ export async function registerRoutes(
     }
   });
 
-  // Team routes (also exposed as /api/users for compatibility)
-  app.get("/api/team", isAuthenticated, async (req, res) => {
+  // Team routes - requires team.read permission (manager+ only)
+  app.get("/api/team", isAuthenticated, requirePermission("team.read"), async (req, res) => {
     try {
       const team = await storage.getAllEmployees();
       res.json(team);
@@ -143,7 +143,8 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/users", isAuthenticated, async (req, res) => {
+  // Users endpoint for compatibility - also requires team.read permission
+  app.get("/api/users", isAuthenticated, requirePermission("team.read"), async (req, res) => {
     try {
       const users = await storage.getAllEmployees();
       res.json(users);
@@ -153,7 +154,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/team/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/team/:id", isAuthenticated, requirePermission("team.read"), async (req, res) => {
     try {
       const member = await storage.getUser(req.params.id);
       if (!member) {
@@ -634,8 +635,8 @@ export async function registerRoutes(
     }
   });
 
-  // Product Features
-  app.get("/api/features", isAuthenticated, async (req: any, res) => {
+  // Product Features - admin only for viewing the management pages
+  app.get("/api/features", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const statusFilter = req.query.status
@@ -655,7 +656,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/features/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/features/:id", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const feature = await storage.getFeatureById(req.params.id, userId);
