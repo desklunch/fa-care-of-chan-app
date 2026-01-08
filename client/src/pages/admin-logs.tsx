@@ -1,22 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation } from "wouter";
 import { PageLayout } from "@/framework";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import {
   Activity,
   User,
-  Mail,
   FileEdit,
   Trash2,
   Plus,
@@ -24,11 +15,12 @@ import {
   LogOut,
   CheckCircle,
   XCircle,
+  Layers,
+  Zap,
 } from "lucide-react";
 import { DataGridPage } from "@/components/data-grid";
-import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
-import type { ColumnConfig } from "@/components/data-grid/types";
-import type { AuditLog } from "@shared/schema";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
+import type { AuditLog, User as UserType } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
 type AuditLogWithName = AuditLog & { performerName?: string };
@@ -47,8 +39,6 @@ const actionIcons: Record<string, typeof Activity> = {
   delete: Trash2,
   login: LogIn,
   logout: LogOut,
-  email_sent: Mail,
-  invite_used: CheckCircle,
 };
 
 const actionColors: Record<string, string> = {
@@ -59,23 +49,26 @@ const actionColors: Record<string, string> = {
   logout: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
   email_sent: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
   invite_used: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-};
-
-const entityLabels: Record<string, string> = {
-  user: "User",
-  invite: "Invite",
-  session: "Session",
+  link_feature: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+  unlink_feature: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+  link_issue: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+  unlink_issue: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+  add_change: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+  remove_change: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  add_venue: "bg-green-500/10 text-green-600 dark:text-green-400",
+  remove_venue: "bg-red-500/10 text-red-600 dark:text-red-400",
+  reorder: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  upload: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
 };
 
 function ActionCellRenderer({ value }: ICellRendererParams<AuditLogWithName, string>) {
   if (!value) return null;
   
-  const Icon = actionIcons[value] || Activity;
   const colorClass = actionColors[value] || "bg-muted text-muted-foreground";
   
   return (
     <span className={`${colorClass} capitalize font-medium text-xs`}>
-      {value.replace("_", " ")}
+      {value.replace(/_/g, " ")}
     </span>
   );
 }
@@ -84,8 +77,8 @@ function EntityTypeCellRenderer({ value }: ICellRendererParams<AuditLogWithName,
   if (!value) return null;
   
   return (
-    <span  className="capitalize text-xs">
-      {entityLabels[value] || value}
+    <span className="capitalize text-xs">
+      {value.replace(/_/g, " ")}
     </span>
   );
 }
@@ -94,7 +87,6 @@ function StatusCellRenderer({ value }: ICellRendererParams<AuditLogWithName, str
   if (!value) return null;
   
   const isSuccess = value === "success";
-  const Icon = isSuccess ? CheckCircle : XCircle;
   
   return (
     <span className={`flex h-full items-center gap-1 font-medium text-xs ${isSuccess ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
@@ -113,21 +105,90 @@ function PerformerCellRenderer({ data }: ICellRendererParams<AuditLogWithName>) 
   );
 }
 
+function TimestampCellRenderer({ value }: ICellRendererParams<AuditLogWithName, string | Date>) {
+  if (!value) return null;
+  
+  const date = typeof value === "string" ? new Date(value) : value;
+  const formatted = date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "America/New_York",
+  });
+  
+  return (
+    <span className="text-xs text-muted-foreground">
+      {formatted} EST
+    </span>
+  );
+}
+
+function formatJsonValue(value: unknown): string {
+  if (value === null || value === undefined) return "-";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    return value.map(v => typeof v === "object" ? JSON.stringify(v) : String(v)).join(", ");
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
 function ChangesCellRenderer({ value }: ICellRendererParams<AuditLogWithName, unknown>) {
   if (!value) return <span className="text-muted-foreground">-</span>;
   
   const changes = value as { before?: Record<string, unknown>; after?: Record<string, unknown> };
-  const changedKeys = Object.keys(changes.after || changes.before || {});
+  const beforeKeys = Object.keys(changes.before || {});
+  const afterKeys = Object.keys(changes.after || {});
+  const allKeys = Array.from(new Set([...beforeKeys, ...afterKeys]));
   
-  if (changedKeys.length === 0) {
+  if (allKeys.length === 0) {
     return <span className="text-muted-foreground">-</span>;
   }
   
   return (
-    <span className="text-sm text-muted-foreground">
-      {changedKeys.slice(0, 3).join(", ")}
-      {changedKeys.length > 3 && ` +${changedKeys.length - 3} more`}
-    </span>
+    <div className="text-xs space-y-1 py-1">
+      {allKeys.slice(0, 4).map((key) => {
+        const before = changes.before?.[key];
+        const after = changes.after?.[key];
+        const hasBefore = changes.before && key in changes.before;
+        const hasAfter = changes.after && key in changes.after;
+        
+        return (
+          <div key={key} className="flex flex-wrap gap-1">
+            <span className="font-medium text-foreground">{key}:</span>
+            {hasBefore && hasAfter ? (
+              <>
+                <span className="text-red-500 line-through truncate max-w-[100px]" title={formatJsonValue(before)}>
+                  {formatJsonValue(before)}
+                </span>
+                <span className="text-muted-foreground">→</span>
+                <span className="text-green-600 dark:text-green-400 truncate max-w-[100px]" title={formatJsonValue(after)}>
+                  {formatJsonValue(after)}
+                </span>
+              </>
+            ) : hasAfter ? (
+              <span className="text-green-600 dark:text-green-400 truncate max-w-[150px]" title={formatJsonValue(after)}>
+                {formatJsonValue(after)}
+              </span>
+            ) : hasBefore ? (
+              <span className="text-red-500 truncate max-w-[150px]" title={formatJsonValue(before)}>
+                {formatJsonValue(before)}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+      {allKeys.length > 4 && (
+        <span className="text-muted-foreground">+{allKeys.length - 4} more fields</span>
+      )}
+    </div>
   );
 }
 
@@ -138,9 +199,9 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "performedAt",
     category: "Time",
     colDef: {
-      flex:1,
-      minWidth: 150,
-      cellRenderer: DateCellRenderer,
+      flex: 1,
+      minWidth: 180,
+      cellRenderer: TimestampCellRenderer,
       sort: "desc",
     },
   },
@@ -149,7 +210,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     headerName: "User",
     category: "User",
     colDef: {
-      flex:1,
+      flex: 1,
       minWidth: 150,
       cellRenderer: PerformerCellRenderer,
     },
@@ -160,8 +221,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "action",
     category: "Activity",
     colDef: {
-      flex:1,
-      minWidth: 150,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: ActionCellRenderer,
     },
   },
@@ -171,8 +232,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "entityType",
     category: "Activity",
     colDef: {
-      flex:1,
-      minWidth: 100,
+      flex: 1,
+      minWidth: 120,
       cellRenderer: EntityTypeCellRenderer,
     },
   },
@@ -183,7 +244,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     category: "Activity",
     toggleable: true,
     colDef: {
-      flex:1,
+      flex: 1,
       width: 280,
       cellRenderer: ({ value }: ICellRendererParams<AuditLogWithName, string>) => (
         <span className="font-mono text-xs text-muted-foreground">
@@ -198,7 +259,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     field: "status",
     category: "Activity",
     colDef: {
-      flex:1,
+      flex: 1,
       minWidth: 100,
       cellRenderer: StatusCellRenderer,
     },
@@ -211,7 +272,8 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     toggleable: true,
     colDef: {
       flex: 2,
-      minWidth: 150,
+      minWidth: 250,
+      autoHeight: true,
       cellRenderer: ChangesCellRenderer,
     },
   },
@@ -222,7 +284,7 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
     category: "Details",
     toggleable: true,
     colDef: {
-      flex:1,
+      flex: 1,
       width: 140,
       cellRenderer: ({ value }: ICellRendererParams<AuditLogWithName, string>) => (
         <span className="font-mono text-xs">
@@ -235,27 +297,77 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
 
 const defaultVisibleColumns = ["performedAt", "performerName", "action", "entityType", "status", "changes"];
 
+const ENTITY_TYPES = [
+  { id: "user", label: "User" },
+  { id: "invite", label: "Invite" },
+  { id: "session", label: "Session" },
+  { id: "venue", label: "Venue" },
+  { id: "venue_collection", label: "Venue Collection" },
+  { id: "venue_photo", label: "Venue Photo" },
+  { id: "venue_file", label: "Venue File" },
+  { id: "floorplan", label: "Floorplan" },
+  { id: "contact", label: "Contact" },
+  { id: "vendor", label: "Vendor" },
+  { id: "vendor_service", label: "Vendor Service" },
+  { id: "deal", label: "Deal" },
+  { id: "deal_task", label: "Deal Task" },
+  { id: "deal_service", label: "Deal Service" },
+  { id: "comment", label: "Comment" },
+  { id: "feature", label: "Feature" },
+  { id: "release", label: "Release" },
+  { id: "category", label: "Category" },
+  { id: "amenity", label: "Amenity" },
+  { id: "industry", label: "Industry" },
+  { id: "tag", label: "Tag" },
+];
+
+const ACTIONS = [
+  { id: "create", label: "Create" },
+  { id: "update", label: "Update" },
+  { id: "delete", label: "Delete" },
+  { id: "login", label: "Login" },
+  { id: "logout", label: "Logout" },
+  { id: "email_sent", label: "Email Sent" },
+  { id: "invite_used", label: "Invite Used" },
+  { id: "upload", label: "Upload" },
+  { id: "add_venue", label: "Add Venue" },
+  { id: "remove_venue", label: "Remove Venue" },
+  { id: "reorder", label: "Reorder" },
+  { id: "link_feature", label: "Link Feature" },
+  { id: "unlink_feature", label: "Unlink Feature" },
+  { id: "link_issue", label: "Link Issue" },
+  { id: "unlink_issue", label: "Unlink Issue" },
+  { id: "add_change", label: "Add Change" },
+  { id: "remove_change", label: "Remove Change" },
+];
+
 export default function AdminLogs() {
   usePageTitle("Activity Logs");
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
-  const [entityTypeFilter, setEntityTypeFilter] = useState<string>("all");
-  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [filterState, setFilterState] = useState<Record<string, string[]>>({});
+
+  const entityTypeFilter = filterState.entityType?.[0] || undefined;
+  const actionFilter = filterState.action?.[0] || undefined;
+  const userFilter = filterState.user?.[0] || undefined;
 
   const queryParams = new URLSearchParams();
   queryParams.set("page", page.toString());
   queryParams.set("pageSize", pageSize.toString());
-  if (entityTypeFilter !== "all") {
+  if (entityTypeFilter) {
     queryParams.set("entityType", entityTypeFilter);
   }
-  if (actionFilter !== "all") {
+  if (actionFilter) {
     queryParams.set("action", actionFilter);
+  }
+  if (userFilter) {
+    queryParams.set("performedBy", userFilter);
   }
 
   const { data, isLoading, error } = useQuery<PaginatedResponse>({
-    queryKey: ["/api/admin/logs", page, pageSize, entityTypeFilter, actionFilter],
+    queryKey: ["/api/admin/logs", page, pageSize, entityTypeFilter, actionFilter, userFilter],
     queryFn: async () => {
       const response = await fetch(`/api/admin/logs?${queryParams.toString()}`);
       if (!response.ok) {
@@ -265,11 +377,64 @@ export default function AdminLogs() {
     },
   });
 
+  const { data: users = [] } = useQuery<UserType[]>({
+    queryKey: ["/api/users"],
+  });
+
   useEffect(() => {
     if (error && isUnauthorizedError(error as Error)) {
       setLocation("/");
     }
   }, [error, setLocation]);
+
+  const filters: FilterConfig<AuditLogWithName>[] = useMemo(() => [
+    {
+      id: "entityType",
+      label: "Entity Types",
+      icon: Layers,
+      placeholder: "Filter by entity type",
+      optionSource: {
+        type: "static",
+        options: ENTITY_TYPES,
+      },
+      matchFn: (item, selectedValues) => selectedValues.includes(item.entityType),
+    },
+    {
+      id: "action",
+      label: "Actions",
+      icon: Zap,
+      placeholder: "Filter by action",
+      optionSource: {
+        type: "static",
+        options: ACTIONS,
+      },
+      matchFn: (item, selectedValues) => selectedValues.includes(item.action),
+    },
+    {
+      id: "user",
+      label: "Users",
+      icon: User,
+      placeholder: "Filter by user",
+      optionSource: {
+        type: "static",
+        options: users.map((u) => ({ id: u.id, label: u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : (u.email || "Unknown") })),
+      },
+      matchFn: (item, selectedValues) => item.performedBy ? selectedValues.includes(item.performedBy) : false,
+    },
+  ], [users]);
+
+  const handleFilterChange = (filterId: string, values: string[]) => {
+    setFilterState((prev) => ({
+      ...prev,
+      [filterId]: values,
+    }));
+    setPage(1);
+  };
+
+  const searchInChanges = (item: AuditLogWithName): string => {
+    if (!item.changes) return "";
+    return JSON.stringify(item.changes);
+  };
 
   if (user?.role !== "admin") {
     return (
@@ -282,49 +447,6 @@ export default function AdminLogs() {
       </PageLayout>
     );
   }
-
-  const FilterBar = (
-    <div className="flex items-center gap-3">
-      <Select
-        value={entityTypeFilter}
-        onValueChange={(value) => {
-          setEntityTypeFilter(value);
-          setPage(1);
-        }}
-      >
-        <SelectTrigger className="w-[140px]" data-testid="select-entity-type">
-          <SelectValue placeholder="Entity Type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Entities</SelectItem>
-          <SelectItem value="user">User</SelectItem>
-          <SelectItem value="invite">Invite</SelectItem>
-          <SelectItem value="session">Session</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select
-        value={actionFilter}
-        onValueChange={(value) => {
-          setActionFilter(value);
-          setPage(1);
-        }}
-      >
-        <SelectTrigger className="w-[140px]" data-testid="select-action">
-          <SelectValue placeholder="Action" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Actions</SelectItem>
-          <SelectItem value="create">Create</SelectItem>
-          <SelectItem value="update">Update</SelectItem>
-          <SelectItem value="delete">Delete</SelectItem>
-          <SelectItem value="login">Login</SelectItem>
-          <SelectItem value="logout">Logout</SelectItem>
-          <SelectItem value="email_sent">Email Sent</SelectItem>
-          <SelectItem value="invite_used">Invite Used</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
 
   return (
     <PageLayout
@@ -341,8 +463,11 @@ export default function AdminLogs() {
         externalLoading={isLoading}
         emptyMessage="No audit logs found"
         emptyDescription="Activity will appear here as users interact with the system"
-        headerContent={FilterBar}
         getRowId={(log) => log.id}
+        filters={filters}
+        collapsibleFilters={false}
+        searchFields={["entityId", searchInChanges]}
+        searchPlaceholder="Search entity ID or changes..."
         pagination={data ? {
           page: data.page,
           pageSize: data.pageSize,
