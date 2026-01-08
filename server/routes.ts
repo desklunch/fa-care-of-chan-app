@@ -2941,9 +2941,25 @@ export async function registerRoutes(
         parsed.data,
         req.user.claims.sub
       );
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_collection",
+        entityId: collection.id,
+        status: "success",
+        metadata: { name: collection.name },
+      });
+      
       res.status(201).json(collection);
     } catch (error) {
       console.error("Error creating venue collection:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "venue_collection",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create venue collection" });
     }
   });
@@ -2959,6 +2975,7 @@ export async function registerRoutes(
         });
       }
       
+      const original = await storage.getVenueCollectionById(req.params.id);
       const collection = await storage.updateVenueCollection(
         req.params.id,
         parsed.data
@@ -2968,9 +2985,24 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Collection not found" });
       }
       
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, collection),
+      });
+      
       res.json(collection);
     } catch (error) {
       console.error("Error updating venue collection:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update venue collection" });
     }
   });
@@ -2978,10 +3010,27 @@ export async function registerRoutes(
   // Delete a venue collection
   app.delete("/api/venue-collections/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const collection = await storage.getVenueCollectionById(req.params.id);
       await storage.deleteVenueCollection(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: collection?.name },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting venue collection:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete venue collection" });
     }
   });
@@ -3003,11 +3052,26 @@ export async function registerRoutes(
         req.user.claims.sub
       );
       
+      await logAuditEvent(req, {
+        action: "add_venues",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { venueIds: parsed.data.venueIds, count: parsed.data.venueIds.length },
+      });
+      
       // Return the updated collection
       const collection = await storage.getVenueCollectionById(req.params.id);
       res.json(collection);
     } catch (error) {
       console.error("Error adding venues to collection:", error);
+      await logAuditEvent(req, {
+        action: "add_venues",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to add venues to collection" });
     }
   });
@@ -3019,9 +3083,25 @@ export async function registerRoutes(
         req.params.collectionId,
         req.params.venueId
       );
+      
+      await logAuditEvent(req, {
+        action: "remove_venue",
+        entityType: "venue_collection",
+        entityId: req.params.collectionId,
+        status: "success",
+        metadata: { venueId: req.params.venueId },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error removing venue from collection:", error);
+      await logAuditEvent(req, {
+        action: "remove_venue",
+        entityType: "venue_collection",
+        entityId: req.params.collectionId,
+        status: "failure",
+        metadata: { venueId: req.params.venueId, error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to remove venue from collection" });
     }
   });
@@ -3036,11 +3116,26 @@ export async function registerRoutes(
       
       await storage.reorderVenuesInCollection(req.params.id, venueIds);
       
+      await logAuditEvent(req, {
+        action: "reorder",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { venueCount: venueIds.length },
+      });
+      
       // Return the updated collection
       const collection = await storage.getVenueCollectionById(req.params.id);
       res.json(collection);
     } catch (error) {
       console.error("Error reordering venues in collection:", error);
+      await logAuditEvent(req, {
+        action: "reorder",
+        entityType: "venue_collection",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to reorder venues in collection" });
     }
   });
@@ -3096,9 +3191,25 @@ export async function registerRoutes(
         sortOrder: sortOrder ?? 0,
         uploadedById: req.user?.id,
       });
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "floorplan",
+        entityId: floorplan.id,
+        status: "success",
+        metadata: { venueId: req.params.venueId, title },
+      });
+      
       res.status(201).json(floorplan);
     } catch (error) {
       console.error("Error creating floorplan:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "floorplan",
+        entityId: null,
+        status: "failure",
+        metadata: { venueId: req.params.venueId, error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to create floorplan" });
     }
   });
@@ -3145,6 +3256,7 @@ export async function registerRoutes(
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
+      const original = await storage.getVenueFileById(req.params.id);
       const floorplan = await storage.updateVenueFile(req.params.id, {
         title,
         caption,
@@ -3155,9 +3267,25 @@ export async function registerRoutes(
       if (!floorplan) {
         return res.status(404).json({ message: "Floorplan not found" });
       }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "floorplan",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, floorplan),
+      });
+      
       res.json(floorplan);
     } catch (error) {
       console.error("Error updating floorplan:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "floorplan",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to update floorplan" });
     }
   });
@@ -3191,9 +3319,25 @@ export async function registerRoutes(
       }
       
       await storage.deleteVenueFile(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "floorplan",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { venueId: floorplan.venueId, title: floorplan.title },
+      });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting floorplan:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "floorplan",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
       res.status(500).json({ message: "Failed to delete floorplan" });
     }
   });
