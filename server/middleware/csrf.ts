@@ -10,6 +10,7 @@ const EXCLUDED_PATHS = [
   "/api/auth/google/callback",
   "/api/auth/dev-login",
   "/api/activity/",
+  "/api/places/",
 ];
 
 const {
@@ -56,7 +57,8 @@ function shouldSkipCsrf(req: Request): boolean {
 }
 
 function isAuthenticated(req: Request): boolean {
-  return !!(req as any).user;
+  const session = (req as any).session;
+  return !!(session?.userId);
 }
 
 export function csrfProtectionMiddleware(req: Request, res: Response, next: NextFunction) {
