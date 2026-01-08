@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLayout } from "../hooks/layout-context";
 import { useTheme } from "@/lib/theme-provider";
+import { usePermissions } from "@/hooks/usePermissions";
 import Logo from "./logo";
 import type { NavItem, NavSection } from "../types/layout";
 
@@ -29,6 +30,7 @@ interface SidebarProps {
 export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: SidebarProps) {
   const { user, navigation, onSignOut } = useLayout();
   const { resolvedTheme, setTheme } = useTheme();
+  const { can } = usePermissions();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(false);
@@ -70,9 +72,14 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
   };
 
   const filterByRole = (items: NavItem[]) => {
-    if (!user?.role) return items;
     return items.filter((item) => {
+      // New permission-based check takes priority
+      if (item.requiredPermission) {
+        return can(item.requiredPermission);
+      }
+      // Legacy role-based check for backward compatibility
       if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
+      if (!user?.role) return false;
       return item.allowedRoles.includes(user.role!);
     });
   };
@@ -80,6 +87,11 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
   const filterSections = (sections: NavSection[]) => {
     return sections
       .filter((section) => {
+        // New permission-based check takes priority
+        if (section.requiredPermission) {
+          return can(section.requiredPermission);
+        }
+        // Legacy role-based check for backward compatibility
         if (!section.allowedRoles || section.allowedRoles.length === 0) return true;
         if (!user?.role) return false;
         return section.allowedRoles.includes(user.role);

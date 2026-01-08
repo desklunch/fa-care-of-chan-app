@@ -1,18 +1,25 @@
 import { ReactNode } from "react";
+import type { Permission } from "@shared/permissions";
 
 export interface NavItem {
   name: string;
   href: string;
   icon: any;
   active?: boolean;
+  /** @deprecated Use requiredPermission instead for centralized permission control */
   allowedRoles?: string[];
+  /** Required permission to view this nav item */
+  requiredPermission?: Permission;
   badge?: number | string;
 }
 
 export interface NavSection {
   heading?: string;
   items: NavItem[];
+  /** @deprecated Use requiredPermission instead for centralized permission control */
   allowedRoles?: string[];
+  /** Required permission to view this section */
+  requiredPermission?: Permission;
   defaultCollapsed?: boolean;
 }
 

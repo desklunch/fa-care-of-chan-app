@@ -177,23 +177,26 @@ function useLayoutConfig() {
       },
       {
         heading: "New Business",
-        allowedRoles: ["admin", "manager"],
+        requiredPermission: "deals.read",
         items: [
           {
             name: "Deals",
             href: "/deals",
             icon: Tickets,
+            requiredPermission: "deals.read",
           },
           {
             name: "Views",
             href: "/deals/reports",
             icon: ScanEye,
+            requiredPermission: "deals.read",
           },
  
           {
             name: "Manage",
             href: "/sales/manage",
             icon: SlidersHorizontal,
+            requiredPermission: "sales.manage",
           },
         ],
       },
@@ -214,39 +217,44 @@ function useLayoutConfig() {
       },
       {
         heading: "Admin",
-        allowedRoles: ["admin", "manager"],
+        requiredPermission: "team.read",
         defaultCollapsed: true,
         items: [
           {
             name: "Team",
             href: "/team",
             icon: Users,
+            requiredPermission: "team.read",
           },
           {
             name: "Features",
             href: "/app/features",
             icon: DraftingCompass,
+            requiredPermission: "app_features.read",
           },
           {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
+            requiredPermission: "app_features.read",
           },
           {
             name: "Logs",
             href: "/admin/logs",
             icon: SquareTerminal,
+            requiredPermission: "audit.read",
           },
           {
             name: "Analytics",
             href: "/admin/analytics",
             icon: ScanEye,
+            requiredPermission: "admin.analytics",
           },
         ],
       },
       {
         heading: "In Development",
-        allowedRoles: ["admin"],
+        requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
 
@@ -254,72 +262,83 @@ function useLayoutConfig() {
             name: "Vendors",
             href: "/vendors",
             icon: Handshake,
+            requiredPermission: "vendors.read",
           },
           {
             name: "Requests",
             href: "/forms/requests",
             icon: RadioTower,
+            requiredPermission: "admin.settings",
           },
           {
             name: "Forms",
             href: "/forms/templates",
             icon: FileText,
+            requiredPermission: "admin.settings",
           },
           {
             name: "Comments",
             href: "/comments",
             icon: MessageSquare,
+            requiredPermission: "admin.settings",
           },
           {
             name: "Invites",
             href: "/admin/invites",
             icon: UserPlus,
+            requiredPermission: "invites.read",
           },
 
           {
             name: "Vendor Services",
             href: "/admin/vendors/services",
             icon: Briefcase,
+            requiredPermission: "admin.settings",
           },
           {
             name: "Vendor Tokens",
             href: "/admin/vendors/tokens",
             icon: Link2,
+            requiredPermission: "vendor_tokens.manage",
           },
 
         ],
       },
       {
         heading: "App",
-        allowedRoles: ["admin"],
+        requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
           {
             name: "Theme Editor",
             href: "/admin/theme",
             icon: Palette,
+            requiredPermission: "theme.manage",
           },
           {
             name: "Feature Categories",
             href: "/admin/app/features",
             icon: Tags,
+            requiredPermission: "app_features.manage",
           },
           {
             name: "Releases",
             href: "/admin/releases",
             icon: Rocket,
+            requiredPermission: "releases.manage",
           },
         ],
       },
       {
         heading: "AI",
-        allowedRoles: ["admin"],
+        requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
           {
             name: "Context",
             href: "/ai/context",
             icon: Bot,
+            requiredPermission: "admin.settings",
           },
         ],
       },
