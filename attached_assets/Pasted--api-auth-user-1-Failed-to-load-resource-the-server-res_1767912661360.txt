@@ -1,0 +1,1543 @@
+/api/auth/user:1  Failed to load resource: the server responded with a status of 401 ()
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+client:339 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Qt @ client:339
+(anonymous) @ client:305
+Bf @ client:115
+b @ client:112
+client:339 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Qt @ client:339
+(anonymous) @ client:305
+Bf @ client:115
+b @ client:112
+index-D9BvQ5cK.js:49  GET https://app.careofchan.com/api/csrf-token 401 (Unauthorized)
+HC @ index-D9BvQ5cK.js:49
+jb @ index-D9BvQ5cK.js:49
+mutationFn @ landing-D7m8426W.js:1
+fn @ index-D9BvQ5cK.js:49
+x @ index-D9BvQ5cK.js:49
+start @ index-D9BvQ5cK.js:49
+execute @ index-D9BvQ5cK.js:49
+await in execute
+mutate @ useMutation--gtCsg5J.js:1
+(anonymous) @ useMutation--gtCsg5J.js:1
+onSuccess @ landing-D7m8426W.js:1
+callback @ index-D9BvQ5cK.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+index-D9BvQ5cK.js:49 Failed to fetch CSRF token: Error: Failed to fetch CSRF token
+    at HC (index-D9BvQ5cK.js:49:40443)
+    at async jb (index-D9BvQ5cK.js:49:40782)
+    at async Object.mutationFn (landing-D7m8426W.js:1:292)
+jb @ index-D9BvQ5cK.js:49
+await in jb
+mutationFn @ landing-D7m8426W.js:1
+fn @ index-D9BvQ5cK.js:49
+x @ index-D9BvQ5cK.js:49
+start @ index-D9BvQ5cK.js:49
+execute @ index-D9BvQ5cK.js:49
+await in execute
+mutate @ useMutation--gtCsg5J.js:1
+(anonymous) @ useMutation--gtCsg5J.js:1
+onSuccess @ landing-D7m8426W.js:1
+callback @ index-D9BvQ5cK.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+index-D9BvQ5cK.js:49 Fetch failed loading: GET "https://app.careofchan.com/api/csrf-token".
+HC @ index-D9BvQ5cK.js:49
+jb @ index-D9BvQ5cK.js:49
+mutationFn @ landing-D7m8426W.js:1
+fn @ index-D9BvQ5cK.js:49
+x @ index-D9BvQ5cK.js:49
+start @ index-D9BvQ5cK.js:49
+execute @ index-D9BvQ5cK.js:49
+await in execute
+mutate @ useMutation--gtCsg5J.js:1
+(anonymous) @ useMutation--gtCsg5J.js:1
+onSuccess @ landing-D7m8426W.js:1
+callback @ index-D9BvQ5cK.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: POST "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+index-D9BvQ5cK.js:41 [Violation] 'setTimeout' handler took 84ms
+ag-grid-theme-ofspPznx.js:1 AG Grid: warning #48 Cell data type is "object" but no Value Formatter has been provided. Please either provide an object data type definition with a Value Formatter, or set "colDef.valueFormatter" 
+See https://www.ag-grid.com/react-data-grid/errors/48?_version_=34.3.1&property=Formatter
+(anonymous) @ ag-grid-theme-ofspPznx.js:1
+ar @ ag-grid-theme-ofspPznx.js:1
+ei @ ag-grid-theme-ofspPznx.js:1
+ur @ ag-grid-theme-ofspPznx.js:1
+M @ ag-grid-theme-ofspPznx.js:3
+t @ ag-grid-theme-ofspPznx.js:17
+validateColDef @ ag-grid-theme-ofspPznx.js:17
+En @ ag-grid-theme-ofspPznx.js:3
+dg @ ag-grid-theme-ofspPznx.js:3
+ud @ ag-grid-theme-ofspPznx.js:3
+ag @ ag-grid-theme-ofspPznx.js:3
+createColsFromColDefs @ ag-grid-theme-ofspPznx.js:3
+setColumnDefs @ ag-grid-theme-ofspPznx.js:3
+setColumnsAndData @ ag-grid-theme-ofspPznx.js:20
+(anonymous) @ ag-grid-theme-ofspPznx.js:20
+addEventListener.e @ ag-grid-theme-ofspPznx.js:17
+(anonymous) @ ag-grid-theme-ofspPznx.js:1
+o @ ag-grid-theme-ofspPznx.js:1
+dispatchToListeners @ ag-grid-theme-ofspPznx.js:1
+dispatchEvent @ ag-grid-theme-ofspPznx.js:1
+dispatchLocalEvent @ ag-grid-theme-ofspPznx.js:1
+register @ ag-grid-theme-ofspPznx.js:17
+setComp @ ag-grid-theme-ofspPznx.js:17
+(anonymous) @ ag-grid-theme-ofspPznx.js:61
+Ru @ index-D9BvQ5cK.js:41
+sp @ index-D9BvQ5cK.js:41
+Fv @ index-D9BvQ5cK.js:41
+Fv @ index-D9BvQ5cK.js:41
+Fv @ index-D9BvQ5cK.js:41
+hx @ index-D9BvQ5cK.js:41
+wx @ index-D9BvQ5cK.js:41
+Gn @ index-D9BvQ5cK.js:41
+lp @ index-D9BvQ5cK.js:41
+Kn @ index-D9BvQ5cK.js:39
+(anonymous) @ index-D9BvQ5cK.js:41
+setTimeout
+o @ index-D9BvQ5cK.js:49
+i @ index-D9BvQ5cK.js:49
+batch @ index-D9BvQ5cK.js:49
+qt @ index-D9BvQ5cK.js:49
+setData @ index-D9BvQ5cK.js:49
+onSuccess @ index-D9BvQ5cK.js:49
+f @ index-D9BvQ5cK.js:49
+Promise.then
+x @ index-D9BvQ5cK.js:49
+start @ index-D9BvQ5cK.js:49
+fetch @ index-D9BvQ5cK.js:49
+Wo @ index-D9BvQ5cK.js:49
+onSubscribe @ index-D9BvQ5cK.js:49
+subscribe @ index-D9BvQ5cK.js:49
+(anonymous) @ index-D9BvQ5cK.js:49
+av @ index-D9BvQ5cK.js:39
+ka @ index-D9BvQ5cK.js:41
+Qr @ index-D9BvQ5cK.js:41
+(anonymous) @ index-D9BvQ5cK.js:41
+S @ index-D9BvQ5cK.js:26
+A @ index-D9BvQ5cK.js:26
+ag-grid-theme-ofspPznx.js:1 AG Grid: warning #48 Cell data type is "object" but no Value Parser has been provided. Please either provide an object data type definition with a Value Parser, or set "colDef.valueParser" 
+See https://www.ag-grid.com/react-data-grid/errors/48?_version_=34.3.1&property=Parser
+(anonymous) @ ag-grid-theme-ofspPznx.js:1
+ar @ ag-grid-theme-ofspPznx.js:1
+ei @ ag-grid-theme-ofspPznx.js:1
+ur @ ag-grid-theme-ofspPznx.js:1
+M @ ag-grid-theme-ofspPznx.js:3
+t @ ag-grid-theme-ofspPznx.js:17
+validateColDef @ ag-grid-theme-ofspPznx.js:17
+En @ ag-grid-theme-ofspPznx.js:3
+dg @ ag-grid-theme-ofspPznx.js:3
+ud @ ag-grid-theme-ofspPznx.js:3
+ag @ ag-grid-theme-ofspPznx.js:3
+createColsFromColDefs @ ag-grid-theme-ofspPznx.js:3
+setColumnDefs @ ag-grid-theme-ofspPznx.js:3
+setColumnsAndData @ ag-grid-theme-ofspPznx.js:20
+(anonymous) @ ag-grid-theme-ofspPznx.js:20
+addEventListener.e @ ag-grid-theme-ofspPznx.js:17
+(anonymous) @ ag-grid-theme-ofspPznx.js:1
+o @ ag-grid-theme-ofspPznx.js:1
+dispatchToListeners @ ag-grid-theme-ofspPznx.js:1
+dispatchEvent @ ag-grid-theme-ofspPznx.js:1
+dispatchLocalEvent @ ag-grid-theme-ofspPznx.js:1
+register @ ag-grid-theme-ofspPznx.js:17
+setComp @ ag-grid-theme-ofspPznx.js:17
+(anonymous) @ ag-grid-theme-ofspPznx.js:61
+Ru @ index-D9BvQ5cK.js:41
+sp @ index-D9BvQ5cK.js:41
+Fv @ index-D9BvQ5cK.js:41
+Fv @ index-D9BvQ5cK.js:41
+Fv @ index-D9BvQ5cK.js:41
+hx @ index-D9BvQ5cK.js:41
+wx @ index-D9BvQ5cK.js:41
+Gn @ index-D9BvQ5cK.js:41
+lp @ index-D9BvQ5cK.js:41
+Kn @ index-D9BvQ5cK.js:39
+(anonymous) @ index-D9BvQ5cK.js:41
+setTimeout
+o @ index-D9BvQ5cK.js:49
+i @ index-D9BvQ5cK.js:49
+batch @ index-D9BvQ5cK.js:49
+qt @ index-D9BvQ5cK.js:49
+setData @ index-D9BvQ5cK.js:49
+onSuccess @ index-D9BvQ5cK.js:49
+f @ index-D9BvQ5cK.js:49
+Promise.then
+x @ index-D9BvQ5cK.js:49
+start @ index-D9BvQ5cK.js:49
+fetch @ index-D9BvQ5cK.js:49
+Wo @ index-D9BvQ5cK.js:49
+onSubscribe @ index-D9BvQ5cK.js:49
+subscribe @ index-D9BvQ5cK.js:49
+(anonymous) @ index-D9BvQ5cK.js:49
+av @ index-D9BvQ5cK.js:39
+ka @ index-D9BvQ5cK.js:41
+Qr @ index-D9BvQ5cK.js:41
+(anonymous) @ index-D9BvQ5cK.js:41
+S @ index-D9BvQ5cK.js:26
+A @ index-D9BvQ5cK.js:26
+index-D9BvQ5cK.js:41 [Violation] 'setTimeout' handler took 128ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] Forced reflow while executing JavaScript took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+[Violation] 'requestAnimationFrame' handler took <N>ms
+deals-ByikoKp9.js:1 [DealsGrid] onCellValueChanged: {field: 'ownerId', newValue: 'none', oldValue: 'OE', dataId: '3c57228b-41e2-4842-b71c-66967e172640'}
+index-D9BvQ5cK.js:49 Fetch finished loading: PATCH "https://app.careofchan.com/api/deals/3c57228b-41e2-4842-b71c-66967e172640".
+jb @ index-D9BvQ5cK.js:49
+await in jb
+mutationFn @ deals-ByikoKp9.js:1
+fn @ index-D9BvQ5cK.js:49
+x @ index-D9BvQ5cK.js:49
+start @ index-D9BvQ5cK.js:49
+execute @ index-D9BvQ5cK.js:49
+await in execute
+mutate @ useMutation--gtCsg5J.js:1
+(anonymous) @ useMutation--gtCsg5J.js:1
+(anonymous) @ deals-ByikoKp9.js:1
+(anonymous) @ ag-grid-theme-ofspPznx.js:20
+wrapOutgoing @ ag-grid-theme-ofspPznx.js:17
+o @ ag-grid-theme-ofspPznx.js:20
+(anonymous) @ ag-grid-theme-ofspPznx.js:20
+(anonymous) @ ag-grid-theme-ofspPznx.js:1
+flushAsyncQueue @ ag-grid-theme-ofspPznx.js:1
+setTimeout
+t @ ag-grid-theme-ofspPznx.js:1
+dispatchAsync @ ag-grid-theme-ofspPznx.js:1
+o @ ag-grid-theme-ofspPznx.js:1
+dispatchToListeners @ ag-grid-theme-ofspPznx.js:1
+dispatchEvent @ ag-grid-theme-ofspPznx.js:1
+dispatchEvent @ ag-grid-theme-ofspPznx.js:17
+hideTooltip @ ag-grid-theme-ofspPznx.js:17
+attemptToHideTooltip @ ag-grid-theme-ofspPznx.js:17
+hideItemTooltip @ ag-grid-theme-ofspPznx.js:3
+beforeHidePicker @ ag-grid-theme-ofspPznx.js:3
+closedCallback @ ag-grid-theme-ofspPznx.js:3
+p @ ag-grid-theme-ofspPznx.js:17
+hidePicker @ ag-grid-theme-ofspPznx.js:3
+fieldValueChanged @ ag-grid-theme-ofspPznx.js:3
+(anonymous) @ ag-grid-theme-ofspPznx.js:1
+o @ ag-grid-theme-ofspPznx.js:1
+dispatchToListeners @ ag-grid-theme-ofspPznx.js:1
+dispatchEvent @ ag-grid-theme-ofspPznx.js:1
+dispatchLocalEvent @ ag-grid-theme-ofspPznx.js:1
+fireChangeEvent @ ag-grid-theme-ofspPznx.js:3
+setValue @ ag-grid-theme-ofspPznx.js:3
+(anonymous) @ ag-grid-theme-ofspPznx.js:3
+index-D9BvQ5cK.js:305 [AppVisibility] App idle for 407s (focus), syncing router and invalidating queries
+index-D9BvQ5cK.js:305 [AppVisibility] App idle for 6449s (focus), syncing router and invalidating queries
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+index-CBM-Hk99.js:49  GET https://app.careofchan.com/api/auth/user 401 (Unauthorized)
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch failed loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+vh @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+client:339 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Qt @ client:339
+(anonymous) @ client:305
+Bf @ client:115
+b @ client:112
+client:339 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Qt @ client:339
+(anonymous) @ client:305
+Bf @ client:115
+b @ client:112
+index-CBM-Hk99.js:49  GET https://app.careofchan.com/api/csrf-token 401 (Unauthorized)
+HC @ index-CBM-Hk99.js:49
+jb @ index-CBM-Hk99.js:49
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+Qt.c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Failed to fetch CSRF token: Error: Failed to fetch CSRF token
+    at HC (index-CBM-Hk99.js:49:40443)
+    at async jb (index-CBM-Hk99.js:49:40782)
+    at async Object.mutationFn (landing-BSMAoSN1.js:1:292)
+jb @ index-CBM-Hk99.js:49
+await in jb
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+Qt.c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Fetch failed loading: GET "https://app.careofchan.com/api/csrf-token".
+HC @ index-CBM-Hk99.js:49
+jb @ index-CBM-Hk99.js:49
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+Qt.c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Fetch finished loading: POST "https://app.careofchan.com/api/auth/google".
+jb @ index-CBM-Hk99.js:49
+await in jb
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+Qt.c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+refetchQueries @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+invalidateQueries @ index-CBM-Hk99.js:49
+onSuccess @ landing-BSMAoSN1.js:1
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+Qt.c.port1.onmessage @ client:339
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/textarea-Dg2ejj96.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+refetchQueries @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+invalidateQueries @ index-CBM-Hk99.js:49
+onSuccess @ landing-BSMAoSN1.js:1
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+Qt.c.port1.onmessage @ client:339
+index-CBM-Hk99.js:41 TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+xu @ index-CBM-Hk99.js:41
+Sv.n.callback @ index-CBM-Hk99.js:41
+Bf @ index-CBM-Hk99.js:39
+sp @ index-CBM-Hk99.js:41
+Fv @ index-CBM-Hk99.js:41
+hx @ index-CBM-Hk99.js:41
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 Uncaught TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/rotate-ccw-O-apXMy_.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/use-page-title-QW9vsiGc.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/wrench-B2AsIx8u.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/badge-DBkF3T5c.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/label-BQd2VOE0.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/useMutation-Bq8ej3S_.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+xu @ index-CBM-Hk99.js:41
+Sv.n.callback @ index-CBM-Hk99.js:41
+Bf @ index-CBM-Hk99.js:39
+sp @ index-CBM-Hk99.js:41
+Fv @ index-CBM-Hk99.js:41
+hx @ index-CBM-Hk99.js:41
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 Uncaught TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+vh @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41  GET https://app.careofchan.com/assets/pencil-DDPGK-5l.js net::ERR_ABORTED 429 (Too Many Requests)
+(anonymous) @ index-CBM-Hk99.js:41
+U @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:305
+ww @ index-CBM-Hk99.js:10
+Wv @ index-CBM-Hk99.js:41
+Uv @ index-CBM-Hk99.js:41
+gx @ index-CBM-Hk99.js:41
+ra @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+(anonymous) @ index-CBM-Hk99.js:41
+setTimeout
+o @ index-CBM-Hk99.js:49
+i @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+qt @ index-CBM-Hk99.js:49
+setData @ index-CBM-Hk99.js:49
+onSuccess @ index-CBM-Hk99.js:49
+f @ index-CBM-Hk99.js:49
+Promise.then
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+vh @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+xu @ index-CBM-Hk99.js:41
+Sv.n.callback @ index-CBM-Hk99.js:41
+Bf @ index-CBM-Hk99.js:39
+sp @ index-CBM-Hk99.js:41
+Fv @ index-CBM-Hk99.js:41
+hx @ index-CBM-Hk99.js:41
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 Uncaught TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+ Fetch failed loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+ Fetch failed loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+ Fetch failed loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+ Fetch failed loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+Navigated to https://app.careofchan.com/
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+vh @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 [Violation] 'setTimeout' handler took 64ms
+index-CBM-Hk99.js:305 [AppVisibility] App idle for 1354s (visibility), syncing router and invalidating queries
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/admin/analytics
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+vh @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+admin-analytics-Cp1V36X_.js:68 Fetch finished loading: GET "https://app.careofchan.com/api/admin/activity/pageviews/recent?limit=50&environment=production".
+queryFn @ admin-analytics-Cp1V36X_.js:68
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+admin-analytics-Cp1V36X_.js:68 Fetch finished loading: GET "https://app.careofchan.com/api/admin/activity?startDate=2025-12-09T05:00:00.000Z&endDate=2026-01-09T04:59:59.999Z&environment=production".
+queryFn @ admin-analytics-Cp1V36X_.js:68
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+(anonymous) @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/auth/logout".
+onSignOut @ index-CBM-Hk99.js:305
+Fw @ index-CBM-Hk99.js:38
+$w @ index-CBM-Hk99.js:38
+Vw @ index-CBM-Hk99.js:38
+Af @ index-CBM-Hk99.js:38
+Wm @ index-CBM-Hk99.js:38
+(anonymous) @ index-CBM-Hk99.js:38
+ed @ index-CBM-Hk99.js:41
+mm @ index-CBM-Hk99.js:38
+dl @ index-CBM-Hk99.js:38
+bc @ index-CBM-Hk99.js:38
+r2 @ index-CBM-Hk99.js:38
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+index-CBM-Hk99.js:49  GET https://app.careofchan.com/api/auth/user 401 (Unauthorized)
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:49 Fetch failed loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+Wo @ index-CBM-Hk99.js:49
+onSubscribe @ index-CBM-Hk99.js:49
+subscribe @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+av @ index-CBM-Hk99.js:39
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+vh @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:305 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-CBM-Hk99.js:305
+setTimeout
+(anonymous) @ index-CBM-Hk99.js:305
+(anonymous) @ index-CBM-Hk99.js:305
+ka @ index-CBM-Hk99.js:41
+Qr @ index-CBM-Hk99.js:41
+lp @ index-CBM-Hk99.js:41
+Kn @ index-CBM-Hk99.js:39
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+/_/gsi/_/js/k=gsi.gsi.en.Had24GIzZdk.O/am=AACAYMRW/d=1/rs=AF0KOtUzUpe8urxceUIV1xJwxHMaU4y38Q/m=credential_button_library:219 Fetch failed loading: POST "https://play.google.com/log?format=json&hasfast=true&authuser=0".
+(anonymous) @ m=credential_button_library:219
+kd @ m=credential_button_library:87
+next @ m=credential_button_library:88
+(anonymous) @ m=credential_button_library:88
+nd @ m=credential_button_library:88
+_.od @ m=credential_button_library:88
+Kj.send @ m=credential_button_library:219
+p @ m=credential_button_library:216
+Ej.flush @ m=credential_button_library:216
+(anonymous) @ m=credential_button_library:210
+hj @ m=credential_button_library:205
+(anonymous) @ m=credential_button_library:204
+setTimeout
+ej.start @ m=credential_button_library:204
+Ej.log @ m=credential_button_library:212
+Uj.log @ m=credential_button_library:223
+Em @ m=credential_button_library:304
+(anonymous) @ m=credential_button_library:304
+Promise.then
+Km.h @ m=credential_button_library:304
+(anonymous) @ m=credential_button_library:310
+(anonymous) @ button?type=standard&theme=filled_blue&size=large&text=signin_with&shape=pill&logo_alignment=undefined&width=undefined&locale=undefined&click_listener=undefined&is_fedcm_supported=false&client_id=30102058631-olab80h56moonvmdv6pq199deq4blims.apps.googleusercontent.com&iframe_id=gsi_531761_993879&cas=gnqRsBI%2By%2BQMeYzYDeDr38S4Q3vyPK%2BDr85q%2B5uqHwQ:316
+/_/gsi/_/js/k=gsi.gsi.en.Had24GIzZdk.O/am=AACAYMRW/d=1/rs=AF0KOtUzUpe8urxceUIV1xJwxHMaU4y38Q/m=credential_button_library:219  POST https://play.google.com/log?format=json&hasfast=true&authuser=0 net::ERR_BLOCKED_BY_CLIENT
+(anonymous) @ m=credential_button_library:219
+kd @ m=credential_button_library:87
+next @ m=credential_button_library:88
+(anonymous) @ m=credential_button_library:88
+nd @ m=credential_button_library:88
+_.od @ m=credential_button_library:88
+Kj.send @ m=credential_button_library:219
+p @ m=credential_button_library:216
+Ej.flush @ m=credential_button_library:216
+(anonymous) @ m=credential_button_library:210
+hj @ m=credential_button_library:205
+(anonymous) @ m=credential_button_library:204
+setTimeout
+ej.start @ m=credential_button_library:204
+Ej.log @ m=credential_button_library:212
+Uj.log @ m=credential_button_library:223
+Em @ m=credential_button_library:304
+(anonymous) @ m=credential_button_library:304
+Promise.then
+Km.h @ m=credential_button_library:304
+(anonymous) @ m=credential_button_library:310
+(anonymous) @ button?type=standard&theme=filled_blue&size=large&text=signin_with&shape=pill&logo_alignment=undefined&width=undefined&locale=undefined&click_listener=undefined&is_fedcm_supported=false&client_id=30102058631-olab80h56moonvmdv6pq199deq4blims.apps.googleusercontent.com&iframe_id=gsi_531761_993879&cas=gnqRsBI%2By%2BQMeYzYDeDr38S4Q3vyPK%2BDr85q%2B5uqHwQ:316
+client:339 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Qt @ client:339
+(anonymous) @ client:305
+Bf @ client:115
+b @ client:112
+client:339 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Qt @ client:339
+(anonymous) @ client:305
+Bf @ client:115
+b @ client:112
+index-CBM-Hk99.js:49  GET https://app.careofchan.com/api/csrf-token 401 (Unauthorized)
+HC @ index-CBM-Hk99.js:49
+jb @ index-CBM-Hk99.js:49
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Failed to fetch CSRF token: Error: Failed to fetch CSRF token
+    at HC (index-CBM-Hk99.js:49:40443)
+    at async jb (index-CBM-Hk99.js:49:40782)
+    at async Object.mutationFn (landing-BSMAoSN1.js:1:292)
+jb @ index-CBM-Hk99.js:49
+await in jb
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Fetch failed loading: GET "https://app.careofchan.com/api/csrf-token".
+HC @ index-CBM-Hk99.js:49
+jb @ index-CBM-Hk99.js:49
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+index-CBM-Hk99.js:49 Fetch finished loading: POST "https://app.careofchan.com/api/auth/google".
+jb @ index-CBM-Hk99.js:49
+await in jb
+mutationFn @ landing-BSMAoSN1.js:1
+fn @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+index-CBM-Hk99.js:49 Fetch finished loading: GET "https://app.careofchan.com/api/auth/user".
+(anonymous) @ index-CBM-Hk99.js:49
+s @ index-CBM-Hk99.js:49
+x @ index-CBM-Hk99.js:49
+start @ index-CBM-Hk99.js:49
+fetch @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+refetchQueries @ index-CBM-Hk99.js:49
+(anonymous) @ index-CBM-Hk99.js:49
+batch @ index-CBM-Hk99.js:49
+invalidateQueries @ index-CBM-Hk99.js:49
+onSuccess @ landing-BSMAoSN1.js:1
+execute @ index-CBM-Hk99.js:49
+await in execute
+mutate @ useMutation-Bq8ej3S_.js:1
+(anonymous) @ useMutation-Bq8ej3S_.js:1
+onSuccess @ landing-BSMAoSN1.js:1
+callback @ index-CBM-Hk99.js:259
+Ot.Ea @ client:340
+Fs.Ea @ client:351
+c.port1.onmessage @ client:339
+type-BqR0Nn5K.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+clock-DGiJWYsu.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+eye-Dn78Se_f.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+index-Bp7qPwV6.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+chevron-down-1QZtTKHF.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+venues-BscvOeUq.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+index-CBM-Hk99.js:41 TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+xu @ index-CBM-Hk99.js:41
+Sv.n.callback @ index-CBM-Hk99.js:41
+Bf @ index-CBM-Hk99.js:39
+sp @ index-CBM-Hk99.js:41
+Fv @ index-CBM-Hk99.js:41
+hx @ index-CBM-Hk99.js:41
+wx @ index-CBM-Hk99.js:41
+Gn @ index-CBM-Hk99.js:41
+zv @ index-CBM-Hk99.js:41
+S @ index-CBM-Hk99.js:26
+A @ index-CBM-Hk99.js:26
+index-CBM-Hk99.js:41 Uncaught TypeError: Failed to fetch dynamically imported module: https://app.careofchan.com/assets/venues-BscvOeUq.js
+chevrons-up-down-D0JoF_qD.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+circle-alert-DSPtCbEV.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+corner-down-right-LLZb647_.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+package-CFfVMAGD.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+circle-x-gmSAknyr.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+square-arrow-out-up-right-C-BkdBIu.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+skeleton-OH7KhKjB.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+folder-v4pDMHfI.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+shield-x-OODg-yye.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+image-off-DqSPtGze.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+save-Dd7vRHks.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+pen-BRWo_QxA.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+list-checks-Dalzb5Ja.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+use-page-title-QW9vsiGc.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+mail-CEaFcVLn.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+factory-BEzhw4jQ.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+circle-fading-plus-DYqyyNWB.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+grip-vertical-BXyurXuI.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+external-link-7qXZcgay.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+phone-CkAp1BIH.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+thumbs-up--hK70yMB.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+layers-PZAda6lW.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+star-DkIGv_V8.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+settings-2-BMpj5mUF.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+input--nUohpQC.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+rotate-ccw-O-apXMy_.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+trending-up-DVowzOxn.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+link-DARcv-g-.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+list-DKzBwbsT.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+pencil-DDPGK-5l.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+ag-grid-theme-D_h__erp.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+share-2-DKMbL1Cb.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+badge-DBkF3T5c.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+wrench-B2AsIx8u.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+house-CMzHs1Wl.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+add-to-collection-dialog-BvdqE5a-.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+trash-2-HAE_KE0p.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+copy-C6hgSOst.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+triangle-alert-BoKHRM1B.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+log-in-BQN1YwGD.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+square-pen-Kfawrii2.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+receipt-DR-CNWJM.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+lightbulb-CYjUGCuJ.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+page-container-fgK20uRh.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+shield-CCaS1YAC.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+filter-Dmt_1qxZ.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+tag-DhSQWTNB.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+plus-DeCLLG1I.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+DataGridPage-BJYrgw8v.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+textarea-Dg2ejj96.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+zap-pwivTG2j.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+index-DUV-3_0h.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+label-BQd2VOE0.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+send-BX4wiYWY.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+chevron-left-DPZBDQs0.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+arrow-left-BZ4M4so3.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+calendar-DJI6oi9f.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+mouse-pointer-click-Bx8hvKyl.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+calendar-clock-CMiVONTu.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+circle-check-big-BY9zRVwD.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
+play-DXsXdXl3.js:1 Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.
