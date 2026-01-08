@@ -69,6 +69,7 @@ import aiRoutes from "./routes/ai.routes";
 import mcpRoutes from "./mcp/transport";
 import { requestContextMiddleware, updateRequestContext } from "./lib/request-context";
 import { initializeAuditBridge } from "./lib/audit-bridge";
+import { setupCsrf } from "./middleware/csrf";
 
 const dealsService = new DealsService(storage);
 
@@ -94,6 +95,9 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // CSRF protection - must come after auth (uses session for token validation)
+  setupCsrf(app);
 
   // Request context middleware - must come after auth so we have user info
   app.use(requestContextMiddleware);

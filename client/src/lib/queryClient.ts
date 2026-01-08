@@ -1,8 +1,37 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+let csrfToken: string | null = null;
+
+export async function fetchCsrfToken(): Promise<string> {
+  if (csrfToken) {
+    return csrfToken;
+  }
+  
+  const res = await fetch("/api/csrf-token", {
+    credentials: "include",
+  });
+  
+  if (res.ok) {
+    const data = await res.json();
+    csrfToken = data.csrfToken;
+    return csrfToken!;
+  }
+  
+  throw new Error("Failed to fetch CSRF token");
+}
+
+export function clearCsrfToken(): void {
+  csrfToken = null;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    
+    if (res.status === 403 && text.includes("CSRF")) {
+      clearCsrfToken();
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -12,9 +41,24 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers: Record<string, string> = {};
+  
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+    try {
+      const token = await fetchCsrfToken();
+      headers["x-csrf-token"] = token;
+    } catch (e) {
+      console.warn("Failed to fetch CSRF token:", e);
+    }
+  }
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -41,19 +85,12 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
-/**
- * Retry logic that only retries network/connection errors, not HTTP errors (4xx/5xx).
- * This handles stale HTTP keep-alive connections gracefully.
- */
 function shouldRetryQuery(failureCount: number, error: Error): boolean {
-  // Don't retry more than 2 times
   if (failureCount >= 2) return false;
   
-  // Don't retry HTTP errors (4xx, 5xx) - these are intentional server responses
   const errorMessage = error?.message || "";
   if (errorMessage.match(/^[45]\d{2}:/)) return false;
   
-  // Retry network/connection errors (failed to fetch, connection reset, etc.)
   return true;
 }
 
@@ -63,7 +100,7 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: true,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: shouldRetryQuery,
     },
     mutations: {

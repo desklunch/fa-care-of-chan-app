@@ -1,93 +1,92 @@
-import { Request, Response, NextFunction } from "express";
-import Tokens from "csrf";
+import { doubleCsrf } from "csrf-csrf";
+import cookieParser from "cookie-parser";
+import type { Request, Response, NextFunction, Express } from "express";
 
-const tokens = new Tokens();
+const CSRF_SECRET = process.env.SESSION_SECRET || "csrf-secret-fallback";
 
-const CSRF_COOKIE_NAME = "csrf-token";
-const CSRF_HEADER_NAME = "x-csrf-token";
-
-const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-
-const EXCLUDED_PATHS = new Set([
+const EXCLUDED_PATHS = [
   "/api/auth/callback",
-  "/api/auth/replit/callback",
+  "/api/auth/replit/callback", 
   "/api/auth/google/callback",
-]);
+  "/api/auth/dev-login",
+  "/api/activity/",
+];
 
-declare global {
-  namespace Express {
-    interface Session {
-      csrfSecret?: string;
+const {
+  generateCsrfToken,
+  doubleCsrfProtection,
+} = doubleCsrf({
+  getSecret: () => CSRF_SECRET,
+  getSessionIdentifier: (req: Request) => {
+    const session = (req as any).session;
+    if (!session?.id) {
+      throw new Error("CSRF_NO_SESSION");
     }
-  }
-}
-
-function getCsrfSecret(req: Request): string {
-  if (!req.session.csrfSecret) {
-    req.session.csrfSecret = tokens.secretSync();
-  }
-  return req.session.csrfSecret;
-}
-
-export function csrfMiddleware(req: Request, res: Response, next: NextFunction) {
-  const secret = getCsrfSecret(req);
-  const token = tokens.create(secret);
-  
-  res.cookie(CSRF_COOKIE_NAME, token, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
+    return session.id;
+  },
+  cookieName: "x-csrf-token",
+  cookieOptions: {
     sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
     path: "/",
-  });
-  
-  (req as any).csrfToken = token;
-  
-  next();
-}
+  },
+  size: 64,
+  ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+  getCsrfTokenFromRequest: (req: Request) => {
+    return req.headers["x-csrf-token"] as string;
+  },
+});
 
-export function csrfProtection(req: Request, res: Response, next: NextFunction) {
-  if (SAFE_METHODS.has(req.method)) {
-    return next();
-  }
-  
-  if (EXCLUDED_PATHS.has(req.path)) {
-    return next();
+function shouldSkipCsrf(req: Request): boolean {
+  if (EXCLUDED_PATHS.some(path => req.path.startsWith(path))) {
+    return true;
   }
   
   if (!req.path.startsWith("/api/")) {
+    return true;
+  }
+  
+  const session = (req as any).session;
+  if (!session?.id) {
+    return true;
+  }
+  
+  return false;
+}
+
+function isAuthenticated(req: Request): boolean {
+  return !!(req as any).user;
+}
+
+export function csrfProtectionMiddleware(req: Request, res: Response, next: NextFunction) {
+  if (shouldSkipCsrf(req)) {
     return next();
   }
   
-  const secret = req.session?.csrfSecret;
-  if (!secret) {
-    return res.status(403).json({ 
-      message: "CSRF validation failed: No session",
-      code: "CSRF_NO_SESSION" 
-    });
-  }
-  
-  const tokenFromHeader = req.get(CSRF_HEADER_NAME);
-  const tokenFromCookie = req.cookies?.[CSRF_COOKIE_NAME];
-  
-  const tokenToValidate = tokenFromHeader || tokenFromCookie;
-  
-  if (!tokenToValidate) {
-    return res.status(403).json({ 
-      message: "CSRF validation failed: No token provided",
-      code: "CSRF_NO_TOKEN" 
-    });
-  }
-  
-  if (!tokens.verify(secret, tokenToValidate)) {
-    return res.status(403).json({ 
-      message: "CSRF validation failed: Invalid token",
-      code: "CSRF_INVALID_TOKEN" 
-    });
-  }
-  
-  next();
+  return doubleCsrfProtection(req, res, next);
 }
 
-export function getCsrfToken(req: Request): string {
-  return (req as any).csrfToken || "";
+export function csrfTokenEndpoint(req: Request, res: Response) {
+  if (!isAuthenticated(req)) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  
+  try {
+    const token = generateCsrfToken(req, res);
+    res.json({ csrfToken: token });
+  } catch (error) {
+    console.error("Failed to generate CSRF token:", error);
+    res.status(500).json({ message: "Failed to generate CSRF token" });
+  }
 }
+
+export function setupCsrf(app: Express) {
+  app.use(cookieParser());
+  
+  app.get("/api/csrf-token", csrfTokenEndpoint);
+  
+  app.use(csrfProtectionMiddleware);
+}
+
+export { generateCsrfToken };
