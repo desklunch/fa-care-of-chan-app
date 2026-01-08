@@ -58,6 +58,21 @@ function getSearchFromUrl(): string {
   return getUrlParams().get("q") || "";
 }
 
+// Check if URL has ANY grid-related params (c, s, o, q, f_*)
+// If true, we should trust URL completely and NOT fall back to session storage
+function hasAnyGridParamsInUrl(): boolean {
+  const params = getUrlParams();
+  if (params.has("c") || params.has("s") || params.has("o") || params.has("q")) {
+    return true;
+  }
+  for (const key of params.keys()) {
+    if (key.startsWith("f_")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function setFiltersToUrl(filterState: Record<string, string[]>, searchText?: string) {
   const params = getUrlParams();
   
@@ -343,20 +358,26 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [isFilterInitialized, setIsFilterInitialized] = useState(false);
   const [isGridInitialized, setIsGridInitialized] = useState(false);
   const scrollRestoredRef = useRef(false);
+  const isPopStateUpdateRef = useRef(false); // Track when state update came from popstate
 
   // Get all column IDs for index mapping
   const allColumnIds = useMemo(() => columns.map((col) => col.id), [columns]);
 
   // Use external filter state if provided, otherwise initialize from URL/session
+  // Important: If URL has ANY grid params, trust URL completely (even if filters are empty)
+  // This prevents session storage from overriding URL state after browser back navigation
   const [internalFilterState, setInternalFilterState] = useState<Record<string, string[]>>(() => {
     if (externalFilterState) return externalFilterState;
     const urlFilters = getFiltersFromUrl();
     if (Object.keys(urlFilters).length > 0) {
       return urlFilters;
     }
-    const sessionFilters = getFiltersFromSession(window.location.pathname);
-    if (sessionFilters && Object.keys(sessionFilters).length > 0) {
-      return sessionFilters;
+    // Only use session storage if URL has NO grid params at all (fresh visit)
+    if (!hasAnyGridParamsInUrl()) {
+      const sessionFilters = getFiltersFromSession(window.location.pathname);
+      if (sessionFilters && Object.keys(sessionFilters).length > 0) {
+        return sessionFilters;
+      }
     }
     return {};
   });
@@ -370,9 +391,12 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     if (Object.keys(urlFilters).some(k => urlFilters[k].length > 0)) {
       return true;
     }
-    const sessionFilters = getFiltersFromSession(window.location.pathname);
-    if (sessionFilters && Object.keys(sessionFilters).some(k => sessionFilters[k].length > 0)) {
-      return true;
+    // Only check session storage if URL has no grid params
+    if (!hasAnyGridParamsInUrl()) {
+      const sessionFilters = getFiltersFromSession(window.location.pathname);
+      if (sessionFilters && Object.keys(sessionFilters).some(k => sessionFilters[k].length > 0)) {
+        return true;
+      }
     }
     return false;
   });
@@ -383,9 +407,12 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     if (urlColumns && urlColumns.length > 0) {
       return urlColumns;
     }
-    const sessionColumns = getColumnsFromSession(window.location.pathname);
-    if (sessionColumns && sessionColumns.length > 0) {
-      return sessionColumns;
+    // Only use session storage if URL has no grid params
+    if (!hasAnyGridParamsInUrl()) {
+      const sessionColumns = getColumnsFromSession(window.location.pathname);
+      if (sessionColumns && sessionColumns.length > 0) {
+        return sessionColumns;
+      }
     }
     return defaultVisibleColumns;
   });
@@ -395,7 +422,11 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [sortState, setSortState] = useState<SortState | null>(() => {
     const urlSort = getSortFromUrl();
     if (urlSort) return urlSort;
-    return getSortFromSession(window.location.pathname);
+    // Only use session storage if URL has no grid params
+    if (!hasAnyGridParamsInUrl()) {
+      return getSortFromSession(window.location.pathname);
+    }
+    return null;
   });
   const [isSortInitialized, setIsSortInitialized] = useState(false);
 
@@ -403,12 +434,19 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [columnOrder, setColumnOrder] = useState<number[] | null>(() => {
     const urlOrder = getColumnOrderFromUrl();
     if (urlOrder) return urlOrder;
-    return getColumnOrderFromSession(window.location.pathname);
+    // Only use session storage if URL has no grid params
+    if (!hasAnyGridParamsInUrl()) {
+      return getColumnOrderFromSession(window.location.pathname);
+    }
+    return null;
   });
   const [isOrderInitialized, setIsOrderInitialized] = useState(false);
 
   // Sync visibleColumns to URL and session storage when they change
   useEffect(() => {
+    // Skip URL sync if update came from popstate (browser back/forward)
+    if (isPopStateUpdateRef.current) return;
+    
     if (!isColumnInitialized) {
       setIsColumnInitialized(true);
       const urlColumns = getColumnsFromUrl(allColumnIds);
@@ -425,6 +463,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   // Sync filterState and searchText to URL and session storage when they change
   useEffect(() => {
+    // Skip URL sync if update came from popstate (browser back/forward)
+    if (isPopStateUpdateRef.current) return;
+    
     if (!isFilterInitialized) {
       setIsFilterInitialized(true);
       if (Object.keys(filterState).length > 0 || searchText) {
@@ -439,6 +480,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   // Sync sort state to URL and session storage
   useEffect(() => {
+    // Skip URL sync if update came from popstate (browser back/forward)
+    if (isPopStateUpdateRef.current) return;
+    
     if (!isSortInitialized) {
       setIsSortInitialized(true);
       return;
@@ -449,6 +493,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
   // Sync column order to URL and session storage
   useEffect(() => {
+    // Skip URL sync if update came from popstate (browser back/forward)
+    if (isPopStateUpdateRef.current) return;
+    
     if (!isOrderInitialized) {
       setIsOrderInitialized(true);
       return;
@@ -480,6 +527,49 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       }
     };
   }, [gridApi]);
+
+  // Listen for browser back/forward navigation and sync state from URL
+  // This is needed because React doesn't remount the component on popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      // Mark that this update is from popstate to skip URL sync in useEffects
+      isPopStateUpdateRef.current = true;
+      
+      // Re-read state from URL (not session storage)
+      const urlFilters = getFiltersFromUrl();
+      const urlSearch = getSearchFromUrl();
+      const urlColumns = getColumnsFromUrl(allColumnIds);
+      const urlSort = getSortFromUrl();
+      const urlOrder = getColumnOrderFromUrl();
+      
+      // Only update if we're not using external filter state
+      if (!externalFilterState) {
+        setInternalFilterState(urlFilters);
+      }
+      setSearchText(urlSearch);
+      if (urlColumns && urlColumns.length > 0) {
+        setVisibleColumns(urlColumns);
+      } else {
+        // If no columns in URL after back navigation, use defaults
+        setVisibleColumns(defaultVisibleColumns);
+      }
+      setSortState(urlSort);
+      setColumnOrder(urlOrder);
+      
+      // Update showFilters based on new filter state
+      setShowFilters(Object.keys(urlFilters).some(k => urlFilters[k].length > 0));
+      
+      // Reset the flag after a microtask to allow useEffects to see it
+      queueMicrotask(() => {
+        isPopStateUpdateRef.current = false;
+      });
+    };
+    
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [allColumnIds, externalFilterState, defaultVisibleColumns]);
 
   // Use external data if provided, otherwise fetch via query
   const useExternalData = externalData !== undefined;
