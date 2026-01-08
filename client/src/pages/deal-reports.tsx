@@ -411,7 +411,7 @@ export default function DealReports() {
   const handleTabChange = (value: string) => {
     if (isValidTab(value)) {
       setActiveTab(value);
-      setLocation(`/deals/reports?tab=${value}`);
+      setLocation(`/deals/reports?tab=${value}`, { replace: true });
     }
   };
 
