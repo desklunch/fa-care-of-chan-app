@@ -42,13 +42,23 @@ function updateUrlParams(updates: Record<string, string | null>) {
 // FILTER HELPERS
 // ============================================
 
+// Use a separator unlikely to appear in filter values
+const FILTER_VALUE_SEPARATOR = "|||";
+
 function getFiltersFromUrl(): Record<string, string[]> {
   const params = getUrlParams();
   const filters: Record<string, string[]> = {};
   params.forEach((value, key) => {
     if (key.startsWith("f_")) {
       const filterId = key.replace("f_", "");
-      filters[filterId] = value.split(",").filter(Boolean);
+      // Support both new separator and legacy comma separator for backwards compatibility
+      if (value.includes(FILTER_VALUE_SEPARATOR)) {
+        filters[filterId] = value.split(FILTER_VALUE_SEPARATOR).filter(Boolean);
+      } else {
+        // Legacy: values were comma-separated, but this breaks on values containing commas
+        // For single values, this still works correctly
+        filters[filterId] = [value];
+      }
     }
   });
   return filters;
@@ -83,10 +93,10 @@ function setFiltersToUrl(filterState: Record<string, string[]>, searchText?: str
     }
   });
   
-  // Add current filter params
+  // Add current filter params using separator that won't appear in values
   Object.entries(filterState).forEach(([filterId, values]) => {
     if (values.length > 0) {
-      params.set(`f_${filterId}`, values.join(","));
+      params.set(`f_${filterId}`, values.join(FILTER_VALUE_SEPARATOR));
     }
   });
   
