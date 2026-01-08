@@ -159,6 +159,23 @@ function useLayoutConfig() {
         ],
       },
       {
+        heading: "Directory",
+        items: [
+          {
+            name: "Clients",
+            href: "/clients",
+            icon: Building2,
+          },
+
+          {
+            name: "Contacts",
+            href: "/contacts",
+            icon: Contact,
+          },
+
+        ],
+      },
+      {
         heading: "New Business",
         allowedRoles: ["admin", "manager"],
         items: [
@@ -172,17 +189,7 @@ function useLayoutConfig() {
             href: "/deals/reports",
             icon: ScanEye,
           },
-          {
-            name: "Clients",
-            href: "/clients",
-            icon: Building2,
-          },
-
-          {
-            name: "Contacts",
-            href: "/contacts",
-            icon: Contact,
-          },
+ 
           {
             name: "Manage",
             href: "/sales/manage",
