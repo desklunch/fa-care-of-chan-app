@@ -1191,7 +1191,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteContact(id: string): Promise<void> {
+    // Unlink from deals where this contact is the primary contact
+    await db.update(deals).set({ primaryContactId: null }).where(eq(deals.primaryContactId, id));
+    // Remove vendor-contact links
     await db.delete(vendorsContacts).where(eq(vendorsContacts.contactId, id));
+    // Delete the contact
     await db.delete(contacts).where(eq(contacts.id, id));
   }
 
