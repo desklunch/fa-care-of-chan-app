@@ -698,7 +698,7 @@ export default function VendorDetail() {
                   </PermissionGate>
                 </FieldRow>
                 {vendor.locations && vendor.locations.length > 0 && (
-                  <FieldRow label="Locations" testId="row-locations">
+                  <FieldRow label="Service Locations" testId="row-locations">
                     <div className="flex flex-wrap gap-2">
                       {vendor.locations.map((location, index) => (
                         <Badge
