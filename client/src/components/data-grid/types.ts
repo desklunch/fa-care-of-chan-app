@@ -30,19 +30,7 @@ export interface ColumnConfig<T> {
   colDef: Omit<ColDef<T>, "colId" | "headerName" | "field" | "hide">;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export interface DataGridPageProps<T, C = unknown> {
-  title?: string;
-  description?: string;
-  icon?: LucideIcon;
-  breadcrumbs?: Array<{ label: string; href?: string }>;
   queryKey: string;
   columns: ColumnConfig<T>[];
   defaultVisibleColumns: string[];
@@ -56,21 +44,8 @@ export interface DataGridPageProps<T, C = unknown> {
   emptyDescription?: string;
   context?: C;
   
-  // External data mode (for paginated APIs)
-  externalData?: T[];
-  externalLoading?: boolean;
-  
   // When true, shows loading state while external context data (like lookup tables) is loading
   isExternalDataLoading?: boolean;
-  
-  // Pagination props
-  pagination?: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-  };
   
   // Row selection props
   enableRowSelection?: boolean;
@@ -82,10 +57,6 @@ export interface DataGridPageProps<T, C = unknown> {
   
   // Collapsible filters - when true, filters are hidden behind a toggle button
   collapsibleFilters?: boolean;
-  
-  // External filter state (for server-side filtering with pagination)
-  filterState?: Record<string, string[]>;
-  onFilterChange?: (filterId: string, values: string[]) => void;
   
   // Row dragging props
   enableRowDrag?: boolean;

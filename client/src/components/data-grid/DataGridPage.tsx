@@ -8,7 +8,7 @@ import { ExpandableSearch } from "./expandable-search";
 import { FilterBar } from "./filter-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
+import { ListFilter } from "lucide-react";
 import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -75,7 +75,7 @@ function hasAnyGridParamsInUrl(): boolean {
   if (params.has("c") || params.has("s") || params.has("o") || params.has("q")) {
     return true;
   }
-  for (const key of params.keys()) {
+  for (const key of Array.from(params.keys())) {
     if (key.startsWith("f_")) {
       return true;
     }
@@ -346,16 +346,11 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   emptyMessage = "No data found",
   emptyDescription,
   context,
-  externalData,
-  externalLoading,
-  pagination,
   enableRowSelection,
   onSelectionChanged,
   selectionToolbar,
   filters = [],
   collapsibleFilters = false,
-  filterState: externalFilterState,
-  onFilterChange: externalOnFilterChange,
   enableRowDrag = false,
   onRowDragEnd,
   onCellValueChanged,
@@ -373,11 +368,10 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   // Get all column IDs for index mapping
   const allColumnIds = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  // Use external filter state if provided, otherwise initialize from URL/session
+  // Initialize filter state from URL/session
   // Important: If URL has ANY grid params, trust URL completely (even if filters are empty)
   // This prevents session storage from overriding URL state after browser back navigation
-  const [internalFilterState, setInternalFilterState] = useState<Record<string, string[]>>(() => {
-    if (externalFilterState) return externalFilterState;
+  const [filterState, setFilterState] = useState<Record<string, string[]>>(() => {
     const urlFilters = getFiltersFromUrl();
     if (Object.keys(urlFilters).length > 0) {
       return urlFilters;
@@ -391,9 +385,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     }
     return {};
   });
-  
-  // Use external filter state if provided, otherwise use internal
-  const filterState = externalFilterState ?? internalFilterState;
 
   // Expand filter bar if there are active filters
   const [showFilters, setShowFilters] = useState(() => {
@@ -552,10 +543,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       const urlSort = getSortFromUrl();
       const urlOrder = getColumnOrderFromUrl();
       
-      // Only update if we're not using external filter state
-      if (!externalFilterState) {
-        setInternalFilterState(urlFilters);
-      }
+      setFilterState(urlFilters);
       setSearchText(urlSearch);
       if (urlColumns && urlColumns.length > 0) {
         setVisibleColumns(urlColumns);
@@ -579,18 +567,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [allColumnIds, externalFilterState, defaultVisibleColumns]);
+  }, [allColumnIds, defaultVisibleColumns]);
 
-  // Use external data if provided, otherwise fetch via query
-  const useExternalData = externalData !== undefined;
-  
-  const { data: queryData = [], isLoading: queryLoading } = useQuery<T[]>({
+  const { data = [], isLoading: queryLoading } = useQuery<T[]>({
     queryKey: [queryKey],
-    enabled: !useExternalData,
   });
   
-  const data = useExternalData ? externalData : queryData;
-  const isLoading = (useExternalData ? (externalLoading ?? false) : queryLoading) || isExternalDataLoading;
+  const isLoading = queryLoading || isExternalDataLoading;
 
   // Determine if dragging should be suppressed (when sorting, filters, or search are active)
   const hasActiveFilters = Object.values(filterState).some((v) => v.length > 0);
@@ -650,20 +633,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   );
 
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
-    if (externalOnFilterChange) {
-      externalOnFilterChange(filterId, values);
-    } else {
-      setInternalFilterState((prev) => ({
-        ...prev,
-        [filterId]: values,
-      }));
-    }
-  }, [externalOnFilterChange]);
+    setFilterState((prev) => ({
+      ...prev,
+      [filterId]: values,
+    }));
+  }, []);
 
   const filteredData = useMemo(() => {
-    // Disable client-side filtering when using server-side pagination
-    // as the server already handles filtering
-    if (pagination) return data;
     
     let result = data;
 
@@ -696,7 +672,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     }
 
     return result;
-  }, [data, searchText, searchFields, pagination, filters, filterState]);
+  }, [data, searchText, searchFields, filters, filterState]);
 
   // Note: With rowDragManaged=true, AG Grid handles visual reordering internally.
   // We only sync rowData when drag is NOT in progress to avoid conflicts.
@@ -928,7 +904,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         
         <div className="flex items-center gap-2 text-foreground">
 
-          {!pagination && searchFields.length > 0 && (
+          {searchFields.length > 0 && (
             <ExpandableSearch
               value={searchText}
               onChange={setSearchText}
@@ -966,13 +942,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         </div>
         <div className="flex items-center gap-4">
           {toolbarActions}
-          <div className="text-sm text-muted-foreground whitespace-nowrap
-" data-testid="text-row-count">
-            {pagination 
-              ? `${pagination.total} total`
-              : `${filteredData.length} of ${data.length}`
-            }
-            
+          <div className="text-sm text-muted-foreground whitespace-nowrap" data-testid="text-row-count">
+            {`${filteredData.length} of ${data.length}`}
           </div>
           <ColumnSelector
             columns={columns}
@@ -1026,36 +997,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           onCellValueChanged={onCellValueChanged}
         />
       </div>
-
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t pt-4">
-          <div className="text-sm text-muted-foreground">
-            Page {pagination.page} of {pagination.totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.page <= 1}
-              onClick={() => pagination.onPageChange(pagination.page - 1)}
-              data-testid="button-prev-page"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.page >= pagination.totalPages}
-              onClick={() => pagination.onPageChange(pagination.page + 1)}
-              data-testid="button-next-page"
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
