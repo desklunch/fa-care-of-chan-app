@@ -707,7 +707,7 @@ export default function VendorDetail() {
                           data-testid={`badge-location-${index}`}
                         >
                           <MapPin className="h-3 w-3 mr-1" />
-                          {location.displayName || (location.countryCode === "US" && location.city && location.regionCode ? `${location.city}, ${location.regionCode}` : `${location.city}, ${location.region}`)}
+                          {location.displayName || `${location.city}, ${location.region}, ${location.country}`}
                         </Badge>
                       ))}
                     </div>

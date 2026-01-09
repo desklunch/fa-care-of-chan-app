@@ -110,30 +110,14 @@ export function PlaceAutocomplete({
       if (!response.ok) throw new Error("Failed to fetch place details");
       const data = await response.json();
 
-      const city = data.city || "";
-      const region = data.region || "";
-      const regionCode = data.regionCode || "";
-      const country = data.country || "";
-      const countryCode = data.countryCode || "";
-      
-      // Format display name: use region code for US locations
-      let displayName: string;
-      if (countryCode === "US" && city && regionCode) {
-        displayName = `${city}, ${regionCode}`;
-      } else if (city && region) {
-        displayName = `${city}, ${region}`;
-      } else {
-        displayName = prediction.description;
-      }
-
       const location: VendorLocation = {
         placeId: prediction.place_id,
-        city,
-        region,
-        regionCode,
-        country,
-        countryCode,
-        displayName,
+        city: data.city || "",
+        region: data.region || "",
+        regionCode: data.regionCode || "",
+        country: data.country || "",
+        countryCode: data.countryCode || "",
+        displayName: prediction.description,
       };
 
       if (clearOnSelect) {
