@@ -237,10 +237,9 @@ export function EditableField({
   );
 
   const actionButtons = (
-    <div className="flex gap-2 justify-end">
+    <div className="flex gap-3 justify-end">
       <Button 
-        size="sm" 
-        variant="ghost" 
+        variant="outline" 
         onClick={handleCancel} 
         disabled={isLoading}
         data-testid={`button-cancel-${field}`}
@@ -248,7 +247,6 @@ export function EditableField({
         <X className="h-4 w-4" />
       </Button>
       <Button 
-        size="sm" 
         onClick={handleSave} 
         disabled={isLoading}
         data-testid={`button-save-${field}`}
@@ -478,15 +476,16 @@ export function EditableField({
     if (isMobile) {
       return (
         <div 
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
-          style={{ height: viewportHeight }}
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm z-50"
         >
           <div 
-            className="absolute top-4 bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg flex flex-col gap-4 p-4"
+            className="fixed inset-4  rounded-lg border border-input  flex flex-col gap-4 p-6 flex flex-col justify-center"
+            style={{ height: viewportHeight-36 }}
+
             data-testid={`mobile-editor-${field}`}
           >
-            <div className="text-sm font-semibold shrink-0">{label}</div>
-            <div className="flex-1 flex flex-col gap-2 overflow-auto">
+            <div className="text-base font-medium shrink-0">{label}</div>
+            <div className=" flex flex-col gap-2">
               {renderEditorContent()}
             </div>
             {actionButtons}
