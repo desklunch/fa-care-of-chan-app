@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { VendorWithRelations, VendorService, Contact, FormRequest } from "@shared/schema";
+import type { VendorWithRelations, VendorService, FormRequest } from "@shared/schema";
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink, User, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText } from "lucide-react";
+import { Star, ExternalLink, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "contacts", "locations"];
+const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "locations"];
 
 const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
     {
@@ -89,45 +89,6 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
             {services.length > 3 && (
               <Badge variant="outline" className="text-xs shrink-0">
                 +{services.length - 3}
-              </Badge>
-            )}
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "contacts",
-    headerName: "Contacts",
-    field: "contacts",
-    category: "Contacts",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { value: Contact[] | undefined }) => {
-        const contacts = params.value;
-        if (!contacts || contacts.length === 0) return null;
-        return (
-          <div className="flex items-center gap-1 h-full overflow-hidden">
-            {contacts.slice(0, 2).map((contact) => (
-              <Link 
-                key={contact.id} 
-                href={`/contacts/${contact.id}`}
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                <Badge 
-                  variant="outline" 
-                  className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
-                  data-testid={`badge-contact-${contact.id}`}
-                >
-                  <User className="w-3 h-3" />
-                  {contact.firstName} {contact.lastName}
-                </Badge>
-              </Link>
-            ))}
-            {contacts.length > 2 && (
-              <Badge variant="outline" className="text-xs shrink-0">
-                +{contacts.length - 2}
               </Badge>
             )}
           </div>
@@ -665,7 +626,7 @@ export default function Vendors() {
         emptyDescription="Your vendor directory is empty."
         filters={vendorFilters}
         toolbarActions={<></>}
-        enableRowSelection={isAdmin}
+        enableRowSelection={false}
         selectionToolbar={selectionToolbar}
       />
 

@@ -1298,14 +1298,6 @@ export class DatabaseStorage implements IStorage {
       .from(vendorServicesVendors)
       .innerJoin(vendorServices, eq(vendorServicesVendors.vendorServiceId, vendorServices.id));
 
-    const vendorContactMappings = await db
-      .select({
-        vendorId: vendorsContacts.vendorId,
-        contact: contacts,
-      })
-      .from(vendorsContacts)
-      .innerJoin(contacts, eq(vendorsContacts.contactId, contacts.id));
-
     const servicesByVendorId = new Map<string, VendorService[]>();
     for (const mapping of vendorServiceMappings) {
       const existing = servicesByVendorId.get(mapping.vendorId) || [];
@@ -1313,17 +1305,11 @@ export class DatabaseStorage implements IStorage {
       servicesByVendorId.set(mapping.vendorId, existing);
     }
 
-    const contactsByVendorId = new Map<string, Contact[]>();
-    for (const mapping of vendorContactMappings) {
-      const existing = contactsByVendorId.get(mapping.vendorId) || [];
-      existing.push(mapping.contact);
-      contactsByVendorId.set(mapping.vendorId, existing);
-    }
-
+    // Contacts not loaded for grid performance - fetch individually on detail page
     return allVendors.map((vendor) => ({
       ...vendor,
       services: servicesByVendorId.get(vendor.id) || [],
-      contacts: contactsByVendorId.get(vendor.id) || [],
+      contacts: [],
     }));
   }
 
