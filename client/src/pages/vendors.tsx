@@ -625,6 +625,7 @@ export default function Vendors() {
         emptyMessage="No vendors found"
         emptyDescription="Your vendor directory is empty."
         filters={vendorFilters}
+        collapsibleFilters={true}
         toolbarActions={<></>}
         enableRowSelection={false}
         selectionToolbar={selectionToolbar}
