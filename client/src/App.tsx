@@ -11,7 +11,11 @@ import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { TabVisibilityHandler } from "@/hooks/useTabVisibility";
+import { NavigationLogger } from "@/hooks/useNavigationLogger";
+import { InputLogger } from "@/hooks/useInputLogger";
 import type { LayoutConfig } from "@/framework/types/layout";
+
+import "@/lib/debug-logger";
 
 const Landing = lazy(() => import("@/pages/landing"));
 const InviteActivation = lazy(() => import("@/pages/invite-activation"));
@@ -508,6 +512,8 @@ function App() {
           <TooltipProvider>
             <AnalyticsTracker />
             <TabVisibilityHandler />
+            <NavigationLogger />
+            <InputLogger />
             <Toaster />
             <Router />
           </TooltipProvider>
