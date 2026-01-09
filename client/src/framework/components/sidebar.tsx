@@ -185,7 +185,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
       )}
       <aside
         className={cn(
-          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-[1000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
+          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-[2000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
           "flex flex-col h-full",
           "lg:relative lg:z-auto",
           isCollapsed && !isMediumScreen && "lg:w-[72px]",
@@ -195,8 +195,8 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           isMediumScreen && !isHovered && "md:w-[72px]",
           "md:flex",
           isMobileOpen 
-            ? "fixed inset-y-0 left-0 w-[90vw] max-w-[90vw] translate-x-0" 
-            : "fixed inset-y-0 left-0 w-[90vw] max-w-[90vw] -translate-x-full md:relative md:translate-x-0 md:w-auto"
+            ? "fixed inset-y-0 left-0 w-[80vw] max-w-[80vw] translate-x-0" 
+            : "fixed inset-y-0 left-0 w-[80vw] max-w-[80vw] -translate-x-full md:relative md:translate-x-0 md:w-auto"
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -431,6 +431,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
               )}
             >
               <Link
+                href="/profile"
                 className={cn(
                   "flex items-center gap-3 hover-elevate p-1 -m-1 min-w-0",
                   showExpanded ? "flex-1" : ""
