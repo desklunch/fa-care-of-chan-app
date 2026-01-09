@@ -312,7 +312,7 @@ function EditableTitle({
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="text-xl font-semibold flex-1 bg-transparent border-b-2 border-primary outline-none"
+          className="text-2xl font-bold flex-1 bg-transparent border-b-2 border-primary outline-none"
           data-testid={`input-${testId}`}
         />
         <Button
@@ -344,7 +344,7 @@ function EditableTitle({
       onDoubleClick={() => !disabled && setIsEditing(true)}
     >
       <h1
-        className="text-xl font-semibold"
+        className="text-2xl font-bold"
         data-testid={testId}
       >
         {value}
@@ -651,7 +651,7 @@ export default function VendorDetail() {
           <div className="space-y-1">
             {vendor.isPreferred && (
               <Badge variant="secondary" data-testid="badge-preferred">
-                Preferred Vendor
+                Preferred
               </Badge>
             )}
             <PermissionGate permission="vendors.write" fallback={
@@ -669,10 +669,7 @@ export default function VendorDetail() {
           </div>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Info</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="space-y-0 divide-y divide-border/50">
                 <FieldRow label="Services" testId="row-services">
                   <PermissionGate permission="vendors.write" fallback={
