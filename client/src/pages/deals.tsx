@@ -1,4 +1,5 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CellValueChangedEvent } from "ag-grid-community";
@@ -322,7 +323,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 76,
       editable: true,
       cellEditor: "agSelectCellEditor",
-
       pinned: "left",
       lockPinned: true,
       autoHeight: true,
@@ -866,6 +866,7 @@ export default function Deals() {
   usePageTitle("Deals");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Fetch users for the Owner dropdown
   const { data: users = [] } = useQuery<
@@ -898,6 +899,18 @@ export default function Deals() {
     industries,
     industriesMap,
   };
+
+  // On mobile, remove column pinning to fix AG Grid display issues
+  const responsiveColumns = useMemo(() => {
+    if (!isMobile) return dealColumns;
+    return dealColumns.map((col) => {
+      if (col.colDef?.pinned || col.colDef?.lockPinned) {
+        const { pinned, lockPinned, ...restColDef } = col.colDef;
+        return { ...col, colDef: restColDef };
+      }
+      return col;
+    });
+  }, [isMobile]);
 
   // Mutation to update a single deal field with optimistic updates
   const updateDealMutation = useMutation({
@@ -1101,7 +1114,7 @@ export default function Deals() {
     >
       <DataGridPage
         queryKey="/api/deals"
-        columns={dealColumns}
+        columns={responsiveColumns}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
         searchFields={[
           "displayName",
@@ -1122,7 +1135,7 @@ export default function Deals() {
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"
         emptyDescription="Start tracking your sales pipeline by creating a deal."
-        enableRowDrag={true}
+        enableRowDrag={!isMobile}
         onRowDragEnd={handleRowDragEnd}
         onCellValueChanged={handleCellValueChanged}
       />
