@@ -185,7 +185,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
       )}
       <aside
         className={cn(
-          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-200 ",
+          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-[1000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
           "flex flex-col h-full",
           "lg:relative lg:z-auto",
           isCollapsed && !isMediumScreen && "lg:w-[72px]",
@@ -193,7 +193,10 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           "md:relative md:z-50",
           isMediumScreen && isHovered && "md:w-[280px] md:shadow-xl",
           isMediumScreen && !isHovered && "md:w-[72px]",
-          isMobileOpen ? "fixed inset-y-0 left-0 w-[280px]" : "hidden md:flex"
+          "md:flex",
+          isMobileOpen 
+            ? "fixed inset-y-0 left-0 w-[90vw] max-w-[90vw] translate-x-0" 
+            : "fixed inset-y-0 left-0 w-[90vw] max-w-[90vw] -translate-x-full md:relative md:translate-x-0 md:w-auto"
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -327,6 +330,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                           className={navItemClasses}
                           aria-label={showExpanded ? undefined : item.name}
                           data-testid={`link-nav-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
+                          onClick={onMobileClose}
                         >
                           <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                           {showExpanded && (
