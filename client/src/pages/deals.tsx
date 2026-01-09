@@ -750,7 +750,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "locationsText",
     category: "Basic Info",
     colDef: {
-      flex: 3,
+      flex: 1.5,
       minWidth: 220,
       editable: true,
       sortable: false,
@@ -828,7 +828,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "budgetNotes",
     category: "Basic Info",
     colDef: {
-      flex: 1,
+      flex: 3,
       minWidth: 200,
       editable: true,
       cellEditor: "agLargeTextCellEditor",
