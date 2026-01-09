@@ -187,19 +187,24 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-[var(--sidebar-width)] p-0 [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          className="bg-sidebar text-sidebar-foreground w-[90vw] max-w-[90vw] p-0 [&>button]:hidden"
           side={side}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div 
+            className="flex h-full w-full flex-col"
+            onClickCapture={(e) => {
+              const target = e.target as HTMLElement
+              if (target.closest('a, [data-sidebar="menu-button"]')) {
+                setOpenMobile(false)
+              }
+            }}
+          >
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     )
@@ -503,7 +508,6 @@ function SidebarMenuButton({
   size = "default",
   tooltip,
   className,
-  onClick,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean
@@ -511,14 +515,7 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button"
-  const { isMobile, state, setOpenMobile } = useSidebar()
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(e)
-    if (isMobile) {
-      setOpenMobile(false)
-    }
-  }
+  const { isMobile, state } = useSidebar()
 
   const button = (
     <Comp
@@ -527,7 +524,6 @@ function SidebarMenuButton({
       data-size={size}
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-      onClick={handleClick}
       {...props}
     />
   )
