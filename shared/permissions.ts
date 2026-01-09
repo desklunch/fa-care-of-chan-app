@@ -128,7 +128,8 @@ const TIER_1_PERMISSIONS: Permission[] = [
   'contacts.write',
   'contacts.delete',
   'vendors.read',
-  // Note: vendors.write and vendors.delete are admin only
+  'vendors.write',
+  // Note: vendors.delete is admin only
   // Note: team.read is tier 2+ (manager/admin only)
   'app_features.read',
   'app_features.vote',
@@ -150,7 +151,6 @@ const TIER_2_PERMISSIONS: Permission[] = [
 // Tier 3 (admin) permissions - includes all lower tiers
 const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
-  'vendors.write', // Admin-only: Create/update vendors
   'vendors.delete', // Admin-only: Delete vendors
   'team.manage',
   'invites.read',

@@ -191,7 +191,11 @@ function useLayoutConfig() {
             href: "/clients",
             icon: Building2,
           },
-
+          {
+            name: "Vendors",
+            href: "/vendors",
+            icon: Handshake,
+          },
           {
             name: "Contacts",
             href: "/contacts",
@@ -273,12 +277,7 @@ function useLayoutConfig() {
             requiredPermission: "admin.settings",
           },
 
-          {
-            name: "Vendors",
-            href: "/vendors",
-            icon: Handshake,
-            requiredPermission: "vendors.read",
-          },
+
           {
             name: "Requests",
             href: "/forms/requests",
