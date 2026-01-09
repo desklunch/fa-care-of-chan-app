@@ -288,7 +288,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 240,
-
       sortable: false,
       editable: true,
       // TEMPORARY: Disabled pinning for mobile debugging
