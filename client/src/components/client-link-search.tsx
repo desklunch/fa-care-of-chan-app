@@ -77,11 +77,11 @@ export function ClientLinkSearch({
   onClose,
 }: ClientLinkSearchProps) {
   return (
-    <EntityLinkSearch<Client>
+    <EntityLinkSearch
       contactId={contactId}
       linkedEntities={linkedClients}
       config={clientLinkConfig}
-      onLink={onLink}
+      onLink={onLink as (entity: { id: string }) => void}
       onUnlink={onUnlink}
       disabled={disabled}
       showLinkedEntities={showLinkedClients}
@@ -113,11 +113,11 @@ export function VendorLinkSearch({
   onClose,
 }: VendorLinkSearchProps) {
   return (
-    <EntityLinkSearch<Vendor>
+    <EntityLinkSearch
       contactId={contactId}
       linkedEntities={linkedVendors}
       config={vendorLinkConfig}
-      onLink={onLink}
+      onLink={onLink as (entity: { id: string }) => void}
       onUnlink={onUnlink}
       disabled={disabled}
       showLinkedEntities={showLinkedVendors}
