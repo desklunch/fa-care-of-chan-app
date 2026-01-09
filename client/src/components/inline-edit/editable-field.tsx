@@ -49,6 +49,9 @@ export function EditableField({
   const [localError, setLocalError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
+  const prevArrayRef = useRef<string>(JSON.stringify(arrayValue));
+  const prevValueRef = useRef<string | null | undefined>(value);
+  const prevBooleanRef = useRef<boolean>(booleanValue);
   
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(800);
@@ -98,17 +101,30 @@ export function EditableField({
   }, [isEditing]);
 
   useEffect(() => {
-    if (!isEditing) {
+    if (isEditing) return;
+    
+    if (prevValueRef.current !== value) {
+      prevValueRef.current = value;
       setEditValue(value || "");
-      setEditBoolean(booleanValue);
-      setEditArray(arrayValue);
-      const currentMultiStr = JSON.stringify(multiSelectValues);
-      if (prevMultiRef.current !== currentMultiStr) {
-        prevMultiRef.current = currentMultiStr;
-        setSelectedMulti(multiSelectValues);
-      }
     }
-  }, [value, multiSelectValues, arrayValue, booleanValue, isEditing]);
+    
+    if (prevBooleanRef.current !== booleanValue) {
+      prevBooleanRef.current = booleanValue;
+      setEditBoolean(booleanValue);
+    }
+    
+    const currentArrayStr = JSON.stringify(arrayValue);
+    if (prevArrayRef.current !== currentArrayStr) {
+      prevArrayRef.current = currentArrayStr;
+      setEditArray(arrayValue);
+    }
+    
+    const currentMultiStr = JSON.stringify(multiSelectValues);
+    if (prevMultiRef.current !== currentMultiStr) {
+      prevMultiRef.current = currentMultiStr;
+      setSelectedMulti(multiSelectValues);
+    }
+  });
 
   useEffect(() => {
     if (error) {
