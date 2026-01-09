@@ -13,7 +13,18 @@ import {
   UserPlus,
   Trash2,
   Handshake,
+  Pencil,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import type { Contact, Client, DealWithRelations, DealStatus } from "@shared/schema";
 import { format } from "date-fns";
@@ -65,6 +76,7 @@ export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [showClientSearch, setShowClientSearch] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -112,6 +124,27 @@ export default function ContactDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "clients"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/contacts/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Contact deleted",
+        description: "The contact has been removed.",
+      });
+      setLocation("/contacts");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete contact.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -173,6 +206,19 @@ export default function ContactDetail() {
       breadcrumbs={[
         { label: "Contacts", href: "/contacts" },
         { label: fullName },
+      ]}
+      primaryAction={{
+        label: "Edit Contact",
+        href: `/contacts/${id}/edit`,
+        icon: Pencil,
+      }}
+      additionalActions={[
+        {
+          label: "Delete Contact",
+          onClick: () => setShowDeleteDialog(true),
+          icon: Trash2,
+          variant: "destructive",
+        },
       ]}
     >
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
@@ -460,6 +506,32 @@ export default function ContactDetail() {
           </Card>
         </PermissionGate>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete contact?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{fullName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }
