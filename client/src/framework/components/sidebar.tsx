@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   PanelLeftClose,
   ChevronRight,
-  X,
+  PanelRightOpen,
   ChevronUp,
   LogOut,
   Sun,
@@ -218,7 +218,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
             data-testid="button-close-sidebar"
             aria-label="Close menu"
           >
-            <X className="h-5 w-5" />
+            <PanelRightOpen className="h-5 w-5" />
           </Button>
 
           {showExpanded && !isMediumScreen && (
