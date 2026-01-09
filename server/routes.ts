@@ -939,7 +939,7 @@ export async function registerRoutes(
   // Contacts routes
   app.get("/api/contacts", isAuthenticated, async (req, res) => {
     try {
-      const contacts = await storage.getContactsWithVendors();
+      const contacts = await storage.getContactsWithRelations();
       res.json(contacts);
     } catch (error) {
       console.error("Error fetching contacts:", error);

@@ -352,7 +352,7 @@ export function createMcpServer(): McpServer {
     },
     async ({ query, limit }) => {
       try {
-        let contacts = await storage.getContactsWithVendors();
+        let contacts = await storage.getContactsWithRelations();
         
         if (query) {
           const lowerQuery = query.toLowerCase();

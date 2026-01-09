@@ -987,10 +987,18 @@ export type VendorWithRelations = Vendor & {
   contacts: Contact[];
 };
 
-export type ContactWithVendors = Contact & {
-  vendors: Vendor[];
-  clients: Client[];
+// Simplified relation types for optimized queries
+export type VendorSummary = Pick<Vendor, 'id' | 'businessName'>;
+export type ClientSummary = Pick<Client, 'id' | 'name'>;
+
+// Renamed from ContactWithVendors - includes both vendors and clients
+export type ContactWithRelations = Contact & {
+  vendors: VendorSummary[];
+  clients: ClientSummary[];
 };
+
+// Keep for backward compatibility
+export type ContactWithVendors = ContactWithRelations;
 
 // Venue with associated amenities, tags, floorplans, and photos
 export type VenueWithRelations = Venue & {

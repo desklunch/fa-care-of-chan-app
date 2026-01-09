@@ -59,7 +59,7 @@ import {
   type VendorService,
   type VendorWithServices,
   type VendorWithRelations,
-  type ContactWithVendors,
+  type ContactWithRelations,
   type Venue,
   type CreateVenue,
   type UpdateVenue,
@@ -237,9 +237,9 @@ export interface IStorage {
   
   // Contact operations
   getContacts(): Promise<Contact[]>;
-  getContactsWithVendors(): Promise<ContactWithVendors[]>;
-  getClientLinkedContacts(): Promise<ContactWithVendors[]>;
-  getVendorLinkedContacts(): Promise<ContactWithVendors[]>;
+  getContactsWithRelations(): Promise<ContactWithRelations[]>;
+  getClientLinkedContacts(): Promise<ContactWithRelations[]>;
+  getVendorLinkedContacts(): Promise<ContactWithRelations[]>;
   getContactById(id: string): Promise<Contact | undefined>;
   createContact(data: CreateContact): Promise<Contact>;
   updateContact(id: string, data: UpdateContact): Promise<Contact | undefined>;
@@ -1087,50 +1087,51 @@ export class DatabaseStorage implements IStorage {
       .orderBy(contacts.lastName, contacts.firstName);
   }
 
-  async getContactsWithVendors(): Promise<ContactWithVendors[]> {
-    const allContacts = await db
-      .select()
-      .from(contacts)
-      .orderBy(contacts.lastName, contacts.firstName);
+  async getContactsWithRelations(): Promise<ContactWithRelations[]> {
+    // Optimized single-query approach using json_agg subqueries
+    // This fetches only id and name for related companies, reducing data transfer
+    const result = await db.execute(sql`
+      SELECT 
+        c.*,
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', v.id, 'businessName', v.business_name))
+           FROM vendors_contacts vc
+           JOIN vendors v ON vc.vendor_id = v.id
+           WHERE vc.contact_id = c.id),
+          '[]'::json
+        ) AS vendors,
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', cl.id, 'name', cl.name))
+           FROM client_contacts cc
+           JOIN clients cl ON cc.client_id = cl.id
+           WHERE cc.contact_id = c.id),
+          '[]'::json
+        ) AS clients
+      FROM contacts c
+      ORDER BY c.last_name, c.first_name
+    `);
 
-    const contactVendorMappings = await db
-      .select({
-        contactId: vendorsContacts.contactId,
-        vendor: vendors,
-      })
-      .from(vendorsContacts)
-      .innerJoin(vendors, eq(vendorsContacts.vendorId, vendors.id));
-
-    const vendorsByContactId = new Map<string, Vendor[]>();
-    for (const mapping of contactVendorMappings) {
-      const existing = vendorsByContactId.get(mapping.contactId) || [];
-      existing.push(mapping.vendor);
-      vendorsByContactId.set(mapping.contactId, existing);
-    }
-
-    const contactClientMappings = await db
-      .select({
-        contactId: clientContacts.contactId,
-        client: clients,
-      })
-      .from(clientContacts)
-      .innerJoin(clients, eq(clientContacts.clientId, clients.id));
-
-    const clientsByContactId = new Map<string, Client[]>();
-    for (const mapping of contactClientMappings) {
-      const existing = clientsByContactId.get(mapping.contactId) || [];
-      existing.push(mapping.client);
-      clientsByContactId.set(mapping.contactId, existing);
-    }
-
-    return allContacts.map((contact) => ({
-      ...contact,
-      vendors: vendorsByContactId.get(contact.id) || [],
-      clients: clientsByContactId.get(contact.id) || [],
+    // Map raw SQL result to ContactWithRelations type
+    return (result.rows as any[]).map(row => ({
+      id: row.id,
+      externalId: row.external_id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      jobTitle: row.job_title,
+      emailAddresses: row.email_addresses || [],
+      phoneNumbers: row.phone_numbers || [],
+      instagramUsername: row.instagram_username,
+      linkedinUsername: row.linkedin_username,
+      homeAddress: row.home_address,
+      dateOfBirth: row.date_of_birth,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      vendors: row.vendors || [],
+      clients: row.clients || [],
     }));
   }
 
-  async getClientLinkedContacts(): Promise<ContactWithVendors[]> {
+  async getClientLinkedContacts(): Promise<ContactWithRelations[]> {
     // Get all contact IDs that have at least one client link
     const linkedContactIds = await db
       .selectDistinct({ contactId: clientContacts.contactId })
@@ -1139,11 +1140,11 @@ export class DatabaseStorage implements IStorage {
     const linkedIds = new Set(linkedContactIds.map(r => r.contactId));
     
     // Get all contacts with their vendors/clients, then filter to only those linked to clients
-    const allContactsWithRelations = await this.getContactsWithVendors();
+    const allContactsWithRelations = await this.getContactsWithRelations();
     return allContactsWithRelations.filter(contact => linkedIds.has(contact.id));
   }
 
-  async getVendorLinkedContacts(): Promise<ContactWithVendors[]> {
+  async getVendorLinkedContacts(): Promise<ContactWithRelations[]> {
     // Get all contact IDs that have at least one vendor link
     const linkedContactIds = await db
       .selectDistinct({ contactId: vendorsContacts.contactId })
@@ -1152,7 +1153,7 @@ export class DatabaseStorage implements IStorage {
     const linkedIds = new Set(linkedContactIds.map(r => r.contactId));
     
     // Get all contacts with their vendors/clients, then filter to only those linked to vendors
-    const allContactsWithRelations = await this.getContactsWithVendors();
+    const allContactsWithRelations = await this.getContactsWithRelations();
     return allContactsWithRelations.filter(contact => linkedIds.has(contact.id));
   }
 
