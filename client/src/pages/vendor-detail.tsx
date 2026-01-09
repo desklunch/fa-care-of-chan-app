@@ -579,46 +579,102 @@ export default function VendorDetail() {
               </PermissionGate>
             </CardContent>
           </Card>
-          {vendor.contacts && vendor.contacts.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  Contacts
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 pt-4 pb-4">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base font-bold pt-2">
+                  Contacts{" "}
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {localLinkedContacts.length}
+                  </span>
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {vendor.contacts.map((contact) => {
-                    const contactName = `${contact.firstName} ${contact.lastName}`;
-                    const contactInitials = `${contact.firstName[0]}${contact.lastName[0]}`.toUpperCase();
-                    return (
-                      <Link
-                        key={contact.id}
-                        href={`/contacts/${contact.id}`}
-                        className="flex items-center gap-3 p-3 rounded-lg hover-elevate border border-border"
-                        data-testid={`link-contact-${contact.id}`}
-                      >
- 
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium">{contactName}</p>
-                          {contact.jobTitle && (
-                            <p className="text-sm text-muted-foreground truncate">
-                              {contact.jobTitle}
-                            </p>
-                          )}
-                        </div>
-                        {contact.emailAddresses && contact.emailAddresses.length > 0 && (
-                          <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-32">
-                            {contact.emailAddresses[0]}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
+              </div>
+              <PermissionGate permission="vendors.write">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowContactSearch(true)}
+                  disabled={showContactSearch}
+                  data-testid="button-link-contact"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add
+                </Button>
+              </PermissionGate>
+            </CardHeader>
+            <CardContent>
+              {isLoadingContacts ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="space-y-3">
+                  {showContactSearch && (
+                    <VendorContactLinkSearch
+                      vendorId={id!}
+                      linkedContacts={localLinkedContacts}
+                      onLink={handleLinkContact}
+                      onUnlink={handleUnlinkContact}
+                      showLinkedContacts={false}
+                      autoFocus
+                      onClose={() => setShowContactSearch(false)}
+                    />
+                  )}
+
+                  {localLinkedContacts.length === 0 && !showContactSearch ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No contacts linked yet</p>
+                      <p className="text-sm">
+                        Click "Add" to link contacts to this vendor.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {localLinkedContacts.map((contact) => (
+                        <div
+                          key={contact.id}
+                          className="flex items-center justify-between p-3 pl-4 rounded-lg bg-background/50 dark:bg-foreground/[4%]"
+                          data-testid={`contact-item-${contact.id}`}
+                        >
+                          <div>
+                            <div className="flex flex-col">
+                              <Link href={`/contacts/${contact.id}`}>
+                                <span className="font-medium text-primary hover:underline cursor-pointer">
+                                  {[contact.firstName, contact.lastName]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                                </span>
+                              </Link>
+
+                              {contact.jobTitle && (
+                                <span className="text-sm text-muted-foreground">
+                                  {contact.jobTitle}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <PermissionGate permission="vendors.write">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleUnlinkContact(contact.id)}
+                              data-testid={`button-unlink-contact-${contact.id}`}
+                              className="w-9 h-9 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="!h-[18px] !w-[18px] !stroke-[1.5px]" />
+                            </Button>
+                          </PermissionGate>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Details</CardTitle>
@@ -787,101 +843,6 @@ export default function VendorDetail() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2 pt-4 pb-4">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-base font-bold pt-2">
-                  Contacts{" "}
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {localLinkedContacts.length}
-                  </span>
-                </CardTitle>
-              </div>
-              <PermissionGate permission="vendors.write">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowContactSearch(true)}
-                  disabled={showContactSearch}
-                  data-testid="button-link-contact"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Add
-                </Button>
-              </PermissionGate>
-            </CardHeader>
-            <CardContent>
-              {isLoadingContacts ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {showContactSearch && (
-                    <VendorContactLinkSearch
-                      vendorId={id!}
-                      linkedContacts={localLinkedContacts}
-                      onLink={handleLinkContact}
-                      onUnlink={handleUnlinkContact}
-                      showLinkedContacts={false}
-                      autoFocus
-                      onClose={() => setShowContactSearch(false)}
-                    />
-                  )}
-
-                  {localLinkedContacts.length === 0 && !showContactSearch ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>No contacts linked yet</p>
-                      <p className="text-sm">
-                        Click "Add" to link contacts to this vendor.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {localLinkedContacts.map((contact) => (
-                        <div
-                          key={contact.id}
-                          className="flex items-center justify-between p-3 pl-4 rounded-lg bg-background/50 dark:bg-foreground/[4%]"
-                          data-testid={`contact-item-${contact.id}`}
-                        >
-                          <div>
-                            <div className="flex flex-col">
-                              <Link href={`/contacts/${contact.id}`}>
-                                <span className="font-medium text-primary hover:underline cursor-pointer">
-                                  {[contact.firstName, contact.lastName]
-                                    .filter(Boolean)
-                                    .join(" ")}
-                                </span>
-                              </Link>
-
-                              {contact.jobTitle && (
-                                <span className="text-sm text-muted-foreground">
-                                  {contact.jobTitle}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <PermissionGate permission="vendors.write">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleUnlinkContact(contact.id)}
-                              data-testid={`button-unlink-contact-${contact.id}`}
-                              className="w-9 h-9 text-muted-foreground hover:text-destructive"
-                            >
-                              <Trash2 className="!h-[18px] !w-[18px] !stroke-[1.5px]" />
-                            </Button>
-                          </PermissionGate>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
         </div>
       </PageLayout>
