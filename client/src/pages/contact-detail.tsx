@@ -294,7 +294,7 @@ export default function ContactDetail() {
 
             {showClientSearch && (
               <FieldRow
-                label={localLinkedClients.length === 0 ? "Company" : ""}
+                label={localLinkedClients.length === 0 ? "Client" : ""}
                 testId="field-client-search"
               >
                 <ClientLinkSearch
