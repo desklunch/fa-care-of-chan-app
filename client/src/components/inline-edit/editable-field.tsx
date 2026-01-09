@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -134,9 +135,25 @@ export function EditableField({
 
   useEffect(() => {
     if (isEditing && isMobile) {
-      document.body.style.overflow = "hidden";
+      const scrollY = window.scrollY;
+      const html = document.documentElement;
+      const body = document.body;
+      
+      html.style.overflow = "hidden";
+      body.style.overflow = "hidden";
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      
       return () => {
-        document.body.style.overflow = "";
+        html.style.overflow = "";
+        body.style.overflow = "";
+        body.style.position = "";
+        body.style.top = "";
+        body.style.left = "";
+        body.style.right = "";
+        window.scrollTo(0, scrollY);
       };
     }
   }, [isEditing, isMobile]);
@@ -476,13 +493,14 @@ export function EditableField({
 
   const renderEditor = () => {
     if (isMobile) {
-      return (
+      const mobileOverlay = (
         <div 
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm touch-none overscroll-none"
           style={{ height: viewportHeight }}
+          onTouchMove={(e) => e.preventDefault()}
         >
           <div 
-            className="absolute top-4 bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg flex flex-col gap-4 p-4"
+            className="absolute top-4 bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg flex flex-col gap-4 p-4 touch-auto overscroll-contain"
             data-testid={`mobile-editor-${field}`}
           >
             <div className="text-sm font-semibold shrink-0">{label}</div>
@@ -493,6 +511,7 @@ export function EditableField({
           </div>
         </div>
       );
+      return createPortal(mobileOverlay, document.body);
     }
 
     return (
