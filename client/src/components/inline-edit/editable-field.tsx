@@ -11,7 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Loader2, Pencil, Check, X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -40,14 +44,22 @@ export function EditableField({
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
-  const [selectedMulti, setSelectedMulti] = useState<string[]>(multiSelectValues);
+  const [selectedMulti, setSelectedMulti] =
+    useState<string[]>(multiSelectValues);
   const [editArray, setEditArray] = useState<string[]>(arrayValue);
   const [editBoolean, setEditBoolean] = useState(booleanValue);
   const [dateOpen, setDateOpen] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
+  const [heightView, setHeightView] = useState(window.visualViewport?.height ?? window.innerHeight)
 
+  useEffect(() => {
+    const handleResize = () => setHeightView(window.visualViewport?.height ?? window.innerHeight)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+  
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -76,41 +88,47 @@ export function EditableField({
     }
   }, [error]);
 
-  const validateLocally = useCallback((val: unknown): string | null => {
-    if (!validation) return null;
-    
-    if (validation.required && (val === null || val === undefined || val === "")) {
-      return "This field is required";
-    }
-    
-    if (typeof val === "string") {
-      if (validation.minLength && val.length < validation.minLength) {
-        return `Must be at least ${validation.minLength} characters`;
+  const validateLocally = useCallback(
+    (val: unknown): string | null => {
+      if (!validation) return null;
+
+      if (
+        validation.required &&
+        (val === null || val === undefined || val === "")
+      ) {
+        return "This field is required";
       }
-      if (validation.maxLength && val.length > validation.maxLength) {
-        return `Must be no more than ${validation.maxLength} characters`;
+
+      if (typeof val === "string") {
+        if (validation.minLength && val.length < validation.minLength) {
+          return `Must be at least ${validation.minLength} characters`;
+        }
+        if (validation.maxLength && val.length > validation.maxLength) {
+          return `Must be no more than ${validation.maxLength} characters`;
+        }
+        if (validation.pattern && !validation.pattern.test(val)) {
+          return "Invalid format";
+        }
       }
-      if (validation.pattern && !validation.pattern.test(val)) {
-        return "Invalid format";
+
+      if (validation.customValidator) {
+        return validation.customValidator(val);
       }
-    }
-    
-    if (validation.customValidator) {
-      return validation.customValidator(val);
-    }
-    
-    return null;
-  }, [validation]);
+
+      return null;
+    },
+    [validation],
+  );
 
   const handleSave = () => {
     let saveValue: unknown;
-    
+
     switch (type) {
       case "multiselect":
         saveValue = selectedMulti;
         break;
       case "array":
-        saveValue = editArray.filter(v => v.trim() !== "");
+        saveValue = editArray.filter((v) => v.trim() !== "");
         break;
       case "switch":
         saveValue = editBoolean;
@@ -121,13 +139,13 @@ export function EditableField({
       default:
         saveValue = editValue || null;
     }
-    
+
     const validationError = validateLocally(saveValue);
     if (validationError) {
       setLocalError(validationError);
       return;
     }
-    
+
     setLocalError(null);
     onSave(field, saveValue);
     setIsEditing(false);
@@ -160,8 +178,8 @@ export function EditableField({
   };
 
   const toggleMultiSelect = (val: string) => {
-    setSelectedMulti(prev => 
-      prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
+    setSelectedMulti((prev) =>
+      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val],
     );
   };
 
@@ -169,23 +187,25 @@ export function EditableField({
 
   const renderEditor = () => {
     const errorDisplay = displayError && (
-      <p className="text-sm text-destructive" data-testid={`error-${field}`}>{displayError}</p>
+      <p className="text-sm text-destructive" data-testid={`error-${field}`}>
+        {displayError}
+      </p>
     );
 
     const actionButtons = (
       <div className="flex gap-2 justify-end">
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={handleCancel} 
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleCancel}
           disabled={isLoading}
           data-testid={`button-cancel-${field}`}
         >
           <X className="h-4 w-4" />
         </Button>
-        <Button 
-          size="sm" 
-          onClick={handleSave} 
+        <Button
+          size="sm"
+          onClick={handleSave}
           disabled={isLoading}
           data-testid={`button-save-${field}`}
         >
@@ -212,7 +232,10 @@ export function EditableField({
               onKeyDown={(e) => {
                 if (e.key === "Escape") handleCancel();
               }}
-              className={cn("min-h-[150px] text-base leading-[1.6em]", displayError && "border-destructive")}
+              className={cn(
+                "min-h-[150px] text-base leading-[1.6em]",
+                displayError && "border-destructive",
+              )}
               disabled={isLoading}
               data-testid={`input-${field}`}
             />
@@ -234,15 +257,18 @@ export function EditableField({
               }}
               disabled={isLoading}
             >
-              <SelectTrigger 
-                className={cn("w-full", displayError && "border-destructive")} 
+              <SelectTrigger
+                className={cn("w-full", displayError && "border-destructive")}
                 data-testid={`select-${field}`}
               >
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
               <SelectContent>
                 {options.map((opt) => (
-                  <SelectItem key={opt.value || "__none__"} value={opt.value || "__none__"}>
+                  <SelectItem
+                    key={opt.value || "__none__"}
+                    value={opt.value || "__none__"}
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -264,7 +290,7 @@ export function EditableField({
                   className={cn(
                     "w-full justify-start text-left font-normal",
                     !editValue && "text-muted-foreground",
-                    displayError && "border-destructive"
+                    displayError && "border-destructive",
                   )}
                   disabled={isLoading}
                   data-testid={`datepicker-${field}`}
@@ -303,7 +329,9 @@ export function EditableField({
               {options.map((opt) => (
                 <Badge
                   key={opt.value}
-                  variant={selectedMulti.includes(opt.value) ? "default" : "outline"}
+                  variant={
+                    selectedMulti.includes(opt.value) ? "default" : "outline"
+                  }
                   className="cursor-pointer"
                   onClick={() => {
                     toggleMultiSelect(opt.value);
@@ -399,7 +427,10 @@ export function EditableField({
                 setLocalError(null);
               }}
               onKeyDown={handleKeyDown}
-              className={cn("w-full text-sm", displayError && "border-destructive")}
+              className={cn(
+                "w-full text-sm",
+                displayError && "border-destructive",
+              )}
               disabled={isLoading}
               data-testid={`input-${field}`}
             />
@@ -412,47 +443,54 @@ export function EditableField({
 
   return (
     <div
-      className="group flex py-4 border-b border-border/50 last:border-b-0"
+      className="group  py-4 border-b border-border/50 last:border-b-0"
       data-testid={testId}
       onDoubleClick={handleDoubleClick}
     >
-      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">
-        {isEditing ? (
-          renderEditor()
-        ) : (
-          <div className="flex items-start gap-2 group">
-            <div className="flex-1">
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Saving...</span>
-                </div>
-              ) : displayValue !== undefined ? (
-                displayValue
-              ) : value ? (
-                <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
-              ) : (
-                <span className="text-muted-foreground">{placeholder}</span>
+      {isEditing ? (
+      <div className="absolute top-4 h-[90dvh] left-4 right-4 bg-card p-4 border rounded-lg  flex flex-col gap-2 z-50">
+          <div className="text-xs font-semibold shrink-0">{label}</div>
+          <div className="flex-1 text-sm">{renderEditor()}</div>
+        </div>
+      ) : (
+          <div className="w-full flex">
+          <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
+          <div className="flex-1 text-sm">
+            <div className="flex items-start gap-2 group">
+              <div className="flex-1">
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-muted-foreground">Saving...</span>
+                  </div>
+                ) : displayValue !== undefined ? (
+                  displayValue
+                ) : value ? (
+                  <span className={cn("whitespace-pre-wrap", valueClassName)}>
+                    {value}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">{placeholder}</span>
+                )}
+              </div>
+              {!disabled && !isLoading && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 opacity-20 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  onClick={() => {
+                    setIsEditing(true);
+                    setLocalError(null);
+                  }}
+                  data-testid={`button-edit-${field}`}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
               )}
             </div>
-            {!disabled && !isLoading && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                onClick={() => {
-                  setIsEditing(true);
-                  setLocalError(null);
-                }}
-                data-testid={`button-edit-${field}`}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            )}
           </div>
-        )}
-      </div>
+          </div>
+      )}
     </div>
   );
 }
