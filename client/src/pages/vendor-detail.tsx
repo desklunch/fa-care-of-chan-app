@@ -606,30 +606,73 @@ export default function VendorDetail() {
         ] : undefined}
       >
         <div className="p-4 md:p-6 max-w-4xl space-y-6">
+          <div className="flex items-center gap-3">
+            <PermissionGate permission="vendors.write" fallback={
+              <h1 className="text-2xl font-bold" data-testid="text-vendor-name">
+                {vendor.businessName}
+              </h1>
+            }>
+              <EditableTitle
+                value={vendor.businessName}
+                onSave={(val) => handleFieldSave("businessName", val)}
+                testId="text-vendor-name"
+                disabled={!canEdit}
+              />
+            </PermissionGate>
+            {vendor.isPreferred && (
+              <Badge variant="secondary" data-testid="badge-preferred">
+                Preferred
+              </Badge>
+            )}
+          </div>
+
           <Card>
-            <CardHeader className="pb-0">
-              <div className="flex items-center gap-3">
-                <PermissionGate resource="vendors" action="write" fallback={
-                  <h1 className="text-xl font-semibold" data-testid="text-vendor-name">
-                    {vendor.businessName}
-                  </h1>
-                }>
-                  <EditableTitle
-                    value={vendor.businessName}
-                    onSave={(val) => handleFieldSave("businessName", val)}
-                    testId="text-vendor-name"
-                    disabled={!canEdit}
-                  />
-                </PermissionGate>
-                {vendor.isPreferred && (
-                  <Badge variant="secondary" data-testid="badge-preferred">
-                    Preferred
-                  </Badge>
+            <CardContent className="pt-6">
+              <div className="space-y-0 divide-y divide-border/50">
+                <FieldRow label="Services" testId="row-services">
+                  <PermissionGate permission="vendors.write" fallback={
+                    <div className="flex flex-wrap gap-2">
+                      {vendor.services && vendor.services.length > 0 ? (
+                        vendor.services.map((service) => (
+                          <Badge
+                            key={service.id}
+                            variant="outline"
+                            data-testid={`badge-service-${service.id}`}
+                          >
+                            {service.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground">No services assigned</span>
+                      )}
+                    </div>
+                  }>
+                    <ServicesEditor
+                      vendorServices={vendor.services || []}
+                      allServices={allServices}
+                      onSave={handleServicesSave}
+                      disabled={!canEdit}
+                    />
+                  </PermissionGate>
+                </FieldRow>
+                {vendor.locations && vendor.locations.length > 0 && (
+                  <FieldRow label="Locations" testId="row-locations">
+                    <div className="flex flex-wrap gap-2">
+                      {vendor.locations.map((location, index) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          data-testid={`badge-location-${index}`}
+                        >
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {location.displayName || `${location.city}, ${location.region}, ${location.country}`}
+                        </Badge>
+                      ))}
+                    </div>
+                  </FieldRow>
                 )}
               </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <PermissionGate resource="vendors" action="write" fallback={
+              <PermissionGate permission="vendors.write" fallback={
                 <div className="space-y-0 divide-y divide-border/50">
                   <FieldRow label="Email" testId="row-email">
                     {vendor.email ? (
@@ -747,45 +790,10 @@ export default function VendorDetail() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Services
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PermissionGate resource="vendors" action="write" fallback={
-                <div className="flex flex-wrap gap-2">
-                  {vendor.services && vendor.services.length > 0 ? (
-                    vendor.services.map((service) => (
-                      <Badge
-                        key={service.id}
-                        variant="outline"
-                        data-testid={`badge-service-${service.id}`}
-                      >
-                        {service.name}
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground">No services assigned</span>
-                  )}
-                </div>
-              }>
-                <ServicesEditor
-                  vendorServices={vendor.services || []}
-                  allServices={allServices}
-                  onSave={handleServicesSave}
-                  disabled={!canEdit}
-                />
-              </PermissionGate>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle className="text-lg">Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <PermissionGate resource="vendors" action="write" fallback={
+              <PermissionGate permission="vendors.write" fallback={
                 <div className="space-y-0 divide-y divide-border/50">
                   <FieldRow label="Employee Count" testId="row-employee-count">
                     {vendor.employeeCount || <span className="text-muted-foreground">Not set</span>}
@@ -805,6 +813,13 @@ export default function VendorDetail() {
                   </FieldRow>
                   <FieldRow label="Diversity Information" testId="row-diversity">
                     {vendor.diversityInfo || <span className="text-muted-foreground">Not set</span>}
+                  </FieldRow>
+                  <FieldRow label="Notes" testId="row-notes">
+                    {vendor.notes ? (
+                      <span className="whitespace-pre-wrap">{vendor.notes}</span>
+                    ) : (
+                      <span className="text-muted-foreground">No notes</span>
+                    )}
                   </FieldRow>
                 </div>
               }>
@@ -865,61 +880,20 @@ export default function VendorDetail() {
                     onSave={handleFieldSave}
                     disabled={!canEdit}
                   />
+                  <EditableFieldRow
+                    label="Notes"
+                    value={vendor.notes}
+                    field="notes"
+                    testId="row-notes"
+                    type="textarea"
+                    onSave={handleFieldSave}
+                    disabled={!canEdit}
+                    placeholder="Add notes about this vendor..."
+                  />
                 </div>
               </PermissionGate>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PermissionGate resource="vendors" action="write" fallback={
-                <p className="text-sm whitespace-pre-wrap" data-testid="text-notes">
-                  {vendor.notes || <span className="text-muted-foreground">No notes</span>}
-                </p>
-              }>
-                <EditableFieldRow
-                  label=""
-                  value={vendor.notes}
-                  field="notes"
-                  testId="row-notes"
-                  type="textarea"
-                  onSave={handleFieldSave}
-                  disabled={!canEdit}
-                  placeholder="Add notes about this vendor..."
-                />
-              </PermissionGate>
-            </CardContent>
-          </Card>
-
-          {vendor.locations && vendor.locations.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Locations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {vendor.locations.map((location, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 text-sm p-2 rounded-md bg-accent/30"
-                      data-testid={`location-${index}`}
-                    >
-                      <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span>
-                        {location.displayName || `${location.city}, ${location.region}, ${location.country}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {vendor.contacts && vendor.contacts.length > 0 && (
             <Card>
