@@ -5987,8 +5987,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
       }
       
       const deals = await dealsService.list({ status: statusFilter });
-      // TEMPORARY: Limit to 10 items for mobile debugging
-      res.json(deals.slice(0, 10));
+      res.json(deals);
     } catch (error) {
       handleServiceError(res, error, "Failed to fetch deals");
     }

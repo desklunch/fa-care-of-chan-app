@@ -1122,9 +1122,10 @@ export default function Deals() {
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"
         emptyDescription="Start tracking your sales pipeline by creating a deal."
-        enableRowDrag={true}
-        onRowDragEnd={handleRowDragEnd}
-        onCellValueChanged={handleCellValueChanged}
+        // TEMPORARY: Disabled for mobile debugging
+        // enableRowDrag={true}
+        // onRowDragEnd={handleRowDragEnd}
+        // onCellValueChanged={handleCellValueChanged}
       />
     </PageLayout>
   );
