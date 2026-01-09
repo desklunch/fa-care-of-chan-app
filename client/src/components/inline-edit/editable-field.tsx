@@ -277,7 +277,7 @@ export function EditableField({
               }}
               className={cn(
                 "min-h-[150px] text-base leading-[1.6em] flex-1",
-                isMobile && "min-h-0",
+                isMobile && "min-h-0 input-prevent-scroll-on-focus",
                 displayError && "border-destructive"
               )}
               disabled={isLoading}
@@ -462,7 +462,11 @@ export function EditableField({
                 setLocalError(null);
               }}
               onKeyDown={handleKeyDown}
-              className={cn("w-full text-sm", displayError && "border-destructive")}
+              className={cn(
+                "w-full text-sm",
+                isMobile && "input-prevent-scroll-on-focus",
+                displayError && "border-destructive"
+              )}
               disabled={isLoading}
               data-testid={`input-${field}`}
             />
