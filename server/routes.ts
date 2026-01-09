@@ -482,38 +482,11 @@ export async function registerRoutes(
     }
   });
 
-  // Admin audit logs endpoint
+  // Admin audit logs endpoint - returns 250 most recent logs
   app.get("/api/admin/logs", isAuthenticated, requirePermission("audit.read"), async (req, res) => {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const pageSize = Math.min(parseInt(req.query.pageSize as string) || 50, 100);
-      
-      const filters: {
-        entityType?: string;
-        action?: string;
-        performedBy?: string;
-        startDate?: Date;
-        endDate?: Date;
-      } = {};
-
-      if (req.query.entityType) {
-        filters.entityType = req.query.entityType as string;
-      }
-      if (req.query.action) {
-        filters.action = req.query.action as string;
-      }
-      if (req.query.performedBy) {
-        filters.performedBy = req.query.performedBy as string;
-      }
-      if (req.query.startDate) {
-        filters.startDate = new Date(req.query.startDate as string);
-      }
-      if (req.query.endDate) {
-        filters.endDate = new Date(req.query.endDate as string);
-      }
-
-      const result = await storage.getAuditLogs(page, pageSize, filters);
-      res.json(result);
+      const logs = await storage.getRecentAuditLogs(250);
+      res.json(logs);
     } catch (error) {
       console.error("Error fetching audit logs:", error);
       res.status(500).json({ message: "Failed to fetch audit logs" });

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useLocation } from "wouter";
@@ -13,8 +13,6 @@ import {
   Plus,
   LogIn,
   LogOut,
-  CheckCircle,
-  XCircle,
   Layers,
   Zap,
 } from "lucide-react";
@@ -24,14 +22,6 @@ import type { AuditLog, User as UserType } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
 type AuditLogWithName = AuditLog & { performerName?: string };
-
-interface PaginatedResponse {
-  logs: AuditLogWithName[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
 
 const actionIcons: Record<string, typeof Activity> = {
   create: Plus,
@@ -345,40 +335,13 @@ export default function AdminLogs() {
   usePageTitle("Activity Logs");
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(50);
-  const [filterState, setFilterState] = useState<Record<string, string[]>>({});
-
-  const entityTypeFilter = filterState.entityType?.[0] || undefined;
-  const actionFilter = filterState.action?.[0] || undefined;
-  const userFilter = filterState.user?.[0] || undefined;
-
-  const queryParams = new URLSearchParams();
-  queryParams.set("page", page.toString());
-  queryParams.set("pageSize", pageSize.toString());
-  if (entityTypeFilter) {
-    queryParams.set("entityType", entityTypeFilter);
-  }
-  if (actionFilter) {
-    queryParams.set("action", actionFilter);
-  }
-  if (userFilter) {
-    queryParams.set("performedBy", userFilter);
-  }
-
-  const { data, isLoading, error } = useQuery<PaginatedResponse>({
-    queryKey: ["/api/admin/logs", page, pageSize, entityTypeFilter, actionFilter, userFilter],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/logs?${queryParams.toString()}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch audit logs");
-      }
-      return response.json();
-    },
-  });
 
   const { data: users = [] } = useQuery<UserType[]>({
     queryKey: ["/api/users"],
+  });
+
+  const { error } = useQuery<AuditLogWithName[]>({
+    queryKey: ["/api/admin/logs"],
   });
 
   useEffect(() => {
@@ -423,14 +386,6 @@ export default function AdminLogs() {
     },
   ], [users]);
 
-  const handleFilterChange = (filterId: string, values: string[]) => {
-    setFilterState((prev) => ({
-      ...prev,
-      [filterId]: values,
-    }));
-    setPage(1);
-  };
-
   const searchInChanges = (item: AuditLogWithName): string => {
     if (!item.changes) return "";
     return JSON.stringify(item.changes);
@@ -455,28 +410,17 @@ export default function AdminLogs() {
         { label: "Audit Logs" },
       ]}
     >
-      <DataGridPage
+      <DataGridPage<AuditLogWithName>
         queryKey="/api/admin/logs"
         columns={auditLogColumns}
         defaultVisibleColumns={defaultVisibleColumns}
-        externalData={data?.logs || []}
-        externalLoading={isLoading}
         emptyMessage="No audit logs found"
         emptyDescription="Activity will appear here as users interact with the system"
         getRowId={(log) => log.id}
         filters={filters}
-        collapsibleFilters={false}
-        filterState={filterState}
-        onFilterChange={handleFilterChange}
+        collapsibleFilters={true}
         searchFields={["entityId", searchInChanges]}
         searchPlaceholder="Search entity ID or changes..."
-        pagination={data ? {
-          page: data.page,
-          pageSize: data.pageSize,
-          total: data.total,
-          totalPages: data.totalPages,
-          onPageChange: setPage,
-        } : undefined}
       />
     </PageLayout>
   );

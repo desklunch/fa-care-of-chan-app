@@ -176,21 +176,7 @@ import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-
 import { alias } from "drizzle-orm/pg-core";
 import { randomBytes } from "crypto";
 
-export interface AuditLogFilters {
-  entityType?: string;
-  action?: string;
-  performedBy?: string;
-  startDate?: Date;
-  endDate?: Date;
-}
-
-export interface PaginatedAuditLogs {
-  logs: (AuditLog & { performerName?: string })[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+export type AuditLogWithName = AuditLog & { performerName?: string };
 
 export interface IStorage {
   // User operations
@@ -212,11 +198,7 @@ export interface IStorage {
   
   // Audit log operations
   createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
-  getAuditLogs(
-    page: number,
-    pageSize: number,
-    filters?: AuditLogFilters
-  ): Promise<PaginatedAuditLogs>;
+  getRecentAuditLogs(limit?: number): Promise<AuditLogWithName[]>;
   
   // Stats
   getStats(): Promise<{
@@ -661,43 +643,7 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  async getAuditLogs(
-    page: number = 1,
-    pageSize: number = 50,
-    filters?: AuditLogFilters
-  ): Promise<PaginatedAuditLogs> {
-    const offset = (page - 1) * pageSize;
-    
-    // Build filter conditions
-    const conditions: any[] = [];
-    
-    if (filters?.entityType) {
-      conditions.push(eq(auditLogs.entityType, filters.entityType));
-    }
-    if (filters?.action) {
-      conditions.push(eq(auditLogs.action, filters.action));
-    }
-    if (filters?.performedBy) {
-      conditions.push(eq(auditLogs.performedBy, filters.performedBy));
-    }
-    if (filters?.startDate) {
-      conditions.push(gte(auditLogs.performedAt, filters.startDate));
-    }
-    if (filters?.endDate) {
-      conditions.push(lte(auditLogs.performedAt, filters.endDate));
-    }
-    
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-    
-    // Get total count
-    const [countResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(auditLogs)
-      .where(whereClause);
-    
-    const total = Number(countResult?.count) || 0;
-    
-    // Get paginated logs with performer info
+  async getRecentAuditLogs(limit: number = 250): Promise<AuditLogWithName[]> {
     const logs = await db
       .select({
         id: auditLogs.id,
@@ -717,13 +663,10 @@ export class DatabaseStorage implements IStorage {
       })
       .from(auditLogs)
       .leftJoin(users, eq(auditLogs.performedBy, users.id))
-      .where(whereClause)
       .orderBy(desc(auditLogs.performedAt))
-      .limit(pageSize)
-      .offset(offset);
+      .limit(limit);
     
-    // Transform to include performerName
-    const logsWithNames = logs.map((log) => ({
+    return logs.map((log) => ({
       id: log.id,
       action: log.action,
       entityType: log.entityType,
@@ -739,14 +682,6 @@ export class DatabaseStorage implements IStorage {
         .filter(Boolean)
         .join(" ") || log.performerEmail || "System",
     }));
-    
-    return {
-      logs: logsWithNames,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    };
   }
 
   // Feature category operations
