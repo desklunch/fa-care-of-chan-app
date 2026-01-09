@@ -410,13 +410,13 @@ export default function AdminLogs() {
         { label: "Audit Logs" },
       ]}
     >
-      <DataGridPage<AuditLogWithName>
+      <DataGridPage
         queryKey="/api/admin/logs"
         columns={auditLogColumns}
         defaultVisibleColumns={defaultVisibleColumns}
         emptyMessage="No audit logs found"
         emptyDescription="Activity will appear here as users interact with the system"
-        getRowId={(log) => log.id}
+        getRowId={(log: AuditLogWithName) => log.id}
         filters={filters}
         collapsibleFilters={true}
         searchFields={["entityId", searchInChanges]}

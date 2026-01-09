@@ -458,14 +458,14 @@ export default function Brands() {
         icon: CircleFadingPlus,
       }}
     >
-      <DataGridPage<Brand, BrandActionsContext>
+      <DataGridPage
         queryKey="/api/brands"
         columns={brandColumns}
         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
         searchFields={["name", "industry", "notes"]}
         searchPlaceholder="Search brands..."
         filters={brandFilters}
-        getRowId={(brand) => brand.id}
+        getRowId={(brand: Brand) => brand.id}
         emptyMessage="No brands found"
         emptyDescription="Start building your brand directory by adding a brand."
         context={gridContext}
