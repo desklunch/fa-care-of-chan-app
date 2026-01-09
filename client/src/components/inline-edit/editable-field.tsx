@@ -17,7 +17,9 @@ import { Loader2, Pencil, Check, X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { parseDateOnly } from "@/lib/date";
 import { cn } from "@/lib/utils";
-import type { EditableFieldProps, FieldValidation } from "./types";
+import type { EditableFieldProps } from "./types";
+
+const MOBILE_BREAKPOINT = 768;
 
 export function EditableField({
   label,
@@ -47,6 +49,34 @@ export function EditableField({
   const [localError, setLocalError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
+  
+  const [isMobile, setIsMobile] = useState(() => 
+    typeof window !== "undefined" ? window.innerWidth < MOBILE_BREAKPOINT : false
+  );
+  const [viewportHeight, setViewportHeight] = useState(() => 
+    typeof window !== "undefined" 
+      ? (window.visualViewport?.height ?? window.innerHeight) 
+      : 800
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+    };
+
+    const handleViewportResize = () => {
+      setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("resize", handleViewportResize);
+    
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleViewportResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -75,6 +105,15 @@ export function EditableField({
       setLocalError(error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (isEditing && isMobile) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [isEditing, isMobile]);
 
   const validateLocally = useCallback((val: unknown): string | null => {
     if (!validation) return null;
@@ -167,41 +206,41 @@ export function EditableField({
 
   const displayError = localError || error;
 
-  const renderEditor = () => {
-    const errorDisplay = displayError && (
-      <p className="text-sm text-destructive" data-testid={`error-${field}`}>{displayError}</p>
-    );
+  const errorDisplay = displayError && (
+    <p className="text-sm text-destructive" data-testid={`error-${field}`}>{displayError}</p>
+  );
 
-    const actionButtons = (
-      <div className="flex gap-2 justify-end">
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={handleCancel} 
-          disabled={isLoading}
-          data-testid={`button-cancel-${field}`}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        <Button 
-          size="sm" 
-          onClick={handleSave} 
-          disabled={isLoading}
-          data-testid={`button-save-${field}`}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Check className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-    );
+  const actionButtons = (
+    <div className="flex gap-2 justify-end">
+      <Button 
+        size="sm" 
+        variant="ghost" 
+        onClick={handleCancel} 
+        disabled={isLoading}
+        data-testid={`button-cancel-${field}`}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <Button 
+        size="sm" 
+        onClick={handleSave} 
+        disabled={isLoading}
+        data-testid={`button-save-${field}`}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Check className="h-4 w-4" />
+        )}
+      </Button>
+    </div>
+  );
 
+  const renderEditorContent = () => {
     switch (type) {
       case "textarea":
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <>
             <Textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
               value={editValue}
@@ -212,19 +251,22 @@ export function EditableField({
               onKeyDown={(e) => {
                 if (e.key === "Escape") handleCancel();
               }}
-              className={cn("min-h-[150px] text-base leading-[1.6em]", displayError && "border-destructive")}
+              className={cn(
+                "min-h-[150px] text-base leading-[1.6em] flex-1",
+                isMobile && "min-h-0",
+                displayError && "border-destructive"
+              )}
               disabled={isLoading}
               data-testid={`input-${field}`}
             />
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
 
       case "select":
         const selectValue = editValue || "__none__";
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <>
             <Select
               value={selectValue}
               onValueChange={(val) => {
@@ -249,14 +291,13 @@ export function EditableField({
               </SelectContent>
             </Select>
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
 
       case "date":
         const parsedDate = editValue ? parseDateOnly(editValue) : null;
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <>
             <Popover open={dateOpen} onOpenChange={setDateOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -292,13 +333,12 @@ export function EditableField({
               </PopoverContent>
             </Popover>
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
 
       case "multiselect":
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <>
             <div className="flex flex-wrap gap-2">
               {options.map((opt) => (
                 <Badge
@@ -316,61 +356,61 @@ export function EditableField({
               ))}
             </div>
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
 
       case "array":
         return (
-          <div className="flex flex-col gap-2 w-full">
-            {editArray.map((item, index) => (
-              <div key={index} className="flex gap-2">
-                <Input
-                  value={item}
-                  onChange={(e) => {
-                    const newArray = [...editArray];
-                    newArray[index] = e.target.value;
-                    setEditArray(newArray);
-                    setLocalError(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") handleCancel();
-                  }}
-                  className="flex-1"
-                  disabled={isLoading}
-                  data-testid={`input-${field}-${index}`}
-                  autoFocus={index === 0}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => {
-                    setEditArray(editArray.filter((_, i) => i !== index));
-                  }}
-                  disabled={isLoading}
-                  data-testid={`button-remove-${field}-${index}`}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditArray([...editArray, ""])}
-              disabled={isLoading}
-              data-testid={`button-add-${field}`}
-            >
-              Add
-            </Button>
+          <>
+            <div className="flex flex-col gap-2 flex-1 overflow-auto">
+              {editArray.map((item, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={item}
+                    onChange={(e) => {
+                      const newArray = [...editArray];
+                      newArray[index] = e.target.value;
+                      setEditArray(newArray);
+                      setLocalError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") handleCancel();
+                    }}
+                    className="flex-1"
+                    disabled={isLoading}
+                    data-testid={`input-${field}-${index}`}
+                    autoFocus={index === 0}
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditArray(editArray.filter((_, i) => i !== index));
+                    }}
+                    disabled={isLoading}
+                    data-testid={`button-remove-${field}-${index}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditArray([...editArray, ""])}
+                disabled={isLoading}
+                data-testid={`button-add-${field}`}
+              >
+                Add
+              </Button>
+            </div>
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
 
       case "switch":
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <>
             <div className="flex items-center gap-3">
               <Switch
                 checked={editBoolean}
@@ -384,13 +424,12 @@ export function EditableField({
               <span className="text-sm">{editBoolean ? "Yes" : "No"}</span>
             </div>
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
 
       default:
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <>
             <Input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               value={editValue}
@@ -404,10 +443,38 @@ export function EditableField({
               data-testid={`input-${field}`}
             />
             {errorDisplay}
-            {actionButtons}
-          </div>
+          </>
         );
     }
+  };
+
+  const renderEditor = () => {
+    if (isMobile) {
+      return (
+        <div 
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+          style={{ height: viewportHeight }}
+        >
+          <div 
+            className="absolute top-4 bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg flex flex-col gap-4 p-4"
+            data-testid={`mobile-editor-${field}`}
+          >
+            <div className="text-sm font-semibold shrink-0">{label}</div>
+            <div className="flex-1 flex flex-col gap-2 overflow-auto">
+              {renderEditorContent()}
+            </div>
+            {actionButtons}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-2 w-full">
+        {renderEditorContent()}
+        {actionButtons}
+      </div>
+    );
   };
 
   return (
