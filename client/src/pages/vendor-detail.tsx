@@ -17,6 +17,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft,
   Building2,
   MapPin,
@@ -28,6 +38,8 @@ import {
   Loader2,
   Pencil,
   X,
+  PenBox,
+  Trash2,
 } from "lucide-react";
 import type { VendorWithRelations, VendorService } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
@@ -456,6 +468,7 @@ export default function VendorDetail() {
   const canEdit = user?.role === "admin" || user?.role === "manager";
   
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -511,6 +524,24 @@ export default function VendorDetail() {
       toast({
         title: "Error",
         description: "Failed to generate update link",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/vendors/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      toast({ title: "Vendor deleted" });
+      setLocation("/vendors");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete vendor",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -599,9 +630,20 @@ export default function VendorDetail() {
         ]}
         additionalActions={canEdit ? [
           {
+            label: "Edit Vendor",
+            icon: PenBox,
+            onClick: () => setLocation(`/vendors/${id}/edit`),
+          },
+          {
             label: "Generate Update Link",
             icon: LinkIcon,
             onClick: () => generateLinkMutation.mutate(),
+          },
+          {
+            label: "Delete Vendor",
+            icon: Trash2,
+            onClick: () => setShowDeleteDialog(true),
+            variant: "destructive" as const,
           },
         ] : undefined}
       >
@@ -985,6 +1027,32 @@ export default function VendorDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{vendor.businessName}"? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
