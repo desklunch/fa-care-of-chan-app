@@ -1,7 +1,7 @@
 import { themeQuartz, iconSetAlpine, iconSetMaterial } from "ag-grid-community";
 
 export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
-  browserColorScheme: "dark",
+  browserColorScheme: "inherit",
   spacing: 12,
   foregroundColor: "hsl(var(--foreground))",
   backgroundColor: "hsl(var(--background))",
