@@ -26,10 +26,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
-import type { Contact, Client, DealWithRelations, DealStatus } from "@shared/schema";
+import type { Contact, Client, Vendor, DealWithRelations, DealStatus } from "@shared/schema";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { ClientLinkSearch } from "@/components/client-link-search";
+import { ClientLinkSearch, VendorLinkSearch } from "@/components/client-link-search";
 import { PermissionGate } from "@/components/permission-gate";
 import {
   EditableField,
@@ -76,6 +76,7 @@ export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [showClientSearch, setShowClientSearch] = useState(false);
+  const [showVendorSearch, setShowVendorSearch] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
@@ -93,16 +94,26 @@ export default function ContactDetail() {
     enabled: !!id,
   });
 
+  const { data: linkedVendors = [] } = useQuery<Vendor[]>({
+    queryKey: ["/api/contacts", id, "vendors"],
+    enabled: !!id,
+  });
+
   const { data: deals = [], isLoading: isLoadingDeals } = useQuery<DealWithRelations[]>({
     queryKey: ["/api/contacts", id, "deals"],
     enabled: !!id,
   });
 
   const [localLinkedClients, setLocalLinkedClients] = useState<Client[]>([]);
+  const [localLinkedVendors, setLocalLinkedVendors] = useState<Vendor[]>([]);
 
   useEffect(() => {
     setLocalLinkedClients(linkedClients);
   }, [linkedClients]);
+
+  useEffect(() => {
+    setLocalLinkedVendors(linkedVendors);
+  }, [linkedVendors]);
 
   const {
     saveField,
@@ -124,6 +135,15 @@ export default function ContactDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "clients"] });
+    },
+  });
+
+  const unlinkVendorMutation = useMutation({
+    mutationFn: async (vendorId: string) => {
+      await apiRequest("DELETE", `/api/contacts/${id}/vendors/${vendorId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "vendors"] });
     },
   });
 
@@ -160,6 +180,16 @@ export default function ContactDetail() {
   const handleUnlinkClient = (clientId: string) => {
     setLocalLinkedClients((prev) => prev.filter((c) => c.id !== clientId));
     unlinkClientMutation.mutate(clientId);
+  };
+
+  const handleLinkVendor = (vendor: Vendor) => {
+    setLocalLinkedVendors((prev) => [...prev, vendor]);
+    setShowVendorSearch(false);
+  };
+
+  const handleUnlinkVendor = (vendorId: string) => {
+    setLocalLinkedVendors((prev) => prev.filter((v) => v.id !== vendorId));
+    unlinkVendorMutation.mutate(vendorId);
   };
 
   usePageTitle(
@@ -305,6 +335,65 @@ export default function ContactDetail() {
                   showLinkedClients={false}
                   autoFocus
                   onClose={() => setShowClientSearch(false)}
+                />
+              </FieldRow>
+            )}
+
+            {localLinkedVendors.length > 0 ? (
+              localLinkedVendors.map((vendor, index) => (
+                <FieldRow
+                  key={vendor.id}
+                  label={index === 0 ? "Vendor" : ""}
+                  testId={`field-linked-vendor-${vendor.id}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Link
+                      href={`/vendors/${vendor.id}`}
+                      className="text-primary font-medium hover:underline"
+                      data-testid={`link-vendor-${vendor.id}`}
+                    >
+                      {vendor.businessName}
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleUnlinkVendor(vendor.id)}
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      data-testid={`button-unlink-vendor-${vendor.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </FieldRow>
+              ))
+            ) : !showVendorSearch ? (
+              <FieldRow label="Vendor" testId="field-linked-vendor-empty">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowVendorSearch(true)}
+                  className="h-auto px-2 text-muted-foreground hover:text-primary"
+                  data-testid="button-link-vendor-inline"
+                >
+                  <Handshake className="h-4 w-4" />
+                  Add Vendor
+                </Button>
+              </FieldRow>
+            ) : null}
+
+            {showVendorSearch && (
+              <FieldRow
+                label={localLinkedVendors.length === 0 ? "Vendor" : ""}
+                testId="field-vendor-search"
+              >
+                <VendorLinkSearch
+                  contactId={id!}
+                  linkedVendors={localLinkedVendors}
+                  onLink={handleLinkVendor}
+                  onUnlink={handleUnlinkVendor}
+                  showLinkedVendors={false}
+                  autoFocus
+                  onClose={() => setShowVendorSearch(false)}
                 />
               </FieldRow>
             )}

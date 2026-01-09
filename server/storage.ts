@@ -487,6 +487,7 @@ export interface IStorage {
   
   // Vendor-Contact link operations
   getContactsForVendor(vendorId: string): Promise<Contact[]>;
+  getVendorsForContact(contactId: string): Promise<Vendor[]>;
   linkVendorContact(vendorId: string, contactId: string): Promise<void>;
   unlinkVendorContact(vendorId: string, contactId: string): Promise<void>;
   
@@ -4119,6 +4120,16 @@ export class DatabaseStorage implements IStorage {
       .where(eq(vendorsContacts.vendorId, vendorId))
       .orderBy(asc(contacts.lastName), asc(contacts.firstName));
     return result.map(r => r.contact);
+  }
+
+  async getVendorsForContact(contactId: string): Promise<Vendor[]> {
+    const result = await db
+      .select({ vendor: vendors })
+      .from(vendorsContacts)
+      .innerJoin(vendors, eq(vendorsContacts.vendorId, vendors.id))
+      .where(eq(vendorsContacts.contactId, contactId))
+      .orderBy(asc(vendors.businessName));
+    return result.map(r => r.vendor);
   }
 
   async linkVendorContact(vendorId: string, contactId: string): Promise<void> {

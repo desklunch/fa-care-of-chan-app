@@ -6480,6 +6480,68 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     }
   });
 
+  // GET /api/contacts/:id/vendors - Get vendors linked to a contact
+  app.get("/api/contacts/:id/vendors", isAuthenticated, async (req, res) => {
+    try {
+      const contact = await storage.getContactById(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      const vendors = await storage.getVendorsForContact(req.params.id);
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching contact vendors:", error);
+      res.status(500).json({ message: "Failed to fetch contact vendors" });
+    }
+  });
+
+  // POST /api/contacts/:id/vendors/:vendorId - Link a vendor to a contact
+  app.post("/api/contacts/:id/vendors/:vendorId", isAuthenticated, async (req: any, res) => {
+    try {
+      const contact = await storage.getContactById(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      const vendor = await storage.getVendorById(req.params.vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      await storage.linkVendorContact(req.params.vendorId, req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "link",
+        entityType: "vendor_contact",
+        entityId: req.params.id,
+        metadata: { contactId: req.params.id, vendorId: req.params.vendorId, vendorName: vendor.businessName },
+      });
+      
+      res.status(201).json({ message: "Vendor linked to contact" });
+    } catch (error) {
+      console.error("Error linking vendor to contact:", error);
+      res.status(500).json({ message: "Failed to link vendor to contact" });
+    }
+  });
+
+  // DELETE /api/contacts/:id/vendors/:vendorId - Unlink a vendor from a contact
+  app.delete("/api/contacts/:id/vendors/:vendorId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.unlinkVendorContact(req.params.vendorId, req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "unlink",
+        entityType: "vendor_contact",
+        entityId: req.params.id,
+        metadata: { contactId: req.params.id, vendorId: req.params.vendorId },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unlinking vendor from contact:", error);
+      res.status(500).json({ message: "Failed to unlink vendor from contact" });
+    }
+  });
+
   // ==========================================
   // BRANDS
   // ==========================================
