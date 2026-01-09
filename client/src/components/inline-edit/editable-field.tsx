@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -135,25 +134,9 @@ export function EditableField({
 
   useEffect(() => {
     if (isEditing && isMobile) {
-      const scrollY = window.scrollY;
-      const html = document.documentElement;
-      const body = document.body;
-      
-      html.style.overflow = "hidden";
-      body.style.overflow = "hidden";
-      body.style.position = "fixed";
-      body.style.top = `-${scrollY}px`;
-      body.style.left = "0";
-      body.style.right = "0";
-      
+      document.body.style.overflow = "hidden";
       return () => {
-        html.style.overflow = "";
-        body.style.overflow = "";
-        body.style.position = "";
-        body.style.top = "";
-        body.style.left = "";
-        body.style.right = "";
-        window.scrollTo(0, scrollY);
+        document.body.style.overflow = "";
       };
     }
   }, [isEditing, isMobile]);
@@ -493,14 +476,13 @@ export function EditableField({
 
   const renderEditor = () => {
     if (isMobile) {
-      const mobileOverlay = (
+      return (
         <div 
-          className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm touch-none overscroll-none"
-          style={{ height: viewportHeight-50 }}
-          onTouchMove={(e) => e.preventDefault()}
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+          style={{ height: viewportHeight }}
         >
           <div 
-            className="absolute top-4 bottom-4 left-4 right-4 rounded-lg border shadow-lg flex flex-col gap-4 p-4 touch-auto overscroll-contain"
+            className="absolute top-4 bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg flex flex-col gap-4 p-4"
             data-testid={`mobile-editor-${field}`}
           >
             <div className="text-sm font-semibold shrink-0">{label}</div>
@@ -511,7 +493,6 @@ export function EditableField({
           </div>
         </div>
       );
-      return createPortal(mobileOverlay, document.body);
     }
 
     return (
