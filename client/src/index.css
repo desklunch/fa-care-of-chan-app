@@ -417,4 +417,9 @@
     color: hsl(var(--muted-foreground));
     border: 1px solid hsl(88var(--border));
   }
+
+  /* Safe area padding for iOS Safari floating toolbar */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
 }

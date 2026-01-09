@@ -14,7 +14,7 @@ function AppShellContent({ children }: AppShellProps) {
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
 
   return (
-    <div className="flex flex-col bg-muted overflow-hidden overscroll-contain w-screen h-screen">
+    <div className="flex flex-col bg-muted overflow-hidden overscroll-contain w-screen h-dvh">
       <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
       <div className="flex flex-1 bg-background rounded-none md:rounded-xl ring ring-[1.5px] ring-black/5 shadow-lg overflow-hidden overscroll-contain md:m-3 shadow-4xl">
         <Sidebar
@@ -30,7 +30,7 @@ function AppShellContent({ children }: AppShellProps) {
             primaryAction={headerState.primaryAction}
             additionalActions={headerState.additionalActions}
           />
-          <main className="flex-1 overflow-auto overscroll-contain">{children}</main>
+          <main className="flex-1 overflow-auto overscroll-contain pb-safe">{children}</main>
         </div>
       </div>
     </div>
