@@ -496,11 +496,11 @@ export function EditableField({
       const mobileOverlay = (
         <div 
           className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm touch-none overscroll-none"
-          style={{ height: viewportHeight }}
+          style={{ height: viewportHeight-50 }}
           onTouchMove={(e) => e.preventDefault()}
         >
           <div 
-            className="absolute top-4 bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg flex flex-col gap-4 p-4 touch-auto overscroll-contain"
+            className="absolute top-4 bottom-4 left-4 right-4 rounded-lg border shadow-lg flex flex-col gap-4 p-4 touch-auto overscroll-contain"
             data-testid={`mobile-editor-${field}`}
           >
             <div className="text-sm font-semibold shrink-0">{label}</div>
