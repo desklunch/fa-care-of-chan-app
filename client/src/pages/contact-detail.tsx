@@ -254,7 +254,7 @@ export default function ContactDetail() {
               localLinkedClients.map((client, index) => (
                 <FieldRow
                   key={client.id}
-                  label={index === 0 ? "Company" : ""}
+                  label={index === 0 ? "Client" : ""}
                   testId={`field-linked-client-${client.id}`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -278,16 +278,16 @@ export default function ContactDetail() {
                 </FieldRow>
               ))
             ) : !showClientSearch ? (
-              <FieldRow label="Company" testId="field-linked-client-empty">
+              <FieldRow label="Client" testId="field-linked-client-empty">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowClientSearch(true)}
-                  className="h-auto p-0 text-muted-foreground hover:text-primary"
+                  className="h-auto px-2 text-muted-foreground hover:text-primary"
                   data-testid="button-link-client-inline"
                 >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Company
+                  <UserPlus className="h-4 w-4" />
+                  Add Client Company
                 </Button>
               </FieldRow>
             ) : null}
@@ -466,11 +466,10 @@ export default function ContactDetail() {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : deals.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Handshake className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No deals yet</p>
+                <div className="text-center py-4 text-muted-foreground">
+
                   <p className="text-sm">
-                    This contact is not assigned as the primary contact on any deals.
+                    {fullName} is not assigned as the primary contact on any deals.
                   </p>
                 </div>
               ) : (

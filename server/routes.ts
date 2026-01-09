@@ -2515,6 +2515,72 @@ export async function registerRoutes(
     }
   });
 
+  // ==========================================
+  // VENDOR-CONTACT LINKING
+  // ==========================================
+
+  // GET /api/vendors/:id/contacts - Get contacts linked to a vendor
+  app.get("/api/vendors/:id/contacts", isAuthenticated, async (req, res) => {
+    try {
+      const vendor = await storage.getVendorById(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      const contacts = await storage.getContactsForVendor(req.params.id);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching vendor contacts:", error);
+      res.status(500).json({ message: "Failed to fetch vendor contacts" });
+    }
+  });
+
+  // POST /api/vendors/:id/contacts/:contactId - Link a contact to a vendor
+  app.post("/api/vendors/:id/contacts/:contactId", isAuthenticated, requirePermission("vendors.write"), async (req: any, res) => {
+    try {
+      const vendor = await storage.getVendorById(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      const contact = await storage.getContactById(req.params.contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      await storage.linkVendorContact(req.params.id, req.params.contactId);
+      
+      await logAuditEvent(req, {
+        action: "link",
+        entityType: "vendor",
+        entityId: req.params.id,
+        metadata: { vendorId: req.params.id, contactId: req.params.contactId, contactName: `${contact.firstName} ${contact.lastName}` },
+      });
+      
+      res.status(201).json({ message: "Contact linked to vendor" });
+    } catch (error) {
+      console.error("Error linking contact to vendor:", error);
+      res.status(500).json({ message: "Failed to link contact to vendor" });
+    }
+  });
+
+  // DELETE /api/vendors/:id/contacts/:contactId - Unlink a contact from a vendor
+  app.delete("/api/vendors/:id/contacts/:contactId", isAuthenticated, requirePermission("vendors.write"), async (req: any, res) => {
+    try {
+      await storage.unlinkVendorContact(req.params.id, req.params.contactId);
+      
+      await logAuditEvent(req, {
+        action: "unlink",
+        entityType: "vendor",
+        entityId: req.params.id,
+        metadata: { vendorId: req.params.id, contactId: req.params.contactId },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unlinking contact from vendor:", error);
+      res.status(500).json({ message: "Failed to unlink contact from vendor" });
+    }
+  });
+
   // Generate vendor update link (admin only)
   app.post("/api/vendors/:id/generate-update-link", isAuthenticated, requirePermission("vendor_tokens.manage"), async (req: any, res) => {
     try {

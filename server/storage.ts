@@ -481,6 +481,11 @@ export interface IStorage {
   linkClientContact(clientId: string, contactId: string): Promise<void>;
   unlinkClientContact(clientId: string, contactId: string): Promise<void>;
   
+  // Vendor-Contact link operations
+  getContactsForVendor(vendorId: string): Promise<Contact[]>;
+  linkVendorContact(vendorId: string, contactId: string): Promise<void>;
+  unlinkVendorContact(vendorId: string, contactId: string): Promise<void>;
+  
   // Brand operations
   getBrands(): Promise<Brand[]>;
   getBrandById(id: string): Promise<Brand | undefined>;
@@ -4141,6 +4146,35 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(clientContacts.clientId, clientId),
           eq(clientContacts.contactId, contactId)
+        )
+      );
+  }
+
+  // Vendor-Contact link operations
+  async getContactsForVendor(vendorId: string): Promise<Contact[]> {
+    const result = await db
+      .select({ contact: contacts })
+      .from(vendorsContacts)
+      .innerJoin(contacts, eq(vendorsContacts.contactId, contacts.id))
+      .where(eq(vendorsContacts.vendorId, vendorId))
+      .orderBy(asc(contacts.lastName), asc(contacts.firstName));
+    return result.map(r => r.contact);
+  }
+
+  async linkVendorContact(vendorId: string, contactId: string): Promise<void> {
+    await db
+      .insert(vendorsContacts)
+      .values({ vendorId, contactId })
+      .onConflictDoNothing();
+  }
+
+  async unlinkVendorContact(vendorId: string, contactId: string): Promise<void> {
+    await db
+      .delete(vendorsContacts)
+      .where(
+        and(
+          eq(vendorsContacts.vendorId, vendorId),
+          eq(vendorsContacts.contactId, contactId)
         )
       );
   }
