@@ -1,24 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,15 +22,13 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Loader2, Trash2, PenBox, Pencil, Check, X, CalendarIcon } from "lucide-react";
+import { Loader2, Trash2, PenBox } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
-import { cn } from "@/lib/utils";
 import type {
   DealWithRelations,
   DealStatus,
-  DealService,
   User,
   Client,
   Brand,
@@ -49,421 +36,12 @@ import type {
 } from "@shared/schema";
 import { dealStatuses } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
-
-type EditableFieldType = "text" | "textarea" | "select" | "date" | "multiselect";
-
-interface EditableFieldRowProps {
-  label: string;
-  value: string | null | undefined;
-  field: string;
-  testId?: string;
-  type?: EditableFieldType;
-  options?: { value: string; label: string }[];
-  multiSelectValues?: string[];
-  onSave: (field: string, value: unknown) => void;
-  displayValue?: React.ReactNode;
-  placeholder?: string;
-  disabled?: boolean;
-  valueClassName?: string;
-}
-
-function EditableFieldRow({
-  label,
-  value,
-  field,
-  testId,
-  type = "text",
-  options = [],
-  multiSelectValues = [],
-  onSave,
-  displayValue,
-  placeholder = "Not set",
-  disabled = false,
-  valueClassName,
-}: EditableFieldRowProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value || "");
-  const [selectedMulti, setSelectedMulti] = useState<string[]>(multiSelectValues);
-  const [dateOpen, setDateOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      if (inputRef.current instanceof HTMLInputElement) {
-        inputRef.current.select();
-      }
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    if (!isEditing) {
-      setEditValue(value || "");
-      // Only update multiselect if values actually changed (compare by content, not reference)
-      const currentMultiStr = JSON.stringify(multiSelectValues);
-      if (prevMultiRef.current !== currentMultiStr) {
-        prevMultiRef.current = currentMultiStr;
-        setSelectedMulti(multiSelectValues);
-      }
-    }
-  }, [value, multiSelectValues, isEditing]);
-
-  const handleSave = () => {
-    if (type === "multiselect") {
-      onSave(field, selectedMulti);
-    } else if (type === "date") {
-      onSave(field, editValue || null);
-    } else {
-      onSave(field, editValue || null);
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value || "");
-    setSelectedMulti(multiSelectValues);
-    setIsEditing(false);
-    setDateOpen(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && type !== "textarea") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const handleDoubleClick = () => {
-    if (!disabled) {
-      setIsEditing(true);
-    }
-  };
-
-  const toggleMultiSelect = (val: string) => {
-    setSelectedMulti(prev => 
-      prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
-    );
-  };
-
-  const renderEditor = () => {
-    switch (type) {
-      case "textarea":
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <Textarea
-              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") handleCancel();
-              }}
-              className="min-h-[150px] text-base leading-[1.6em]"
-              data-testid={`input-${field}`}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-
-      case "select":
-        const selectValue = editValue || "__none__";
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <Select
-              value={selectValue}
-              onValueChange={(val) => {
-                const actualValue = val === "__none__" ? "" : val;
-                setEditValue(actualValue);
-              }}
-            >
-              <SelectTrigger className="w-full" data-testid={`select-${field}`}>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((opt) => (
-                  <SelectItem key={opt.value || "__none__"} value={opt.value || "__none__"}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={() => { onSave(field, editValue); setIsEditing(false); }} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-
-      case "date":
-        const parsedDate = editValue ? parseDateOnly(editValue) : null;
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <Popover open={dateOpen} onOpenChange={setDateOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !editValue && "text-muted-foreground"
-                  )}
-                  data-testid={`datepicker-${field}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {parsedDate ? format(parsedDate, "PPP") : placeholder}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={parsedDate || undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      const formatted = format(date, "yyyy-MM-dd");
-                      setEditValue(formatted);
-                    } else {
-                      setEditValue("");
-                    }
-                    setDateOpen(false);
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={() => { onSave(field, editValue || null); setIsEditing(false); }} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-
-      case "multiselect":
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <div className="flex flex-wrap gap-2">
-              {options.map((opt) => (
-                <Badge
-                  key={opt.value}
-                  variant={selectedMulti.includes(opt.value) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleMultiSelect(opt.value)}
-                  data-testid={`badge-toggle-${opt.value.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  {opt.label}
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <Input
-              ref={inputRef as React.RefObject<HTMLInputElement>}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full text-sm"
-              data-testid={`input-${field}`}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div
-      className="group flex py-4 border-b border-border/50 last:border-b-0"
-      data-testid={testId}
-      onDoubleClick={handleDoubleClick}
-    >
-      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">
-        {isEditing ? (
-          renderEditor()
-        ) : (
-          <div className="flex items-start gap-2 group">
-            <div className="flex-1">
-              {displayValue !== undefined ? displayValue : (
-                value ? (
-                  <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
-                ) : (
-                  <span className="text-muted-foreground">{placeholder}</span>
-                )
-              )}
-            </div>
-            {!disabled && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                onClick={() => setIsEditing(true)}
-                data-testid={`button-edit-${field}`}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FieldRow({
-  label,
-  children,
-  testId,
-  colSpan = 1,
-}: {
-  label: string;
-  children: React.ReactNode;
-  testId?: string;
-  colSpan?: number;
-}) {
-  return (
-    <div
-      className={`flex py-4 border-b border-border/50 last:border-b-0 col-span-${colSpan}`}
-      data-testid={testId}
-    >
-      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">{children}</div>
-    </div>
-  );
-}
-
-function EditableTitle({
-  value,
-  onSave,
-  testId,
-}: {
-  value: string;
-  onSave: (value: string) => void;
-  testId?: string;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  const handleSave = () => {
-    if (editValue.trim() && editValue !== value) {
-      onSave(editValue.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      setEditValue(value);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="text-3xl font-bold flex-1 bg-transparent border-b-2 border-primary outline-none"
-          data-testid={`input-${testId}`}
-        />
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => {
-            setEditValue(value);
-            setIsEditing(false);
-          }}
-          data-testid={`button-cancel-${testId}`}
-        >
-          <X className="h-5 w-5" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleSave}
-          data-testid={`button-save-${testId}`}
-        >
-          <Check className="h-5 w-5" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="group flex items-center gap-2"
-      onDoubleClick={() => setIsEditing(true)}
-    >
-      <h1
-        className="text-3xl font-bold"
-        data-testid={testId}
-      >
-        {value}
-      </h1>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-        onClick={() => setIsEditing(true)}
-        data-testid={`button-edit-${testId}`}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
+import {
+  EditableField,
+  EditableTitle,
+  FieldRow,
+  useFieldMutation,
+} from "@/components/inline-edit";
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -486,52 +64,49 @@ export default function DealDetail() {
     queryKey: ["/api/clients"],
   });
 
-  // Fetch deal services from API
   const { data: dealServices = [] } = useQuery<DealServiceType[]>({
     queryKey: ["/api/deal-services"],
   });
 
-  // Create a services lookup map
   const servicesMap = new Map(dealServices.map(s => [s.id, s]));
 
   const { data: brands = [] } = useQuery<Pick<Brand, "id" | "name" | "industry">[]>({
     queryKey: ["/api/brands"],
   });
 
-  // Fetch industries for lookup
   const { data: industries = [] } = useQuery<Industry[]>({
     queryKey: ["/api/industries"],
   });
 
-  // Create an industries lookup map
   const industriesMap = new Map(industries.map(i => [i.id, i]));
 
   usePageTitle(deal?.displayName || "Deal");
 
-  const updateMutation = useMutation({
-    mutationFn: async (updates: Record<string, unknown>) => {
-      return apiRequest("PATCH", `/api/deals/${id}`, updates);
-    },
+  const {
+    saveField,
+    isFieldLoading,
+    getFieldError,
+  } = useFieldMutation({
+    entityType: "deals",
+    entityId: id || "",
+    queryKey: ["/api/deals", id],
+    additionalQueryKeys: [["/api/deals"]],
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", id] });
       toast({ title: "Deal updated" });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update deal",
-        description: error.message,
-        variant: "destructive",
-      });
     },
   });
 
   const handleFieldSave = (field: string, value: unknown) => {
     let processedValue = value;
-    if (value === "" && (field === "ownerId" || field === "clientId" || field === "brandId" || field === "primaryContactId")) {
+    if (value === "" && (field === "ownerId" || field === "clientId" || field === "brandId" || field === "primaryContactId" || field === "industryId")) {
       processedValue = null;
     }
-    updateMutation.mutate({ [field]: processedValue });
+    saveField(field, processedValue);
+  };
+
+  const handleServicesSave = (field: string, value: unknown) => {
+    const ids = (value as string[]).map(Number);
+    saveField(field, ids);
   };
 
   const deleteMutation = useMutation({
@@ -591,18 +166,6 @@ export default function DealDetail() {
     );
   }
 
-  const createdByName = deal.createdBy
-    ? [deal.createdBy.firstName, deal.createdBy.lastName]
-        .filter(Boolean)
-        .join(" ") || "Unknown"
-    : "Unknown";
-  const createdByInitials = createdByName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
   const ownerName = deal.owner
     ? [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ") ||
       "Unassigned"
@@ -655,8 +218,10 @@ export default function DealDetail() {
                   value={deal.displayName}
                   onSave={(value) => handleFieldSave("displayName", value)}
                   testId="text-deal-name"
+                  isLoading={isFieldLoading("displayName")}
+                  error={getFieldError("displayName")}
+                  validation={{ required: true }}
                 />
-  
 
               </div>
             </div>
@@ -675,11 +240,9 @@ export default function DealDetail() {
             value="overview"
             className="max-w-4xl space-y-4 p-4 md:p-6 pt-4"
           >
-            {/* Deal Information Card */}
             <Card>
-
               <CardContent className="py-2">
-                <EditableFieldRow
+                <EditableField
                   label="Owner"
                   value={deal.ownerId || ""}
                   field="ownerId"
@@ -693,6 +256,8 @@ export default function DealDetail() {
                     })),
                   ]}
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("ownerId")}
+                  error={getFieldError("ownerId")}
                   displayValue={
                     ownerName ? (
                       <div className="flex items-center gap-3">
@@ -714,7 +279,7 @@ export default function DealDetail() {
                   placeholder="Select owner"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Status"
                   value={deal.status}
                   field="status"
@@ -722,11 +287,13 @@ export default function DealDetail() {
                   type="select"
                   options={dealStatuses.map((s) => ({ value: s, label: s }))}
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("status")}
+                  error={getFieldError("status")}
                   displayValue={<DealStatusBadge status={deal.status as DealStatus} />}
                   placeholder="Select status"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Client"
                   value={deal.clientId || ""}
                   field="clientId"
@@ -734,6 +301,8 @@ export default function DealDetail() {
                   type="select"
                   options={clients.map((c) => ({ value: c.id, label: c.name }))}
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("clientId")}
+                  error={getFieldError("clientId")}
                   displayValue={
                     deal.client ? (
                       <Link href={`/clients/${deal.client.id}`}>
@@ -751,32 +320,7 @@ export default function DealDetail() {
                   placeholder="Select client"
                 />
 
-                {/* <EditableFieldRow
-                  label="Brand"
-                  value={deal.brandId || ""}
-                  field="brandId"
-                  testId="field-brand"
-                  type="select"
-                  options={brands.map((b) => ({ value: b.id, label: b.name }))}
-                  onSave={handleFieldSave}
-                  displayValue={
-                    deal.brand ? (
-                      <Link href={`/brands`}>
-                        <span
-                          className="text-primary hover:underline cursor-pointer"
-                          data-testid="link-deal-brand"
-                        >
-                          {deal.brand.name}
-                        </span>
-                      </Link>
-                    ) : (
-                      <span className="text-muted-foreground">No brand assigned</span>
-                    )
-                  }
-                  placeholder="Select brand"
-                /> */}
-
-                <EditableFieldRow
+                <EditableField
                   label="Industry"
                   value={deal.industryId || ""}
                   field="industryId"
@@ -784,6 +328,8 @@ export default function DealDetail() {
                   type="select"
                   options={industries.map((i) => ({ value: i.id, label: i.name }))}
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("industryId")}
+                  error={getFieldError("industryId")}
                   displayValue={
                     deal.industryId ? (
                       <span data-testid="text-industry">
@@ -811,38 +357,44 @@ export default function DealDetail() {
                   )}
                 </FieldRow>
 
-                <EditableFieldRow
+                <EditableField
                   label="Project Date"
                   value={deal.projectDate || ""}
                   field="projectDate"
                   testId="field-project-date"
                   type="text"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("projectDate")}
+                  error={getFieldError("projectDate")}
                   placeholder="e.g., Q1 2025, March 15-17"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Locations"
                   value={deal.locationsText || ""}
                   field="locationsText"
                   testId="field-locations-text"
                   type="textarea"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("locationsText")}
+                  error={getFieldError("locationsText")}
                   placeholder="Enter locations"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Concept"
                   value={deal.concept || ""}
                   field="concept"
                   testId="field-concept"
                   type="textarea"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("concept")}
+                  error={getFieldError("concept")}
                   placeholder="Enter concept description"
                   valueClassName="text-base prose dark:prose-invert "
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Services"
                   value=""
                   field="serviceIds"
@@ -850,11 +402,9 @@ export default function DealDetail() {
                   type="multiselect"
                   options={dealServices.filter(s => s.isActive).map((s) => ({ value: String(s.id), label: s.name }))}
                   multiSelectValues={serviceIds.map(String)}
-                  onSave={(field, value) => {
-                    // Convert string array back to number array
-                    const ids = (value as string[]).map(Number);
-                    handleFieldSave(field, ids);
-                  }}
+                  onSave={handleServicesSave}
+                  isLoading={isFieldLoading("serviceIds")}
+                  error={getFieldError("serviceIds")}
                   displayValue={
                     serviceIds.length > 0 ? (
                       <div className="flex flex-wrap gap-2" data-testid="deal-services">
@@ -879,23 +429,27 @@ export default function DealDetail() {
                   placeholder="Select services"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Budget Notes"
                   value={deal.budgetNotes || ""}
                   field="budgetNotes"
                   testId="field-budget-notes"
                   type="textarea"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("budgetNotes")}
+                  error={getFieldError("budgetNotes")}
                   placeholder="Enter budget notes"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Started"
                   value={deal.startedOn || ""}
                   field="startedOn"
                   testId="field-started-on"
                   type="date"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("startedOn")}
+                  error={getFieldError("startedOn")}
                   displayValue={
                     deal.startedOn && parseDateOnly(deal.startedOn) ? (
                       <span className="font-medium">{format(parseDateOnly(deal.startedOn)!, "MMM d, yyyy")}</span>
@@ -904,13 +458,15 @@ export default function DealDetail() {
                   placeholder="Select date"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Last Contact"
                   value={deal.lastContactOn || ""}
                   field="lastContactOn"
                   testId="field-last-contact"
                   type="date"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("lastContactOn")}
+                  error={getFieldError("lastContactOn")}
                   displayValue={
                     deal.lastContactOn && parseDateOnly(deal.lastContactOn) ? (
                       <span className="font-medium">{format(parseDateOnly(deal.lastContactOn)!, "MMM d, yyyy")}</span>
@@ -919,13 +475,15 @@ export default function DealDetail() {
                   placeholder="Select date"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Won"
                   value={deal.wonOn || ""}
                   field="wonOn"
                   testId="field-won-on"
                   type="date"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("wonOn")}
+                  error={getFieldError("wonOn")}
                   displayValue={
                     deal.wonOn && parseDateOnly(deal.wonOn) ? (
                       <span className="font-medium">{format(parseDateOnly(deal.wonOn)!, "MMM d, yyyy")}</span>
@@ -934,13 +492,15 @@ export default function DealDetail() {
                   placeholder="Select date"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Proposal Sent"
                   value={deal.proposalSentOn || ""}
                   field="proposalSentOn"
                   testId="field-proposal-sent-on"
                   type="date"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("proposalSentOn")}
+                  error={getFieldError("proposalSentOn")}
                   displayValue={
                     deal.proposalSentOn && parseDateOnly(deal.proposalSentOn) ? (
                       <span className="font-medium">{format(parseDateOnly(deal.proposalSentOn)!, "MMM d, yyyy")}</span>
@@ -949,13 +509,15 @@ export default function DealDetail() {
                   placeholder="Select date"
                 />
 
-                <EditableFieldRow
+                <EditableField
                   label="Next Steps"
                   value={deal.notes || ""}
                   field="notes"
                   testId="field-notes"
                   type="textarea"
                   onSave={handleFieldSave}
+                  isLoading={isFieldLoading("notes")}
+                  error={getFieldError("notes")}
                   placeholder="Enter next steps"
                   valueClassName="text-base prose dark:prose-invert "
                 />

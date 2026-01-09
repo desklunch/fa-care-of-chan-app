@@ -1,24 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -43,18 +34,17 @@ import {
   Loader2,
   Pencil,
   Trash2,
-  Globe,
-  Building2,
   Handshake,
   Users,
-  Plus,
   UserPlus,
-  Check,
-  X,
 } from "lucide-react";
-import { format } from "date-fns";
 import { ContactLinkSearch } from "@/components/contact-link-search";
 import { PermissionGate } from "@/components/permission-gate";
+import {
+  EditableField,
+  EditableTitle,
+  useFieldMutation,
+} from "@/components/inline-edit";
 
 const statusColors: Record<
   DealStatus,
@@ -91,303 +81,6 @@ const statusColors: Record<
   Canceled: { variant: "outline", className: "opacity-50" },
 };
 
-function FieldRow({
-  label,
-  children,
-  testId,
-}: {
-  label: string;
-  children: React.ReactNode;
-  testId?: string;
-}) {
-  return (
-    <div
-      className="flex py-4 border-b border-border/50 last:border-b-0"
-      data-testid={testId}
-    >
-      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">{children}</div>
-    </div>
-  );
-}
-
-type EditableFieldType = "text" | "select";
-
-interface EditableFieldRowProps {
-  label: string;
-  value: string | null | undefined;
-  field: string;
-  testId?: string;
-  type?: EditableFieldType;
-  options?: { value: string; label: string }[];
-  onSave: (field: string, value: unknown) => void;
-  displayValue?: React.ReactNode;
-  placeholder?: string;
-}
-
-function EditableFieldRow({
-  label,
-  value,
-  field,
-  testId,
-  type = "text",
-  options = [],
-  onSave,
-  displayValue,
-  placeholder = "Not set",
-}: EditableFieldRowProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value || "");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    if (!isEditing) {
-      setEditValue(value || "");
-    }
-  }, [value, isEditing]);
-
-  const handleSave = () => {
-    onSave(field, editValue || null);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value || "");
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const handleDoubleClick = () => {
-    setIsEditing(true);
-  };
-
-  const renderEditor = () => {
-    if (type === "select") {
-      const selectValue = editValue || "__none__";
-      return (
-        <div className="flex flex-col gap-2 w-full">
-          <Select
-            value={selectValue}
-            onValueChange={(val) => {
-              const actualValue = val === "__none__" ? "" : val;
-              setEditValue(actualValue);
-            }}
-          >
-            <SelectTrigger className="w-full" data-testid={`select-${field}`}>
-              <SelectValue placeholder={placeholder} />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map((opt) => (
-                <SelectItem
-                  key={opt.value || "__none__"}
-                  value={opt.value || "__none__"}
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex gap-2 justify-end">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleCancel}
-              data-testid={`button-cancel-${field}`}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              data-testid={`button-save-${field}`}
-            >
-              <Check className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex flex-col gap-2 w-full">
-        <Input
-          ref={inputRef}
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          data-testid={`input-${field}`}
-        />
-        <div className="flex gap-2 justify-end">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleCancel}
-            data-testid={`button-cancel-${field}`}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            data-testid={`button-save-${field}`}
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div
-      className="flex py-4 border-b border-border/50 last:border-b-0"
-      data-testid={testId}
-    >
-      <div className="w-2/5 text-sm font-semibold shrink-0 pt-2">{label}</div>
-      <div className="flex-1 text-sm">
-        {isEditing ? (
-          renderEditor()
-        ) : (
-          <div
-            className="group flex items-center gap-2 cursor-pointer min-h-[36px]"
-            onDoubleClick={handleDoubleClick}
-          >
-            <div className="flex-1">
-              {displayValue ||
-                (value ? (
-                  value
-                ) : (
-                  <span className="text-muted-foreground">{placeholder}</span>
-                ))}
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-              onClick={() => setIsEditing(true)}
-              data-testid={`button-edit-${field}`}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function EditableTitle({
-  value,
-  onSave,
-  testId,
-}: {
-  value: string;
-  onSave: (value: string) => void;
-  testId?: string;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  const handleSave = () => {
-    if (editValue.trim() && editValue !== value) {
-      onSave(editValue.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      setEditValue(value);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="text-3xl font-bold flex-1 bg-transparent border-b-2 border-primary outline-none"
-          data-testid={`input-${testId}`}
-        />
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => {
-            setEditValue(value);
-            setIsEditing(false);
-          }}
-          data-testid={`button-cancel-${testId}`}
-        >
-          <X className="h-5 w-5" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleSave}
-          data-testid={`button-save-${testId}`}
-        >
-          <Check className="h-5 w-5" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="group flex items-center gap-2"
-      onDoubleClick={() => setIsEditing(true)}
-    >
-      <h1 className="text-3xl font-bold" data-testid={testId}>
-        {value}
-      </h1>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-        onClick={() => setIsEditing(true)}
-        data-testid={`button-edit-${testId}`}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
-
 export default function ClientDetail() {
   const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -406,12 +99,10 @@ export default function ClientDetail() {
     enabled: Boolean(params.id),
   });
 
-  // Fetch industries for lookup
   const { data: industries = [] } = useQuery<Industry[]>({
     queryKey: ["/api/industries"],
   });
 
-  // Create industries lookup map
   const industriesMap = new Map(industries.map((i) => [i.id, i]));
 
   const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<
@@ -459,21 +150,17 @@ export default function ClientDetail() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async (updates: Record<string, unknown>) => {
-      return apiRequest("PATCH", `/api/clients/${params.id}`, updates);
-    },
+  const {
+    saveField,
+    isFieldLoading,
+    getFieldError,
+  } = useFieldMutation({
+    entityType: "clients",
+    entityId: params.id || "",
+    queryKey: ["/api/clients", params.id],
+    additionalQueryKeys: [["/api/clients"]],
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/clients", params.id] });
       toast({ title: "Client updated" });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update client",
-        description: error.message,
-        variant: "destructive",
-      });
     },
   });
 
@@ -482,7 +169,11 @@ export default function ClientDetail() {
     if (value === "" && field === "industryId") {
       processedValue = null;
     }
-    updateMutation.mutate({ [field]: processedValue });
+    saveField(field, processedValue);
+  };
+
+  const handleTitleSave = (value: string) => {
+    saveField("name", value, { required: true, minLength: 1 });
   };
 
   if (isLoading) {
@@ -541,13 +232,16 @@ export default function ClientDetail() {
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
         <EditableTitle
           value={client.name}
-          onSave={(value) => handleFieldSave("name", value)}
+          onSave={handleTitleSave}
           testId="text-client-name"
+          isLoading={isFieldLoading("name")}
+          error={getFieldError("name")}
+          validation={{ required: true, minLength: 1 }}
         />
 
         <Card>
           <CardContent className="py-4">
-            <EditableFieldRow
+            <EditableField
               label="Industry"
               value={client.industryId || ""}
               field="industryId"
@@ -558,6 +252,8 @@ export default function ClientDetail() {
                 ...industries.map((i) => ({ value: i.id, label: i.name })),
               ]}
               onSave={handleFieldSave}
+              isLoading={isFieldLoading("industryId")}
+              error={getFieldError("industryId")}
               displayValue={
                 client.industryId ? (
                   <Badge variant="secondary">
@@ -568,13 +264,15 @@ export default function ClientDetail() {
               }
               placeholder="Select industry"
             />
-            <EditableFieldRow
+            <EditableField
               label="Website"
               value={client.website || ""}
               field="website"
               testId="field-client-website"
               type="text"
               onSave={handleFieldSave}
+              isLoading={isFieldLoading("website")}
+              error={getFieldError("website")}
               displayValue={
                 client.website ? (
                   <div className="flex items-center gap-2">

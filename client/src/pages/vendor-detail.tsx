@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +28,6 @@ import {
   ArrowLeft,
   Building2,
   MapPin,
-  Briefcase,
   Contact,
   LinkIcon,
   Copy,
@@ -46,332 +43,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { cn } from "@/lib/utils";
 import { PermissionGate } from "@/components/permission-gate";
-
-type EditableFieldType = "text" | "textarea" | "switch";
-
-interface EditableFieldRowProps {
-  label: string;
-  value: string | null | undefined;
-  field: string;
-  testId?: string;
-  type?: EditableFieldType;
-  onSave: (field: string, value: unknown) => void;
-  displayValue?: React.ReactNode;
-  placeholder?: string;
-  disabled?: boolean;
-  valueClassName?: string;
-  booleanValue?: boolean;
-}
-
-function EditableFieldRow({
-  label,
-  value,
-  field,
-  testId,
-  type = "text",
-  onSave,
-  displayValue,
-  placeholder = "Not set",
-  disabled = false,
-  valueClassName,
-  booleanValue = false,
-}: EditableFieldRowProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value || "");
-  const [editBoolean, setEditBoolean] = useState(booleanValue);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      if (inputRef.current instanceof HTMLInputElement) {
-        inputRef.current.select();
-      }
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    if (!isEditing) {
-      setEditValue(value || "");
-      setEditBoolean(booleanValue);
-    }
-  }, [value, booleanValue, isEditing]);
-
-  const handleSave = () => {
-    if (type === "switch") {
-      onSave(field, editBoolean);
-    } else {
-      onSave(field, editValue || null);
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value || "");
-    setEditBoolean(booleanValue);
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && type !== "textarea") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const handleDoubleClick = () => {
-    if (!disabled) {
-      setIsEditing(true);
-    }
-  };
-
-  const renderEditor = () => {
-    switch (type) {
-      case "textarea":
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <Textarea
-              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") handleCancel();
-              }}
-              className="min-h-[100px] text-base"
-              data-testid={`input-${field}`}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-
-      case "switch":
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={editBoolean}
-                onCheckedChange={setEditBoolean}
-                data-testid={`switch-${field}`}
-              />
-              <span className="text-sm">{editBoolean ? "Yes" : "No"}</span>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <Input
-              ref={inputRef as React.RefObject<HTMLInputElement>}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full text-sm"
-              data-testid={`input-${field}`}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={handleCancel} data-testid={`button-cancel-${field}`}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={handleSave} data-testid={`button-save-${field}`}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div
-      className="group flex gap-4 py-4 border-b border-border/50 last:border-b-0"
-      data-testid={testId}
-      onDoubleClick={handleDoubleClick}
-    >
-      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">
-        {isEditing ? (
-          renderEditor()
-        ) : (
-          <div className="flex items-start gap-2 group">
-            <div className="flex-1">
-              {displayValue !== undefined ? displayValue : (
-                value ? (
-                  <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
-                ) : (
-                  <span className="text-muted-foreground">{placeholder}</span>
-                )
-              )}
-            </div>
-            {!disabled && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                onClick={() => setIsEditing(true)}
-                data-testid={`button-edit-${field}`}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FieldRow({
-  label,
-  children,
-  testId,
-}: {
-  label: string;
-  children: React.ReactNode;
-  testId?: string;
-}) {
-  return (
-    <div
-      className="flex gap-4 py-4 border-b border-border/50 last:border-b-0"
-      data-testid={testId}
-    >
-      <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">{children}</div>
-    </div>
-  );
-}
-
-function EditableTitle({
-  value,
-  onSave,
-  testId,
-  disabled = false,
-}: {
-  value: string;
-  onSave: (value: string) => void;
-  testId?: string;
-  disabled?: boolean;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  const handleSave = () => {
-    if (editValue.trim() && editValue !== value) {
-      onSave(editValue.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      setEditValue(value);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="text-2xl font-bold flex-1 bg-transparent border-b-2 border-primary outline-none"
-          data-testid={`input-${testId}`}
-        />
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => {
-            setEditValue(value);
-            setIsEditing(false);
-          }}
-          data-testid={`button-cancel-${testId}`}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleSave}
-          data-testid={`button-save-${testId}`}
-        >
-          <Check className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="group flex items-center gap-2"
-      onDoubleClick={() => !disabled && setIsEditing(true)}
-    >
-      <h1
-        className="text-2xl font-bold"
-        data-testid={testId}
-      >
-        {value}
-      </h1>
-      {!disabled && (
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-          onClick={() => setIsEditing(true)}
-          data-testid={`button-edit-${testId}`}
-        >
-          <Pencil className="h-3 w-3" />
-        </Button>
-      )}
-    </div>
-  );
-}
+import {
+  EditableField,
+  EditableTitle,
+  FieldRow,
+  useFieldMutation,
+} from "@/components/inline-edit";
 
 interface ServicesEditorProps {
   vendorServices: VendorService[];
   allServices: VendorService[];
   onSave: (serviceIds: string[]) => void;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
-function ServicesEditor({ vendorServices, allServices, onSave, disabled = false }: ServicesEditorProps) {
+function ServicesEditor({ vendorServices, allServices, onSave, disabled = false, isLoading = false }: ServicesEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>(vendorServices.map(s => s.id));
 
@@ -414,11 +102,11 @@ function ServicesEditor({ vendorServices, allServices, onSave, disabled = false 
           ))}
         </div>
         <div className="flex gap-2 justify-end">
-          <Button size="sm" variant="ghost" onClick={handleCancel} data-testid="button-cancel-services">
+          <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isLoading} data-testid="button-cancel-services">
             <X className="h-4 w-4" />
           </Button>
-          <Button size="sm" onClick={handleSave} data-testid="button-save-services">
-            <Check className="h-4 w-4" />
+          <Button size="sm" onClick={handleSave} disabled={isLoading} data-testid="button-save-services">
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -428,10 +116,15 @@ function ServicesEditor({ vendorServices, allServices, onSave, disabled = false 
   return (
     <div 
       className="group flex items-start gap-2"
-      onDoubleClick={() => !disabled && setIsEditing(true)}
+      onDoubleClick={() => !disabled && !isLoading && setIsEditing(true)}
     >
       <div className="flex flex-wrap gap-2 flex-1">
-        {vendorServices.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="text-muted-foreground">Saving...</span>
+          </div>
+        ) : vendorServices.length > 0 ? (
           vendorServices.map((service) => (
             <Badge
               key={service.id}
@@ -445,7 +138,7 @@ function ServicesEditor({ vendorServices, allServices, onSave, disabled = false 
           <span className="text-muted-foreground">No services assigned</span>
         )}
       </div>
-      {!disabled && (
+      {!disabled && !isLoading && (
         <Button
           size="icon"
           variant="ghost"
@@ -484,6 +177,20 @@ export default function VendorDetail() {
 
   usePageTitle(vendor?.businessName || "Vendor");
 
+  const {
+    saveField,
+    isFieldLoading,
+    getFieldError,
+  } = useFieldMutation({
+    entityType: "vendors",
+    entityId: id || "",
+    queryKey: ["/api/vendors", id],
+    additionalQueryKeys: [["/api/vendors"]],
+    onSuccess: () => {
+      toast({ title: "Vendor updated" });
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (updates: Record<string, unknown>) => {
       return apiRequest("PATCH", `/api/vendors/${id}`, updates);
@@ -503,11 +210,15 @@ export default function VendorDetail() {
   });
 
   const handleFieldSave = (field: string, value: unknown) => {
-    updateMutation.mutate({ [field]: value });
+    saveField(field, value);
   };
 
   const handleServicesSave = (serviceIds: string[]) => {
     updateMutation.mutate({ serviceIds });
+  };
+
+  const handleEmployeeCountSave = (field: string, value: unknown) => {
+    saveField(field, value ? parseInt(value as string, 10) : null);
   };
   
   const generateLinkMutation = useMutation({
@@ -664,6 +375,9 @@ export default function VendorDetail() {
                 onSave={(val) => handleFieldSave("businessName", val)}
                 testId="text-vendor-name"
                 disabled={!canEdit}
+                isLoading={isFieldLoading("businessName")}
+                error={getFieldError("businessName")}
+                validation={{ required: true }}
               />
             </PermissionGate>
           </div>
@@ -694,6 +408,7 @@ export default function VendorDetail() {
                       allServices={allServices}
                       onSave={handleServicesSave}
                       disabled={!canEdit}
+                      isLoading={updateMutation.isPending}
                     />
                   </PermissionGate>
                 </FieldRow>
@@ -754,39 +469,45 @@ export default function VendorDetail() {
                 </div>
               }>
                 <div className="space-y-0 divide-y divide-border/50">
-                  <EditableFieldRow
+                  <EditableField
                     label="Email"
                     value={vendor.email}
                     field="email"
                     testId="row-email"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("email")}
+                    error={getFieldError("email")}
                     displayValue={vendor.email ? (
                       <a href={`mailto:${vendor.email}`} className="text-primary hover:underline">
                         {vendor.email}
                       </a>
                     ) : undefined}
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Phone"
                     value={vendor.phone}
                     field="phone"
                     testId="row-phone"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("phone")}
+                    error={getFieldError("phone")}
                     displayValue={vendor.phone ? (
                       <a href={`tel:${vendor.phone}`} className="hover:underline">
                         {vendor.phone}
                       </a>
                     ) : undefined}
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Website"
                     value={vendor.website}
                     field="website"
                     testId="row-website"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("website")}
+                    error={getFieldError("website")}
                     displayValue={vendor.website ? (
                       <a 
                         href={vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`}
@@ -798,7 +519,7 @@ export default function VendorDetail() {
                       </a>
                     ) : undefined}
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Address"
                     value={vendor.address}
                     field="address"
@@ -806,6 +527,8 @@ export default function VendorDetail() {
                     type="textarea"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("address")}
+                    error={getFieldError("address")}
                   />
                 </div>
               </PermissionGate>
@@ -850,13 +573,15 @@ export default function VendorDetail() {
                 </div>
               }>
                 <div className="space-y-0 divide-y divide-border/50">
-                  <EditableFieldRow
+                  <EditableField
                     label="Deck"
                     value={vendor.capabilitiesDeck}
                     field="capabilitiesDeck"
                     testId="row-capabilities"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("capabilitiesDeck")}
+                    error={getFieldError("capabilitiesDeck")}
                     displayValue={vendor.capabilitiesDeck ? (
                       <a 
                         href={vendor.capabilitiesDeck.startsWith("http") ? vendor.capabilitiesDeck : `https://${vendor.capabilitiesDeck}`}
@@ -868,15 +593,17 @@ export default function VendorDetail() {
                       </a>
                     ) : undefined}
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Employees"
                     value={vendor.employeeCount?.toString() || null}
                     field="employeeCount"
                     testId="row-employee-count"
-                    onSave={(field, val) => handleFieldSave(field, val ? parseInt(val as string, 10) : null)}
+                    onSave={handleEmployeeCountSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("employeeCount")}
+                    error={getFieldError("employeeCount")}
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Sales Tax"
                     value={null}
                     field="chargesSalesTax"
@@ -885,13 +612,15 @@ export default function VendorDetail() {
                     booleanValue={vendor.chargesSalesTax || false}
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("chargesSalesTax")}
+                    error={getFieldError("chargesSalesTax")}
                     displayValue={
                       <Badge variant={vendor.chargesSalesTax ? "default" : "outline"}>
                         {vendor.chargesSalesTax ? "Yes" : "No"}
                       </Badge>
                     }
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Tax Notes"
                     value={vendor.salesTaxNotes}
                     field="salesTaxNotes"
@@ -899,8 +628,10 @@ export default function VendorDetail() {
                     type="textarea"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("salesTaxNotes")}
+                    error={getFieldError("salesTaxNotes")}
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Diversity"
                     value={vendor.diversityInfo}
                     field="diversityInfo"
@@ -908,6 +639,8 @@ export default function VendorDetail() {
                     type="textarea"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("diversityInfo")}
+                    error={getFieldError("diversityInfo")}
                   />
                 </div>
               </PermissionGate>
@@ -936,7 +669,7 @@ export default function VendorDetail() {
                 </div>
               }>
                 <div className="space-y-0 divide-y divide-border/50">
-                  <EditableFieldRow
+                  <EditableField
                     label="Preferred"
                     value={null}
                     field="isPreferred"
@@ -945,13 +678,15 @@ export default function VendorDetail() {
                     booleanValue={vendor.isPreferred || false}
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("isPreferred")}
+                    error={getFieldError("isPreferred")}
                     displayValue={
                       <Badge variant={vendor.isPreferred ? "default" : "outline"}>
                         {vendor.isPreferred ? "Yes" : "No"}
                       </Badge>
                     }
                   />
-                  <EditableFieldRow
+                  <EditableField
                     label="Notes"
                     value={vendor.notes}
                     field="notes"
@@ -959,6 +694,8 @@ export default function VendorDetail() {
                     type="textarea"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                    isLoading={isFieldLoading("notes")}
+                    error={getFieldError("notes")}
                     placeholder="Add notes about this vendor..."
                   />
                 </div>
