@@ -16,13 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
-import type { VenueWithRelations } from "@shared/schema";
+import type { VenueGridRow } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import {
   MapPin,
-  Globe,
-  Instagram,
-  ExternalLink,
   icons,
   HelpCircle,
   CircleFadingPlus,
@@ -56,7 +53,7 @@ function getIconComponent(iconName: string): LucideIcon {
   return (icon || HelpCircle) as LucideIcon;
 }
 
-function NameCellRenderer({ data }: { data: VenueWithRelations }) {
+function NameCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data) return null;
   return (
     <div className="flex items-center gap-2 h-full">
@@ -90,7 +87,7 @@ function NameCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-function LocationCellRenderer({ data }: { data: VenueWithRelations }) {
+function LocationCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data) return null;
   const parts = [data.city, data.state].filter(Boolean);
   if (parts.length === 0) return null;
@@ -102,65 +99,12 @@ function LocationCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-function AddressCellRenderer({ data }: { data: VenueWithRelations }) {
-  if (!data) return null;
-  const parts = [
-    data.streetAddress1,
-    data.city,
-    data.state,
-    data.zipCode,
-  ].filter(Boolean);
-  if (parts.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1 h-full">
-      <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-      <span className="truncate">{parts.join(", ")}</span>
-    </div>
-  );
-}
-
-function WebsiteCellRenderer({ data }: { data: VenueWithRelations }) {
-  if (!data?.website) return null;
-  return (
-    <a
-      href={data.website}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-1 text-primary hover:underline h-full"
-      onClick={(e) => e.stopPropagation()}
-      data-testid={`link-venue-website-${data.id}`}
-    >
-      <Globe className="w-3 h-3 shrink-0" />
-      <span className="truncate">Website</span>
-      <ExternalLink className="w-3 h-3 shrink-0" />
-    </a>
-  );
-}
-
-function InstagramCellRenderer({ data }: { data: VenueWithRelations }) {
-  if (!data?.instagramAccount) return null;
-  const handle = data.instagramAccount.replace(/^@/, "");
-  return (
-    <a
-      href={`https://instagram.com/${handle}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-1 text-pink-600 hover:underline h-full"
-      onClick={(e) => e.stopPropagation()}
-      data-testid={`link-venue-instagram-${data.id}`}
-    >
-      <Instagram className="w-3 h-3 shrink-0" />
-      <span className="truncate">@{handle}</span>
-    </a>
-  );
-}
-
-function StatusCellRenderer({ data }: { data: VenueWithRelations }) {
+function StatusCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data) return null;
   return data.isActive ? <span>Active</span> : <span>Inactive</span>;
 }
 
-function DescriptionCellRenderer({ data }: { data: VenueWithRelations }) {
+function DescriptionCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data?.shortDescription) return null;
   return (
     <span className="truncate  prose-sm">
@@ -169,7 +113,7 @@ function DescriptionCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-function AmenitiesCellRenderer({ data }: { data: VenueWithRelations }) {
+function AmenitiesCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data?.amenities || data.amenities.length === 0) return null;
   return (
     <div className="flex items-center gap-1 h-full overflow-hidden">
@@ -196,7 +140,7 @@ function AmenitiesCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-function CuisineTagsCellRenderer({ data }: { data: VenueWithRelations }) {
+function CuisineTagsCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data?.cuisineTags || data.cuisineTags.length === 0) return null;
   return (
     <div className="flex items-center gap-1 h-full overflow-hidden">
@@ -214,7 +158,7 @@ function CuisineTagsCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-function StyleTagsCellRenderer({ data }: { data: VenueWithRelations }) {
+function StyleTagsCellRenderer({ data }: { data: VenueGridRow }) {
   if (!data?.styleTags || data.styleTags.length === 0) return null;
   return (
     <div className="flex items-center gap-1 h-full overflow-hidden">
@@ -237,7 +181,7 @@ function StyleTagsCellRenderer({ data }: { data: VenueWithRelations }) {
   );
 }
 
-const venueColumns: ColumnConfig<VenueWithRelations>[] = [
+const venueColumns: ColumnConfig<VenueGridRow>[] = [
   {
     id: "name",
     headerName: "Name",
@@ -245,7 +189,7 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 200,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <NameCellRenderer data={params.data} />
       ),
     },
@@ -273,11 +217,11 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 150,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <LocationCellRenderer data={params.data} />
       ),
       valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
+        const data = params.data as VenueGridRow;
         return [data?.city, data?.state].filter(Boolean).join(", ");
       },
     },
@@ -288,11 +232,11 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 1.5,
       minWidth: 180,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <StyleTagsCellRenderer data={params.data} />
       ),
       valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
+        const data = params.data as VenueGridRow;
         return data?.styleTags?.map((t) => t.name).join(", ") || "";
       },
     },
@@ -303,11 +247,11 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 1,
       minWidth: 120,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <CuisineTagsCellRenderer data={params.data} />
       ),
       valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
+        const data = params.data as VenueGridRow;
         return data?.cuisineTags?.map((t) => t.name).join(", ") || "";
       },
     },
@@ -318,11 +262,11 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 200,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <AmenitiesCellRenderer data={params.data} />
       ),
       valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
+        const data = params.data as VenueGridRow;
         return data?.amenities?.map((a) => a.name).join(", ") || "";
       },
     },
@@ -334,7 +278,7 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 200,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <DescriptionCellRenderer data={params.data} />
       ),
     },
@@ -346,7 +290,7 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
       flex: 0.6,
       minWidth: 100,
       valueGetter: (params) => {
-        const data = params.data as VenueWithRelations;
+        const data = params.data as VenueGridRow;
         if (!data?.venueSpaces || data.venueSpaces.length === 0) return null;
         const capacities = data.venueSpaces.flatMap((s) => [
           s.maxCapacitySeated || 0,
@@ -368,14 +312,14 @@ const venueColumns: ColumnConfig<VenueWithRelations>[] = [
     colDef: {
       flex: 0.8,
       minWidth: 100,
-      cellRenderer: (params: { data: VenueWithRelations }) => (
+      cellRenderer: (params: { data: VenueGridRow }) => (
         <StatusCellRenderer data={params.data} />
       ),
     },
   },
 ];
 
-const venueFilters: FilterConfig<VenueWithRelations>[] = [
+const venueFilters: FilterConfig<VenueGridRow>[] = [
   {
     id: "venueType",
     label: "Type",
@@ -502,13 +446,13 @@ export default function VenuesPage() {
 
   // Fetch venues data
   const { data: venues = [], isLoading: isVenuesLoading } = useQuery<
-    VenueWithRelations[]
+    VenueGridRow[]
   >({
     queryKey: ["/api/venues"],
   });
 
   const handleRowClick = useCallback(
-    (venue: VenueWithRelations) => {
+    (venue: VenueGridRow) => {
       navigate(`/venues/${venue.id}`);
     },
     [navigate],
@@ -519,7 +463,7 @@ export default function VenuesPage() {
   }, [navigate]);
 
   const handleAddToCollection = useCallback(
-    (venues: VenueWithRelations[], clearSelection: () => void) => {
+    (venues: VenueGridRow[], clearSelection: () => void) => {
       setSelectedVenueIds(venues.map((v) => v.id));
       setClearSelectionFn(() => clearSelection);
       setCollectionDialogOpen(true);
@@ -533,7 +477,7 @@ export default function VenuesPage() {
   }, [clearSelectionFn]);
 
   const selectionToolbar = useCallback(
-    (selectedRows: VenueWithRelations[], clearSelection: () => void) => {
+    (selectedRows: VenueGridRow[], clearSelection: () => void) => {
       if (selectedRows.length === 0) return null;
 
       return (
@@ -596,10 +540,10 @@ export default function VenuesPage() {
       "city",
       "state",
       "shortDescription",
-    ] as (keyof VenueWithRelations)[],
+    ] as (keyof VenueGridRow)[],
     searchPlaceholder: "Search venues...",
     onRowClick: handleRowClick,
-    getRowId: (venue: VenueWithRelations) => venue.id,
+    getRowId: (venue: VenueGridRow) => venue.id,
     emptyMessage: "No venues yet",
     emptyDescription: "Venues will appear here once they are added.",
     externalData: venues,

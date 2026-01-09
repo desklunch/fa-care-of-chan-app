@@ -64,6 +64,10 @@ import {
   type CreateVenue,
   type UpdateVenue,
   type VenueWithRelations,
+  type VenueGridRow,
+  type AmenitySummary,
+  type TagSummary,
+  type VenueSpace,
   type VenueFloorplan,
   type CreateVenueFloorplan,
   type UpdateVenueFloorplan,
@@ -264,7 +268,7 @@ export interface IStorage {
   
   // Venue operations
   getVenues(): Promise<Venue[]>;
-  getVenuesWithRelations(): Promise<VenueWithRelations[]>;
+  getVenuesWithRelations(): Promise<VenueGridRow[]>;
   getVenueById(id: string): Promise<Venue | undefined>;
   getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined>;
   createVenue(data: CreateVenue): Promise<Venue>;
@@ -1390,104 +1394,59 @@ export class DatabaseStorage implements IStorage {
     return venue;
   }
   
-  async getVenuesWithRelations(): Promise<VenueWithRelations[]> {
-    // Optimized: Parallel batch queries instead of sequential
-    // This reduces latency by running all queries concurrently
-    const [allVenues, allVenueAmenities, allVenueTags, allVenueFiles, allVenuePhotos] = await Promise.all([
-      db.select().from(venues).orderBy(venues.name),
-      db
-        .select({
-          venueId: venueAmenities.venueId,
-          amenity: amenities,
-        })
-        .from(venueAmenities)
-        .innerJoin(amenities, eq(venueAmenities.amenityId, amenities.id)),
-      db
-        .select({
-          venueId: venueTags.venueId,
-          tag: tags,
-        })
-        .from(venueTags)
-        .innerJoin(tags, eq(venueTags.tagId, tags.id)),
-      db
-        .select({
-          file: venueFiles,
-          uploadedBy: {
-            id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-          },
-        })
-        .from(venueFiles)
-        .leftJoin(users, eq(venueFiles.uploadedById, users.id))
-        .orderBy(venueFiles.sortOrder, venueFiles.uploadedAt),
-      db
-        .select()
-        .from(venuePhotos)
-        .orderBy(asc(venuePhotos.sortOrder)),
-    ]);
-    
-    const amenitiesByVenue = new Map<string, Amenity[]>();
-    for (const va of allVenueAmenities) {
-      if (!amenitiesByVenue.has(va.venueId)) {
-        amenitiesByVenue.set(va.venueId, []);
-      }
-      amenitiesByVenue.get(va.venueId)!.push(va.amenity);
-    }
-    
-    const tagsByVenue = new Map<string, Tag[]>();
-    for (const vt of allVenueTags) {
-      if (!tagsByVenue.has(vt.venueId)) {
-        tagsByVenue.set(vt.venueId, []);
-      }
-      tagsByVenue.get(vt.venueId)!.push(vt.tag);
-    }
-    
-    const floorplansByVenue = new Map<string, VenueFileWithUploader[]>();
-    const attachmentsByVenue = new Map<string, VenueFileWithUploader[]>();
-    for (const vf of allVenueFiles) {
-      const fileWithUploader: VenueFileWithUploader = {
-        ...vf.file,
-        uploadedBy: vf.uploadedBy,
-      };
-      if (vf.file.category === 'floorplan') {
-        if (!floorplansByVenue.has(vf.file.venueId)) {
-          floorplansByVenue.set(vf.file.venueId, []);
-        }
-        floorplansByVenue.get(vf.file.venueId)!.push(fileWithUploader);
-      } else {
-        if (!attachmentsByVenue.has(vf.file.venueId)) {
-          attachmentsByVenue.set(vf.file.venueId, []);
-        }
-        attachmentsByVenue.get(vf.file.venueId)!.push(fileWithUploader);
-      }
-    }
-    
-    const photosByVenue = new Map<string, VenuePhoto[]>();
-    for (const photo of allVenuePhotos) {
-      if (!photosByVenue.has(photo.venueId)) {
-        photosByVenue.set(photo.venueId, []);
-      }
-      photosByVenue.get(photo.venueId)!.push(photo);
-    }
-    
-    return allVenues.map(venue => {
-      const venueAmenitiesList = amenitiesByVenue.get(venue.id) || [];
-      const venueTagsList = tagsByVenue.get(venue.id) || [];
-      const venueFloorplansList = floorplansByVenue.get(venue.id) || [];
-      const venueAttachmentsList = attachmentsByVenue.get(venue.id) || [];
-      const venuePhotosList = photosByVenue.get(venue.id) || [];
-      
-      return {
-        ...venue,
-        amenities: venueAmenitiesList,
-        cuisineTags: venueTagsList.filter(t => t.category === 'Cuisine'),
-        styleTags: venueTagsList.filter(t => t.category === 'Style'),
-        floorplans: venueFloorplansList,
-        attachments: venueAttachmentsList,
-        photos: venuePhotosList,
-      };
-    });
+  async getVenuesWithRelations(): Promise<VenueGridRow[]> {
+    // Optimized: Single SQL query with json_agg subqueries
+    // Only selects columns needed for grid display, excludes files/photos
+    const result = await db.execute(sql`
+      SELECT 
+        v.id,
+        v.name,
+        v.venue_type,
+        v.short_description,
+        v.city,
+        v.state,
+        v.venue_spaces,
+        v.is_active,
+        v.is_draft,
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', a.id, 'name', a.name, 'icon', a.icon))
+           FROM venue_amenities va
+           JOIN amenities a ON va.amenity_id = a.id
+           WHERE va.venue_id = v.id),
+          '[]'::json
+        ) AS amenities,
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'category', t.category))
+           FROM venue_tags vt
+           JOIN tags t ON vt.tag_id = t.id
+           WHERE vt.venue_id = v.id AND t.category = 'Cuisine'),
+          '[]'::json
+        ) AS cuisine_tags,
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'category', t.category))
+           FROM venue_tags vt
+           JOIN tags t ON vt.tag_id = t.id
+           WHERE vt.venue_id = v.id AND t.category = 'Style'),
+          '[]'::json
+        ) AS style_tags
+      FROM venues v
+      ORDER BY v.name
+    `);
+
+    return (result.rows as any[]).map(row => ({
+      id: row.id as string,
+      name: row.name as string,
+      venueType: row.venue_type as string | null,
+      shortDescription: row.short_description as string | null,
+      city: row.city as string | null,
+      state: row.state as string | null,
+      venueSpaces: row.venue_spaces as VenueSpace[] | null,
+      isActive: row.is_active as boolean,
+      isDraft: row.is_draft as boolean,
+      amenities: row.amenities as AmenitySummary[],
+      cuisineTags: row.cuisine_tags as TagSummary[],
+      styleTags: row.style_tags as TagSummary[],
+    }));
   }
   
   async createVenue(data: CreateVenue): Promise<Venue> {

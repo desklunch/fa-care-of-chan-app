@@ -990,6 +990,8 @@ export type VendorWithRelations = Vendor & {
 // Simplified relation types for optimized queries
 export type VendorSummary = Pick<Vendor, 'id' | 'businessName'>;
 export type ClientSummary = Pick<Client, 'id' | 'name'>;
+export type AmenitySummary = Pick<Amenity, 'id' | 'name' | 'icon'>;
+export type TagSummary = Pick<Tag, 'id' | 'name' | 'category'>;
 
 // Renamed from ContactWithVendors - includes both vendors and clients
 export type ContactWithRelations = Contact & {
@@ -1000,7 +1002,7 @@ export type ContactWithRelations = Contact & {
 // Keep for backward compatibility
 export type ContactWithVendors = ContactWithRelations;
 
-// Venue with associated amenities, tags, floorplans, and photos
+// Venue with associated amenities, tags, floorplans, and photos (for detail view)
 export type VenueWithRelations = Venue & {
   amenities: Amenity[];
   cuisineTags: Tag[];
@@ -1009,6 +1011,22 @@ export type VenueWithRelations = Venue & {
   attachments: VenueFileWithUploader[];
   photos: VenuePhoto[];
   collections?: VenueCollectionWithCreator[];
+};
+
+// Optimized venue type for grid display (excludes files/photos, uses summary types)
+export type VenueGridRow = {
+  id: string;
+  name: string;
+  venueType: string | null;
+  shortDescription: string | null;
+  city: string | null;
+  state: string | null;
+  venueSpaces: VenueSpace[] | null;
+  isActive: boolean;
+  isDraft: boolean;
+  amenities: AmenitySummary[];
+  cuisineTags: TagSummary[];
+  styleTags: TagSummary[];
 };
 
 // Venue collection types
