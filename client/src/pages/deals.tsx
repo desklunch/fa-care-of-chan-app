@@ -291,8 +291,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
 
       sortable: false,
       editable: true,
-      pinned: "left",
-      lockPinned: true,
+      // TEMPORARY: Disabled pinning for mobile debugging
+      // pinned: "left",
+      // lockPinned: true,
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
@@ -323,8 +324,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       editable: true,
       cellEditor: "agSelectCellEditor",
 
-      pinned: "left",
-      lockPinned: true,
+      // TEMPORARY: Disabled pinning for mobile debugging
+      // pinned: "left",
+      // lockPinned: true,
       autoHeight: true,
       resizable: false,
       sortable: false,
@@ -397,8 +399,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         values: dealStatuses,
       },
       comparator: createStatusComparator(),
-      pinned: "left",
-      lockPinned: true,
+      // TEMPORARY: Disabled pinning for mobile debugging
+      // pinned: "left",
+      // lockPinned: true,
       resizable: false,
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
@@ -1122,10 +1125,9 @@ export default function Deals() {
         getRowId={(deal) => deal.id || ""}
         emptyMessage="No deals found"
         emptyDescription="Start tracking your sales pipeline by creating a deal."
-        // TEMPORARY: Disabled for mobile debugging
-        // enableRowDrag={true}
-        // onRowDragEnd={handleRowDragEnd}
-        // onCellValueChanged={handleCellValueChanged}
+        enableRowDrag={true}
+        onRowDragEnd={handleRowDragEnd}
+        onCellValueChanged={handleCellValueChanged}
       />
     </PageLayout>
   );
