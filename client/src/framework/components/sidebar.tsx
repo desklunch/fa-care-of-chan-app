@@ -192,8 +192,8 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           isMediumScreen && !isHovered && "md:w-[72px]",
           "md:flex",
           isMobileOpen 
-            ? "fixed inset-y-0 left-0 w-[80vw] max-w-[80vw] translate-x-0" 
-            : "fixed inset-y-0 left-0 w-[80vw] max-w-[80vw] -translate-x-full pointer-events-none md:pointer-events-auto md:relative md:translate-x-0 md:w-auto"
+            ? "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] translate-x-0 rounded-r-lg" 
+            : "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] -translate-x-full pointer-events-none rounded-r-lg md:pointer-events-auto md:relative md:translate-x-0 md:w-auto md:rounded-none"
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
