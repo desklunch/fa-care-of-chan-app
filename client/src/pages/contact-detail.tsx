@@ -281,33 +281,73 @@ export default function ContactDetail() {
               validation={{ required: true }}
             />
             {localLinkedClients.length > 0 ? (
-              localLinkedClients.map((client, index) => (
-                <FieldRow
-                  key={client.id}
-                  label={index === 0 ? "Client" : ""}
-                  testId={`field-linked-client-${client.id}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <Link
-                      href={`/clients/${client.id}`}
-                      className="text-primary font-medium hover:underline"
-                      data-testid={`link-client-${client.id}`}
-                    >
-                      {client.name}
-                    </Link>
+              <>
+                {localLinkedClients.map((client, index) => (
+                  <FieldRow
+                    key={client.id}
+                    label={index === 0 ? "Client" : ""}
+                    testId={`field-linked-client-${client.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <Link
+                        href={`/clients/${client.id}`}
+                        className="text-primary font-medium hover:underline"
+                        data-testid={`link-client-${client.id}`}
+                      >
+                        {client.name}
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleUnlinkClient(client.id)}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        data-testid={`button-unlink-client-${client.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FieldRow>
+                ))}
+                {showClientSearch ? (
+                  <FieldRow label="" testId="field-client-search">
+                    <ClientLinkSearch
+                      contactId={id!}
+                      linkedClients={localLinkedClients}
+                      onLink={handleLinkClient}
+                      onUnlink={handleUnlinkClient}
+                      showLinkedClients={false}
+                      autoFocus
+                      onClose={() => setShowClientSearch(false)}
+                    />
+                  </FieldRow>
+                ) : (
+                  <FieldRow label="" testId="field-add-another-client">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleUnlinkClient(client.id)}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                      data-testid={`button-unlink-client-${client.id}`}
+                      onClick={() => setShowClientSearch(true)}
+                      className="h-auto px-2 text-muted-foreground hover:text-primary"
+                      data-testid="button-add-another-client"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <UserPlus className="h-4 w-4" />
+                      Add another client
                     </Button>
-                  </div>
-                </FieldRow>
-              ))
-            ) : !showClientSearch ? (
+                  </FieldRow>
+                )}
+              </>
+            ) : showClientSearch ? (
+              <FieldRow label="Client" testId="field-client-search">
+                <ClientLinkSearch
+                  contactId={id!}
+                  linkedClients={localLinkedClients}
+                  onLink={handleLinkClient}
+                  onUnlink={handleUnlinkClient}
+                  showLinkedClients={false}
+                  autoFocus
+                  onClose={() => setShowClientSearch(false)}
+                />
+              </FieldRow>
+            ) : (
               <FieldRow label="Client" testId="field-linked-client-empty">
                 <Button
                   variant="ghost"
@@ -320,53 +360,76 @@ export default function ContactDetail() {
                   Add Client Company
                 </Button>
               </FieldRow>
-            ) : null}
-
-            {showClientSearch && (
-              <FieldRow
-                label={localLinkedClients.length === 0 ? "Client" : ""}
-                testId="field-client-search"
-              >
-                <ClientLinkSearch
-                  contactId={id!}
-                  linkedClients={localLinkedClients}
-                  onLink={handleLinkClient}
-                  onUnlink={handleUnlinkClient}
-                  showLinkedClients={false}
-                  autoFocus
-                  onClose={() => setShowClientSearch(false)}
-                />
-              </FieldRow>
             )}
 
             {localLinkedVendors.length > 0 ? (
-              localLinkedVendors.map((vendor, index) => (
-                <FieldRow
-                  key={vendor.id}
-                  label={index === 0 ? "Vendor" : ""}
-                  testId={`field-linked-vendor-${vendor.id}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <Link
-                      href={`/vendors/${vendor.id}`}
-                      className="text-primary font-medium hover:underline"
-                      data-testid={`link-vendor-${vendor.id}`}
-                    >
-                      {vendor.businessName}
-                    </Link>
+              <>
+                {localLinkedVendors.map((vendor, index) => (
+                  <FieldRow
+                    key={vendor.id}
+                    label={index === 0 ? "Vendor" : ""}
+                    testId={`field-linked-vendor-${vendor.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <Link
+                        href={`/vendors/${vendor.id}`}
+                        className="text-primary font-medium hover:underline"
+                        data-testid={`link-vendor-${vendor.id}`}
+                      >
+                        {vendor.businessName}
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleUnlinkVendor(vendor.id)}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        data-testid={`button-unlink-vendor-${vendor.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FieldRow>
+                ))}
+                {showVendorSearch ? (
+                  <FieldRow label="" testId="field-vendor-search">
+                    <VendorLinkSearch
+                      contactId={id!}
+                      linkedVendors={localLinkedVendors}
+                      onLink={handleLinkVendor}
+                      onUnlink={handleUnlinkVendor}
+                      showLinkedVendors={false}
+                      autoFocus
+                      onClose={() => setShowVendorSearch(false)}
+                    />
+                  </FieldRow>
+                ) : (
+                  <FieldRow label="" testId="field-add-another-vendor">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleUnlinkVendor(vendor.id)}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                      data-testid={`button-unlink-vendor-${vendor.id}`}
+                      onClick={() => setShowVendorSearch(true)}
+                      className="h-auto px-2 text-muted-foreground hover:text-primary"
+                      data-testid="button-add-another-vendor"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Handshake className="h-4 w-4" />
+                      Add another vendor
                     </Button>
-                  </div>
-                </FieldRow>
-              ))
-            ) : !showVendorSearch ? (
+                  </FieldRow>
+                )}
+              </>
+            ) : showVendorSearch ? (
+              <FieldRow label="Vendor" testId="field-vendor-search">
+                <VendorLinkSearch
+                  contactId={id!}
+                  linkedVendors={localLinkedVendors}
+                  onLink={handleLinkVendor}
+                  onUnlink={handleUnlinkVendor}
+                  showLinkedVendors={false}
+                  autoFocus
+                  onClose={() => setShowVendorSearch(false)}
+                />
+              </FieldRow>
+            ) : (
               <FieldRow label="Vendor" testId="field-linked-vendor-empty">
                 <Button
                   variant="ghost"
@@ -378,23 +441,6 @@ export default function ContactDetail() {
                   <Handshake className="h-4 w-4" />
                   Add Vendor
                 </Button>
-              </FieldRow>
-            ) : null}
-
-            {showVendorSearch && (
-              <FieldRow
-                label={localLinkedVendors.length === 0 ? "Vendor" : ""}
-                testId="field-vendor-search"
-              >
-                <VendorLinkSearch
-                  contactId={id!}
-                  linkedVendors={localLinkedVendors}
-                  onLink={handleLinkVendor}
-                  onUnlink={handleUnlinkVendor}
-                  showLinkedVendors={false}
-                  autoFocus
-                  onClose={() => setShowVendorSearch(false)}
-                />
               </FieldRow>
             )}
 
