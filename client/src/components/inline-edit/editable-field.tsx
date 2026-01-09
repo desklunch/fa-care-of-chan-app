@@ -50,33 +50,43 @@ export function EditableField({
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
   
-  const [isMobile, setIsMobile] = useState(() => 
-    typeof window !== "undefined" ? window.innerWidth < MOBILE_BREAKPOINT : false
-  );
-  const [viewportHeight, setViewportHeight] = useState(() => 
-    typeof window !== "undefined" 
-      ? (window.visualViewport?.height ?? window.innerHeight) 
-      : 800
-  );
+  const [isMobile, setIsMobile] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(800);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-      setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
-    };
+    const checkMobile = () => window.innerWidth < MOBILE_BREAKPOINT;
+    const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
+    
+    setIsMobile(checkMobile());
+    setViewportHeight(getViewportHeight());
 
-    const handleViewportResize = () => {
-      setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+    const handleResize = () => {
+      setIsMobile(checkMobile());
     };
 
     window.addEventListener("resize", handleResize);
-    window.visualViewport?.addEventListener("resize", handleViewportResize);
     
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.visualViewport?.removeEventListener("resize", handleViewportResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isEditing || !isMobile) return;
+
+    const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
+    setViewportHeight(getViewportHeight());
+
+    const handleViewportResize = () => {
+      setViewportHeight(getViewportHeight());
+    };
+
+    window.visualViewport?.addEventListener("resize", handleViewportResize);
+    
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleViewportResize);
+    };
+  }, [isEditing, isMobile]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
