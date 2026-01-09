@@ -120,7 +120,7 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 const TIER_1_PERMISSIONS: Permission[] = [
   'venues.read',
   'venues.write',
-  // Note: venues.delete is tier 2+ (manager/admin only)
+  'venues.delete',
   'clients.read',
   'clients.write',
   'clients.delete',
@@ -129,16 +129,15 @@ const TIER_1_PERMISSIONS: Permission[] = [
   'contacts.delete',
   'vendors.read',
   'vendors.write',
-  // Note: vendors.delete is admin only
+  'vendors.delete',
   // Note: team.read is tier 2+ (manager/admin only)
   'app_features.read',
   'app_features.vote',
 ];
 
-// Tier 2 (manager) permissions - includes all tier 1 + deals, venue deletion, and team access
+// Tier 2 (manager) permissions - includes all tier 1 + deals and team access
 const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
-  'venues.delete', // Managers can delete venues
   'team.read', // Managers can view team directory
   'deals.read',
   'deals.write',
@@ -151,7 +150,6 @@ const TIER_2_PERMISSIONS: Permission[] = [
 // Tier 3 (admin) permissions - includes all lower tiers
 const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
-  'vendors.delete', // Admin-only: Delete vendors
   'team.manage',
   'invites.read',
   'invites.manage',
