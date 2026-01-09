@@ -291,9 +291,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
 
       sortable: false,
       editable: true,
-      // TEMPORARY: Disabled pinning for mobile debugging
-      // pinned: "left",
-      // lockPinned: true,
+      pinned: "left",
+      lockPinned: true,
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
@@ -324,9 +323,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       editable: true,
       cellEditor: "agSelectCellEditor",
 
-      // TEMPORARY: Disabled pinning for mobile debugging
-      // pinned: "left",
-      // lockPinned: true,
+      pinned: "left",
+      lockPinned: true,
       autoHeight: true,
       resizable: false,
       sortable: false,
@@ -399,9 +397,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         values: dealStatuses,
       },
       comparator: createStatusComparator(),
-      // TEMPORARY: Disabled pinning for mobile debugging
-      // pinned: "left",
-      // lockPinned: true,
+      pinned: "left",
+      lockPinned: true,
       resizable: false,
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
