@@ -3,36 +3,6 @@ import { contacts } from "../shared/schema";
 import * as fs from "fs";
 import * as path from "path";
 
-interface CsvContact {
-  leagacy_id: string;
-  first_name: string;
-  last_name: string;
-  title: string;
-  email: string;
-  phone: string;
-  linkedin_username: string;
-}
-
-function parseCSV(content: string): CsvContact[] {
-  const lines = content.split("\n");
-  const headers = parseCSVLine(lines[0]);
-  const results: CsvContact[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-
-    const values = parseCSVLine(line);
-    const obj: any = {};
-    headers.forEach((header, index) => {
-      obj[header.trim()] = values[index]?.trim() || "";
-    });
-    results.push(obj as CsvContact);
-  }
-
-  return results;
-}
-
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let current = "";
@@ -60,56 +30,73 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
+function parseJsonArray(value: string): string[] | null {
+  if (!value || value.trim() === '') return null;
+  
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.map(v => String(v));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function importContacts() {
   console.log("Starting contacts import...");
 
   const csvPath = path.join(
     process.cwd(),
-    "attached_assets/contacts_1764782403871.csv"
+    "attached_assets/vendors_contacts_-_contacts_1767978915034.csv"
   );
   const content = fs.readFileSync(csvPath, "utf-8");
-  const csvContacts = parseCSV(content);
-
-  console.log(`Found ${csvContacts.length} contacts to import`);
+  const lines = content.split("\n").filter(line => line.trim() !== "");
+  
+  const header = parseCSVLine(lines[0]);
+  console.log("Header:", header);
+  
+  const dataLines = lines.slice(1);
+  console.log(`Found ${dataLines.length} contacts to import`);
 
   let imported = 0;
   let skipped = 0;
 
-  for (const csvContact of csvContacts) {
-    const firstName = csvContact.first_name?.trim();
-    const lastName = csvContact.last_name?.trim() || "";
+  for (const line of dataLines) {
+    const values = parseCSVLine(line);
+    
+    const externalId = values[0]?.trim() || null;
+    const firstName = values[1]?.trim() || "";
+    const lastName = values[2]?.trim() || "";
+    const phoneNumbers = parseJsonArray(values[3]);
+    const emailAddresses = parseJsonArray(values[4]);
+    const jobTitle = values[5]?.trim() || null;
 
-    if (!firstName) {
+    if (!firstName && !lastName) {
+      console.log(`Skipping row with no name: ${line.substring(0, 50)}...`);
       skipped++;
       continue;
     }
 
-    const emailAddresses = csvContact.email?.trim()
-      ? [csvContact.email.trim()]
-      : null;
-    const phoneNumbers = csvContact.phone?.trim()
-      ? [csvContact.phone.trim()]
-      : null;
-
     try {
       await db.insert(contacts).values({
-        externalId: csvContact.leagacy_id?.trim() || null,
-        firstName,
-        lastName,
-        jobTitle: csvContact.title?.trim() || null,
-        emailAddresses,
+        externalId,
+        firstName: firstName || "",
+        lastName: lastName || "",
         phoneNumbers,
-        linkedinUsername: csvContact.linkedin_username?.trim() || null,
+        emailAddresses,
+        jobTitle,
       });
       imported++;
 
-      if (imported % 100 === 0) {
+      if (imported % 50 === 0) {
         console.log(`Imported ${imported} contacts...`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         `Error importing contact ${firstName} ${lastName}:`,
-        error
+        error.message
       );
       skipped++;
     }
