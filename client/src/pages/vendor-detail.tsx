@@ -203,7 +203,7 @@ function EditableFieldRow({
 
   return (
     <div
-      className="group flex py-4 border-b border-border/50 last:border-b-0"
+      className="group flex gap-4 py-4 border-b border-border/50 last:border-b-0"
       data-testid={testId}
       onDoubleClick={handleDoubleClick}
     >
@@ -251,7 +251,7 @@ function FieldRow({
 }) {
   return (
     <div
-      className="flex py-4 border-b border-border/50 last:border-b-0"
+      className="flex gap-4 py-4 border-b border-border/50 last:border-b-0"
       data-testid={testId}
     >
       <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
@@ -648,7 +648,12 @@ export default function VendorDetail() {
         ] : undefined}
       >
         <div className="p-4 md:p-6 max-w-4xl space-y-6">
-          <div className="flex items-center gap-3">
+          <div className="space-y-1">
+            {vendor.isPreferred && (
+              <Badge variant="secondary" data-testid="badge-preferred">
+                Preferred Vendor
+              </Badge>
+            )}
             <PermissionGate permission="vendors.write" fallback={
               <h1 className="text-2xl font-bold" data-testid="text-vendor-name">
                 {vendor.businessName}
@@ -661,15 +666,13 @@ export default function VendorDetail() {
                 disabled={!canEdit}
               />
             </PermissionGate>
-            {vendor.isPreferred && (
-              <Badge variant="secondary" data-testid="badge-preferred">
-                Preferred
-              </Badge>
-            )}
           </div>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Info</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-0 divide-y divide-border/50">
                 <FieldRow label="Services" testId="row-services">
                   <PermissionGate permission="vendors.write" fallback={
@@ -807,8 +810,51 @@ export default function VendorDetail() {
                     onSave={handleFieldSave}
                     disabled={!canEdit}
                   />
+                </div>
+              </PermissionGate>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PermissionGate permission="vendors.write" fallback={
+                <div className="space-y-0 divide-y divide-border/50">
+                  <FieldRow label="Deck" testId="row-capabilities">
+                    {vendor.capabilitiesDeck ? (
+                      <a 
+                        href={vendor.capabilitiesDeck.startsWith("http") ? vendor.capabilitiesDeck : `https://${vendor.capabilitiesDeck}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        View Deck
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">Not set</span>
+                    )}
+                  </FieldRow>
+                  <FieldRow label="Employees" testId="row-employee-count">
+                    {vendor.employeeCount || <span className="text-muted-foreground">Not set</span>}
+                  </FieldRow>
+                  <FieldRow label="Sales Tax" testId="row-sales-tax">
+                    <Badge variant={vendor.chargesSalesTax ? "default" : "outline"}>
+                      {vendor.chargesSalesTax ? "Yes" : "No"}
+                    </Badge>
+                  </FieldRow>
+                  <FieldRow label="Tax Notes" testId="row-tax-notes">
+                    {vendor.salesTaxNotes || <span className="text-muted-foreground">Not set</span>}
+                  </FieldRow>
+                  <FieldRow label="Diversity" testId="row-diversity">
+                    {vendor.diversityInfo || <span className="text-muted-foreground">Not set</span>}
+                  </FieldRow>
+                </div>
+              }>
+                <div className="space-y-0 divide-y divide-border/50">
                   <EditableFieldRow
-                    label="Capabilities Deck"
+                    label="Deck"
                     value={vendor.capabilitiesDeck}
                     field="capabilitiesDeck"
                     testId="row-capabilities"
@@ -825,49 +871,8 @@ export default function VendorDetail() {
                       </a>
                     ) : undefined}
                   />
-                </div>
-              </PermissionGate>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PermissionGate permission="vendors.write" fallback={
-                <div className="space-y-0 divide-y divide-border/50">
-                  <FieldRow label="Employee Count" testId="row-employee-count">
-                    {vendor.employeeCount || <span className="text-muted-foreground">Not set</span>}
-                  </FieldRow>
-                  <FieldRow label="Preferred Vendor" testId="row-preferred">
-                    <Badge variant={vendor.isPreferred ? "default" : "outline"}>
-                      {vendor.isPreferred ? "Yes" : "No"}
-                    </Badge>
-                  </FieldRow>
-                  <FieldRow label="Charges Sales Tax" testId="row-sales-tax">
-                    <Badge variant={vendor.chargesSalesTax ? "default" : "outline"}>
-                      {vendor.chargesSalesTax ? "Yes" : "No"}
-                    </Badge>
-                  </FieldRow>
-                  <FieldRow label="Sales Tax Notes" testId="row-tax-notes">
-                    {vendor.salesTaxNotes || <span className="text-muted-foreground">Not set</span>}
-                  </FieldRow>
-                  <FieldRow label="Diversity Information" testId="row-diversity">
-                    {vendor.diversityInfo || <span className="text-muted-foreground">Not set</span>}
-                  </FieldRow>
-                  <FieldRow label="Notes" testId="row-notes">
-                    {vendor.notes ? (
-                      <span className="whitespace-pre-wrap">{vendor.notes}</span>
-                    ) : (
-                      <span className="text-muted-foreground">No notes</span>
-                    )}
-                  </FieldRow>
-                </div>
-              }>
-                <div className="space-y-0 divide-y divide-border/50">
                   <EditableFieldRow
-                    label="Employee Count"
+                    label="Employees"
                     value={vendor.employeeCount?.toString() || null}
                     field="employeeCount"
                     testId="row-employee-count"
@@ -875,22 +880,7 @@ export default function VendorDetail() {
                     disabled={!canEdit}
                   />
                   <EditableFieldRow
-                    label="Preferred Vendor"
-                    value={null}
-                    field="isPreferred"
-                    testId="row-preferred"
-                    type="switch"
-                    booleanValue={vendor.isPreferred || false}
-                    onSave={handleFieldSave}
-                    disabled={!canEdit}
-                    displayValue={
-                      <Badge variant={vendor.isPreferred ? "default" : "outline"}>
-                        {vendor.isPreferred ? "Yes" : "No"}
-                      </Badge>
-                    }
-                  />
-                  <EditableFieldRow
-                    label="Charges Sales Tax"
+                    label="Sales Tax"
                     value={null}
                     field="chargesSalesTax"
                     testId="row-sales-tax"
@@ -905,7 +895,7 @@ export default function VendorDetail() {
                     }
                   />
                   <EditableFieldRow
-                    label="Sales Tax Notes"
+                    label="Tax Notes"
                     value={vendor.salesTaxNotes}
                     field="salesTaxNotes"
                     testId="row-tax-notes"
@@ -914,13 +904,55 @@ export default function VendorDetail() {
                     disabled={!canEdit}
                   />
                   <EditableFieldRow
-                    label="Diversity Information"
+                    label="Diversity"
                     value={vendor.diversityInfo}
                     field="diversityInfo"
                     testId="row-diversity"
                     type="textarea"
                     onSave={handleFieldSave}
                     disabled={!canEdit}
+                  />
+                </div>
+              </PermissionGate>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Internal</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PermissionGate permission="vendors.write" fallback={
+                <div className="space-y-0 divide-y divide-border/50">
+                  <FieldRow label="Preferred" testId="row-preferred">
+                    <Badge variant={vendor.isPreferred ? "default" : "outline"}>
+                      {vendor.isPreferred ? "Yes" : "No"}
+                    </Badge>
+                  </FieldRow>
+                  <FieldRow label="Notes" testId="row-notes">
+                    {vendor.notes ? (
+                      <span className="whitespace-pre-wrap">{vendor.notes}</span>
+                    ) : (
+                      <span className="text-muted-foreground">No notes</span>
+                    )}
+                  </FieldRow>
+                </div>
+              }>
+                <div className="space-y-0 divide-y divide-border/50">
+                  <EditableFieldRow
+                    label="Preferred"
+                    value={null}
+                    field="isPreferred"
+                    testId="row-preferred"
+                    type="switch"
+                    booleanValue={vendor.isPreferred || false}
+                    onSave={handleFieldSave}
+                    disabled={!canEdit}
+                    displayValue={
+                      <Badge variant={vendor.isPreferred ? "default" : "outline"}>
+                        {vendor.isPreferred ? "Yes" : "No"}
+                      </Badge>
+                    }
                   />
                   <EditableFieldRow
                     label="Notes"
