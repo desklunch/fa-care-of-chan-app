@@ -323,7 +323,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 76,
       editable: true,
       cellEditor: "agSelectCellEditor",
-
+      pinned: "left",
+      lockPinned: true,
       autoHeight: true,
       resizable: false,
       sortable: false,
@@ -388,8 +389,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "status",
     category: "Basic Info",
     colDef: {
-      flex: 2,
-      maxWidth: 200,
+      width: 140,
 
       editable: true,
       cellEditor: "agSelectCellEditor",
@@ -397,15 +397,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         values: dealStatuses,
       },
       comparator: createStatusComparator(),
-
+      pinned: "left",
+      lockPinned: true,
+      resizable: false,
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
-        <div className="bg-white flex">
           <DealStatusBadge
             status={params.value as DealWithRelations["status"]}
           />
-        </div>
         );
       },
     },
