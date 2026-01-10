@@ -289,11 +289,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 240,
-
-      sortable: false,
-      editable: true,
       pinned: "left",
       lockPinned: true,
+      sortable: false,
+      editable: true,
+ 
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
@@ -303,7 +303,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               <Button
                 size="sm"
                 variant="ghost"
-                className="bg-foreground/5 text-muted-foreground p-2"
+                className="  bg-foreground/5 text-muted-foreground p-2"
               >
                 <SquareArrowOutUpRight className="h-3 w-3 " />
               </Button>
@@ -388,20 +388,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 1.5,
-      minWidth: 40,
-
+      minWidth: 80,
+      maxWidth: 170,
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: {
         values: dealStatuses,
       },
       comparator: createStatusComparator(),
-      pinned: "left",
 
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
-          <div className="@container w-full h-full flex items-center">
+          <div className="@container w-full h-full flex items-start pt-[14px]">
             <DealStatusBadge
               status={params.value as DealWithRelations["status"]}
             />
@@ -473,7 +472,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -499,7 +498,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -525,7 +524,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -551,7 +550,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
             <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
           </span>
         );
@@ -581,7 +580,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -805,7 +804,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -843,7 +842,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (

@@ -25,11 +25,12 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center font-medium whitespace-nowrap",
-        "size-3 p-0 rounded-full text-[0px]",
-        "@[140px]:px-1.5 @[140px]:py-0.5 @[140px]:text-xs @[140px]:rounded-[5px] @[140px]:size-auto",
         statusClass,
-        className
+        className,
+        "inline-flex items-center justify-center font-medium whitespace-nowrap",
+        "size-3 p-0 rounded-full text-[0px] mt-1 !border-[2px]",
+        "@[100px]:px-1.5 @[100px]:py-0.5 @[100px]:text-xs @[100px]:rounded-[5px] @[100px]:mt-0 @[100px]:size-auto @[100px]:!border-[1.25px] ",
+
       )}
       data-testid={`badge-deal-status-${status.toLowerCase().replace(/\s+/g, "-")}`}
       title={status}
