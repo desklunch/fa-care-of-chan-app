@@ -899,22 +899,49 @@ export default function Deals() {
     industriesMap,
   };
 
-  // On mobile, show only essential columns with flex sizing, no resize
+  // Mobile column configuration: explicit ColDef overrides per column
+  const mobileColumnConfig: Record<string, {
+    pinned?: "left" | "right" | boolean;
+    lockPinned?: boolean;
+    width?: number;
+    minWidth?: number;
+    maxWidth?: number;
+    resizable?: boolean;
+    flex?: number;
+  }> = {
+    displayName: {
+      flex: 1,
+      minWidth: 120,
+      resizable: false,
+    },
+    owner: {
+      flex: 1,
+      minWidth: 100,
+      resizable: false,
+    },
+    status: {
+      flex: 1,
+      minWidth: 100,
+      resizable: false,
+    },
+  };
+
+  // On mobile, show only essential columns with explicit config
   const responsiveColumns = useMemo(() => {
     if (!isMobile) return dealColumns;
     
-    const mobileColumnIds = ["displayName", "owner", "status"];
+    const mobileColumnIds = Object.keys(mobileColumnConfig);
     
     return dealColumns
       .filter((col) => mobileColumnIds.includes(col.id))
       .map((col) => {
-        const { pinned, lockPinned, width, minWidth, maxWidth, resizable, ...restColDef } = col.colDef || {};
+        const { pinned, lockPinned, width, minWidth, maxWidth, resizable, flex, ...restColDef } = col.colDef || {};
+        const mobileConfig = mobileColumnConfig[col.id] || {};
         return {
           ...col,
           colDef: {
             ...restColDef,
-            flex: 1,
-            resizable: false,
+            ...mobileConfig,
           },
         };
       });
