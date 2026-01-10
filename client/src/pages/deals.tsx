@@ -287,17 +287,17 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     toggleable: false,
     colDef: {
-      flex: 2,
+      flex: 5,
       minWidth: 240,
       pinned: "left",
       lockPinned: true,
       sortable: false,
       editable: true,
- 
+
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
-          <span className="flex items-start  gap-3 w-full">
+          <span className="flex items-start  gap-2 md:gap-3 w-full flex-row-reverse md:flex-row">
             <span className="flex-1 truncate">{params.value}</span>
             <Link href={`/deals/${params.data.id}`} className="flex-shrink-0">
               <Button
@@ -319,8 +319,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "ownerId",
     category: "Basic Info",
     colDef: {
-      flex: 0,
       width: 76,
+      minWidth: 60,
       editable: true,
       cellEditor: "agSelectCellEditor",
 
@@ -387,7 +387,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "status",
     category: "Basic Info",
     colDef: {
-      flex: 1.5,
+      flex: 1,
       minWidth: 80,
       maxWidth: 170,
       editable: true,
@@ -400,7 +400,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
-          <div className="@container w-full h-full flex items-start pt-[14px]">
+          <div className="@container w-full h-full min-h-10 flex items-start pt-[14px]">
             <DealStatusBadge
               status={params.value as DealWithRelations["status"]}
             />
@@ -902,18 +902,19 @@ export default function Deals() {
   // On mobile, show only essential columns with flex sizing, no resize
   const responsiveColumns = useMemo(() => {
     if (!isMobile) return dealColumns;
-    
+
     const mobileColumnIds = ["displayName", "owner", "status"];
-    
+
     return dealColumns
       .filter((col) => mobileColumnIds.includes(col.id))
       .map((col) => {
-        const { pinned, lockPinned, width, minWidth, maxWidth, resizable, ...restColDef } = col.colDef || {};
+        const { pinned, lockPinned, width, resizable, ...restColDef } =
+          col.colDef || {};
         return {
           ...col,
           colDef: {
-            ...restColDef,
             flex: 1,
+            ...restColDef,
             resizable: false,
           },
         };
