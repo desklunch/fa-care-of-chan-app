@@ -908,11 +908,13 @@ export default function Deals() {
     maxWidth?: number;
     resizable?: boolean;
     flex?: number;
+    headerName?: string;
   }> = {
     displayName: {
       flex: 1,
       minWidth: 120,
       resizable: false,
+      headerName: "Deal",
     },
     owner: {
       flex: 1,
