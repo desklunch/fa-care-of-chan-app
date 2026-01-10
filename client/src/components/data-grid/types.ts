@@ -64,6 +64,9 @@ export interface DataGridPageProps<T, C = unknown> {
   
   // Cell editing props
   onCellValueChanged?: (event: CellValueChangedEvent<T>) => void;
+  
+  // Hide column selector (useful for mobile)
+  hideColumnSelector?: boolean;
 }
 
 export interface ColumnSelectorProps {

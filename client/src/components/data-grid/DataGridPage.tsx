@@ -355,6 +355,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   onRowDragEnd,
   onCellValueChanged,
   isExternalDataLoading = false,
+  hideColumnSelector = false,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
@@ -945,14 +946,16 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           <div className="text-sm text-muted-foreground whitespace-nowrap" data-testid="text-row-count">
             {`${filteredData.length} of ${data.length}`}
           </div>
-          <ColumnSelector
-            columns={columns}
-            defaultVisibleColumns={defaultVisibleColumns}
-            getColumnVisibility={getColumnVisibility}
-            onToggleColumn={handleToggleColumn}
-            onShowAll={handleShowAll}
-            onResetToDefaults={handleResetToDefaults}
-          />
+          {!hideColumnSelector && (
+            <ColumnSelector
+              columns={columns}
+              defaultVisibleColumns={defaultVisibleColumns}
+              getColumnVisibility={getColumnVisibility}
+              onToggleColumn={handleToggleColumn}
+              onShowAll={handleShowAll}
+              onResetToDefaults={handleResetToDefaults}
+            />
+          )}
         </div>
       </div>
 

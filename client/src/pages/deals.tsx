@@ -899,16 +899,25 @@ export default function Deals() {
     industriesMap,
   };
 
-  // On mobile, remove column pinning to fix AG Grid display issues
+  // On mobile, show only essential columns with flex sizing, no resize
   const responsiveColumns = useMemo(() => {
     if (!isMobile) return dealColumns;
-    return dealColumns.map((col) => {
-      if (col.colDef?.pinned || col.colDef?.lockPinned) {
-        const { pinned, lockPinned, ...restColDef } = col.colDef;
-        return { ...col, colDef: restColDef };
-      }
-      return col;
-    });
+    
+    const mobileColumnIds = ["displayName", "owner", "status"];
+    
+    return dealColumns
+      .filter((col) => mobileColumnIds.includes(col.id))
+      .map((col) => {
+        const { pinned, lockPinned, width, minWidth, maxWidth, resizable, ...restColDef } = col.colDef || {};
+        return {
+          ...col,
+          colDef: {
+            ...restColDef,
+            flex: 1,
+            resizable: false,
+          },
+        };
+      });
   }, [isMobile]);
 
   // Mutation to update a single deal field with optimistic updates
@@ -1137,6 +1146,7 @@ export default function Deals() {
         enableRowDrag={!isMobile}
         onRowDragEnd={handleRowDragEnd}
         onCellValueChanged={handleCellValueChanged}
+        hideColumnSelector={isMobile}
       />
     </PageLayout>
   );
