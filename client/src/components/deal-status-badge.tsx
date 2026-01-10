@@ -25,13 +25,13 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-[5px] whitespace-nowrap",
+        "flex flex-1 items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-[5px] whitespace-nowrap @container",
         statusClass,
         className
       )}
       data-testid={`badge-deal-status-${status.toLowerCase().replace(/\s+/g, "-")}`}
     >
-      {status}
+      <span className="flex flex-1 w-auto  bg-red-400 @max-[200px]:bg-black">{status}</span>
     </span>
   );
 }

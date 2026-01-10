@@ -389,7 +389,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 2,
-      maxWidth: 140,
+      maxWidth: 200,
 
       editable: true,
       cellEditor: "agSelectCellEditor",
@@ -401,9 +401,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
+        <div className="bg-white flex">
           <DealStatusBadge
             status={params.value as DealWithRelations["status"]}
           />
+        </div>
         );
       },
     },
