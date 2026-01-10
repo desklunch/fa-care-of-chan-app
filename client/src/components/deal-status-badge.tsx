@@ -25,13 +25,30 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-[5px] whitespace-nowrap",
+        "inline-flex items-center justify-center font-medium whitespace-nowrap",
+        "size-3 p-0 rounded-full text-[0px]",
+        "@[140px]:px-1.5 @[140px]:py-0.5 @[140px]:text-xs @[140px]:rounded-[5px] @[140px]:size-auto",
         statusClass,
         className
       )}
       data-testid={`badge-deal-status-${status.toLowerCase().replace(/\s+/g, "-")}`}
+      title={status}
     >
       {status}
     </span>
+  );
+}
+
+export function DealStatusBadgeContainer({ 
+  children, 
+  className 
+}: { 
+  children: React.ReactNode; 
+  className?: string;
+}) {
+  return (
+    <div className={cn("@container", className)}>
+      {children}
+    </div>
   );
 }
