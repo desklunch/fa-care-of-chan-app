@@ -483,12 +483,12 @@ export default function VenuesPage() {
       return (
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-primary ml-2">
-            {selectedRows.length} venue{selectedRows.length !== 1 ? "s" : ""}{" "}
+            {selectedRows.length} {" "}
             selected
           </span>
           <div className="flex gap-4">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() =>
                 handleAddToCollection(selectedRows, clearSelection)
@@ -499,7 +499,7 @@ export default function VenuesPage() {
               Add to Collection
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={clearSelection}
               data-testid="button-clear-selection"

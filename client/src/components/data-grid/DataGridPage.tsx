@@ -896,9 +896,9 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   `;
 
   return (
-    <div className="p-0 md:px-6 h-full flex flex-col gap-4 ">
+    <div className="p-0 md:px-6 h-full flex flex-col gap-4">
       {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
-        <div className="bg-muted/50 border rounded-lg p-3" data-testid="selection-toolbar">
+        <div className="bg-muted/50 border md:rounded-lg p-3" data-testid="selection-toolbar">
           {selectionToolbar(selectedRows, clearSelection)}
         </div>
       )}
