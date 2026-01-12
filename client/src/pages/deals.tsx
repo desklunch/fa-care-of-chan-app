@@ -299,7 +299,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         return (
           <span className="flex items-start  gap-3 w-full flex-row-reverse md:flex-row">
             <span className="flex-1 truncate">{params.value}</span>
-            <Link href={`/deals/${params.data.id}`} className="flex-shrink-0">
+            <Link href={`/deals/${params.data.id}`} className="hidden md:block flex-shrink-0">
               <Button
                 size="sm"
                 variant="ghost"
@@ -323,6 +323,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 76,
       editable: true,
       cellEditor: "agSelectCellEditor",
+      resizable: false,
 
       autoHeight: true,
       sortable: false,
@@ -387,9 +388,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "status",
     category: "Basic Info",
     colDef: {
-      flex: 1.5,
-      minWidth: 80,
-      maxWidth: 170,
+      width: 150,
+      resizable: false,
+
       editable: true,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: {
