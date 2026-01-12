@@ -65,6 +65,9 @@ export interface DataGridPageProps<T, C = unknown> {
   // Cell editing props
   onCellValueChanged?: (event: CellValueChangedEvent<T>) => void;
   
+  // Cell selection - when false, cells cannot be focused/selected (defaults to false)
+  enableCellSelection?: boolean;
+  
   // Hide column selector (useful for mobile)
   hideColumnSelector?: boolean;
 }

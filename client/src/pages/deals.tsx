@@ -1181,6 +1181,7 @@ export default function Deals() {
         onRowDragEnd={handleRowDragEnd}
         onCellValueChanged={handleCellValueChanged}
         hideColumnSelector={isMobile}
+        enableCellSelection={!isMobile}
         onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
       />
     </PageLayout>

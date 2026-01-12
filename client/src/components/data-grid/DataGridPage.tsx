@@ -355,6 +355,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   onRowDragEnd,
   onCellValueChanged,
   isExternalDataLoading = false,
+  enableCellSelection = false,
   hideColumnSelector = false,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
@@ -998,6 +999,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           suppressMoveWhenRowDragging={enableRowDrag}
           onRowDragEnd={enableRowDrag ? handleRowDragEnd : undefined}
           onCellValueChanged={onCellValueChanged}
+          suppressCellFocus={!enableCellSelection}
         />
       </div>
     </div>
