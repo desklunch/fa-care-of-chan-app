@@ -518,7 +518,7 @@ export function EditableField({
           renderEditor()
         ) : (
           <div className="flex items-start gap-2 group">
-            <div className="flex-1">
+            <div className="flex-1 ">
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

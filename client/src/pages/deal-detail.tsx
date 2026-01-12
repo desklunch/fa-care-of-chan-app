@@ -289,7 +289,11 @@ export default function DealDetail() {
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("status")}
                   error={getFieldError("status")}
-                  displayValue={<DealStatusBadge status={deal.status as DealStatus} />}
+                  displayValue={
+                  <div className="@container w-full flex">
+                    <DealStatusBadge status={deal.status as DealStatus} />
+                  </div>
+                  }
                   placeholder="Select status"
                 />
 
