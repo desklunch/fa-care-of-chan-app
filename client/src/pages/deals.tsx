@@ -909,24 +909,26 @@ export default function Deals() {
     resizable?: boolean;
     flex?: number;
     headerName?: string;
+    editable?: boolean;
   }> = {
     displayName: {
       flex: 1,
       resizable: false,
+      editable: false,
     },
     owner: {
       flex: 0,
       width: 60,
       resizable: false,
       headerName: "",
-
+      editable: false,
     },
     status: {
       flex: 0,
       width: 50,
       resizable: false,
       headerName: "",
-
+      editable: false,
     },
   };
 
@@ -1178,8 +1180,8 @@ export default function Deals() {
         onRowDragEnd={handleRowDragEnd}
         onCellValueChanged={handleCellValueChanged}
         hideColumnSelector={isMobile}
+        onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
       />
     </PageLayout>
   );
 }
-// onRowClick={(deal) => setLocation(`/deals/${deal.id}`)}
