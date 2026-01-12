@@ -895,13 +895,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   `;
 
   return (
-    <div className="p-4 md:px-6 h-full flex flex-col gap-4 ">
+    <div className="p-0 md:px-6 h-full flex flex-col gap-4 ">
       {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
         <div className="bg-muted/50 border rounded-lg p-3" data-testid="selection-toolbar">
           {selectionToolbar(selectedRows, clearSelection)}
         </div>
       )}
-      <div className="flex items-start justify-between gap-3 ">
+      <div className="p-4 pb-0 md:p-0 flex items-start justify-between gap-3 ">
         
         <div className="flex items-center gap-2 text-foreground">
 
@@ -941,7 +941,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   
           {headerContent}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex h-9 items-center gap-4">
           {toolbarActions}
           <div className="text-sm text-muted-foreground whitespace-nowrap" data-testid="text-row-count">
             {`${filteredData.length} of ${data.length}`}

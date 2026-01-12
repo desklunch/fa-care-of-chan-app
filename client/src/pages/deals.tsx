@@ -297,7 +297,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
-          <span className="flex items-start  gap-3 w-full">
+          <span className="flex items-start  gap-3 w-full flex-row-reverse md:flex-row">
             <span className="flex-1 truncate">{params.value}</span>
             <Link href={`/deals/${params.data.id}`} className="flex-shrink-0">
               <Button
@@ -912,19 +912,21 @@ export default function Deals() {
   }> = {
     displayName: {
       flex: 1,
-      minWidth: 120,
       resizable: false,
-      headerName: "Deal",
     },
     owner: {
-      flex: 1,
-      minWidth: 100,
+      flex: 0,
+      width: 60,
       resizable: false,
+      headerName: "",
+
     },
     status: {
-      flex: 1,
-      minWidth: 100,
+      flex: 0,
+      width: 50,
       resizable: false,
+      headerName: "",
+
     },
   };
 
