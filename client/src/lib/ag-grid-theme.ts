@@ -17,6 +17,7 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   headerFontSize: 13,
   dragHandleColor: "hsl(var(--muted-foreground))",
   pinnedColumnBorder: true,
-  wrapperBorder: true
+  wrapperBorder: true,
+  headerHeight: 48,
 
 });

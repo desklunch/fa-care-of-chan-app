@@ -896,13 +896,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   `;
 
   return (
-    <div className="p-0 md:px-6 h-full flex flex-col gap-4">
+    <div className="h-full flex flex-col">
       {enableRowSelection && selectedRows.length > 0 && selectionToolbar && (
-        <div className="bg-muted/50 border md:rounded-lg p-3" data-testid="selection-toolbar">
+        <div className="bg-muted/50 border p-3" data-testid="selection-toolbar">
           {selectionToolbar(selectedRows, clearSelection)}
         </div>
       )}
-      <div className="p-4 pb-0 md:p-0 flex items-start justify-between gap-3 ">
+      <div className="p-4  md:p-4 md:py-4  flex items-start justify-between gap-3 ">
         
         <div className="flex items-center gap-2 text-foreground">
 
@@ -961,7 +961,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       </div>
 
       {filters.length > 0 && collapsibleFilters && showFilters && (
-        <div className="flex items-center gap-2 flex-wrap" data-testid="collapsible-filter-row">
+        <div className="px-4 pb-4 flex items-center gap-2 flex-wrap" data-testid="collapsible-filter-row">
           <FilterBar
             filters={filters}
             data={data}
@@ -974,7 +974,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
 
 
-      <div className="flex-1 min-h-[400px] overflow-hidden" style={{ contain: 'layout style paint' }} data-testid="data-grid">
+      <div className="p-0 md:px-4  flex-1 min-h-[400px] overflow-hidden" style={{ contain: 'layout style paint' }} data-testid="data-grid">
         <AgGridReact
           ref={gridRef}
           rowData={filteredData}
