@@ -61,7 +61,7 @@ The system uses a comprehensive audit logging infrastructure with two complement
 - For new service layers: Emit domain events, let the bridge handle audit persistence
 - For existing routes: Continue using `logAuditEvent()` 
 - Add new event types to both `events.ts` AND `event-registry.ts` to avoid silent audit gaps
-- Reference `audit-logging-plan.md` for detailed implementation documentation
+- Reference `docs/audit-logging-plan.md` for detailed implementation documentation
 
 **Audit Coverage Status (January 2026):**
 - 110 of 120 mutating routes now have audit logging (92% coverage)
@@ -69,7 +69,7 @@ The system uses a comprehensive audit logging infrastructure with two complement
 - All core business data routes covered: venues, collections, floorplans, photos, files, comments, deals, contacts
 - All reference data management covered: amenities, industries, tags, vendor services, deal services
 - Release management includes custom actions: link_feature, unlink_feature, link_issue, unlink_issue, add_change, remove_change
-- See `audit-coverage-report.md` for complete implementation status
+- See `docs/audit-coverage-report.md` for complete implementation status
 
 ## External Dependencies
 
@@ -90,9 +90,9 @@ The following documentation files MUST be maintained as part of development:
 
 | File | Purpose | Update Frequency |
 |------|---------|------------------|
-| `ai-mcp.md` | AI/MCP implementation plan and progress tracking | Update after completing each phase, or when implementation diverges from plan |
+| `docs/ai-mcp.md` | AI/MCP implementation plan and progress tracking | Update after completing each phase, or when implementation diverges from plan |
 | `replit.md` | Project overview, architecture, and preferences | Update when adding major features or changing architecture |
-| `audit-*.md` | Technical audit reports | Create new file for each audit |
+| `docs/audit-*.md` | Technical audit reports | Create new file for each audit |
 
 ### ai-mcp.md Maintenance Requirements
 
