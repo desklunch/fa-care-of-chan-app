@@ -7,22 +7,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
-import { RouterRecoveryProvider, useRouterRecovery } from "@/lib/router-recovery-context";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { TabVisibilityHandler } from "@/hooks/useTabVisibility";
+import { NavigationWatchdog } from "@/hooks/useNavigationWatchdog";
 import { NavigationLogger } from "@/hooks/useNavigationLogger";
 import { InputLogger } from "@/hooks/useInputLogger";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import "@/lib/debug-logger";
-import { patchHistoryMethods } from "@/lib/history-patch";
-
-// Apply history patch immediately on module load
-// This ensures pushState/replaceState dispatch popstate events
-// which fixes wouter navigation after extended idle periods
-patchHistoryMethods();
 
 const Landing = lazy(() => import("@/pages/landing"));
 const InviteActivation = lazy(() => import("@/pages/invite-activation"));
@@ -512,8 +505,7 @@ function RouterContent() {
 }
 
 function Router() {
-  const { routerKey } = useRouterRecovery();
-  return <RouterContent key={routerKey} />;
+  return <RouterContent />;
 }
 
 function App() {
@@ -522,14 +514,12 @@ function App() {
       <GoogleAuthProviderWrapper>
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
           <TooltipProvider>
-            <RouterRecoveryProvider>
-              <AnalyticsTracker />
-              <TabVisibilityHandler />
-              <NavigationLogger />
-              <InputLogger />
-              <Toaster />
-              <Router />
-            </RouterRecoveryProvider>
+            <AnalyticsTracker />
+            <NavigationWatchdog />
+            <NavigationLogger />
+            <InputLogger />
+            <Toaster />
+            <Router />
           </TooltipProvider>
         </ThemeProvider>
       </GoogleAuthProviderWrapper>
