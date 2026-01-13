@@ -25,7 +25,10 @@ export function useTabVisibility() {
     const wouterPath = wouterLocationRef.current;
     const pathsMatch = browserPath === wouterPath;
     
-    debugLog("NAVIGATION", "Forcing router sync", {
+    // Capture original history state to preserve for features that depend on it
+    const originalHistoryState = history.state;
+    
+    debugLog("NAVIGATION", "Forcing router sync (attempt 1: popstate)", {
       browserPath,
       wouterPath,
       pathsMatch,
@@ -35,26 +38,60 @@ export function useTabVisibility() {
       debugLog("NAVIGATION", `URL mismatch detected: wouter=${wouterPath}, browser=${browserPath}`);
     }
     
-    // ALWAYS dispatch popstate to force wouter to re-read window.location.pathname
-    // This works because:
-    // 1. Wouter subscribes to popstate events via useSyncExternalStore
-    // 2. When popstate fires, wouter's getSnapshot reads window.location.pathname
-    // 3. If the pathname differs from its cached value, React re-renders
-    // 
-    // In mismatch cases: browser URL is already correct, wouter just needs to re-read it
-    // In match cases: this ensures wouter's subscription is active after tab visibility change
-    debugLog("NAVIGATION", "Dispatching popstate to trigger wouter subscription");
-    window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
+    // Attempt 1: Dispatch popstate - this triggers wouter's useSyncExternalStore to re-read pathname
+    window.dispatchEvent(new PopStateEvent("popstate", { state: originalHistoryState }));
     
-    // Verify sync after a microtask (popstate handler runs synchronously)
-    queueMicrotask(() => {
-      const newWouterPath = wouterLocationRef.current;
-      if (newWouterPath !== browserPath) {
-        debugLog("NAVIGATION", `WARNING: Sync may have failed - wouter still reports ${newWouterPath}, expected ${browserPath}`);
-      } else if (!pathsMatch) {
-        debugLog("NAVIGATION", `Sync successful: wouter now reports ${newWouterPath}`);
+    // Use setTimeout to verify AFTER React has committed useEffect updates
+    // React's commit phase + useEffect runs async, so we need to wait for the event loop
+    // 50ms gives React enough time to process the update in most cases
+    setTimeout(() => {
+      const afterPopstatePath = wouterLocationRef.current;
+      
+      if (afterPopstatePath === browserPath) {
+        if (!pathsMatch) {
+          debugLog("NAVIGATION", `Sync successful via popstate: wouter now reports ${afterPopstatePath}`);
+        }
+        return;
       }
-    });
+      
+      // Attempt 2: Force wouter re-render by temporarily changing PATHNAME (not just query string)
+      // Wouter's snapshot reads window.location.pathname, so we must change that
+      // Using replaceState ensures no history entries are added
+      debugLog("NAVIGATION", `Attempt 1 failed (wouter=${afterPopstatePath}). Trying pathname mutation...`);
+      
+      const currentSearch = window.location.search;
+      const currentHash = window.location.hash;
+      const fullPath = browserPath + currentSearch + currentHash;
+      
+      // Step 1: Replace to a different pathname (add /_recovery segment)
+      // This changes window.location.pathname, which wouter's snapshot will detect
+      const tempPath = browserPath.replace(/\/$/, "") + "/_recovery";
+      history.replaceState(originalHistoryState, "", tempPath);
+      window.dispatchEvent(new PopStateEvent("popstate", { state: originalHistoryState }));
+      
+      // Step 2: Replace back to the correct pathname
+      // Wouter will see another pathname change and update again
+      history.replaceState(originalHistoryState, "", fullPath);
+      window.dispatchEvent(new PopStateEvent("popstate", { state: originalHistoryState }));
+      
+      // Verify after another timeout to allow React to commit
+      setTimeout(() => {
+        const afterMutationPath = wouterLocationRef.current;
+        
+        if (afterMutationPath === browserPath) {
+          debugLog("NAVIGATION", `Sync successful via pathname mutation: wouter now reports ${afterMutationPath}`);
+          return;
+        }
+        
+        // Attempt 3: Ultimate fallback - hard reload
+        // Trigger regardless of initial pathsMatch since we now have a confirmed mismatch
+        debugLog("NAVIGATION", `Attempt 2 failed (wouter=${afterMutationPath}). Wouter subscription appears broken.`);
+        debugLog("NAVIGATION", `CRITICAL: Router sync failed after all attempts. Performing hard reload.`);
+        
+        // Hard reload to recover from completely broken state
+        window.location.reload();
+      }, 50);
+    }, 50);
   }, []);
 
   const handleWakeUp = useCallback((source: string, fromHiddenState: boolean = false) => {

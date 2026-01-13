@@ -59,13 +59,16 @@ Rather than trying to detect the frozen state, we proactively recover when retur
 ### Recovery Actions
 
 1. **Router Sync** (ANY hidden→visible transition)
-   - Dispatches a `popstate` event to force wouter to re-read `window.location.pathname`
-   - Detects URL mismatch between browser state and wouter's internal state (for logging)
-   - Includes post-sync verification via `queueMicrotask` to confirm the fix worked
+   - Multi-stage recovery with escalating remediation:
+     - **Attempt 1:** Dispatch `popstate` event (triggers wouter's subscription)
+     - **Attempt 2:** Pathname mutation via `replaceState` (temp path + back) with `popstate` - forces pathname change detection without adding history entries
+     - **Attempt 3:** Hard reload as ultimate fallback for broken subscriptions
+   - Detects URL mismatch between browser state and wouter's internal state
+   - Verifies sync success via `setTimeout(50ms)` after each attempt (allows React's useEffect to commit updates)
+   - Preserves original `history.state` throughout all attempts
    - Triggered whenever `wasHiddenRef` is true, regardless of measured idle time
-   - Cheap operation, safe to run on every wake-up from hidden state
    
-   **Technical Note:** The browser URL is already correct in mismatch cases (navigation updated `window.location` but wouter's React state didn't update). Dispatching `popstate` triggers wouter's `useSyncExternalStore` subscription to re-read the current path and update React state.
+   **Technical Note:** The browser URL is already correct in mismatch cases. The challenge is that wouter's `useSyncExternalStore` subscription may become stale after extended tab suspension. Using `replaceState` (not `pushState`) ensures no duplicate history entries accumulate. The 50ms verification delay allows React's commit phase to complete before checking if wouter updated.
 
 2. **Full Recovery** (2m+ idle)
    - Clears cached CSRF token (forces refresh on next mutation)
@@ -236,4 +239,7 @@ To test the recovery system:
 | 2026-01-13 | **Fixed critical bug:** Router sync now triggers on ANY hidden→visible transition (removed idle time requirement) |
 | 2026-01-13 | **Fixed critical bug:** Blur handler now sets `wasHiddenRef=true` to catch visibility gaps |
 | 2026-01-13 | Attempted fix using wouter's `setLocation()` API - didn't work because replaceState doesn't fire popstate |
-| 2026-01-13 | **Final fix:** Dispatch `popstate` event directly - this triggers wouter's `useSyncExternalStore` to re-read `window.location.pathname` and sync React state |
+| 2026-01-13 | Attempted fix with popstate dispatch only - didn't work because wouter subscription may be stale |
+| 2026-01-13 | Implemented multi-stage recovery: (1) popstate, (2) pathname mutation + popstate, (3) hard reload fallback |
+| 2026-01-13 | Fixed verification timing: queueMicrotask/requestAnimationFrame were too fast, switched to setTimeout(50ms) |
+| 2026-01-13 | **Final fix:** Multi-stage recovery with setTimeout verification allows React to commit useEffect updates before checking sync status |
