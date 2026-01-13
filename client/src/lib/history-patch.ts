@@ -3,6 +3,7 @@ import { debugLog } from "@/lib/debug-logger";
 let isPatched = false;
 let originalPushState: typeof history.pushState | null = null;
 let originalReplaceState: typeof history.replaceState | null = null;
+let isDispatching = false;
 
 export function patchHistoryMethods(): void {
   if (isPatched) {
@@ -19,10 +20,16 @@ export function patchHistoryMethods(): void {
     url?: string | URL | null
   ) {
     const result = originalPushState!(data, unused, url);
-    debugLog("NAVIGATION", "pushState intercepted, dispatching popstate", {
-      url: url?.toString(),
-    });
-    window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
+    
+    // Prevent infinite loops - only dispatch if we're not already dispatching
+    if (!isDispatching) {
+      isDispatching = true;
+      debugLog("NAVIGATION", "pushState intercepted, dispatching popstate", {
+        url: url?.toString(),
+      });
+      window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
+      isDispatching = false;
+    }
     return result;
   };
 
@@ -32,10 +39,16 @@ export function patchHistoryMethods(): void {
     url?: string | URL | null
   ) {
     const result = originalReplaceState!(data, unused, url);
-    debugLog("NAVIGATION", "replaceState intercepted, dispatching popstate", {
-      url: url?.toString(),
-    });
-    window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
+    
+    // Prevent infinite loops - only dispatch if we're not already dispatching
+    if (!isDispatching) {
+      isDispatching = true;
+      debugLog("NAVIGATION", "replaceState intercepted, dispatching popstate", {
+        url: url?.toString(),
+      });
+      window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
+      isDispatching = false;
+    }
     return result;
   };
 
