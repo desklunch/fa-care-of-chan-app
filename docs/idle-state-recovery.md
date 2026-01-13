@@ -53,7 +53,7 @@ Rather than trying to detect the frozen state, we proactively recover when retur
 
 | Threshold | Value | Action |
 |-----------|-------|--------|
-| Router Sync | Any hidden→visible | Force router sync via popstate event (always) |
+| Router Sync | Any hidden→visible | Force router sync via wouter's setLocation API (popstate fallback if paths match) |
 | Full Recovery | 2 minutes | Clear CSRF token + router sync + invalidate queries |
 
 ### Recovery Actions
