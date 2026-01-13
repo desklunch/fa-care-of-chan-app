@@ -5,7 +5,7 @@ const MAX_RECOVERY_ATTEMPTS = 3;
 
 let isInitialized = false;
 let originalPushState: typeof history.pushState | null = null;
-let wouterLocationRef: string = window.location.pathname;
+let wouterLocationRef: string = window.location.pathname + window.location.search + window.location.hash;
 let pendingSyncCheck: ReturnType<typeof setTimeout> | null = null;
 let recoveryAttempts = 0;
 
@@ -13,8 +13,12 @@ export function updateWouterLocation(path: string): void {
   wouterLocationRef = path;
 }
 
+function getBrowserFullPath(): string {
+  return window.location.pathname + window.location.search + window.location.hash;
+}
+
 function attemptRecovery(): void {
-  const browserPath = window.location.pathname;
+  const browserPath = getBrowserFullPath();
   const wouterPath = wouterLocationRef;
   
   if (browserPath === wouterPath) {
@@ -41,7 +45,7 @@ function attemptRecovery(): void {
   window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
   
   setTimeout(() => {
-    if (window.location.pathname !== wouterLocationRef) {
+    if (getBrowserFullPath() !== wouterLocationRef) {
       attemptRecovery();
     } else {
       debugLog("NAVIGATION", "Recovery successful - router synced");
@@ -57,7 +61,7 @@ function scheduleSyncCheck(): void {
   
   pendingSyncCheck = setTimeout(() => {
     pendingSyncCheck = null;
-    const browserPath = window.location.pathname;
+    const browserPath = getBrowserFullPath();
     const wouterPath = wouterLocationRef;
     
     if (browserPath !== wouterPath) {
@@ -95,7 +99,7 @@ export function initNavigationWatchdog(): void {
   window.addEventListener("popstate", () => {
     debugLog("NAVIGATION", "popstate event fired", {
       state: history.state,
-      currentLocation: window.location.pathname,
+      currentLocation: getBrowserFullPath(),
     });
     scheduleSyncCheck();
   });
