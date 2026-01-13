@@ -7,7 +7,8 @@ type LogCategory =
   | "API"
   | "NAVIGATION"
   | "INPUT"
-  | "SESSION";
+  | "SESSION"
+  | "STALL";
 
 interface LogEntry {
   timestamp: string;
@@ -51,6 +52,7 @@ function getCategoryStyle(category: LogCategory): string {
     NAVIGATION: "color: #673ab7; font-weight: bold",
     INPUT: "color: #795548; font-weight: bold",
     SESSION: "color: #e91e63; font-weight: bold",
+    STALL: "color: #ff0000; font-weight: bold; background: #ffcccc",
   };
   return styles[category];
 }
@@ -66,6 +68,7 @@ function getCategoryIcon(category: LogCategory): string {
     NAVIGATION: "🧭",
     INPUT: "👆",
     SESSION: "🎫",
+    STALL: "⚠️",
   };
   return icons[category];
 }
@@ -138,10 +141,50 @@ export function getAppState(): {
   };
 }
 
+let navigationStallCount = 0;
+let lastExpectedPath: string | null = null;
+let stallCheckTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+export function trackNavigationIntent(expectedPath: string): void {
+  lastExpectedPath = expectedPath;
+  const currentPath = window.location.pathname;
+  
+  debugLog("NAVIGATION", `Navigation intent: ${currentPath} -> ${expectedPath}`);
+  
+  if (stallCheckTimeoutId) {
+    clearTimeout(stallCheckTimeoutId);
+  }
+  
+  stallCheckTimeoutId = setTimeout(() => {
+    const actualPath = window.location.pathname;
+    if (actualPath !== expectedPath && lastExpectedPath === expectedPath) {
+      navigationStallCount++;
+      debugLog("STALL", `Navigation stall detected! Expected: ${expectedPath}, Actual: ${actualPath}`, {
+        stallCount: navigationStallCount,
+        timeSinceIntent: "250ms",
+        expectedPath,
+        actualPath,
+      });
+    }
+    lastExpectedPath = null;
+    stallCheckTimeoutId = null;
+  }, 250);
+}
+
+export function getNavigationStallCount(): number {
+  return navigationStallCount;
+}
+
+export function resetNavigationStallCount(): void {
+  navigationStallCount = 0;
+}
+
 (window as any).__debugLog = debugLog;
 (window as any).__dumpLogHistory = dumpLogHistory;
 (window as any).__getLogHistory = getLogHistory;
 (window as any).__getAppState = getAppState;
+(window as any).__getNavigationStallCount = getNavigationStallCount;
+(window as any).__resetNavigationStallCount = resetNavigationStallCount;
 
 debugLog("LIFECYCLE", "Debug logger initialized", {
   startTime: new Date(appStartTime).toISOString(),
