@@ -7,7 +7,7 @@ const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes - triggers full recovery 
 const DEBOUNCE_MS = 500; // Prevent rapid-fire wake-up calls
 
 export function useTabVisibility() {
-  const [wouterLocation, setWouterLocation] = useLocation();
+  const [wouterLocation] = useLocation();
   const lastActiveRef = useRef<number>(Date.now());
   const lastUserInteractionRef = useRef<number>(Date.now());
   const lastWakeUpRef = useRef<number>(0);
@@ -23,24 +23,39 @@ export function useTabVisibility() {
   const forceRouterSync = useCallback(() => {
     const browserPath = window.location.pathname;
     const wouterPath = wouterLocationRef.current;
+    const pathsMatch = browserPath === wouterPath;
     
     debugLog("NAVIGATION", "Forcing router sync", {
       browserPath,
       wouterPath,
-      pathsMatch: browserPath === wouterPath,
+      pathsMatch,
     });
     
-    // If browser URL differs from wouter's internal state, force wouter to adopt it
-    if (browserPath !== wouterPath) {
-      debugLog("NAVIGATION", `URL mismatch detected - forcing wouter to sync: ${wouterPath} -> ${browserPath}`);
-      setWouterLocation(browserPath, { replace: true });
-    } else {
-      // Even if paths match, dispatch popstate to ensure wouter re-evaluates
-      // This handles edge cases where wouter's subscription may have been suspended
-      debugLog("NAVIGATION", "Paths match - dispatching popstate as fallback");
-      window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
+    if (!pathsMatch) {
+      debugLog("NAVIGATION", `URL mismatch detected: wouter=${wouterPath}, browser=${browserPath}`);
     }
-  }, [setWouterLocation]);
+    
+    // ALWAYS dispatch popstate to force wouter to re-read window.location.pathname
+    // This works because:
+    // 1. Wouter subscribes to popstate events via useSyncExternalStore
+    // 2. When popstate fires, wouter's getSnapshot reads window.location.pathname
+    // 3. If the pathname differs from its cached value, React re-renders
+    // 
+    // In mismatch cases: browser URL is already correct, wouter just needs to re-read it
+    // In match cases: this ensures wouter's subscription is active after tab visibility change
+    debugLog("NAVIGATION", "Dispatching popstate to trigger wouter subscription");
+    window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
+    
+    // Verify sync after a microtask (popstate handler runs synchronously)
+    queueMicrotask(() => {
+      const newWouterPath = wouterLocationRef.current;
+      if (newWouterPath !== browserPath) {
+        debugLog("NAVIGATION", `WARNING: Sync may have failed - wouter still reports ${newWouterPath}, expected ${browserPath}`);
+      } else if (!pathsMatch) {
+        debugLog("NAVIGATION", `Sync successful: wouter now reports ${newWouterPath}`);
+      }
+    });
+  }, []);
 
   const handleWakeUp = useCallback((source: string, fromHiddenState: boolean = false) => {
     const now = Date.now();

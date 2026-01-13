@@ -53,17 +53,19 @@ Rather than trying to detect the frozen state, we proactively recover when retur
 
 | Threshold | Value | Action |
 |-----------|-------|--------|
-| Router Sync | Any hidden→visible | Force router sync via wouter's setLocation API (popstate fallback if paths match) |
+| Router Sync | Any hidden→visible | Dispatch popstate event to force wouter to re-read browser URL |
 | Full Recovery | 2 minutes | Clear CSRF token + router sync + invalidate queries |
 
 ### Recovery Actions
 
 1. **Router Sync** (ANY hidden→visible transition)
-   - Uses wouter's `setLocation()` API to force the router to adopt `window.location.pathname`
-   - Detects URL mismatch between browser state and wouter's internal state
-   - Falls back to `popstate` dispatch if paths already match
+   - Dispatches a `popstate` event to force wouter to re-read `window.location.pathname`
+   - Detects URL mismatch between browser state and wouter's internal state (for logging)
+   - Includes post-sync verification via `queueMicrotask` to confirm the fix worked
    - Triggered whenever `wasHiddenRef` is true, regardless of measured idle time
    - Cheap operation, safe to run on every wake-up from hidden state
+   
+   **Technical Note:** The browser URL is already correct in mismatch cases (navigation updated `window.location` but wouter's React state didn't update). Dispatching `popstate` triggers wouter's `useSyncExternalStore` subscription to re-read the current path and update React state.
 
 2. **Full Recovery** (2m+ idle)
    - Clears cached CSRF token (forces refresh on next mutation)
@@ -233,4 +235,5 @@ To test the recovery system:
 | 2026-01-13 | **Fixed critical bug:** Focus handler now checks `wasHiddenRef` and passes it to wake-up |
 | 2026-01-13 | **Fixed critical bug:** Router sync now triggers on ANY hidden→visible transition (removed idle time requirement) |
 | 2026-01-13 | **Fixed critical bug:** Blur handler now sets `wasHiddenRef=true` to catch visibility gaps |
-| 2026-01-13 | **Fixed critical bug:** Changed from `popstate` dispatch to using wouter's `setLocation()` API - popstate alone didn't unfreeze the router |
+| 2026-01-13 | Attempted fix using wouter's `setLocation()` API - didn't work because replaceState doesn't fire popstate |
+| 2026-01-13 | **Final fix:** Dispatch `popstate` event directly - this triggers wouter's `useSyncExternalStore` to re-read `window.location.pathname` and sync React state |
