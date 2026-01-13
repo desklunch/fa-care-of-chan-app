@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
+import { RouterRecoveryProvider, useRouterRecovery } from "@/lib/router-recovery-context";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -453,7 +454,7 @@ function AnalyticsTracker() {
   return null;
 }
 
-function Router() {
+function RouterContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -504,18 +505,25 @@ function Router() {
   );
 }
 
+function Router() {
+  const { routerKey } = useRouterRecovery();
+  return <RouterContent key={routerKey} />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <GoogleAuthProviderWrapper>
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
           <TooltipProvider>
-            <AnalyticsTracker />
-            <TabVisibilityHandler />
-            <NavigationLogger />
-            <InputLogger />
-            <Toaster />
-            <Router />
+            <RouterRecoveryProvider>
+              <AnalyticsTracker />
+              <TabVisibilityHandler />
+              <NavigationLogger />
+              <InputLogger />
+              <Toaster />
+              <Router />
+            </RouterRecoveryProvider>
           </TooltipProvider>
         </ThemeProvider>
       </GoogleAuthProviderWrapper>

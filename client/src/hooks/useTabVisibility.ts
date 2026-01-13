@@ -2,12 +2,14 @@ import { useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { queryClient, clearCsrfToken } from "@/lib/queryClient";
 import { debugLog } from "@/lib/debug-logger";
+import { useRouterRecovery } from "@/lib/router-recovery-context";
 
 const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes - triggers full recovery (CSRF clear + query invalidation)
 const DEBOUNCE_MS = 500; // Prevent rapid-fire wake-up calls
 
 export function useTabVisibility() {
   const [wouterLocation] = useLocation();
+  const { forceRouterRemount } = useRouterRecovery();
   const lastActiveRef = useRef<number>(Date.now());
   const lastUserInteractionRef = useRef<number>(Date.now());
   const lastWakeUpRef = useRef<number>(0);
@@ -168,6 +170,11 @@ export function useTabVisibility() {
       scheduleInvalidation(() => {
         debugLog("QUERY", "Executing queryClient.invalidateQueries()");
         queryClient.invalidateQueries();
+        
+        // Force router remount to create fresh wouter subscriptions
+        // This is critical: popstate alone doesn't fix stale subscriptions
+        forceRouterRemount();
+        
         wakeUpPendingRef.current = false;
         debugLog("LIFECYCLE", "Wake-up recovery complete", { wakeUpPending: false });
       });
@@ -177,7 +184,7 @@ export function useTabVisibility() {
     
     lastActiveRef.current = now;
     lastUserInteractionRef.current = now;
-  }, [forceRouterSync]);
+  }, [forceRouterSync, forceRouterRemount]);
 
   const handleVisibilityChange = useCallback(() => {
     const wasHidden = wasHiddenRef.current;
