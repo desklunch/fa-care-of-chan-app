@@ -189,7 +189,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           !isCollapsed && !isMediumScreen && "lg:w-[280px]",
           "md:relative md:z-50",
           isMediumScreen && isHovered && "md:w-[280px] md:shadow-xl",
-          isMediumScreen && !isHovered && "md:w-[72px]",
+          isMediumScreen && !isHovered && "md:!w-[72px]",
           "md:flex",
           isMobileOpen 
             ? "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] translate-x-0 rounded-r-lg" 

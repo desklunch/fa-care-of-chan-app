@@ -913,7 +913,7 @@ export default function Deals() {
     editable?: boolean;
   }> = {
     displayName: {
-      flex: 1,
+      flex: 2,
       resizable: false,
       editable: false,
     },
