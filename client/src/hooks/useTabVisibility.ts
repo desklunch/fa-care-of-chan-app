@@ -126,9 +126,8 @@ export function useTabVisibility() {
       return;
     }
     
-    // ALWAYS sync router when returning from hidden state
-    // The measured idle time can be unreliable due to browser throttling of hidden tabs
-    // When wasHiddenRef is true, we KNOW the tab was hidden - sync regardless of measured time
+    // ALWAYS sync router when returning from hidden state (regardless of idle time)
+    // This ensures wouter resubscribes to location changes even for short idle periods
     if (fromHiddenState) {
       debugLog("LIFECYCLE", `Router sync triggered (from hidden state, measured idle: ${Math.round(capturedIdleTime / 1000)}s)`, {
         source,
@@ -145,38 +144,36 @@ export function useTabVisibility() {
       
       debugLog("LIFECYCLE", `App was idle for ${Math.round(capturedIdleTime / 1000)}s - initiating full recovery`, {
         source,
-        actions: ["clearCsrfToken", "forceRouterSync", "invalidateQueries"],
+        actions: ["clearCsrfToken", "forceRouterRemount", "invalidateQueries"],
       });
       
       // Clear CSRF token to force refresh on next mutation
       clearCsrfToken();
       debugLog("SESSION", "CSRF token cleared due to idle timeout");
       
-      // Sync router (may be redundant if already synced above, but safe)
-      forceRouterSync();
-      
-      // Use requestIdleCallback if available, otherwise setTimeout
-      // This prevents blocking the main thread during heavy query invalidation
-      const scheduleInvalidation = (callback: () => void) => {
-        if ('requestIdleCallback' in window) {
-          debugLog("QUERY", "Scheduling query invalidation via requestIdleCallback");
-          (window as any).requestIdleCallback(callback, { timeout: 2000 });
-        } else {
-          debugLog("QUERY", "Scheduling query invalidation via setTimeout (fallback)");
-          setTimeout(callback, 100);
-        }
-      };
-      
-      scheduleInvalidation(() => {
-        debugLog("QUERY", "Executing queryClient.invalidateQueries()");
-        queryClient.invalidateQueries();
-        
-        // Force router remount to create fresh wouter subscriptions
-        // This is critical: popstate alone doesn't fix stale subscriptions
+      // Use queueMicrotask to ensure router remount happens AFTER React commits from forceRouterSync
+      // This prevents the remount from executing before the tree is ready
+      queueMicrotask(() => {
+        debugLog("NAVIGATION", "Forcing router remount (post-sync microtask)");
         forceRouterRemount();
         
-        wakeUpPendingRef.current = false;
-        debugLog("LIFECYCLE", "Wake-up recovery complete", { wakeUpPending: false });
+        // Defer query invalidation further to avoid blocking the main thread
+        const scheduleInvalidation = (callback: () => void) => {
+          if ('requestIdleCallback' in window) {
+            debugLog("QUERY", "Scheduling query invalidation via requestIdleCallback");
+            (window as any).requestIdleCallback(callback, { timeout: 2000 });
+          } else {
+            debugLog("QUERY", "Scheduling query invalidation via setTimeout (fallback)");
+            setTimeout(callback, 100);
+          }
+        };
+        
+        scheduleInvalidation(() => {
+          debugLog("QUERY", "Executing queryClient.invalidateQueries()");
+          queryClient.invalidateQueries();
+          wakeUpPendingRef.current = false;
+          debugLog("LIFECYCLE", "Wake-up recovery complete", { wakeUpPending: false });
+        });
       });
     } else if (!fromHiddenState) {
       debugLog("LIFECYCLE", `Idle time (${Math.round(capturedIdleTime / 1000)}s) below threshold - no recovery needed`);
