@@ -28,6 +28,23 @@ The frozen router state cannot be reliably detected because:
 2. When frozen, clicks trigger handlers but state doesn't mutate - there's nothing observable to detect
 3. Heuristic checks (comparing expected vs actual path) are brittle and risk false positives
 
+### Idle Time Measurement Bug (Fixed 2026-01-13)
+
+A critical bug was discovered where idle time measurement was unreliable:
+
+**Problem:** The `visibilitychange` event sometimes doesn't fire when switching tabs, and even when it does, the measured idle time could be incorrect (e.g., showing 33ms after 11 minutes of actual idle).
+
+**Root Cause:**
+1. `visibilitychange` to `visible` may not fire in all browsers/scenarios
+2. The `focus` event fires but doesn't know the tab was hidden
+3. The `lastUserInteractionRef` timestamp could be updated by other events racing with the wake-up handler
+
+**Solution:**
+1. Track hidden state independently using `wasHiddenRef` - set on blur AND visibility hidden
+2. Pass `wasHiddenRef` value from focus handler (not just visibility handler)
+3. Always sync router when `fromHiddenState` is true, regardless of measured idle time
+4. Reset `wasHiddenRef` after both focus and visibility wake-ups
+
 ## Solution: Proactive Recovery
 
 Rather than trying to detect the frozen state, we proactively recover when returning from hidden state.
@@ -36,14 +53,15 @@ Rather than trying to detect the frozen state, we proactively recover when retur
 
 | Threshold | Value | Action |
 |-----------|-------|--------|
-| Router Sync | 10 seconds | Force router sync via popstate event |
+| Router Sync | Any hidden→visible | Force router sync via popstate event (always) |
 | Full Recovery | 2 minutes | Clear CSRF token + router sync + invalidate queries |
 
 ### Recovery Actions
 
-1. **Router Sync** (10s+ idle, from hidden state)
+1. **Router Sync** (ANY hidden→visible transition)
    - Dispatches a `popstate` event to re-sync wouter with browser URL
-   - Cheap operation, safe to run frequently
+   - Triggered whenever `wasHiddenRef` is true, regardless of measured idle time
+   - Cheap operation, safe to run on every wake-up from hidden state
 
 2. **Full Recovery** (2m+ idle)
    - Clears cached CSRF token (forces refresh on next mutation)
@@ -72,20 +90,20 @@ The `useTabVisibility` hook manages:
 
 ```typescript
 // Thresholds
-const STALE_THRESHOLD_MS = 2 * 60 * 1000;      // 2 minutes
-const ROUTER_SYNC_THRESHOLD_MS = 10 * 1000;    // 10 seconds
+const STALE_THRESHOLD_MS = 2 * 60 * 1000;      // 2 minutes for full recovery
 
 // Recovery is triggered when:
-// 1. Visibility changes from hidden -> visible AND idle > 10s (router sync only)
-// 2. Any wake-up event AND idle > 2 minutes (full recovery)
+// 1. wasHiddenRef is true -> ALWAYS sync router (regardless of measured idle time)
+// 2. Measured idle > 2 minutes -> Full recovery (CSRF clear + invalidate queries)
 ```
 
 ### Hidden State Tracking
 
 The hook tracks whether the tab was hidden using `wasHiddenRef`:
-- Set to `true` when `document.hidden` becomes true
-- Reset to `false` after recovery on visible transition
+- Set to `true` when `document.hidden` becomes true OR window loses focus (blur)
+- Reset to `false` after recovery on visible transition OR focus-based wake-up
 - Passed to `handleWakeUp` as `fromHiddenState` flag
+- **Critical:** Focus handler now checks `wasHiddenRef` to catch cases where `visibilitychange` didn't fire
 
 ## Debugging
 
@@ -211,3 +229,6 @@ To test the recovery system:
 | 2026-01-13 | Lowered stale threshold from 5 minutes to 2 minutes |
 | 2026-01-13 | Added router sync on hidden→visible transition (10s threshold) |
 | 2026-01-13 | Added navigation stall detection for telemetry |
+| 2026-01-13 | **Fixed critical bug:** Focus handler now checks `wasHiddenRef` and passes it to wake-up |
+| 2026-01-13 | **Fixed critical bug:** Router sync now triggers on ANY hidden→visible transition (removed idle time requirement) |
+| 2026-01-13 | **Fixed critical bug:** Blur handler now sets `wasHiddenRef=true` to catch visibility gaps |

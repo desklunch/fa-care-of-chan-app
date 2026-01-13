@@ -2,8 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { queryClient, clearCsrfToken } from "@/lib/queryClient";
 import { debugLog } from "@/lib/debug-logger";
 
-const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes - lowered from 5 to catch more stale scenarios
-const ROUTER_SYNC_THRESHOLD_MS = 10 * 1000; // 10 seconds - always sync router after this idle time
+const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes - triggers full recovery (CSRF clear + query invalidation)
 const DEBOUNCE_MS = 500; // Prevent rapid-fire wake-up calls
 
 export function useTabVisibility() {
@@ -20,19 +19,20 @@ export function useTabVisibility() {
 
   const handleWakeUp = useCallback((source: string, fromHiddenState: boolean = false) => {
     const now = Date.now();
-    const idleTime = now - lastUserInteractionRef.current;
+    // CRITICAL: Capture idle time FIRST, before any other logic runs
+    // This prevents race conditions with user interaction handlers
+    const capturedIdleTime = now - lastUserInteractionRef.current;
     const timeSinceLastWakeUp = now - lastWakeUpRef.current;
-    const exceedsStaleThreshold = idleTime > STALE_THRESHOLD_MS;
-    const exceedsRouterSyncThreshold = idleTime > ROUTER_SYNC_THRESHOLD_MS;
+    const exceedsStaleThreshold = capturedIdleTime > STALE_THRESHOLD_MS;
     
     debugLog("LIFECYCLE", `Wake-up triggered from ${source}`, {
-      idleTimeMs: idleTime,
-      idleTimeSec: Math.round(idleTime / 1000),
+      idleTimeMs: capturedIdleTime,
+      idleTimeSec: Math.round(capturedIdleTime / 1000),
       timeSinceLastWakeUpMs: timeSinceLastWakeUp,
       wakeUpPending: wakeUpPendingRef.current,
       exceedsStaleThreshold,
-      exceedsRouterSyncThreshold,
       fromHiddenState,
+      wasHiddenRef: wasHiddenRef.current,
     });
     
     // Debounce: prevent multiple wake-ups in quick succession (visibility + focus fire together)
@@ -47,12 +47,14 @@ export function useTabVisibility() {
       return;
     }
     
-    // Always sync router when returning from hidden state after router sync threshold
-    // This prevents the "frozen router" issue where React click handlers fire but navigation doesn't happen
-    if (fromHiddenState && exceedsRouterSyncThreshold) {
-      debugLog("LIFECYCLE", `Router sync triggered (idle ${Math.round(idleTime / 1000)}s, from hidden state)`, {
+    // ALWAYS sync router when returning from hidden state
+    // The measured idle time can be unreliable due to browser throttling of hidden tabs
+    // When wasHiddenRef is true, we KNOW the tab was hidden - sync regardless of measured time
+    if (fromHiddenState) {
+      debugLog("LIFECYCLE", `Router sync triggered (from hidden state, measured idle: ${Math.round(capturedIdleTime / 1000)}s)`, {
         source,
         action: "forceRouterSync",
+        reason: "wasHiddenRef was true - always sync on hidden->visible transition",
       });
       forceRouterSync();
     }
@@ -62,7 +64,7 @@ export function useTabVisibility() {
       wakeUpPendingRef.current = true;
       lastWakeUpRef.current = now;
       
-      debugLog("LIFECYCLE", `App was idle for ${Math.round(idleTime / 1000)}s - initiating full recovery`, {
+      debugLog("LIFECYCLE", `App was idle for ${Math.round(capturedIdleTime / 1000)}s - initiating full recovery`, {
         source,
         actions: ["clearCsrfToken", "forceRouterSync", "invalidateQueries"],
       });
@@ -92,8 +94,8 @@ export function useTabVisibility() {
         wakeUpPendingRef.current = false;
         debugLog("LIFECYCLE", "Wake-up recovery complete", { wakeUpPending: false });
       });
-    } else if (!fromHiddenState || !exceedsRouterSyncThreshold) {
-      debugLog("LIFECYCLE", `Idle time (${Math.round(idleTime / 1000)}s) below threshold - no recovery needed`);
+    } else if (!fromHiddenState) {
+      debugLog("LIFECYCLE", `Idle time (${Math.round(capturedIdleTime / 1000)}s) below threshold - no recovery needed`);
     }
     
     lastActiveRef.current = now;
@@ -125,17 +127,32 @@ export function useTabVisibility() {
   }, [handleWakeUp]);
 
   const handleWindowFocus = useCallback(() => {
+    // Check wasHiddenRef BEFORE calling handleWakeUp
+    // This handles the case where visibilitychange didn't fire but focus did
+    const wasHidden = wasHiddenRef.current;
+    
     debugLog("FOCUS", "Window received focus", {
       documentVisibility: document.visibilityState,
       activeElement: document.activeElement?.tagName,
+      wasHiddenRef: wasHidden,
     });
-    handleWakeUp("focus");
+    
+    // Pass wasHidden as fromHiddenState - if tab was hidden, this focus is a wake-up from hidden state
+    handleWakeUp("focus", wasHidden);
+    
+    // Reset wasHiddenRef after focus-based wake-up (visibility handler may not have run)
+    if (wasHidden) {
+      wasHiddenRef.current = false;
+    }
   }, [handleWakeUp]);
 
   const handleWindowBlur = useCallback(() => {
     debugLog("FOCUS", "Window lost focus", {
       documentVisibility: document.visibilityState,
     });
+    // Mark as hidden when focus is lost - catches cases where visibilitychange doesn't fire
+    // (e.g., switching between windows on same desktop, or some browser behaviors)
+    wasHiddenRef.current = true;
   }, []);
 
   const handlePageShow = useCallback((event: PageTransitionEvent) => {
