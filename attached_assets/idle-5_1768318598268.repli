@@ -1,0 +1,484 @@
+client:495 [vite] connecting...
+client:618 [vite] connected.
+chunk-RPCDYKBN.js?v=3a6f3b02:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+debug-logger.ts:91 🔄 [15:29:27.287] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-01-13T15:29:27.287Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.'}
+google-auth.tsx:22 VITE_GOOGLE_CLIENT_ID is not set
+GoogleAuthProviderWrapper @ google-auth.tsx:22
+renderWithHooks @ chunk-RPCDYKBN.js?v=3a6f3b02:11548
+mountIndeterminateComponent @ chunk-RPCDYKBN.js?v=3a6f3b02:14926
+beginWork @ chunk-RPCDYKBN.js?v=3a6f3b02:15914
+beginWork$1 @ chunk-RPCDYKBN.js?v=3a6f3b02:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=3a6f3b02:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=3a6f3b02:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=3a6f3b02:19116
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18678
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+debug-logger.ts:97 🔄 [15:29:27.321] [+0s] [LIFECYCLE] TabVisibilityHandler mounted - attaching event listeners
+debug-logger.ts:97 🧭 [15:29:27.321] [+0s] [NAVIGATION] Initial route: /deals
+debug-logger.ts:97 👆 [15:29:27.321] [+0s] [INPUT] Input logger initialized
+debug-logger.ts:97 📡 [15:29:27.322] [+0s] [QUERY] Fetching: /api/auth/user
+debug-logger.ts:91 🔐 [15:29:27.322] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+debug-logger.ts:97 📡 [15:29:27.322] [+0s] [QUERY] Fetching: /api/settings/theme
+debug-logger.ts:91 🔄 [15:29:27.325] [+0s] [LIFECYCLE] pageshow event fired {persisted: false, documentVisibility: 'visible'}
+debug-logger.ts:91 📡 [15:29:27.686] [+0s] [QUERY] Query success: /api/auth/user {status: 200, durationMs: 365}
+chunk-RPCDYKBN.js?v=3a6f3b02:521 Warning: Received `true` for a non-boolean attribute `collapsed`.
+
+If you want to write it to the DOM, pass a string instead: collapsed="true" or collapsed={value.toString()}.
+    at svg
+    at https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/lucide-react.js?v=3a6f3b02:1576:5
+    at https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/lucide-react.js?v=3a6f3b02:1608:8
+    at button
+    at _c (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/components/ui/button.tsx:55:11)
+    at header
+    at Header (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/framework/components/header.tsx:148:3)
+    at div
+    at div
+    at div
+    at AppShellContent (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/framework/components/app-shell.tsx:23:28)
+    at PageHeaderProvider (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/framework/hooks/page-header-context.tsx:20:38)
+    at AppShell (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/framework/components/app-shell.tsx:99:36)
+    at LayoutProvider (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/framework/hooks/layout-context.tsx:20:34)
+    at AuthenticatedRoutes (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/App.tsx?v=Qan2SM8gfgyeGUf9DXUVp:433:24)
+    at Route (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3a6f3b02:265:16)
+    at Switch (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3a6f3b02:321:17)
+    at Suspense
+    at Router (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/App.tsx?v=Qan2SM8gfgyeGUf9DXUVp:817:42)
+    at Provider (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=3a6f3b02:38:15)
+    at TooltipProvider (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=3a6f3b02:64:5)
+    at ThemeProvider (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/lib/theme-provider.tsx:107:3)
+    at GoogleAuthProviderWrapper (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/src/lib/google-auth.tsx:26:45)
+    at QueryClientProvider (https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=3a6f3b02:2805:3)
+    at App
+printWarning @ chunk-RPCDYKBN.js?v=3a6f3b02:521
+error @ chunk-RPCDYKBN.js?v=3a6f3b02:505
+validateProperty$1 @ chunk-RPCDYKBN.js?v=3a6f3b02:3433
+warnUnknownProperties @ chunk-RPCDYKBN.js?v=3a6f3b02:3459
+validateProperties$2 @ chunk-RPCDYKBN.js?v=3a6f3b02:3478
+validatePropertiesInDevelopment @ chunk-RPCDYKBN.js?v=3a6f3b02:7346
+setInitialProperties @ chunk-RPCDYKBN.js?v=3a6f3b02:7535
+finalizeInitialChildren @ chunk-RPCDYKBN.js?v=3a6f3b02:8345
+completeWork @ chunk-RPCDYKBN.js?v=3a6f3b02:16293
+completeUnitOfWork @ chunk-RPCDYKBN.js?v=3a6f3b02:19224
+performUnitOfWork @ chunk-RPCDYKBN.js?v=3a6f3b02:19206
+workLoopSync @ chunk-RPCDYKBN.js?v=3a6f3b02:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=3a6f3b02:19116
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18874
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=3a6f3b02:555
+flush @ @tanstack_react-query.js?v=3a6f3b02:569
+batch @ @tanstack_react-query.js?v=3a6f3b02:587
+dispatch_fn @ @tanstack_react-query.js?v=3a6f3b02:996
+setData @ @tanstack_react-query.js?v=3a6f3b02:696
+onSuccess @ @tanstack_react-query.js?v=3a6f3b02:897
+resolve @ @tanstack_react-query.js?v=3a6f3b02:456
+Promise.then
+run @ @tanstack_react-query.js?v=3a6f3b02:498
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19432
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=3a6f3b02:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18718
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+debug-logger.ts:91 🔐 [15:29:27.710] [+0s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:91 🔐 [15:29:27.710] [+0s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:91 🔐 [15:29:27.711] [+0s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:91 🔐 [15:29:27.711] [+0s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:91 🔐 [15:29:27.711] [+0s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:91 🔐 [15:29:27.711] [+0s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:91 🔐 [15:29:27.711] [+0s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:91 🔐 [15:29:27.712] [+0s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:91 📡 [15:29:27.823] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 500}
+debug-logger.ts:97 📡 [15:29:29.028] [+1s] [QUERY] Fetching: /api/deals
+debug-logger.ts:97 📡 [15:29:29.028] [+1s] [QUERY] Fetching: /api/users
+debug-logger.ts:97 📡 [15:29:29.029] [+1s] [QUERY] Fetching: /api/deal-services
+debug-logger.ts:97 📡 [15:29:29.029] [+1s] [QUERY] Fetching: /api/industries
+debug-logger.ts:91 📡 [15:29:29.419] [+2s] [QUERY] Query success: /api/industries {status: 200, durationMs: 390}
+debug-logger.ts:91 📡 [15:29:29.454] [+2s] [QUERY] Query success: /api/users {status: 200, durationMs: 426}
+debug-logger.ts:91 📡 [15:29:29.599] [+2s] [QUERY] Query success: /api/deal-services {status: 200, durationMs: 570}
+debug-logger.ts:91 📡 [15:29:29.852] [+2s] [QUERY] Query success: /api/deals {status: 200, durationMs: 824}
+chunk-KHASGEXT.js?v=3a6f3b02:1479 AG Grid: invalid gridOptions property 'data-replit-metadata' did you mean any of these: resetRowDataOnUpdate, treeDataParentIdField, detailCellRendererParams, getDataPath, treeDataDisplayType, dataTypeDefinitions, createChartContainer, onRangeDeleteStart.
+If you are trying to annotate gridOptions with application data, use the 'gridOptions.context' property instead.
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+_doOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1118
+_warnOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+checkProperties @ chunk-KHASGEXT.js?v=3a6f3b02:41166
+processOptions @ chunk-KHASGEXT.js?v=3a6f3b02:41067
+processGridOptions @ chunk-KHASGEXT.js?v=3a6f3b02:41002
+validateGridOptions @ chunk-KHASGEXT.js?v=3a6f3b02:31198
+postConstruct @ chunk-KHASGEXT.js?v=3a6f3b02:31084
+initBeans @ chunk-KHASGEXT.js?v=3a6f3b02:7913
+init @ chunk-KHASGEXT.js?v=3a6f3b02:7890
+AgContext @ chunk-KHASGEXT.js?v=3a6f3b02:7864
+create @ chunk-KHASGEXT.js?v=3a6f3b02:40196
+(anonymous) @ ag-grid-react.js?v=3a6f3b02:2897
+commitAttachRef @ chunk-RPCDYKBN.js?v=3a6f3b02:17279
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:17168
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17969
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19353
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=3a6f3b02:555
+flush @ @tanstack_react-query.js?v=3a6f3b02:569
+batch @ @tanstack_react-query.js?v=3a6f3b02:587
+dispatch_fn @ @tanstack_react-query.js?v=3a6f3b02:996
+setData @ @tanstack_react-query.js?v=3a6f3b02:696
+onSuccess @ @tanstack_react-query.js?v=3a6f3b02:897
+resolve @ @tanstack_react-query.js?v=3a6f3b02:456
+Promise.then
+run @ @tanstack_react-query.js?v=3a6f3b02:498
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:19328
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+chunk-KHASGEXT.js?v=3a6f3b02:1479 AG Grid: invalid gridOptions property 'data-component-name' did you mean any of these: onComponentStateChanged, dragAndDropImageComponentParams, loadingOverlayComponentParams, noRowsOverlayComponentParams, components, navigateToNextHeader, dragAndDropImageComponent, reactiveCustomComponents.
+If you are trying to annotate gridOptions with application data, use the 'gridOptions.context' property instead.
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+_doOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1118
+_warnOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+checkProperties @ chunk-KHASGEXT.js?v=3a6f3b02:41166
+processOptions @ chunk-KHASGEXT.js?v=3a6f3b02:41067
+processGridOptions @ chunk-KHASGEXT.js?v=3a6f3b02:41002
+validateGridOptions @ chunk-KHASGEXT.js?v=3a6f3b02:31198
+postConstruct @ chunk-KHASGEXT.js?v=3a6f3b02:31084
+initBeans @ chunk-KHASGEXT.js?v=3a6f3b02:7913
+init @ chunk-KHASGEXT.js?v=3a6f3b02:7890
+AgContext @ chunk-KHASGEXT.js?v=3a6f3b02:7864
+create @ chunk-KHASGEXT.js?v=3a6f3b02:40196
+(anonymous) @ ag-grid-react.js?v=3a6f3b02:2897
+commitAttachRef @ chunk-RPCDYKBN.js?v=3a6f3b02:17279
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:17168
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17969
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19353
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=3a6f3b02:555
+flush @ @tanstack_react-query.js?v=3a6f3b02:569
+batch @ @tanstack_react-query.js?v=3a6f3b02:587
+dispatch_fn @ @tanstack_react-query.js?v=3a6f3b02:996
+setData @ @tanstack_react-query.js?v=3a6f3b02:696
+onSuccess @ @tanstack_react-query.js?v=3a6f3b02:897
+resolve @ @tanstack_react-query.js?v=3a6f3b02:456
+Promise.then
+run @ @tanstack_react-query.js?v=3a6f3b02:498
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:19328
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+chunk-KHASGEXT.js?v=3a6f3b02:1479 AG Grid: to see all the valid gridOptions properties please check: https://www.ag-grid.com/react-data-grid/grid-options/
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+_doOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1118
+_warnOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+checkProperties @ chunk-KHASGEXT.js?v=3a6f3b02:41170
+processOptions @ chunk-KHASGEXT.js?v=3a6f3b02:41067
+processGridOptions @ chunk-KHASGEXT.js?v=3a6f3b02:41002
+validateGridOptions @ chunk-KHASGEXT.js?v=3a6f3b02:31198
+postConstruct @ chunk-KHASGEXT.js?v=3a6f3b02:31084
+initBeans @ chunk-KHASGEXT.js?v=3a6f3b02:7913
+init @ chunk-KHASGEXT.js?v=3a6f3b02:7890
+AgContext @ chunk-KHASGEXT.js?v=3a6f3b02:7864
+create @ chunk-KHASGEXT.js?v=3a6f3b02:40196
+(anonymous) @ ag-grid-react.js?v=3a6f3b02:2897
+commitAttachRef @ chunk-RPCDYKBN.js?v=3a6f3b02:17279
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:17168
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17969
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19353
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=3a6f3b02:555
+flush @ @tanstack_react-query.js?v=3a6f3b02:569
+batch @ @tanstack_react-query.js?v=3a6f3b02:587
+dispatch_fn @ @tanstack_react-query.js?v=3a6f3b02:996
+setData @ @tanstack_react-query.js?v=3a6f3b02:696
+onSuccess @ @tanstack_react-query.js?v=3a6f3b02:897
+resolve @ @tanstack_react-query.js?v=3a6f3b02:456
+Promise.then
+run @ @tanstack_react-query.js?v=3a6f3b02:498
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:19328
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+chunk-KHASGEXT.js?v=3a6f3b02:1479 AG Grid: warning #48 Cell data type is "object" but no Value Formatter has been provided. Please either provide an object data type definition with a Value Formatter, or set "colDef.valueFormatter" 
+See https://www.ag-grid.com/react-data-grid/errors/48?_version_=34.3.1&property=Formatter
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+_doOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1118
+_warnOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+getMsgOrDefault @ chunk-KHASGEXT.js?v=3a6f3b02:1616
+_warn @ chunk-KHASGEXT.js?v=3a6f3b02:1685
+warning @ chunk-KHASGEXT.js?v=3a6f3b02:26041
+validateColDef @ chunk-KHASGEXT.js?v=3a6f3b02:26045
+_addColumnDefaultAndTypes @ chunk-KHASGEXT.js?v=3a6f3b02:3261
+createColumn @ chunk-KHASGEXT.js?v=3a6f3b02:3155
+_recursivelyCreateColumns @ chunk-KHASGEXT.js?v=3a6f3b02:3141
+_createColumnTree @ chunk-KHASGEXT.js?v=3a6f3b02:3085
+createColsFromColDefs @ chunk-KHASGEXT.js?v=3a6f3b02:3913
+setColumnDefs @ chunk-KHASGEXT.js?v=3a6f3b02:4256
+setColumnsAndData @ chunk-KHASGEXT.js?v=3a6f3b02:38845
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:38836
+addEventListener._a3 @ chunk-KHASGEXT.js?v=3a6f3b02:26726
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:80
+runCallback @ chunk-KHASGEXT.js?v=3a6f3b02:70
+dispatchToListeners @ chunk-KHASGEXT.js?v=3a6f3b02:80
+dispatchEvent @ chunk-KHASGEXT.js?v=3a6f3b02:48
+dispatchLocalEvent @ chunk-KHASGEXT.js?v=3a6f3b02:950
+register @ chunk-KHASGEXT.js?v=3a6f3b02:26757
+setComp @ chunk-KHASGEXT.js?v=3a6f3b02:13908
+(anonymous) @ ag-grid-react.js?v=3a6f3b02:2408
+commitAttachRef @ chunk-RPCDYKBN.js?v=3a6f3b02:17279
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:17168
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17969
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19353
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=3a6f3b02:555
+flush @ @tanstack_react-query.js?v=3a6f3b02:569
+batch @ @tanstack_react-query.js?v=3a6f3b02:587
+dispatch_fn @ @tanstack_react-query.js?v=3a6f3b02:996
+setData @ @tanstack_react-query.js?v=3a6f3b02:696
+onSuccess @ @tanstack_react-query.js?v=3a6f3b02:897
+resolve @ @tanstack_react-query.js?v=3a6f3b02:456
+Promise.then
+run @ @tanstack_react-query.js?v=3a6f3b02:498
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:19328
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+chunk-KHASGEXT.js?v=3a6f3b02:1479 AG Grid: warning #48 Cell data type is "object" but no Value Parser has been provided. Please either provide an object data type definition with a Value Parser, or set "colDef.valueParser" 
+See https://www.ag-grid.com/react-data-grid/errors/48?_version_=34.3.1&property=Parser
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+_doOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1118
+_warnOnce @ chunk-KHASGEXT.js?v=3a6f3b02:1479
+getMsgOrDefault @ chunk-KHASGEXT.js?v=3a6f3b02:1616
+_warn @ chunk-KHASGEXT.js?v=3a6f3b02:1685
+warning @ chunk-KHASGEXT.js?v=3a6f3b02:26041
+validateColDef @ chunk-KHASGEXT.js?v=3a6f3b02:26048
+_addColumnDefaultAndTypes @ chunk-KHASGEXT.js?v=3a6f3b02:3261
+createColumn @ chunk-KHASGEXT.js?v=3a6f3b02:3155
+_recursivelyCreateColumns @ chunk-KHASGEXT.js?v=3a6f3b02:3141
+_createColumnTree @ chunk-KHASGEXT.js?v=3a6f3b02:3085
+createColsFromColDefs @ chunk-KHASGEXT.js?v=3a6f3b02:3913
+setColumnDefs @ chunk-KHASGEXT.js?v=3a6f3b02:4256
+setColumnsAndData @ chunk-KHASGEXT.js?v=3a6f3b02:38845
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:38836
+addEventListener._a3 @ chunk-KHASGEXT.js?v=3a6f3b02:26726
+(anonymous) @ chunk-KHASGEXT.js?v=3a6f3b02:80
+runCallback @ chunk-KHASGEXT.js?v=3a6f3b02:70
+dispatchToListeners @ chunk-KHASGEXT.js?v=3a6f3b02:80
+dispatchEvent @ chunk-KHASGEXT.js?v=3a6f3b02:48
+dispatchLocalEvent @ chunk-KHASGEXT.js?v=3a6f3b02:950
+register @ chunk-KHASGEXT.js?v=3a6f3b02:26757
+setComp @ chunk-KHASGEXT.js?v=3a6f3b02:13908
+(anonymous) @ ag-grid-react.js?v=3a6f3b02:2408
+commitAttachRef @ chunk-RPCDYKBN.js?v=3a6f3b02:17279
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:17168
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17969
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:17950
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19353
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=3a6f3b02:555
+flush @ @tanstack_react-query.js?v=3a6f3b02:569
+batch @ @tanstack_react-query.js?v=3a6f3b02:587
+dispatch_fn @ @tanstack_react-query.js?v=3a6f3b02:996
+setData @ @tanstack_react-query.js?v=3a6f3b02:696
+onSuccess @ @tanstack_react-query.js?v=3a6f3b02:897
+resolve @ @tanstack_react-query.js?v=3a6f3b02:456
+Promise.then
+run @ @tanstack_react-query.js?v=3a6f3b02:498
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:19328
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+debug-logger.ts:91 👆 [15:29:41.320] [+14s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'BODY', testId: null, keyCount: 1, …}
+debug-logger.ts:91 🎯 [15:29:41.544] [+14s] [FOCUS] Window lost focus {documentVisibility: 'visible'}
+debug-logger.ts:91 👁️ [15:29:42.593] [+15s] [VISIBILITY] Document visibility changed to: hidden {hidden: true, hasFocus: false, wasHidden: true}
+debug-logger.ts:91 🎯 [15:30:38.490] [+1m11s] [FOCUS] Window received focus {documentVisibility: 'hidden', activeElement: 'BODY', wasHiddenRef: true}
+debug-logger.ts:91 🔄 [15:30:38.490] [+1m11s] [LIFECYCLE] Wake-up triggered from focus {idleTimeMs: 56901, idleTimeSec: 57, timeSinceLastWakeUpMs: 1768318238490, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:91 🔄 [15:30:38.490] [+1m11s] [LIFECYCLE] Router sync triggered (from hidden state, measured idle: 57s) {source: 'focus', action: 'forceRouterSync', reason: 'wasHiddenRef was true - always sync on hidden->visible transition'}
+debug-logger.ts:97 🧭 [15:30:38.490] [+1m11s] [NAVIGATION] Forcing router sync via popstate event
+debug-logger.ts:91 🧭 [15:30:38.490] [+1m11s] [NAVIGATION] popstate event fired {state: {…}, currentLocation: '/deals'}
+debug-logger.ts:91 👁️ [15:30:38.581] [+1m11s] [VISIBILITY] Document visibility changed to: visible {hidden: false, hasFocus: true, wasHidden: false}
+debug-logger.ts:91 🔄 [15:30:38.581] [+1m11s] [LIFECYCLE] Wake-up triggered from visibility {idleTimeMs: 91, idleTimeSec: 0, timeSinceLastWakeUpMs: 1768318238581, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:97 🔄 [15:30:38.581] [+1m11s] [LIFECYCLE] Idle time (0s) below threshold - no recovery needed
+debug-logger.ts:91 👆 [15:30:40.844] [+1m13s] [INPUT] Click detected on SPAN {testId: null, tagName: 'SPAN', className: 'text-sm flex-1', textContent: 'Clients', clickCount: 1, …}
+debug-logger.ts:91 🧭 [15:30:40.860] [+1m13s] [NAVIGATION] Route changed: /deals -> /clients {from: '/deals', to: '/clients', navigationCount: 1}
+debug-logger.ts:97 🧭 [15:30:40.860] [+1m13s] [NAVIGATION] Initial route: /clients
+debug-logger.ts:97 📡 [15:30:41.624] [+1m14s] [QUERY] Fetching: /api/clients
+debug-logger.ts:91 📡 [15:30:42.134] [+1m14s] [QUERY] Query success: /api/clients {status: 200, durationMs: 511}
+debug-logger.ts:91 👆 [15:31:27.944] [+2m0s] [INPUT] Click detected on SPAN {testId: null, tagName: 'SPAN', className: 'text-sm flex-1', textContent: 'Deals', clickCount: 2, …}
+debug-logger.ts:91 🧭 [15:31:27.977] [+2m0s] [NAVIGATION] Route changed: /clients -> /deals {from: '/clients', to: '/deals', navigationCount: 2}
+debug-logger.ts:97 🧭 [15:31:27.979] [+2m0s] [NAVIGATION] Initial route: /deals
+debug-logger.ts:91 👆 [15:31:36.507] [+2m9s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'A', testId: 'link-nav-deals', keyCount: 2, …}
+debug-logger.ts:91 🎯 [15:31:37.665] [+2m10s] [FOCUS] Window lost focus {documentVisibility: 'visible'}
+debug-logger.ts:91 👁️ [15:31:38.691] [+2m11s] [VISIBILITY] Document visibility changed to: hidden {hidden: true, hasFocus: false, wasHidden: true}
+debug-logger.ts:91 🎯 [15:31:41.759] [+2m14s] [FOCUS] Window received focus {documentVisibility: 'hidden', activeElement: 'A', wasHiddenRef: true}
+debug-logger.ts:91 🔄 [15:31:41.760] [+2m14s] [LIFECYCLE] Wake-up triggered from focus {idleTimeMs: 4368, idleTimeSec: 4, timeSinceLastWakeUpMs: 1768318301760, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:91 🔄 [15:31:41.760] [+2m14s] [LIFECYCLE] Router sync triggered (from hidden state, measured idle: 4s) {source: 'focus', action: 'forceRouterSync', reason: 'wasHiddenRef was true - always sync on hidden->visible transition'}
+debug-logger.ts:97 🧭 [15:31:41.760] [+2m14s] [NAVIGATION] Forcing router sync via popstate event
+debug-logger.ts:91 🧭 [15:31:41.760] [+2m14s] [NAVIGATION] popstate event fired {state: {…}, currentLocation: '/deals'}
+debug-logger.ts:91 👁️ [15:31:41.834] [+2m14s] [VISIBILITY] Document visibility changed to: visible {hidden: false, hasFocus: true, wasHidden: false}
+debug-logger.ts:91 🔄 [15:31:41.834] [+2m14s] [LIFECYCLE] Wake-up triggered from visibility {idleTimeMs: 1, idleTimeSec: 0, timeSinceLastWakeUpMs: 1768318301834, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:97 🔄 [15:31:41.834] [+2m14s] [LIFECYCLE] Idle time (0s) below threshold - no recovery needed
+debug-logger.ts:91 👆 [15:31:44.023] [+2m16s] [INPUT] Click detected on SPAN {testId: null, tagName: 'SPAN', className: 'text-sm flex-1', textContent: 'Clients', clickCount: 3, …}
+debug-logger.ts:91 🎯 [15:31:50.492] [+2m23s] [FOCUS] Window lost focus {documentVisibility: 'visible'}
+debug-logger.ts:91 🎯 [15:32:00.508] [+2m33s] [FOCUS] Window received focus {documentVisibility: 'visible', activeElement: 'A', wasHiddenRef: true}
+debug-logger.ts:91 🔄 [15:32:00.508] [+2m33s] [LIFECYCLE] Wake-up triggered from focus {idleTimeMs: 5271, idleTimeSec: 5, timeSinceLastWakeUpMs: 1768318320508, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:91 🔄 [15:32:00.508] [+2m33s] [LIFECYCLE] Router sync triggered (from hidden state, measured idle: 5s) {source: 'focus', action: 'forceRouterSync', reason: 'wasHiddenRef was true - always sync on hidden->visible transition'}
+debug-logger.ts:97 🧭 [15:32:00.508] [+2m33s] [NAVIGATION] Forcing router sync via popstate event
+debug-logger.ts:91 🧭 [15:32:00.508] [+2m33s] [NAVIGATION] popstate event fired {state: null, currentLocation: '/clients'}
+debug-logger.ts:91 🧭 [15:32:00.533] [+2m33s] [NAVIGATION] Route changed: /deals -> /clients {from: '/deals', to: '/clients', navigationCount: 3}
+debug-logger.ts:97 🧭 [15:32:00.536] [+2m33s] [NAVIGATION] Initial route: /clients
+debug-logger.ts:91 👆 [15:32:11.217] [+2m43s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'A', testId: 'link-nav-clients', keyCount: 4, …}
+debug-logger.ts:91 🎯 [15:32:11.407] [+2m44s] [FOCUS] Window lost focus {documentVisibility: 'visible'}
+debug-logger.ts:91 👁️ [15:32:12.458] [+2m45s] [VISIBILITY] Document visibility changed to: hidden {hidden: true, hasFocus: false, wasHidden: true}
+debug-logger.ts:91 🎯 [15:32:36.272] [+3m8s] [FOCUS] Window received focus {documentVisibility: 'hidden', activeElement: 'A', wasHiddenRef: true}
+debug-logger.ts:91 🔄 [15:32:36.272] [+3m8s] [LIFECYCLE] Wake-up triggered from focus {idleTimeMs: 25055, idleTimeSec: 25, timeSinceLastWakeUpMs: 1768318356272, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:91 🔄 [15:32:36.272] [+3m8s] [LIFECYCLE] Router sync triggered (from hidden state, measured idle: 25s) {source: 'focus', action: 'forceRouterSync', reason: 'wasHiddenRef was true - always sync on hidden->visible transition'}
+debug-logger.ts:97 🧭 [15:32:36.272] [+3m8s] [NAVIGATION] Forcing router sync via popstate event
+debug-logger.ts:91 🧭 [15:32:36.273] [+3m8s] [NAVIGATION] popstate event fired {state: {…}, currentLocation: '/clients'}
+debug-logger.ts:91 👁️ [15:32:36.330] [+3m9s] [VISIBILITY] Document visibility changed to: visible {hidden: false, hasFocus: true, wasHidden: false}
+debug-logger.ts:91 🔄 [15:32:36.330] [+3m9s] [LIFECYCLE] Wake-up triggered from visibility {idleTimeMs: 58, idleTimeSec: 0, timeSinceLastWakeUpMs: 1768318356330, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:97 🔄 [15:32:36.330] [+3m9s] [LIFECYCLE] Idle time (0s) below threshold - no recovery needed
+debug-logger.ts:91 👆 [15:32:40.999] [+3m13s] [INPUT] Click detected on A {testId: 'link-nav-deals', tagName: 'A', className: 'flex items-center gap-3 px-3 py-2 font-medium roun', textContent: 'Deals', clickCount: 4, …}
+debug-logger.ts:91 👆 [15:32:55.109] [+3m27s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'A', testId: 'link-nav-deals', keyCount: 5, …}
+debug-logger.ts:91 👆 [15:32:57.445] [+3m30s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'A', testId: 'link-nav-deals', keyCount: 6, …}
+debug-logger.ts:91 👆 [15:32:59.369] [+3m32s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'A', testId: 'link-nav-deals', keyCount: 8, …}
+debug-logger.ts:91 👆 [15:33:26.978] [+3m59s] [INPUT] Key press: Meta {key: 'Meta', code: 'MetaLeft', tagName: 'A', testId: 'link-nav-deals', keyCount: 9, …}
+debug-logger.ts:91 🎯 [15:33:28.157] [+4m0s] [FOCUS] Window lost focus {documentVisibility: 'visible'}
+debug-logger.ts:91 🎯 [15:33:28.894] [+4m1s] [FOCUS] Window received focus {documentVisibility: 'visible', activeElement: 'A', wasHiddenRef: true}
+debug-logger.ts:91 🔄 [15:33:28.894] [+4m1s] [LIFECYCLE] Wake-up triggered from focus {idleTimeMs: 818, idleTimeSec: 1, timeSinceLastWakeUpMs: 1768318408894, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:91 🔄 [15:33:28.894] [+4m1s] [LIFECYCLE] Router sync triggered (from hidden state, measured idle: 1s) {source: 'focus', action: 'forceRouterSync', reason: 'wasHiddenRef was true - always sync on hidden->visible transition'}
+debug-logger.ts:97 🧭 [15:33:28.894] [+4m1s] [NAVIGATION] Forcing router sync via popstate event
+debug-logger.ts:91 🧭 [15:33:28.894] [+4m1s] [NAVIGATION] popstate event fired {state: null, currentLocation: '/deals'}
+debug-logger.ts:91 🧭 [15:33:28.922] [+4m1s] [NAVIGATION] Route changed: /clients -> /deals {from: '/clients', to: '/deals', navigationCount: 4}
+debug-logger.ts:97 🧭 [15:33:28.926] [+4m1s] [NAVIGATION] Initial route: /deals
+debug-logger.ts:91 🎯 [15:33:55.020] [+4m27s] [FOCUS] Window lost focus {documentVisibility: 'visible'}
+debug-logger.ts:91 🎯 [15:33:59.670] [+4m32s] [FOCUS] Window received focus {documentVisibility: 'visible', activeElement: 'A', wasHiddenRef: true}
+debug-logger.ts:91 🔄 [15:33:59.670] [+4m32s] [LIFECYCLE] Wake-up triggered from focus {idleTimeMs: 28438, idleTimeSec: 28, timeSinceLastWakeUpMs: 1768318439670, wakeUpPending: false, exceedsStaleThreshold: false, …}
+debug-logger.ts:91 🔄 [15:33:59.670] [+4m32s] [LIFECYCLE] Router sync triggered (from hidden state, measured idle: 28s) {source: 'focus', action: 'forceRouterSync', reason: 'wasHiddenRef was true - always sync on hidden->visible transition'}
+debug-logger.ts:97 🧭 [15:33:59.670] [+4m32s] [NAVIGATION] Forcing router sync via popstate event
+debug-logger.ts:91 🧭 [15:33:59.670] [+4m32s] [NAVIGATION] popstate event fired {state: {…}, currentLocation: '/deals'}

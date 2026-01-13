@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { useLocation } from "wouter";
 import { queryClient, clearCsrfToken } from "@/lib/queryClient";
 import { debugLog } from "@/lib/debug-logger";
 
@@ -6,16 +7,40 @@ const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes - triggers full recovery 
 const DEBOUNCE_MS = 500; // Prevent rapid-fire wake-up calls
 
 export function useTabVisibility() {
+  const [wouterLocation, setWouterLocation] = useLocation();
   const lastActiveRef = useRef<number>(Date.now());
   const lastUserInteractionRef = useRef<number>(Date.now());
   const lastWakeUpRef = useRef<number>(0);
   const wakeUpPendingRef = useRef<boolean>(false);
   const wasHiddenRef = useRef<boolean>(false);
+  const wouterLocationRef = useRef<string>(wouterLocation);
+  
+  // Keep ref in sync with wouter location
+  useEffect(() => {
+    wouterLocationRef.current = wouterLocation;
+  }, [wouterLocation]);
 
   const forceRouterSync = useCallback(() => {
-    debugLog("NAVIGATION", "Forcing router sync via popstate event");
-    window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
-  }, []);
+    const browserPath = window.location.pathname;
+    const wouterPath = wouterLocationRef.current;
+    
+    debugLog("NAVIGATION", "Forcing router sync", {
+      browserPath,
+      wouterPath,
+      pathsMatch: browserPath === wouterPath,
+    });
+    
+    // If browser URL differs from wouter's internal state, force wouter to adopt it
+    if (browserPath !== wouterPath) {
+      debugLog("NAVIGATION", `URL mismatch detected - forcing wouter to sync: ${wouterPath} -> ${browserPath}`);
+      setWouterLocation(browserPath, { replace: true });
+    } else {
+      // Even if paths match, dispatch popstate to ensure wouter re-evaluates
+      // This handles edge cases where wouter's subscription may have been suspended
+      debugLog("NAVIGATION", "Paths match - dispatching popstate as fallback");
+      window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
+    }
+  }, [setWouterLocation]);
 
   const handleWakeUp = useCallback((source: string, fromHiddenState: boolean = false) => {
     const now = Date.now();

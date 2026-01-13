@@ -59,7 +59,9 @@ Rather than trying to detect the frozen state, we proactively recover when retur
 ### Recovery Actions
 
 1. **Router Sync** (ANY hidden→visible transition)
-   - Dispatches a `popstate` event to re-sync wouter with browser URL
+   - Uses wouter's `setLocation()` API to force the router to adopt `window.location.pathname`
+   - Detects URL mismatch between browser state and wouter's internal state
+   - Falls back to `popstate` dispatch if paths already match
    - Triggered whenever `wasHiddenRef` is true, regardless of measured idle time
    - Cheap operation, safe to run on every wake-up from hidden state
 
@@ -197,14 +199,13 @@ The thresholds can be modified in `client/src/hooks/useTabVisibility.ts`:
 
 ```typescript
 const STALE_THRESHOLD_MS = 2 * 60 * 1000;      // Full recovery threshold
-const ROUTER_SYNC_THRESHOLD_MS = 10 * 1000;    // Router-only sync threshold
 const DEBOUNCE_MS = 500;                        // Wake-up debounce
 ```
 
 ### Recommendations
 
-- **ROUTER_SYNC_THRESHOLD_MS**: Keep low (10-30s) since router sync is cheap
-- **STALE_THRESHOLD_MS**: Balance between battery/performance and reliability
+- **Router sync**: Always runs on hidden→visible transition (no threshold, very cheap)
+- **STALE_THRESHOLD_MS**: Balance between battery/performance and reliability (2 minutes default)
 - **DEBOUNCE_MS**: Prevent rapid-fire wake-ups when visibility + focus fire together
 
 ## Testing
@@ -232,3 +233,4 @@ To test the recovery system:
 | 2026-01-13 | **Fixed critical bug:** Focus handler now checks `wasHiddenRef` and passes it to wake-up |
 | 2026-01-13 | **Fixed critical bug:** Router sync now triggers on ANY hidden→visible transition (removed idle time requirement) |
 | 2026-01-13 | **Fixed critical bug:** Blur handler now sets `wasHiddenRef=true` to catch visibility gaps |
+| 2026-01-13 | **Fixed critical bug:** Changed from `popstate` dispatch to using wouter's `setLocation()` API - popstate alone didn't unfreeze the router |
