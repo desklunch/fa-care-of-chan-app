@@ -2,8 +2,6 @@ import { debugLog } from "@/lib/debug-logger";
 
 let isPatched = false;
 let originalPushState: typeof history.pushState | null = null;
-let originalReplaceState: typeof history.replaceState | null = null;
-let isDispatching = false;
 
 export function patchHistoryMethods(): void {
   if (isPatched) {
@@ -12,61 +10,35 @@ export function patchHistoryMethods(): void {
   }
 
   originalPushState = history.pushState.bind(history);
-  originalReplaceState = history.replaceState.bind(history);
 
+  // Only patch pushState (actual navigation), not replaceState (state updates)
+  // replaceState is often called for query params and can cause loops
   history.pushState = function (
     data: unknown,
     unused: string,
     url?: string | URL | null
   ) {
     const result = originalPushState!(data, unused, url);
-    
-    // Prevent infinite loops - only dispatch if we're not already dispatching
-    if (!isDispatching) {
-      isDispatching = true;
-      debugLog("NAVIGATION", "pushState intercepted, dispatching popstate", {
-        url: url?.toString(),
-      });
-      window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
-      isDispatching = false;
-    }
-    return result;
-  };
-
-  history.replaceState = function (
-    data: unknown,
-    unused: string,
-    url?: string | URL | null
-  ) {
-    const result = originalReplaceState!(data, unused, url);
-    
-    // Prevent infinite loops - only dispatch if we're not already dispatching
-    if (!isDispatching) {
-      isDispatching = true;
-      debugLog("NAVIGATION", "replaceState intercepted, dispatching popstate", {
-        url: url?.toString(),
-      });
-      window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
-      isDispatching = false;
-    }
+    debugLog("NAVIGATION", "pushState intercepted, dispatching popstate", {
+      url: url?.toString(),
+    });
+    window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
     return result;
   };
 
   isPatched = true;
-  debugLog("NAVIGATION", "History methods patched - pushState/replaceState now dispatch popstate");
+  debugLog("NAVIGATION", "History pushState patched - now dispatches popstate");
 }
 
 export function unpatchHistoryMethods(): void {
-  if (!isPatched || !originalPushState || !originalReplaceState) {
+  if (!isPatched || !originalPushState) {
     return;
   }
 
   history.pushState = originalPushState;
-  history.replaceState = originalReplaceState;
   originalPushState = null;
-  originalReplaceState = null;
   isPatched = false;
-  debugLog("NAVIGATION", "History methods restored to original");
+  debugLog("NAVIGATION", "History pushState restored to original");
 }
 
 export function isHistoryPatched(): boolean {
