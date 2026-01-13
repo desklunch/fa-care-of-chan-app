@@ -17,6 +17,12 @@ import { InputLogger } from "@/hooks/useInputLogger";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import "@/lib/debug-logger";
+import { patchHistoryMethods } from "@/lib/history-patch";
+
+// Apply history patch immediately on module load
+// This ensures pushState/replaceState dispatch popstate events
+// which fixes wouter navigation after extended idle periods
+patchHistoryMethods();
 
 const Landing = lazy(() => import("@/pages/landing"));
 const InviteActivation = lazy(() => import("@/pages/invite-activation"));
