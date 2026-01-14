@@ -377,7 +377,6 @@ function SnapshotView30() {
         suppressMovableColumns={true}
         suppressColumnVirtualisation={true}
         getRowId={(params) => params.data.id}
-        suppressPropertyNamesCheck={true}
       />
     </div>
   );
