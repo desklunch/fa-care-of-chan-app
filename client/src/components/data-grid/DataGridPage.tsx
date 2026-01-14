@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule, SelectionChangedEvent, RowClickedEvent, SortChangedEvent, ColumnMovedEvent, RowDragEndEvent } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
@@ -17,22 +16,6 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 // ============================================
 // URL PARAM HELPERS
 // ============================================
-
-type NavigateFn = (to: string, options?: { replace?: boolean }) => void;
-let navigateRef: NavigateFn | null = null;
-let navigateRefOwner: symbol | null = null;
-
-function setNavigateRef(navigate: NavigateFn, owner: symbol) {
-  navigateRef = navigate;
-  navigateRefOwner = owner;
-}
-
-function clearNavigateRef(owner: symbol) {
-  if (navigateRefOwner === owner) {
-    navigateRef = null;
-    navigateRefOwner = null;
-  }
-}
 
 function getUrlParams(): URLSearchParams {
   return new URLSearchParams(window.location.search);
@@ -52,12 +35,7 @@ function updateUrlParams(updates: Record<string, string | null>) {
   const newUrl = params.toString() 
     ? `${window.location.pathname}?${params.toString()}`
     : window.location.pathname;
-  
-  if (navigateRef) {
-    navigateRef(newUrl, { replace: true });
-  } else {
-    window.history.replaceState({}, "", newUrl);
-  }
+  window.history.replaceState({}, "", newUrl);
 }
 
 // ============================================
@@ -134,12 +112,7 @@ function setFiltersToUrl(filterState: Record<string, string[]>, searchText?: str
   const newUrl = params.toString() 
     ? `${window.location.pathname}?${params.toString()}`
     : window.location.pathname;
-  
-  if (navigateRef) {
-    navigateRef(newUrl, { replace: true });
-  } else {
-    window.history.replaceState({}, "", newUrl);
-  }
+  window.history.replaceState({}, "", newUrl);
 }
 
 function getSessionStorageKey(pathname: string): string {
@@ -385,7 +358,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   enableCellSelection = false,
   hideColumnSelector = false,
 }: DataGridPageProps<T, C>) {
-  const [, navigate] = useLocation();
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState(() => getSearchFromUrl());
@@ -394,16 +366,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [isGridInitialized, setIsGridInitialized] = useState(false);
   const scrollRestoredRef = useRef(false);
   const isPopStateUpdateRef = useRef(false); // Track when state update came from popstate
-
-  // Set navigate ref for URL helper functions to use wouter navigation
-  // Use a stable symbol per mount to track ownership
-  const ownerRef = useRef<symbol>(Symbol());
-  useEffect(() => {
-    setNavigateRef(navigate, ownerRef.current);
-    return () => {
-      clearNavigateRef(ownerRef.current);
-    };
-  }, [navigate]);
 
   // Get all column IDs for index mapping
   const allColumnIds = useMemo(() => columns.map((col) => col.id), [columns]);
