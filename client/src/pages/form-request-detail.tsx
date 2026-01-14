@@ -760,6 +760,7 @@ export default function AdminFormRequestDetailPage() {
                         filter: true,
                         resizable: true,
                       }}
+                      suppressPropertyNamesCheck={true}
                     />
                   </div>
                 )}
@@ -789,6 +790,7 @@ export default function AdminFormRequestDetailPage() {
                           filter: true,
                           resizable: true,
                         }}
+                        suppressPropertyNamesCheck={true}
                       />
                     </div>
                   )}

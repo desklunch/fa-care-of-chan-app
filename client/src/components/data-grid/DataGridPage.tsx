@@ -1000,6 +1000,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
           onRowDragEnd={enableRowDrag ? handleRowDragEnd : undefined}
           onCellValueChanged={onCellValueChanged}
           suppressCellFocus={!enableCellSelection}
+          suppressPropertyNamesCheck={true}
         />
       </div>
     </div>
