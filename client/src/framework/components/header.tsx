@@ -101,7 +101,7 @@ export default function Header({
         data-testid="button-mobile-menu"
         aria-label="Toggle navigation menu"
       >
-        <Menu width="24" collapsed />
+        <Menu className="h-6 w-6" />
       </Button>
 
       {breadcrumbs && breadcrumbs.length > 0 && (
