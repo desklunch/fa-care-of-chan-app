@@ -85,8 +85,6 @@ export function initNavigationWatchdog(): void {
       url: url?.toString(),
     });
     
-    window.dispatchEvent(new PopStateEvent("popstate", { state: data }));
-    
     scheduleSyncCheck();
     
     return result;
