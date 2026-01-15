@@ -3,6 +3,7 @@
  * 
  * React hooks and components for permission-based access control.
  * Uses the cached permission context from the auth user object.
+ * Supports tier override for development testing.
  */
 
 import { useMemo } from "react";
@@ -14,7 +15,9 @@ import {
   hasAllPermissions,
   canAccessPath,
   getAllowedSearchCategories,
+  createPermissionContext,
 } from "@shared/permissions";
+import { useTierOverride } from "@/contexts/tier-override-context";
 
 /**
  * Hook to access the user's permission context and check permissions.
@@ -28,11 +31,23 @@ import {
  */
 export function usePermissions() {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { overrideRole } = useTierOverride();
 
-  // Get permission context from user (cached from /api/auth/user response)
-  const permissionContext = useMemo(() => {
+  // Get actual permission context from user (cached from /api/auth/user response)
+  const actualPermissionContext = useMemo(() => {
     return (user as any)?.permissionContext as PermissionContext | undefined;
   }, [user]);
+
+  // Get effective permission context (with tier override applied in dev mode)
+  const permissionContext = useMemo(() => {
+    // Only apply override in development mode, if override is set, and ONLY for actual admins
+    // This prevents non-admins from spoofing permissions via localStorage
+    const isActualAdminUser = actualPermissionContext?.role === "admin";
+    if (import.meta.env.DEV && overrideRole && actualPermissionContext && isActualAdminUser) {
+      return createPermissionContext(overrideRole);
+    }
+    return actualPermissionContext;
+  }, [actualPermissionContext, overrideRole]);
 
   // Check if user has a specific permission
   const can = useMemo(() => {
@@ -67,11 +82,17 @@ export function usePermissions() {
     return getAllowedSearchCategories(permissionContext);
   }, [permissionContext]);
 
-  // Get the user's role
+  // Get the effective role (may be overridden in dev mode)
   const role = permissionContext?.role;
 
-  // Get the user's tier level
+  // Get the actual role (never overridden)
+  const actualRole = actualPermissionContext?.role;
+
+  // Get the effective tier level
   const tier = permissionContext?.tier ?? 0;
+
+  // Check if currently using an override
+  const isOverridden = import.meta.env.DEV && !!overrideRole && !!actualPermissionContext;
 
   return {
     // Permission context
@@ -86,6 +107,7 @@ export function usePermissions() {
     // Computed values
     allowedSearchCategories,
     role,
+    actualRole,
     tier,
     
     // Auth state
@@ -94,8 +116,12 @@ export function usePermissions() {
     
     // Convenience checks
     isAdmin: role === "admin",
+    isActualAdmin: actualRole === "admin",
     isManager: role === "manager",
     isManagerOrAbove: tier >= 2,
+    
+    // Dev mode tier override
+    isOverridden,
   };
 }
 

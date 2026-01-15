@@ -11,15 +11,26 @@ import {
   Moon,
   Trash2,
   Search,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useLayout } from "../hooks/layout-context";
 import { useTheme } from "@/lib/theme-provider";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useTierOverride } from "@/contexts/tier-override-context";
 import Logo from "./logo";
 import type { NavItem, NavSection } from "../types/layout";
+import type { Role } from "@shared/permissions";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -30,7 +41,8 @@ interface SidebarProps {
 export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: SidebarProps) {
   const { user, navigation, onSignOut } = useLayout();
   const { resolvedTheme, setTheme } = useTheme();
-  const { can } = usePermissions();
+  const { can, isActualAdmin, role, isOverridden } = usePermissions();
+  const { overrideRole, setOverrideRole, clearOverride } = useTierOverride();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(false);
@@ -383,6 +395,53 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
             );
           })}
         </nav>
+
+        {import.meta.env.DEV && isActualAdmin && showExpanded && (
+          <div className="border-t border-sidebar-border p-3">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Shield className="h-3 w-3" />
+                <span>Test as Role</span>
+                {isOverridden && (
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                    Override
+                  </Badge>
+                )}
+              </div>
+              <Select
+                value={overrideRole || "actual"}
+                onValueChange={(value) => {
+                  if (value === "actual") {
+                    clearOverride();
+                  } else {
+                    setOverrideRole(value as Role);
+                  }
+                }}
+              >
+                <SelectTrigger 
+                  className="h-8 text-xs" 
+                  data-testid="select-tier-override"
+                >
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="actual" data-testid="option-tier-actual">
+                    Actual Role (Admin)
+                  </SelectItem>
+                  <SelectItem value="manager" data-testid="option-tier-manager">
+                    Manager (Tier 2)
+                  </SelectItem>
+                  <SelectItem value="employee" data-testid="option-tier-employee">
+                    Employee (Tier 1)
+                  </SelectItem>
+                  <SelectItem value="viewer" data-testid="option-tier-viewer">
+                    Viewer (Tier 0)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
 
         <div className="border-t border-sidebar-border p-3">
           <div className={cn("flex gap-1", !showExpanded && "justify-center")}>

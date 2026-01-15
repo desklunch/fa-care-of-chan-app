@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
+import { TierOverrideProvider } from "@/contexts/tier-override-context";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -513,14 +514,16 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <GoogleAuthProviderWrapper>
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
-          <TooltipProvider>
-            <AnalyticsTracker />
-            <NavigationWatchdog />
-            <NavigationLogger />
-            <InputLogger />
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <TierOverrideProvider>
+            <TooltipProvider>
+              <AnalyticsTracker />
+              <NavigationWatchdog />
+              <NavigationLogger />
+              <InputLogger />
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </TierOverrideProvider>
         </ThemeProvider>
       </GoogleAuthProviderWrapper>
     </QueryClientProvider>
