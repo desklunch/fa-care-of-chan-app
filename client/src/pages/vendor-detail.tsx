@@ -417,7 +417,7 @@ export default function VendorDetail() {
                 Preferred
               </Badge>
             )}
-            <PermissionGate permission="vendors.write" fallback={
+            <PermissionGate permission="vendors.write" behavior="fallback" fallback={
               <h1 className="text-2xl font-bold" data-testid="text-vendor-name">
                 {vendor.businessName}
               </h1>
@@ -438,7 +438,7 @@ export default function VendorDetail() {
             <CardContent className="pt-6">
               <div className="space-y-0 divide-y divide-border/50">
                 <FieldRow label="Services" testId="row-services">
-                  <PermissionGate permission="vendors.write" fallback={
+                  <PermissionGate permission="vendors.write" behavior="fallback" fallback={
                     <div className="flex flex-wrap gap-2">
                       {vendor.services && vendor.services.length > 0 ? (
                         vendor.services.map((service) => (
@@ -481,7 +481,7 @@ export default function VendorDetail() {
                   </FieldRow>
                 )}
               </div>
-              <PermissionGate permission="vendors.write" fallback={
+              <PermissionGate permission="vendors.write" behavior="fallback" fallback={
                 <div className="space-y-0 divide-y divide-border/50">
                   <FieldRow label="Email" testId="row-email">
                     {vendor.email ? (
@@ -687,7 +687,7 @@ export default function VendorDetail() {
               <CardTitle className="text-lg">Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <PermissionGate permission="vendors.write" fallback={
+              <PermissionGate permission="vendors.write" behavior="fallback" fallback={
                 <div className="space-y-0 divide-y divide-border/50">
                   <FieldRow label="Deck" testId="row-capabilities">
                     {vendor.capabilitiesDeck ? (
@@ -799,7 +799,7 @@ export default function VendorDetail() {
               <CardTitle className="text-lg">Internal</CardTitle>
             </CardHeader>
             <CardContent>
-              <PermissionGate permission="vendors.write" fallback={
+              <PermissionGate permission="vendors.write" behavior="fallback" fallback={
                 <div className="space-y-0 divide-y divide-border/50">
                   <FieldRow label="Preferred" testId="row-preferred">
                     <Badge variant={vendor.isPreferred ? "default" : "outline"}>

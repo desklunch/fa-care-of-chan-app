@@ -367,7 +367,11 @@ export default function ContactDetail() {
                   Add Client Company
                 </Button>
               </FieldRow>
-            )) : null}
+            )) : (
+              <FieldRow label="Client" testId="field-linked-client-empty">
+                <span className="text-muted-foreground">Not set</span>
+              </FieldRow>
+            )}
 
             {localLinkedVendors.length > 0 ? (
               <>
@@ -450,7 +454,11 @@ export default function ContactDetail() {
                   Add Vendor
                 </Button>
               </FieldRow>
-            )) : null}
+            )) : (
+              <FieldRow label="Vendor" testId="field-linked-vendor-empty">
+                <span className="text-muted-foreground">Not set</span>
+              </FieldRow>
+            )}
 
             <EditableField
               label="Job Title"
