@@ -302,12 +302,34 @@ function SectionContent<T extends { id: string }>({
   return <DataGridPage {...dataGridProps} />;
 }
 
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
+    
+    mediaQuery.addEventListener("change", handler);
+    setMatches(mediaQuery.matches);
+    
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, [query]);
+
+  return matches;
+}
+
 export function ManagePage({ title, sections, breadcrumbs = [], writePermission }: ManagePageProps) {
   const [, navigate] = useLocation();
   const searchString = useSearch();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { can } = usePermissions();
   const canWrite = writePermission ? can(writePermission as Permission) : true;
+  const isNarrowViewport = useMediaQuery("(max-width: 768px)");
   
   const searchParams = new URLSearchParams(searchString);
   const tabFromUrl = searchParams.get("tab");
@@ -379,28 +401,60 @@ export function ManagePage({ title, sections, breadcrumbs = [], writePermission 
       } : undefined}
     >
       <div className="flex flex-col h-full">
-        <div className="border-b px-4 md:px-6 pt-2">
-          <ScrollArea className="w-full">
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="inline-flex h- w-auto">
+        <div className="border-b px-4 md:px-6 pt-2 pb-2">
+          {isNarrowViewport ? (
+            <Select value={activeTab} onValueChange={handleTabChange}>
+              <SelectTrigger className="w-full" data-testid="select-section">
+                <SelectValue>
+                  {activeSection && (
+                    <span className="flex items-center gap-2">
+                      <activeSection.icon className="h-4 w-4" />
+                      {activeSection.label}
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
                 {sections.map((section) => {
                   const Icon = section.icon;
                   return (
-                    <TabsTrigger
+                    <SelectItem
                       key={section.id}
                       value={section.id}
-                      className="gap-2"
-                      data-testid={`tab-${section.id}`}
+                      data-testid={`select-item-${section.id}`}
                     >
-                      <Icon className="h-4 w-4" />
-                      {section.label}
-                    </TabsTrigger>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {section.label}
+                      </span>
+                    </SelectItem>
                   );
                 })}
-              </TabsList>
-            </Tabs>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+              </SelectContent>
+            </Select>
+          ) : (
+            <ScrollArea className="w-full">
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <TabsList className="inline-flex h-auto w-auto">
+                  {sections.map((section) => {
+                    const Icon = section.icon;
+                    return (
+                      <TabsTrigger
+                        key={section.id}
+                        value={section.id}
+                        className="gap-2"
+                        data-testid={`tab-${section.id}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {section.label}
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+              </Tabs>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          )}
         </div>
 
         <div className="flex-1 overflow-hidden">

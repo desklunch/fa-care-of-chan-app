@@ -258,7 +258,7 @@ const vendorServiceColumns: ColumnConfig<VendorService>[] = [
 
 const amenitiesSection: ManageSectionConfig<Amenity> = {
   id: "amenities",
-  label: "Amenities",
+  label: "Venue Amenities",
   icon: Sparkles,
   description: "Manage venue amenities like WiFi, Parking, etc.",
   queryKey: "/api/amenities",
@@ -311,7 +311,7 @@ const amenitiesSection: ManageSectionConfig<Amenity> = {
 
 const stylesSection: ManageSectionConfig<Tag> = {
   id: "styles",
-  label: "Styles",
+  label: "Venue Styles",
   icon: Lightbulb,
   description: "Manage venue style tags like Casual, Formal, etc.",
   queryKey: "/api/tags?category=Style",
@@ -349,7 +349,7 @@ const stylesSection: ManageSectionConfig<Tag> = {
 
 const cuisinesSection: ManageSectionConfig<Tag> = {
   id: "cuisines",
-  label: "Cuisines",
+  label: "Venue Cuisines",
   icon: UtensilsCrossed,
   description: "Manage venue cuisine tags like Italian, Japanese, etc.",
   queryKey: "/api/tags?category=Cuisine",
@@ -387,7 +387,7 @@ const cuisinesSection: ManageSectionConfig<Tag> = {
 
 const industriesSection: ManageSectionConfig<Industry> = {
   id: "industries",
-  label: "Industries",
+  label: "Client Industries",
   icon: Building2,
   description: "Manage client industries like Technology, Healthcare, etc.",
   queryKey: "/api/industries",
@@ -433,7 +433,7 @@ type DealServiceWithStringId = Omit<DealService, 'id'> & { id: string };
 
 const dealServicesSection: ManageSectionConfig<DealServiceWithStringId> = {
   id: "deal-services",
-  label: "Deal Services",
+  label: "CoC Services",
   icon: Briefcase,
   description: "Manage services that can be assigned to deals.",
   queryKey: "/api/deal-services",
