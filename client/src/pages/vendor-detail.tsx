@@ -416,37 +416,44 @@ export default function VendorDetail() {
         ]}
       >
         <Tabs defaultValue="overview" className="w-full">
-          <div className="border-b px-4 md:px-6">
-            <TabsList className="h-10">
-              <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-              <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+          <div className="sticky top-0 bg-background z-10">
+            <div className="p-4 md:p-6 pb-2 md:pb-2">
+                <div className="space-y-1">
+              {vendor.isPreferred && (
+                <Badge variant="secondary" data-testid="badge-preferred">
+                  Preferred
+                </Badge>
+              )}
+              <PermissionGate permission="vendors.write" behavior="fallback" fallback={
+                <h1 className="text-3xl font-bold" data-testid="text-vendor-name">
+                  {vendor.businessName}
+                </h1>
+              }>
+                <EditableTitle
+                  value={vendor.businessName}
+                  onSave={(val) => handleFieldSave("businessName", val)}
+                  testId="text-vendor-name"
+                  disabled={!canEdit}
+                  isLoading={isFieldLoading("businessName")}
+                  error={getFieldError("businessName")}
+                  validation={{ required: true }}
+                />
+              </PermissionGate>
+            </div>
+            </div>
+
+            <TabsList data-testid="tabs-vendor" className="px-4 md:px-6">
+              <TabsTrigger value="overview" data-testid="tab-overview">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="comments" data-testid="tab-comments">
+                Comments
+              </TabsTrigger>
             </TabsList>
           </div>
           
           <TabsContent value="overview" className="mt-0">
-            <div className="p-4 md:p-6 max-w-4xl space-y-6">
-              <div className="space-y-1">
-            {vendor.isPreferred && (
-              <Badge variant="secondary" data-testid="badge-preferred">
-                Preferred
-              </Badge>
-            )}
-            <PermissionGate permission="vendors.write" behavior="fallback" fallback={
-              <h1 className="text-2xl font-bold" data-testid="text-vendor-name">
-                {vendor.businessName}
-              </h1>
-            }>
-              <EditableTitle
-                value={vendor.businessName}
-                onSave={(val) => handleFieldSave("businessName", val)}
-                testId="text-vendor-name"
-                disabled={!canEdit}
-                isLoading={isFieldLoading("businessName")}
-                error={getFieldError("businessName")}
-                validation={{ required: true }}
-              />
-            </PermissionGate>
-          </div>
+            <div className="max-w-4xl space-y-6">
 
           <Card>
             <CardContent className="pt-6">
@@ -867,7 +874,7 @@ export default function VendorDetail() {
           </TabsContent>
           
           <TabsContent value="comments" className="mt-0">
-            <div className="max-w-4xl p-4 md:p-6">
+            <div className="max-w-4xl ">
               {user && id && (
                 <CommentList
                   entityType="vendor"

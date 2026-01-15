@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor, Client } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { Building2, CircleFadingPlus } from "lucide-react";
+import { Building2, Handshake, UserPlus } from "lucide-react";
 
-const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "clients", "emailAddresses", "phoneNumbers"];
+const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "company", "emailAddresses", "phoneNumbers"];
 
 const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   {
@@ -68,76 +68,52 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
     },
   },
   {
-    id: "vendors",
-    headerName: "Vendors",
+    id: "company",
+    headerName: "Company",
     field: "vendors",
     category: "Work",
     colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { value: Vendor[] | undefined }) => {
-        const vendors = params.value;
-        if (!vendors || vendors.length === 0) return null;
+      flex: 3,
+      minWidth: 280,
+      cellRenderer: (params: { data: ContactWithVendors | undefined }) => {
+        const vendors = params.data?.vendors || [];
+        const clients = params.data?.clients || [];
+        
+        if (vendors.length === 0 && clients.length === 0) return null;
+        
+        const allItems: Array<{ type: 'vendor' | 'client'; id: string; name: string }> = [
+          ...clients.map(c => ({ type: 'client' as const, id: c.id, name: c.name })),
+          ...vendors.map(v => ({ type: 'vendor' as const, id: v.id, name: v.businessName })),
+        ];
+        
+        const displayItems = allItems.slice(0, 3);
+        const remainingCount = allItems.length - 3;
+        
         return (
           <div className="flex items-center gap-1 h-full overflow-hidden">
-            {vendors.slice(0, 2).map((vendor) => (
+            {displayItems.map((item) => (
               <Link 
-                key={vendor.id} 
-                href={`/vendors/${vendor.id}`}
+                key={`${item.type}-${item.id}`}
+                href={item.type === 'client' ? `/clients/${item.id}` : `/vendors/${item.id}`}
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
                 <Badge 
-                  variant="outline" 
+                  variant={item.type === 'client' ? 'secondary' : 'outline'}
                   className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
-                  data-testid={`badge-vendor-${vendor.id}`}
+                  data-testid={`badge-${item.type}-${item.id}`}
                 >
-                  <Building2 className="w-3 h-3" />
-                  {vendor.businessName}
+                  {item.type === 'client' ? (
+                    <Building2 className="w-3 h-3" />
+                  ) : (
+                    <Handshake className="w-3 h-3" />
+                  )}
+                  {item.name}
                 </Badge>
               </Link>
             ))}
-            {vendors.length > 2 && (
+            {remainingCount > 0 && (
               <Badge variant="outline" className="text-xs shrink-0">
-                +{vendors.length - 2}
-              </Badge>
-            )}
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "clients",
-    headerName: "Clients",
-    field: "clients",
-    category: "Work",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { value: Client[] | undefined }) => {
-        const clients = params.value;
-        if (!clients || clients.length === 0) return null;
-        return (
-          <div className="flex items-center gap-1 h-full overflow-hidden">
-            {clients.slice(0, 2).map((client) => (
-              <Link 
-                key={client.id} 
-                href={`/clients/${client.id}`}
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs shrink-0 flex items-center gap-1 cursor-pointer"
-                  data-testid={`badge-client-${client.id}`}
-                >
-                  <CircleFadingPlus className="w-3 h-3" />
-                  {client.name}
-                </Badge>
-              </Link>
-            ))}
-            {clients.length > 2 && (
-              <Badge variant="secondary" className="text-xs shrink-0">
-                +{clients.length - 2}
+                +{remainingCount}
               </Badge>
             )}
           </div>
@@ -279,7 +255,7 @@ export default function Contacts() {
       primaryAction={canCreate ? {
         label: "New Contact",
         href: "/contacts/new",
-        icon: CircleFadingPlus,
+        icon: UserPlus,
       } : undefined}
     >
       <DataGridPage

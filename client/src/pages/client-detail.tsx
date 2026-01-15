@@ -238,25 +238,43 @@ export default function ClientDetail() {
       ] : []}
     >
       <Tabs defaultValue="overview" className="w-full">
-        <div className="border-b px-4 md:px-6">
-          <TabsList className="h-10">
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+        <div className="sticky top-0 bg-background z-10">
+          <div className="p-4 md:p-6 pb-2 md:pb-2">
+              <div className="space-y-1">
+    
+            <PermissionGate permission="clients.write" behavior="fallback" fallback={
+              <h1 className="text-3xl font-bold" data-testid="text-vendor-name">
+                {client.name}
+              </h1>
+            }>
+                 <EditableTitle
+                value={client.name}
+                onSave={handleTitleSave}
+                testId="text-client-name"
+                disabled={!canEdit}
+                isLoading={isFieldLoading("name")}
+                error={getFieldError("name")}
+                validation={{ required: true, minLength: 1 }}
+              />
+
+            </PermissionGate>
+          </div>
+          </div>
+
+          <TabsList data-testid="tabs-client" className="px-4 md:px-6">
+            <TabsTrigger value="overview" data-testid="tab-overview">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="comments" data-testid="tab-comments">
+              Comments
+            </TabsTrigger>
           </TabsList>
         </div>
+
         
         <TabsContent value="overview" className="mt-0">
-          <div className="max-w-4xl space-y-6 p-4 md:p-6">
-            <EditableTitle
-          value={client.name}
-          onSave={handleTitleSave}
-          testId="text-client-name"
-          disabled={!canEdit}
-          isLoading={isFieldLoading("name")}
-          error={getFieldError("name")}
-          validation={{ required: true, minLength: 1 }}
-        />
-
+          <div className="max-w-4xl space-y-6">
+ 
         <Card>
           <CardContent className="py-4">
             <EditableField
@@ -475,7 +493,7 @@ export default function ClientDetail() {
         </TabsContent>
         
         <TabsContent value="comments" className="mt-0">
-          <div className="max-w-4xl p-4 md:p-6">
+          <div className="max-w-4xl ">
             {user && params.id && (
               <CommentList
                 entityType="client"
