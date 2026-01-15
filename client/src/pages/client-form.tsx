@@ -27,6 +27,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertClientSchema, type Client, type CreateClient, type Industry } from "@shared/schema";
 import { z } from "zod";
 import { Loader2, Save, X } from "lucide-react";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 
 const clientFormSchema = insertClientSchema.extend({
   website: z.string().optional().refine(
@@ -145,25 +147,41 @@ export default function ClientForm() {
   };
 
   return (
-    <PageLayout
-      breadcrumbs={[
-        { label: "Clients", href: "/clients" },
-        ...(isEdit && client ? [{ label: client.name, href: `/clients/${params.id}` }] : []),
-        { label: isEdit ? "Edit" : "New Client" },
-      ]}
-      primaryAction={{
-        label: isEdit ? "Save Changes" : "Create Client",
-        icon: Save,
-        onClick: handleHeaderSubmit,
-      }}
-      additionalActions={[
-        {
-          label: "Cancel",
-          icon: X,
-          onClick: handleCancel,
-        },
-      ]}
+    <PermissionGate 
+      permission="clients.write" 
+      fallback={
+        <PageLayout
+          breadcrumbs={[
+            { label: "Clients", href: "/clients" },
+            { label: isEdit ? "Edit Client" : "New Client" },
+          ]}
+        >
+          <NoPermissionMessage 
+            title="Permission Required"
+            message="You don't have permission to create or edit clients. Please contact an administrator if you need access."
+          />
+        </PageLayout>
+      }
     >
+      <PageLayout
+        breadcrumbs={[
+          { label: "Clients", href: "/clients" },
+          ...(isEdit && client ? [{ label: client.name, href: `/clients/${params.id}` }] : []),
+          { label: isEdit ? "Edit" : "New Client" },
+        ]}
+        primaryAction={{
+          label: isEdit ? "Save Changes" : "Create Client",
+          icon: Save,
+          onClick: handleHeaderSubmit,
+        }}
+        additionalActions={[
+          {
+            label: "Cancel",
+            icon: X,
+            onClick: handleCancel,
+          },
+        ]}
+      >
       <div className="max-w-2xl p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -256,6 +274,7 @@ export default function ClientForm() {
           </form>
         </Form>
       </div>
-    </PageLayout>
+      </PageLayout>
+    </PermissionGate>
   );
 }

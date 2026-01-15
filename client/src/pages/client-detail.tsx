@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { ContactLinkSearch } from "@/components/contact-link-search";
 import { PermissionGate } from "@/components/permission-gate";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   EditableField,
   EditableTitle,
@@ -85,6 +86,9 @@ export default function ClientDetail() {
   const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { can } = usePermissions();
+  const canEdit = can('clients.write');
+  const canDelete = can('clients.delete');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showContactSearch, setShowContactSearch] = useState(false);
 
@@ -215,25 +219,26 @@ export default function ClientDetail() {
         { label: "Clients", href: "/clients" },
         { label: client.name },
       ]}
-      primaryAction={{
+      primaryAction={canEdit ? {
         label: "Edit Client",
         href: `/clients/${params.id}/edit`,
         icon: Pencil,
-      }}
-      additionalActions={[
+      } : undefined}
+      additionalActions={canDelete ? [
         {
           label: "Delete Client",
           onClick: () => setShowDeleteDialog(true),
           icon: Trash2,
           variant: "destructive",
         },
-      ]}
+      ] : []}
     >
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
         <EditableTitle
           value={client.name}
           onSave={handleTitleSave}
           testId="text-client-name"
+          disabled={!canEdit}
           isLoading={isFieldLoading("name")}
           error={getFieldError("name")}
           validation={{ required: true, minLength: 1 }}
@@ -252,6 +257,7 @@ export default function ClientDetail() {
                 ...industries.map((i) => ({ value: i.id, label: i.name })),
               ]}
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("industryId")}
               error={getFieldError("industryId")}
               displayValue={
@@ -271,6 +277,7 @@ export default function ClientDetail() {
               testId="field-client-website"
               type="text"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("website")}
               error={getFieldError("website")}
               displayValue={
@@ -308,16 +315,18 @@ export default function ClientDetail() {
                 </span>
               </CardTitle>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowContactSearch(true)}
-              disabled={showContactSearch}
-              data-testid="button-link-contact"
-            >
-              <UserPlus className="h-4 w-4" />
-              Add
-            </Button>
+            {canEdit && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowContactSearch(true)}
+                disabled={showContactSearch}
+                data-testid="button-link-contact"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {isLoadingContacts ? (
@@ -372,15 +381,16 @@ export default function ClientDetail() {
                           </div>
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUnlinkContact(contact.id)}
-                          data-testid={`button-unlink-contact-${contact.id}`}
-                          className=" w-9 h-9 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="!h-[18px] !w-[18px] !stroke-[1.5px]" />
-                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleUnlinkContact(contact.id)}
+                            data-testid={`button-unlink-contact-${contact.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>

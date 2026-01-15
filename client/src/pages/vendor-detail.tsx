@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import type { VendorWithRelations, VendorService, Contact } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { VendorContactLinkSearch } from "@/components/vendor-contact-link-search";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -159,8 +160,10 @@ export default function VendorDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { can } = usePermissions();
   const { toast } = useToast();
-  const canEdit = user?.role === "admin" || user?.role === "manager";
+  const canEdit = can('vendors.write');
+  const canDelete = can('vendors.delete');
   
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -384,24 +387,28 @@ export default function VendorDetail() {
           { label: "Vendors", href: "/vendors" },
           { label: vendor.businessName },
         ]}
-        additionalActions={canEdit ? [
-          {
-            label: "Edit Vendor",
-            icon: PenBox,
-            onClick: () => setLocation(`/vendors/${id}/edit`),
-          },
-          {
-            label: "Generate Update Link",
-            icon: LinkIcon,
-            onClick: () => generateLinkMutation.mutate(),
-          },
-          {
-            label: "Delete Vendor",
-            icon: Trash2,
-            onClick: () => setShowDeleteDialog(true),
-            variant: "destructive" as const,
-          },
-        ] : undefined}
+        additionalActions={[
+          ...(canEdit ? [
+            {
+              label: "Edit Vendor",
+              icon: PenBox,
+              onClick: () => setLocation(`/vendors/${id}/edit`),
+            },
+            {
+              label: "Generate Update Link",
+              icon: LinkIcon,
+              onClick: () => generateLinkMutation.mutate(),
+            },
+          ] : []),
+          ...(canDelete ? [
+            {
+              label: "Delete Vendor",
+              icon: Trash2,
+              onClick: () => setShowDeleteDialog(true),
+              variant: "destructive" as const,
+            },
+          ] : []),
+        ]}
       >
         <div className="p-4 md:p-6 max-w-4xl space-y-6">
           <div className="space-y-1">

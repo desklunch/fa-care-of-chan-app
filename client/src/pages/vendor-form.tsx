@@ -34,6 +34,8 @@ import {
 import type { VendorWithRelations, VendorService, VendorLocation } from "@shared/schema";
 import { insertVendorSchema } from "@shared/schema";
 import { z } from "zod";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 
 const formSchema = insertVendorSchema;
 
@@ -233,13 +235,29 @@ export default function VendorForm() {
   const backUrl = isEditMode && vendorId ? `/vendors/${vendorId}` : "/vendors";
 
   return (
-    <PageLayout 
-      breadcrumbs={[
-        { label: "Vendors", href: "/vendors" },
-        ...(isEditMode && existingVendor ? [{ label: existingVendor.businessName, href: `/vendors/${vendorId}` }] : []),
-        { label: isEditMode ? "Edit" : "New Vendor" }
-      ]}
+    <PermissionGate 
+      permission="vendors.write" 
+      fallback={
+        <PageLayout 
+          breadcrumbs={[
+            { label: "Vendors", href: "/vendors" },
+            { label: isEditMode ? "Edit Vendor" : "New Vendor" }
+          ]}
+        >
+          <NoPermissionMessage 
+            title="Permission Required"
+            message="You don't have permission to create or edit vendors. Please contact an administrator if you need access."
+          />
+        </PageLayout>
+      }
     >
+      <PageLayout 
+        breadcrumbs={[
+          { label: "Vendors", href: "/vendors" },
+          ...(isEditMode && existingVendor ? [{ label: existingVendor.businessName, href: `/vendors/${vendorId}` }] : []),
+          { label: isEditMode ? "Edit" : "New Vendor" }
+        ]}
+      >
       <div className="p-6 max-w-3xl">
 
 
@@ -651,6 +669,7 @@ export default function VendorForm() {
           </form>
         </Form>
       </div>
-    </PageLayout>
+      </PageLayout>
+    </PermissionGate>
   );
 }

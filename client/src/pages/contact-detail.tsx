@@ -31,6 +31,7 @@ import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { ClientLinkSearch, VendorLinkSearch } from "@/components/client-link-search";
 import { PermissionGate } from "@/components/permission-gate";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   EditableField,
   FieldRow,
@@ -75,6 +76,9 @@ const statusColors: Record<
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { can } = usePermissions();
+  const canEdit = can('contacts.write');
+  const canDelete = can('contacts.delete');
   const [showClientSearch, setShowClientSearch] = useState(false);
   const [showVendorSearch, setShowVendorSearch] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -237,19 +241,19 @@ export default function ContactDetail() {
         { label: "Contacts", href: "/contacts" },
         { label: fullName },
       ]}
-      primaryAction={{
+      primaryAction={canEdit ? {
         label: "Edit Contact",
         href: `/contacts/${id}/edit`,
         icon: Pencil,
-      }}
-      additionalActions={[
+      } : undefined}
+      additionalActions={canDelete ? [
         {
           label: "Delete Contact",
           onClick: () => setShowDeleteDialog(true),
           icon: Trash2,
           variant: "destructive",
         },
-      ]}
+      ] : []}
     >
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
         <h1 className="text-3xl font-bold" data-testid="text-contact-name">
@@ -264,6 +268,7 @@ export default function ContactDetail() {
               field="firstName"
               testId="field-contact-first-name"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("firstName")}
               error={getFieldError("firstName")}
               placeholder="Enter first name"
@@ -275,6 +280,7 @@ export default function ContactDetail() {
               field="lastName"
               testId="field-contact-last-name"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("lastName")}
               error={getFieldError("lastName")}
               placeholder="Enter last name"
@@ -296,19 +302,20 @@ export default function ContactDetail() {
                       >
                         {client.name}
                       </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUnlinkClient(client.id)}
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                        data-testid={`button-unlink-client-${client.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleUnlinkClient(client.id)}
+                          data-testid={`button-unlink-client-${client.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </FieldRow>
                 ))}
-                {showClientSearch ? (
+                {canEdit && (showClientSearch ? (
                   <FieldRow label="" testId="field-client-search">
                     <ClientLinkSearch
                       contactId={id!}
@@ -333,9 +340,9 @@ export default function ContactDetail() {
                       Add another client
                     </Button>
                   </FieldRow>
-                )}
+                ))}
               </>
-            ) : showClientSearch ? (
+            ) : canEdit ? (showClientSearch ? (
               <FieldRow label="Client" testId="field-client-search">
                 <ClientLinkSearch
                   contactId={id!}
@@ -360,7 +367,7 @@ export default function ContactDetail() {
                   Add Client Company
                 </Button>
               </FieldRow>
-            )}
+            )) : null}
 
             {localLinkedVendors.length > 0 ? (
               <>
@@ -378,19 +385,20 @@ export default function ContactDetail() {
                       >
                         {vendor.businessName}
                       </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUnlinkVendor(vendor.id)}
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                        data-testid={`button-unlink-vendor-${vendor.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleUnlinkVendor(vendor.id)}
+                          data-testid={`button-unlink-vendor-${vendor.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </FieldRow>
                 ))}
-                {showVendorSearch ? (
+                {canEdit && (showVendorSearch ? (
                   <FieldRow label="" testId="field-vendor-search">
                     <VendorLinkSearch
                       contactId={id!}
@@ -415,9 +423,9 @@ export default function ContactDetail() {
                       Add another vendor
                     </Button>
                   </FieldRow>
-                )}
+                ))}
               </>
-            ) : showVendorSearch ? (
+            ) : canEdit ? (showVendorSearch ? (
               <FieldRow label="Vendor" testId="field-vendor-search">
                 <VendorLinkSearch
                   contactId={id!}
@@ -442,7 +450,7 @@ export default function ContactDetail() {
                   Add Vendor
                 </Button>
               </FieldRow>
-            )}
+            )) : null}
 
             <EditableField
               label="Job Title"
@@ -450,6 +458,7 @@ export default function ContactDetail() {
               field="jobTitle"
               testId="field-contact-job-title"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("jobTitle")}
               error={getFieldError("jobTitle")}
             />
@@ -462,6 +471,7 @@ export default function ContactDetail() {
               type="array"
               arrayValue={contact.emailAddresses || []}
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("emailAddresses")}
               error={getFieldError("emailAddresses")}
               displayValue={
@@ -483,6 +493,7 @@ export default function ContactDetail() {
               type="array"
               arrayValue={contact.phoneNumbers || []}
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("phoneNumbers")}
               error={getFieldError("phoneNumbers")}
               displayValue={
@@ -509,6 +520,7 @@ export default function ContactDetail() {
               field="instagramUsername"
               testId="field-contact-instagram"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("instagramUsername")}
               error={getFieldError("instagramUsername")}
               displayValue={
@@ -533,6 +545,7 @@ export default function ContactDetail() {
               field="linkedinUsername"
               testId="field-contact-linkedin"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("linkedinUsername")}
               error={getFieldError("linkedinUsername")}
               displayValue={
@@ -558,6 +571,7 @@ export default function ContactDetail() {
               testId="field-contact-address"
               type="textarea"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("homeAddress")}
               error={getFieldError("homeAddress")}
             />
@@ -569,6 +583,7 @@ export default function ContactDetail() {
               testId="field-contact-dob"
               type="date"
               onSave={handleFieldSave}
+              disabled={!canEdit}
               isLoading={isFieldLoading("dateOfBirth")}
               error={getFieldError("dateOfBirth")}
               displayValue={

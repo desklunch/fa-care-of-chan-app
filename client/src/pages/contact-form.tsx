@@ -16,6 +16,8 @@ import { Save, Plus, X, Loader2 } from "lucide-react";
 import type { Contact } from "@shared/schema";
 import { insertContactSchema } from "@shared/schema";
 import { z } from "zod";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 
 const formSchema = insertContactSchema.extend({
   phoneNumbers: z.array(z.string()).optional().nullable(),
@@ -191,25 +193,41 @@ export default function ContactForm() {
   };
 
   return (
-    <PageLayout 
-      breadcrumbs={[
-        { label: "Contacts", href: "/contacts" },
-        ...(isEditMode && existingContact ? [{ label: fullName, href: `/contacts/${contactId}` }] : []),
-        { label: isEditMode ? "Edit" : "New Contact" }
-      ]}
-      primaryAction={{
-        label: isEditMode ? "Save Changes" : "Create Contact",
-        icon: Save,
-        onClick: handleHeaderSubmit,
-      }}
-      additionalActions={[
-        {
-          label: "Cancel",
-          icon: X,
-          onClick: handleCancel,
-        },
-      ]}
+    <PermissionGate 
+      permission="contacts.write" 
+      fallback={
+        <PageLayout 
+          breadcrumbs={[
+            { label: "Contacts", href: "/contacts" },
+            { label: isEditMode ? "Edit Contact" : "New Contact" }
+          ]}
+        >
+          <NoPermissionMessage 
+            title="Permission Required"
+            message="You don't have permission to create or edit contacts. Please contact an administrator if you need access."
+          />
+        </PageLayout>
+      }
     >
+      <PageLayout 
+        breadcrumbs={[
+          { label: "Contacts", href: "/contacts" },
+          ...(isEditMode && existingContact ? [{ label: fullName, href: `/contacts/${contactId}` }] : []),
+          { label: isEditMode ? "Edit" : "New Contact" }
+        ]}
+        primaryAction={{
+          label: isEditMode ? "Save Changes" : "Create Contact",
+          icon: Save,
+          onClick: handleHeaderSubmit,
+        }}
+        additionalActions={[
+          {
+            label: "Cancel",
+            icon: X,
+            onClick: handleCancel,
+          },
+        ]}
+      >
       <div className="max-w-2xl p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -437,6 +455,7 @@ export default function ContactForm() {
           </form>
         </Form>
       </div>
-    </PageLayout>
+      </PageLayout>
+    </PermissionGate>
   );
 }
