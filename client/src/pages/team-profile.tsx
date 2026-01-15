@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import type { User } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { format } from "date-fns";
 
 export default function TeamProfile() {
   const { id } = useParams<{ id: string }>();
@@ -97,15 +96,6 @@ export default function TeamProfile() {
 
   const editHref = isOwnProfile ? "/profile/edit" : `/team/${id}/edit`;
 
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return null;
-    try {
-      return format(new Date(date), "MMM d, yyyy");
-    } catch {
-      return null;
-    }
-  };
-
   return (
     <PageLayout
       breadcrumbs={[
@@ -123,28 +113,27 @@ export default function TeamProfile() {
       }
     >
       <div className="p-4 md:p-6 pb-2 md:pb-2">
-        <h1 className="text-3xl font-bold" data-testid="text-member-name">
-          {fullName}
-        </h1>
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage
+              src={member.profileImageUrl || undefined}
+              alt={fullName}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-primary/10 text-primary text-xl font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <h1 className="text-3xl font-bold" data-testid="text-member-name">
+            {fullName}
+          </h1>
+        </div>
       </div>
 
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex flex-col items-center md:items-start">
-                <Avatar className="h-32 w-32">
-                  <AvatarImage
-                    src={member.profileImageUrl || undefined}
-                    alt={fullName}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-primary/10 text-primary text-3xl font-medium">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="flex-1">
+            <div>
                 <FieldRow label="First Name" testId="field-first-name">
                   {member.firstName || <span className="text-muted-foreground">Not set</span>}
                 </FieldRow>
@@ -199,13 +188,6 @@ export default function TeamProfile() {
                     <span className="text-muted-foreground">Not set</span>
                   )}
                 </FieldRow>
-                <FieldRow label="Created At" testId="field-created-at">
-                  {formatDate(member.createdAt) || <span className="text-muted-foreground">Not set</span>}
-                </FieldRow>
-                <FieldRow label="Updated At" testId="field-updated-at">
-                  {formatDate(member.updatedAt) || <span className="text-muted-foreground">Not set</span>}
-                </FieldRow>
-              </div>
             </div>
           </CardContent>
         </Card>
