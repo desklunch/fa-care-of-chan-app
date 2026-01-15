@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { VenueGridRow } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import {
@@ -419,6 +420,8 @@ export default function VenuesPage() {
   usePageTitle("Venues");
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
+  const { can } = usePermissions();
+  const canWrite = can("venues.write");
   const isAdmin = user?.role === "admin";
 
   // Welcome dialog state
@@ -558,11 +561,11 @@ export default function VenuesPage() {
     <>
       <PageLayout
         breadcrumbs={[{ label: "Venues" }]}
-        primaryAction={{
+        primaryAction={canWrite ? {
           label: "New Venue",
           icon: CircleFadingPlus,
           onClick: handleCreate,
-        }}
+        } : undefined}
       >
         <div className="flex flex-col  h-full">
           {/* InfoBanner disabled for now

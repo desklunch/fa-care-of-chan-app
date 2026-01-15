@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { VenueCollectionWithCreator } from "@shared/schema";
 import { FolderOpen, Plus, Store, ListChecks, MousePointerClick, ArrowRightLeft, Layers } from "lucide-react";
 
@@ -18,6 +19,8 @@ export default function VenueCollectionsPage() {
   usePageTitle("Venue Collections");
   const [, navigate] = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canWrite = can("venues.write");
 
   // Welcome dialog state
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
@@ -78,11 +81,11 @@ export default function VenueCollectionsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Venues", href: "/venues" }, { label: "Collections" }]}
-      primaryAction={{
+      primaryAction={canWrite ? {
         label: "New Collection",
         icon: Plus,
         onClick: handleCreate,
-      }}
+      } : undefined}
     >
       <div className="p-6">
         {isCollectionsLoading ? (
@@ -126,7 +129,7 @@ export default function VenueCollectionsPage() {
                       <CardTitle className="text-lg truncate" data-testid={`text-collection-name-${collection.id}`}>
                         {collection.name}
                       </CardTitle>
-                      <Badge variant="ghost" className="shrink-0 gap-1">
+                      <Badge variant="outline" className="shrink-0 gap-1">
                         <Store className="h-3 w-3" />
                         {collection.venueCount}
                       </Badge>
@@ -143,7 +146,8 @@ export default function VenueCollectionsPage() {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {collection.createdBy ? (
                       <span>
-                        <Link 
+  <Link 
+                          href={`/team/${collection.createdBy.id}`}
                           onClick={(e) => e.stopPropagation()}
                           className=" text-foreground"
                           data-testid={`link-creator-${collection.createdBy.id}`}

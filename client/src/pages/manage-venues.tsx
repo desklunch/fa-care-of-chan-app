@@ -258,6 +258,7 @@ export default function ManageVenuesPage() {
         { label: "Venues", href: "/venues" },
         { label: "Manage" },
       ]}
+      writePermission="venues.write"
     />
   );
 }

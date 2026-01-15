@@ -52,6 +52,8 @@ import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { useStagedAssets, StagedPhoto, StagedFloorplan, StagedAttachment } from "@/hooks/use-staged-assets";
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive, Sparkles, RefreshCw, Unlink, MapPin } from "lucide-react";
 import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto, VenueSpace } from "@shared/schema";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 import { formatTimeAgo } from "@/lib/format-time";
 import { insertVenueSchema, venueTypes } from "@shared/schema";
 import { Users } from "lucide-react";
@@ -1237,6 +1239,18 @@ export default function VenueFormPage() {
   }
 
   return (
+    <PermissionGate
+      permission="venues.write"
+      behavior="fallback"
+      fallback={
+        <PageLayout breadcrumbs={breadcrumbs}>
+          <NoPermissionMessage
+            title="Permission Required"
+            message="You don't have permission to create or edit venues. Please contact an administrator if you need access."
+          />
+        </PageLayout>
+      }
+    >
     <PageLayout 
       breadcrumbs={breadcrumbs}
       primaryAction={{
@@ -2415,5 +2429,6 @@ export default function VenueFormPage() {
         </Form>
       </div>
     </PageLayout>
+  </PermissionGate>
   );
 }

@@ -45,4 +45,5 @@ export interface ManagePageProps {
   title: string;
   sections: ManageSectionConfig<any>[];
   breadcrumbs?: { label: string; href?: string }[];
+  writePermission?: string;
 }

@@ -11,6 +11,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityDisplay } from "@/components/ui/amenity-toggle";
@@ -69,6 +70,9 @@ export default function VenueDetailPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { can } = usePermissions();
+  const canWrite = can("venues.write");
+  const canDelete = can("venues.delete");
   const isAdmin = user?.role === "admin";
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -227,39 +231,40 @@ export default function VenueDetailPage() {
     );
   }
 
+  // Build additional actions based on permissions
+  const additionalActions = [
+    {
+      label: "Copy Public Link",
+      icon: Share2,
+      onClick: () => {
+        const publicUrl = `${window.location.origin}/public/venues/${id}`;
+        navigator.clipboard.writeText(publicUrl);
+        toast({ title: "Public link copied", description: "Share this link with anyone to view this venue" });
+      },
+    },
+    {
+      label: "Add to Collection",
+      icon: FolderPlus,
+      onClick: () => setCollectionDialogOpen(true),
+    },
+    ...(canDelete ? [{
+      label: "Delete",
+      icon: Trash2,
+      variant: "destructive" as const,
+      onClick: () => setDeleteDialogOpen(true),
+    }] : []),
+  ];
+
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      primaryAction={
-        {
-          label: "Edit",
-          icon: SquarePen,
-          variant: "outline",
-          onClick: () => setLocation(`/venues/${id}/edit`),
-        }
-      }
-      additionalActions={[
-        {
-          label: "Copy Public Link",
-          icon: Share2,
-          onClick: () => {
-            const publicUrl = `${window.location.origin}/public/venues/${id}`;
-            navigator.clipboard.writeText(publicUrl);
-            toast({ title: "Public link copied", description: "Share this link with anyone to view this venue" });
-          },
-        },
-        {
-          label: "Add to Collection",
-          icon: FolderPlus,
-          onClick: () => setCollectionDialogOpen(true),
-        },
-        {
-          label: "Delete",
-          icon: Trash2,
-          variant: "destructive" as const,
-          onClick: () => setDeleteDialogOpen(true),
-        },
-      ]}
+      primaryAction={canWrite ? {
+        label: "Edit",
+        icon: SquarePen,
+        variant: "outline",
+        onClick: () => setLocation(`/venues/${id}/edit`),
+      } : undefined}
+      additionalActions={additionalActions}
     >
       <div className=" ">
 

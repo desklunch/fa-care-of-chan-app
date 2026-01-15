@@ -28,6 +28,8 @@ import {
 import type { VenueCollectionWithVenues } from "@shared/schema";
 import { insertVenueCollectionSchema } from "@shared/schema";
 import { z } from "zod";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 
 const formSchema = insertVenueCollectionSchema;
 type FormData = z.infer<typeof formSchema>;
@@ -156,6 +158,24 @@ export default function VenueCollectionForm() {
   const backUrl = isEditMode && collectionId ? `/venues/collections/${collectionId}` : "/venues/collections";
 
   return (
+    <PermissionGate
+      permission="venues.write"
+      behavior="fallback"
+      fallback={
+        <PageLayout
+          breadcrumbs={[
+            { label: "Venues", href: "/venues" },
+            { label: "Collections", href: "/venues/collections" },
+            { label: isEditMode ? "Edit Collection" : "New Collection" }
+          ]}
+        >
+          <NoPermissionMessage
+            title="Permission Required"
+            message="You don't have permission to create or edit collections. Please contact an administrator if you need access."
+          />
+        </PageLayout>
+      }
+    >
     <PageLayout 
       breadcrumbs={[
         { label: "Venues", href: "/venues" },
@@ -288,5 +308,6 @@ export default function VenueCollectionForm() {
         </Card>
       </div>
     </PageLayout>
+  </PermissionGate>
   );
 }

@@ -39,6 +39,8 @@ import { IconPicker } from "@/components/ui/icon-picker";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleFadingPlus, Trash2 } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { Permission } from "@shared/permissions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -300,10 +302,12 @@ function SectionContent<T extends { id: string }>({
   return <DataGridPage {...dataGridProps} />;
 }
 
-export function ManagePage({ title, sections, breadcrumbs = [] }: ManagePageProps) {
+export function ManagePage({ title, sections, breadcrumbs = [], writePermission }: ManagePageProps) {
   const [, navigate] = useLocation();
   const searchString = useSearch();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canWrite = writePermission ? can(writePermission as Permission) : true;
   
   const searchParams = new URLSearchParams(searchString);
   const tabFromUrl = searchParams.get("tab");
@@ -337,9 +341,10 @@ export function ManagePage({ title, sections, breadcrumbs = [] }: ManagePageProp
   };
 
   const handleRowClick = useCallback((item: { id: string }) => {
+    if (!canWrite) return;
     setSelectedItem(item);
     setEditDialogOpen(true);
-  }, []);
+  }, [canWrite]);
 
   const handleCreateClick = useCallback(() => {
     setCreateDialogOpen(true);
@@ -366,12 +371,12 @@ export function ManagePage({ title, sections, breadcrumbs = [] }: ManagePageProp
   return (
     <PageLayout
       breadcrumbs={breadcrumbs.length > 0 ? breadcrumbs : [{ label: title }]}
-      primaryAction={{
+      primaryAction={canWrite ? {
         label: `New ${activeSection?.entityName || "Item"}`,
         onClick: handleCreateClick,
         icon: CircleFadingPlus,
         variant: "default",
-      }}
+      } : undefined}
     >
       <div className="flex flex-col h-full">
         <div className="border-b px-4 md:px-6 pt-2">

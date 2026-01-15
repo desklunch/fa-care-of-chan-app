@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { VenueCollectionWithVenues, Venue } from "@shared/schema";
 import { 
@@ -144,6 +145,7 @@ function SortableVenueCard({
             {venue.addedBy && venue.addedAt && (
               <div className="text-xs text-muted-foreground ">
                 <Link 
+                  href={`/team/${venue.addedBy.id}`}
                   onClick={(e) => e.stopPropagation()}
                   data-testid={`link-added-by-${venue.addedBy.id}`}
                 >
@@ -197,6 +199,9 @@ export default function VenueCollectionDetail() {
   const collectionId = params?.id;
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canWrite = can("venues.write");
+  const canDelete = can("venues.delete");
 
   const { data: collection, isLoading: isCollectionLoading } = useQuery<VenueCollectionWithVenues>({
     queryKey: ["/api/venue-collections", collectionId],
@@ -366,6 +371,21 @@ export default function VenueCollectionDetail() {
     );
   }
 
+  // Build additional actions based on permissions
+  const additionalActions = [
+    {
+      label: "Copy Public Link",
+      icon: Share2,
+      onClick: handleCopyPublicLink,
+    },
+    ...(canDelete ? [{
+      label: "Delete",
+      icon: Trash2,
+      variant: "destructive" as const,
+      onClick: handleDelete,
+    }] : []),
+  ];
+
   return (
     <PageLayout 
       breadcrumbs={[
@@ -373,24 +393,12 @@ export default function VenueCollectionDetail() {
         { label: "Collections", href: "/venues/collections" },
         { label: collection.name }
       ]}
-      primaryAction={{
+      primaryAction={canWrite ? {
         label: "Edit",
         icon: Edit,
         onClick: handleEdit,
-      }}
-      additionalActions={[
-        {
-          label: "Copy Public Link",
-          icon: Share2,
-          onClick: handleCopyPublicLink,
-        },
-        {
-          label: "Delete",
-          icon: Trash2,
-          variant: "destructive",
-          onClick: handleDelete,
-        },
-      ]}
+      } : undefined}
+      additionalActions={additionalActions}
     >
       <div className="p-6">
         <div className="mb-6">
@@ -421,6 +429,7 @@ export default function VenueCollectionDetail() {
                 )}
                 by{" "}
                 <Link 
+                  href={`/team/${collection.createdBy.id}`}
                   className="font-semibold"
                   data-testid={`link-creator-${collection.createdBy.id}`}
                 >
