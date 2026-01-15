@@ -92,7 +92,7 @@ initializeAuditBridge();           // Line 114 - Audit bridge last
 |-------|--------|--------|-------------|--------------|
 | 0 | Foundation + AI/MCP | 8 | - | ai.routes.ts (4) + mcp/transport.ts (4) |
 | 1 | Reference Data | 31 | NO | tags (6) + amenities (5) + industries (5) + deal-services (5) + brands (5) + vendor-services (5) |
-| 2 | Admin & Analytics | 14 | NO | admin/* (9) + activity/* (5) |
+| 2 | Admin & Analytics | 21 | NO | team (5) + invites (6) + admin (3) + activity (7) |
 | 3 | Settings & Comments | 7 | NO | settings (2) + comments (5) |
 | 4 | Issues & Features | 15 | NO | app-issues (5) + features (10) |
 | 5 | Releases | 14 | NO | releases/* (14) |
@@ -1328,6 +1328,7 @@ Complete system verification:
 | 2026-01-15 | Phase 0.5 | **Complete** | Removed 10 dead storage methods. storage.ts: 4,199 → 4,087 lines (-112) |
 | 2026-01-15 | Phase 1 | **Complete** | Extracted Reference Data domain. 26 routes, 26 storage methods. routes.ts: 6,714 → 6,107 (-607 lines) |
 | 2026-01-15 | Phase 1.1 | **Complete** | Added vendor_services to Reference Data. +5 routes, +5 storage methods. routes.ts: 6,107 → 5,989 (-118 lines). Total now 31 routes. |
+| 2026-01-15 | Phase 2 | **Complete** | Extracted Admin domain (team, invites, admin, activity). 21 routes, 19 storage methods. routes.ts: 5,989 → 5,451 (-538 lines). |
 | | | | |
 
 ---
@@ -1344,3 +1345,4 @@ Complete system verification:
 - [x] Phase 0.5 complete - dead code removed (112 lines saved)
 - [x] Phase 1 complete - Reference Data domain extracted (26 routes, 607 lines saved)
 - [x] Phase 1.1 complete - Added vendor_services to Reference Data (31 total routes, 725 total lines saved)
+- [x] Phase 2 complete - Admin domain extracted (21 routes, 1263 total lines saved)
