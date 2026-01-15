@@ -165,20 +165,26 @@ Based on functional cohesion and line-of-code distribution:
 | `getFormResponseByToken()` | Unused | Zero callers confirmed | ✅ Yes |
 | `getOutreachTokensByRequestId()` | Unused | Zero callers confirmed | ✅ Yes |
 
-**Total: 6 methods to remove**
+### 3.2 Deprecated Floorplan Methods (Confirmed Dead)
 
-### 3.2 Methods Incorrectly Flagged as Dead (KEEP)
+Routes already migrated to use unified VenueFile methods. These 5 methods have zero callers:
+
+| Method | Reason | Verification | Safe to Remove |
+|--------|--------|--------------|----------------|
+| `getVenueFloorplans()` | Routes use `getVenueFiles(venueId, 'floorplan')` | Zero callers confirmed | ✅ Yes |
+| `getVenueFloorplanById()` | Routes use `getVenueFileById()` | Zero callers confirmed | ✅ Yes |
+| `createVenueFloorplan()` | Routes use `createVenueFile()` with category | Zero callers confirmed | ✅ Yes |
+| `updateVenueFloorplan()` | Routes use `updateVenueFile()` | Zero callers confirmed | ✅ Yes |
+| `deleteVenueFloorplan()` | Routes use VenueFile deletion | Zero callers confirmed | ✅ Yes |
+
+**Total: 11 methods to remove (6 superseded + 5 deprecated floorplan)**
+
+### 3.3 Methods Incorrectly Flagged as Dead (KEEP)
 
 | Method | Used By | Verification |
 |--------|---------|--------------|
 | `getSetting()` | Called by `getTheme()` (line 2207) | ✅ Keep |
 | `setSetting()` | Called by `setTheme()` (line 2213) | ✅ Keep |
-
-### 3.3 Deprecated But In Use
-
-| Method | Deprecation Note | Status |
-|--------|------------------|--------|
-| Floorplan methods (5) | Comment says "deprecated - use Venue File operations" | Still have routes, keep for now |
 
 ---
 
@@ -499,6 +505,42 @@ export class DatabaseStorage implements IStorage {
 - No functionality changes
 - AI context endpoints respond correctly
 - MCP SSE connection establishes
+
+---
+
+### Phase 0.5: Pre-Refactor Cleanup (Risk Reduction)
+
+**Objective:** Remove dead code and extract shared utilities before extraction phases to reduce complexity and prevent issues.
+
+**Tasks:**
+
+1. **Remove 11 dead storage methods:**
+   - `getContacts()`, `getVendors()`, `getVenues()`, `getVendorsWithServices()`
+   - `getFormResponseByToken()`, `getOutreachTokensByRequestId()`
+   - `getVenueFloorplans()`, `getVenueFloorplanById()`, `createVenueFloorplan()`
+   - `updateVenueFloorplan()`, `deleteVenueFloorplan()`
+
+2. **Extract `computeEarliestEventDate` to `server/lib/date-utils.ts`:**
+   - Currently defined in storage.ts, used by deals operations
+   - Prevents circular import issues during Phase 9 (Deals extraction)
+
+3. **Create barrel export template at `server/domains/_template/index.ts`:**
+   ```typescript
+   // Template for domain module exports
+   export { registerXxxRoutes } from './xxx.routes';
+   export { XxxStorage } from './xxx.storage';
+   // Optional: export { XxxService } from './xxx.service';
+   ```
+
+4. **Remove IStorage interface entries for dead methods**
+
+**Acceptance Criteria:**
+- 11 dead methods removed from storage.ts
+- IStorage interface updated (11 fewer method signatures)
+- `computeEarliestEventDate` importable from `server/lib/date-utils.ts`
+- TypeScript compiles
+- Application starts without errors
+- All existing functionality still works
 
 ---
 
