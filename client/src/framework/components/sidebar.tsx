@@ -430,7 +430,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                 <Trash2 className="h-5 w-5" />
               </Button>
             )}
-            {isActualAdmin && showExpanded && (
+            {import.meta.env.DEV && isActualAdmin && showExpanded && (
               <div className="w-full">
 
                 <Select
