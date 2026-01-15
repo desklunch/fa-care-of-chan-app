@@ -62,19 +62,6 @@ const clientColumns: ColumnConfig<Client>[] = [
       minWidth: 180,
     },
   },
-  {
-    id: "updatedAt",
-    headerName: "Updated",
-    field: "updatedAt",
-    category: "Details",
-    colDef: {
-      width: 130,
-      valueFormatter: (params: { value: string | Date | null }) => {
-        if (!params.value) return "";
-        return format(new Date(params.value), "MMM d, yyyy");
-      },
-    },
-  },
 ];
 
 const clientFilters: FilterConfig<Client>[] = [

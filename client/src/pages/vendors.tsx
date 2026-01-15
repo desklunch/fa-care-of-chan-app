@@ -32,17 +32,6 @@ import { Star, ExternalLink, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loade
 const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "locations"];
 
 const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
-    {
-    id: "id",
-    headerName: "ID",
-    field: "id",
-    category: "System",
-    colDef: {
-      flex: 1,
-      width: 120,
-      minWidth: 100,
-    },
-  },
   {
     id: "businessName",
     headerName: "Business Name",
@@ -211,27 +200,6 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
     },
   },
   {
-    id: "employeeCount",
-    headerName: "Employees",
-    field: "employeeCount",
-    category: "Details",
-    colDef: {
-      flex: 1,
-      width: 110,
-      minWidth: 100,
-    },
-  },
-  {
-    id: "diversityInfo",
-    headerName: "Diversity",
-    field: "diversityInfo",
-    category: "Details",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-    },
-  },
-  {
     id: "isPreferred",
     headerName: "Preferred",
     field: "isPreferred",
@@ -247,82 +215,6 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
             <Badge variant="default" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20">
               Preferred
             </Badge>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "chargesSalesTax",
-    headerName: "Sales Tax",
-    field: "chargesSalesTax",
-    category: "Financial",
-    colDef: {
-      flex: 1,
-      width: 100,
-      minWidth: 100,
-      cellRenderer: (params: { value: boolean | null }) => {
-        return (
-          <div className="flex items-center h-full">
-            <Badge variant={params.value ? "default" : "secondary"} className="text-xs">
-              {params.value ? "Yes" : "No"}
-            </Badge>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "salesTaxNotes",
-    headerName: "Tax Notes",
-    field: "salesTaxNotes",
-    category: "Financial",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-    },
-  },
-  {
-    id: "notes",
-    headerName: "Notes",
-    field: "notes",
-    category: "Details",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        return (
-          <div className="flex items-center h-full">
-            <span className="truncate text-muted-foreground">{params.value}</span>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "capabilitiesDeck",
-    headerName: "Capabilities Deck",
-    field: "capabilitiesDeck",
-    category: "Details",
-    colDef: {
-      flex: 1.2,
-      minWidth: 150,
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        const url = params.value.startsWith("http") ? params.value : `https://${params.value}`;
-        return (
-          <div className="flex items-center gap-1 h-full">
-            <a 
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline truncate flex items-center gap-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              View Deck
-              <ExternalLink className="w-3 h-3 shrink-0" />
-            </a>
           </div>
         );
       },
@@ -620,7 +512,6 @@ export default function Vendors() {
           "phone",
           "website",
           "address",
-          "diversityInfo",
         ]}
         searchPlaceholder="Search vendors..."
         onRowClick={(vendor) => setLocation(`/vendors/${vendor.id}`)}
