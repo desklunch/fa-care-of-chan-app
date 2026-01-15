@@ -240,7 +240,6 @@ export interface IStorage {
   deleteComment(id: string): Promise<void>;
   
   // Contact operations
-  getContacts(): Promise<Contact[]>;
   getContactsWithRelations(): Promise<ContactWithRelations[]>;
   getClientLinkedContacts(): Promise<ContactWithRelations[]>;
   getVendorLinkedContacts(): Promise<ContactWithRelations[]>;
@@ -250,8 +249,6 @@ export interface IStorage {
   deleteContact(id: string): Promise<void>;
   
   // Vendor operations
-  getVendors(): Promise<Vendor[]>;
-  getVendorsWithServices(): Promise<VendorWithServices[]>;
   getVendorsWithRelations(): Promise<VendorWithRelations[]>;
   getVendorById(id: string): Promise<Vendor | undefined>;
   getVendorByIdWithRelations(id: string): Promise<VendorWithRelations | undefined>;
@@ -267,7 +264,6 @@ export interface IStorage {
   deleteVendorService(id: string): Promise<void>;
   
   // Venue operations
-  getVenues(): Promise<Venue[]>;
   getVenuesWithRelations(): Promise<VenueGridRow[]>;
   getVenueById(id: string): Promise<Venue | undefined>;
   getVenueByIdWithRelations(id: string): Promise<VenueWithRelations | undefined>;
@@ -281,13 +277,6 @@ export interface IStorage {
   
   // Venue-Tag relationship operations
   getVenueTags(venueId: string): Promise<Tag[]>;
-  
-  // Venue Floorplan operations (deprecated - use Venue File operations)
-  getVenueFloorplans(venueId: string): Promise<VenueFloorplan[]>;
-  getVenueFloorplanById(id: string): Promise<VenueFloorplan | undefined>;
-  createVenueFloorplan(data: CreateVenueFloorplan): Promise<VenueFloorplan>;
-  updateVenueFloorplan(id: string, data: UpdateVenueFloorplan): Promise<VenueFloorplan | undefined>;
-  deleteVenueFloorplan(id: string): Promise<void>;
   
   // Venue File operations (unified for floorplans and attachments)
   getVenueFiles(venueId: string, category?: string): Promise<VenueFileWithUploader[]>;
@@ -392,7 +381,6 @@ export interface IStorage {
   markOutreachTokenResponded(token: string): Promise<void>;
   
   // Form response operations
-  getFormResponseByToken(tokenId: string): Promise<FormResponse | undefined>;
   createOrUpdateFormResponse(tokenId: string, data: CreateFormResponse): Promise<FormResponse>;
   
   // Public form data (for unauthenticated access)
@@ -1085,13 +1073,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Contact operations
-  async getContacts(): Promise<Contact[]> {
-    return db
-      .select()
-      .from(contacts)
-      .orderBy(contacts.lastName, contacts.firstName);
-  }
-
   async getContactsWithRelations(): Promise<ContactWithRelations[]> {
     // Optimized single-query approach using json_agg subqueries
     // This fetches only id and name for related companies, reducing data transfer
@@ -1200,40 +1181,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Vendor operations
-  async getVendors(): Promise<Vendor[]> {
-    return db
-      .select()
-      .from(vendors)
-      .orderBy(vendors.businessName);
-  }
-
-  async getVendorsWithServices(): Promise<VendorWithServices[]> {
-    const allVendors = await db
-      .select()
-      .from(vendors)
-      .orderBy(vendors.businessName);
-
-    const vendorServiceMappings = await db
-      .select({
-        vendorId: vendorServicesVendors.vendorId,
-        service: vendorServices,
-      })
-      .from(vendorServicesVendors)
-      .innerJoin(vendorServices, eq(vendorServicesVendors.vendorServiceId, vendorServices.id));
-
-    const servicesByVendorId = new Map<string, VendorService[]>();
-    for (const mapping of vendorServiceMappings) {
-      const existing = servicesByVendorId.get(mapping.vendorId) || [];
-      existing.push(mapping.service);
-      servicesByVendorId.set(mapping.vendorId, existing);
-    }
-
-    return allVendors.map((vendor) => ({
-      ...vendor,
-      services: servicesByVendorId.get(vendor.id) || [],
-    }));
-  }
-
   async getVendorsWithRelations(): Promise<VendorWithRelations[]> {
     const allVendors = await db
       .select()
@@ -1390,10 +1337,6 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Venue CRUD operations
-  async getVenues(): Promise<Venue[]> {
-    return db.select().from(venues).orderBy(venues.name);
-  }
-  
   async getVenueById(id: string): Promise<Venue | undefined> {
     const [venue] = await db.select().from(venues).where(eq(venues.id, id));
     return venue;
@@ -1580,52 +1523,6 @@ export class DatabaseStorage implements IStorage {
         }))
       );
     }
-  }
-  
-  // Venue Floorplan operations
-  async getVenueFloorplans(venueId: string): Promise<VenueFloorplan[]> {
-    return db
-      .select()
-      .from(venueFloorplans)
-      .where(eq(venueFloorplans.venueId, venueId))
-      .orderBy(venueFloorplans.sortOrder, venueFloorplans.uploadedAt);
-  }
-  
-  async getVenueFloorplanById(id: string): Promise<VenueFloorplan | undefined> {
-    const [floorplan] = await db
-      .select()
-      .from(venueFloorplans)
-      .where(eq(venueFloorplans.id, id));
-    return floorplan;
-  }
-  
-  async createVenueFloorplan(data: CreateVenueFloorplan): Promise<VenueFloorplan> {
-    const [floorplan] = await db
-      .insert(venueFloorplans)
-      .values({
-        venueId: data.venueId,
-        fileUrl: data.fileUrl,
-        thumbnailUrl: data.thumbnailUrl,
-        fileType: data.fileType,
-        title: data.title,
-        caption: data.caption,
-        sortOrder: data.sortOrder ?? 0,
-      })
-      .returning();
-    return floorplan;
-  }
-  
-  async updateVenueFloorplan(id: string, data: UpdateVenueFloorplan): Promise<VenueFloorplan | undefined> {
-    const [floorplan] = await db
-      .update(venueFloorplans)
-      .set(data)
-      .where(eq(venueFloorplans.id, id))
-      .returning();
-    return floorplan;
-  }
-  
-  async deleteVenueFloorplan(id: string): Promise<void> {
-    await db.delete(venueFloorplans).where(eq(venueFloorplans.id, id));
   }
   
   // Venue File operations (unified for floorplans and attachments)
@@ -2806,14 +2703,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Form response operations
-  async getFormResponseByToken(tokenId: string): Promise<FormResponse | undefined> {
-    const [response] = await db
-      .select()
-      .from(formResponses)
-      .where(eq(formResponses.tokenId, tokenId));
-    return response;
-  }
-
   async createOrUpdateFormResponse(tokenId: string, data: CreateFormResponse): Promise<FormResponse> {
     const [response] = await db
       .insert(formResponses)
