@@ -536,7 +536,7 @@ export default function VenueDetailPage() {
                 <CardTitle className="text-lg flex items-center gap-2">
                   Photos
                 </CardTitle>
-                {venue.photos && venue.photos.length > 1 && (
+                {canWrite && venue.photos && venue.photos.length > 1 && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -572,15 +572,22 @@ export default function VenueDetailPage() {
                       </div>
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => setLocation(`/venues/${id}/edit`)}
-                    className="relative aspect-square overflow-hidden rounded-lg  bg-muted/50 hover:bg-muted transition-colors cursor-pointer flex items-center justify-center gap-2"
-                    data-testid="button-upload-photos"
-                  >
-                    <ImagePlus className="h-5 w-5 text-muted-foreground/50" />
-                    <span className="text-sm text-muted-foreground/50 text-center">Add Photos</span>
-                  </button>
+                  {canWrite && (
+                    <button
+                      type="button"
+                      onClick={() => setLocation(`/venues/${id}/edit`)}
+                      className="relative aspect-square overflow-hidden rounded-lg  bg-muted/50 hover:bg-muted transition-colors cursor-pointer flex items-center justify-center gap-2"
+                      data-testid="button-upload-photos"
+                    >
+                      <ImagePlus className="h-5 w-5 text-muted-foreground/50" />
+                      <span className="text-sm text-muted-foreground/50 text-center">Add Photos</span>
+                    </button>
+                  )}
+                  {!canWrite && (!venue.photos || venue.photos.length <= 1) && (
+                    <div className="relative aspect-square overflow-hidden rounded-lg bg-muted/30 flex items-center justify-center">
+                      <span className="text-sm text-muted-foreground">No Photos</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -589,7 +596,7 @@ export default function VenueDetailPage() {
         <Card className="group relative">
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg">Amenities</CardTitle>
-            {venue.amenities && venue.amenities.length > 0 && (
+            {canWrite && venue.amenities && venue.amenities.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -604,7 +611,7 @@ export default function VenueDetailPage() {
           <CardContent>
             {venue.amenities && venue.amenities.length > 0 ? (
               <AmenityDisplay amenities={venue.amenities} />
-            ) : (
+            ) : canWrite ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -615,6 +622,8 @@ export default function VenueDetailPage() {
                 <Sparkles className="h-4 w-4" />
                 Add an Amenity
               </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">No Amenities</p>
             )}
           </CardContent>
         </Card>
@@ -623,7 +632,7 @@ export default function VenueDetailPage() {
           <Card className="group relative">
             <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg">Cuisine</CardTitle>
-              {venue.cuisineTags && venue.cuisineTags.length > 0 && (
+              {canWrite && venue.cuisineTags && venue.cuisineTags.length > 0 && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -649,7 +658,7 @@ export default function VenueDetailPage() {
                     </Badge>
                   ))}
                 </div>
-              ) : (
+              ) : canWrite ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -660,6 +669,8 @@ export default function VenueDetailPage() {
                   <Utensils className="h-4 w-4" />
                   Assign Cuisine
                 </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">No Cuisines</p>
               )}
             </CardContent>
           </Card>
@@ -667,7 +678,7 @@ export default function VenueDetailPage() {
           <Card className="group relative">
             <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg">Style</CardTitle>
-              {venue.styleTags && venue.styleTags.length > 0 && (
+              {canWrite && venue.styleTags && venue.styleTags.length > 0 && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -693,7 +704,7 @@ export default function VenueDetailPage() {
                     </Badge>
                   ))}
                 </div>
-              ) : (
+              ) : canWrite ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -704,6 +715,8 @@ export default function VenueDetailPage() {
                   <Palette className="h-4 w-4" />
                   Assign Styles
                 </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">No Styles</p>
               )}
             </CardContent>
           </Card>
@@ -714,7 +727,7 @@ export default function VenueDetailPage() {
             <CardTitle className="text-lg flex items-center gap-2">
               Event Spaces
             </CardTitle>
-            {venue.venueSpaces && venue.venueSpaces.length > 0 && (
+            {canWrite && venue.venueSpaces && venue.venueSpaces.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -777,7 +790,7 @@ export default function VenueDetailPage() {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : canWrite ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -788,6 +801,8 @@ export default function VenueDetailPage() {
                 <Plus className="h-4 w-4" />
                 Add Event Space
               </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">No Event Spaces</p>
             )}
           </CardContent>
         </Card>
@@ -797,7 +812,7 @@ export default function VenueDetailPage() {
             <CardTitle className="text-lg flex items-center gap-2">
               Floorplans
             </CardTitle>
-            {venue.floorplans && venue.floorplans.length > 0 && (
+            {canWrite && venue.floorplans && venue.floorplans.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -861,7 +876,7 @@ export default function VenueDetailPage() {
                     </a>
                   ))}
               </div>
-            ) : (
+            ) : canWrite ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -871,6 +886,8 @@ export default function VenueDetailPage() {
                 <Layout className="h-4 w-4" />
                 Upload Floorplans
               </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">No Floorplans</p>
             )}
           </CardContent>
         </Card>
@@ -880,7 +897,7 @@ export default function VenueDetailPage() {
             <CardTitle className="text-lg flex items-center gap-2">
               Attachments
             </CardTitle>
-            {venue.attachments && venue.attachments.length > 0 && (
+            {canWrite && venue.attachments && venue.attachments.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -1040,7 +1057,7 @@ export default function VenueDetailPage() {
                     );
                   })}
               </div>
-            ) : (
+            ) : canWrite ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -1051,6 +1068,8 @@ export default function VenueDetailPage() {
                 <Paperclip className="h-4 w-4" />
                 Attach Files
               </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">No Attachments</p>
             )}
           </CardContent>
         </Card>
