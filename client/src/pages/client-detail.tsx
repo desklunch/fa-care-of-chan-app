@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type {
@@ -41,11 +42,13 @@ import {
 import { ContactLinkSearch } from "@/components/contact-link-search";
 import { PermissionGate } from "@/components/permission-gate";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import {
   EditableField,
   EditableTitle,
   useFieldMutation,
 } from "@/components/inline-edit";
+import { CommentList } from "@/components/ui/comments";
 
 const statusColors: Record<
   DealStatus,
@@ -87,6 +90,7 @@ export default function ClientDetail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { can } = usePermissions();
+  const { user } = useAuth();
   const canEdit = can('clients.write');
   const canDelete = can('clients.delete');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -233,8 +237,17 @@ export default function ClientDetail() {
         },
       ] : []}
     >
-      <div className="max-w-4xl space-y-6 p-4 md:p-6">
-        <EditableTitle
+      <Tabs defaultValue="overview" className="w-full">
+        <div className="border-b px-4 md:px-6">
+          <TabsList className="h-10">
+            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="overview" className="mt-0">
+          <div className="max-w-4xl space-y-6 p-4 md:p-6">
+            <EditableTitle
           value={client.name}
           onSave={handleTitleSave}
           testId="text-client-name"
@@ -458,7 +471,21 @@ export default function ClientDetail() {
             </CardContent>
           </Card>
         </PermissionGate>
-      </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="comments" className="mt-0">
+          <div className="max-w-4xl p-4 md:p-6">
+            {user && params.id && (
+              <CommentList
+                entityType="client"
+                entityId={params.id}
+                currentUser={user}
+              />
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

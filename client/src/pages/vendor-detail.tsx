@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CommentList } from "@/components/ui/comments";
 import {
   ArrowLeft,
   Building2,
@@ -413,8 +415,17 @@ export default function VendorDetail() {
           ] : []),
         ]}
       >
-        <div className="p-4 md:p-6 max-w-4xl space-y-6">
-          <div className="space-y-1">
+        <Tabs defaultValue="overview" className="w-full">
+          <div className="border-b px-4 md:px-6">
+            <TabsList className="h-10">
+              <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+              <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <TabsContent value="overview" className="mt-0">
+            <div className="p-4 md:p-6 max-w-4xl space-y-6">
+              <div className="space-y-1">
             {vendor.isPreferred && (
               <Badge variant="secondary" data-testid="badge-preferred">
                 Preferred
@@ -852,9 +863,21 @@ export default function VendorDetail() {
               </PermissionGate>
             </CardContent>
           </Card>
-
-
-        </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="comments" className="mt-0">
+            <div className="max-w-4xl p-4 md:p-6">
+              {user && id && (
+                <CommentList
+                  entityType="vendor"
+                  entityId={id}
+                  currentUser={user}
+                />
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </PageLayout>
 
       <Dialog open={showLinkDialog} onOpenChange={handleCloseDialog}>
