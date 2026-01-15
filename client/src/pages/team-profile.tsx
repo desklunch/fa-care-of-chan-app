@@ -123,23 +123,9 @@ export default function TeamProfile() {
       }
     >
       <div className="p-4 md:p-6 pb-2 md:pb-2">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold" data-testid="text-member-name">
-            {fullName}
-          </h1>
-          {member.title && (
-            <span className="text-muted-foreground" data-testid="text-member-title">
-              {member.title}
-            </span>
-          )}
-          {member.department && (
-            <div className="pt-1">
-              <Badge variant="secondary" data-testid="badge-department">
-                {member.department}
-              </Badge>
-            </div>
-          )}
-        </div>
+        <h1 className="text-3xl font-bold" data-testid="text-member-name">
+          {fullName}
+        </h1>
       </div>
 
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
