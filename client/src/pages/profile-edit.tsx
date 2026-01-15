@@ -123,7 +123,7 @@ export default function ProfileEdit() {
       breadcrumbs={[
         { label: "Team", href: "/team" },
         { label: fullName, href: `/team/${user.id}` },
-        { label: "Edit Profile" },
+        { label: "Edit" },
       ]}
     >
       <div className="p-4 md:p-6 max-w-3xl mx-auto">

@@ -11,7 +11,7 @@ export default function Feedback() {
   const { user } = useAuth();
 
   return (
-    <PageLayout breadcrumbs={[{ label: "App" },{ label: "Feedback" }]}>
+    <PageLayout breadcrumbs={[{ label: "Feedback" }]}>
               {/* <InfoBanner
             id="feedback-features-tip"
             title="Have a specific request?"

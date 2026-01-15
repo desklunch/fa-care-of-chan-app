@@ -696,7 +696,7 @@ export default function ManagePage() {
 
   if (!canReadSales) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Sales", href: "/deals" }, { label: "Manage" }]}>
+      <PageLayout breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Manage" }]}>
         <NoPermissionMessage
           title="Access Denied"
           message="You don't have permission to view sales management. Please contact an administrator if you need access."
@@ -707,7 +707,7 @@ export default function ManagePage() {
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Sales", href: "/deals" }, { label: "Manage" }]}
+      breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Manage" }]}
       primaryAction={canManageSales ? {
         label: activeTab === "industries" ? "New Industry" : "New Service",
         onClick: () => activeTab === "industries" ? setIndustryCreateDialogOpen(true) : setServiceCreateDialogOpen(true),

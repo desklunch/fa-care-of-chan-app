@@ -1691,7 +1691,7 @@ export default function GuidePage() {
   };
 
   return (
-    <PageLayout breadcrumbs={[{ label: "App " }, { label: "Guide" }]}>
+    <PageLayout breadcrumbs={[{ label: "Guide" }]}>
       <div className="flex h-[calc(100vh-120px)]">
         {/* Sidebar Navigation */}
         <aside className="w-64 border-r  hidden lg:block">
