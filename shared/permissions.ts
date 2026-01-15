@@ -4,15 +4,15 @@
  * This module defines the role hierarchy and permission mappings for the application.
  * It provides utilities for checking permissions that can be used on both frontend and backend.
  * 
- * Role Hierarchy:
- * - admin: Full access to everything
- * - manager (tier 2): Access to deals, sales management, and all employee permissions
- * - employee (tier 1): Basic access to venues, clients, contacts, vendors with write/delete
- * - viewer (tier 0): Read-only access to venues, clients, contacts, vendors
+ * Role Hierarchy (with inheritance - each tier inherits all permissions from lower tiers):
+ * - Tier 3 (admin): Full access to everything (inherits tier 2)
+ * - Tier 2 (manager): Access to deals, sales management (inherits tier 1)
+ * - Tier 1 (employee): Write/delete access to venues, clients, contacts, vendors (inherits tier 0)
+ * - Tier 0 (viewer): Read-only access to venues, clients, contacts, vendors, team
  * 
  * Future extensibility:
  * - Additional tier 2 roles (sales-manager, venue-manager) can be added
- * - Each tier 2 role inherits tier 1 permissions and has specific tier 2 permissions
+ * - Each role inherits all permissions from lower tiers
  */
 
 // ============================================
@@ -119,6 +119,8 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 // ============================================
 
 // Base permissions for each tier
+// Each tier inherits all permissions from lower tiers
+
 // Tier 0 (viewer) permissions - read-only access
 const TIER_0_PERMISSIONS: Permission[] = [
   'venues.read',
@@ -128,25 +130,22 @@ const TIER_0_PERMISSIONS: Permission[] = [
   'team.read', // All users can view team directory
 ];
 
-// Tier 1 (employee) permissions - basic CRUD for general entities
+// Tier 1 (employee) permissions - inherits tier 0 + basic CRUD for general entities
 const TIER_1_PERMISSIONS: Permission[] = [
-  'venues.read',
+  ...TIER_0_PERMISSIONS,
   'venues.write',
   'venues.delete',
-  'clients.read',
   'clients.write',
   'clients.delete',
-  'contacts.read',
   'contacts.write',
   'contacts.delete',
-  'vendors.read',
   'vendors.write',
   'vendors.delete',
   'app_features.read',
   'app_features.vote',
 ];
 
-// Tier 2 (manager) permissions - includes all tier 1 + deals and team access
+// Tier 2 (manager) permissions - inherits tier 1 + deals and sales access
 const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
   'deals.read',
@@ -157,7 +156,7 @@ const TIER_2_PERMISSIONS: Permission[] = [
   'search.deals',
 ];
 
-// Tier 3 (admin) permissions - includes all lower tiers
+// Tier 3 (admin) permissions - inherits tier 2 + full admin access
 const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
   'team.manage',
