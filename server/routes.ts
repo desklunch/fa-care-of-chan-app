@@ -233,8 +233,8 @@ export async function registerRoutes(
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Handle role update if provided (separate from profile fields)
-      const { role } = req.body;
+      // Handle role and isActive updates (separate from profile fields)
+      const { role, isActive } = req.body;
       
       // First update profile fields
       let updatedUser = await storage.updateUser(id, result.data);
@@ -245,6 +245,11 @@ export async function registerRoutes(
       // Then update role if provided (admins can change roles)
       if (role && ["admin", "manager", "employee", "viewer"].includes(role)) {
         updatedUser = await storage.updateUser(id, { role });
+      }
+      
+      // Update isActive if provided (admins can change active status)
+      if (typeof isActive === "boolean") {
+        updatedUser = await storage.updateUser(id, { isActive });
       }
 
       // Log the profile update

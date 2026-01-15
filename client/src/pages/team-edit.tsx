@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -43,6 +44,7 @@ export default function TeamEdit() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string>("");
+  const [isActive, setIsActive] = useState<boolean>(true);
 
   const isAdmin = can('team.manage');
 
@@ -80,11 +82,12 @@ export default function TeamEdit() {
         profileImageUrl: member.profileImageUrl || "",
       });
       setSelectedRole(member.role || "employee");
+      setIsActive(member.isActive ?? true);
     }
   }, [member, form]);
 
   const updateMutation = useMutation({
-    mutationFn: async (data: UpdateProfile & { role?: string }) => {
+    mutationFn: async (data: UpdateProfile & { role?: string; isActive?: boolean }) => {
       return apiRequest("PATCH", `/api/team/${id}`, data);
     },
     onSuccess: () => {
@@ -114,7 +117,7 @@ export default function TeamEdit() {
   });
 
   const onSubmit = (data: UpdateProfile) => {
-    updateMutation.mutate({ ...data, role: selectedRole });
+    updateMutation.mutate({ ...data, role: selectedRole, isActive });
   };
 
   if (memberLoading) {
@@ -328,7 +331,7 @@ export default function TeamEdit() {
                     )}
                   />
 
-                  <div className="pt-4 border-t border-border">
+                  <div className="pt-4 border-t border-border space-y-4">
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
                         <Shield className="h-4 w-4" />
@@ -351,6 +354,20 @@ export default function TeamEdit() {
                       <p className="text-xs text-muted-foreground mt-1">
                         Controls what this user can access in the application.
                       </p>
+                    </FormItem>
+
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Active Status</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          Inactive users cannot log in to the application.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                        data-testid="switch-is-active"
+                      />
                     </FormItem>
                   </div>
 
