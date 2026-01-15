@@ -142,7 +142,7 @@ function DealsGuideContent() {
             <p>
               The Deals module is your central hub for managing your sales pipeline. Track opportunities from initial lead through to closed deals, with comprehensive tools for managing budgets, proposals, contacts, and more.
             </p>
-            <h4>Key Features</h4>
+            <h3>Key Features</h3>
             <ul>
               <li><strong>Pipeline Management</strong> - Track deals through customizable status stages</li>
               <li><strong>Budget Tracking</strong> - Monitor deal values and compare to proposals</li>
@@ -164,14 +164,14 @@ function DealsGuideContent() {
             <p>
               The Deals page displays all your deals in a powerful data grid powered by AG Grid. This provides a spreadsheet-like experience for viewing and managing your deals.
             </p>
-            <h4>Grid Features</h4>
+            <h3>Grid Features</h3>
             <ul>
               <li><strong>Resizable Columns</strong> - Drag column borders to adjust width</li>
               <li><strong>Row Selection</strong> - Click any row to view deal details</li>
               <li><strong>Status Badges</strong> - Color-coded status indicators for quick scanning</li>
               <li><strong>Responsive Layout</strong> - Grid adapts to your screen size</li>
             </ul>
-            <h4>Available Columns</h4>
+            <h3>Available Columns</h3>
             <p>The grid can display the following information:</p>
             <ul>
               <li>Deal name and client</li>
@@ -190,7 +190,7 @@ function DealsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Column Visibility & Repositioning</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Showing/Hiding Columns</h4>
+            <h3>Showing/Hiding Columns</h3>
             <p>
               Click the "Columns" button in the toolbar to open the column visibility panel. From here you can:
             </p>
@@ -201,7 +201,7 @@ function DealsGuideContent() {
             </ul>
             <p>Your column preferences are saved automatically and persist across sessions.</p>
             
-            <h4>Repositioning Columns</h4>
+            <h3>Repositioning Columns</h3>
             <p>
               Rearrange columns by dragging their headers to a new position:
             </p>
@@ -221,7 +221,7 @@ function DealsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Sorting</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Sorting by Column</h4>
+            <h3>Sorting by Column</h3>
             <p>
               Click any column header to sort the grid by that column:
             </p>
@@ -232,7 +232,7 @@ function DealsGuideContent() {
             </ul>
             <p>The sort indicator arrow shows the current sort direction.</p>
             
-            <h4>Manual Sorting with Drag & Drop</h4>
+            <h3>Manual Sorting with Drag & Drop</h3>
             <p>
               For custom ordering, use the drag handle on the left side of each row:
             </p>
@@ -255,12 +255,12 @@ function DealsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Quick Search</h4>
+            <h3>Quick Search</h3>
             <p>
               Use the search box in the toolbar to find deals by name, client, or other text fields. Results update in real-time as you type.
             </p>
             
-            <h4>Filter Options</h4>
+            <h3>Filter Options</h3>
             <p>Click the filter buttons in the toolbar to filter deals by:</p>
             <ul>
               <li><strong>Owner</strong> - Filter by deal owner/assignee</li>
@@ -269,7 +269,7 @@ function DealsGuideContent() {
               <li><strong>Services</strong> - Show deals with specific services</li>
             </ul>
             
-            <h4>Using Filters</h4>
+            <h3>Using Filters</h3>
             <ol>
               <li>Click a filter button to open the selection dropdown</li>
               <li>Check one or more options to filter by</li>
@@ -291,7 +291,7 @@ function DealsGuideContent() {
               Edit deal information directly in the grid without opening the detail page. This enables rapid updates when working through multiple deals.
             </p>
             
-            <h4>How to Edit Inline</h4>
+            <h3>How to Edit Inline</h3>
             <ol>
               <li>Double-click on any editable cell in the grid</li>
               <li>The cell enters edit mode with a text input or dropdown</li>
@@ -300,7 +300,7 @@ function DealsGuideContent() {
               <li>Click outside the cell to save changes</li>
             </ol>
             
-            <h4>Editable Fields</h4>
+            <h3>Editable Fields</h3>
             <p>The following fields can be edited inline:</p>
             <ul>
               <li>Deal name</li>
@@ -309,7 +309,7 @@ function DealsGuideContent() {
               <li>Event dates</li>
             </ul>
             
-            <h4>Tips</h4>
+            <h3>Tips</h3>
             <ul>
               <li>Tab between cells to move quickly through edits</li>
               <li>Changes save automatically when you leave the cell</li>
@@ -329,20 +329,20 @@ function DealsGuideContent() {
               Create new deals to track opportunities through your pipeline.
             </p>
             
-            <h4>Creating a New Deal</h4>
+            <h3>Creating a New Deal</h3>
             <ol>
               <li>Click the "New Deal" button in the top right</li>
               <li>Fill in the deal information in the form</li>
               <li>Click "Create Deal" to save</li>
             </ol>
             
-            <h4>Required Fields</h4>
+            <h3>Required Fields</h3>
             <ul>
               <li><strong>Name</strong> - A descriptive name for the deal</li>
               <li><strong>Status</strong> - Initial pipeline stage</li>
             </ul>
             
-            <h4>Optional Fields</h4>
+            <h3>Optional Fields</h3>
             <ul>
               <li><strong>Client</strong> - Link to an existing client</li>
               <li><strong>Owner</strong> - Assign a team member</li>
@@ -366,7 +366,7 @@ function DealsGuideContent() {
               Click any row in the deals grid to open the full detail page for that deal.
             </p>
             
-            <h4>Page Layout</h4>
+            <h3>Page Layout</h3>
             <p>The detail page shows comprehensive deal information:</p>
             <ul>
               <li><strong>Header</strong> - Deal name, status badge, and action buttons</li>
@@ -378,7 +378,7 @@ function DealsGuideContent() {
               <li><strong>Notes</strong> - Markdown-rendered notes section</li>
             </ul>
             
-            <h4>Quick Actions</h4>
+            <h3>Quick Actions</h3>
             <p>From the detail page you can:</p>
             <ul>
               <li>Edit the deal using the Edit button</li>
@@ -398,7 +398,7 @@ function DealsGuideContent() {
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
             <p>There are multiple ways to edit deal information:</p>
             
-            <h4>Inline Editing on Detail Page</h4>
+            <h3>Inline Editing on Detail Page</h3>
             <p>
               On the deal detail page, hover over any field to see an edit icon. Click the icon or double-click the field value to enter edit mode:
             </p>
@@ -408,7 +408,7 @@ function DealsGuideContent() {
               <li>Press Enter to save or Escape to cancel</li>
             </ul>
             
-            <h4>Full Edit Form</h4>
+            <h3>Full Edit Form</h3>
             <p>
               For comprehensive editing, click the "Edit" button to open the full edit form. This provides access to all fields including:
             </p>
@@ -420,7 +420,7 @@ function DealsGuideContent() {
               <li>Rich text notes editor</li>
             </ul>
             
-            <h4>Grid Inline Editing</h4>
+            <h3>Grid Inline Editing</h3>
             <p>
               As described in the Inline Editing section, you can also edit directly in the data grid by double-clicking cells.
             </p>
@@ -438,21 +438,21 @@ function DealsGuideContent() {
               Deals can be deleted when they're no longer needed. This action is permanent.
             </p>
             
-            <h4>How to Delete</h4>
+            <h3>How to Delete</h3>
             <ol>
               <li>Open the deal detail page</li>
               <li>Click the "Delete" button (or trash icon)</li>
               <li>Confirm the deletion in the dialog that appears</li>
             </ol>
             
-            <h4>What Happens When You Delete</h4>
+            <h3>What Happens When You Delete</h3>
             <ul>
               <li>The deal is permanently removed from the system</li>
               <li>Associations with clients and contacts are removed</li>
               <li>This action cannot be undone</li>
             </ul>
             
-            <h4>Alternative: Changing Status</h4>
+            <h3>Alternative: Changing Status</h3>
             <p>
               Instead of deleting, consider changing the deal status to "Cancelled" or "No Go" to preserve the record for historical reference and reporting.
             </p>
@@ -473,7 +473,7 @@ function ClientsGuideContent() {
             <p>
               The Clients module helps you manage your business relationships. Clients represent companies or organizations you work with, and can be linked to multiple contacts and deals.
             </p>
-            <h4>Key Features</h4>
+            <h3>Key Features</h3>
             <ul>
               <li><strong>Client Directory</strong> - Browse and search all clients in a data grid</li>
               <li><strong>Industry Tracking</strong> - Categorize clients by industry for easy filtering</li>
@@ -495,20 +495,20 @@ function ClientsGuideContent() {
               The Clients page displays all your clients in a powerful data grid format, making it easy to browse, search, and manage your client base.
             </p>
             
-            <h4>Default Columns</h4>
+            <h3>Default Columns</h3>
             <ul>
               <li><strong>Name</strong> - Client/company name</li>
               <li><strong>Industry</strong> - Business sector displayed as a badge</li>
               <li><strong>Website</strong> - Company website URL</li>
             </ul>
             
-            <h4>Additional Columns</h4>
+            <h3>Additional Columns</h3>
             <p>Use the Columns button to show or hide:</p>
             <ul>
               <li><strong>Updated</strong> - Last modification date</li>
             </ul>
             
-            <h4>Grid Features</h4>
+            <h3>Grid Features</h3>
             <ul>
               <li>Click any row to view the full client details</li>
               <li>Resize columns by dragging column borders</li>
@@ -526,12 +526,12 @@ function ClientsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Quick Search</h4>
+            <h3>Quick Search</h3>
             <p>
               Use the search box to find clients by name or website. Results update instantly as you type.
             </p>
             
-            <h4>Industry Filter</h4>
+            <h3>Industry Filter</h3>
             <p>
               Click the "Industry" filter button to show only clients in specific industries:
             </p>
@@ -558,25 +558,25 @@ function ClientsGuideContent() {
               Create new clients to build your client directory and track business relationships.
             </p>
             
-            <h4>Creating a New Client</h4>
+            <h3>Creating a New Client</h3>
             <ol>
               <li>Click the "New Client" button in the top right</li>
               <li>Fill in the client information</li>
               <li>Click "Create Client" to save</li>
             </ol>
             
-            <h4>Required Fields</h4>
+            <h3>Required Fields</h3>
             <ul>
               <li><strong>Name</strong> - The company or organization name</li>
             </ul>
             
-            <h4>Optional Fields</h4>
+            <h3>Optional Fields</h3>
             <ul>
               <li><strong>Industry</strong> - Select from available industry categories</li>
               <li><strong>Website</strong> - Company website URL</li>
             </ul>
             
-            <h4>Tips</h4>
+            <h3>Tips</h3>
             <ul>
               <li>Use a consistent naming convention for client names</li>
               <li>Add the website to help identify the client later</li>
@@ -596,7 +596,7 @@ function ClientsGuideContent() {
               Click any client row in the grid to open the detail page with comprehensive information.
             </p>
             
-            <h4>Page Sections</h4>
+            <h3>Page Sections</h3>
             <ul>
               <li><strong>Header</strong> - Client name (editable) and action buttons (Edit, Delete)</li>
               <li><strong>Basic Information</strong> - Industry and website with inline editing</li>
@@ -604,12 +604,12 @@ function ClientsGuideContent() {
               <li><strong>Deals</strong> - All deals associated with this client with status badges</li>
             </ul>
             
-            <h4>Inline Editing</h4>
+            <h3>Inline Editing</h3>
             <p>
               Edit client fields directly on the detail page by hovering over a field and clicking the edit icon, or by double-clicking the field value. Changes save automatically.
             </p>
             
-            <h4>Quick Actions</h4>
+            <h3>Quick Actions</h3>
             <ul>
               <li>Click on a contact name to view their details</li>
               <li>Click on a deal to view deal details</li>
@@ -629,7 +629,7 @@ function ClientsGuideContent() {
               Clients can have multiple contacts associated with them. This helps you track all the people you work with at each company.
             </p>
             
-            <h4>Adding a Contact to a Client</h4>
+            <h3>Adding a Contact to a Client</h3>
             <ol>
               <li>Open the client detail page</li>
               <li>Find the Contacts section</li>
@@ -638,7 +638,7 @@ function ClientsGuideContent() {
               <li>Select the contact to link them</li>
             </ol>
             
-            <h4>Removing a Contact Link</h4>
+            <h3>Removing a Contact Link</h3>
             <ol>
               <li>In the Contacts section, find the contact to unlink</li>
               <li>Click the trash icon next to the contact</li>
@@ -647,7 +647,7 @@ function ClientsGuideContent() {
               Note: Unlinking a contact does not delete the contact itself, it only removes the association with this client.
             </p>
             
-            <h4>Contact Display</h4>
+            <h3>Contact Display</h3>
             <p>
               Each linked contact shows their name and job title (if available). Click on a contact's name to navigate to their full detail page.
             </p>
@@ -665,19 +665,19 @@ function ClientsGuideContent() {
               The Deals section on the client detail page shows all deals linked to this client.
             </p>
             
-            <h4>Deal Information</h4>
+            <h3>Deal Information</h3>
             <p>Each deal in the list displays:</p>
             <ul>
               <li>Deal name</li>
               <li>Status badge with color coding</li>
             </ul>
             
-            <h4>Quick Navigation</h4>
+            <h3>Quick Navigation</h3>
             <p>
               Click on any deal to navigate directly to the deal detail page where you can view and manage all deal information.
             </p>
             
-            <h4>Creating Deals for a Client</h4>
+            <h3>Creating Deals for a Client</h3>
             <p>
               To create a new deal for this client, navigate to the Deals section and create a new deal, then select this client in the deal form.
             </p>
@@ -691,7 +691,7 @@ function ClientsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Editing Clients</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Inline Editing</h4>
+            <h3>Inline Editing</h3>
             <p>
               On the client detail page, hover over any field to see an edit icon:
             </p>
@@ -702,14 +702,14 @@ function ClientsGuideContent() {
               <li>Changes save automatically</li>
             </ul>
             
-            <h4>Editable Fields</h4>
+            <h3>Editable Fields</h3>
             <ul>
               <li><strong>Name</strong> - Client/company name (click the title to edit)</li>
               <li><strong>Industry</strong> - Select from dropdown</li>
               <li><strong>Website</strong> - Enter or update the URL</li>
             </ul>
             
-            <h4>Full Edit Form</h4>
+            <h3>Full Edit Form</h3>
             <p>
               Click the "Edit Client" button to open the complete edit form where you can update all fields at once.
             </p>
@@ -723,21 +723,21 @@ function ClientsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Deleting Clients</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>How to Delete a Client</h4>
+            <h3>How to Delete a Client</h3>
             <ol>
               <li>Open the client detail page</li>
               <li>Click the "Delete Client" button</li>
               <li>Confirm the deletion in the dialog that appears</li>
             </ol>
             
-            <h4>Important Considerations</h4>
+            <h3>Important Considerations</h3>
             <ul>
               <li>Deleting a client is permanent and cannot be undone</li>
               <li>Associated contacts will be unlinked but not deleted</li>
               <li>Deals linked to this client will need to be updated or reassigned</li>
             </ul>
             
-            <h4>Before Deleting</h4>
+            <h3>Before Deleting</h3>
             <p>
               Consider whether you need to preserve any associated data. You may want to reassign deals to a different client before deletion, or export any important information.
             </p>
@@ -758,7 +758,7 @@ function VendorsGuideContent() {
             <p>
               The Vendors module helps you manage your vendor and supplier relationships. Vendors represent businesses that provide services to your organization, such as caterers, florists, photographers, and other event service providers.
             </p>
-            <h4>Key Features</h4>
+            <h3>Key Features</h3>
             <ul>
               <li><strong>Vendor Directory</strong> - Browse and search all vendors in a data grid</li>
               <li><strong>Service Tracking</strong> - Categorize vendors by the services they provide</li>
@@ -781,14 +781,14 @@ function VendorsGuideContent() {
               The Vendors page displays all your vendors in a powerful data grid format for easy browsing and management.
             </p>
             
-            <h4>Default Columns</h4>
+            <h3>Default Columns</h3>
             <ul>
               <li><strong>Business Name</strong> - Vendor name with preferred star indicator</li>
               <li><strong>Services</strong> - Services the vendor provides (displayed as badges)</li>
               <li><strong>Locations</strong> - Service locations/regions</li>
             </ul>
             
-            <h4>Additional Columns</h4>
+            <h3>Additional Columns</h3>
             <p>Use the Columns button to show or hide:</p>
             <ul>
               <li><strong>Email</strong> - Primary contact email</li>
@@ -804,7 +804,7 @@ function VendorsGuideContent() {
               <li><strong>Capabilities Deck</strong> - Link to capabilities document</li>
             </ul>
             
-            <h4>Grid Features</h4>
+            <h3>Grid Features</h3>
             <ul>
               <li>Click any row to view full vendor details</li>
               <li>Resize columns by dragging column borders</li>
@@ -821,19 +821,19 @@ function VendorsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Quick Search</h4>
+            <h3>Quick Search</h3>
             <p>
               Use the search box to find vendors by business name, email, phone, website, address, or diversity info. Results update instantly as you type.
             </p>
             
-            <h4>Filter Options</h4>
+            <h3>Filter Options</h3>
             <p>Click the "Filters" button to access filtering options:</p>
             <ul>
               <li><strong>Locations</strong> - Filter by service locations/regions</li>
               <li><strong>Services</strong> - Filter by services provided</li>
             </ul>
             
-            <h4>Using Filters</h4>
+            <h3>Using Filters</h3>
             <ol>
               <li>Click the Filters button to expand filter options</li>
               <li>Select filter criteria from the dropdowns</li>
@@ -855,19 +855,19 @@ function VendorsGuideContent() {
               Create new vendors to build your vendor directory and track supplier relationships.
             </p>
             
-            <h4>Creating a New Vendor</h4>
+            <h3>Creating a New Vendor</h3>
             <ol>
               <li>Click the "New Vendor" button in the top right</li>
               <li>Fill in the vendor information</li>
               <li>Click "Save" to create the vendor</li>
             </ol>
             
-            <h4>Required Fields</h4>
+            <h3>Required Fields</h3>
             <ul>
               <li><strong>Business Name</strong> - The vendor's company name</li>
             </ul>
             
-            <h4>Optional Fields</h4>
+            <h3>Optional Fields</h3>
             <ul>
               <li><strong>Contact Info</strong> - Email, phone, website, address</li>
               <li><strong>Services</strong> - Select services this vendor provides</li>
@@ -880,7 +880,7 @@ function VendorsGuideContent() {
               <li><strong>Capabilities Deck</strong> - Link to vendor's capabilities document</li>
             </ul>
             
-            <h4>Adding Service Locations</h4>
+            <h3>Adding Service Locations</h3>
             <p>
               Use the location search powered by Google Places to add cities or regions where the vendor provides services. You can add multiple locations.
             </p>
@@ -898,7 +898,7 @@ function VendorsGuideContent() {
               Click any vendor row in the grid to open the detail page with comprehensive information.
             </p>
             
-            <h4>Page Sections</h4>
+            <h3>Page Sections</h3>
             <ul>
               <li><strong>Header</strong> - Business name (editable), preferred badge, and action buttons</li>
               <li><strong>Services</strong> - Services this vendor provides (editable)</li>
@@ -909,12 +909,12 @@ function VendorsGuideContent() {
               <li><strong>Notes</strong> - General notes about the vendor</li>
             </ul>
             
-            <h4>Inline Editing</h4>
+            <h3>Inline Editing</h3>
             <p>
               Managers and admins can edit vendor fields directly on the detail page by hovering over a field and clicking the edit icon, or by double-clicking the field value.
             </p>
             
-            <h4>Quick Actions</h4>
+            <h3>Quick Actions</h3>
             <ul>
               <li><strong>Edit Vendor</strong> - Open the full edit form</li>
               <li><strong>Generate Update Link</strong> - Create a link for the vendor to update their own information</li>
@@ -934,7 +934,7 @@ function VendorsGuideContent() {
               Vendors can have multiple contacts associated with them. This helps you track the people you work with at each vendor organization.
             </p>
             
-            <h4>Adding a Contact to a Vendor</h4>
+            <h3>Adding a Contact to a Vendor</h3>
             <ol>
               <li>Open the vendor detail page</li>
               <li>Find the Contacts section</li>
@@ -943,7 +943,7 @@ function VendorsGuideContent() {
               <li>Select the contact to link them to this vendor</li>
             </ol>
             
-            <h4>Removing a Contact Link</h4>
+            <h3>Removing a Contact Link</h3>
             <ol>
               <li>In the Contacts section, find the contact to unlink</li>
               <li>Click the trash icon next to the contact</li>
@@ -953,7 +953,7 @@ function VendorsGuideContent() {
               Note: Unlinking a contact does not delete the contact itself, it only removes the association with this vendor.
             </p>
             
-            <h4>Contact Display</h4>
+            <h3>Contact Display</h3>
             <p>
               Each linked contact shows their name and job title (if available). Click on a contact's name to navigate to their full detail page.
             </p>
@@ -967,7 +967,7 @@ function VendorsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Services & Locations</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Managing Services</h4>
+            <h3>Managing Services</h3>
             <p>
               Services categorize what each vendor provides. On the vendor detail page:
             </p>
@@ -978,17 +978,17 @@ function VendorsGuideContent() {
               <li>Click the checkmark to save your changes</li>
             </ol>
             
-            <h4>Service Categories</h4>
+            <h3>Service Categories</h3>
             <p>
               Services are managed by administrators in the Admin section. Common service categories include catering, photography, florals, entertainment, and more.
             </p>
             
-            <h4>Service Locations</h4>
+            <h3>Service Locations</h3>
             <p>
               Locations indicate which cities or regions a vendor serves. Locations are added when creating or editing a vendor using Google Places search.
             </p>
             
-            <h4>Filtering by Services and Locations</h4>
+            <h3>Filtering by Services and Locations</h3>
             <p>
               On the Vendors directory page, use the Filters to find vendors by specific services or locations. This is useful when searching for vendors that can serve a particular area or provide specific services.
             </p>
@@ -1002,7 +1002,7 @@ function VendorsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Editing Vendors</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Inline Editing</h4>
+            <h3>Inline Editing</h3>
             <p>
               On the vendor detail page, managers and admins can hover over any field to see an edit icon:
             </p>
@@ -1013,7 +1013,7 @@ function VendorsGuideContent() {
               <li>Changes save automatically</li>
             </ul>
             
-            <h4>Editable Fields</h4>
+            <h3>Editable Fields</h3>
             <ul>
               <li><strong>Business Name</strong> - Click the title to edit</li>
               <li><strong>Services</strong> - Toggle services on/off</li>
@@ -1023,12 +1023,12 @@ function VendorsGuideContent() {
               <li><strong>Notes</strong> - Update general notes</li>
             </ul>
             
-            <h4>Full Edit Form</h4>
+            <h3>Full Edit Form</h3>
             <p>
               Click "Edit Vendor" to open the complete edit form where you can update all fields including service locations.
             </p>
             
-            <h4>Vendor Self-Update</h4>
+            <h3>Vendor Self-Update</h3>
             <p>
               Admins can generate a special update link that allows vendors to update their own information. This link expires after a set period and provides limited access to edit vendor details.
             </p>
@@ -1042,21 +1042,21 @@ function VendorsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Deleting Vendors</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>How to Delete a Vendor</h4>
+            <h3>How to Delete a Vendor</h3>
             <ol>
               <li>Open the vendor detail page</li>
               <li>Click the "Delete Vendor" button</li>
               <li>Confirm the deletion in the dialog that appears</li>
             </ol>
             
-            <h4>Important Considerations</h4>
+            <h3>Important Considerations</h3>
             <ul>
               <li>Deleting a vendor is permanent and cannot be undone</li>
               <li>Associated contacts will be unlinked but not deleted</li>
               <li>Any active update tokens for this vendor will be invalidated</li>
             </ul>
             
-            <h4>Before Deleting</h4>
+            <h3>Before Deleting</h3>
             <p>
               Consider whether you need to preserve any vendor information or contact associations. Make sure no active deals or projects depend on this vendor before removing them from the system.
             </p>
@@ -1077,7 +1077,7 @@ function ContactsGuideContent() {
             <p>
               The Contacts module helps you manage individual people you work with. Contacts can be associated with clients and linked to deals for comprehensive relationship management.
             </p>
-            <h4>Key Features</h4>
+            <h3>Key Features</h3>
             <ul>
               <li><strong>Contact Directory</strong> - Searchable list of all contacts</li>
               <li><strong>Contact Details</strong> - Store names, titles, emails, phones</li>
@@ -1098,7 +1098,7 @@ function ContactsGuideContent() {
               The Contacts page displays all contacts in a data grid for easy browsing and management.
             </p>
             
-            <h4>Grid Columns</h4>
+            <h3>Grid Columns</h3>
             <ul>
               <li><strong>Name</strong> - Contact's full name</li>
               <li><strong>Title</strong> - Job title or role</li>
@@ -1107,7 +1107,7 @@ function ContactsGuideContent() {
               <li><strong>Client</strong> - Associated company (if linked)</li>
             </ul>
             
-            <h4>Grid Features</h4>
+            <h3>Grid Features</h3>
             <ul>
               <li>Click rows to view full contact details</li>
               <li>Sort by any column header</li>
@@ -1124,12 +1124,12 @@ function ContactsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Quick Search</h4>
+            <h3>Quick Search</h3>
             <p>
               Use the search box to find contacts by name, email, title, or company. Search results update in real-time.
             </p>
             
-            <h4>Filtering Contacts</h4>
+            <h3>Filtering Contacts</h3>
             <p>
               Use the available filter buttons to narrow your view:
             </p>
@@ -1152,7 +1152,7 @@ function ContactsGuideContent() {
               Click any contact to open their full detail page.
             </p>
             
-            <h4>Page Sections</h4>
+            <h3>Page Sections</h3>
             <ul>
               <li><strong>Header</strong> - Contact name and action buttons</li>
               <li><strong>Personal Info</strong> - Name, title, and other details</li>
@@ -1162,7 +1162,7 @@ function ContactsGuideContent() {
               <li><strong>Related Deals</strong> - Deals this contact is involved with</li>
             </ul>
             
-            <h4>Inline Editing</h4>
+            <h3>Inline Editing</h3>
             <p>
               Edit contact fields directly on the page by hovering over a field and clicking the edit icon, or double-clicking the field value.
             </p>
@@ -1180,7 +1180,7 @@ function ContactsGuideContent() {
               Contacts can be associated with one or more clients, helping you track which people work at which companies.
             </p>
             
-            <h4>Linking to a Client</h4>
+            <h3>Linking to a Client</h3>
             <ol>
               <li>Open the contact detail page</li>
               <li>Find the Clients section</li>
@@ -1189,7 +1189,7 @@ function ContactsGuideContent() {
               <li>The contact is now linked to that client</li>
             </ol>
             
-            <h4>Unlinking a Client</h4>
+            <h3>Unlinking a Client</h3>
             <ol>
               <li>In the Clients section, find the client to unlink</li>
               <li>Click the unlink or remove button</li>
@@ -1208,7 +1208,7 @@ function ContactsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Editing Contacts</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>Inline Editing</h4>
+            <h3>Inline Editing</h3>
             <p>
               On the contact detail page, hover over any field to see an edit icon:
             </p>
@@ -1218,7 +1218,7 @@ function ContactsGuideContent() {
               <li>Press Enter to save, Escape to cancel</li>
             </ul>
             
-            <h4>Full Edit Form</h4>
+            <h3>Full Edit Form</h3>
             <p>
               Click the "Edit" button to access the complete edit form:
             </p>
@@ -1239,21 +1239,21 @@ function ContactsGuideContent() {
         <h2 className="text-2xl font-bold mb-4">Deleting Contacts</h2>
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
-            <h4>How to Delete a Contact</h4>
+            <h3>How to Delete a Contact</h3>
             <ol>
               <li>Open the contact detail page</li>
               <li>Click the "Delete" button</li>
               <li>Confirm the deletion in the dialog</li>
             </ol>
             
-            <h4>Important Considerations</h4>
+            <h3>Important Considerations</h3>
             <ul>
               <li>Deleting a contact is permanent and cannot be undone</li>
               <li>The contact will be unlinked from all associated clients</li>
               <li>Deal associations will be removed</li>
             </ul>
             
-            <h4>Before Deleting</h4>
+            <h3>Before Deleting</h3>
             <p>
               Make sure you no longer need the contact's information. Consider whether they have any active deals or important client associations before proceeding.
             </p>
@@ -1277,7 +1277,7 @@ function VenuesGuideContent() {
             <p>
               The Venues module is your central hub for managing all venue information. Whether you're tracking potential event spaces, restaurants, or any other locations, this system helps you organize, search, and collaborate on venue data.
             </p>
-            <h4>Key Features</h4>
+            <h3>Key Features</h3>
             <ul>
               <li><strong>Comprehensive Directory</strong> - Browse and search all venues with powerful filtering</li>
               <li><strong>Detailed Profiles</strong> - Store contact info, photos, floorplans, and more</li>
@@ -1302,17 +1302,17 @@ function VenuesGuideContent() {
               The Venues Directory is your main interface for browsing all venues in the system. It provides multiple ways to find exactly what you're looking for.
             </p>
             
-            <h4>Searching Venues</h4>
+            <h3>Searching Venues</h3>
             <p>
               Use the search bar at the top of the page to find venues by name, location, or description. The search updates results in real-time as you type.
             </p>
             
-            <h4>Filtering by Tags</h4>
+            <h3>Filtering by Tags</h3>
             <p>
               Click on any tag badge to filter venues by that tag. You can select multiple tags to narrow down your results. Active filters appear at the top of the page and can be cleared individually or all at once.
             </p>
             
-            <h4>Selecting Multiple Venues</h4>
+            <h3>Selecting Multiple Venues</h3>
             <p>
               Use the checkboxes on venue cards to select multiple venues at once. This is useful for:
             </p>
@@ -1321,7 +1321,7 @@ function VenuesGuideContent() {
               <li>Bulk operations (coming soon)</li>
             </ul>
             
-            <h4>Venue Cards</h4>
+            <h3>Venue Cards</h3>
             <p>
               Each venue card displays:
             </p>
@@ -1351,14 +1351,14 @@ function VenuesGuideContent() {
               The venue detail page provides a comprehensive view of all information about a specific venue.
             </p>
             
-            <h4>Page Layout</h4>
+            <h3>Page Layout</h3>
             <p>The detail page is organized into two main tabs:</p>
             <ul>
               <li><strong>Overview</strong> - All venue information, photos, and files</li>
               <li><strong>Comments</strong> - Team discussion and notes about the venue</li>
             </ul>
             
-            <h4>Overview Tab</h4>
+            <h3>Overview Tab</h3>
             <p>The Overview tab contains several sections:</p>
             <ul>
               <li><strong>Hero Image</strong> - The primary photo displayed prominently at the top</li>
@@ -1372,7 +1372,7 @@ function VenuesGuideContent() {
               <li><strong>Map</strong> - Interactive map showing the venue location</li>
             </ul>
             
-            <h4>Actions</h4>
+            <h3>Actions</h3>
             <p>From the venue detail page, you can:</p>
             <ul>
               <li><strong>Add to Collection</strong> - Add this venue to an existing or new collection</li>
@@ -1396,12 +1396,12 @@ function VenuesGuideContent() {
               The Comments feature allows your team to collaborate and share notes about venues directly within the app.
             </p>
             
-            <h4>Adding Comments</h4>
+            <h3>Adding Comments</h3>
             <p>
               Navigate to the "Comments" tab on any venue detail page. Type your comment in the text field and click "Post" to add it. Comments are visible to all team members.
             </p>
             
-            <h4>Comment Features</h4>
+            <h3>Comment Features</h3>
             <ul>
               <li>Comments show the author's name and profile picture</li>
               <li>Timestamps indicate when each comment was posted</li>
@@ -1409,7 +1409,7 @@ function VenuesGuideContent() {
               <li>Admins can moderate all comments</li>
             </ul>
             
-            <h4>Best Practices</h4>
+            <h3>Best Practices</h3>
             <ul>
               <li>Use comments to share visit notes, client feedback, or important updates</li>
               <li>Tag specific details like pricing, availability, or contact experiences</li>
@@ -1432,7 +1432,7 @@ function VenuesGuideContent() {
               Admins can create new venues to add to the directory. The venue creation form guides you through entering all relevant information.
             </p>
             
-            <h4>Google Places Integration</h4>
+            <h3>Google Places Integration</h3>
             <p>
               The easiest way to create a venue is to use the Google Places search. Start typing a venue name and select from the suggestions. This automatically populates:
             </p>
@@ -1444,12 +1444,12 @@ function VenuesGuideContent() {
               <li>Google Place ID (for map integration)</li>
             </ul>
             
-            <h4>Importing Photos from Google</h4>
+            <h3>Importing Photos from Google</h3>
             <p>
               After selecting a venue from Google Places, click "Import Photos" to browse available photos from Google. Select the photos you want to add, and they'll be automatically imported and stored in your system.
             </p>
             
-            <h4>Manual Entry</h4>
+            <h3>Manual Entry</h3>
             <p>
               You can also enter venue information manually. Required fields are:
             </p>
@@ -1458,7 +1458,7 @@ function VenuesGuideContent() {
             </ul>
             <p>All other fields are optional but recommended for a complete profile.</p>
             
-            <h4>Form Sections</h4>
+            <h3>Form Sections</h3>
             <ul>
               <li><strong>Basic Info</strong> - Name, tagline, and description</li>
               <li><strong>Location</strong> - Full address details</li>
@@ -1486,14 +1486,14 @@ function VenuesGuideContent() {
               Floorplans help your team understand venue layouts for event planning. Upload architectural drawings, CAD files, or simple sketches.
             </p>
             
-            <h4>Supported File Types</h4>
+            <h3>Supported File Types</h3>
             <ul>
               <li>Images (JPG, PNG, WebP)</li>
               <li>PDF documents</li>
               <li>Design files (AI, PSD - view in external app)</li>
             </ul>
             
-            <h4>Uploading Floorplans</h4>
+            <h3>Uploading Floorplans</h3>
             <p>
               In the venue form, scroll to the Floorplans section. Click to upload or drag and drop files. Each floorplan can have:
             </p>
@@ -1502,7 +1502,7 @@ function VenuesGuideContent() {
               <li><strong>Caption</strong> - Additional notes or dimensions</li>
             </ul>
             
-            <h4>Viewing Floorplans</h4>
+            <h3>Viewing Floorplans</h3>
             <p>
               On the venue detail page, floorplans appear in a dedicated section. Click any floorplan to view it full-size. For PDFs, they'll open in a new tab or your default PDF viewer.
             </p>
@@ -1523,7 +1523,7 @@ function VenuesGuideContent() {
               Attachments allow you to store any additional documents related to a venue that don't fit in other categories.
             </p>
             
-            <h4>Common Attachment Types</h4>
+            <h3>Common Attachment Types</h3>
             <ul>
               <li>Contracts and agreements</li>
               <li>Pricing sheets and menus</li>
@@ -1533,7 +1533,7 @@ function VenuesGuideContent() {
               <li>Brochures and marketing materials</li>
             </ul>
             
-            <h4>Supported Formats</h4>
+            <h3>Supported Formats</h3>
             <p>
               The system accepts most common file formats including:
             </p>
@@ -1545,7 +1545,7 @@ function VenuesGuideContent() {
               <li>Archives (ZIP)</li>
             </ul>
             
-            <h4>Managing Attachments</h4>
+            <h3>Managing Attachments</h3>
             <p>
               Each attachment displays the file type icon, title, and who uploaded it. You can:
             </p>
@@ -1572,7 +1572,7 @@ function VenuesGuideContent() {
               Collections let you organize venues into custom groups. Create collections for specific events, client proposals, or any grouping that makes sense for your workflow.
             </p>
             
-            <h4>Creating a Collection</h4>
+            <h3>Creating a Collection</h3>
             <ol>
               <li>Navigate to Venues → Collections in the sidebar</li>
               <li>Click "New Collection"</li>
@@ -1580,7 +1580,7 @@ function VenuesGuideContent() {
               <li>Click "Create Collection"</li>
             </ol>
             
-            <h4>Adding Venues to Collections</h4>
+            <h3>Adding Venues to Collections</h3>
             <p>There are two ways to add venues:</p>
             
             <p><strong>From the Venues Directory:</strong></p>
@@ -1597,7 +1597,7 @@ function VenuesGuideContent() {
               <li>The venue is immediately added</li>
             </ol>
             
-            <h4>Managing Collections</h4>
+            <h3>Managing Collections</h3>
             <p>
               Within a collection, you can:
             </p>
@@ -1608,7 +1608,7 @@ function VenuesGuideContent() {
               <li><strong>Delete collection</strong> - Remove the entire collection (venues are preserved)</li>
             </ul>
             
-            <h4>Use Cases</h4>
+            <h3>Use Cases</h3>
             <ul>
               <li>Create a "Client X Event Options" collection for a proposal</li>
               <li>Group "Preferred Venues" for quick access</li>
@@ -1632,7 +1632,7 @@ function VenuesGuideContent() {
               Amenities and Tags help categorize venues for easy filtering and discovery.
             </p>
             
-            <h4>Amenities</h4>
+            <h3>Amenities</h3>
             <p>
               Amenities represent features or facilities available at a venue. Examples include:
             </p>
@@ -1646,7 +1646,7 @@ function VenuesGuideContent() {
               When editing a venue, toggle amenities on or off in the Amenities section. On the detail page, amenities display with checkmarks for quick scanning.
             </p>
             
-            <h4>Tags</h4>
+            <h3>Tags</h3>
             <p>
               Tags are flexible labels for categorization. Unlike amenities, tags can be anything you define:
             </p>
@@ -1657,7 +1657,7 @@ function VenuesGuideContent() {
               <li>Price tier: $, $$, $$$, $$$$</li>
             </ul>
             
-            <h4>Managing Tags & Amenities</h4>
+            <h3>Managing Tags & Amenities</h3>
             <p>
               Admins can manage the master list of tags and amenities from the sidebar:
             </p>
@@ -1666,7 +1666,7 @@ function VenuesGuideContent() {
               <li><strong>Tags</strong> - Create and manage venue tags with colors</li>
             </ul>
             
-            <h4>Filtering by Tags</h4>
+            <h3>Filtering by Tags</h3>
             <p>
               On the Venues Directory page, click any tag to filter venues. Multiple tags can be selected for an "AND" filter (venues must have all selected tags).
             </p>
@@ -1696,14 +1696,7 @@ export default function GuidePage() {
         {/* Sidebar Navigation */}
         <aside className="w-64 border-r  hidden lg:block">
           <ScrollArea className="h-full py-4">
-            <div className="px-4 mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                User Guide
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Learn how to use the app
-              </p>
-            </div>
+
             <nav className="space-y-1 px-2">
               {guideSections.map((section) => {
                 const Icon = section.icon;

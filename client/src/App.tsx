@@ -158,11 +158,7 @@ function useLayoutConfig() {
             href: "/venues/collections",
             icon: FolderOpen,
           },
-          {
-            name: "Manage",
-            href: "/manage/venues",
-            icon: SlidersHorizontal,
-          },
+
         ],
       },
       {
@@ -182,12 +178,6 @@ function useLayoutConfig() {
             requiredPermission: "deals.read",
           },
 
-          {
-            name: "Manage",
-            href: "/sales/manage",
-            icon: SlidersHorizontal,
-            requiredPermission: "sales.manage",
-          },
         ],
       },
       {
@@ -322,7 +312,18 @@ function useLayoutConfig() {
             icon: Link2,
             requiredPermission: "vendor_tokens.manage",
           },
+          {
+            name: "Venue Tags",
+            href: "/manage/venues",
+            icon: SlidersHorizontal,
+          },
 
+          {
+            name: "Sales Tags",
+            href: "/sales/manage",
+            icon: SlidersHorizontal,
+            requiredPermission: "sales.manage",
+          },
         ],
       },
       {

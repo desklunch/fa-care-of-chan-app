@@ -329,7 +329,7 @@ export function ManagePage({ title, sections, breadcrumbs = [], writePermission 
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { can } = usePermissions();
   const canWrite = writePermission ? can(writePermission as Permission) : true;
-  const isNarrowViewport = useMediaQuery("(max-width: 768px)");
+  const isNarrowViewport = useMediaQuery("(max-width: 1300px)");
   
   const searchParams = new URLSearchParams(searchString);
   const tabFromUrl = searchParams.get("tab");
@@ -401,41 +401,43 @@ export function ManagePage({ title, sections, breadcrumbs = [], writePermission 
       } : undefined}
     >
       <div className="flex flex-col h-full">
-        <div className="border-b px-4 md:px-6 pt-2 pb-2">
+        <div className="border-b ">
           {isNarrowViewport ? (
-            <Select value={activeTab} onValueChange={handleTabChange}>
-              <SelectTrigger className="w-full" data-testid="select-section">
-                <SelectValue>
-                  {activeSection && (
-                    <span className="flex items-center gap-2">
-                      <activeSection.icon className="h-4 w-4" />
-                      {activeSection.label}
-                    </span>
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {sections.map((section) => {
-                  const Icon = section.icon;
-                  return (
-                    <SelectItem
-                      key={section.id}
-                      value={section.id}
-                      data-testid={`select-item-${section.id}`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        {section.label}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+<div className="px-4 md:px-6 py-4">
+  <Select value={activeTab} onValueChange={handleTabChange}>
+    <SelectTrigger className="w-full" data-testid="select-section">
+      <SelectValue>
+        {activeSection && (
+          <span className="flex items-center gap-2">
+            <activeSection.icon className="h-4 w-4" />
+            {activeSection.label}
+          </span>
+        )}
+      </SelectValue>
+    </SelectTrigger>
+    <SelectContent>
+      {sections.map((section) => {
+        const Icon = section.icon;
+        return (
+          <SelectItem
+            key={section.id}
+            value={section.id}
+            data-testid={`select-item-${section.id}`}
+          >
+            <span className="flex items-center gap-2">
+              <Icon className="h-4 w-4" />
+              {section.label}
+            </span>
+          </SelectItem>
+        );
+      })}
+    </SelectContent>
+  </Select>
+</div>
           ) : (
             <ScrollArea className="w-full">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="inline-flex h-auto w-auto">
+                <TabsList className="inline-flex h-auto w-auto px-4 md:px-6 pt-4">
                   {sections.map((section) => {
                     const Icon = section.icon;
                     return (

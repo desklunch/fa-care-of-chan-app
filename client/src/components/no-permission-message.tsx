@@ -20,9 +20,7 @@ export function NoPermissionMessage({
     <div className="min-h-[50vh] flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-card-border">
         <CardContent className="py-12 text-center">
-          <div className="flex justify-center mb-4">
-            <ShieldX className="h-16 w-16 text-muted-foreground" />
-          </div>
+   
           <h1 className="text-xl font-semibold mb-2" data-testid="text-no-permission-title">
             {title}
           </h1>
@@ -36,18 +34,17 @@ export function NoPermissionMessage({
                 onClick={() => window.history.back()}
                 data-testid="button-permission-go-back"
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
                 Go Back
               </Button>
             )}
-            {showHomeButton && (
+            {/* {showHomeButton && (
               <Link href="/">
                 <Button data-testid="button-permission-go-home">
                   <Home className="mr-2 h-4 w-4" />
                   Home
                 </Button>
               </Link>
-            )}
+            )} */}
           </div>
         </CardContent>
       </Card>
