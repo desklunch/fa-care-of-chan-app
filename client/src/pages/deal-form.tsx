@@ -7,6 +7,8 @@ import { z } from "zod";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 import {
   Form,
   FormControl,
@@ -226,6 +228,23 @@ export default function DealForm() {
   };
 
   return (
+    <PermissionGate
+      permission="deals.write"
+      behavior="fallback"
+      fallback={
+        <PageLayout
+          breadcrumbs={[
+            { label: "Deals", href: "/deals" },
+            { label: isEditing ? "Edit" : "New Deal" },
+          ]}
+        >
+          <NoPermissionMessage
+            title="Permission Required"
+            message="You don't have permission to create or edit deals. Please contact an administrator if you need access."
+          />
+        </PageLayout>
+      }
+    >
     <PageLayout
       breadcrumbs={[
         { label: "Deals", href: "/deals" },
@@ -776,5 +795,6 @@ export default function DealForm() {
         </Form>
       </div>
     </PageLayout>
+    </PermissionGate>
   );
 }

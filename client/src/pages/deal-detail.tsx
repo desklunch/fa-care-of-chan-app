@@ -21,6 +21,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
 import { Loader2, Trash2, PenBox } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
@@ -48,7 +51,10 @@ export default function DealDetail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isManagerOrAdmin = user?.role === "admin" || user?.role === "manager";
+  const { can } = usePermissions();
+  const canRead = can("deals.read");
+  const canWrite = can("deals.write");
+  const canDelete = can("deals.delete");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
@@ -181,19 +187,35 @@ export default function DealDetail() {
 
   const serviceIds = (deal.serviceIds as number[]) || [];
 
+  if (!canRead) {
+    return (
+      <PageLayout
+        breadcrumbs={[
+          { label: "Deals", href: "/deals" },
+          { label: "Deal" },
+        ]}
+      >
+        <NoPermissionMessage
+          title="Access Denied"
+          message="You don't have permission to view deals. Please contact an administrator if you need access."
+        />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout
       breadcrumbs={[
         { label: "Deals", href: "/deals" },
         { label: deal.displayName },
       ]}
-      primaryAction={{
+      primaryAction={canWrite ? {
         label: "Edit",
         href: `/deals/${id}/edit`,
         icon: PenBox,
-      }}
+      } : undefined}
       additionalActions={
-        isManagerOrAdmin
+        canDelete
           ? [
               {
                 label: "Delete",
@@ -218,6 +240,7 @@ export default function DealDetail() {
                   value={deal.displayName}
                   onSave={(value) => handleFieldSave("displayName", value)}
                   testId="text-deal-name"
+                  disabled={!canWrite}
                   isLoading={isFieldLoading("displayName")}
                   error={getFieldError("displayName")}
                   validation={{ required: true }}
@@ -248,6 +271,7 @@ export default function DealDetail() {
                   field="ownerId"
                   testId="field-owner"
                   type="select"
+                  disabled={!canWrite}
                   options={[
                     { value: "", label: "Unassigned" },
                     ...users.map((u) => ({
@@ -285,6 +309,7 @@ export default function DealDetail() {
                   field="status"
                   testId="field-status"
                   type="select"
+                  disabled={!canWrite}
                   options={dealStatuses.map((s) => ({ value: s, label: s }))}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("status")}
@@ -303,6 +328,7 @@ export default function DealDetail() {
                   field="clientId"
                   testId="field-client"
                   type="select"
+                  disabled={!canWrite}
                   options={clients.map((c) => ({ value: c.id, label: c.name }))}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("clientId")}
@@ -330,6 +356,7 @@ export default function DealDetail() {
                   field="industryId"
                   testId="field-industry"
                   type="select"
+                  disabled={!canWrite}
                   options={industries.map((i) => ({ value: i.id, label: i.name }))}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("industryId")}
@@ -367,6 +394,7 @@ export default function DealDetail() {
                   field="projectDate"
                   testId="field-project-date"
                   type="text"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("projectDate")}
                   error={getFieldError("projectDate")}
@@ -379,6 +407,7 @@ export default function DealDetail() {
                   field="locationsText"
                   testId="field-locations-text"
                   type="textarea"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("locationsText")}
                   error={getFieldError("locationsText")}
@@ -391,6 +420,7 @@ export default function DealDetail() {
                   field="concept"
                   testId="field-concept"
                   type="textarea"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("concept")}
                   error={getFieldError("concept")}
@@ -404,6 +434,7 @@ export default function DealDetail() {
                   field="serviceIds"
                   testId="field-services"
                   type="multiselect"
+                  disabled={!canWrite}
                   options={dealServices.filter(s => s.isActive).map((s) => ({ value: String(s.id), label: s.name }))}
                   multiSelectValues={serviceIds.map(String)}
                   onSave={handleServicesSave}
@@ -439,6 +470,7 @@ export default function DealDetail() {
                   field="budgetNotes"
                   testId="field-budget-notes"
                   type="textarea"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("budgetNotes")}
                   error={getFieldError("budgetNotes")}
@@ -451,6 +483,7 @@ export default function DealDetail() {
                   field="startedOn"
                   testId="field-started-on"
                   type="date"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("startedOn")}
                   error={getFieldError("startedOn")}
@@ -468,6 +501,7 @@ export default function DealDetail() {
                   field="lastContactOn"
                   testId="field-last-contact"
                   type="date"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("lastContactOn")}
                   error={getFieldError("lastContactOn")}
@@ -485,6 +519,7 @@ export default function DealDetail() {
                   field="wonOn"
                   testId="field-won-on"
                   type="date"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("wonOn")}
                   error={getFieldError("wonOn")}
@@ -502,6 +537,7 @@ export default function DealDetail() {
                   field="proposalSentOn"
                   testId="field-proposal-sent-on"
                   type="date"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("proposalSentOn")}
                   error={getFieldError("proposalSentOn")}
@@ -519,6 +555,7 @@ export default function DealDetail() {
                   field="notes"
                   testId="field-notes"
                   type="textarea"
+                  disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("notes")}
                   error={getFieldError("notes")}

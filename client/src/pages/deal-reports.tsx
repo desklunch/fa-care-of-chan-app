@@ -6,6 +6,8 @@ import { Kanban, DealKanbanCard, type KanbanColumn } from "@/components/kanban";
 import { Loader2, SquareArrowOutUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
@@ -391,6 +393,26 @@ export default function DealReports() {
       { label: "Views" },
     ],
   });
+
+  return (
+    <PermissionGate
+      permission="deals.read"
+      behavior="fallback"
+      fallback={
+        <div className="p-6">
+          <NoPermissionMessage
+            title="Access Denied"
+            message="You don't have permission to view deal reports. Please contact an administrator if you need access."
+          />
+        </div>
+      }
+    >
+      <DealReportsContent location={location} setLocation={setLocation} />
+    </PermissionGate>
+  );
+}
+
+function DealReportsContent({ location, setLocation }: { location: string; setLocation: (path: string, options?: { replace?: boolean }) => void }) {
 
   const getInitialTab = (): ReportTab => {
     const searchParams = new URLSearchParams(window.location.search);

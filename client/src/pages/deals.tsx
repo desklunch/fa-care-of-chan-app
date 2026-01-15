@@ -6,6 +6,9 @@ import { CellValueChangedEvent } from "ag-grid-community";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 import type {
   DealWithRelations,
   DealService,
@@ -869,6 +872,9 @@ export default function Deals() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { can } = usePermissions();
+  const canRead = can("deals.read");
+  const canWrite = can("deals.write");
 
   // Fetch users for the Owner dropdown
   const { data: users = [] } = useQuery<
@@ -1150,14 +1156,25 @@ export default function Deals() {
     reorderMutation.mutate(dealIds);
   };
 
+  if (!canRead) {
+    return (
+      <PageLayout breadcrumbs={[{ label: "Deals" }]}>
+        <NoPermissionMessage
+          title="Access Denied"
+          message="You don't have permission to view deals. Please contact an administrator if you need access."
+        />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout
       breadcrumbs={[{ label: "Deals" }]}
-      primaryAction={{
+      primaryAction={canWrite ? {
         label: "New Deal",
         href: "/deals/new",
         icon: CircleFadingPlus,
-      }}
+      } : undefined}
     >
       <DataGridPage
         queryKey="/api/deals"

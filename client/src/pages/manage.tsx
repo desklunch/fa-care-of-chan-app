@@ -6,6 +6,9 @@ import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/permission-gate";
+import { NoPermissionMessage } from "@/components/no-permission-message";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Industry, DealService } from "@shared/schema";
@@ -546,6 +549,9 @@ export default function ManagePage() {
   const [, navigate] = useLocation();
   const searchString = useSearch();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canReadSales = can("sales.read");
+  const canManageSales = can("sales.manage");
   
   const searchParams = new URLSearchParams(searchString);
   const tabParam = searchParams.get("tab");
@@ -688,15 +694,26 @@ export default function ManagePage() {
     return null;
   }
 
+  if (!canReadSales) {
+    return (
+      <PageLayout breadcrumbs={[{ label: "Sales", href: "/deals" }, { label: "Manage" }]}>
+        <NoPermissionMessage
+          title="Access Denied"
+          message="You don't have permission to view sales management. Please contact an administrator if you need access."
+        />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout
       breadcrumbs={[{ label: "Sales", href: "/deals" }, { label: "Manage" }]}
-      primaryAction={{
+      primaryAction={canManageSales ? {
         label: activeTab === "industries" ? "New Industry" : "New Service",
         onClick: () => activeTab === "industries" ? setIndustryCreateDialogOpen(true) : setServiceCreateDialogOpen(true),
         icon: CircleFadingPlus,
         variant: "default",
-      }}
+      } : undefined}
     >
       <div className="flex flex-col h-full">
         <div className="px-4 md:px-6 pt-2 border-b">
