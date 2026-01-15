@@ -396,60 +396,15 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           })}
         </nav>
 
-        {import.meta.env.DEV && isActualAdmin && showExpanded && (
-          <div className="border-t border-sidebar-border p-3">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Shield className="h-3 w-3" />
-                <span>Test as Role</span>
-                {isOverridden && (
-                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-                    Override
-                  </Badge>
-                )}
-              </div>
-              <Select
-                value={overrideRole || "actual"}
-                onValueChange={(value) => {
-                  if (value === "actual") {
-                    clearOverride();
-                  } else {
-                    setOverrideRole(value as Role);
-                  }
-                }}
-              >
-                <SelectTrigger 
-                  className="h-8 text-xs" 
-                  data-testid="select-tier-override"
-                >
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="actual" data-testid="option-tier-actual">
-                    Actual Role (Admin)
-                  </SelectItem>
-                  <SelectItem value="manager" data-testid="option-tier-manager">
-                    Manager (Tier 2)
-                  </SelectItem>
-                  <SelectItem value="employee" data-testid="option-tier-employee">
-                    Employee (Tier 1)
-                  </SelectItem>
-                  <SelectItem value="viewer" data-testid="option-tier-viewer">
-                    Viewer (Tier 0)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
+  
 
-        <div className="border-t border-sidebar-border p-3">
-          <div className={cn("flex gap-1", !showExpanded && "justify-center")}>
+        <div className="border-t border-sidebar-border p-2">
+          <div className={cn("flex gap-3 items-center", !showExpanded && "justify-center")}>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="h-9 w-9"
+              className="h-9 w-12"
               data-testid="button-theme-toggle"
               aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
@@ -467,7 +422,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                   localStorage.clear();
                   window.location.reload();
                 }}
-                className="h-9 w-9"
+                className="h-9 w-12"
                 data-testid="button-clear-storage"
                 aria-label="Clear local storage (dev only)"
                 title="Clear local storage"
@@ -475,6 +430,42 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                 <Trash2 className="h-5 w-5" />
               </Button>
             )}
+            {import.meta.env.DEV && isActualAdmin && showExpanded && (
+              <div className="w-full">
+
+                <Select
+                  value={overrideRole || "actual"}
+                  onValueChange={(value) => {
+                    if (value === "actual") {
+                      clearOverride();
+                    } else {
+                      setOverrideRole(value as Role);
+                    }
+                  }}
+                >
+                  <SelectTrigger 
+                    className="h-9 text-xs" 
+                    data-testid="select-tier-override"
+                  >
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="actual" data-testid="option-tier-actual">
+                      Admin (T3)
+                    </SelectItem>
+                    <SelectItem value="manager" data-testid="option-tier-manager">
+                      Manager (T2)
+                    </SelectItem>
+                    <SelectItem value="employee" data-testid="option-tier-employee">
+                      Employee (T1)
+                    </SelectItem>
+                    <SelectItem value="viewer" data-testid="option-tier-viewer">
+                      Viewer (T0)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              )}
           </div>
         </div>
 
