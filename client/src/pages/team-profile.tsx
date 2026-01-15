@@ -198,6 +198,7 @@ export default function TeamProfile() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="viewer">Viewer</SelectItem>
                           <SelectItem value="employee">Employee</SelectItem>
                           <SelectItem value="manager">Manager</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>

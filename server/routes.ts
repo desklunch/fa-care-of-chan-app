@@ -177,8 +177,8 @@ export async function registerRoutes(
       const { id } = req.params;
       const { role } = req.body;
       
-      if (!role || !["admin", "manager", "employee"].includes(role)) {
-        return res.status(400).json({ message: "Invalid role. Must be 'admin', 'manager', or 'employee'" });
+      if (!role || !["admin", "manager", "employee", "viewer"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be 'admin', 'manager', 'employee', or 'viewer'" });
       }
 
       const userBefore = await storage.getUser(id);

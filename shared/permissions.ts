@@ -7,7 +7,8 @@
  * Role Hierarchy:
  * - admin: Full access to everything
  * - manager (tier 2): Access to deals, sales management, and all employee permissions
- * - employee (tier 1): Basic access to venues, clients, contacts, vendors
+ * - employee (tier 1): Basic access to venues, clients, contacts, vendors with write/delete
+ * - viewer (tier 0): Read-only access to venues, clients, contacts, vendors
  * 
  * Future extensibility:
  * - Additional tier 2 roles (sales-manager, venue-manager) can be added
@@ -22,6 +23,7 @@ export const ROLES = {
   admin: 'admin',
   manager: 'manager',
   employee: 'employee',
+  viewer: 'viewer',
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -33,6 +35,7 @@ export const ROLE_TIERS: Record<Role, number> = {
   admin: 3,
   manager: 2,
   employee: 1,
+  viewer: 0,
 };
 
 // ============================================
@@ -116,6 +119,16 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 // ============================================
 
 // Base permissions for each tier
+// Tier 0 (viewer) permissions - read-only access
+const TIER_0_PERMISSIONS: Permission[] = [
+  'venues.read',
+  'clients.read',
+  'contacts.read',
+  'vendors.read',
+  'app_features.read',
+  'app_features.vote',
+];
+
 // Tier 1 (employee) permissions - basic CRUD for general entities
 const TIER_1_PERMISSIONS: Permission[] = [
   'venues.read',
@@ -167,6 +180,7 @@ const TIER_3_PERMISSIONS: Permission[] = [
 
 // Role to permissions mapping
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  viewer: TIER_0_PERMISSIONS,
   employee: TIER_1_PERMISSIONS,
   manager: TIER_2_PERMISSIONS,
   admin: TIER_3_PERMISSIONS,
