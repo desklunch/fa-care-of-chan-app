@@ -242,11 +242,11 @@ export default function VenueDetailPage() {
         toast({ title: "Public link copied", description: "Share this link with anyone to view this venue" });
       },
     },
-    {
+    ...(canWrite ? [{
       label: "Add to Collection",
       icon: FolderPlus,
       onClick: () => setCollectionDialogOpen(true),
-    },
+    }] : []),
     ...(canDelete ? [{
       label: "Delete",
       icon: Trash2,
@@ -1079,7 +1079,7 @@ export default function VenueDetailPage() {
             <CardTitle className="text-lg flex items-center gap-2">
               Collections
             </CardTitle>
-            {venueCollections.length > 0 && (
+            {canWrite && venueCollections.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -1109,7 +1109,7 @@ export default function VenueDetailPage() {
                   </Link>
                 ))}
               </div>
-            ) : (
+            ) : canWrite ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -1120,6 +1120,8 @@ export default function VenueDetailPage() {
                 <FolderPlus className="h-4 w-4" />
                 Add to a Collection
               </Button>
+            ) : (
+              <p className="text-muted-foreground text-sm">No collections</p>
             )}
           </CardContent>
         </Card>

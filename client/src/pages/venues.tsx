@@ -553,8 +553,8 @@ export default function VenuesPage() {
     externalLoading: isVenuesLoading,
     filters: venueFilters,
     collapsibleFilters: true,
-    enableRowSelection: true,
-    selectionToolbar: selectionToolbar,
+    enableRowSelection: canWrite,
+    selectionToolbar: canWrite ? selectionToolbar : undefined,
   };
 
   return (

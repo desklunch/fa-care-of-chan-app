@@ -55,11 +55,13 @@ type VenueInCollection = Venue & {
 function SortableVenueCard({ 
   venue, 
   collectionId,
-  onRemove 
+  onRemove,
+  canWrite = false
 }: { 
   venue: VenueInCollection; 
   collectionId: string;
   onRemove: (venueId: string) => void;
+  canWrite?: boolean;
 }) {
   const [, navigate] = useLocation();
   const [isHovered, setIsHovered] = useState(false);
@@ -116,16 +118,18 @@ function SortableVenueCard({
             </div>
           )}
           
-          <div 
-            className="absolute top-2 left-2 cursor-grab active:cursor-grabbing"
-            {...attributes}
-            {...listeners}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-background/80 backdrop-blur-sm rounded-md p-1.5 shadow-sm">
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
+          {canWrite && (
+            <div 
+              className="absolute top-2 left-2 cursor-grab active:cursor-grabbing"
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-background/80 backdrop-blur-sm rounded-md p-1.5 shadow-sm">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
-          </div>
+          )}
         </div>
         
         <CardHeader className="pb-2 space-y-0 px-4 pt-4">
@@ -174,14 +178,16 @@ function SortableVenueCard({
                       View Details
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-destructive focus:text-destructive"
-                    onClick={handleRemoveClick}
-                    data-testid={`button-remove-venue-${venue.id}`}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remove from Collection
-                  </DropdownMenuItem>
+                  {canWrite && (
+                    <DropdownMenuItem 
+                      className="text-destructive focus:text-destructive"
+                      onClick={handleRemoveClick}
+                      data-testid={`button-remove-venue-${venue.id}`}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove from Collection
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -453,7 +459,7 @@ export default function VenueCollectionDetail() {
               Add venues to this collection from the Venues page or from individual venue pages.
             </p>
           </div>
-        ) : (
+        ) : canWrite ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -470,11 +476,24 @@ export default function VenueCollectionDetail() {
                     venue={venue} 
                     collectionId={collection.id}
                     onRemove={handleRemoveVenue}
+                    canWrite={canWrite}
                   />
                 ))}
               </div>
             </SortableContext>
           </DndContext>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {orderedVenues.map((venue) => (
+              <SortableVenueCard 
+                key={venue.id} 
+                venue={venue} 
+                collectionId={collection.id}
+                onRemove={handleRemoveVenue}
+                canWrite={false}
+              />
+            ))}
+          </div>
         )}
       </div>
     </PageLayout>
