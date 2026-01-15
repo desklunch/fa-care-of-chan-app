@@ -91,14 +91,14 @@ initializeAuditBridge();           // Line 114 - Audit bridge last
 | Phase | Domain | Routes | Has Service | Verification |
 |-------|--------|--------|-------------|--------------|
 | 0 | Foundation + AI/MCP | 8 | - | ai.routes.ts (4) + mcp/transport.ts (4) |
-| 1 | Reference Data | 26 | NO | tags (6) + amenities (6) + industries (5) + deal-services (5) + brands (4) |
+| 1 | Reference Data | 31 | NO | tags (6) + amenities (5) + industries (5) + deal-services (5) + brands (5) + vendor-services (5) |
 | 2 | Admin & Analytics | 14 | NO | admin/* (9) + activity/* (5) |
 | 3 | Settings & Comments | 7 | NO | settings (2) + comments (5) |
 | 4 | Issues & Features | 15 | NO | app-issues (5) + features (10) |
 | 5 | Releases | 14 | NO | releases/* (14) |
 | 6 | Contacts | 12 | NO | contacts/* (12) incl linking routes |
 | 7 | Clients | 10 | NO | clients/* (10) |
-| 8 | Vendors Complex | 19 | NO → LATER | vendors + vendor-services + vendor-tokens |
+| 8 | Vendors Complex | 14 | NO → LATER | vendors + vendor-tokens (vendor-services moved to Reference Data) |
 | 9 | Deals | 10 | EXISTS | deals/* (10) |
 | 10 | Venues Complex | 43 | NO → NEW | venues + photos + files + floorplans + collections + objects |
 | 11 | Forms | 15 | NO → NEW | form-templates + form-requests + form/:token |
@@ -1327,6 +1327,7 @@ Complete system verification:
 | 2026-01-15 | Phase 0 | **Complete** | Created server/domains/_template/, server/lib/route-utils.ts, validated AI/MCP imports |
 | 2026-01-15 | Phase 0.5 | **Complete** | Removed 10 dead storage methods. storage.ts: 4,199 → 4,087 lines (-112) |
 | 2026-01-15 | Phase 1 | **Complete** | Extracted Reference Data domain. 26 routes, 26 storage methods. routes.ts: 6,714 → 6,107 (-607 lines) |
+| 2026-01-15 | Phase 1.1 | **Complete** | Added vendor_services to Reference Data. +5 routes, +5 storage methods. routes.ts: 6,107 → 5,989 (-118 lines). Total now 31 routes. |
 | | | | |
 
 ---
@@ -1342,3 +1343,4 @@ Complete system verification:
 - [x] Phase 0 complete - infrastructure created
 - [x] Phase 0.5 complete - dead code removed (112 lines saved)
 - [x] Phase 1 complete - Reference Data domain extracted (26 routes, 607 lines saved)
+- [x] Phase 1.1 complete - Added vendor_services to Reference Data (31 total routes, 725 total lines saved)

@@ -7,12 +7,14 @@
  * - Industries (5 routes)
  * - Deal Services (5 routes)
  * - Brands (5 routes)
+ * - Vendor Services (5 routes)
  * 
- * Total: 26 routes
+ * Total: 31 routes
  */
 
 import type { Express } from "express";
 import { isAuthenticated, isManagerOrAdmin } from "../../googleAuth";
+import { requirePermission } from "../../middleware/permissions";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { referenceDataStorage } from "./reference-data.storage";
 import {
@@ -23,6 +25,8 @@ import {
   insertDealServiceSchema,
   insertBrandSchema,
   updateBrandSchema,
+  insertVendorServiceSchema,
+  updateVendorServiceSchema,
 } from "@shared/schema";
 
 export function registerReferenceDataRoutes(app: Express): void {
@@ -632,6 +636,130 @@ export function registerReferenceDataRoutes(app: Express): void {
     } catch (error) {
       console.error("Error deleting brand:", error);
       res.status(500).json({ message: "Failed to delete brand" });
+    }
+  });
+
+  // ===== VENDOR SERVICE ROUTES (5) =====
+
+  // GET /api/vendor-services - Get all vendor services
+  app.get("/api/vendor-services", isAuthenticated, async (req, res) => {
+    try {
+      const services = await referenceDataStorage.getVendorServices();
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching vendor services:", error);
+      res.status(500).json({ message: "Failed to fetch vendor services" });
+    }
+  });
+
+  // GET /api/vendor-services/:id - Get single vendor service
+  app.get("/api/vendor-services/:id", isAuthenticated, async (req, res) => {
+    try {
+      const service = await referenceDataStorage.getVendorServiceById(req.params.id);
+      if (!service) {
+        return res.status(404).json({ message: "Vendor service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error fetching vendor service:", error);
+      res.status(500).json({ message: "Failed to fetch vendor service" });
+    }
+  });
+
+  // POST /api/vendor-services - Create new vendor service
+  app.post("/api/vendor-services", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const parsed = insertVendorServiceSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const service = await referenceDataStorage.createVendorService(parsed.data);
+      
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_service",
+        entityId: service.id,
+        status: "success",
+        metadata: { name: service.name },
+      });
+      
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating vendor service:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "vendor_service",
+        entityId: null,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
+      res.status(500).json({ message: "Failed to create vendor service" });
+    }
+  });
+
+  // PATCH /api/vendor-services/:id - Update vendor service
+  app.patch("/api/vendor-services/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const parsed = updateVendorServiceSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const original = await referenceDataStorage.getVendorServiceById(req.params.id);
+      const service = await referenceDataStorage.updateVendorService(req.params.id, parsed.data);
+      if (!service) {
+        return res.status(404).json({ message: "Vendor service not found" });
+      }
+      
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, service),
+      });
+      
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating vendor service:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
+      res.status(500).json({ message: "Failed to update vendor service" });
+    }
+  });
+
+  // DELETE /api/vendor-services/:id - Delete vendor service
+  app.delete("/api/vendor-services/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const service = await referenceDataStorage.getVendorServiceById(req.params.id);
+      if (!service) {
+        return res.status(404).json({ message: "Vendor service not found" });
+      }
+      await referenceDataStorage.deleteVendorService(req.params.id);
+      
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "success",
+        metadata: { name: service.name },
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting vendor service:", error);
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "vendor_service",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
+      res.status(500).json({ message: "Failed to delete vendor service" });
     }
   });
 }

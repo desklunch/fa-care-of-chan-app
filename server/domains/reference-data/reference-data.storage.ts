@@ -17,6 +17,7 @@ import {
   industries,
   dealServices,
   brands,
+  vendorServices,
   type Tag,
   type CreateTag,
   type UpdateTag,
@@ -31,6 +32,9 @@ import {
   type Brand,
   type CreateBrand,
   type UpdateBrand,
+  type VendorService,
+  type CreateVendorService,
+  type UpdateVendorService,
 } from "@shared/schema";
 
 export interface IReferenceDataStorage {
@@ -69,6 +73,13 @@ export interface IReferenceDataStorage {
   createBrand(data: CreateBrand): Promise<Brand>;
   updateBrand(id: string, data: UpdateBrand): Promise<Brand | undefined>;
   deleteBrand(id: string): Promise<void>;
+
+  // Vendor Service operations
+  getVendorServices(): Promise<VendorService[]>;
+  getVendorServiceById(id: string): Promise<VendorService | undefined>;
+  createVendorService(data: CreateVendorService): Promise<VendorService>;
+  updateVendorService(id: string, data: UpdateVendorService): Promise<VendorService | undefined>;
+  deleteVendorService(id: string): Promise<void>;
 }
 
 export class ReferenceDataStorage implements IReferenceDataStorage {
@@ -268,6 +279,43 @@ export class ReferenceDataStorage implements IReferenceDataStorage {
 
   async deleteBrand(id: string): Promise<void> {
     await db.delete(brands).where(eq(brands.id, id));
+  }
+
+  // Vendor Service operations
+  async getVendorServices(): Promise<VendorService[]> {
+    return db
+      .select()
+      .from(vendorServices)
+      .orderBy(vendorServices.name);
+  }
+
+  async getVendorServiceById(id: string): Promise<VendorService | undefined> {
+    const [service] = await db
+      .select()
+      .from(vendorServices)
+      .where(eq(vendorServices.id, id));
+    return service;
+  }
+
+  async createVendorService(data: CreateVendorService): Promise<VendorService> {
+    const [service] = await db
+      .insert(vendorServices)
+      .values(data)
+      .returning();
+    return service;
+  }
+
+  async updateVendorService(id: string, data: UpdateVendorService): Promise<VendorService | undefined> {
+    const [service] = await db
+      .update(vendorServices)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(vendorServices.id, id))
+      .returning();
+    return service;
+  }
+
+  async deleteVendorService(id: string): Promise<void> {
+    await db.delete(vendorServices).where(eq(vendorServices.id, id));
   }
 }
 
