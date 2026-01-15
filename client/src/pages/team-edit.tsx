@@ -162,37 +162,6 @@ export default function TeamEdit() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="flex items-center gap-4 pb-6 border-b border-border">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage
-                        src={form.watch("profileImageUrl") || member.profileImageUrl || undefined}
-                        alt={fullName}
-                      />
-                      <AvatarFallback className="bg-primary/10 text-primary text-2xl font-medium">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <FormField
-                        control={form.control}
-                        name="profileImageUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Profile Image URL</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="https://example.com/avatar.jpg"
-                                {...field}
-                                value={field.value || ""}
-                                data-testid="input-profile-image"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <FormField

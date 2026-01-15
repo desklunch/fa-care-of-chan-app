@@ -250,7 +250,8 @@ export function CommentItem({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-2 items-center">
-              <Link 
+              <Link
+                href={`/team/${comment.createdById}`}
                 className="font-medium text-sm hover:underline flex gap-2 items-center"
                 data-testid={`link-author-${comment.id}`}
               >

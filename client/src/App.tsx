@@ -210,9 +210,9 @@ function useLayoutConfig() {
 
         ],
       },
+
       {
-        heading: "Settings",
-        requiredPermission: "team.read",
+        heading: "App",
         defaultCollapsed: true,
         items: [
           {
@@ -221,12 +221,6 @@ function useLayoutConfig() {
             icon: Users,
             requiredPermission: "team.read",
           },
-        ],
-      },
-      {
-        heading: "Support",
-        defaultCollapsed: true,
-        items: [
           {
             name: "Guide",
             href: "/guide",
@@ -325,7 +319,7 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "App",
+        heading: "Dev",
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
