@@ -164,6 +164,7 @@ export default function VendorDetail() {
   const { toast } = useToast();
   const canEdit = can('vendors.write');
   const canDelete = can('vendors.delete');
+  const canManageTokens = can('vendor_tokens.manage');
   
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -394,6 +395,8 @@ export default function VendorDetail() {
               icon: PenBox,
               onClick: () => setLocation(`/vendors/${id}/edit`),
             },
+          ] : []),
+          ...(canManageTokens ? [
             {
               label: "Generate Update Link",
               icon: LinkIcon,
