@@ -21,6 +21,7 @@ import {
   Users,
   Contact,
   Briefcase,
+  Building2,
   Lightbulb,
   Settings,
   BookOpen,
@@ -61,10 +62,28 @@ const guideSections: GuideSection[] = [
       { id: "clients-overview", title: "Overview" },
       { id: "clients-grid", title: "Clients Data Grid" },
       { id: "clients-search-filters", title: "Search & Filters" },
+      { id: "clients-creating", title: "Creating Clients" },
       { id: "clients-detail", title: "Client Detail Page" },
       { id: "clients-contacts", title: "Linking Contacts" },
+      { id: "clients-deals", title: "Associated Deals" },
       { id: "clients-editing", title: "Editing Clients" },
       { id: "clients-deleting", title: "Deleting Clients" },
+    ],
+  },
+  {
+    id: "vendors",
+    title: "Vendors",
+    icon: Building2,
+    subsections: [
+      { id: "vendors-overview", title: "Overview" },
+      { id: "vendors-grid", title: "Vendors Data Grid" },
+      { id: "vendors-search-filters", title: "Search & Filters" },
+      { id: "vendors-creating", title: "Creating Vendors" },
+      { id: "vendors-detail", title: "Vendor Detail Page" },
+      { id: "vendors-contacts", title: "Linking Contacts" },
+      { id: "vendors-services", title: "Services & Locations" },
+      { id: "vendors-editing", title: "Editing Vendors" },
+      { id: "vendors-deleting", title: "Deleting Vendors" },
     ],
   },
   {
@@ -456,10 +475,11 @@ function ClientsGuideContent() {
             </p>
             <h4>Key Features</h4>
             <ul>
-              <li><strong>Client Directory</strong> - Browse and search all clients</li>
-              <li><strong>Industry Tracking</strong> - Categorize clients by industry</li>
+              <li><strong>Client Directory</strong> - Browse and search all clients in a data grid</li>
+              <li><strong>Industry Tracking</strong> - Categorize clients by industry for easy filtering</li>
               <li><strong>Contact Associations</strong> - Link multiple contacts to each client</li>
-              <li><strong>Deal Relationships</strong> - See all deals associated with a client</li>
+              <li><strong>Deal Relationships</strong> - View all deals associated with a client</li>
+              <li><strong>Inline Editing</strong> - Update client information directly on the detail page</li>
             </ul>
           </CardContent>
         </Card>
@@ -472,14 +492,19 @@ function ClientsGuideContent() {
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
             <p>
-              The Clients page displays all your clients in a data grid format, making it easy to browse, search, and manage your client base.
+              The Clients page displays all your clients in a powerful data grid format, making it easy to browse, search, and manage your client base.
             </p>
             
-            <h4>Grid Columns</h4>
+            <h4>Default Columns</h4>
             <ul>
               <li><strong>Name</strong> - Client/company name</li>
-              <li><strong>Industry</strong> - Business sector</li>
-              <li><strong>Website</strong> - Company website</li>
+              <li><strong>Industry</strong> - Business sector displayed as a badge</li>
+              <li><strong>Website</strong> - Company website URL</li>
+            </ul>
+            
+            <h4>Additional Columns</h4>
+            <p>Use the Columns button to show or hide:</p>
+            <ul>
               <li><strong>Updated</strong> - Last modification date</li>
             </ul>
             
@@ -489,6 +514,7 @@ function ClientsGuideContent() {
               <li>Resize columns by dragging column borders</li>
               <li>Sort by clicking column headers</li>
               <li>Customize visible columns via the Columns button</li>
+              <li>Reorder columns by dragging column headers</li>
             </ul>
           </CardContent>
         </Card>
@@ -502,7 +528,7 @@ function ClientsGuideContent() {
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
             <h4>Quick Search</h4>
             <p>
-              Use the search box to find clients by name, industry, or website. Results update instantly as you type.
+              Use the search box to find clients by name or website. Results update instantly as you type.
             </p>
             
             <h4>Industry Filter</h4>
@@ -516,8 +542,46 @@ function ClientsGuideContent() {
               <li>Clear the filter by clicking X on the badge</li>
             </ol>
             <p>
-              The industry filter automatically shows all industries present in your client data.
+              The industry filter dynamically shows all industries present in your client data, sorted alphabetically.
             </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-creating" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Creating Clients</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Create new clients to build your client directory and track business relationships.
+            </p>
+            
+            <h4>Creating a New Client</h4>
+            <ol>
+              <li>Click the "New Client" button in the top right</li>
+              <li>Fill in the client information</li>
+              <li>Click "Create Client" to save</li>
+            </ol>
+            
+            <h4>Required Fields</h4>
+            <ul>
+              <li><strong>Name</strong> - The company or organization name</li>
+            </ul>
+            
+            <h4>Optional Fields</h4>
+            <ul>
+              <li><strong>Industry</strong> - Select from available industry categories</li>
+              <li><strong>Website</strong> - Company website URL</li>
+            </ul>
+            
+            <h4>Tips</h4>
+            <ul>
+              <li>Use a consistent naming convention for client names</li>
+              <li>Add the website to help identify the client later</li>
+              <li>You can add contacts and deals after creating the client</li>
+            </ul>
           </CardContent>
         </Card>
       </section>
@@ -529,21 +593,28 @@ function ClientsGuideContent() {
         <Card>
           <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
             <p>
-              Click any client row to open the detail page with comprehensive information.
+              Click any client row in the grid to open the detail page with comprehensive information.
             </p>
             
             <h4>Page Sections</h4>
             <ul>
-              <li><strong>Header</strong> - Client name and action buttons</li>
-              <li><strong>Basic Information</strong> - Name, industry, website</li>
-              <li><strong>Contacts</strong> - All contacts associated with this client</li>
-              <li><strong>Deals</strong> - Deals linked to this client</li>
+              <li><strong>Header</strong> - Client name (editable) and action buttons (Edit, Delete)</li>
+              <li><strong>Basic Information</strong> - Industry and website with inline editing</li>
+              <li><strong>Contacts</strong> - All contacts linked to this client with ability to add/remove</li>
+              <li><strong>Deals</strong> - All deals associated with this client with status badges</li>
             </ul>
             
             <h4>Inline Editing</h4>
             <p>
               Edit client fields directly on the detail page by hovering over a field and clicking the edit icon, or by double-clicking the field value. Changes save automatically.
             </p>
+            
+            <h4>Quick Actions</h4>
+            <ul>
+              <li>Click on a contact name to view their details</li>
+              <li>Click on a deal to view deal details</li>
+              <li>Use the "Add" button to link new contacts</li>
+            </ul>
           </CardContent>
         </Card>
       </section>
@@ -562,24 +633,53 @@ function ClientsGuideContent() {
             <ol>
               <li>Open the client detail page</li>
               <li>Find the Contacts section</li>
-              <li>Click "Link Contact" or the add button</li>
-              <li>Search for and select an existing contact</li>
-              <li>The contact is now linked to this client</li>
+              <li>Click the "Add" button</li>
+              <li>Search for an existing contact by name</li>
+              <li>Select the contact to link them</li>
             </ol>
             
             <h4>Removing a Contact Link</h4>
             <ol>
               <li>In the Contacts section, find the contact to unlink</li>
-              <li>Click the unlink or remove button next to the contact</li>
-              <li>Confirm the action</li>
+              <li>Click the trash icon next to the contact</li>
             </ol>
             <p>
               Note: Unlinking a contact does not delete the contact itself, it only removes the association with this client.
             </p>
             
-            <h4>Creating New Contacts</h4>
+            <h4>Contact Display</h4>
             <p>
-              You can also create a new contact directly from the client page. The new contact will automatically be linked to the current client.
+              Each linked contact shows their name and job title (if available). Click on a contact's name to navigate to their full detail page.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="clients-deals" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Associated Deals</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Deals section on the client detail page shows all deals linked to this client.
+            </p>
+            
+            <h4>Deal Information</h4>
+            <p>Each deal in the list displays:</p>
+            <ul>
+              <li>Deal name</li>
+              <li>Status badge with color coding</li>
+            </ul>
+            
+            <h4>Quick Navigation</h4>
+            <p>
+              Click on any deal to navigate directly to the deal detail page where you can view and manage all deal information.
+            </p>
+            
+            <h4>Creating Deals for a Client</h4>
+            <p>
+              To create a new deal for this client, navigate to the Deals section and create a new deal, then select this client in the deal form.
             </p>
           </CardContent>
         </Card>
@@ -597,20 +697,22 @@ function ClientsGuideContent() {
             </p>
             <ul>
               <li>Click the icon or double-click the value to edit</li>
-              <li>Make your changes in the input field</li>
+              <li>Make your changes in the input field or dropdown</li>
               <li>Press Enter to save, Escape to cancel</li>
+              <li>Changes save automatically</li>
+            </ul>
+            
+            <h4>Editable Fields</h4>
+            <ul>
+              <li><strong>Name</strong> - Client/company name (click the title to edit)</li>
+              <li><strong>Industry</strong> - Select from dropdown</li>
+              <li><strong>Website</strong> - Enter or update the URL</li>
             </ul>
             
             <h4>Full Edit Form</h4>
             <p>
-              Click the "Edit" button to open the complete edit form with all fields:
+              Click the "Edit Client" button to open the complete edit form where you can update all fields at once.
             </p>
-            <ul>
-              <li>Client name</li>
-              <li>Industry</li>
-              <li>Website</li>
-              <li>Any other client properties</li>
-            </ul>
           </CardContent>
         </Card>
       </section>
@@ -624,20 +726,339 @@ function ClientsGuideContent() {
             <h4>How to Delete a Client</h4>
             <ol>
               <li>Open the client detail page</li>
-              <li>Click the "Delete" button</li>
-              <li>Confirm the deletion in the dialog</li>
+              <li>Click the "Delete Client" button</li>
+              <li>Confirm the deletion in the dialog that appears</li>
             </ol>
             
             <h4>Important Considerations</h4>
             <ul>
               <li>Deleting a client is permanent and cannot be undone</li>
               <li>Associated contacts will be unlinked but not deleted</li>
-              <li>Deals linked to this client may need to be updated</li>
+              <li>Deals linked to this client will need to be updated or reassigned</li>
             </ul>
             
             <h4>Before Deleting</h4>
             <p>
-              Consider whether you need to preserve any associated data. You may want to reassign deals to a different client before deletion.
+              Consider whether you need to preserve any associated data. You may want to reassign deals to a different client before deletion, or export any important information.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  );
+}
+
+function VendorsGuideContent() {
+  return (
+    <div className="space-y-12">
+      <section id="vendors-overview" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Vendors Overview</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Vendors module helps you manage your vendor and supplier relationships. Vendors represent businesses that provide services to your organization, such as caterers, florists, photographers, and other event service providers.
+            </p>
+            <h4>Key Features</h4>
+            <ul>
+              <li><strong>Vendor Directory</strong> - Browse and search all vendors in a data grid</li>
+              <li><strong>Service Tracking</strong> - Categorize vendors by the services they provide</li>
+              <li><strong>Location Management</strong> - Track which locations/regions vendors serve</li>
+              <li><strong>Contact Associations</strong> - Link contacts to vendor organizations</li>
+              <li><strong>Preferred Vendors</strong> - Mark and filter preferred vendor partners</li>
+              <li><strong>Financial Details</strong> - Track sales tax and diversity information</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-grid" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Vendors Data Grid</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              The Vendors page displays all your vendors in a powerful data grid format for easy browsing and management.
+            </p>
+            
+            <h4>Default Columns</h4>
+            <ul>
+              <li><strong>Business Name</strong> - Vendor name with preferred star indicator</li>
+              <li><strong>Services</strong> - Services the vendor provides (displayed as badges)</li>
+              <li><strong>Locations</strong> - Service locations/regions</li>
+            </ul>
+            
+            <h4>Additional Columns</h4>
+            <p>Use the Columns button to show or hide:</p>
+            <ul>
+              <li><strong>Email</strong> - Primary contact email</li>
+              <li><strong>Phone</strong> - Contact phone number</li>
+              <li><strong>Website</strong> - Vendor website URL</li>
+              <li><strong>Address</strong> - Physical address</li>
+              <li><strong>Employees</strong> - Employee count</li>
+              <li><strong>Diversity</strong> - Diversity certifications or information</li>
+              <li><strong>Preferred</strong> - Preferred vendor status</li>
+              <li><strong>Sales Tax</strong> - Whether vendor charges sales tax</li>
+              <li><strong>Tax Notes</strong> - Additional tax information</li>
+              <li><strong>Notes</strong> - General notes</li>
+              <li><strong>Capabilities Deck</strong> - Link to capabilities document</li>
+            </ul>
+            
+            <h4>Grid Features</h4>
+            <ul>
+              <li>Click any row to view full vendor details</li>
+              <li>Resize columns by dragging column borders</li>
+              <li>Sort by clicking column headers</li>
+              <li>Customize visible columns via the Columns button</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-search-filters" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Search & Filters</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Quick Search</h4>
+            <p>
+              Use the search box to find vendors by business name, email, phone, website, address, or diversity info. Results update instantly as you type.
+            </p>
+            
+            <h4>Filter Options</h4>
+            <p>Click the "Filters" button to access filtering options:</p>
+            <ul>
+              <li><strong>Locations</strong> - Filter by service locations/regions</li>
+              <li><strong>Services</strong> - Filter by services provided</li>
+            </ul>
+            
+            <h4>Using Filters</h4>
+            <ol>
+              <li>Click the Filters button to expand filter options</li>
+              <li>Select filter criteria from the dropdowns</li>
+              <li>Multiple selections within a filter show vendors matching any selected option</li>
+              <li>Multiple filters combine to show only vendors matching all criteria</li>
+              <li>Active filter count shows as an indicator on the Filters button</li>
+            </ol>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-creating" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Creating Vendors</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Create new vendors to build your vendor directory and track supplier relationships.
+            </p>
+            
+            <h4>Creating a New Vendor</h4>
+            <ol>
+              <li>Click the "New Vendor" button in the top right</li>
+              <li>Fill in the vendor information</li>
+              <li>Click "Save" to create the vendor</li>
+            </ol>
+            
+            <h4>Required Fields</h4>
+            <ul>
+              <li><strong>Business Name</strong> - The vendor's company name</li>
+            </ul>
+            
+            <h4>Optional Fields</h4>
+            <ul>
+              <li><strong>Contact Info</strong> - Email, phone, website, address</li>
+              <li><strong>Services</strong> - Select services this vendor provides</li>
+              <li><strong>Locations</strong> - Add locations/regions the vendor serves using Google Places</li>
+              <li><strong>Employee Count</strong> - Number of employees</li>
+              <li><strong>Diversity Info</strong> - Diversity certifications or details</li>
+              <li><strong>Sales Tax</strong> - Whether vendor charges sales tax and related notes</li>
+              <li><strong>Preferred</strong> - Mark as a preferred vendor</li>
+              <li><strong>Notes</strong> - General notes about the vendor</li>
+              <li><strong>Capabilities Deck</strong> - Link to vendor's capabilities document</li>
+            </ul>
+            
+            <h4>Adding Service Locations</h4>
+            <p>
+              Use the location search powered by Google Places to add cities or regions where the vendor provides services. You can add multiple locations.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-detail" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Vendor Detail Page</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Click any vendor row in the grid to open the detail page with comprehensive information.
+            </p>
+            
+            <h4>Page Sections</h4>
+            <ul>
+              <li><strong>Header</strong> - Business name (editable), preferred badge, and action buttons</li>
+              <li><strong>Services</strong> - Services this vendor provides (editable)</li>
+              <li><strong>Service Locations</strong> - Regions/cities the vendor serves</li>
+              <li><strong>Contact Info</strong> - Email, phone, website, address (all editable)</li>
+              <li><strong>Business Details</strong> - Employee count, diversity info, sales tax details</li>
+              <li><strong>Contacts</strong> - People associated with this vendor</li>
+              <li><strong>Notes</strong> - General notes about the vendor</li>
+            </ul>
+            
+            <h4>Inline Editing</h4>
+            <p>
+              Managers and admins can edit vendor fields directly on the detail page by hovering over a field and clicking the edit icon, or by double-clicking the field value.
+            </p>
+            
+            <h4>Quick Actions</h4>
+            <ul>
+              <li><strong>Edit Vendor</strong> - Open the full edit form</li>
+              <li><strong>Generate Update Link</strong> - Create a link for the vendor to update their own information</li>
+              <li><strong>Delete Vendor</strong> - Remove the vendor from the system</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-contacts" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Linking Contacts</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <p>
+              Vendors can have multiple contacts associated with them. This helps you track the people you work with at each vendor organization.
+            </p>
+            
+            <h4>Adding a Contact to a Vendor</h4>
+            <ol>
+              <li>Open the vendor detail page</li>
+              <li>Find the Contacts section</li>
+              <li>Click the "Add" button</li>
+              <li>Search for an existing contact by name</li>
+              <li>Select the contact to link them to this vendor</li>
+            </ol>
+            
+            <h4>Removing a Contact Link</h4>
+            <ol>
+              <li>In the Contacts section, find the contact to unlink</li>
+              <li>Click the trash icon next to the contact</li>
+              <li>Confirm the action</li>
+            </ol>
+            <p>
+              Note: Unlinking a contact does not delete the contact itself, it only removes the association with this vendor.
+            </p>
+            
+            <h4>Contact Display</h4>
+            <p>
+              Each linked contact shows their name and job title (if available). Click on a contact's name to navigate to their full detail page.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-services" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Services & Locations</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Managing Services</h4>
+            <p>
+              Services categorize what each vendor provides. On the vendor detail page:
+            </p>
+            <ol>
+              <li>Click the edit icon next to Services</li>
+              <li>Click on service badges to toggle them on or off</li>
+              <li>Selected services appear with a filled background</li>
+              <li>Click the checkmark to save your changes</li>
+            </ol>
+            
+            <h4>Service Categories</h4>
+            <p>
+              Services are managed by administrators in the Admin section. Common service categories include catering, photography, florals, entertainment, and more.
+            </p>
+            
+            <h4>Service Locations</h4>
+            <p>
+              Locations indicate which cities or regions a vendor serves. Locations are added when creating or editing a vendor using Google Places search.
+            </p>
+            
+            <h4>Filtering by Services and Locations</h4>
+            <p>
+              On the Vendors directory page, use the Filters to find vendors by specific services or locations. This is useful when searching for vendors that can serve a particular area or provide specific services.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-editing" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Editing Vendors</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>Inline Editing</h4>
+            <p>
+              On the vendor detail page, managers and admins can hover over any field to see an edit icon:
+            </p>
+            <ul>
+              <li>Click the icon or double-click the value to edit</li>
+              <li>Make your changes in the input field</li>
+              <li>Press Enter to save, Escape to cancel</li>
+              <li>Changes save automatically</li>
+            </ul>
+            
+            <h4>Editable Fields</h4>
+            <ul>
+              <li><strong>Business Name</strong> - Click the title to edit</li>
+              <li><strong>Services</strong> - Toggle services on/off</li>
+              <li><strong>Contact Info</strong> - Email, phone, website, address</li>
+              <li><strong>Business Details</strong> - Employee count, diversity info, tax settings</li>
+              <li><strong>Preferred Status</strong> - Mark as preferred vendor</li>
+              <li><strong>Notes</strong> - Update general notes</li>
+            </ul>
+            
+            <h4>Full Edit Form</h4>
+            <p>
+              Click "Edit Vendor" to open the complete edit form where you can update all fields including service locations.
+            </p>
+            
+            <h4>Vendor Self-Update</h4>
+            <p>
+              Admins can generate a special update link that allows vendors to update their own information. This link expires after a set period and provides limited access to edit vendor details.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      <section id="vendors-deleting" className="scroll-mt-6">
+        <h2 className="text-2xl font-bold mb-4">Deleting Vendors</h2>
+        <Card>
+          <CardContent className="pt-6 prose prose-sm dark:prose-invert max-w-none">
+            <h4>How to Delete a Vendor</h4>
+            <ol>
+              <li>Open the vendor detail page</li>
+              <li>Click the "Delete Vendor" button</li>
+              <li>Confirm the deletion in the dialog that appears</li>
+            </ol>
+            
+            <h4>Important Considerations</h4>
+            <ul>
+              <li>Deleting a vendor is permanent and cannot be undone</li>
+              <li>Associated contacts will be unlinked but not deleted</li>
+              <li>Any active update tokens for this vendor will be invalidated</li>
+            </ul>
+            
+            <h4>Before Deleting</h4>
+            <p>
+              Consider whether you need to preserve any vendor information or contact associations. Make sure no active deals or projects depend on this vendor before removing them from the system.
             </p>
           </CardContent>
         </Card>
@@ -1362,10 +1783,10 @@ export default function GuidePage() {
               {/* Section Content */}
               {activeSection === "deals" && <DealsGuideContent />}
               {activeSection === "clients" && <ClientsGuideContent />}
+              {activeSection === "vendors" && <VendorsGuideContent />}
               {activeSection === "contacts" && <ContactsGuideContent />}
               {activeSection === "venues" && <VenuesGuideContent />}
               {activeSection === "team" && <StubContent title="Team Directory Documentation" />}
-              {activeSection === "vendors" && <StubContent title="Vendors Documentation" />}
               {activeSection === "features" && <StubContent title="Feature Requests Documentation" />}
               {activeSection === "admin" && <StubContent title="Admin Settings Documentation" />}
             </div>
