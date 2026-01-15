@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Badge } from "@/components/ui/badge";
 import type { Client, Industry } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
@@ -101,6 +102,8 @@ const clientFilters: FilterConfig<Client>[] = [
 export default function Clients() {
   usePageTitle("Clients");
   const [, setLocation] = useLocation();
+  const { can } = usePermissions();
+  const canCreate = can('clients.write');
 
   // Fetch industries for lookup
   const { data: industries = [], isLoading: industriesLoading } = useQuery<Industry[]>({
@@ -119,11 +122,11 @@ export default function Clients() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Clients" }]}
-      primaryAction={{
+      primaryAction={canCreate ? {
         label: "New Client",
         href: "/clients/new",
         icon: CircleFadingPlus,
-      }}
+      } : undefined}
     >
       <DataGridPage
         queryKey="/api/clients"

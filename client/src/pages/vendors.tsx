@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePermissions } from "@/hooks/usePermissions";
 import { DataGridPage } from "@/components/data-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -417,6 +418,8 @@ export default function Vendors() {
   const [vendorsToAssign, setVendorsToAssign] = useState<VendorWithRelations[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { can } = usePermissions();
+  const canCreate = can('vendors.write');
   const isAdmin = user?.role === "admin";
   const isAuthenticated = !!user;
 
@@ -600,12 +603,12 @@ export default function Vendors() {
   return (
     <PageLayout 
       breadcrumbs={[{ label: "Vendors" }]}
-      primaryAction={{
+      primaryAction={canCreate ? {
         label: "New Vendor",
         href: "/vendors/new",
         icon: CircleFadingPlus,
         variant: "default",
-      }}
+      } : undefined}
     >
       <DataGridPage
         queryKey="/api/vendors"

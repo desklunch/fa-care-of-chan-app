@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor, Client } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
@@ -269,15 +270,17 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
 export default function Contacts() {
   usePageTitle("Contacts");
   const [, setLocation] = useLocation();
+  const { can } = usePermissions();
+  const canCreate = can('contacts.write');
 
   return (
     <PageLayout
       breadcrumbs={[{ label: "Contacts" }]}
-      primaryAction={{
+      primaryAction={canCreate ? {
         label: "New Contact",
         href: "/contacts/new",
         icon: CircleFadingPlus,
-      }}
+      } : undefined}
     >
       <DataGridPage
         queryKey="/api/contacts"
