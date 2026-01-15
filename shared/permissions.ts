@@ -125,8 +125,7 @@ const TIER_0_PERMISSIONS: Permission[] = [
   'clients.read',
   'contacts.read',
   'vendors.read',
-  'app_features.read',
-  'app_features.vote',
+  'team.read', // All users can view team directory
 ];
 
 // Tier 1 (employee) permissions - basic CRUD for general entities
@@ -143,7 +142,6 @@ const TIER_1_PERMISSIONS: Permission[] = [
   'vendors.read',
   'vendors.write',
   'vendors.delete',
-  // Note: team.read is tier 2+ (manager/admin only)
   'app_features.read',
   'app_features.vote',
 ];
@@ -151,7 +149,6 @@ const TIER_1_PERMISSIONS: Permission[] = [
 // Tier 2 (manager) permissions - includes all tier 1 + deals and team access
 const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
-  'team.read', // Managers can view team directory
   'deals.read',
   'deals.write',
   'deals.delete',

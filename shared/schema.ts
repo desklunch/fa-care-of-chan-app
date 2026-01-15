@@ -817,6 +817,7 @@ export const commentEntityTypes = [
   "feedback",
   "deal",
   "client",
+  "user",
 ] as const;
 export type CommentEntityType = (typeof commentEntityTypes)[number];
 

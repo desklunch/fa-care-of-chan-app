@@ -121,7 +121,7 @@ export default function ProfileEdit() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Directory", href: "/directory" },
+        { label: "Team", href: "/team" },
         { label: fullName, href: `/team/${user.id}` },
         { label: "Edit Profile" },
       ]}

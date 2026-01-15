@@ -10,12 +10,14 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CommentWithAuthor, User } from "@shared/schema";
 import { MessageSquare, Pencil, Trash2, X, Check, CornerDownRight, MoreVertical } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 
 function renderTextWithLinks(text: string): (string | JSX.Element)[] {
   const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
@@ -94,7 +96,7 @@ export function CommentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-start gap-2" data-testid={parentId ? "form-reply" : "form-comment"}>
+    <form onSubmit={handleSubmit} className="flex items-start gap-4" data-testid={parentId ? "form-reply" : "form-comment"}>
       <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -123,10 +125,11 @@ export function CommentForm({
           size="md" 
           disabled={!body.trim() || createMutation.isPending}
           data-testid="button-submit-comment"
-          className="h-12"
+          className="h-12 !w-20"
         >
-          <MessageSquare className="h-4 w-4 " />
-          {createMutation.isPending ? "Posting..." : (parentId ? "Reply" : "Post")}
+          {!createMutation.isPending && (<MessageSquare className="h-4 w-4 " />)}
+          
+          {createMutation.isPending ? "Posting" : (parentId ? "Reply" : "Post")}
         </Button>
       </div>
     </form>
@@ -437,31 +440,36 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
   const isAdmin = currentUser?.role === "admin";
 
   return (
-    <div className="space-y-6 flex-1 " data-testid="comment-list">
-      <div>
+    <Card className="space-y-6 flex-1 " data-testid="comment-list">
+      <CardHeader className="pb-0">
         <CommentForm entityType={entityType} entityId={entityId} />
 
-      </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+
+        {!comments || comments.length === 0 ? (
+          <div className="text-center text-sm py-8 text-muted-foreground flex flex-col items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            <p>No comments yet</p>
+          </div>
+        ) : (
+          <div className="space-y-8 ">
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                currentUserId={currentUser?.id}
+                isAdmin={isAdmin}
+                entityType={entityType}
+                entityId={entityId}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
       
-      {!comments || comments.length === 0 ? (
-        <div className="text-center text-sm py-8 text-muted-foreground flex flex-col items-center gap-2">
-          <MessageSquare className="h-4 w-4" />
-          <p>No comments yet</p>
-        </div>
-      ) : (
-        <div className="space-y-8 ">
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              currentUserId={currentUser?.id}
-              isAdmin={isAdmin}
-              entityType={entityType}
-              entityId={entityId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+      
+
+    </Card>
   );
 }

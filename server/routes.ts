@@ -215,6 +215,58 @@ export async function registerRoutes(
     }
   });
 
+  // Admin: Update any team member's profile (requires team.manage)
+  app.patch("/api/team/:id", isAuthenticated, requirePermission("team.manage"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const result = updateProfileSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid data", 
+          errors: result.error.flatten() 
+        });
+      }
+
+      const userBefore = await storage.getUser(id);
+      if (!userBefore) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Handle role update if provided (separate from profile fields)
+      const { role } = req.body;
+      
+      // First update profile fields
+      let updatedUser = await storage.updateUser(id, result.data);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Then update role if provided (admins can change roles)
+      if (role && ["admin", "manager", "employee", "viewer"].includes(role)) {
+        updatedUser = await storage.updateUser(id, { role });
+      }
+
+      // Log the profile update
+      const changes = getChangedFields(
+        userBefore as unknown as Record<string, unknown>,
+        updatedUser as unknown as Record<string, unknown>
+      );
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "user",
+        entityId: id,
+        changes,
+        metadata: { changedBy: req.user.claims.sub },
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating team member:", error);
+      res.status(500).json({ message: "Failed to update team member" });
+    }
+  });
+
   // Profile routes
   app.patch("/api/profile", isAuthenticated, async (req: any, res) => {
     try {

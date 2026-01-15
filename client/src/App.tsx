@@ -23,6 +23,7 @@ const InviteActivation = lazy(() => import("@/pages/invite-activation"));
 const AuthError = lazy(() => import("@/pages/auth-error"));
 const TeamPage = lazy(() => import("@/pages/team"));
 const TeamProfile = lazy(() => import("@/pages/team-profile"));
+const TeamEdit = lazy(() => import("@/pages/team-edit"));
 const Profile = lazy(() => import("@/pages/profile"));
 const ProfileEdit = lazy(() => import("@/pages/profile-edit"));
 const AdminInvites = lazy(() => import("@/pages/admin-invites"));
@@ -376,6 +377,7 @@ function AuthenticatedRoutes() {
             <Route path="/" component={Venues} />
           <Route path="/team" component={TeamPage} />
           <Route path="/team/:id" component={TeamProfile} />
+          <Route path="/team/:id/edit" component={TeamEdit} />
           <Route path="/profile" component={Profile} />
           <Route path="/profile/edit" component={ProfileEdit} />
           <Route path="/app/features" component={AppFeatures} />
