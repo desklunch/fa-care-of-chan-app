@@ -149,6 +149,7 @@ export default function ClientForm() {
   return (
     <PermissionGate 
       permission="clients.write" 
+      behavior="fallback"
       fallback={
         <PageLayout
           breadcrumbs={[

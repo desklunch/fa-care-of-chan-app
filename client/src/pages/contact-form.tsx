@@ -195,6 +195,7 @@ export default function ContactForm() {
   return (
     <PermissionGate 
       permission="contacts.write" 
+      behavior="fallback"
       fallback={
         <PageLayout 
           breadcrumbs={[

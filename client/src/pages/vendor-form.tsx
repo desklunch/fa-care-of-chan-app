@@ -237,6 +237,7 @@ export default function VendorForm() {
   return (
     <PermissionGate 
       permission="vendors.write" 
+      behavior="fallback"
       fallback={
         <PageLayout 
           breadcrumbs={[
