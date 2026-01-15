@@ -244,6 +244,111 @@ When migrating routes, audit logging MUST be preserved exactly:
 
 ---
 
+## Part 4.5: Service Contract for AI/MCP
+
+Since AI automation will expand to **all domains**, every service method must behave predictably for AI agents.
+
+### 4.5.1 Service Method Guarantees
+
+| Guarantee | What it means |
+|-----------|---------------|
+| **Input validation** | Validate with Zod schemas before any action |
+| **Authorization check** | Verify user has permission for this action |
+| **Domain event emission** | Emit a typed event that audit-bridge can persist |
+| **Consistent errors** | Throw `ServiceError` with codes AI can interpret |
+| **Return normalized entity** | Return the created/updated entity (not void) |
+
+### 4.5.2 Standard Service Method Pattern
+
+Based on existing `DealsService` pattern:
+
+```typescript
+// server/domains/venues/venues.service.ts
+import { BaseService, ServiceError } from '../services/base.service';
+import { domainEvents } from '../lib/events';
+import { createVenueSchema } from '@shared/schema';
+
+class VenuesService extends BaseService {
+  
+  async createVenue(userId: string, data: CreateVenueInput): Promise<Venue> {
+    // 1. Validate input with Zod
+    const validated = createVenueSchema.parse(data);
+    
+    // 2. Authorization (inherited from BaseService context)
+    this.requirePermission('venues.write');
+    
+    // 3. Perform storage action
+    const venue = await this.storage.createVenue(validated);
+    
+    // 4. Emit domain event (audit-bridge handles persistence)
+    domainEvents.emit('venue:created', {
+      venueId: venue.id,
+      userId,
+      payload: venue
+    });
+    
+    // 5. Return normalized entity
+    return venue;
+  }
+}
+```
+
+### 4.5.3 Route vs Service Responsibility
+
+| Concern | Route Handler | Service Method |
+|---------|---------------|----------------|
+| HTTP parsing | ✅ Parse req.body, params | ❌ Receives typed input |
+| Input validation | ❌ Delegates to service | ✅ Validates with Zod |
+| Business logic | ❌ Thin controller | ✅ Contains all logic |
+| Storage calls | ❌ Delegates to service | ✅ Orchestrates storage |
+| Audit logging | ❌ Removed | ✅ Emits domain events |
+| Response formatting | ✅ Formats JSON response | ❌ Returns entity |
+| Error handling | ✅ Catches ServiceError | ✅ Throws ServiceError |
+
+### 4.5.4 AI Agent Compatibility
+
+When AI agents automate actions, they call service methods directly - not HTTP endpoints:
+
+```typescript
+// AI agent calling service directly
+const venue = await venuesService.createVenue(userId, {
+  name: "New Venue",
+  address: "123 Main St"
+});
+
+// vs HTTP which requires:
+// - Serializing to JSON
+// - Handling HTTP status codes
+// - Parsing response body
+```
+
+### 4.5.5 Event Types for New Services
+
+New services must register event types in `server/lib/events.ts` and mappings in `server/lib/event-registry.ts`:
+
+```typescript
+// server/lib/events.ts
+export type DomainEventType = 
+  | 'venue:created'
+  | 'venue:updated'
+  | 'venue:deleted'
+  | 'form:submitted'
+  | 'form:approved'
+  // ... existing deal events
+```
+
+### 4.5.6 Migration Path for Existing Routes
+
+During extraction, routes transition through three states:
+
+1. **Current:** Route → Storage + manual `logAuditEvent()`
+2. **Intermediate:** Route → Storage + manual audit (preserved during extraction)
+3. **Final:** Route → Service → Storage + domain events (post-extraction enhancement)
+
+**IMPORTANT:** Do not convert to service pattern during extraction phases. Complete extraction first, then add service layer as enhancement.
+
+---
+
 ## Part 5: Proposed Architecture
 
 ### 5.1 Target Directory Structure
