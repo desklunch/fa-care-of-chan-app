@@ -289,6 +289,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 240,
+      width:240,
+      maxWidth: 320,
       pinned: "left",
       lockPinned: true,
       sortable: false,
@@ -913,9 +915,12 @@ export default function Deals() {
     editable?: boolean;
   }> = {
     displayName: {
-      flex: 2,
+      flex: 1,
       resizable: false,
       editable: false,
+      minWidth: 180,
+      pinned: false,
+      lockPinned: false,
     },
     owner: {
       flex: 0,
