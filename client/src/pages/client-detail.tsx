@@ -130,8 +130,33 @@ export default function ClientDetail() {
     setShowContactSearch(false);
   };
 
+  const unlinkContactMutation = useMutation({
+    mutationFn: async (contactId: string) => {
+      await apiRequest("DELETE", `/api/clients/${params.id}/contacts/${contactId}`);
+      return contactId;
+    },
+    onMutate: (contactId) => {
+      setLocalLinkedContacts((prev) => prev.filter((c) => c.id !== contactId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", params.id, "full"] });
+      toast({
+        title: "Contact unlinked",
+        description: "Contact has been removed from this client.",
+      });
+    },
+    onError: (error: Error) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", params.id, "full"] });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unlink contact",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUnlinkContact = (contactId: string) => {
-    setLocalLinkedContacts((prev) => prev.filter((c) => c.id !== contactId));
+    unlinkContactMutation.mutate(contactId);
   };
 
   usePageTitle(client?.name || "Client Details");
