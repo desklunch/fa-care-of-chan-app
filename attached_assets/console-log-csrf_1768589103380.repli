@@ -1,0 +1,167 @@
+chunk-RPCDYKBN.js?v=3a6f3b02:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+debug-logger.ts:88 🔄 [18:44:03.039] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-01-16T18:44:03.039Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.'}
+debug-logger.ts:94 🧭 [18:44:03.047] [+0s] [NAVIGATION] Navigation watchdog initialized
+debug-logger.ts:94 🧭 [18:44:03.069] [+0s] [NAVIGATION] Initial route: /
+debug-logger.ts:94 👆 [18:44:03.070] [+0s] [INPUT] Input logger initialized
+debug-logger.ts:94 📡 [18:44:03.070] [+0s] [QUERY] Fetching: /api/auth/user
+debug-logger.ts:88 🔐 [18:44:03.071] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+debug-logger.ts:94 📡 [18:44:03.071] [+0s] [QUERY] Fetching: /api/settings/theme
+debug-logger.ts:88 📡 [18:44:03.149] [+0s] [QUERY] Query returned 401 (returnNull behavior): /api/auth/user {durationMs: 79}
+debug-logger.ts:88 🔐 [18:44:03.152] [+0s] [AUTH] Auth loading complete {isAuthenticated: false, userId: undefined}
+queryClient.ts:148 Fetch failed loading: GET "https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/api/auth/user".
+(anonymous) @ queryClient.ts:148
+fetchFn @ @tanstack_react-query.js?v=3a6f3b02:840
+run @ @tanstack_react-query.js?v=3a6f3b02:494
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+fetch @ @tanstack_react-query.js?v=3a6f3b02:926
+executeFetch_fn @ @tanstack_react-query.js?v=3a6f3b02:2211
+onSubscribe @ @tanstack_react-query.js?v=3a6f3b02:1898
+subscribe @ @tanstack_react-query.js?v=3a6f3b02:24
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=3a6f3b02:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19432
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=3a6f3b02:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18718
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+debug-logger.ts:88 📡 [18:44:03.218] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 147}
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+useAnalytics.ts:117 Fetch finished loading: POST "https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/api/activity/pageview".
+(anonymous) @ useAnalytics.ts:117
+setTimeout
+(anonymous) @ useAnalytics.ts:101
+(anonymous) @ useAnalytics.ts:173
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19432
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=3a6f3b02:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18718
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+useAnalytics.ts:48 Fetch finished loading: POST "https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/api/activity/session".
+initSession @ useAnalytics.ts:48
+(anonymous) @ useAnalytics.ts:113
+setTimeout
+(anonymous) @ useAnalytics.ts:101
+(anonymous) @ useAnalytics.ts:173
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19432
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=3a6f3b02:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18718
+workLoop @ chunk-RPCDYKBN.js?v=3a6f3b02:197
+flushWork @ chunk-RPCDYKBN.js?v=3a6f3b02:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=3a6f3b02:384
+debug-logger.ts:88 👆 [18:44:08.019] [+4s] [INPUT] Click detected on BUTTON {testId: 'button-dev-login', tagName: 'BUTTON', className: 'inline-flex items-center justify-center gap-2 whit', textContent: 'Dev Login (omar@functionalarti', clickCount: 1, …}
+debug-logger.ts:88 🌐 [18:44:08.020] [+4s] [API] Starting request: POST /api/auth/dev-login {hasBody: true}
+debug-logger.ts:94 🌐 [18:44:08.020] [+4s] [API] Skipping CSRF for auth endpoint: /api/auth/dev-login
+debug-logger.ts:88 🌐 [18:44:08.672] [+5s] [API] Response received: POST /api/auth/dev-login {status: 200, ok: true, durationMs: 652}
+queryClient.ts:119 Fetch finished loading: POST "https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/api/auth/dev-login".
+apiRequest @ queryClient.ts:119
+mutationFn @ landing.tsx:49
+fn @ @tanstack_react-query.js?v=3a6f3b02:1189
+run @ @tanstack_react-query.js?v=3a6f3b02:494
+start @ @tanstack_react-query.js?v=3a6f3b02:536
+execute @ @tanstack_react-query.js?v=3a6f3b02:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=3a6f3b02:2630
+(anonymous) @ @tanstack_react-query.js?v=3a6f3b02:3295
+onClick @ landing.tsx:128
+callCallback2 @ chunk-RPCDYKBN.js?v=3a6f3b02:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=3a6f3b02:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=3a6f3b02:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=3a6f3b02:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=3a6f3b02:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=3a6f3b02:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=3a6f3b02:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=3a6f3b02:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=3a6f3b02:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=3a6f3b02:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=3a6f3b02:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=3a6f3b02:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=3a6f3b02:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=3a6f3b02:5449
+debug-logger.ts:94 📡 [18:44:08.673] [+5s] [QUERY] Fetching: /api/auth/user
+debug-logger.ts:88 🧭 [18:44:08.674] [+5s] [NAVIGATION] pushState intercepted {url: '/'}
+debug-logger.ts:88 🔐 [18:44:08.676] [+5s] [AUTH] Auth query refetching {isStale: true, lastUpdated: '2026-01-16T18:44:03.149Z'}
+debug-logger.ts:88 📡 [18:44:08.959] [+5s] [QUERY] Query success: /api/auth/user {status: 200, durationMs: 287}
+debug-logger.ts:88 🔐 [18:44:08.974] [+5s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:88 🔐 [18:44:08.975] [+5s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:88 🔐 [18:44:08.975] [+5s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:88 🔐 [18:44:08.975] [+5s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:88 🔐 [18:44:08.975] [+5s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:88 🔐 [18:44:08.975] [+5s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:88 🔐 [18:44:08.975] [+5s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:94 📡 [18:44:10.995] [+7s] [QUERY] Fetching: /api/venues
+debug-logger.ts:88 🔐 [18:44:10.996] [+7s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:88 🔐 [18:44:10.996] [+7s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:88 🔐 [18:44:10.996] [+7s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:88 🔐 [18:44:10.996] [+7s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:88 📡 [18:44:11.447] [+8s] [QUERY] Query success: /api/venues {status: 200, durationMs: 452}
+debug-logger.ts:88 🧭 [18:44:14.216] [+11s] [NAVIGATION] Nav link clicked, starting navigation watchdog timer {targetHref: '/deals', currentPathname: '/'}
+debug-logger.ts:88 👆 [18:44:14.217] [+11s] [INPUT] Click detected on A {testId: 'link-nav-deals', tagName: 'A', className: 'flex items-center gap-3 px-3 py-2 font-medium roun', textContent: 'Deals', clickCount: 2, …}
+debug-logger.ts:88 🧭 [18:44:14.218] [+11s] [NAVIGATION] pushState intercepted {url: '/deals'}
+debug-logger.ts:88 🧭 [18:44:14.230] [+11s] [NAVIGATION] Route changed: / -> /deals {from: '/', to: '/deals', navigationCount: 1}
+debug-logger.ts:94 🧭 [18:44:14.230] [+11s] [NAVIGATION] Initial route: /deals
+useAnalytics.ts:117 Fetch finished loading: POST "https://60ed33c0-51f6-4aa5-8754-65d1dd01997d-00-o2el11sdmb4q.spock.replit.dev/api/activity/pageview".
+(anonymous) @ useAnalytics.ts:117
+setTimeout
+(anonymous) @ useAnalytics.ts:101
+(anonymous) @ useAnalytics.ts:173
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=3a6f3b02:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=3a6f3b02:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=3a6f3b02:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=3a6f3b02:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=3a6f3b02:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=3a6f3b02:19416
+commitRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=3a6f3b02:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=3a6f3b02:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=3a6f3b02:18627
+debug-logger.ts:94 📡 [18:44:15.063] [+12s] [QUERY] Fetching: /api/deals
+debug-logger.ts:88 🔐 [18:44:15.063] [+12s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+debug-logger.ts:88 🔐 [18:44:15.063] [+12s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+debug-logger.ts:94 📡 [18:44:15.063] [+12s] [QUERY] Fetching: /api/users
+debug-logger.ts:94 📡 [18:44:15.064] [+12s] [QUERY] Fetching: /api/deal-services
+debug-logger.ts:94 📡 [18:44:15.064] [+12s] [QUERY] Fetching: /api/industries
+debug-logger.ts:88 📡 [18:44:15.668] [+12s] [QUERY] Query success: /api/deal-services {status: 200, durationMs: 605}
+debug-logger.ts:88 📡 [18:44:15.669] [+12s] [QUERY] Query success: /api/industries {status: 200, durationMs: 605}
+debug-logger.ts:88 📡 [18:44:15.731] [+12s] [QUERY] Query success: /api/deals {status: 200, durationMs: 669}
+debug-logger.ts:88 📡 [18:44:15.732] [+12s] [QUERY] Query success: /api/users {status: 200, durationMs: 668}
