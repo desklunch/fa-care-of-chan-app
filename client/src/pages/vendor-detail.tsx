@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -160,7 +161,7 @@ function ServicesEditor({ vendorServices, allServices, onSave, disabled = false,
 
 export default function VendorDetail() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { user } = useAuth();
   const { can } = usePermissions();
   const { toast } = useToast();

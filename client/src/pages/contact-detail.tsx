@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
@@ -75,7 +76,7 @@ const statusColors: Record<
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { can } = usePermissions();
   const canEdit = can('contacts.write');
   const canDelete = can('contacts.delete');

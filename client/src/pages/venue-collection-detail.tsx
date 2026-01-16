@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, useLocation, Link } from "wouter";
+import { useRoute, Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +64,7 @@ function SortableVenueCard({
   onRemove: (venueId: string) => void;
   canWrite?: boolean;
 }) {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const [isHovered, setIsHovered] = useState(false);
 
   const {
@@ -200,7 +201,7 @@ function SortableVenueCard({
 }
 
 export default function VenueCollectionDetail() {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const [, params] = useRoute<{ id: string }>("/venues/collections/:id");
   const collectionId = params?.id;
   const { toast } = useToast();

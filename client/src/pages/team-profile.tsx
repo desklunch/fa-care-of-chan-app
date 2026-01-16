@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +20,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function TeamProfile() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { user: currentUser } = useAuth();
   const { can } = usePermissions();
 

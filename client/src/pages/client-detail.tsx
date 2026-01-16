@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -87,7 +88,7 @@ const statusColors: Record<
 
 export default function ClientDetail() {
   const params = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const { can } = usePermissions();
   const { user } = useAuth();

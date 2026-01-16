@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -67,7 +68,7 @@ import type { VenueWithRelations, VenueCollectionWithCreator, VenueSpace } from 
 
 export default function VenueDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const { can } = usePermissions();

@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { format } from "date-fns";
 import { SquarePen, Trash2, AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,7 +57,7 @@ const statusOrder: IssueStatus[] = ["reported", "under_review", "in_progress", "
 
 export default function AppIssueDetail() {
   const { id } = useParams<{ id: string }>();
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

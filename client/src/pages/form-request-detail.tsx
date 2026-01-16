@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -293,7 +294,7 @@ function ReadOnlyField({ field }: { field: FormFieldType }) {
 }
 
 export default function AdminFormRequestDetailPage() {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();

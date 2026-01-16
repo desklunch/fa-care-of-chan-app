@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -124,7 +125,7 @@ function ReadOnlyField({ field }: { field: FormFieldType }) {
 }
 
 export default function FormTemplateDetailPage() {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { id } = useParams<{ id: string }>();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
 
