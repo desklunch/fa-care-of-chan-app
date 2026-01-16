@@ -1,5 +1,5 @@
 import { useLocation as useWouterLocation } from "wouter";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { startNavigationWatchdog } from "@/lib/navigation-watchdog";
 
 export function useProtectedLocation(): ReturnType<typeof useWouterLocation> {
@@ -13,5 +13,8 @@ export function useProtectedLocation(): ReturnType<typeof useWouterLocation> {
     [setLocation]
   );
 
-  return [location, protectedSetLocation];
+  return useMemo(
+    () => [location, protectedSetLocation] as const,
+    [location, protectedSetLocation]
+  );
 }
