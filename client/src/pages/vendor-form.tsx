@@ -279,9 +279,31 @@ export default function VendorForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
+
+            <div className="flex items-center space-x-2 p-4 bg-background border border-input rounded-md">
+              <FormField
+                control={form.control}
+                name="isPreferred"
+                render={({ field }) => (
+                  <FormItem className="flex items-center w-full justify-between gap-4 space-y-0    ">
+                    <Label htmlFor="isPreferred">Preferred Vendor</Label>
+
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="switch-preferred"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            </Card>
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  {isEditMode ? "Edit Vendor" : "Add New Vendor"}
+                  Business Info
                 </CardTitle>
                 <CardDescription>
                   {isEditMode 
@@ -389,47 +411,6 @@ export default function VendorForm() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  Service Locations
-                </CardTitle>
-                <CardDescription>
-                  Search and select the cities or regions where this vendor operates.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <PlaceAutocomplete
-                  value={null}
-                  onSelect={handleLocationSelect}
-                  placeholder="Search for a city..."
-                  clearOnSelect
-                  data-testid="input-location-search"
-                />
-                
-                {locations.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {locations.map((location, index) => (
-                      <Badge 
-                        key={location.placeId || index} 
-                        variant="secondary"
-                        className="flex items-center gap-1 pr-1"
-                      >
-                        <span>{location.displayName || `${location.city}, ${location.region}, ${location.country}`}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeLocation(index)}
-                          className="ml-1 rounded-full hover:bg-muted p-0.5"
-                          data-testid={`button-remove-location-${index}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             <Card>
               <CardHeader>
@@ -478,6 +459,48 @@ export default function VendorForm() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Service Locations
+                </CardTitle>
+                <CardDescription>
+                  Search and select the cities or regions where this vendor operates.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <PlaceAutocomplete
+                  value={null}
+                  onSelect={handleLocationSelect}
+                  placeholder="Search for a city..."
+                  clearOnSelect
+                  data-testid="input-location-search"
+                />
+
+                {locations.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {locations.map((location, index) => (
+                      <Badge 
+                        key={location.placeId || index} 
+                        variant="secondary"
+                        className="flex items-center gap-1 pr-1"
+                      >
+                        <span>{location.displayName || `${location.city}, ${location.region}, ${location.country}`}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(index)}
+                          className="ml-1 rounded-full hover:bg-muted p-0.5"
+                          data-testid={`button-remove-location-${index}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
             <Card>
               <CardHeader>
                 <CardTitle>Business Details</CardTitle>
@@ -542,12 +565,14 @@ export default function VendorForm() {
                 />
 
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 p-4 bg-background border border-input rounded-md">
                     <FormField
                       control={form.control}
                       name="chargesSalesTax"
                       render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
+                          <FormItem className="flex items-center w-full justify-between gap-4 space-y-0">
+                          <Label htmlFor="chargesSalesTax">Charges Sales Tax</Label>
+
                           <FormControl>
                             <Switch
                               checked={field.value}
@@ -555,7 +580,6 @@ export default function VendorForm() {
                               data-testid="switch-sales-tax"
                             />
                           </FormControl>
-                          <Label htmlFor="chargesSalesTax">Charges Sales Tax</Label>
                         </FormItem>
                       )}
                     />
@@ -566,7 +590,7 @@ export default function VendorForm() {
                       control={form.control}
                       name="salesTaxNotes"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="">
                           <FormLabel>Sales Tax Notes</FormLabel>
                           <FormControl>
                             <Input 
@@ -583,24 +607,6 @@ export default function VendorForm() {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <FormField
-                    control={form.control}
-                    name="isPreferred"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="switch-preferred"
-                          />
-                        </FormControl>
-                        <Label htmlFor="isPreferred">Preferred Vendor</Label>
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 <FormField
                   control={form.control}
