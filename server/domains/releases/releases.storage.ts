@@ -13,7 +13,6 @@ import {
   type AppReleaseIssue,
   type AppReleaseChange,
   type InsertAppRelease,
-  type InsertAppReleaseChange,
   type ReleaseStatus,
 } from "@shared/schema";
 
@@ -41,7 +40,7 @@ export const releasesStorage = {
         id: appReleases.id,
         versionLabel: appReleases.versionLabel,
         title: appReleases.title,
-        description: appReleases.description,
+        releaseNotes: appReleases.releaseNotes,
         status: appReleases.status,
         releaseDate: appReleases.releaseDate,
         createdById: appReleases.createdById,
@@ -67,7 +66,7 @@ export const releasesStorage = {
         id: appReleases.id,
         versionLabel: appReleases.versionLabel,
         title: appReleases.title,
-        description: appReleases.description,
+        releaseNotes: appReleases.releaseNotes,
         status: appReleases.status,
         releaseDate: appReleases.releaseDate,
         createdById: appReleases.createdById,
@@ -201,7 +200,7 @@ export const releasesStorage = {
 
   async addChangeToRelease(
     releaseId: string,
-    data: InsertAppReleaseChange,
+    data: { changeType: string; title: string; description?: string | null },
     userId: string
   ): Promise<AppReleaseChange> {
     const [change] = await db
@@ -259,7 +258,7 @@ export const releasesStorage = {
   async getFixedIssuesNotInRelease(sinceDate?: Date): Promise<Array<{
     id: string;
     title: string;
-    resolvedAt: Date | null;
+    fixedAt: Date | null;
   }>> {
     const releasedIssueIds = db
       .select({ issueId: appReleaseIssues.issueId })
@@ -271,18 +270,18 @@ export const releasesStorage = {
     ];
 
     if (sinceDate) {
-      conditions.push(gte(appIssues.resolvedAt, sinceDate));
+      conditions.push(gte(appIssues.fixedAt, sinceDate));
     }
 
     const issues = await db
       .select({
         id: appIssues.id,
         title: appIssues.title,
-        resolvedAt: appIssues.resolvedAt,
+        fixedAt: appIssues.fixedAt,
       })
       .from(appIssues)
       .where(and(...conditions))
-      .orderBy(desc(appIssues.resolvedAt));
+      .orderBy(desc(appIssues.fixedAt));
 
     return issues;
   },
