@@ -18,9 +18,23 @@ import {
 } from "@shared/schema";
 
 export interface FeatureWithDetails extends AppFeature {
-  categoryName?: string | null;
-  createdByName?: string | null;
-  voteCount?: number;
+  category: {
+    id: string;
+    name: string;
+    description: string | null;
+    color: string | null;
+    sortOrder: number;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  createdBy: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+  };
+  voteCount: number;
   hasVoted?: boolean;
 }
 
@@ -55,39 +69,78 @@ export const issuesFeaturesStorage = {
         id: appFeatures.id,
         title: appFeatures.title,
         description: appFeatures.description,
+        featureType: appFeatures.featureType,
         status: appFeatures.status,
         categoryId: appFeatures.categoryId,
         priority: appFeatures.priority,
         sortOrder: appFeatures.sortOrder,
         createdById: appFeatures.createdById,
+        ownerId: appFeatures.ownerId,
+        estimatedDelivery: appFeatures.estimatedDelivery,
         createdAt: appFeatures.createdAt,
         updatedAt: appFeatures.updatedAt,
         completedAt: appFeatures.completedAt,
         categoryName: appFeatureCategories.name,
-        createdByName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        categoryDescription: appFeatureCategories.description,
+        categoryColor: appFeatureCategories.color,
+        categorySortOrder: appFeatureCategories.sortOrder,
+        categoryIsActive: appFeatureCategories.isActive,
+        categoryCreatedAt: appFeatureCategories.createdAt,
+        categoryUpdatedAt: appFeatureCategories.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
         voteCount: sql<number>`(SELECT COUNT(*) FROM ${appFeatureVotes} WHERE ${appFeatureVotes.featureId} = ${appFeatures.id})`,
       })
       .from(appFeatures)
       .leftJoin(appFeatureCategories, eq(appFeatures.categoryId, appFeatureCategories.id))
       .leftJoin(users, eq(appFeatures.createdById, users.id))
       .where(whereClause)
-      .orderBy(desc(appFeatures.createdAt));
+      .orderBy(appFeatures.sortOrder, desc(appFeatures.createdAt));
 
+    let userVotes: string[] = [];
     if (filters?.userId) {
       const votedFeatures = await db
         .select({ featureId: appFeatureVotes.featureId })
         .from(appFeatureVotes)
         .where(eq(appFeatureVotes.userId, filters.userId));
-
-      const votedIds = new Set(votedFeatures.map((v) => v.featureId));
-
-      return features.map((f) => ({
-        ...f,
-        hasVoted: votedIds.has(f.id),
-      }));
+      userVotes = votedFeatures.map((v) => v.featureId);
     }
 
-    return features;
+    return features.map((f) => ({
+      id: f.id,
+      title: f.title,
+      description: f.description,
+      featureType: f.featureType,
+      status: f.status,
+      categoryId: f.categoryId,
+      priority: f.priority,
+      sortOrder: f.sortOrder,
+      createdById: f.createdById,
+      ownerId: f.ownerId,
+      estimatedDelivery: f.estimatedDelivery,
+      createdAt: f.createdAt,
+      updatedAt: f.updatedAt,
+      completedAt: f.completedAt,
+      voteCount: f.voteCount || 0,
+      category: {
+        id: f.categoryId,
+        name: f.categoryName || "",
+        description: f.categoryDescription,
+        color: f.categoryColor,
+        sortOrder: f.categorySortOrder || 0,
+        isActive: f.categoryIsActive ?? true,
+        createdAt: f.categoryCreatedAt || new Date(),
+        updatedAt: f.categoryUpdatedAt || new Date(),
+      },
+      createdBy: {
+        id: f.createdById,
+        firstName: f.createdByFirstName,
+        lastName: f.createdByLastName,
+        profileImageUrl: f.createdByProfileImage,
+      },
+      hasVoted: userVotes.includes(f.id),
+    }));
   },
 
   async getFeatureById(featureId: string, userId?: string): Promise<FeatureWithDetails | null> {
@@ -96,16 +149,27 @@ export const issuesFeaturesStorage = {
         id: appFeatures.id,
         title: appFeatures.title,
         description: appFeatures.description,
+        featureType: appFeatures.featureType,
         status: appFeatures.status,
         categoryId: appFeatures.categoryId,
         priority: appFeatures.priority,
         sortOrder: appFeatures.sortOrder,
         createdById: appFeatures.createdById,
+        ownerId: appFeatures.ownerId,
+        estimatedDelivery: appFeatures.estimatedDelivery,
         createdAt: appFeatures.createdAt,
         updatedAt: appFeatures.updatedAt,
         completedAt: appFeatures.completedAt,
         categoryName: appFeatureCategories.name,
-        createdByName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        categoryDescription: appFeatureCategories.description,
+        categoryColor: appFeatureCategories.color,
+        categorySortOrder: appFeatureCategories.sortOrder,
+        categoryIsActive: appFeatureCategories.isActive,
+        categoryCreatedAt: appFeatureCategories.createdAt,
+        categoryUpdatedAt: appFeatureCategories.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
         voteCount: sql<number>`(SELECT COUNT(*) FROM ${appFeatureVotes} WHERE ${appFeatureVotes.featureId} = ${appFeatures.id})`,
       })
       .from(appFeatures)
@@ -115,16 +179,49 @@ export const issuesFeaturesStorage = {
 
     if (!feature) return null;
 
+    let hasVoted = false;
     if (userId) {
       const [vote] = await db
         .select()
         .from(appFeatureVotes)
         .where(and(eq(appFeatureVotes.featureId, featureId), eq(appFeatureVotes.userId, userId)));
-
-      return { ...feature, hasVoted: !!vote };
+      hasVoted = !!vote;
     }
 
-    return feature;
+    return {
+      id: feature.id,
+      title: feature.title,
+      description: feature.description,
+      featureType: feature.featureType,
+      status: feature.status,
+      categoryId: feature.categoryId,
+      priority: feature.priority,
+      sortOrder: feature.sortOrder,
+      createdById: feature.createdById,
+      ownerId: feature.ownerId,
+      estimatedDelivery: feature.estimatedDelivery,
+      createdAt: feature.createdAt,
+      updatedAt: feature.updatedAt,
+      completedAt: feature.completedAt,
+      voteCount: feature.voteCount || 0,
+      category: {
+        id: feature.categoryId,
+        name: feature.categoryName || "",
+        description: feature.categoryDescription,
+        color: feature.categoryColor,
+        sortOrder: feature.categorySortOrder || 0,
+        isActive: feature.categoryIsActive ?? true,
+        createdAt: feature.categoryCreatedAt || new Date(),
+        updatedAt: feature.categoryUpdatedAt || new Date(),
+      },
+      createdBy: {
+        id: feature.createdById,
+        firstName: feature.createdByFirstName,
+        lastName: feature.createdByLastName,
+        profileImageUrl: feature.createdByProfileImage,
+      },
+      hasVoted,
+    };
   },
 
   async createFeature(data: InsertAppFeature, userId: string): Promise<AppFeature> {
