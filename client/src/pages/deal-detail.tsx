@@ -316,9 +316,8 @@ export default function DealDetail() {
                   isLoading={isFieldLoading("status")}
                   error={getFieldError("status")}
                   displayValue={
-                  <div className="@container w-full flex">
                     <DealStatusBadge status={deal.status as DealStatus} />
-                  </div>
+
                   }
                   placeholder="Select status"
                 />

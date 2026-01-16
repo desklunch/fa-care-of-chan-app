@@ -23,6 +23,8 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
   const statusClass = statusStyleMap[status] || "deal-status-fallback";
   
   return (
+    <div className="@container w-full flex items-center justify-end ">
+
     <span
       className={cn(
         statusClass,
@@ -37,6 +39,7 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
     >
       {status}
     </span>
+    </div>
   );
 }
 
@@ -48,7 +51,7 @@ export function DealStatusBadgeContainer({
   className?: string;
 }) {
   return (
-    <div className={cn("@container", className)}>
+    <div className={cn("@container bg-white", className)}>
       {children}
     </div>
   );

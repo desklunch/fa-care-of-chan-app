@@ -174,7 +174,7 @@ function SnapshotView30() {
       field: "status" as const,
       flex: 1,
       minWidth: 130,
-      maxWidth: 130,
+      maxWidth: 160,
       sortable: false,
       editable: false,
       cellRenderer: (params: { value: string }) => {
