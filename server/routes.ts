@@ -64,6 +64,7 @@ import { registerSettingsCommentsRoutes } from "./domains/settings-comments";
 import { registerIssuesFeaturesRoutes } from "./domains/issues-features";
 import { registerReleasesRoutes } from "./domains/releases";
 import { registerContactsRoutes } from "./domains/contacts";
+import { registerClientsRoutes } from "./domains/clients";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { setupCsrf } from "./middleware/csrf";
 
@@ -116,8 +117,10 @@ export async function registerRoutes(
   registerIssuesFeaturesRoutes(app);
   registerReleasesRoutes(app);
   registerContactsRoutes(app);
+  registerClientsRoutes(app);
 
   // NOTE: Contacts routes moved to server/domains/contacts/
+  // NOTE: Clients routes moved to server/domains/clients/
 
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
@@ -3833,188 +3836,6 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         metadata: { dealId: req.params.dealId, error: (error as Error).message },
       });
       handleServiceError(res, error, "Failed to delete deal task");
-    }
-  });
-
-  // GET /api/clients - Get all clients
-  app.get("/api/clients", isAuthenticated, async (req, res) => {
-    try {
-      const clients = await storage.getClients();
-      res.json(clients);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      res.status(500).json({ message: "Failed to fetch clients" });
-    }
-  });
-
-  // GET /api/clients/:id - Get a single client
-  app.get("/api/clients/:id", isAuthenticated, async (req, res) => {
-    try {
-      const client = await storage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      res.json(client);
-    } catch (error) {
-      console.error("Error fetching client:", error);
-      res.status(500).json({ message: "Failed to fetch client" });
-    }
-  });
-
-  // GET /api/clients/:id/deals - Get deals for a client
-  app.get("/api/clients/:id/deals", isAuthenticated, async (req, res) => {
-    try {
-      const client = await storage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      const deals = await storage.getDealsByClientId(req.params.id);
-      res.json(deals);
-    } catch (error) {
-      console.error("Error fetching client deals:", error);
-      res.status(500).json({ message: "Failed to fetch client deals" });
-    }
-  });
-
-  // POST /api/clients - Create a new client
-  app.post("/api/clients", isAuthenticated, async (req: any, res) => {
-    try {
-      const validatedData = insertClientSchema.parse(req.body);
-      const client = await storage.createClient(validatedData);
-      
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "client",
-        entityId: client.id,
-        metadata: { name: client.name },
-      });
-      
-      res.status(201).json(client);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      console.error("Error creating client:", error);
-      res.status(500).json({ message: "Failed to create client" });
-    }
-  });
-
-  // PATCH /api/clients/:id - Update a client
-  app.patch("/api/clients/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const existingClient = await storage.getClientById(req.params.id);
-      if (!existingClient) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      
-      const validatedData = updateClientSchema.parse(req.body);
-      const client = await storage.updateClient(req.params.id, validatedData);
-      
-      const changes = getChangedFields(existingClient, client);
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "client",
-        entityId: req.params.id,
-        changes,
-      });
-      
-      res.json(client);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      console.error("Error updating client:", error);
-      res.status(500).json({ message: "Failed to update client" });
-    }
-  });
-
-  // DELETE /api/clients/:id - Delete a client
-  app.delete("/api/clients/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
-    try {
-      const client = await storage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      
-      await storage.deleteClient(req.params.id);
-      
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "client",
-        entityId: req.params.id,
-        metadata: { name: client.name },
-      });
-      
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting client:", error);
-      res.status(500).json({ message: "Failed to delete client" });
-    }
-  });
-
-  // ==========================================
-  // CLIENT-CONTACT LINKING
-  // ==========================================
-
-  // GET /api/clients/:id/contacts - Get contacts linked to a client
-  app.get("/api/clients/:id/contacts", isAuthenticated, async (req, res) => {
-    try {
-      const client = await storage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      const contacts = await storage.getContactsForClient(req.params.id);
-      res.json(contacts);
-    } catch (error) {
-      console.error("Error fetching client contacts:", error);
-      res.status(500).json({ message: "Failed to fetch client contacts" });
-    }
-  });
-
-  // POST /api/clients/:id/contacts/:contactId - Link a contact to a client
-  app.post("/api/clients/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
-    try {
-      const client = await storage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      const contact = await storage.getContactById(req.params.contactId);
-      if (!contact) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-      
-      await storage.linkClientContact(req.params.id, req.params.contactId);
-      
-      await logAuditEvent(req, {
-        action: "link",
-        entityType: "client_contact",
-        entityId: req.params.id,
-        metadata: { clientId: req.params.id, contactId: req.params.contactId, contactName: `${contact.firstName} ${contact.lastName}` },
-      });
-      
-      res.status(201).json({ message: "Contact linked to client" });
-    } catch (error) {
-      console.error("Error linking contact to client:", error);
-      res.status(500).json({ message: "Failed to link contact to client" });
-    }
-  });
-
-  // DELETE /api/clients/:id/contacts/:contactId - Unlink a contact from a client
-  app.delete("/api/clients/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
-    try {
-      await storage.unlinkClientContact(req.params.id, req.params.contactId);
-      
-      await logAuditEvent(req, {
-        action: "unlink",
-        entityType: "client_contact",
-        entityId: req.params.id,
-        metadata: { clientId: req.params.id, contactId: req.params.contactId },
-      });
-      
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error unlinking contact from client:", error);
-      res.status(500).json({ message: "Failed to unlink contact from client" });
     }
   });
 
