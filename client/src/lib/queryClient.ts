@@ -102,11 +102,16 @@ export async function apiRequest(
   }
   
   if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
-    try {
-      const token = await fetchCsrfToken();
-      headers["x-csrf-token"] = token;
-    } catch (e) {
-      debugLog("API", `CSRF token fetch failed for ${method} ${url}`, { error: String(e) });
+    const isAuthEndpoint = url.startsWith("/api/auth/");
+    if (!isAuthEndpoint) {
+      try {
+        const token = await fetchCsrfToken();
+        headers["x-csrf-token"] = token;
+      } catch (e) {
+        debugLog("API", `CSRF token fetch failed for ${method} ${url}`, { error: String(e) });
+      }
+    } else {
+      debugLog("API", `Skipping CSRF for auth endpoint: ${url}`);
     }
   }
   
