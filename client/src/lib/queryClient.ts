@@ -107,6 +107,7 @@ export async function apiRequest(
       try {
         const token = await fetchCsrfToken();
         headers["x-csrf-token"] = token;
+        debugLog("API", `CSRF token applied for ${method} ${url}`);
       } catch (e) {
         debugLog("API", `CSRF token fetch failed for ${method} ${url}`, { error: String(e) });
       }
