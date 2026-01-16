@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { Save, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -185,10 +185,17 @@ export default function VenueCollectionForm() {
         { label: isEditMode ? "Edit" : "New Collection" }
       ]}
       primaryAction={{
-        label: "Save",
+        label: isEditMode ? "Update Collection" : "Create Collection",
         icon: Save,
         onClick: form.handleSubmit(onSubmit),
       }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          icon: X,
+          onClick: () => setLocation(backUrl),
+        },
+      ]}
     >
       <div className="p-6 max-w-2xl mx-auto">
         <Card>
@@ -245,63 +252,24 @@ export default function VenueCollectionForm() {
                   )}
                 />
 
-                <div className="flex justify-between gap-3 pt-4 border-t">
-                  <div>
-                    {isEditMode && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            type="button"
-                            variant="outline" 
-                            className="text-destructive hover:text-destructive"
-                            disabled={isPending}
-                            data-testid="button-delete-collection"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this collection? This will not delete the venues themselves, only the collection.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate()}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              data-testid="button-confirm-delete"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setLocation(backUrl)}
-                      disabled={isPending}
-                      data-testid="button-cancel"
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={isPending}
-                      data-testid="button-save-collection"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {isPending ? "Saving..." : "Save Collection"}
-                    </Button>
-                  </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setLocation(backUrl)}
+                    disabled={isPending}
+                    data-testid="button-cancel"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    data-testid="button-submit-collection"
+                  >
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {isEditMode ? "Update Collection" : "Create Collection"}
+                  </Button>
                 </div>
               </form>
             </Form>

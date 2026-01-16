@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertClientSchema, type Client, type CreateClient, type Industry } from "@shared/schema";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { Loader2, Save, X } from "lucide-react";
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
@@ -172,7 +173,7 @@ export default function ClientForm() {
           { label: isEdit ? "Edit" : "New Client" },
         ]}
         primaryAction={{
-          label: isEdit ? "Save Changes" : "Create Client",
+          label: isEdit ? "Update Client" : "Create Client",
           icon: Save,
           onClick: handleHeaderSubmit,
         }}
@@ -273,6 +274,26 @@ export default function ClientForm() {
                 />
               </CardContent>
             </Card>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isPending}
+                data-testid="button-cancel"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-submit-client"
+              >
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isEdit ? "Update Client" : "Create Client"}
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

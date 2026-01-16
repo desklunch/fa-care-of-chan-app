@@ -22,7 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { FormBuilder } from "@/components/form-builder";
-import { Save, Trash2 } from "lucide-react";
+import { Save, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -169,20 +169,20 @@ export default function AdminFormRequestFormPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const primaryAction = {
-    label: isPending ? "Saving..." : isEditing ? "Save" : "Create",
+    label: isEditing ? "Update Request" : "Create Request",
     icon: Save,
     variant: "default" as const,
     onClick: handleSave,
   };
 
-  const additionalActions = isEditing ? [
+  const additionalActions = [
     {
-      label: "Delete",
-      icon: Trash2,
-      variant: "destructive" as const,
-      onClick: () => setDeleteDialogOpen(true),
+      label: "Cancel",
+      icon: X,
+      variant: "outline" as const,
+      onClick: () => navigate("/forms/requests"),
     },
-  ] : undefined;
+  ];
 
   if (isAuthLoading) {
     return (
@@ -327,7 +327,7 @@ export default function AdminFormRequestFormPage() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-3 pt-2">
           <Button
             variant="outline"
             onClick={() => navigate("/forms/requests")}
@@ -339,10 +339,10 @@ export default function AdminFormRequestFormPage() {
           <Button
             onClick={handleSave}
             disabled={!title.trim() || isPending}
-            data-testid="button-save-request-bottom"
+            data-testid="button-submit-request"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Request"}
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isEditing ? "Update Request" : "Create Request"}
           </Button>
         </div>
       </div>

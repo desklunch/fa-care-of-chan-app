@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { ArrowLeft, Save, Trash2, X, Building2, MapPin, Briefcase } from "lucide-react";
+import { Save, X, Loader2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
@@ -258,6 +258,18 @@ export default function VendorForm() {
           { label: "Vendors", href: "/vendors" },
           ...(isEditMode && existingVendor ? [{ label: existingVendor.businessName, href: `/vendors/${vendorId}` }] : []),
           { label: isEditMode ? "Edit" : "New Vendor" }
+        ]}
+        primaryAction={{
+          label: isEditMode ? "Update Vendor" : "Create Vendor",
+          icon: Save,
+          onClick: () => form.handleSubmit(onSubmit)(),
+        }}
+        additionalActions={[
+          {
+            label: "Cancel",
+            icon: X,
+            onClick: () => setLocation(backUrl),
+          },
         ]}
       >
       <div className="p-6 max-w-3xl">
@@ -611,62 +623,24 @@ export default function VendorForm() {
               </CardContent>
             </Card>
 
-            <div className="flex gap-3 justify-between">
-              <div className="flex gap-3">
-                <Link href={backUrl}>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                </Link>
-                <Button 
-                  type="submit" 
-                  disabled={isPending}
-                  data-testid="button-save"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isPending 
-                    ? (isEditMode ? "Saving..." : "Creating...") 
-                    : (isEditMode ? "Save Changes" : "Create Vendor")
-                  }
-                </Button>
-              </div>
-              {isEditMode && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      type="button" 
-                      variant="destructive"
-                      disabled={isPending}
-                      data-testid="button-delete"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this vendor? This action cannot be undone and will remove all associations with services and contacts.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteMutation.mutate()}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        data-testid="button-confirm-delete"
-                      >
-                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation(backUrl)}
+                disabled={isPending}
+                data-testid="button-cancel"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-submit-vendor"
+              >
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isEditMode ? "Update Vendor" : "Create Vendor"}
+              </Button>
             </div>
           </form>
         </Form>

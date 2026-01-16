@@ -15,7 +15,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { PageLayout } from "@/framework";
 import { FormBuilder } from "@/components/form-builder";
-import { Save, Trash2 } from "lucide-react";
+import { Save, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -138,20 +138,20 @@ export default function AdminFormTemplateFormPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const primaryAction = {
-    label: isPending ? "Saving..." : isEditing ? "Save" : "Create",
+    label: isEditing ? "Update Template" : "Create Template",
     icon: Save,
     variant: "default" as const,
     onClick: handleSave,
   };
 
-  const additionalActions = isEditing ? [
+  const additionalActions = [
     {
-      label: "Delete",
-      icon: Trash2,
-      variant: "destructive" as const,
-      onClick: () => setDeleteDialogOpen(true),
+      label: "Cancel",
+      icon: X,
+      variant: "outline" as const,
+      onClick: () => navigate("/forms/templates"),
     },
-  ] : undefined;
+  ];
 
   if (isAuthLoading) {
     return (
@@ -238,7 +238,7 @@ export default function AdminFormTemplateFormPage() {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-2">
           <Button
             variant="outline"
             onClick={() => navigate("/forms/templates")}
@@ -250,10 +250,10 @@ export default function AdminFormTemplateFormPage() {
           <Button
             onClick={handleSave}
             disabled={!name.trim() || isPending}
-            data-testid="button-save-template-bottom"
+            data-testid="button-submit-template"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Template"}
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isEditing ? "Update Template" : "Create Template"}
           </Button>
         </div>
       </div>

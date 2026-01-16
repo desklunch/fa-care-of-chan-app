@@ -1255,8 +1255,8 @@ export default function VenueFormPage() {
     <PageLayout 
       breadcrumbs={breadcrumbs}
       primaryAction={{
-        label: isPending ? "Saving..." : (isEditingVenue ? "Save Changes" : "Create Venue"),
-        icon: isPending ? Loader2 : Save,
+        label: isEditingVenue ? "Update Venue" : "Create Venue",
+        icon: Save,
         variant: "default",
         onClick: () => document.getElementById("venue-form-submit")?.click(),
       }}
@@ -2409,22 +2409,17 @@ export default function VenueFormPage() {
                 variant="outline"
                 onClick={() => setLocation("/venues")}
                 disabled={isPending}
-                data-testid="button-cancel-bottom"
+                data-testid="button-cancel"
               >
-                <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isPending}
-                data-testid="button-save-bottom"
+                data-testid="button-submit-venue"
               >
-                {isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {isPending ? "Saving..." : (isEditingVenue ? "Save Changes" : "Create Venue")}
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isEditingVenue ? "Update Venue" : "Create Venue"}
               </Button>
             </div>
 

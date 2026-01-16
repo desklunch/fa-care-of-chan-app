@@ -218,7 +218,7 @@ export default function ContactForm() {
           { label: isEditMode ? "Edit" : "New Contact" }
         ]}
         primaryAction={{
-          label: isEditMode ? "Save Changes" : "Create Contact",
+          label: isEditMode ? "Update Contact" : "Create Contact",
           icon: Save,
           onClick: handleHeaderSubmit,
         }}
@@ -454,6 +454,26 @@ export default function ContactForm() {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isPending}
+                data-testid="button-cancel"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-submit-contact"
+              >
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isEditMode ? "Update Contact" : "Create Contact"}
+              </Button>
+            </div>
           </form>
         </Form>
       </div>
