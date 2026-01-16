@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLayout } from "@/framework";
@@ -7,7 +7,7 @@ import { PageLayout } from "@/framework";
 export default function Profile() {
   usePageTitle("Profile");
   const { user, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
 
   useEffect(() => {
     if (!isLoading && user?.id) {

@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { PageLayout } from "@/framework";
 import { Badge } from "@/components/ui/badge";
@@ -160,7 +160,7 @@ const defaultVisibleColumns = [
 export default function AdminVendorTokens() {
   usePageTitle("Vendor Tokens");
   const { user, isLoading, error } = useAuth();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
 
   useEffect(() => {
     if (!isLoading && !user) {

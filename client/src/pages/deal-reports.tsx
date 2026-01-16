@@ -1,6 +1,7 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kanban, DealKanbanCard, type KanbanColumn } from "@/components/kanban";
 import { Loader2, SquareArrowOutUpRight } from "lucide-react";
@@ -385,7 +386,7 @@ function SnapshotView30() {
 }
 
 export default function DealReports() {
-  const [location, setLocation] = useLocation();
+  const [location, setLocation] = useProtectedLocation();
   
   usePageHeader({
     breadcrumbs: [

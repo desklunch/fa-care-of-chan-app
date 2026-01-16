@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { useLocation, useSearch } from "wouter";
+import { useSearch } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
@@ -324,7 +325,7 @@ function useMediaQuery(query: string): boolean {
 }
 
 export function ManagePage({ title, sections, breadcrumbs = [], writePermission }: ManagePageProps) {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const searchString = useSearch();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { can } = usePermissions();

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import {
@@ -207,7 +207,7 @@ const defaultVisibleColumns = ["name", "description", "sections", "fields", "cre
 
 export default function AdminFormTemplatesPage() {
   usePageTitle("Form Templates");
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 

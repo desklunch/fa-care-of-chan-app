@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -273,7 +273,7 @@ function IndustryFormDialog({ open, onOpenChange, industry, onSuccess }: Industr
 
 export default function IndustriesPage() {
   usePageTitle("Industries");
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);

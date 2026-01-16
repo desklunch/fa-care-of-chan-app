@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { useLocation, useSearch } from "wouter";
+import { useSearch } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -546,7 +547,7 @@ function ServiceFormDialog({ open, onOpenChange, service, onSuccess }: ServiceFo
 
 export default function ManagePage() {
   usePageTitle("Manage");
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const searchString = useSearch();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { can } = usePermissions();

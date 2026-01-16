@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -334,7 +334,7 @@ const ACTIONS = [
 export default function AdminLogs() {
   usePageTitle("Activity Logs");
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
 
   const { data: users = [] } = useQuery<UserType[]>({
     queryKey: ["/api/users"],

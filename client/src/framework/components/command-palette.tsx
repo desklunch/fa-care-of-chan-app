@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery } from "@tanstack/react-query";
 import {
   CommandDialog,
@@ -22,7 +22,7 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const [search, setSearch] = useState("");
   const { navigation, user } = useLayout();
   const { can } = usePermissions();

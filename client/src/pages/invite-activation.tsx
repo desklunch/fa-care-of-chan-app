@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useLocation, useSearch } from "wouter";
+import { useSearch } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { GoogleLogin } from "@react-oauth/google";
 import { useGoogleAuth } from "@/lib/google-auth";
@@ -12,7 +13,7 @@ import type { Invite } from "@shared/schema";
 
 export default function InviteActivation() {
   const search = useSearch();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const { isGoogleAuthAvailable } = useGoogleAuth();
   const params = new URLSearchParams(search);

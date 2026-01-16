@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -221,7 +221,7 @@ const defaultVisibleColumns = [ "name", "status", "actions"];
 
 export default function AdminInvites() {
   usePageTitle("Invites");
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();

@@ -10,7 +10,7 @@ import { Building2, Users, Shield, Loader2, KeyboardMusic } from "lucide-react";
 import Logo from "@/framework/components/logo";
 import { GoogleLogin } from "@react-oauth/google";
 import { useGoogleAuth } from "@/lib/google-auth";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 const isDevelopment = import.meta.env.DEV;
 
 export default function Landing() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const { isGoogleAuthAvailable } = useGoogleAuth();
 
