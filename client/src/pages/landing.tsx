@@ -73,7 +73,7 @@ export default function Landing() {
         </div>
 
         <div className="rounded-md border border-primary w-fit p-2 py-1 text-base tracking-wide font-normal">
-          CoCOS 1.2.0
+          CoCOS 1.3.0
         </div>
         
         {/* Desktop: Show sign-in */}
