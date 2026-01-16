@@ -1852,11 +1852,13 @@ export default function VenueFormPage() {
                   venueId={isEditingVenue ? id! : undefined}
                   onFloorplanUploaded={(result, metadata) => {
                     if (isEditingVenue) {
-                      // Record already created by upload endpoint, just refresh and notify
-                      queryClient.invalidateQueries({ queryKey: ["/api/venues", id, "full"] });
-                      toast({
-                        title: "Floorplan uploaded",
-                        description: "The floorplan has been added successfully.",
+                      // Create the database record after file upload
+                      createFloorplanMutation.mutate({
+                        fileUrl: result.fileUrl,
+                        thumbnailUrl: result.thumbnailUrl,
+                        fileType: result.fileType,
+                        title: metadata.title,
+                        caption: metadata.caption,
                       });
                     } else {
                       addStagedFloorplan({

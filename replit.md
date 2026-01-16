@@ -28,6 +28,42 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - **Tier 0 (viewer):** Read-only access to venues, clients, contacts, vendors, app features
 -   **Database ORM:** Drizzle ORM with Neon serverless PostgreSQL driver for type-safe queries.
 -   **API:** RESTful endpoints under `/api`, consistent JSON request/response, and error handling.
+-   **Domain-Based Modules:** Backend organized into domain modules under `server/domains/`:
+    - `reference-data/` - Tags, amenities, industries, deal services, brands, vendor services (31 routes)
+    - `admin/` - Team, invites, admin settings, activity tracking (21 routes)
+    - `settings-comments/` - Theme settings and entity comments (7 routes)
+    - `issues-features/` - App issues, feature requests, and categories (19 routes)
+    - `releases/` - App release and version management (14 routes)
+    - `contacts/` - Contact CRUD with email/social management (12 routes)
+    - `clients/` - Client organizations management (10 routes)
+    - `vendors/` - Vendor management (14 routes)
+    - `deals/` - Deal pipeline with service layer (11 routes)
+    - `places/` - Google Places API integration (10 routes)
+    - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
+    - `forms/` - Form templates, requests, and public form submission (15 routes)
+    
+    **Refactor Status (January 2026):**
+    - `routes.ts` reduced from 6,714 to 506 lines (92% reduction)
+    - `storage.ts` reduced from 4,087 to 2,573 lines (37% reduction)
+    - 201 routes extracted to domain modules
+    - 8 core infrastructure routes remain in routes.ts (auth, object storage)
+    
+    **Domain Storage Files (3,211 lines total):**
+    - `venues.storage.ts` (600 lines) - venue CRUD, photos, files, floorplans, collections, amenities, tags
+    - `forms.storage.ts` (477 lines) - templates, requests, outreach tokens, responses
+    - `admin.storage.ts` (365 lines) - team, invites, audit logs, activity tracking
+    - `issues-features.storage.ts` (325 lines) - app issues, feature requests, categories
+    - `reference-data.storage.ts` (322 lines) - tags, amenities, industries, brands, vendor services
+    - `vendors.storage.ts` (309 lines) - vendor CRUD, services, update tokens
+    - `releases.storage.ts` (289 lines) - app releases, version management
+    - `contacts.storage.ts` (224 lines) - contact CRUD, relations, linking
+    - `settings-comments.storage.ts` (217 lines) - theme settings, entity comments
+    - `clients.storage.ts` (83 lines) - client CRUD, contact linking
+    
+    **Hybrid Service Layer:**
+    - DealsService uses main storage interface for business logic with domain events
+    - Other domains use direct storage access from domain storage files
+    - Cross-domain queries (e.g., getDealsByClientId) remain in main storage.ts
 
 ### Feature Specifications
 The system includes modules for:

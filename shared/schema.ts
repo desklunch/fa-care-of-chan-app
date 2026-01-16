@@ -1051,8 +1051,8 @@ export type ProductFeature = AppFeature;
 export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
-export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand';
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
