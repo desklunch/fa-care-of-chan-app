@@ -534,11 +534,24 @@ export default function DealForm() {
                             <FormControl>
                               <Button
                                 variant="outline"
-                                className="w-full pl-3 text-left font-normal justify-start"
+                                className="border-input w-full pl-3 text-left font-normal justify-betweem"
                                 data-testid="button-last-contact"
                               >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                                <div>
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+
+                                </div>
+                                {field.value && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-auto h-auto"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                                )}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
