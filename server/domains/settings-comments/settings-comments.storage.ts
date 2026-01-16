@@ -77,11 +77,11 @@ export const settingsCommentsStorage = {
         createdAt: comments.createdAt,
         updatedAt: comments.updatedAt,
         deletedAt: comments.deletedAt,
-        author: {
+        createdBy: {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-          email: users.email,
+          profileImageUrl: users.profileImageUrl,
         },
       })
       .from(comments)
@@ -122,11 +122,11 @@ export const settingsCommentsStorage = {
         createdAt: comments.createdAt,
         updatedAt: comments.updatedAt,
         deletedAt: comments.deletedAt,
-        author: {
+        createdBy: {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-          email: users.email,
+          profileImageUrl: users.profileImageUrl,
         },
       })
       .from(comments)
@@ -160,11 +160,11 @@ export const settingsCommentsStorage = {
         createdAt: comments.createdAt,
         updatedAt: comments.updatedAt,
         deletedAt: comments.deletedAt,
-        author: {
+        createdBy: {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-          email: users.email,
+          profileImageUrl: users.profileImageUrl,
         },
       })
       .from(comments)

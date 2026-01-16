@@ -171,7 +171,7 @@ export const adminStorage = {
         metadata: auditLogs.metadata,
         status: auditLogs.status,
         performedAt: auditLogs.performedAt,
-        userName: sql<string | null>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`.as('userName'),
+        performerName: sql<string | null>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`.as('performerName'),
       })
       .from(auditLogs)
       .leftJoin(users, eq(auditLogs.performedBy, users.id))
