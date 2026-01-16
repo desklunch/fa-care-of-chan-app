@@ -44,8 +44,26 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     
     **Refactor Status (January 2026):**
     - `routes.ts` reduced from 6,714 to 506 lines (92% reduction)
+    - `storage.ts` reduced from 4,087 to 2,573 lines (37% reduction)
     - 201 routes extracted to domain modules
     - 8 core infrastructure routes remain in routes.ts (auth, object storage)
+    
+    **Domain Storage Files (3,211 lines total):**
+    - `venues.storage.ts` (600 lines) - venue CRUD, photos, files, floorplans, collections, amenities, tags
+    - `forms.storage.ts` (477 lines) - templates, requests, outreach tokens, responses
+    - `admin.storage.ts` (365 lines) - team, invites, audit logs, activity tracking
+    - `issues-features.storage.ts` (325 lines) - app issues, feature requests, categories
+    - `reference-data.storage.ts` (322 lines) - tags, amenities, industries, brands, vendor services
+    - `vendors.storage.ts` (309 lines) - vendor CRUD, services, update tokens
+    - `releases.storage.ts` (289 lines) - app releases, version management
+    - `contacts.storage.ts` (224 lines) - contact CRUD, relations, linking
+    - `settings-comments.storage.ts` (217 lines) - theme settings, entity comments
+    - `clients.storage.ts` (83 lines) - client CRUD, contact linking
+    
+    **Hybrid Service Layer:**
+    - DealsService uses main storage interface for business logic with domain events
+    - Other domains use direct storage access from domain storage files
+    - Cross-domain queries (e.g., getDealsByClientId) remain in main storage.ts
 
 ### Feature Specifications
 The system includes modules for:
