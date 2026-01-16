@@ -79,12 +79,13 @@ export default function ContactForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest("POST", "/api/contacts", data);
+      const res = await apiRequest("POST", "/api/contacts", data);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newContact) => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       toast({ title: "Contact created successfully!" });
-      setLocation("/contacts");
+      setLocation(`/contacts/${newContact.id}`);
     },
     onError: (error: Error) => {
       toast({ 

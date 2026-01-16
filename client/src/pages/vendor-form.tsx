@@ -117,12 +117,13 @@ export default function VendorForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest("POST", "/api/vendors", data);
+      const res = await apiRequest("POST", "/api/vendors", data);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newVendor) => {
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
       toast({ title: "Vendor created successfully!" });
-      setLocation("/vendors");
+      setLocation(`/vendors/${newVendor.id}`);
     },
     onError: (error: Error) => {
       toast({ 
