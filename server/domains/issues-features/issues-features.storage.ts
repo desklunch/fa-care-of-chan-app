@@ -39,7 +39,12 @@ export interface FeatureWithDetails extends AppFeature {
 }
 
 export interface IssueWithDetails extends AppIssue {
-  createdByName?: string | null;
+  createdBy: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+  };
 }
 
 export interface CommentWithUser extends FeatureComment {
@@ -358,14 +363,32 @@ export const issuesFeaturesStorage = {
         fixedAt: appIssues.fixedAt,
         createdAt: appIssues.createdAt,
         updatedAt: appIssues.updatedAt,
-        createdByName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
       })
       .from(appIssues)
       .leftJoin(users, eq(appIssues.createdById, users.id))
       .where(whereClause)
       .orderBy(desc(appIssues.createdAt));
 
-    return issues;
+    return issues.map((i) => ({
+      id: i.id,
+      title: i.title,
+      description: i.description,
+      status: i.status,
+      severity: i.severity,
+      createdById: i.createdById,
+      fixedAt: i.fixedAt,
+      createdAt: i.createdAt,
+      updatedAt: i.updatedAt,
+      createdBy: {
+        id: i.createdById,
+        firstName: i.createdByFirstName,
+        lastName: i.createdByLastName,
+        profileImageUrl: i.createdByProfileImage,
+      },
+    }));
   },
 
   async getIssueById(issueId: string): Promise<IssueWithDetails | null> {
@@ -380,13 +403,33 @@ export const issuesFeaturesStorage = {
         fixedAt: appIssues.fixedAt,
         createdAt: appIssues.createdAt,
         updatedAt: appIssues.updatedAt,
-        createdByName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+        createdByProfileImage: users.profileImageUrl,
       })
       .from(appIssues)
       .leftJoin(users, eq(appIssues.createdById, users.id))
       .where(eq(appIssues.id, issueId));
 
-    return issue || null;
+    if (!issue) return null;
+
+    return {
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      status: issue.status,
+      severity: issue.severity,
+      createdById: issue.createdById,
+      fixedAt: issue.fixedAt,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      createdBy: {
+        id: issue.createdById,
+        firstName: issue.createdByFirstName,
+        lastName: issue.createdByLastName,
+        profileImageUrl: issue.createdByProfileImage,
+      },
+    };
   },
 
   async createIssue(data: InsertAppIssue, userId: string): Promise<AppIssue> {
