@@ -1,5 +1,5 @@
 import { Express } from "express";
-import { isAuthenticated } from "../../replitAuth";
+import { isAuthenticated } from "../../googleAuth";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { contactsStorage } from "./contacts.storage";
 import { insertContactSchema, updateContactSchema } from "@shared/schema";
