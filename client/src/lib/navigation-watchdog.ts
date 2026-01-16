@@ -16,6 +16,12 @@ let pendingNavigation: {
   timeoutId: ReturnType<typeof setTimeout>;
 } | null = null;
 
+// Programmatic navigation recovery (for setLocation calls)
+let pendingProgrammaticNav: {
+  targetHref: string;
+  timeoutId: ReturnType<typeof setTimeout>;
+} | null = null;
+
 export function updateWouterLocation(path: string): void {
   wouterLocationRef = path;
 }
@@ -79,6 +85,33 @@ function clearPendingNavigation(): void {
     clearTimeout(pendingNavigation.timeoutId);
     pendingNavigation = null;
   }
+  if (pendingProgrammaticNav) {
+    clearTimeout(pendingProgrammaticNav.timeoutId);
+    pendingProgrammaticNav = null;
+  }
+}
+
+// Start watchdog for programmatic navigation (call BEFORE setLocation/navigate)
+export function startNavigationWatchdog(targetHref: string): void {
+  // Skip if already at target
+  if (targetHref === window.location.pathname) {
+    return;
+  }
+
+  // Clear any existing pending navigation
+  clearPendingNavigation();
+
+  debugLog("NAVIGATION", "Programmatic navigation started, watchdog timer set", {
+    targetHref,
+    currentPathname: window.location.pathname,
+  });
+
+  const timeoutId = setTimeout(() => {
+    pendingProgrammaticNav = null;
+    handleStuckNavigation(targetHref);
+  }, CLICK_NAVIGATION_TIMEOUT_MS);
+
+  pendingProgrammaticNav = { targetHref, timeoutId };
 }
 
 // Handle stuck navigation: wouter's Link didn't call pushState
