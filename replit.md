@@ -28,6 +28,12 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - **Tier 0 (viewer):** Read-only access to venues, clients, contacts, vendors, app features
 -   **Database ORM:** Drizzle ORM with Neon serverless PostgreSQL driver for type-safe queries.
 -   **API:** RESTful endpoints under `/api`, consistent JSON request/response, and error handling.
+-   **Domain-Based Modules:** Backend organized into domain modules under `server/domains/`:
+    - `reference-data/` - Tags, amenities, industries, deal services, brands, vendor services (31 routes)
+    - `admin/` - Team, invites, admin settings, activity tracking (21 routes)
+    - `settings-comments/` - Theme settings and entity comments (7 routes)
+    - `issues-features/` - App issues and feature requests (15 routes)
+    - `releases/` - App release and version management (14 routes)
 
 ### Feature Specifications
 The system includes modules for:
