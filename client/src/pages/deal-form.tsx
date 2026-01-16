@@ -786,15 +786,7 @@ export default function DealForm() {
             </Card>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={isPending}
-                data-testid="button-submit-deal"
-              >
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? "Update Deal" : "Create Deal"}
-              </Button>
+            <div className="flex justify-end gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -804,6 +796,16 @@ export default function DealForm() {
               >
                 Cancel
               </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                data-testid="button-submit-deal"
+              >
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />
+}
+                {isEditing ? "Update Deal" : "Create Deal"}
+              </Button>
+    
             </div>
           </form>
         </Form>

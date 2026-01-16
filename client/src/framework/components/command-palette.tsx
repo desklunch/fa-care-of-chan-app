@@ -192,7 +192,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput 
-        placeholder="Search pages, venues, collections, deals, clients, and contacts..." 
+        placeholder="Search for anything…" 
         data-testid="input-command-search"
         value={search}
         onValueChange={setSearch}

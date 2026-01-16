@@ -125,7 +125,7 @@ export default function Header({
                 </Link>
               ) : (
                 <span
-                  className={`${index === 0 ? "text-base font-semibold" : "text-sm"} truncate`}
+                  className={`${index === 0 ? "text-base font-semibold" : "text-sm "} truncate`}
                   data-testid={`breadcrumb-${index}`}
                 >
                   {crumb.label}

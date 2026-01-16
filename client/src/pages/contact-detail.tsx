@@ -14,7 +14,7 @@ import {
   UserPlus,
   Trash2,
   Handshake,
-  Pencil,
+  SquarePen,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -208,7 +208,7 @@ export default function ContactDetail() {
       primaryAction={canEdit ? {
         label: "Edit Contact",
         href: `/contacts/${id}/edit`,
-        icon: Pencil,
+        icon: SquarePen,
       } : undefined}
       additionalActions={canDelete ? [
         {

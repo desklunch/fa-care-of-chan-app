@@ -35,7 +35,7 @@ import {
   Copy,
   Check,
   Loader2,
-  Pencil,
+  SquarePen,
   X,
   PenBox,
   Trash2,
@@ -152,7 +152,7 @@ function ServicesEditor({ vendorServices, allServices, onSave, disabled = false,
           onClick={() => setIsEditing(true)}
           data-testid="button-edit-services"
         >
-          <Pencil className="h-3 w-3" />
+          <SquarePen className="h-3 w-3" />
         </Button>
       )}
     </div>
@@ -391,14 +391,13 @@ export default function VendorDetail() {
           { label: "Vendors", href: "/vendors" },
           { label: vendor.businessName },
         ]}
+        primaryAction={canEdit ? {
+          label: "Edit Vendor",
+          href: `/vendors/${id}/edit`,
+          icon: SquarePen,
+        } : undefined}
         additionalActions={[
-          ...(canEdit ? [
-            {
-              label: "Edit Vendor",
-              icon: PenBox,
-              onClick: () => setLocation(`/vendors/${id}/edit`),
-            },
-          ] : []),
+
           ...(canManageTokens ? [
             {
               label: "Generate Update Link",

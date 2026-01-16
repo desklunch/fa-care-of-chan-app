@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import type { VenueCollectionWithCreator } from "@shared/schema";
-import { FolderOpen, Plus, Store, ListChecks, MousePointerClick, ArrowRightLeft, Layers } from "lucide-react";
+import { FolderOpen, CircleFadingPlus, Store, ListChecks, MousePointerClick, ArrowRightLeft, Layers } from "lucide-react";
 
 const COLLECTIONS_WELCOME_KEY = "venue_collections_welcome_seen";
 
@@ -84,7 +84,7 @@ export default function VenueCollectionsPage() {
       breadcrumbs={[{ label: "Venues", href: "/venues" }, { label: "Collections" }]}
       primaryAction={canWrite ? {
         label: "New Collection",
-        icon: Plus,
+        icon: CircleFadingPlus,
         onClick: handleCreate,
       } : undefined}
     >
@@ -218,7 +218,7 @@ export default function VenueCollectionsPage() {
             
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-primary/10 p-2">
-                <Plus className="h-5 w-5 text-primary" />
+                <CircleFadingPlus className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h4 className="font-medium">Create New Collections</h4>

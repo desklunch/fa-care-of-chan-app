@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor, Client } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { Building2, Handshake, UserPlus } from "lucide-react";
+import { Building2, Handshake, CircleFadingPlus } from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "company", "emailAddresses", "phoneNumbers"];
 
@@ -256,7 +256,7 @@ export default function Contacts() {
       primaryAction={canCreate ? {
         label: "New Contact",
         href: "/contacts/new",
-        icon: UserPlus,
+        icon: CircleFadingPlus,
       } : undefined}
     >
       <DataGridPage

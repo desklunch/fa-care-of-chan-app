@@ -39,7 +39,7 @@ interface ClientWithFullRelations extends Client {
 }
 import {
   Loader2,
-  Pencil,
+  SquarePen,
   Trash2,
   Handshake,
   Users,
@@ -216,7 +216,7 @@ export default function ClientDetail() {
       primaryAction={canEdit ? {
         label: "Edit Client",
         href: `/clients/${params.id}/edit`,
-        icon: Pencil,
+        icon: SquarePen,
       } : undefined}
       additionalActions={canDelete ? [
         {
