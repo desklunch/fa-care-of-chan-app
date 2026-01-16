@@ -32,6 +32,11 @@ import type {
   Contact,
   Industry,
 } from "@shared/schema";
+
+interface ClientWithFullRelations extends Client {
+  contacts: Contact[];
+  deals: DealWithRelations[];
+}
 import {
   Loader2,
   Pencil,
@@ -97,29 +102,22 @@ export default function ClientDetail() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showContactSearch, setShowContactSearch] = useState(false);
 
-  const { data: client, isLoading } = useQuery<Client>({
-    queryKey: ["/api/clients", params.id],
-  });
-
-  const { data: deals = [], isLoading: isLoadingDeals } = useQuery<
-    DealWithRelations[]
-  >({
-    queryKey: ["/api/clients", params.id, "deals"],
+  const { data: clientData, isLoading } = useQuery<ClientWithFullRelations>({
+    queryKey: ["/api/clients", params.id, "full"],
     enabled: Boolean(params.id),
   });
+
+  const client = clientData;
+  const deals = clientData?.deals ?? [];
+  const linkedContacts = clientData?.contacts ?? [];
+  const isLoadingDeals = isLoading;
+  const isLoadingContacts = isLoading;
 
   const { data: industries = [] } = useQuery<Industry[]>({
     queryKey: ["/api/industries"],
   });
 
   const industriesMap = new Map(industries.map((i) => [i.id, i]));
-
-  const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<
-    Contact[]
-  >({
-    queryKey: ["/api/clients", params.id, "contacts"],
-    enabled: Boolean(params.id),
-  });
 
   const [localLinkedContacts, setLocalLinkedContacts] = useState<Contact[]>([]);
 
@@ -166,7 +164,7 @@ export default function ClientDetail() {
   } = useFieldMutation({
     entityType: "clients",
     entityId: params.id || "",
-    queryKey: ["/api/clients", params.id],
+    queryKey: ["/api/clients", params.id, "full"],
     additionalQueryKeys: [["/api/clients"]],
     onSuccess: () => {
       toast({ title: "Client updated" });

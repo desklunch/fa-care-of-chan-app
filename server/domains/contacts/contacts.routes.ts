@@ -48,6 +48,19 @@ export function registerContactsRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/contacts/:id/full", isAuthenticated, async (req, res) => {
+    try {
+      const contact = await contactsStorage.getContactByIdWithRelations(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      console.error("Error fetching contact with relations:", error);
+      res.status(500).json({ message: "Failed to fetch contact" });
+    }
+  });
+
   app.post("/api/contacts", isAuthenticated, async (req: any, res) => {
     try {
       const result = insertContactSchema.safeParse(req.body);

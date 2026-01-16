@@ -28,6 +28,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import type { Contact, Client, Vendor, DealWithRelations, DealStatus } from "@shared/schema";
+
+interface ContactWithFullRelations extends Contact {
+  linkedClients: Client[];
+  linkedVendors: Vendor[];
+  deals: DealWithRelations[];
+}
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { ClientLinkSearch, VendorLinkSearch } from "@/components/client-link-search";
@@ -86,28 +92,19 @@ export default function ContactDetail() {
   const { toast } = useToast();
 
   const {
-    data: contact,
+    data: contactData,
     isLoading,
     error,
-  } = useQuery<Contact>({
-    queryKey: ["/api/contacts", id],
+  } = useQuery<ContactWithFullRelations>({
+    queryKey: ["/api/contacts", id, "full"],
     enabled: !!id,
   });
 
-  const { data: linkedClients = [] } = useQuery<Client[]>({
-    queryKey: ["/api/contacts", id, "clients"],
-    enabled: !!id,
-  });
-
-  const { data: linkedVendors = [] } = useQuery<Vendor[]>({
-    queryKey: ["/api/contacts", id, "vendors"],
-    enabled: !!id,
-  });
-
-  const { data: deals = [], isLoading: isLoadingDeals } = useQuery<DealWithRelations[]>({
-    queryKey: ["/api/contacts", id, "deals"],
-    enabled: !!id,
-  });
+  const contact = contactData;
+  const linkedClients = contactData?.linkedClients ?? [];
+  const linkedVendors = contactData?.linkedVendors ?? [];
+  const deals = contactData?.deals ?? [];
+  const isLoadingDeals = isLoading;
 
   const [localLinkedClients, setLocalLinkedClients] = useState<Client[]>([]);
   const [localLinkedVendors, setLocalLinkedVendors] = useState<Vendor[]>([]);
@@ -127,7 +124,7 @@ export default function ContactDetail() {
   } = useFieldMutation({
     entityType: "contacts",
     entityId: id || "",
-    queryKey: ["/api/contacts", id],
+    queryKey: ["/api/contacts", id, "full"],
     additionalQueryKeys: [["/api/contacts"]],
     onSuccess: () => {
       toast({ title: "Contact updated" });
@@ -139,7 +136,7 @@ export default function ContactDetail() {
       await apiRequest("DELETE", `/api/contacts/${id}/clients/${clientId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
     },
   });
 
@@ -148,7 +145,7 @@ export default function ContactDetail() {
       await apiRequest("DELETE", `/api/contacts/${id}/vendors/${vendorId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "vendors"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
     },
   });
 

@@ -1,14 +1,24 @@
 import { db } from "../../db";
 import { eq, asc, desc, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import {
   clients,
   contacts,
   clientContacts,
+  deals,
+  users,
+  brands,
   type Client,
   type Contact,
   type CreateClient,
   type UpdateClient,
+  type DealWithRelations,
 } from "@shared/schema";
+
+export interface ClientWithFullRelations extends Client {
+  contacts: Contact[];
+  deals: DealWithRelations[];
+}
 
 export const clientsStorage = {
   async getClients(): Promise<Client[]> {
@@ -79,5 +89,98 @@ export const clientsStorage = {
     await db.delete(clientContacts).where(
       sql`${clientContacts.clientId} = ${clientId} AND ${clientContacts.contactId} = ${contactId}`
     );
+  },
+
+  async getClientByIdWithRelations(id: string): Promise<ClientWithFullRelations | undefined> {
+    const [client] = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, id));
+
+    if (!client) return undefined;
+
+    const linkedContacts = await db
+      .select({ contact: contacts })
+      .from(clientContacts)
+      .innerJoin(contacts, eq(clientContacts.contactId, contacts.id))
+      .where(eq(clientContacts.clientId, id))
+      .orderBy(asc(contacts.lastName), asc(contacts.firstName));
+
+    const ownerUsers = alias(users, "owner_users");
+    
+    const clientDeals = await db
+      .select({
+        id: deals.id,
+        externalId: deals.externalId,
+        dealNumber: deals.dealNumber,
+        displayName: deals.displayName,
+        status: deals.status,
+        clientId: deals.clientId,
+        brandId: deals.brandId,
+        primaryContactId: deals.primaryContactId,
+        budgetHigh: deals.budgetHigh,
+        budgetLow: deals.budgetLow,
+        budgetNotes: deals.budgetNotes,
+        startedOn: deals.startedOn,
+        wonOn: deals.wonOn,
+        lastContactOn: deals.lastContactOn,
+        proposalSentOn: deals.proposalSentOn,
+        projectDate: deals.projectDate,
+        earliestEventDate: deals.earliestEventDate,
+        locations: deals.locations,
+        eventSchedule: deals.eventSchedule,
+        serviceIds: deals.serviceIds,
+        locationsText: deals.locationsText,
+        concept: deals.concept,
+        notes: deals.notes,
+        ownerId: deals.ownerId,
+        industryId: deals.industryId,
+        createdById: deals.createdById,
+        createdAt: deals.createdAt,
+        updatedAt: deals.updatedAt,
+        sortOrder: deals.sortOrder,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+        client: {
+          id: clients.id,
+          name: clients.name,
+        },
+        brand: {
+          id: brands.id,
+          name: brands.name,
+        },
+        owner: {
+          id: ownerUsers.id,
+          firstName: ownerUsers.firstName,
+          lastName: ownerUsers.lastName,
+          profileImageUrl: ownerUsers.profileImageUrl,
+        },
+        primaryContact: {
+          id: contacts.id,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          emailAddresses: contacts.emailAddresses,
+          phoneNumbers: contacts.phoneNumbers,
+          jobTitle: contacts.jobTitle,
+        },
+      })
+      .from(deals)
+      .leftJoin(users, eq(deals.createdById, users.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(brands, eq(deals.brandId, brands.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
+      .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
+      .where(eq(deals.clientId, id))
+      .orderBy(desc(deals.createdAt));
+
+    return {
+      ...client,
+      contacts: linkedContacts.map(r => r.contact),
+      deals: clientDeals as DealWithRelations[],
+    };
   },
 };

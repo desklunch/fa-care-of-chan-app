@@ -29,6 +29,19 @@ export function registerClientsRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/clients/:id/full", isAuthenticated, async (req, res) => {
+    try {
+      const client = await clientsStorage.getClientByIdWithRelations(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      res.json(client);
+    } catch (error) {
+      console.error("Error fetching client with relations:", error);
+      res.status(500).json({ message: "Failed to fetch client" });
+    }
+  });
+
   app.get("/api/clients/:id/deals", isAuthenticated, async (req, res) => {
     try {
       const client = await clientsStorage.getClientById(req.params.id);
