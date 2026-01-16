@@ -429,7 +429,7 @@ export default function ClientDetail() {
                             </Link>
 
                             {contact.jobTitle && (
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 {contact.jobTitle}
                               </span>
                             )}
