@@ -197,20 +197,17 @@ export default function VenueCollectionForm() {
         },
       ]}
     >
-      <div className="p-6 max-w-2xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>{isEditMode ? "Edit Collection" : "New Collection"}</CardTitle>
-            <CardDescription>
-              {isEditMode 
-                ? "Update the collection details below." 
-                : "Create a new collection to organize your venues."
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Collection Info</CardTitle>
+
+                  </CardHeader>
+                  <CardContent>
+
                 <FormField
                   control={form.control}
                   name="name"
@@ -252,29 +249,31 @@ export default function VenueCollectionForm() {
                   )}
                 />
 
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setLocation(backUrl)}
-                    disabled={isPending}
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    data-testid="button-submit-collection"
-                  >
-                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {isEditMode ? "Update Collection" : "Create Collection"}
-                  </Button>
-                </div>
+                    </CardContent>
+                  </Card>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setLocation(backUrl)}
+                  disabled={isPending}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  data-testid="button-submit-collection"
+                >
+                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {isEditMode ? "Update Collection" : "Create Collection"}
+                </Button>
+              </div>
               </form>
             </Form>
-          </CardContent>
-        </Card>
+
       </div>
     </PageLayout>
   </PermissionGate>

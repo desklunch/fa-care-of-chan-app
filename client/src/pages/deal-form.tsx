@@ -265,13 +265,13 @@ export default function DealForm() {
         },
       ]}
     >
-      <div className="max-w-2xl p-6">
+      <div className="p-4 md:p-6 max-w-3xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Card 1: Deal Info */}
             <Card>
               <CardHeader>
-                <CardTitle>{isEditing ? "Edit Deal" : "Deal Info"}</CardTitle>
+                <CardTitle>Deal Info</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <FormField
@@ -489,11 +489,23 @@ export default function DealForm() {
                             <FormControl>
                               <Button
                                 variant="outline"
-                                className="w-full pl-3 text-left font-normal justify-start"
+                                className="border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
                                 data-testid="button-started-on"
                               >
+                                <div className="flex ">
                                 <Calendar className="mr-2 h-4 w-4" />
                                 {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                                </div>
+                                {field.value && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-auto h-full px-2"
+                                    onClick={() => field.onChange(null)}
+                                  >
+                                    Clear
+                                  </Button>
+                                  )}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
@@ -534,10 +546,10 @@ export default function DealForm() {
                             <FormControl>
                               <Button
                                 variant="outline"
-                                className="border-input w-full pl-3 text-left font-normal justify-betweem"
+                                className="border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
                                 data-testid="button-last-contact"
                               >
-                                <div>
+                                <div className="flex ">
                                   <Calendar className="mr-2 h-4 w-4" />
                                   {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
 
@@ -546,7 +558,7 @@ export default function DealForm() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="w-auto h-auto"
+                                  className="w-auto h-full px-2"
                                   onClick={() => field.onChange(null)}
                                 >
                                   Clear

@@ -231,57 +231,55 @@ export default function ContactForm() {
           },
         ]}
       >
-      <div className="max-w-2xl p-6">
+      <div className="max-w-2xl p-4 md:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{isEditMode ? "Edit Contact" : "Contact Info"}</CardTitle>
+                <CardTitle>Contact Names</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="w-full flex justify-between items-center">
-                          <FormLabel>First Name</FormLabel>
-                          <span className="text-xs font-medium text-muted-foreground">Required</span>
-                        </div>
-                        <FormControl>
-                          <Input 
-                            placeholder="John" 
-                            {...field} 
-                            data-testid="input-first-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="w-full flex justify-between items-center">
+                        <FormLabel>First Name</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
+                      <FormControl>
+                        <Input 
+                          placeholder="John" 
+                          {...field} 
+                          data-testid="input-first-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="w-full flex justify-between items-center">
-                          <FormLabel>Last Name</FormLabel>
-                          <span className="text-xs font-medium text-muted-foreground">Required</span>
-                        </div>
-                        <FormControl>
-                          <Input 
-                            placeholder="Doe" 
-                            {...field} 
-                            data-testid="input-last-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="w-full flex justify-between items-center">
+                        <FormLabel>Last Name</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
+                      <FormControl>
+                        <Input 
+                          placeholder="Doe" 
+                          {...field} 
+                          data-testid="input-last-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -297,9 +295,7 @@ export default function ContactForm() {
                           data-testid="input-job-title"
                         />
                       </FormControl>
-                      <FormDescription>
-                        The contact's role or position.
-                      </FormDescription>
+            
                       <FormMessage />
                     </FormItem>
                   )}
@@ -309,13 +305,13 @@ export default function ContactForm() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Contact Methods</CardTitle>
+                <CardTitle>Contact Info</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <FormLabel>Email Addresses</FormLabel>
                   {emailAddresses.map((email, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={index} className="flex gap-2 items-center">
                       <Input
                         type="email"
                         placeholder="email@example.com"
@@ -330,6 +326,7 @@ export default function ContactForm() {
                           size="icon"
                           onClick={() => removeEmailAddress(index)}
                           data-testid={`button-remove-email-${index}`}
+                          className="h-12"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -338,20 +335,19 @@ export default function ContactForm() {
                   ))}
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={addEmailAddress}
                     data-testid="button-add-email"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
                     Add Email
                   </Button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <FormLabel>Phone Numbers</FormLabel>
                   {phoneNumbers.map((phone, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={index} className="flex gap-2 items-center">
                       <Input
                         type="tel"
                         placeholder="+1 (555) 123-4567"
@@ -366,6 +362,8 @@ export default function ContactForm() {
                           size="icon"
                           onClick={() => removePhoneNumber(index)}
                           data-testid={`button-remove-phone-${index}`}
+                          className="h-12"
+
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -374,12 +372,11 @@ export default function ContactForm() {
                   ))}
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={addPhoneNumber}
                     data-testid="button-add-phone"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
                     Add Phone
                   </Button>
                 </div>
@@ -411,48 +408,46 @@ export default function ContactForm() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Social Profiles</CardTitle>
+                <CardTitle>Social</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="instagramUsername"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Instagram Username</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="@username" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-instagram"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="instagramUsername"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram Username</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="@username" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-instagram"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="linkedinUsername"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>LinkedIn Username</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="john-doe" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-linkedin"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="linkedinUsername"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn Username</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="john-doe" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-linkedin"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 

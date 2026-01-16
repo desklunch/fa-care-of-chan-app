@@ -452,15 +452,18 @@ export default function ClientDetail() {
                   {deals.map((deal) => (
                     <Link href={`/deals/${deal.id}`} key={deal.id}>
                       <div
-                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer bg-background/50  dark:bg-foreground/[4%]"
+                        className="grid grid-cols-2 n p-3 rounded-md hover-elevate cursor-pointer bg-background/50  dark:bg-foreground/[4%]"
                         data-testid={`link-deal-${deal.id}`}
                       >
-                        <div className="flex flex-2 w-full items-center gap-3">
+                        <div className="shrink-0 w-full items-center gap-3">
                           <span className="text-sm font-medium">
                             {deal.displayName}
                           </span>
                         </div>
-                        <DealStatusBadge status={deal.status as DealStatus} />
+                        <div className="flex-1">
+                          <DealStatusBadge status={deal.status as DealStatus} />
+                        </div>
+                        
                       </div>
                     </Link>
                   ))}

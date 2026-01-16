@@ -23,7 +23,7 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
   const statusClass = statusStyleMap[status] || "deal-status-fallback";
   
   return (
-    <div className="@container w-full flex items-center justify-end ">
+    <div className="@container w-full flex flex-0 items-center  ">
 
     <span
       className={cn(

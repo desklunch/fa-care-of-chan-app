@@ -185,7 +185,7 @@ export default function ClientForm() {
           },
         ]}
       >
-      <div className="max-w-2xl p-6">
+      <div className="max-w-2xl p-4 md:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
