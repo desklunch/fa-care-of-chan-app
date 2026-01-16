@@ -8,7 +8,9 @@ import { ExpandableSearch } from "./expandable-search";
 import { FilterBar } from "./filter-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ListFilter } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ListFilter, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { ColumnConfig, DataGridPageProps, FilterConfig } from "./types";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -366,6 +368,10 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const [isGridInitialized, setIsGridInitialized] = useState(false);
   const scrollRestoredRef = useRef(false);
   const isPopStateUpdateRef = useRef(false); // Track when state update came from popstate
+
+  // Mobile detection - auto-enable collapsible filters on mobile
+  const isMobile = useIsMobile();
+  const effectiveCollapsibleFilters = isMobile || collapsibleFilters;
 
   // Get all column IDs for index mapping
   const allColumnIds = useMemo(() => columns.map((col) => col.id), [columns]);
@@ -913,7 +919,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
               placeholder={searchPlaceholder}
             />
           )}
-          {filters.length > 0 && !collapsibleFilters && (
+          {filters.length > 0 && !effectiveCollapsibleFilters && (
             <FilterBar
               filters={filters}
               data={data}
@@ -922,7 +928,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
               context={context}
             />
           )}
-          {filters.length > 0 && collapsibleFilters && (
+          {filters.length > 0 && effectiveCollapsibleFilters && (
             <Button
               variant={showFilters ? "outline" : "ghost"}
               size="md"
@@ -960,7 +966,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         </div>
       </div>
 
-      {filters.length > 0 && collapsibleFilters && showFilters && (
+      {filters.length > 0 && effectiveCollapsibleFilters && showFilters && !isMobile && (
         <div className="px-4 pb-4 flex items-center gap-2 flex-wrap" data-testid="collapsible-filter-row">
           <FilterBar
             filters={filters}
@@ -970,6 +976,35 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
             context={context}
           />
         </div>
+      )}
+
+      {filters.length > 0 && isMobile && (
+        <Sheet open={showFilters} onOpenChange={setShowFilters}>
+          <SheetContent side="bottom" className="h-full max-h-[100dvh] flex flex-col">
+            <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b">
+              <SheetTitle>Filters</SheetTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowFilters(false)}
+                data-testid="button-close-mobile-filters"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto py-4">
+              <div className="flex flex-col gap-3">
+                <FilterBar
+                  filters={filters}
+                  data={data}
+                  filterState={filterState}
+                  onFilterChange={handleFilterChange}
+                  context={context}
+                />
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
 
 
