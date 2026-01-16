@@ -32,8 +32,20 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `reference-data/` - Tags, amenities, industries, deal services, brands, vendor services (31 routes)
     - `admin/` - Team, invites, admin settings, activity tracking (21 routes)
     - `settings-comments/` - Theme settings and entity comments (7 routes)
-    - `issues-features/` - App issues and feature requests (15 routes)
+    - `issues-features/` - App issues, feature requests, and categories (19 routes)
     - `releases/` - App release and version management (14 routes)
+    - `contacts/` - Contact CRUD with email/social management (12 routes)
+    - `clients/` - Client organizations management (10 routes)
+    - `vendors/` - Vendor management (14 routes)
+    - `deals/` - Deal pipeline with service layer (11 routes)
+    - `places/` - Google Places API integration (10 routes)
+    - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
+    - `forms/` - Form templates, requests, and public form submission (15 routes)
+    
+    **Refactor Status (January 2026):**
+    - `routes.ts` reduced from 6,714 to 506 lines (92% reduction)
+    - 201 routes extracted to domain modules
+    - 8 core infrastructure routes remain in routes.ts (auth, object storage)
 
 ### Feature Specifications
 The system includes modules for:

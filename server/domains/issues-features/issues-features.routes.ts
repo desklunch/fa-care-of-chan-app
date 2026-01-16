@@ -9,8 +9,11 @@ import {
   insertFeatureCommentSchema,
   insertAppIssueSchema,
   updateAppIssueSchema,
+  insertFeatureCategorySchema,
+  updateFeatureCategorySchema,
   type FeatureStatus,
 } from "@shared/schema";
+import { storage } from "../../storage";
 
 export function registerIssuesFeaturesRoutes(app: Express): void {
   // ===== FEATURES ROUTES =====
@@ -481,6 +484,123 @@ export function registerIssuesFeaturesRoutes(app: Express): void {
         metadata: { error: String(error) },
       });
       res.status(500).json({ message: "Failed to delete issue" });
+    }
+  });
+
+  // ===== FEATURE CATEGORIES ROUTES =====
+
+  app.get("/api/categories", isAuthenticated, async (req, res) => {
+    try {
+      const includeInactive = req.query.includeInactive === "true";
+      const categories = await storage.getCategories(includeInactive);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post("/api/admin/categories", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
+    try {
+      const result = insertFeatureCategorySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const category = await storage.createCategory(result.data);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature_category",
+        entityId: category.id,
+        changes: { after: result.data as Record<string, unknown> },
+      });
+
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "feature_category",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.patch("/api/admin/categories/:id", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
+    try {
+      const result = updateFeatureCategorySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid data",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const before = await storage.getCategoryById(req.params.id);
+      if (!before) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const category = await storage.updateCategory(req.params.id, result.data);
+
+      const changes = getChangedFields(
+        before as unknown as Record<string, unknown>,
+        category as unknown as Record<string, unknown>
+      );
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: req.params.id,
+        changes,
+      });
+
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.put("/api/admin/categories/order", isAuthenticated, requirePermission("app_features.manage"), async (req: any, res) => {
+    try {
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) {
+        return res.status(400).json({ message: "orderedIds must be an array" });
+      }
+
+      await storage.updateCategoryOrder(orderedIds);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: "order",
+        metadata: { orderedIds },
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating category order:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "feature_category",
+        entityId: "order",
+        status: "failure",
+        metadata: { error: String(error) },
+      });
+      res.status(500).json({ message: "Failed to update category order" });
     }
   });
 }
