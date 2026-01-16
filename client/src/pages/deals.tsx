@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CellValueChangedEvent } from "ag-grid-community";
 import { PageLayout } from "@/framework";
@@ -869,7 +869,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
 
 export default function Deals() {
   usePageTitle("Deals");
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { can } = usePermissions();

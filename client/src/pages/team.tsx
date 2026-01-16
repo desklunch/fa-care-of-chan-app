@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -161,7 +161,7 @@ const teamColumns: ColumnConfig<User>[] = [
 
 export default function Team() {
   usePageTitle("Team");
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
 
   return (
     <PageLayout breadcrumbs={[{ label: "Team" }]}>

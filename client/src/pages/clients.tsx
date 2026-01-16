@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
@@ -88,7 +88,7 @@ const clientFilters: FilterConfig<Client>[] = [
 
 export default function Clients() {
   usePageTitle("Clients");
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { can } = usePermissions();
   const canCreate = can('clients.write');
 

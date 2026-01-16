@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -302,7 +303,7 @@ const vendorFilters: FilterConfig<VendorWithRelations>[] = [
 
 export default function Vendors() {
   usePageTitle("Vendors");
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [assignFormDialogOpen, setAssignFormDialogOpen] = useState(false);

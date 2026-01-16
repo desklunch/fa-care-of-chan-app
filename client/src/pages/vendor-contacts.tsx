@@ -1,4 +1,5 @@
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { DataGridPage } from "@/components/data-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -294,7 +295,7 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
 
 export default function VendorContacts() {
   usePageTitle("Vendor Contacts");
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
 
   return (
     <PageLayout

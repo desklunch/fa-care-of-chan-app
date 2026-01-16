@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -418,7 +418,7 @@ const venueFilters: FilterConfig<VenueGridRow>[] = [
 
 export default function VenuesPage() {
   usePageTitle("Venues");
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
   const { can } = usePermissions();
   const canWrite = can("venues.write");

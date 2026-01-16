@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
@@ -17,7 +18,7 @@ const COLLECTIONS_WELCOME_KEY = "venue_collections_welcome_seen";
 
 export default function VenueCollectionsPage() {
   usePageTitle("Venue Collections");
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { can } = usePermissions();
   const canWrite = can("venues.write");
