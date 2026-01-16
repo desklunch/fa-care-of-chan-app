@@ -1,7 +1,7 @@
 import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
 import { requirePermission } from "../../middleware/permissions";
-import { storage } from "../../storage";
+import { venuesStorage } from "./venues.storage";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { insertVenueSchema, updateVenueSchema, insertVenueCollectionSchema, updateVenueCollectionSchema, addVenuesToCollectionSchema, insertVenuePhotoSchema, updateVenuePhotoSchema } from "@shared/schema";
 import OpenAI from "openai";
@@ -12,7 +12,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/public/venues/:id", async (req, res) => {
     try {
-      const venue = await storage.getVenueByIdWithRelations(req.params.id);
+      const venue = await venuesStorage.getVenueByIdWithRelations(req.params.id);
       if (!venue) {
         return res.status(404).json({ message: "Venue not found" });
       }
@@ -25,7 +25,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/public/venue-collections/:id", async (req, res) => {
     try {
-      const collection = await storage.getVenueCollectionById(req.params.id);
+      const collection = await venuesStorage.getVenueCollectionById(req.params.id);
       if (!collection) {
         return res.status(404).json({ message: "Collection not found" });
       }
@@ -40,7 +40,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues", isAuthenticated, async (req, res) => {
     try {
-      const venues = await storage.getVenuesWithRelations();
+      const venues = await venuesStorage.getVenuesWithRelations();
       res.json(venues);
     } catch (error) {
       console.error("Error fetching venues:", error);
@@ -50,7 +50,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:id", isAuthenticated, async (req, res) => {
     try {
-      const venue = await storage.getVenueById(req.params.id);
+      const venue = await venuesStorage.getVenueById(req.params.id);
       if (!venue) {
         return res.status(404).json({ message: "Venue not found" });
       }
@@ -63,7 +63,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:id/full", isAuthenticated, async (req, res) => {
     try {
-      const venue = await storage.getVenueByIdWithRelations(req.params.id);
+      const venue = await venuesStorage.getVenueByIdWithRelations(req.params.id);
       if (!venue) {
         return res.status(404).json({ message: "Venue not found" });
       }
@@ -87,19 +87,19 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
       
-      const venue = await storage.createVenue(parsed.data);
+      const venue = await venuesStorage.createVenue(parsed.data);
       venueId = venue.id;
       
       if (amenityIds && amenityIds.length > 0) {
-        await storage.setVenueAmenities(venue.id, amenityIds);
+        await venuesStorage.setVenueAmenities(venue.id, amenityIds);
       }
       
       const allTagIds = [...(cuisineTagIds || []), ...(styleTagIds || [])];
       if (allTagIds.length > 0) {
-        await storage.setVenueTags(venue.id, allTagIds);
+        await venuesStorage.setVenueTags(venue.id, allTagIds);
       }
       
-      const fullVenue = await storage.getVenueByIdWithRelations(venue.id);
+      const fullVenue = await venuesStorage.getVenueByIdWithRelations(venue.id);
       
       await logAuditEvent(req, {
         action: "create",
@@ -125,7 +125,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.patch("/api/venues/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const existingVenue = await storage.getVenueById(req.params.id);
+      const existingVenue = await venuesStorage.getVenueById(req.params.id);
       if (!existingVenue) {
         return res.status(404).json({ message: "Venue not found" });
       }
@@ -140,21 +140,21 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
       
-      const venue = await storage.updateVenue(req.params.id, parsed.data);
+      const venue = await venuesStorage.updateVenue(req.params.id, parsed.data);
       if (!venue) {
         return res.status(404).json({ message: "Venue not found" });
       }
       
       if (amenityIds !== undefined) {
-        await storage.setVenueAmenities(venue.id, amenityIds || []);
+        await venuesStorage.setVenueAmenities(venue.id, amenityIds || []);
       }
       
       if (cuisineTagIds !== undefined || styleTagIds !== undefined) {
         const allTagIds = [...(cuisineTagIds || []), ...(styleTagIds || [])];
-        await storage.setVenueTags(venue.id, allTagIds);
+        await venuesStorage.setVenueTags(venue.id, allTagIds);
       }
       
-      const fullVenue = await storage.getVenueByIdWithRelations(venue.id);
+      const fullVenue = await venuesStorage.getVenueByIdWithRelations(venue.id);
       
       const changes = getChangedFields(
         existingVenue as unknown as Record<string, unknown>,
@@ -186,12 +186,12 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.delete("/api/venues/:id", isAuthenticated, requirePermission("venues.delete"), async (req: any, res) => {
     try {
-      const existingVenue = await storage.getVenueById(req.params.id);
+      const existingVenue = await venuesStorage.getVenueById(req.params.id);
       if (!existingVenue) {
         return res.status(404).json({ message: "Venue not found" });
       }
       
-      await storage.deleteVenue(req.params.id);
+      await venuesStorage.deleteVenue(req.params.id);
       
       await logAuditEvent(req, {
         action: "delete",
@@ -217,7 +217,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:id/amenities", isAuthenticated, async (req, res) => {
     try {
-      const amenities = await storage.getVenueAmenities(req.params.id);
+      const amenities = await venuesStorage.getVenueAmenities(req.params.id);
       res.json(amenities);
     } catch (error) {
       console.error("Error fetching venue amenities:", error);
@@ -227,7 +227,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:id/tags", isAuthenticated, async (req, res) => {
     try {
-      const tags = await storage.getVenueTags(req.params.id);
+      const tags = await venuesStorage.getVenueTags(req.params.id);
       res.json(tags);
     } catch (error) {
       console.error("Error fetching venue tags:", error);
@@ -237,7 +237,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:id/collections", isAuthenticated, async (req, res) => {
     try {
-      const collections = await storage.getCollectionsForVenue(req.params.id);
+      const collections = await venuesStorage.getCollectionsForVenue(req.params.id);
       res.json(collections);
     } catch (error) {
       console.error("Error fetching venue collections:", error);
@@ -249,7 +249,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venue-collections", isAuthenticated, async (req, res) => {
     try {
-      const collections = await storage.getVenueCollections();
+      const collections = await venuesStorage.getVenueCollections();
       res.json(collections);
     } catch (error) {
       console.error("Error fetching venue collections:", error);
@@ -259,7 +259,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venue-collections/:id", isAuthenticated, async (req, res) => {
     try {
-      const collection = await storage.getVenueCollectionById(req.params.id);
+      const collection = await venuesStorage.getVenueCollectionById(req.params.id);
       if (!collection) {
         return res.status(404).json({ message: "Collection not found" });
       }
@@ -280,7 +280,7 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
       
-      const collection = await storage.createVenueCollection(
+      const collection = await venuesStorage.createVenueCollection(
         parsed.data,
         req.user.claims.sub
       );
@@ -317,8 +317,8 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
       
-      const original = await storage.getVenueCollectionById(req.params.id);
-      const collection = await storage.updateVenueCollection(
+      const original = await venuesStorage.getVenueCollectionById(req.params.id);
+      const collection = await venuesStorage.updateVenueCollection(
         req.params.id,
         parsed.data
       );
@@ -351,8 +351,8 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.delete("/api/venue-collections/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const collection = await storage.getVenueCollectionById(req.params.id);
-      await storage.deleteVenueCollection(req.params.id);
+      const collection = await venuesStorage.getVenueCollectionById(req.params.id);
+      await venuesStorage.deleteVenueCollection(req.params.id);
       
       await logAuditEvent(req, {
         action: "delete",
@@ -386,7 +386,7 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
       
-      await storage.addVenuesToCollection(
+      await venuesStorage.addVenuesToCollection(
         req.params.id,
         parsed.data.venueIds,
         req.user.claims.sub
@@ -400,7 +400,7 @@ export function registerVenuesRoutes(app: Express): void {
         metadata: { venueIds: parsed.data.venueIds, count: parsed.data.venueIds.length },
       });
       
-      const collection = await storage.getVenueCollectionById(req.params.id);
+      const collection = await venuesStorage.getVenueCollectionById(req.params.id);
       res.json(collection);
     } catch (error) {
       console.error("Error adding venues to collection:", error);
@@ -417,7 +417,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.delete("/api/venue-collections/:collectionId/venues/:venueId", isAuthenticated, async (req: any, res) => {
     try {
-      await storage.removeVenueFromCollection(
+      await venuesStorage.removeVenueFromCollection(
         req.params.collectionId,
         req.params.venueId
       );
@@ -451,7 +451,7 @@ export function registerVenuesRoutes(app: Express): void {
         return res.status(400).json({ message: "venueIds must be an array" });
       }
       
-      await storage.reorderVenuesInCollection(req.params.id, venueIds);
+      await venuesStorage.reorderVenuesInCollection(req.params.id, venueIds);
       
       await logAuditEvent(req, {
         action: "reorder",
@@ -461,7 +461,7 @@ export function registerVenuesRoutes(app: Express): void {
         metadata: { venueCount: venueIds.length },
       });
       
-      const collection = await storage.getVenueCollectionById(req.params.id);
+      const collection = await venuesStorage.getVenueCollectionById(req.params.id);
       res.json(collection);
     } catch (error) {
       console.error("Error reordering venues in collection:", error);
@@ -480,7 +480,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:venueId/floorplans", isAuthenticated, async (req, res) => {
     try {
-      const floorplans = await storage.getVenueFiles(req.params.venueId, 'floorplan');
+      const floorplans = await venuesStorage.getVenueFiles(req.params.venueId, 'floorplan');
       res.json(floorplans);
     } catch (error) {
       console.error("Error fetching venue floorplans:", error);
@@ -490,7 +490,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/floorplans/:id", isAuthenticated, async (req, res) => {
     try {
-      const floorplan = await storage.getVenueFileById(req.params.id);
+      const floorplan = await venuesStorage.getVenueFileById(req.params.id);
       if (!floorplan) {
         return res.status(404).json({ message: "Floorplan not found" });
       }
@@ -513,7 +513,7 @@ export function registerVenuesRoutes(app: Express): void {
         return res.status(400).json({ message: "fileType must be 'image' or 'pdf'" });
       }
       
-      const floorplan = await storage.createVenueFile({
+      const floorplan = await venuesStorage.createVenueFile({
         venueId: req.params.venueId,
         category: 'floorplan',
         fileUrl,
@@ -567,7 +567,7 @@ export function registerVenuesRoutes(app: Express): void {
         uploadedById: req.user?.id,
       }));
 
-      const floorplans = await storage.createVenueFiles(filesToCreate);
+      const floorplans = await venuesStorage.createVenueFiles(filesToCreate);
 
       await logAuditEvent(req, {
         action: "create",
@@ -587,8 +587,8 @@ export function registerVenuesRoutes(app: Express): void {
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
-      const original = await storage.getVenueFileById(req.params.id);
-      const floorplan = await storage.updateVenueFile(req.params.id, {
+      const original = await venuesStorage.getVenueFileById(req.params.id);
+      const floorplan = await venuesStorage.updateVenueFile(req.params.id, {
         title,
         caption,
         sortOrder,
@@ -623,7 +623,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.delete("/api/floorplans/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const floorplan = await storage.getVenueFileById(req.params.id);
+      const floorplan = await venuesStorage.getVenueFileById(req.params.id);
       if (!floorplan) {
         return res.status(404).json({ message: "Floorplan not found" });
       }
@@ -646,7 +646,7 @@ export function registerVenuesRoutes(app: Express): void {
         }
       }
       
-      await storage.deleteVenueFile(req.params.id);
+      await venuesStorage.deleteVenueFile(req.params.id);
       
       await logAuditEvent(req, {
         action: "delete",
@@ -674,7 +674,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.get("/api/venues/:venueId/photos", isAuthenticated, async (req, res) => {
     try {
-      const photos = await storage.getVenuePhotos(req.params.venueId);
+      const photos = await venuesStorage.getVenuePhotos(req.params.venueId);
       res.json(photos);
     } catch (error) {
       console.error("Error fetching venue photos:", error);
@@ -696,7 +696,7 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
 
-      const photo = await storage.createVenuePhoto(result.data);
+      const photo = await venuesStorage.createVenuePhoto(result.data);
 
       await logAuditEvent(req, {
         action: "create",
@@ -729,7 +729,7 @@ export function registerVenuesRoutes(app: Express): void {
         isHero: p.isHero ?? (index === 0),
       }));
 
-      const photos = await storage.createVenuePhotos(photosToCreate);
+      const photos = await venuesStorage.createVenuePhotos(photosToCreate);
 
       await logAuditEvent(req, {
         action: "create",
@@ -756,12 +756,12 @@ export function registerVenuesRoutes(app: Express): void {
         });
       }
 
-      const before = await storage.getVenuePhotoById(req.params.id);
+      const before = await venuesStorage.getVenuePhotoById(req.params.id);
       if (!before) {
         return res.status(404).json({ message: "Photo not found" });
       }
 
-      const photo = await storage.updateVenuePhoto(req.params.id, result.data);
+      const photo = await venuesStorage.updateVenuePhoto(req.params.id, result.data);
 
       await logAuditEvent(req, {
         action: "update",
@@ -782,7 +782,7 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.delete("/api/venue-photos/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const photo = await storage.getVenuePhotoById(req.params.id);
+      const photo = await venuesStorage.getVenuePhotoById(req.params.id);
       if (!photo) {
         return res.status(404).json({ message: "Photo not found" });
       }
@@ -797,7 +797,7 @@ export function registerVenuesRoutes(app: Express): void {
         }
       }
 
-      await storage.deleteVenuePhoto(req.params.id);
+      await venuesStorage.deleteVenuePhoto(req.params.id);
 
       await logAuditEvent(req, {
         action: "delete",
@@ -815,12 +815,12 @@ export function registerVenuesRoutes(app: Express): void {
 
   app.put("/api/venues/:venueId/photos/:photoId/hero", isAuthenticated, async (req: any, res) => {
     try {
-      const photo = await storage.getVenuePhotoById(req.params.photoId);
+      const photo = await venuesStorage.getVenuePhotoById(req.params.photoId);
       if (!photo || photo.venueId !== req.params.venueId) {
         return res.status(404).json({ message: "Photo not found" });
       }
 
-      await storage.setVenuePhotoHero(req.params.venueId, req.params.photoId);
+      await venuesStorage.setVenuePhotoHero(req.params.venueId, req.params.photoId);
 
       await logAuditEvent(req, {
         action: "update",
@@ -900,7 +900,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
   app.get("/api/venues/:venueId/files", isAuthenticated, async (req, res) => {
     try {
       const category = req.query.category as string | undefined;
-      const files = await storage.getVenueFiles(req.params.venueId, category);
+      const files = await venuesStorage.getVenueFiles(req.params.venueId, category);
       res.json(files);
     } catch (error) {
       console.error("Error fetching venue files:", error);
@@ -910,7 +910,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
 
   app.get("/api/venue-files/:id", isAuthenticated, async (req, res) => {
     try {
-      const file = await storage.getVenueFileById(req.params.id);
+      const file = await venuesStorage.getVenueFileById(req.params.id);
       if (!file) {
         return res.status(404).json({ message: "File not found" });
       }
@@ -981,7 +981,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
       }
       
       if (venueId) {
-        const file = await storage.createVenueFile({
+        const file = await venuesStorage.createVenueFile({
           venueId,
           category,
           fileUrl,
@@ -1052,7 +1052,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         return res.status(400).json({ message: "fileType must be 'image', 'pdf', 'document', 'archive', or 'other'" });
       }
       
-      const file = await storage.createVenueFile({
+      const file = await venuesStorage.createVenueFile({
         venueId: req.params.venueId,
         category,
         fileUrl,
@@ -1110,7 +1110,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         uploadedById: req.user?.id,
       }));
 
-      const files = await storage.createVenueFiles(filesToCreate);
+      const files = await venuesStorage.createVenueFiles(filesToCreate);
 
       await logAuditEvent(req, {
         action: "create",
@@ -1130,8 +1130,8 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
     try {
       const { title, caption, sortOrder, thumbnailUrl } = req.body;
       
-      const original = await storage.getVenueFileById(req.params.id);
-      const file = await storage.updateVenueFile(req.params.id, {
+      const original = await venuesStorage.getVenueFileById(req.params.id);
+      const file = await venuesStorage.updateVenueFile(req.params.id, {
         title,
         caption,
         sortOrder,
@@ -1166,7 +1166,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
 
   app.delete("/api/venue-files/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const file = await storage.getVenueFileById(req.params.id);
+      const file = await venuesStorage.getVenueFileById(req.params.id);
       if (!file) {
         return res.status(404).json({ message: "File not found" });
       }
@@ -1189,7 +1189,7 @@ ${JSON.stringify(googlePlaceData, null, 2)}`;
         }
       }
       
-      await storage.deleteVenueFile(req.params.id);
+      await venuesStorage.deleteVenueFile(req.params.id);
       
       await logAuditEvent(req, {
         action: "delete",

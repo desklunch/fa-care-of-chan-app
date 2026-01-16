@@ -3,7 +3,6 @@ import { isAuthenticated } from "../../googleAuth";
 import { requirePermission } from "../../middleware/permissions";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { vendorsStorage } from "./vendors.storage";
-import { storage } from "../../storage";
 import { sendVendorUpdateEmail } from "../../email";
 import {
   insertVendorSchema,
@@ -14,7 +13,7 @@ import {
 export function registerVendorsRoutes(app: Express): void {
   app.get("/api/vendors", isAuthenticated, async (req, res) => {
     try {
-      const vendors = await storage.getVendorsWithRelations();
+      const vendors = await vendorsStorage.getVendorsWithRelations();
       res.json(vendors);
     } catch (error) {
       console.error("Error fetching vendors:", error);
@@ -24,7 +23,7 @@ export function registerVendorsRoutes(app: Express): void {
 
   app.get("/api/vendors/:id", isAuthenticated, async (req, res) => {
     try {
-      const vendor = await storage.getVendorByIdWithRelations(req.params.id);
+      const vendor = await vendorsStorage.getVendorByIdWithRelations(req.params.id);
       if (!vendor) {
         return res.status(404).json({ message: "Vendor not found" });
       }
@@ -43,7 +42,7 @@ export function registerVendorsRoutes(app: Express): void {
       }
 
       const { serviceIds, ...vendorData } = parsed.data;
-      const vendor = await storage.createVendor(vendorData, serviceIds);
+      const vendor = await vendorsStorage.createVendor(vendorData, serviceIds);
 
       await logAuditEvent(req, {
         action: "create",
@@ -79,7 +78,7 @@ export function registerVendorsRoutes(app: Express): void {
       }
 
       const { serviceIds, ...vendorData } = parsed.data;
-      const vendor = await storage.updateVendor(req.params.id, vendorData, serviceIds);
+      const vendor = await vendorsStorage.updateVendor(req.params.id, vendorData, serviceIds);
 
       if (!vendor) {
         return res.status(404).json({ message: "Vendor not found" });
@@ -213,7 +212,7 @@ export function registerVendorsRoutes(app: Express): void {
       }
       
       const expiresInHours = req.body.expiresInHours || 720;
-      const { token, expiresAt } = await storage.createVendorUpdateToken(vendorId, userId, expiresInHours);
+      const { token, expiresAt } = await vendorsStorage.createVendorUpdateToken(vendorId, userId, expiresInHours);
       
       const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
       const host = req.headers['x-forwarded-host'] || req.headers.host;
@@ -269,7 +268,7 @@ export function registerVendorsRoutes(app: Express): void {
             continue;
           }
           
-          const { token, expiresAt } = await storage.createVendorUpdateToken(vendorId, userId, expiresInHours);
+          const { token, expiresAt } = await vendorsStorage.createVendorUpdateToken(vendorId, userId, expiresInHours);
           const updateUrl = `${protocol}://${host}/vendor-update/${token}`;
           
           if (sendEmail) {
@@ -337,7 +336,7 @@ export function registerVendorsRoutes(app: Express): void {
 
   app.get("/api/vendor-update-tokens", isAuthenticated, requirePermission("vendor_tokens.manage"), async (req: any, res) => {
     try {
-      const tokens = await storage.getAllVendorUpdateTokens();
+      const tokens = await vendorsStorage.getAllVendorUpdateTokens();
       res.json(tokens);
     } catch (error) {
       console.error("Error fetching vendor update tokens:", error);
@@ -349,7 +348,7 @@ export function registerVendorsRoutes(app: Express): void {
   app.get("/api/vendor-update/:token", async (req, res) => {
     try {
       const { token } = req.params;
-      const vendor = await storage.getVendorByToken(token);
+      const vendor = await vendorsStorage.getVendorByToken(token);
       
       if (!vendor) {
         return res.status(404).json({ message: "Invalid or expired link" });
@@ -367,7 +366,7 @@ export function registerVendorsRoutes(app: Express): void {
   app.post("/api/vendor-update/:token", async (req, res) => {
     try {
       const { token } = req.params;
-      const vendor = await storage.getVendorByToken(token);
+      const vendor = await vendorsStorage.getVendorByToken(token);
       
       if (!vendor) {
         return res.status(404).json({ message: "Invalid or expired link" });
@@ -400,8 +399,8 @@ export function registerVendorsRoutes(app: Express): void {
         }
       }
       
-      await storage.updateVendor(vendor.id, vendorData, serviceIds);
-      await storage.markTokenAsUsed(token);
+      await vendorsStorage.updateVendor(vendor.id, vendorData, serviceIds);
+      await vendorsStorage.markTokenAsUsed(token);
       
       res.json({ 
         success: true, 

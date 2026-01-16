@@ -1,6 +1,6 @@
 import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
-import { storage } from "../../storage";
+import { formsStorage } from "./forms.storage";
 import { logAuditEvent } from "../../audit";
 import { insertFormTemplateSchema, updateFormTemplateSchema, insertFormRequestSchema, updateFormRequestSchema, insertFormResponseSchema, RecipientType } from "@shared/schema";
 import { sendFormRequestEmail } from "../../email";
@@ -12,7 +12,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.get("/api/form-templates", isAuthenticated, async (req: any, res) => {
     try {
-      const templates = await storage.getFormTemplates();
+      const templates = await formsStorage.getFormTemplates();
       res.json(templates);
     } catch (error) {
       console.error("Error fetching form templates:", error);
@@ -22,7 +22,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.get("/api/form-templates/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const template = await storage.getFormTemplateById(req.params.id);
+      const template = await formsStorage.getFormTemplateById(req.params.id);
       if (!template) {
         return res.status(404).json({ message: "Form template not found" });
       }
@@ -41,7 +41,7 @@ export function registerFormsRoutes(app: Express): void {
       }
 
       const userId = req.user.claims.sub;
-      const template = await storage.createFormTemplate(result.data, userId);
+      const template = await formsStorage.createFormTemplate(result.data, userId);
 
       await logAuditEvent(req, {
         action: "create",
@@ -71,7 +71,7 @@ export function registerFormsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const template = await storage.updateFormTemplate(req.params.id, result.data);
+      const template = await formsStorage.updateFormTemplate(req.params.id, result.data);
       if (!template) {
         return res.status(404).json({ message: "Form template not found" });
       }
@@ -99,12 +99,12 @@ export function registerFormsRoutes(app: Express): void {
 
   app.delete("/api/form-templates/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const template = await storage.getFormTemplateById(req.params.id);
+      const template = await formsStorage.getFormTemplateById(req.params.id);
       if (!template) {
         return res.status(404).json({ message: "Form template not found" });
       }
 
-      await storage.deleteFormTemplate(req.params.id);
+      await formsStorage.deleteFormTemplate(req.params.id);
 
       await logAuditEvent(req, {
         action: "delete",
@@ -134,7 +134,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.get("/api/form-requests", isAuthenticated, async (req: any, res) => {
     try {
-      const requests = await storage.getFormRequests();
+      const requests = await formsStorage.getFormRequests();
       res.json(requests);
     } catch (error) {
       console.error("Error fetching form requests:", error);
@@ -144,7 +144,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.get("/api/form-requests/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const request = await storage.getFormRequestById(req.params.id);
+      const request = await formsStorage.getFormRequestById(req.params.id);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
       }
@@ -163,7 +163,7 @@ export function registerFormsRoutes(app: Express): void {
       }
 
       const userId = req.user.claims.sub;
-      const request = await storage.createFormRequest(result.data, userId);
+      const request = await formsStorage.createFormRequest(result.data, userId);
 
       await logAuditEvent(req, {
         action: "create",
@@ -193,7 +193,7 @@ export function registerFormsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const existingRequest = await storage.getFormRequestById(req.params.id);
+      const existingRequest = await formsStorage.getFormRequestById(req.params.id);
       if (!existingRequest) {
         return res.status(404).json({ message: "Form request not found" });
       }
@@ -202,7 +202,7 @@ export function registerFormsRoutes(app: Express): void {
         return res.status(400).json({ message: "Cannot modify form schema of non-draft requests" });
       }
 
-      const request = await storage.updateFormRequest(req.params.id, result.data);
+      const request = await formsStorage.updateFormRequest(req.params.id, result.data);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
       }
@@ -230,12 +230,12 @@ export function registerFormsRoutes(app: Express): void {
 
   app.delete("/api/form-requests/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const request = await storage.getFormRequestById(req.params.id);
+      const request = await formsStorage.getFormRequestById(req.params.id);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
       }
 
-      await storage.deleteFormRequest(req.params.id);
+      await formsStorage.deleteFormRequest(req.params.id);
 
       await logAuditEvent(req, {
         action: "delete",
@@ -269,12 +269,12 @@ export function registerFormsRoutes(app: Express): void {
         return res.status(400).json({ message: "Recipients array is required" });
       }
 
-      const request = await storage.getFormRequestById(req.params.id);
+      const request = await formsStorage.getFormRequestById(req.params.id);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
       }
 
-      const tokens = await storage.createOutreachTokens(req.params.id, recipients);
+      const tokens = await formsStorage.createOutreachTokens(req.params.id, recipients);
 
       await logAuditEvent(req, {
         action: "create",
@@ -293,7 +293,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.post("/api/form-requests/:id/send", isAuthenticated, async (req: any, res) => {
     try {
-      const request = await storage.getFormRequestById(req.params.id);
+      const request = await formsStorage.getFormRequestById(req.params.id);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
       }
@@ -339,7 +339,7 @@ export function registerFormsRoutes(app: Express): void {
             request.dueDate
           );
 
-          await storage.markOutreachTokenSent(tokenRecord.token);
+          await formsStorage.markOutreachTokenSent(tokenRecord.token);
           sentCount++;
         } catch (emailError) {
           console.error(`Failed to send email to ${recipientEmail}:`, emailError);
@@ -347,7 +347,7 @@ export function registerFormsRoutes(app: Express): void {
         }
       }
 
-      await storage.updateFormRequest(req.params.id, { status: "sent" } as never);
+      await formsStorage.updateFormRequest(req.params.id, { status: "sent" } as never);
 
       await logAuditEvent(req, {
         action: "email_sent",
@@ -373,7 +373,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.get("/api/form-requests/:id/preview", isAuthenticated, async (req: any, res) => {
     try {
-      const request = await storage.getFormRequestById(req.params.id);
+      const request = await formsStorage.getFormRequestById(req.params.id);
       if (!request) {
         return res.status(404).json({ message: "Form request not found" });
       }
@@ -405,7 +405,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.get("/api/form/:token", async (req, res) => {
     try {
-      const formData = await storage.getPublicFormData(req.params.token);
+      const formData = await formsStorage.getPublicFormData(req.params.token);
       if (!formData) {
         return res.status(404).json({ message: "Form not found or expired" });
       }
@@ -418,7 +418,7 @@ export function registerFormsRoutes(app: Express): void {
 
   app.post("/api/form/:token", async (req, res) => {
     try {
-      const tokenRecord = await storage.getOutreachTokenByToken(req.params.token);
+      const tokenRecord = await formsStorage.getOutreachTokenByToken(req.params.token);
       if (!tokenRecord) {
         return res.status(404).json({ message: "Form not found or expired" });
       }
@@ -432,8 +432,8 @@ export function registerFormsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const response = await storage.createOrUpdateFormResponse(tokenRecord.id, result.data);
-      await storage.markOutreachTokenResponded(req.params.token);
+      const response = await formsStorage.createOrUpdateFormResponse(tokenRecord.id, result.data);
+      await formsStorage.markOutreachTokenResponded(req.params.token);
 
       res.json({ message: "Response submitted successfully", response });
     } catch (error) {
