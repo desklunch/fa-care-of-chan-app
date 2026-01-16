@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ import {
 import type { FormTemplate, InsertFormTemplate, FormSection } from "@shared/schema";
 
 export default function AdminFormTemplateFormPage() {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { id } = useParams<{ id?: string }>();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();

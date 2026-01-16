@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -571,7 +572,7 @@ function AttachmentItem({ file, onEdit, onDelete, isDeleting }: AttachmentItemPr
 
 export default function VenueFormPage() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const isEditingVenue = !!id;
 

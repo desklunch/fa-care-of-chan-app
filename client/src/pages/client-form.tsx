@@ -1,4 +1,5 @@
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,7 +41,7 @@ const clientFormSchema = insertClientSchema.extend({
 export default function ClientForm() {
   const params = useParams<{ id?: string }>();
   const isEdit = Boolean(params.id);
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
 
   const { data: client, isLoading: clientLoading } = useQuery<Client>({

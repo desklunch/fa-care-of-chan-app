@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,7 +69,7 @@ type DealFormValues = z.infer<typeof dealFormSchema>;
 
 export default function DealForm() {
   const { id } = useParams<{ id?: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const isEditing = Boolean(id);
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);

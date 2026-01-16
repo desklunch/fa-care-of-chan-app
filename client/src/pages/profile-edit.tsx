@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ import { Loader2, Save } from "lucide-react";
 import { updateProfileSchema, type UpdateProfile } from "@shared/schema";
 
 export default function ProfileEdit() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();

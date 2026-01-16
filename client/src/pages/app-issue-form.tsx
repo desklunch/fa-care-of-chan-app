@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -45,7 +46,7 @@ const severityOptions: { value: IssueSeverity; label: string; description: strin
 
 export default function AppIssueForm() {
   const { id } = useParams<{ id: string }>();
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const { toast } = useToast();
   const isEditing = id && id !== "new";
 

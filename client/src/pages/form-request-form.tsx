@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ import type {
 import { format } from "date-fns";
 
 export default function AdminFormRequestFormPage() {
-  const [, navigate] = useLocation();
+  const [, navigate] = useProtectedLocation();
   const params = useParams<{ id?: string }>();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();

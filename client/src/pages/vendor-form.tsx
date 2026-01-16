@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, useLocation, Link } from "wouter";
+import { useRoute, Link } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -48,7 +49,7 @@ function getIconComponent(iconName: string | null | undefined) {
 }
 
 export default function VendorForm() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const [matchNew] = useRoute("/vendors/new");
   const [matchEdit, editParams] = useRoute<{ id: string }>("/vendors/:id/edit");
   

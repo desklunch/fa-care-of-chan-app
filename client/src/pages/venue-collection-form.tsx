@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, useLocation } from "wouter";
+import { useRoute } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -35,7 +36,7 @@ const formSchema = insertVenueCollectionSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function VenueCollectionForm() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const [matchNew] = useRoute("/venues/collections/new");
   const [matchEdit, editParams] = useRoute<{ id: string }>("/venues/collections/:id/edit");
   

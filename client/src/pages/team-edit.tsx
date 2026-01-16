@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,7 +39,7 @@ import { NoPermissionMessage } from "@/components/no-permission-message";
 
 export default function TeamEdit() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const { user: currentUser } = useAuth();
   const { can } = usePermissions();
   const { toast } = useToast();

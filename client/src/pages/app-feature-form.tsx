@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, useLocation } from "wouter";
+import { useRoute } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -40,7 +41,7 @@ const formSchema = insertAppFeatureSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function AppFeatureForm() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useProtectedLocation();
   const [matchNew] = useRoute("/app/features/new");
   const [matchEdit, editParams] = useRoute<{ id: string }>("/app/features/:id/edit");
   
