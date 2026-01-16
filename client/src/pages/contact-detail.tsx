@@ -39,46 +39,12 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { ClientLinkSearch, VendorLinkSearch } from "@/components/client-link-search";
 import { PermissionGate } from "@/components/permission-gate";
 import { usePermissions } from "@/hooks/usePermissions";
+import { DealStatusBadge } from "@/components/deal-status-badge";
 import {
   EditableField,
   FieldRow,
   useFieldMutation,
 } from "@/components/inline-edit";
-
-const statusColors: Record<
-  DealStatus,
-  {
-    variant: "default" | "secondary" | "outline" | "destructive";
-    className?: string;
-  }
-> = {
-  Prospecting: { variant: "outline" },
-  "Warm Lead": { variant: "secondary" },
-  Proposal: {
-    variant: "secondary",
-    className:
-      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  Feedback: { variant: "secondary" },
-  Contracting: {
-    variant: "secondary",
-    className:
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  "In Progress": {
-    variant: "default",
-    className:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  },
-  "Final Invoicing": { variant: "default" },
-  Complete: {
-    variant: "default",
-    className:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  },
-  "No-Go": { variant: "destructive" },
-  Canceled: { variant: "outline", className: "opacity-50" },
-};
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -630,31 +596,21 @@ export default function ContactDetail() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {deals.map((deal) => {
-                    const statusConfig = statusColors[
-                      deal.status as DealStatus
-                    ] || { variant: "outline" as const };
-                    return (
-                      <Link href={`/deals/${deal.id}`} key={deal.id}>
-                        <div
-                          className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer  bg-background/[50%] dark:bg-foreground/[4%]"
-                          data-testid={`link-deal-${deal.id}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium">
-                              {deal.displayName}
-                            </span>
-                          </div>
-                          <Badge
-                            variant={statusConfig.variant}
-                            className={statusConfig.className}
-                          >
-                            {deal.status}
-                          </Badge>
+                  {deals.map((deal) => (
+                    <Link href={`/deals/${deal.id}`} key={deal.id}>
+                      <div
+                        className="flex items-center justify-between p-3 rounded-md hover-elevate cursor-pointer bg-background/[50%] dark:bg-foreground/[4%]"
+                        data-testid={`link-deal-${deal.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium">
+                            {deal.displayName}
+                          </span>
                         </div>
-                      </Link>
-                    );
-                  })}
+                        <DealStatusBadge status={deal.status as DealStatus} />
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               )}
             </CardContent>
