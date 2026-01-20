@@ -373,7 +373,7 @@ export function MultiSelect({
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName} gap-1 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
+      className={`${appliedButtonClassName} gap-1 h-12 md:h-9 justify-start w-full ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>
@@ -385,7 +385,7 @@ export function MultiSelect({
       type="button"
       variant="default"
       size="md"
-      className="rounded-l-none border-l-0 px-2"
+      className="rounded-l-none border-l-0 px-2 h-12 md:h-9 "
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -417,7 +417,7 @@ export function MultiSelect({
   };
 
   return (
-    <div className="inline-flex items-center">
+    <div className="inline-flex w-full md:w-auto items-center ">
       {isMobile ? (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>

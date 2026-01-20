@@ -106,7 +106,6 @@ const vendorColumns: ColumnConfig<VendorWithRelations>[] = [
                 variant="outline" 
                 className="text-xs shrink-0 flex items-center gap-1"
               >
-                <MapPin className="w-3 h-3" />
                 {loc.displayName || `${loc.city}, ${loc.region}`}
               </Badge>
             ))}

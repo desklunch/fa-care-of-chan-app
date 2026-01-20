@@ -980,19 +980,12 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
       {filters.length > 0 && isMobile && (
         <Sheet open={showFilters} onOpenChange={setShowFilters}>
-          <SheetContent side="bottom" className="h-full max-h-[100dvh] flex flex-col">
-            <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b">
+          <SheetContent side="bottom" className="h-full max-h-[100dvh] flex flex-col p-0">
+            <SheetHeader className="flex flex-row items-center justify-between p-4 border-b">
               <SheetTitle>Filters</SheetTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowFilters(false)}
-                data-testid="button-close-mobile-filters"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto py-4">
+            <div className="flex-1 overflow-y-auto py-0 p-5">
               <div className="flex flex-col gap-3">
                 <FilterBar
                   filters={filters}
@@ -1003,6 +996,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
                 />
               </div>
             </div>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setShowFilters(false)}
+              data-testid="button-close-mobile-filters"
+              className="h-12"
+            >
+              Close
+            </Button>
           </SheetContent>
         </Sheet>
       )}

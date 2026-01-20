@@ -101,7 +101,7 @@ export function FilterBar<T, C = unknown>({
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-2 md:flex-wrap">
       {filters.map((filter) => (
         <FilterControl
           key={filter.id}

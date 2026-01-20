@@ -753,29 +753,27 @@ export default function VenueDetailPage() {
                       <h4 className="font-medium" data-testid={`text-space-name-${space.id}`}>
                         {space.name}
                       </h4>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {(space.hasSeatedFormat || space.hasStandingFormat) && (
-                          <Badge variant="outline" className="text-xs" data-testid={`badge-space-format-${space.id}`}>
-                            {[
-                              space.hasSeatedFormat && "Seated",
-                              space.hasStandingFormat && "Standing"
-                            ].filter(Boolean).join(" & ")}
-                          </Badge>
-                        )}
-                        {(space.maxCapacitySeated || space.maxCapacityStanding) && (
-                          <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
-                            <Users className="h-3 w-3 mr-1" />
-                            {space.maxCapacitySeated && (
-                              <span>{space.minCapacity ? `${space.minCapacity}-` : ""}{space.maxCapacitySeated} seated</span>
-                            )}
-                            {space.maxCapacitySeated && space.maxCapacityStanding && " / "}
-                            {space.maxCapacityStanding && (
-                              <span>{space.maxCapacityStanding} standing</span>
-                            )}
-                          </Badge>
-                        )}
-                      </div>
                     </div>
+                    {space.description && (
+                      <p className="text-sm text-muted-foreground" data-testid={`text-space-description-${space.id}`}>
+                        {space.description}
+                      </p>
+                    )}
+                    {(space.maxCapacitySeated || space.maxCapacityStanding ) && (
+
+                    <div className="flex flex-wrap gap-2">
+                      {space.maxCapacitySeated && (
+                        <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
+                          <span>{space.maxCapacitySeated} Seated</span>
+                        </Badge>
+                      )}
+                      {space.maxCapacityStanding && (
+                        <Badge variant="secondary" data-testid={`badge-space-capacity-${space.id}`}>
+                            <span>{space.maxCapacityStanding} Standing</span>
+                        </Badge>
+                      )}
+                    </div>
+                    )}
                     <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                       {space.sizeSqft && (
                         <span data-testid={`text-space-size-${space.id}`}>
@@ -783,11 +781,6 @@ export default function VenueDetailPage() {
                         </span>
                       )}
                     </div>
-                    {space.description && (
-                      <p className="text-sm text-muted-foreground" data-testid={`text-space-description-${space.id}`}>
-                        {space.description}
-                      </p>
-                    )}
                   </div>
                 ))}
               </div>
