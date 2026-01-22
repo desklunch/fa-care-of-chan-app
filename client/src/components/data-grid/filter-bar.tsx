@@ -82,7 +82,7 @@ function FilterControl<T, C = unknown>({
       triggerLabel={filter.label}
       triggerIcon={<Icon className="h-4 w-4" />}
       placeholder={filter.placeholder || filter.label}
-      showSelectAll={false}
+      showSelectAll={true}
       testIdPrefix={`filter-${filter.id}`}
       searchPlaceholder={`Search ${filter.label.toLowerCase()}...`}
     />

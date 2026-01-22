@@ -117,6 +117,30 @@ function MultiSelectContent({
           </div>
         )}
       </div>
+      <div className="p-2 flex">
+        {showSelectAll && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={selectAll}
+            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
+            data-testid={`button-select-all-${testIdPrefix}`}
+          >
+            <ListChecks  className="h-4 w-4"/>
+            Select All
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={reset}
+          className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
+          data-testid={`button-reset-${testIdPrefix}`}
+        >
+          <ListRestart className="h-4 w-4"/>
+          Reset
+        </Button>
+      </div>
 
       <div className="h-px bg-border mx-1 mb-1" />
 
@@ -220,31 +244,7 @@ function MultiSelectContent({
       <div className="h-px bg-border mx-1 mt-1" />
 
       <div className="p-2 flex">
-        {showSelectAll && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={selectAll}
-            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm [&_svg]:h-4 [&_svg]:w-4 [&_svg]:stroke-[2px]"
-            data-testid={`button-select-all-${testIdPrefix}`}
-          >
-            <ListChecks />
-            Select All
-          </Button>
-        )}
 
-        {showReset && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={reset}
-            className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
-            data-testid={`button-reset-${testIdPrefix}`}
-          >
-            <ListRestart className="h-4 w-4"/>
-            Reset
-          </Button>
-        )}
         <Button
           variant="ghost"
           size="sm"
