@@ -143,26 +143,10 @@ function useLayoutConfig() {
         }
       : null,
     navigation: [
-
-    
       {
-        heading: "Venues",
-        items: [
-          {
-            name: "Venues",
-            href: "/venues",
-            icon: Store,
-          },
-          {
-            name: "Collections",
-            href: "/venues/collections",
-            icon: FolderOpen,
-          },
+        heading: "Sales",
+        defaultCollapsed: true,
 
-        ],
-      },
-      {
-        heading: "New Business",
         requiredPermission: "deals.read",
         items: [
           {
@@ -180,8 +164,30 @@ function useLayoutConfig() {
 
         ],
       },
+    
       {
-        heading: "Directory",
+        heading: "Venues",
+        defaultCollapsed: true,
+
+        items: [
+          {
+            name: "Venues",
+            href: "/venues",
+            icon: Store,
+          },
+          {
+            name: "Collections",
+            href: "/venues/collections",
+            icon: FolderOpen,
+          },
+
+        ],
+      },
+
+      {
+        heading: "Contacts",
+        defaultCollapsed: true,
+
         items: [
           {
             name: "Clients",
@@ -194,16 +200,15 @@ function useLayoutConfig() {
             icon: Handshake,
           },
           {
-            name: "Contacts",
+            name: "People",
             href: "/contacts",
             icon: Contact,
           },
 
         ],
       },
-
       {
-        heading: "App",
+        heading: "Manage",
         defaultCollapsed: true,
         items: [
           {
@@ -219,6 +224,20 @@ function useLayoutConfig() {
             requiredPermission: "venues.write",
           },
           {
+            name: "Theme",
+            href: "/admin/theme",
+            icon: Palette,
+            requiredPermission: "theme.manage",
+          },
+
+        ],
+      },
+      {
+        heading: "App",
+        defaultCollapsed: true,
+        items: [
+  
+          {
             name: "Guide",
             href: "/guide",
             icon: BookOpen,
@@ -228,19 +247,25 @@ function useLayoutConfig() {
             href: "/app/feedback",
             icon: MessageCircleQuestion,
           },
-        ],
-      },
- 
-      {
-        heading: "Admin",
-        requiredPermission: "admin.settings",
-        defaultCollapsed: true,
-        items: [
+          {
+            name: "AI",
+            href: "/ai/context",
+            icon: Bot,
+            requiredPermission: "admin.settings",
+          },
+
           {
             name: "Features",
             href: "/app/features",
             icon: DraftingCompass,
             requiredPermission: "app_features.manage",
+          },
+
+          {
+            name: "Releases",
+            href: "/admin/releases",
+            icon: Rocket,
+            requiredPermission: "releases.manage",
           },
           {
             name: "Issues",
@@ -262,16 +287,19 @@ function useLayoutConfig() {
           },
         ],
       },
+
+ 
+  
       {
-        heading: "In Development",
+        heading: "Developer",
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
           {
-            name: "Context",
-            href: "/ai/context",
-            icon: Bot,
-            requiredPermission: "admin.settings",
+            name: "Feature Categories",
+            href: "/admin/app/features",
+            icon: Tags,
+            requiredPermission: "app_features.manage",
           },
 
 
@@ -312,45 +340,10 @@ function useLayoutConfig() {
             icon: Link2,
             requiredPermission: "vendor_tokens.manage",
           },
-          {
-            name: "Venue Tags",
-            href: "/manage/venues",
-            icon: SlidersHorizontal,
-          },
 
-          {
-            name: "Sales Tags",
-            href: "/sales/manage",
-            icon: SlidersHorizontal,
-            requiredPermission: "sales.manage",
-          },
         ],
       },
-      {
-        heading: "Dev",
-        requiredPermission: "admin.settings",
-        defaultCollapsed: true,
-        items: [
-          {
-            name: "Theme Editor",
-            href: "/admin/theme",
-            icon: Palette,
-            requiredPermission: "theme.manage",
-          },
-          {
-            name: "Feature Categories",
-            href: "/admin/app/features",
-            icon: Tags,
-            requiredPermission: "app_features.manage",
-          },
-          {
-            name: "Releases",
-            href: "/admin/releases",
-            icon: Rocket,
-            requiredPermission: "releases.manage",
-          },
-        ],
-      },
+ 
     
     ],
     onSignOut: async () => {
