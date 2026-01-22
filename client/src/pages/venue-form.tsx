@@ -70,6 +70,14 @@ import {
 const venueTypeLabels: Record<string, string> = {
   restaurant: "Restaurant",
   event_space: "Event Space",
+  gallery: "Gallery",
+  loft: "Loft",
+  private_dining_room: "Private Dining Room",
+  theater: "Theater",
+  museum: "Museum",
+  garden: "Garden",
+  library: "Library",
+  public_property: "Public Property",
 };
 const venueFormSchema = insertVenueSchema.extend({
   amenityIds: z.array(z.string()).default([]),

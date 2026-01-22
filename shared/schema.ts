@@ -261,7 +261,18 @@ export const vendors = pgTable(
 );
 
 // Venue type enum values
-export const venueTypes = ["restaurant", "event_space"] as const;
+export const venueTypes = [
+  "restaurant",
+  "event_space",
+  "gallery",
+  "loft",
+  "private_dining_room",
+  "theater",
+  "museum",
+  "garden",
+  "library",
+  "public_property",
+] as const;
 export type VenueType = (typeof venueTypes)[number];
 
 // Venue space type for JSON storage (will migrate to separate table later)
