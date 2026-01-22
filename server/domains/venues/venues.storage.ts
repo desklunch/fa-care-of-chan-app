@@ -55,6 +55,7 @@ class VenuesStorage {
         v.venue_spaces,
         v.is_active,
         v.is_draft,
+        v.created_at,
         COALESCE(
           (SELECT json_agg(json_build_object('id', a.id, 'name', a.name, 'icon', a.icon))
            FROM venue_amenities va
@@ -93,6 +94,7 @@ class VenuesStorage {
       amenities: row.amenities as AmenitySummary[],
       cuisineTags: row.cuisine_tags as TagSummary[],
       styleTags: row.style_tags as TagSummary[],
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
     }));
   }
 

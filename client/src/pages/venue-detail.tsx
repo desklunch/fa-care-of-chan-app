@@ -272,6 +272,22 @@ export default function VenueDetailPage() {
         <Tabs defaultValue="overview" className="w-full">
           <div className="sticky top-[0px] bg-background z-10">
             <div className="p-4 md:p-6 pb-2 md:pb-2 ">
+              {venue.venueType && (
+                <Badge variant="secondary" className="mb-2 text-xs" data-testid="badge-venue-type">
+                  {{
+                    restaurant: "Restaurant",
+                    event_space: "Event Space",
+                    gallery: "Gallery",
+                    loft: "Loft",
+                    private_dining_room: "Private Dining Room",
+                    theater: "Theater",
+                    museum: "Museum",
+                    garden: "Garden",
+                    library: "Library",
+                    public_property: "Public Property",
+                  }[venue.venueType] || venue.venueType}
+                </Badge>
+              )}
               {(venue.isDraft || !venue.isActive) && (
                 <div className="flex gap-2 mb-4" data-testid="venue-status-badges">
                   {venue.isDraft && (

@@ -1039,6 +1039,7 @@ export type VenueGridRow = {
   amenities: AmenitySummary[];
   cuisineTags: TagSummary[];
   styleTags: TagSummary[];
+  createdAt: string | null;
 };
 
 // Venue collection types

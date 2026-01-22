@@ -208,6 +208,14 @@ const venueColumns: ColumnConfig<VenueGridRow>[] = [
         const labels: Record<string, string> = {
           restaurant: "Restaurant",
           event_space: "Event Space",
+          gallery: "Gallery",
+          loft: "Loft",
+          private_dining_room: "Private Dining Room",
+          theater: "Theater",
+          museum: "Museum",
+          garden: "Garden",
+          library: "Library",
+          public_property: "Public Property",
         };
         return labels[value] || value;
       },
@@ -318,6 +326,20 @@ const venueColumns: ColumnConfig<VenueGridRow>[] = [
       ),
     },
   },
+  {
+    id: "createdAt",
+    headerName: "Created",
+    field: "createdAt",
+    colDef: {
+      flex: 0.8,
+      minWidth: 120,
+      valueFormatter: (params) => {
+        const value = params.value as string | null;
+        if (!value) return "";
+        return new Date(value).toLocaleDateString();
+      },
+    },
+  },
 ];
 
 const venueFilters: FilterConfig<VenueGridRow>[] = [
@@ -330,6 +352,14 @@ const venueFilters: FilterConfig<VenueGridRow>[] = [
       options: [
         { id: "restaurant", label: "Restaurant" },
         { id: "event_space", label: "Event Space" },
+        { id: "gallery", label: "Gallery" },
+        { id: "loft", label: "Loft" },
+        { id: "private_dining_room", label: "Private Dining Room" },
+        { id: "theater", label: "Theater" },
+        { id: "museum", label: "Museum" },
+        { id: "garden", label: "Garden" },
+        { id: "library", label: "Library" },
+        { id: "public_property", label: "Public Property" },
       ],
     },
     matchFn: (venue, selectedValues) => {
