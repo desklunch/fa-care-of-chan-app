@@ -629,6 +629,7 @@ export default function VenueFormPage() {
     resolver: zodResolver(venueFormSchema),
     defaultValues: {
       name: "",
+      venueType: "",
       shortDescription: "",
       longDescription: "",
       streetAddress1: "",
@@ -695,6 +696,7 @@ export default function VenueFormPage() {
     if (venue) {
       form.reset({
         name: venue.name || "",
+        venueType: venue.venueType || "",
         shortDescription: venue.shortDescription || "",
         longDescription: venue.longDescription || "",
         streetAddress1: venue.streetAddress1 || "",
