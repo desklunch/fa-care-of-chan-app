@@ -80,10 +80,6 @@ export const PERMISSIONS = {
   'team.read': 'team.read',
   'team.manage': 'team.manage',
   
-  // Invites - admins only
-  'invites.read': 'invites.read',
-  'invites.manage': 'invites.manage',
-  
   // Audit logs - admins only
   'audit.read': 'audit.read',
   'audit.export': 'audit.export',
@@ -160,8 +156,6 @@ const TIER_2_PERMISSIONS: Permission[] = [
 const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
   'team.manage',
-  'invites.read',
-  'invites.manage',
   'audit.read',
   'audit.export',
   'app_features.manage',
@@ -308,7 +302,6 @@ export const NAV_PERMISSIONS: Record<string, Permission> = {
   '/deals': 'deals.read',
   '/sales/manage': 'sales.manage',
   '/team': 'team.read',
-  '/admin/invites': 'invites.read',
   '/admin/logs': 'audit.read',
   '/admin/analytics': 'admin.analytics',
   '/app/features': 'app_features.read',

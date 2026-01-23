@@ -45,19 +45,6 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Invite tokens for employee registration
-export const invites = pgTable("invites", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").notNull(),
-  token: varchar("token").notNull().unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  createdById: varchar("created_by_id").references(() => users.id),
-  usedAt: timestamp("used_at"),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Audit log source enum values
 export const auditSources = ['api', 'mcp', 'system', 'event'] as const;
 export type AuditSource = (typeof auditSources)[number];
@@ -835,20 +822,12 @@ export const comments = pgTable(
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  createdInvites: many(invites),
   auditLogs: many(auditLogs),
   createdFeatures: many(appFeatures, { relationName: "createdFeatures" }),
   ownedFeatures: many(appFeatures, { relationName: "ownedFeatures" }),
   featureVotes: many(appFeatureVotes),
   featureComments: many(appFeatureComments),
   createdVendorTokens: many(vendorUpdateTokens),
-}));
-
-export const invitesRelations = relations(invites, ({ one }) => ({
-  createdBy: one(users, {
-    fields: [invites.createdById],
-    references: [users.id],
-  }),
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
@@ -917,8 +896,6 @@ export const appFeatureCommentsRelations = relations(appFeatureComments, ({ one 
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
-export type Invite = typeof invites.$inferSelect;
-export type InsertInvite = typeof invites.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
 export type FeatureCategory = typeof appFeatureCategories.$inferSelect;
@@ -1063,17 +1040,7 @@ export const updateProfileSchema = createInsertSchema(users).pick({
   profileImageUrl: true,
 });
 
-export const insertInviteSchema = createInsertSchema(invites).omit({
-  id: true,
-  token: true,
-  createdAt: true,
-  usedAt: true,
-  expiresAt: true,
-  createdById: true,
-});
-
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
-export type CreateInvite = z.infer<typeof insertInviteSchema>;
 
 // Feature category schemas
 export const insertFeatureCategorySchema = createInsertSchema(appFeatureCategories).omit({

@@ -289,7 +289,6 @@ const defaultVisibleColumns = ["performedAt", "performerName", "action", "entity
 
 const ENTITY_TYPES = [
   { id: "user", label: "User" },
-  { id: "invite", label: "Invite" },
   { id: "session", label: "Session" },
   { id: "venue", label: "Venue" },
   { id: "venue_collection", label: "Venue Collection" },
