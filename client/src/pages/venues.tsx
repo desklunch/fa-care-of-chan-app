@@ -43,6 +43,7 @@ const VENUES_WELCOME_KEY = "venues_welcome_seen";
 
 const DEFAULT_VISIBLE_COLUMNS = [
   "name",
+   "venueType",
   "cuisineTags",
   "styleTags",
   "location",
@@ -200,8 +201,8 @@ const venueColumns: ColumnConfig<VenueGridRow>[] = [
     headerName: "Type",
     field: "venueType",
     colDef: {
-      flex: 0.8,
-      minWidth: 100,
+      flex: 1.5,
+      minWidth: 140,
       valueFormatter: (params) => {
         const value = params.value as string | null;
         if (!value) return "";
@@ -224,29 +225,14 @@ const venueColumns: ColumnConfig<VenueGridRow>[] = [
     id: "location",
     headerName: "Location",
     colDef: {
-      flex: 1,
-      minWidth: 150,
+      flex: 1.5,
+      minWidth: 180,
       cellRenderer: (params: { data: VenueGridRow }) => (
         <LocationCellRenderer data={params.data} />
       ),
       valueGetter: (params) => {
         const data = params.data as VenueGridRow;
         return [data?.city, data?.state].filter(Boolean).join(", ");
-      },
-    },
-  },
-  {
-    id: "styleTags",
-    headerName: "Style",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-      cellRenderer: (params: { data: VenueGridRow }) => (
-        <StyleTagsCellRenderer data={params.data} />
-      ),
-      valueGetter: (params) => {
-        const data = params.data as VenueGridRow;
-        return data?.styleTags?.map((t) => t.name).join(", ") || "";
       },
     },
   },
@@ -265,6 +251,22 @@ const venueColumns: ColumnConfig<VenueGridRow>[] = [
       },
     },
   },
+  {
+    id: "styleTags",
+    headerName: "Style",
+    colDef: {
+      flex: 1,
+      minWidth: 180,
+      cellRenderer: (params: { data: VenueGridRow }) => (
+        <StyleTagsCellRenderer data={params.data} />
+      ),
+      valueGetter: (params) => {
+        const data = params.data as VenueGridRow;
+        return data?.styleTags?.map((t) => t.name).join(", ") || "";
+      },
+    },
+  },
+
   {
     id: "amenities",
     headerName: "Amenities",
