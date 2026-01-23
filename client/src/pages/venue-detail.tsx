@@ -353,7 +353,7 @@ export default function VenueDetailPage() {
 
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
               <DialogContent 
-                className="w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-w-none p-0 border-0 bg-black/95 overflow-hidden flex flex-col cursor-pointer"
+                className="w-full h-full top-0 md:top-4 md:!w-[calc(100vw-2rem)] md:!h-[calc(100vh-2rem)] max-w-none md:max-w-none p-0 border-0 bg-black/95 overflow-hidden flex flex-col cursor-pointer rounded-none md:rounded-lg"
                 onClick={() => setLightboxOpen(false)}
               >
                 <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
