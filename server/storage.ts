@@ -1,6 +1,5 @@
 import {
   users,
-  invites,
   auditLogs,
   appFeatureCategories,
   appFeatures,
@@ -35,9 +34,6 @@ import {
   type InsertDealService,
   type User,
   type UpsertUser,
-  type Invite,
-  type InsertInvite,
-  type CreateInvite,
   type AuditLog,
   type InsertAuditLog,
   type FeatureCategory,
@@ -187,15 +183,6 @@ export interface IStorage {
   getAllEmployees(): Promise<User[]>;
   getRecentEmployees(limit?: number): Promise<User[]>;
   
-  // Invite operations
-  createInvite(data: CreateInvite, createdById: string): Promise<Invite>;
-  getInviteByToken(token: string): Promise<Invite | undefined>;
-  getInviteById(id: string): Promise<Invite | undefined>;
-  markInviteUsed(id: string): Promise<void>;
-  deleteInvite(id: string): Promise<void>;
-  getAllInvites(): Promise<Invite[]>;
-  getPendingInvites(): Promise<Invite[]>;
-  
   // Audit log operations
   createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
   getRecentAuditLogs(limit?: number): Promise<AuditLogWithName[]>;
@@ -203,7 +190,6 @@ export interface IStorage {
   // Stats
   getStats(): Promise<{
     totalEmployees: number;
-    activeInvites: number;
     recentSignups: number;
   }>;
 
@@ -443,68 +429,11 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  // Invite operations
-  async createInvite(data: CreateInvite, createdById: string): Promise<Invite> {
-    const token = randomBytes(32).toString("hex");
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
-
-    const [invite] = await db
-      .insert(invites)
-      .values({
-        ...data,
-        token,
-        createdById,
-        expiresAt,
-      })
-      .returning();
-    return invite;
-  }
-
-  async getInviteByToken(token: string): Promise<Invite | undefined> {
-    const [invite] = await db
-      .select()
-      .from(invites)
-      .where(eq(invites.token, token));
-    return invite;
-  }
-
-  async getInviteById(id: string): Promise<Invite | undefined> {
-    const [invite] = await db.select().from(invites).where(eq(invites.id, id));
-    return invite;
-  }
-
-  async markInviteUsed(id: string): Promise<void> {
-    await db
-      .update(invites)
-      .set({ usedAt: new Date() })
-      .where(eq(invites.id, id));
-  }
-
-  async deleteInvite(id: string): Promise<void> {
-    await db.delete(invites).where(eq(invites.id, id));
-  }
-
-  async getAllInvites(): Promise<Invite[]> {
-    return db.select().from(invites).orderBy(desc(invites.createdAt));
-  }
-
-  async getPendingInvites(): Promise<Invite[]> {
-    const now = new Date();
-    return db
-      .select()
-      .from(invites)
-      .where(and(isNull(invites.usedAt), gt(invites.expiresAt, now)))
-      .orderBy(desc(invites.createdAt));
-  }
-
   // Stats
   async getStats(): Promise<{
     totalEmployees: number;
-    activeInvites: number;
     recentSignups: number;
   }> {
-    const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -513,11 +442,6 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(eq(users.isActive, true));
 
-    const [inviteCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(invites)
-      .where(and(isNull(invites.usedAt), gt(invites.expiresAt, now)));
-
     const [recentCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(users)
@@ -525,7 +449,6 @@ export class DatabaseStorage implements IStorage {
 
     return {
       totalEmployees: Number(employeeCount?.count) || 0,
-      activeInvites: Number(inviteCount?.count) || 0,
       recentSignups: Number(recentCount?.count) || 0,
     };
   }

@@ -3,27 +3,23 @@
  * 
  * Storage methods for admin functionality:
  * - Team management (employees, users)
- * - Invites (CRUD, token validation)
  * - Admin stats and audit logs
  * - Analytics/Activity tracking
  * 
- * Total: ~19 storage methods
+ * Total: ~13 storage methods
  */
 
 import { db } from "../../db";
 import { 
   users, 
-  invites, 
   auditLogs,
   analyticsSessions,
   analyticsPageViews,
   analyticsEvents
 } from "@shared/schema";
-import { eq, desc, and, isNull, gt, gte, lte, sql, count } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
 import type { 
   User, 
-  Invite, 
   InsertAnalyticsSession,
   InsertAnalyticsPageView,
   InsertAnalyticsEvent,
@@ -31,13 +27,6 @@ import type {
   AnalyticsPageView,
   AnalyticsEvent
 } from "@shared/schema";
-
-export interface CreateInvite {
-  email: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  role?: string;
-}
 
 export interface AuditLogWithName {
   id: string;
@@ -70,63 +59,11 @@ export const adminStorage = {
       .limit(limit);
   },
 
-  // ==================== Invite Methods ====================
-
-  async createInvite(data: CreateInvite, createdById: string): Promise<Invite> {
-    const token = nanoid(32);
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    const [invite] = await db
-      .insert(invites)
-      .values({
-        ...data,
-        token,
-        createdById,
-        expiresAt,
-      })
-      .returning();
-    return invite;
-  },
-
-  async getInviteByToken(token: string): Promise<Invite | undefined> {
-    const [invite] = await db
-      .select()
-      .from(invites)
-      .where(eq(invites.token, token));
-    return invite;
-  },
-
-  async getInviteById(id: string): Promise<Invite | undefined> {
-    const [invite] = await db
-      .select()
-      .from(invites)
-      .where(eq(invites.id, id));
-    return invite;
-  },
-
-  async deleteInvite(id: string): Promise<void> {
-    await db.delete(invites).where(eq(invites.id, id));
-  },
-
-  async getAllInvites(): Promise<Invite[]> {
-    return db.select().from(invites).orderBy(desc(invites.createdAt));
-  },
-
-  async getPendingInvites(): Promise<Invite[]> {
-    return db
-      .select()
-      .from(invites)
-      .where(and(isNull(invites.usedAt), gt(invites.expiresAt, new Date())))
-      .orderBy(desc(invites.createdAt));
-  },
-
   // ==================== Admin Stats Methods ====================
 
   async getStats(): Promise<{
     totalEmployees: number;
     activeEmployees: number;
-    pendingInvites: number;
     recentActivity: number;
   }> {
     const [employeeCount] = await db
@@ -137,11 +74,6 @@ export const adminStorage = {
       .select({ count: count() })
       .from(users)
       .where(eq(users.isActive, true));
-
-    const [inviteCount] = await db
-      .select({ count: count() })
-      .from(invites)
-      .where(and(isNull(invites.usedAt), gt(invites.expiresAt, new Date())));
 
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
@@ -154,7 +86,6 @@ export const adminStorage = {
     return {
       totalEmployees: employeeCount?.count || 0,
       activeEmployees: activeCount?.count || 0,
-      pendingInvites: inviteCount?.count || 0,
       recentActivity: activityCount?.count || 0,
     };
   },
