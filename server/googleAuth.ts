@@ -41,29 +41,15 @@ async function verifyGoogleToken(idToken: string) {
   return payload;
 }
 
-async function upsertUser(payload: any, inviteToken?: string): Promise<{ user: any; userId: string }> {
-  let inviteData = null;
-  if (inviteToken) {
-    inviteData = await storage.getInviteByToken(inviteToken);
-    if (inviteData && !inviteData.usedAt) {
-      if (inviteData.email.toLowerCase() === payload.email?.toLowerCase()) {
-        await storage.markInviteUsed(inviteData.id);
-      } else {
-        inviteData = null;
-      }
-    } else {
-      inviteData = null;
-    }
-  }
-
+async function upsertUser(payload: any): Promise<{ user: any; userId: string }> {
   // Check if a user with this email already exists (handles migration from old auth systems)
   const existingUser = await storage.getUserByEmail(payload.email);
   
   if (existingUser) {
     // Update existing user's profile info but keep their original ID
     await storage.updateUser(existingUser.id, {
-      firstName: inviteData?.firstName || payload.given_name || existingUser.firstName,
-      lastName: inviteData?.lastName || payload.family_name || existingUser.lastName,
+      firstName: payload.given_name || existingUser.firstName,
+      lastName: payload.family_name || existingUser.lastName,
       profileImageUrl: payload.picture || existingUser.profileImageUrl,
     });
     const updatedUser = await storage.getUser(existingUser.id);
@@ -74,8 +60,8 @@ async function upsertUser(payload: any, inviteToken?: string): Promise<{ user: a
   await storage.upsertUser({
     id: payload.sub,
     email: payload.email,
-    firstName: inviteData?.firstName || payload.given_name,
-    lastName: inviteData?.lastName || payload.family_name,
+    firstName: payload.given_name,
+    lastName: payload.family_name,
     profileImageUrl: payload.picture,
   });
 
@@ -89,7 +75,7 @@ export async function setupAuth(app: Express) {
 
   app.post("/api/auth/google", async (req, res) => {
     try {
-      const { credential, inviteToken } = req.body;
+      const { credential } = req.body;
       
       if (!credential) {
         return res.status(400).json({ message: "No credential provided" });
@@ -110,7 +96,7 @@ export async function setupAuth(app: Express) {
         });
       }
 
-      const { user, userId } = await upsertUser(payload, inviteToken);
+      const { user, userId } = await upsertUser(payload);
       
       // Use the actual user ID (which may be different from Google's sub for migrated accounts)
       (req.session as any).userId = userId;
