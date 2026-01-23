@@ -3,12 +3,11 @@
  * 
  * Routes for admin functionality:
  * - Team management: GET /api/team, /api/users, /api/team/:id, PATCH /api/team/:id/role, PATCH /api/team/:id
- * - Invites: GET/POST/DELETE /api/invites, validate token, send email
  * - Admin: GET /api/admin/stats, /api/admin/recent-employees, /api/admin/logs
  * - Activity tracking: /api/activity/* (session, pageview, event)
  * - Admin analytics: GET /api/admin/activity, /api/admin/activity/pageviews/recent
  * 
- * Total: 21 routes
+ * Total: 15 routes
  */
 
 import type { Express } from "express";
@@ -17,8 +16,7 @@ import { requirePermission } from "../../middleware/permissions";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { adminStorage } from "./admin.storage";
 import { storage } from "../../storage";
-import { updateProfileSchema, insertInviteSchema } from "@shared/schema";
-import { sendInvitationEmail } from "../../email";
+import { updateProfileSchema } from "@shared/schema";
 
 export function registerAdminRoutes(app: Express): void {
   // ==================== Team Routes ====================
@@ -143,195 +141,6 @@ export function registerAdminRoutes(app: Express): void {
     } catch (error) {
       console.error("Error updating team member:", error);
       res.status(500).json({ message: "Failed to update team member" });
-    }
-  });
-
-  // ==================== Invite Routes ====================
-
-  app.get("/api/invites", isAuthenticated, requirePermission("invites.read"), async (req, res) => {
-    try {
-      const allInvites = await adminStorage.getAllInvites();
-      res.json(allInvites);
-    } catch (error) {
-      console.error("Error fetching invites:", error);
-      res.status(500).json({ message: "Failed to fetch invites" });
-    }
-  });
-
-  app.get("/api/invites/pending", isAuthenticated, requirePermission("invites.read"), async (req, res) => {
-    try {
-      const pendingInvites = await adminStorage.getPendingInvites();
-      res.json(pendingInvites);
-    } catch (error) {
-      console.error("Error fetching pending invites:", error);
-      res.status(500).json({ message: "Failed to fetch pending invites" });
-    }
-  });
-
-  app.get("/api/invites/validate/:token", async (req, res) => {
-    try {
-      const invite = await adminStorage.getInviteByToken(req.params.token);
-      
-      if (!invite) {
-        return res.status(404).json({ message: "Invite not found" });
-      }
-      
-      if (invite.usedAt) {
-        return res.status(400).json({ message: "Invite already used" });
-      }
-      
-      if (new Date(invite.expiresAt) < new Date()) {
-        return res.status(400).json({ message: "Invite expired" });
-      }
-      
-      res.json(invite);
-    } catch (error) {
-      console.error("Error validating invite:", error);
-      res.status(500).json({ message: "Failed to validate invite" });
-    }
-  });
-
-  app.post("/api/invites", isAuthenticated, requirePermission("invites.manage"), async (req: any, res) => {
-    try {
-      const result = insertInviteSchema.safeParse(req.body);
-      
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: "Invalid data", 
-          errors: result.error.flatten() 
-        });
-      }
-
-      const existingUser = await storage.getUserByEmail(result.data.email);
-      if (existingUser) {
-        return res.status(400).json({ 
-          message: "A user with this email already exists" 
-        });
-      }
-
-      const pendingInvites = await adminStorage.getPendingInvites();
-      const existingInvite = pendingInvites.find(
-        inv => inv.email.toLowerCase() === result.data.email.toLowerCase()
-      );
-      if (existingInvite) {
-        return res.status(400).json({ 
-          message: "An active invitation already exists for this email" 
-        });
-      }
-
-      const userId = req.user.claims.sub;
-      const invite = await adminStorage.createInvite(result.data, userId);
-
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "invite",
-        entityId: invite.id,
-        changes: {
-          after: {
-            email: invite.email,
-            firstName: invite.firstName,
-            lastName: invite.lastName,
-          },
-        },
-      });
-
-      res.status(201).json(invite);
-    } catch (error) {
-      console.error("Error creating invite:", error);
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "invite",
-        status: "failure",
-        metadata: { error: String(error), email: req.body?.email },
-      });
-      res.status(500).json({ message: "Failed to create invite" });
-    }
-  });
-
-  app.delete("/api/invites/:id", isAuthenticated, requirePermission("invites.manage"), async (req: any, res) => {
-    try {
-      const invite = await adminStorage.getInviteById(req.params.id);
-      if (!invite) {
-        return res.status(404).json({ message: "Invite not found" });
-      }
-      
-      await adminStorage.deleteInvite(req.params.id);
-
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "invite",
-        entityId: req.params.id,
-        changes: {
-          before: {
-            email: invite.email,
-            firstName: invite.firstName,
-            lastName: invite.lastName,
-          },
-        },
-      });
-
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting invite:", error);
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "invite",
-        entityId: req.params.id,
-        status: "failure",
-        metadata: { error: String(error) },
-      });
-      res.status(500).json({ message: "Failed to delete invite" });
-    }
-  });
-
-  app.post("/api/invites/:id/send-email", isAuthenticated, requirePermission("invites.manage"), async (req: any, res) => {
-    try {
-      const invite = await adminStorage.getInviteById(req.params.id);
-      
-      if (!invite) {
-        return res.status(404).json({ message: "Invite not found" });
-      }
-      
-      if (invite.usedAt) {
-        return res.status(400).json({ message: "Cannot send email for an already used invite" });
-      }
-      
-      if (new Date(invite.expiresAt) < new Date()) {
-        return res.status(400).json({ message: "Cannot send email for an expired invite" });
-      }
-
-      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-      const host = req.headers['x-forwarded-host'] || req.headers.host;
-      const inviteLink = `${protocol}://${host}/invite?token=${invite.token}`;
-
-      await sendInvitationEmail({
-        recipientEmail: invite.email,
-        recipientName: `${invite.firstName} ${invite.lastName}`.trim() || 'Team Member',
-        inviteLink,
-        organizationName: 'Team Directory',
-      });
-
-      await logAuditEvent(req, {
-        action: "email_sent",
-        entityType: "invite",
-        entityId: invite.id,
-        metadata: { 
-          recipientEmail: invite.email,
-          recipientName: `${invite.firstName} ${invite.lastName}`.trim(),
-        },
-      });
-
-      res.json({ message: "Invitation email sent successfully" });
-    } catch (error) {
-      console.error("Error sending invitation email:", error);
-      await logAuditEvent(req, {
-        action: "email_sent",
-        entityType: "invite",
-        entityId: req.params.id,
-        status: "failure",
-        metadata: { error: String(error) },
-      });
-      res.status(500).json({ message: "Failed to send invitation email" });
     }
   });
 
