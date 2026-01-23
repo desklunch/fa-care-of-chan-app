@@ -131,6 +131,7 @@ The following documentation files MUST be maintained as part of development:
 | File | Purpose | Update Frequency |
 |------|---------|------------------|
 | `docs/ai-mcp.md` | AI/MCP implementation plan and progress tracking | Update after completing each phase, or when implementation diverges from plan |
+| `docs/mobile-app-support.md` | Mobile app backend support implementation plan | Update when implementing phases or making architectural decisions |
 | `replit.md` | Project overview, architecture, and preferences | Update when adding major features or changing architecture |
 | `docs/audit-*.md` | Technical audit reports | Create new file for each audit |
 
