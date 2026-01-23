@@ -318,12 +318,7 @@ function useLayoutConfig() {
             icon: MessageSquare,
             requiredPermission: "admin.settings",
           },
-          {
-            name: "Vendor Services",
-            href: "/admin/vendors/services",
-            icon: Briefcase,
-            requiredPermission: "admin.settings",
-          },
+
           {
             name: "Vendor Tokens",
             href: "/admin/vendors/tokens",
