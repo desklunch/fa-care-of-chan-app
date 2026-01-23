@@ -52,7 +52,7 @@ import { VenueFileUploader, FileType } from "@/components/ui/venue-file-uploader
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { useStagedAssets, StagedPhoto, StagedFloorplan, StagedAttachment } from "@/hooks/use-staged-assets";
 import { Save, Loader2, Plus, Trash2, Image, ImagePlus, ExternalLink, GripVertical, FileText, FileImage, Pencil, X, Check, Download, Copy, File, FileArchive, Sparkles, RefreshCw, Unlink, MapPin } from "lucide-react";
-import type { VenueWithRelations, VenueFloorplan, VenueFile, VenueFileWithUploader, VenuePhoto, VenueSpace } from "@shared/schema";
+import type { VenueWithRelations, VenueFile, VenueFileWithUploader, VenuePhoto, VenueSpace } from "@shared/schema";
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
 import { formatTimeAgo } from "@/lib/format-time";
@@ -186,7 +186,7 @@ function SortablePhotoItem({ id, index, photoUrl, thumbnailUrl, altText, onView,
 }
 
 interface FloorplanItemProps {
-  floorplan: VenueFloorplan;
+  floorplan: VenueFile;
   onEdit: (id: string, updates: { title?: string; caption?: string }) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;

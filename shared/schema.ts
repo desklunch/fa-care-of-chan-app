@@ -448,26 +448,6 @@ export const venueFiles = pgTable(
   ],
 );
 
-// Keep venueFloorplans for backward compatibility (deprecated - use venueFiles instead)
-export const venueFloorplans = pgTable(
-  "venue_floorplans",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    venueId: varchar("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
-    fileUrl: varchar("file_url", { length: 500 }).notNull(),
-    thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
-    fileType: varchar("file_type", { length: 20 }).notNull(), // 'image' | 'pdf'
-    title: varchar("title", { length: 255 }),
-    caption: text("caption"),
-    sortOrder: integer("sort_order").default(0).notNull(),
-    uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
-  },
-  (table) => [
-    index("idx_venue_floorplans_venue_id").on(table.venueId),
-    index("idx_venue_floorplans_uploaded_at").on(table.uploadedAt),
-  ],
-);
-
 // Venue collections - allow users to organize venues into named groups
 export const venueCollections = pgTable(
   "venue_collections",
@@ -965,8 +945,6 @@ export type VenueTag = typeof venueTags.$inferSelect;
 export type InsertVenueTag = typeof venueTags.$inferInsert;
 export type VenueFile = typeof venueFiles.$inferSelect;
 export type InsertVenueFile = typeof venueFiles.$inferInsert;
-export type VenueFloorplan = typeof venueFloorplans.$inferSelect;
-export type InsertVenueFloorplan = typeof venueFloorplans.$inferInsert;
 export type VenuePhoto = typeof venuePhotos.$inferSelect;
 export type InsertVenuePhoto = typeof venuePhotos.$inferInsert;
 
@@ -1319,29 +1297,6 @@ export const updateVenueFileSchema = insertVenueFileSchema.omit({
 
 export type CreateVenueFile = z.infer<typeof insertVenueFileSchema>;
 export type UpdateVenueFile = z.infer<typeof updateVenueFileSchema>;
-
-// Legacy floorplan schemas (deprecated - use venueFile schemas)
-export const insertVenueFloorplanSchema = createInsertSchema(venueFloorplans).omit({
-  id: true,
-  uploadedAt: true,
-}).extend({
-  venueId: z.string().min(1, "Venue ID is required"),
-  fileUrl: z.string().min(1, "File URL is required").max(500),
-  thumbnailUrl: z.string().max(500).optional().nullable(),
-  fileType: z.enum(["image", "pdf"]),
-  title: z.string().max(255).optional().nullable(),
-  caption: z.string().optional().nullable(),
-  sortOrder: z.number().int().default(0),
-});
-
-export const updateVenueFloorplanSchema = insertVenueFloorplanSchema.omit({
-  venueId: true,
-  fileUrl: true,
-  fileType: true,
-}).partial();
-
-export type CreateVenueFloorplan = z.infer<typeof insertVenueFloorplanSchema>;
-export type UpdateVenueFloorplan = z.infer<typeof updateVenueFloorplanSchema>;
 
 // Venue photo schemas
 export const insertVenuePhotoSchema = createInsertSchema(venuePhotos).omit({
