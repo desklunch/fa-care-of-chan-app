@@ -44,11 +44,7 @@ const VenueCollectionForm = lazy(() => import("@/pages/venue-collection-form"));
 const VenueCollectionDetail = lazy(() => import("@/pages/venue-collection-detail"));
 const Amenities = lazy(() => import("@/pages/amenities"));
 const Industries = lazy(() => import("@/pages/industries"));
-const ManageSalesPage = lazy(() => import("@/pages/manage"));
-const TagsPage = lazy(() => import("@/pages/tags"));
-const ManageVenuesPage = lazy(() => import("@/pages/manage-venues"));
 const ManageTagsPage = lazy(() => import("@/pages/manage-tags"));
-const AdminVendorServices = lazy(() => import("@/pages/admin-vendor-services"));
 const AdminThemeEditor = lazy(() => import("@/pages/admin-theme-editor"));
 const AdminVendorTokens = lazy(() => import("@/pages/admin-vendor-tokens"));
 const VendorUpdateForm = lazy(() => import("@/pages/vendor-update-form"));
@@ -385,12 +381,9 @@ function AuthenticatedRoutes() {
           <Route path="/venues/:id/edit" component={VenueForm} />
           <Route path="/venues/:id" component={VenueDetail} />
           <Route path="/comments" component={CommentsPage} />
-          <Route path="/manage/venues" component={ManageVenuesPage} />
           <Route path="/manage/tags" component={ManageTagsPage} />
           <Route path="/amenities" component={Amenities} />
           <Route path="/industries" component={Industries} />
-          <Route path="/sales/manage" component={ManageSalesPage} />
-          <Route path="/tags" component={TagsPage} />
           <Route path="/deals" component={Deals} />
           <Route path="/deals/reports" component={DealReports} />
           <Route path="/deals/new" component={DealForm} />
@@ -406,7 +399,6 @@ function AuthenticatedRoutes() {
           <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/ai/context" component={AIContext} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
-          <Route path="/admin/vendors/services" component={AdminVendorServices} />
           <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
           <Route path="/forms/templates" component={FormTemplates} />
           <Route path="/forms/templates/new" component={FormTemplateForm} />

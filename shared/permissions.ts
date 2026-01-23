@@ -300,14 +300,12 @@ export const NAV_PERMISSIONS: Record<string, Permission> = {
   '/contacts': 'contacts.read',
   '/vendors': 'vendors.read',
   '/deals': 'deals.read',
-  '/sales/manage': 'sales.manage',
   '/team': 'team.read',
   '/admin/logs': 'audit.read',
   '/admin/analytics': 'admin.analytics',
   '/app/features': 'app_features.read',
   '/app/issues': 'app_features.read',
   '/app/releases': 'releases.read',
-  '/admin/vendor-services': 'admin.settings',
   '/admin/theme': 'theme.manage',
 };
 
