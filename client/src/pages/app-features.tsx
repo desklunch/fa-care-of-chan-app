@@ -33,38 +33,41 @@ function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
   return (
     <Link href={`/app/features/${feature.id}`}>
       <div 
-        className="flex flex-wrap items-center gap-4 px-4 py-3 border-b hover-elevate cursor-pointer"
+        className=" flex justify-between items-center  gap-4 px-4 py-3 border-b hover-elevate cursor-pointer "
         data-testid={`row-feature-${feature.id}`}
       >
-        <Badge 
-          variant="outline"
-          className="shrink-0 w-24 justify-center"
-          style={{ 
-            borderColor: feature.category?.color || undefined,
-            color: feature.category?.color || undefined 
-          }}
-          data-testid={`badge-category-${feature.id}`}
-        >
-          {feature.category?.name || "Uncategorized"}
-        </Badge>
-        
-        <span 
-          className="font-medium min-w-0 flex-1 lg:flex-none lg:w-64 truncate"
-          data-testid={`text-feature-title-${feature.id}`}
-        >
-          {feature.title}
+
+        <span className=" flex items-center  w-auto justify-start gap-4 ">
+          <Badge 
+            variant="outline"
+          className="!w-16 shrink-0 py-0.5 justify-center text-[11px]  text-background font-semibold"
+            style={{ 
+              borderColor: feature.category?.color || undefined,
+              color: feature.category?.color || undefined,
+
+            }}
+            data-testid={`badge-category-${feature.id}`}
+          >
+            {feature.category?.name || "Uncategorized"}
+          </Badge>
+          <span 
+            className="font-medium text-sm shrink-0 "
+            data-testid={`text-feature-title-${feature.id}`}
+          >
+            {feature.title}
+          </span>
+
+          <span 
+            className=" text-xs text-muted-foreground line-clamp-1   "
+            data-testid={`text-feature-description-${feature.id}`}
+          >
+            {feature.description}
+          </span>
         </span>
-        
-        <span 
-          className="hidden lg:block text-sm text-muted-foreground flex-1 min-w-0 truncate"
-          data-testid={`text-feature-description-${feature.id}`}
-        >
-          {feature.description}
-        </span>
+ 
         
         <Badge 
-          className={`shrink-0 uppercase ${statusColors[feature.status as FeatureStatus]}`}
-          size="sm"
+          className={`shrink-0 !w-24 flex items-center justify-center   uppercase ${statusColors[feature.status as FeatureStatus]}`}
           data-testid={`badge-status-${feature.id}`}
         >
           {statusLabels[feature.status as FeatureStatus]}
@@ -169,7 +172,7 @@ export default function AppFeatures() {
               </div>
             </Card>
           ) : (
-            <div className="divide-y">
+            <div className="flex flex-col ">
               {filteredFeatures.map((feature) => (
                 <FeatureRow key={feature.id} feature={feature} />
               ))}
