@@ -19,14 +19,12 @@ import type { LayoutConfig } from "@/framework/types/layout";
 import "@/lib/debug-logger";
 
 const Landing = lazy(() => import("@/pages/landing"));
-const InviteActivation = lazy(() => import("@/pages/invite-activation"));
 const AuthError = lazy(() => import("@/pages/auth-error"));
 const TeamPage = lazy(() => import("@/pages/team"));
 const TeamProfile = lazy(() => import("@/pages/team-profile"));
 const TeamEdit = lazy(() => import("@/pages/team-edit"));
 const Profile = lazy(() => import("@/pages/profile"));
 const ProfileEdit = lazy(() => import("@/pages/profile-edit"));
-const AdminInvites = lazy(() => import("@/pages/admin-invites"));
 const AdminLogs = lazy(() => import("@/pages/admin-logs"));
 const AppFeatures = lazy(() => import("@/pages/app-features"));
 const AppFeatureDetail = lazy(() => import("@/pages/app-feature-detail"));
@@ -96,7 +94,6 @@ function PageLoader() {
 }
 import {
   CircleUserRound,
-  UserPlus,
   SquareTerminal,
   DraftingCompass,
   Sparkles,
@@ -322,13 +319,6 @@ function useLayoutConfig() {
             requiredPermission: "admin.settings",
           },
           {
-            name: "Invites",
-            href: "/admin/invites",
-            icon: UserPlus,
-            requiredPermission: "invites.read",
-          },
-
-          {
             name: "Vendor Services",
             href: "/admin/vendors/services",
             icon: Briefcase,
@@ -420,7 +410,6 @@ function AuthenticatedRoutes() {
           <Route path="/vendors/contacts" component={VendorContacts} />
           <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/ai/context" component={AIContext} />
-          <Route path="/admin/invites" component={AdminInvites} />
           <Route path="/admin/app/features" component={AdminAppFeatures} />
           <Route path="/admin/vendors/services" component={AdminVendorServices} />
           <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
@@ -469,7 +458,6 @@ function RouterContent() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Switch>
-        <Route path="/invite" component={InviteActivation} />
         <Route path="/auth-error" component={AuthError} />
         <Route path="/vendor-update/:token" component={VendorUpdateForm} />
         <Route path="/form/:token" component={PublicForm} />
