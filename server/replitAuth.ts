@@ -51,29 +51,12 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(claims: any, inviteToken?: string) {
-  // Check if there's an invite token and use it to pre-populate user data
-  let inviteData = null;
-  if (inviteToken) {
-    inviteData = await storage.getInviteByToken(inviteToken);
-    if (inviteData && !inviteData.usedAt) {
-      // Check if email matches
-      if (inviteData.email.toLowerCase() === claims["email"]?.toLowerCase()) {
-        // Mark invite as used
-        await storage.markInviteUsed(inviteData.id);
-      } else {
-        inviteData = null; // Email doesn't match, don't use invite data
-      }
-    } else {
-      inviteData = null;
-    }
-  }
-
+async function upsertUser(claims: any) {
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
-    firstName: inviteData?.firstName || claims["first_name"],
-    lastName: inviteData?.lastName || claims["last_name"],
+    firstName: claims["first_name"],
+    lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
   });
 }
@@ -92,9 +75,7 @@ export async function setupAuth(app: Express) {
   ) => {
     const user = {};
     updateUserSession(user, tokens);
-    // Get invite token from session if exists
-    const inviteToken = (tokens as any).inviteToken;
-    await upsertUser(tokens.claims(), inviteToken);
+    await upsertUser(tokens.claims());
     verified(null, user);
   };
 
@@ -123,11 +104,6 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Store invite token in session if provided
-    const inviteToken = req.query.invite as string;
-    if (inviteToken) {
-      (req.session as any).inviteToken = inviteToken;
-    }
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
@@ -138,9 +114,6 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     ensureStrategy(req.hostname);
-    
-    // Retrieve invite token from session
-    const inviteToken = (req.session as any).inviteToken;
     
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
@@ -158,12 +131,6 @@ export async function setupAuth(app: Express) {
           res.redirect("/auth-error?reason=domain");
         });
         return;
-      }
-      
-      // After successful auth, process invite token
-      if (inviteToken && req.user) {
-        upsertUser(claims, inviteToken).catch(console.error);
-        delete (req.session as any).inviteToken;
       }
       
       // Emit login event
