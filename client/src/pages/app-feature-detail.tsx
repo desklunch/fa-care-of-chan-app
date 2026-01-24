@@ -4,10 +4,11 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CommentList } from "@/components/ui/comments";
+import { FieldRow } from "@/components/inline-edit";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -147,36 +148,9 @@ export default function AppFeatureDetail() {
           <div className="p-4 md:p-6 pb-2 md:pb-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
               <div className="space-y-2">
-                <Badge 
-                  variant="outline"
-                  style={{ 
-                    borderColor: feature.category.color || undefined,
-                    color: feature.category.color || undefined 
-                  }}
-                  data-testid="badge-feature-category"
-                >
-                  {feature.category.name}
-                </Badge>
                 <h1 className="text-3xl font-bold" data-testid="text-feature-title">
                   {feature.title}
                 </h1>
-                <div className="flex items-center gap-2 flex-wrap">
-     
-                  {feature.featureType && (
-                    <Badge 
-                      className={featureTypeColors[feature.featureType as FeatureType]}
-                      data-testid="badge-feature-type"
-                    >
-                      {featureTypeLabels[feature.featureType as FeatureType]}
-                    </Badge>
-                  )}
-                  <Badge 
-                    className={statusColors[feature.status as FeatureStatus]}
-                    data-testid="badge-feature-status"
-                  >
-                    {statusLabels[feature.status as FeatureStatus]}
-                  </Badge>
-                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -206,40 +180,9 @@ export default function AppFeatureDetail() {
         <TabsContent value="overview" className="mt-0">
           <div className="max-w-4xl space-y-6 p-4 md:p-6">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground whitespace-pre-wrap" data-testid="text-feature-description">
-                  {feature.description || "No description provided."}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Submitted by</span>
-                  <span className="text-sm" data-testid="text-created-by">
-                    {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName || ""}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Submitted</span>
-                  <span className="text-sm" data-testid="text-created-at">
-                    {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Votes</span>
-                  <span className="text-sm" data-testid="text-vote-count-detail">{feature.voteCount}</span>
-                </div>
-                {isAdmin && (
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-muted-foreground">Update Status</span>
+              <CardContent className="py-2">
+                <FieldRow label="Status" testId="field-feature-status">
+                  {isAdmin ? (
                     <Select 
                       value={feature.status} 
                       onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
@@ -254,8 +197,63 @@ export default function AppFeatureDetail() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                )}
+                  ) : (
+                    <Badge 
+                      className={statusColors[feature.status as FeatureStatus]}
+                      data-testid="badge-feature-status"
+                    >
+                      {statusLabels[feature.status as FeatureStatus]}
+                    </Badge>
+                  )}
+                </FieldRow>
+
+                <FieldRow label="Type" testId="field-feature-type">
+                  {feature.featureType ? (
+                    <Badge 
+                      className={featureTypeColors[feature.featureType as FeatureType]}
+                      data-testid="badge-feature-type"
+                    >
+                      {featureTypeLabels[feature.featureType as FeatureType]}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Not set</span>
+                  )}
+                </FieldRow>
+
+                <FieldRow label="Category" testId="field-feature-category">
+                  <Badge 
+                    variant="outline"
+                    style={{ 
+                      borderColor: feature.category.color || undefined,
+                      color: feature.category.color || undefined 
+                    }}
+                    data-testid="badge-feature-category"
+                  >
+                    {feature.category.name}
+                  </Badge>
+                </FieldRow>
+
+                <FieldRow label="Description" testId="field-feature-description">
+                  <p className="text-sm whitespace-pre-wrap" data-testid="text-feature-description">
+                    {feature.description || <span className="text-muted-foreground">No description provided.</span>}
+                  </p>
+                </FieldRow>
+
+                <FieldRow label="Submitted By" testId="field-feature-submitted-by">
+                  <span data-testid="text-created-by">
+                    {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName || ""}
+                  </span>
+                </FieldRow>
+
+                <FieldRow label="Submitted On" testId="field-feature-submitted-on">
+                  <span data-testid="text-created-at">
+                    {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"}
+                  </span>
+                </FieldRow>
+
+                <FieldRow label="Votes" testId="field-feature-votes">
+                  <span data-testid="text-vote-count-detail">{feature.voteCount}</span>
+                </FieldRow>
               </CardContent>
             </Card>
           </div>
