@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
@@ -7,12 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CommentList } from "@/components/ui/comments";
 import { FieldRow } from "@/components/inline-edit";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { ThumbsUp, Loader2, SquarePen } from "lucide-react";
+import { ThumbsUp, Loader2, SquarePen, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureStatus, FeatureType } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
@@ -48,8 +60,10 @@ const featureTypeColors: Record<FeatureType, string> = {
 export default function AppFeatureDetail() {
   const [, params] = useRoute<{ id: string }>("/app/features/:id");
   const featureId = params?.id;
+  const [, setLocation] = useProtectedLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: feature, isLoading: featureLoading } = useQuery<AppFeatureWithRelations>({
     queryKey: ["/api/features", featureId],
@@ -108,7 +122,26 @@ export default function AppFeatureDetail() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/features/${featureId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+      toast({ title: "Feature deleted successfully!" });
+      setLocation("/app/features");
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to delete feature", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const isAdmin = user?.role === "admin";
+  const canDelete = isAdmin || user?.id === feature?.createdById;
 
   if (featureLoading) {
     return (
@@ -142,6 +175,14 @@ export default function AppFeatureDetail() {
         icon: SquarePen,
         variant: "outline",
       } : undefined}
+      additionalActions={canDelete ? [
+        {
+          label: "Delete Feature",
+          onClick: () => setShowDeleteDialog(true),
+          icon: Trash2,
+          variant: "destructive",
+        },
+      ] : []}
     >
       <Tabs defaultValue="overview" className="w-full">
         <div className="sticky top-0 bg-background z-[9999]">
@@ -273,6 +314,27 @@ export default function AppFeatureDetail() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Feature Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this feature request? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }
