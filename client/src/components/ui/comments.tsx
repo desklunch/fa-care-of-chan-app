@@ -244,7 +244,7 @@ export function CommentItem({
   }
 
   return (
-    <div className={`    ${isReply ? "space-y-4 border-none pt-0 pl-0" : "border-t pt-8  "}`} data-testid={`comment-${comment.id}`}>
+    <div className={`    ${isReply ? "space-y-4 border-none pt-0 pl-0" : "border-b pt-8  "}`} data-testid={`comment-${comment.id}`}>
       <div className="flex gap-3 items-cen">
         {isReply && <CornerDownRight className="h-4 w-4 text-muted-foreground shrink-0 mt-3" />}
         <div className="flex-1 min-w-0">
@@ -252,10 +252,10 @@ export function CommentItem({
             <div className="flex gap-2 items-center">
               <Link
                 href={`/team/${comment.createdById}`}
-                className="font-medium text-sm hover:underline flex gap-2 items-center"
+                className="font-medium text-sm hover:underline flex gap-3 items-center outline-none ring-ring focus:ring-2 "
                 data-testid={`link-author-${comment.id}`}
               >
-                <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
+                <Avatar className="h-6 w-6 shrink-0 cursor-pointer">
                   <AvatarImage src={comment.createdBy?.profileImageUrl || undefined} alt={getAuthorName()} />
                   <AvatarFallback className="text-xs">{getAuthorInitials()}</AvatarFallback>
                 </Avatar>
@@ -441,36 +441,41 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
   const isAdmin = currentUser?.role === "admin";
 
   return (
-    <Card className="space-y-6 flex-1 " data-testid="comment-list">
-      <CardHeader className="pb-0">
-        <CommentForm entityType={entityType} entityId={entityId} />
-
-      </CardHeader>
-      <CardContent className="space-y-6">
-
-        {!comments || comments.length === 0 ? (
-          <div className="text-center text-sm py-8 text-muted-foreground flex flex-col items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            <p>No comments yet</p>
-          </div>
-        ) : (
-          <div className="space-y-8 ">
-            {comments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                currentUserId={currentUser?.id}
-                isAdmin={isAdmin}
-                entityType={entityType}
-                entityId={entityId}
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
-      
-      
-
+<div className="space-y-6">
+  <Card>
+    <CardContent className="!p-4">
+      <CommentForm entityType={entityType} entityId={entityId} />
+    </CardContent>
+  
     </Card>
+  <Card className="space-y-4 flex-1 " data-testid="comment-list">
+
+    <CardContent className="!pt-0 space-y-6">
+
+      {!comments || comments.length === 0 ? (
+        <div className="text-center text-sm py-8 text-muted-foreground flex flex-col items-center gap-2">
+          <MessageSquare className="h-4 w-4" />
+          <p>No comments yet</p>
+        </div>
+      ) : (
+        <div className="space-y-8 ">
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              currentUserId={currentUser?.id}
+              isAdmin={isAdmin}
+              entityType={entityType}
+              entityId={entityId}
+            />
+          ))}
+        </div>
+      )}
+    </CardContent>
+
+
+
+  </Card>
+</div>
   );
 }

@@ -193,18 +193,6 @@ export default function AppFeatureDetail() {
                   {feature.title}
                 </h1>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={feature.hasVoted ? "default" : "outline"}
-                  onClick={() => voteMutation.mutate()}
-                  disabled={voteMutation.isPending}
-                  className="gap-2"
-                  data-testid="button-vote"
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                  <span data-testid="text-vote-count">{feature.voteCount}</span>
-                </Button>
-              </div>
             </div>
           </div>
 
@@ -220,33 +208,60 @@ export default function AppFeatureDetail() {
 
         <TabsContent value="overview" className="mt-0">
           <div className="max-w-4xl space-y-6 p-4 md:p-6">
+            <Card className="">
+              <FieldRow label="Vot" testId="field-feature-status">
+                <Button
+                  variant={feature.hasVoted ? "default" : "outline"}
+                  onClick={() => voteMutation.mutate()}
+                  disabled={voteMutation.isPending}
+                  className="gap-2"
+                  data-testid="button-vote"
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                  <span data-testid="text-vote-count">{feature.voteCount}</span>
+                </Button>
+              </FieldRow>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={feature.hasVoted ? "default" : "outline"}
+                  onClick={() => voteMutation.mutate()}
+                  disabled={voteMutation.isPending}
+                  className="gap-2"
+                  data-testid="button-vote"
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                  <span data-testid="text-vote-count">{feature.voteCount}</span>
+                </Button>
+              </div>
+              <FieldRow label="Status" testId="field-feature-status">
+                {isAdmin ? (
+                  <Select 
+                    value={feature.status} 
+                    onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
+                    disabled={statusMutation.isPending}
+                  >
+                    <SelectTrigger className="w-[180px]" data-testid="select-feature-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(statusLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value} data-testid={`select-option-${value}`}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Badge 
+                    className={statusColors[feature.status as FeatureStatus]}
+                    data-testid="badge-feature-status"
+                  >
+                    {statusLabels[feature.status as FeatureStatus]}
+                  </Badge>
+                )}
+              </FieldRow>
+            </Card>
             <Card>
               <CardContent className="py-2">
-                <FieldRow label="Status" testId="field-feature-status">
-                  {isAdmin ? (
-                    <Select 
-                      value={feature.status} 
-                      onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
-                      disabled={statusMutation.isPending}
-                    >
-                      <SelectTrigger className="w-[180px]" data-testid="select-feature-status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value} data-testid={`select-option-${value}`}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge 
-                      className={statusColors[feature.status as FeatureStatus]}
-                      data-testid="badge-feature-status"
-                    >
-                      {statusLabels[feature.status as FeatureStatus]}
-                    </Badge>
-                  )}
-                </FieldRow>
+
 
                 <FieldRow label="Type" testId="field-feature-type">
                   {feature.featureType ? (

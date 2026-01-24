@@ -51,7 +51,7 @@ export default {
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
           border: "var(--destructive-border)",
         },
-        ring: "hsl(var(--ring) / <alpha-value>)",
+        ring: "hsl(var(--primary    ) / <alpha-value>)",
         chart: {
           "1": "hsl(var(--chart-1) / <alpha-value>)",
           "2": "hsl(var(--chart-2) / <alpha-value>)",
@@ -60,7 +60,7 @@ export default {
           "5": "hsl(var(--chart-5) / <alpha-value>)",
         },
         sidebar: {
-          ring: "hsl(var(--sidebar-ring) / <alpha-value>)",
+          ring: "hsl(var(--primary) / <alpha-value>)",
           DEFAULT: "hsl(var(--sidebar) / <alpha-value>)",
           foreground: "hsl(var(--sidebar-foreground) / <alpha-value>)",
           border: "hsl(var(--sidebar-border) / <alpha-value>)",

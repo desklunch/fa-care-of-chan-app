@@ -19,22 +19,19 @@ export default function Feedback() {
             ctaLabel="App Features"
             ctaUrl="/app/features"
           /> */}
-      <Card className="rounded-none border-none" >
-        <CardHeader className="pb-4">
+      <div className="p-4 md:p-6 space-y-4">
+        <div className="">
+          <h1 className="text-2xl font-bold">Feedback</h1>
+          <p className="text-muted-foreground text-sm">Share your thoughts, ask questions, or leave general feedback
+</p>
+        </div>
+        <CommentList 
+          entityType="feedback" 
+          entityId="general" 
+          currentUser={user || undefined} 
+        />
+      </div>
 
-          <CardDescription>
-            Share your thoughts, ask questions, or leave general feedback
-          </CardDescription>
-        </CardHeader>
-        <CardContent >
-  
-          <CommentList 
-            entityType="feedback" 
-            entityId="general" 
-            currentUser={user || undefined} 
-          />
-        </CardContent>
-      </Card>
     </PageLayout>
   );
 }

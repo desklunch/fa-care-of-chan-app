@@ -195,18 +195,18 @@ export default function AppFeatures() {
             />
             <div className=" ">
               <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
-                <SelectTrigger className="w-[180px] flex rounded-full bg-foreground/10  font-medium h-9  px-3 text-xs gap-2" data-testid="select-group-by">
+                <SelectTrigger className="w-[130px] flex rounded-full bg-foreground/10  font-medium h-9  px-3 text-xs gap-2" data-testid="select-group-by">
                   <span className="flex shrink-0 gap-2">
                     <Layers className="h-4 w-4 " />
-                    <SelectValue placeholder="Group by" />
+                    Grouping
 
                   </span>
                   
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="status">Group by Status</SelectItem>
-                  <SelectItem value="category">Group by Category</SelectItem>
-                  <SelectItem value="none">No Grouping</SelectItem>
+                  <SelectItem value="status">By Status</SelectItem>
+                  <SelectItem value="category">By Category</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                  
                 </SelectContent>
               </Select>

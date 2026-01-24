@@ -303,7 +303,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                   <button
                     onClick={() => toggleGroup(section.heading!)}
                     className={cn(
-                      "w-full h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent transition-colors",
+                      "w-full outline-none ring-ring focus:ring-2   h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent transition-colors",
                       sectionIndex === 0 ? "mt-0" : "mt-2"
                     )}
                     data-testid={`button-toggle-section-${section.heading.toLowerCase().replace(/\s+/g, "-")}`}
@@ -326,7 +326,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                       const isActive = typeof window !== "undefined" && window.location.pathname === item.href;
 
                       const navItemClasses = cn(
-                        "flex items-center gap-3 px-3 py-2 font-medium  rounded-lg transition-colors duration-150 relative",
+                        "flex items-center gap-3 px-3 py-2 font-medium  rounded-lg transition-colors duration-150 relative outline-none ring-ring focus:ring-2   ",
                         isEnabled && "hover:bg-primary/20 hover:text-primary",
                         isActive && "bg-primary text-primary-foreground font-semibold hover:bg-primary/50 hover:text-foreground",
                         !showExpanded && "justify-center",
