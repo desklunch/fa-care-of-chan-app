@@ -251,7 +251,7 @@ function useLayoutConfig() {
             name: "Features",
             href: "/app/features",
             icon: DraftingCompass,
-            requiredPermission: "app_features.manage",
+            requiredPermission: "app_features.read",
           },
 
           {
@@ -264,7 +264,7 @@ function useLayoutConfig() {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
-            requiredPermission: "app_features.manage",
+            requiredPermission: "app_features.read",
           },
           {
             name: "Logs",

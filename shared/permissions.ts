@@ -1,15 +1,15 @@
 /**
  * Centralized Permission System
- * 
+ *
  * This module defines the role hierarchy and permission mappings for the application.
  * It provides utilities for checking permissions that can be used on both frontend and backend.
- * 
+ *
  * Role Hierarchy (with inheritance - each tier inherits all permissions from lower tiers):
  * - Tier 3 (admin): Full access to everything (inherits tier 2)
  * - Tier 2 (manager): Access to deals, sales management (inherits tier 1)
  * - Tier 1 (employee): Write/delete access to venues, clients, contacts, vendors (inherits tier 0)
  * - Tier 0 (viewer): Read-only access to venues, clients, contacts, vendors, team
- * 
+ *
  * Future extensibility:
  * - Additional tier 2 roles (sales-manager, venue-manager) can be added
  * - Each role inherits all permissions from lower tiers
@@ -20,10 +20,10 @@
 // ============================================
 
 export const ROLES = {
-  admin: 'admin',
-  manager: 'manager',
-  employee: 'employee',
-  viewer: 'viewer',
+  admin: "admin",
+  manager: "manager",
+  employee: "employee",
+  viewer: "viewer",
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -48,64 +48,64 @@ export const ROLE_TIERS: Record<Role, number> = {
 
 export const PERMISSIONS = {
   // Venues - all authenticated users
-  'venues.read': 'venues.read',
-  'venues.write': 'venues.write',
-  'venues.delete': 'venues.delete',
-  
+  "venues.read": "venues.read",
+  "venues.write": "venues.write",
+  "venues.delete": "venues.delete",
+
   // Clients - all authenticated users
-  'clients.read': 'clients.read',
-  'clients.write': 'clients.write',
-  'clients.delete': 'clients.delete',
-  
+  "clients.read": "clients.read",
+  "clients.write": "clients.write",
+  "clients.delete": "clients.delete",
+
   // Contacts - all authenticated users
-  'contacts.read': 'contacts.read',
-  'contacts.write': 'contacts.write',
-  'contacts.delete': 'contacts.delete',
-  
+  "contacts.read": "contacts.read",
+  "contacts.write": "contacts.write",
+  "contacts.delete": "contacts.delete",
+
   // Vendors - all authenticated users
-  'vendors.read': 'vendors.read',
-  'vendors.write': 'vendors.write',
-  'vendors.delete': 'vendors.delete',
-  
+  "vendors.read": "vendors.read",
+  "vendors.write": "vendors.write",
+  "vendors.delete": "vendors.delete",
+
   // Deals - managers and admins only
-  'deals.read': 'deals.read',
-  'deals.write': 'deals.write',
-  'deals.delete': 'deals.delete',
-  
+  "deals.read": "deals.read",
+  "deals.write": "deals.write",
+  "deals.delete": "deals.delete",
+
   // Sales management - managers and admins only
-  'sales.read': 'sales.read',
-  'sales.manage': 'sales.manage',
-  
+  "sales.read": "sales.read",
+  "sales.manage": "sales.manage",
+
   // Team management - admins only for role changes
-  'team.read': 'team.read',
-  'team.manage': 'team.manage',
-  
+  "team.read": "team.read",
+  "team.manage": "team.manage",
+
   // Audit logs - admins only
-  'audit.read': 'audit.read',
-  'audit.export': 'audit.export',
-  
+  "audit.read": "audit.read",
+  "audit.export": "audit.export",
+
   // App features/issues - read by all, manage by admins
-  'app_features.read': 'app_features.read',
-  'app_features.vote': 'app_features.vote',
-  'app_features.manage': 'app_features.manage',
-  
+  "app_features.read": "app_features.read",
+  "app_features.vote": "app_features.vote",
+  "app_features.manage": "app_features.manage",
+
   // Releases - admins only
-  'releases.read': 'releases.read',
-  'releases.manage': 'releases.manage',
-  
+  "releases.read": "releases.read",
+  "releases.manage": "releases.manage",
+
   // Admin settings - admins only
-  'admin.settings': 'admin.settings',
-  'admin.analytics': 'admin.analytics',
-  
+  "admin.settings": "admin.settings",
+  "admin.analytics": "admin.analytics",
+
   // Vendor tokens - admins only
-  'vendor_tokens.manage': 'vendor_tokens.manage',
-  
+  "vendor_tokens.manage": "vendor_tokens.manage",
+
   // Theme editor - admins only
-  'theme.manage': 'theme.manage',
-  
+  "theme.manage": "theme.manage",
+
   // Global search scopes
-  'search.deals': 'search.deals',
-  'search.all': 'search.all',
+  "search.deals": "search.deals",
+  "search.all": "search.all",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -119,53 +119,53 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 // Tier 0 (viewer) permissions - read-only access
 const TIER_0_PERMISSIONS: Permission[] = [
-  'venues.read',
-  'clients.read',
-  'contacts.read',
-  'vendors.read',
-  'team.read', // All users can view team directory
+  "venues.read",
+  "clients.read",
+  "contacts.read",
+  "vendors.read",
+  "team.read", // All users can view team directory
 ];
 
 // Tier 1 (employee) permissions - inherits tier 0 + basic CRUD for general entities
 const TIER_1_PERMISSIONS: Permission[] = [
   ...TIER_0_PERMISSIONS,
-  'venues.write',
-  'venues.delete',
-  'clients.write',
-  'clients.delete',
-  'contacts.write',
-  'contacts.delete',
-  'vendors.write',
-  'vendors.delete',
-  'app_features.read',
-  'app_features.vote',
+  "venues.write",
+  "venues.delete",
+  "clients.write",
+  "clients.delete",
+  "contacts.write",
+  "contacts.delete",
+  "vendors.write",
+  "vendors.delete",
+  "app_features.read",
+  "app_features.vote",
 ];
 
 // Tier 2 (manager) permissions - inherits tier 1 + deals and sales access
 const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
-  'deals.read',
-  'deals.write',
-  'deals.delete',
-  'sales.read',
-  'sales.manage',
-  'search.deals',
+  "deals.read",
+  "deals.write",
+  "deals.delete",
+  "sales.read",
+  "sales.manage",
+  "search.deals",
 ];
 
 // Tier 3 (admin) permissions - inherits tier 2 + full admin access
 const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
-  'team.manage',
-  'audit.read',
-  'audit.export',
-  'app_features.manage',
-  'releases.read',
-  'releases.manage',
-  'admin.settings',
-  'admin.analytics',
-  'vendor_tokens.manage',
-  'theme.manage',
-  'search.all',
+  "team.manage",
+  "audit.read",
+  "audit.export",
+  "app_features.manage",
+  "releases.read",
+  "releases.manage",
+  "admin.settings",
+  "admin.analytics",
+  "vendor_tokens.manage",
+  "theme.manage",
+  "search.all",
 ];
 
 // Role to permissions mapping
@@ -198,17 +198,23 @@ export function roleHasPermission(role: Role, permission: Permission): boolean {
 /**
  * Check if a role has any of the given permissions
  */
-export function roleHasAnyPermission(role: Role, permissions: Permission[]): boolean {
+export function roleHasAnyPermission(
+  role: Role,
+  permissions: Permission[],
+): boolean {
   const rolePerms = getPermissionsForRole(role);
-  return permissions.some(p => rolePerms.includes(p));
+  return permissions.some((p) => rolePerms.includes(p));
 }
 
 /**
  * Check if a role has all of the given permissions
  */
-export function roleHasAllPermissions(role: Role, permissions: Permission[]): boolean {
+export function roleHasAllPermissions(
+  role: Role,
+  permissions: Permission[],
+): boolean {
   const rolePerms = getPermissionsForRole(role);
-  return permissions.every(p => rolePerms.includes(p));
+  return permissions.every((p) => rolePerms.includes(p));
 }
 
 /**
@@ -267,7 +273,10 @@ export function createPermissionContext(role: Role): PermissionContext {
 /**
  * Check if a permission context has a specific permission
  */
-export function hasPermission(context: PermissionContext | null | undefined, permission: Permission): boolean {
+export function hasPermission(
+  context: PermissionContext | null | undefined,
+  permission: Permission,
+): boolean {
   if (!context) return false;
   return context.permissions.includes(permission);
 }
@@ -275,17 +284,23 @@ export function hasPermission(context: PermissionContext | null | undefined, per
 /**
  * Check if a permission context has any of the given permissions
  */
-export function hasAnyPermission(context: PermissionContext | null | undefined, permissions: Permission[]): boolean {
+export function hasAnyPermission(
+  context: PermissionContext | null | undefined,
+  permissions: Permission[],
+): boolean {
   if (!context) return false;
-  return permissions.some(p => context.permissions.includes(p));
+  return permissions.some((p) => context.permissions.includes(p));
 }
 
 /**
  * Check if a permission context has all of the given permissions
  */
-export function hasAllPermissions(context: PermissionContext | null | undefined, permissions: Permission[]): boolean {
+export function hasAllPermissions(
+  context: PermissionContext | null | undefined,
+  permissions: Permission[],
+): boolean {
   if (!context) return false;
-  return permissions.every(p => context.permissions.includes(p));
+  return permissions.every((p) => context.permissions.includes(p));
 }
 
 // ============================================
@@ -295,37 +310,40 @@ export function hasAllPermissions(context: PermissionContext | null | undefined,
 // Map navigation paths to required permissions
 // Used by both frontend routing and command palette
 export const NAV_PERMISSIONS: Record<string, Permission> = {
-  '/venues': 'venues.read',
-  '/clients': 'clients.read',
-  '/contacts': 'contacts.read',
-  '/vendors': 'vendors.read',
-  '/deals': 'deals.read',
-  '/team': 'team.read',
-  '/admin/logs': 'audit.read',
-  '/admin/analytics': 'admin.analytics',
-  '/app/features': 'app_features.read',
-  '/app/issues': 'app_features.read',
-  '/app/releases': 'releases.read',
-  '/admin/theme': 'theme.manage',
+  "/venues": "venues.read",
+  "/clients": "clients.read",
+  "/contacts": "contacts.read",
+  "/vendors": "vendors.read",
+  "/deals": "deals.read",
+  "/team": "team.read",
+  "/admin/logs": "audit.read",
+  "/admin/analytics": "admin.analytics",
+  "/app/features": "app_features.read",
+  "/app/issues": "app_features.read",
+  "/app/releases": "releases.read",
+  "/admin/theme": "theme.manage",
 };
 
 /**
  * Check if a user can access a navigation path
  */
-export function canAccessPath(context: PermissionContext | null | undefined, path: string): boolean {
+export function canAccessPath(
+  context: PermissionContext | null | undefined,
+  path: string,
+): boolean {
   // Check for exact match first
   const requiredPermission = NAV_PERMISSIONS[path];
   if (requiredPermission) {
     return hasPermission(context, requiredPermission);
   }
-  
+
   // Check for path prefixes (e.g., /venues/123 should check /venues)
   for (const [navPath, permission] of Object.entries(NAV_PERMISSIONS)) {
-    if (path.startsWith(navPath + '/')) {
+    if (path.startsWith(navPath + "/")) {
       return hasPermission(context, permission);
     }
   }
-  
+
   // Default: allow access for authenticated users
   return true;
 }
@@ -336,20 +354,22 @@ export function canAccessPath(context: PermissionContext | null | undefined, pat
 
 // Map search categories to required permissions
 export const SEARCH_PERMISSIONS: Record<string, Permission> = {
-  venues: 'venues.read',
-  clients: 'clients.read',
-  contacts: 'contacts.read',
-  vendors: 'vendors.read',
-  deals: 'deals.read',
-  team: 'team.read',
+  venues: "venues.read",
+  clients: "clients.read",
+  contacts: "contacts.read",
+  vendors: "vendors.read",
+  deals: "deals.read",
+  team: "team.read",
 };
 
 /**
  * Get allowed search categories based on permissions
  */
-export function getAllowedSearchCategories(context: PermissionContext | null | undefined): string[] {
+export function getAllowedSearchCategories(
+  context: PermissionContext | null | undefined,
+): string[] {
   if (!context) return [];
-  
+
   return Object.entries(SEARCH_PERMISSIONS)
     .filter(([_, permission]) => context.permissions.includes(permission))
     .map(([category]) => category);
