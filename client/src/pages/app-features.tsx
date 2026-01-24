@@ -24,56 +24,59 @@ const statusLabels: Record<FeatureStatus, string> = {
 };
 
 const statusColors: Record<FeatureStatus, string> = {
-  proposed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  under_review: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  planned: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  in_progress: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+  proposed: "border-blue-800 text-blue-800 dark:border-blue-400 dark:text-blue-400",
+  under_review: "border-yellow-800 text-yellow-800 dark:border-yellow-400 dark:text-yellow-400",
+  planned: "border-purple-800 text-purple-800 dark:border-purple-400 dark:text-purple-400",
+  in_progress: "border-orange-800 text-orange-800 dark:border-orange-400 dark:text-orange-400",
+  completed: "border-green-800 text-green-800 dark:border-green-400 dark:text-green-400",
+  archived: "border-gray-800 text-gray-800 dark:border-gray-400 dark:text-gray-400",
 };
 
 function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
   return (
-    <Link href={`/app/features/${feature.id}`}>
       <div 
-        className="flex flex-wrap items-center gap-4 px-4 py-3 border-b hover-elevate cursor-pointer"
+        className=" odd:bg-background even:bg-black/[3%] dark:even:bg-foreground/[2%]"
         data-testid={`row-feature-${feature.id}`}
       >
-        <Badge 
-          variant="outline"
-          className="shrink-0 w-24 justify-center"
-          style={{ 
-            borderColor: feature.category?.color || undefined,
-            color: feature.category?.color || undefined 
-          }}
-          data-testid={`badge-category-${feature.id}`}
-        >
-          {feature.category?.name || "Uncategorized"}
-        </Badge>
+        <Link href={`/app/features/${feature.id}`} className="flex flex-wrap items-center gap-4 px-4 py-4 hover-elevate cursor-pointer">
+
+        <span  className="shrink-0 w-20 "
+>
+          <Badge 
+            variant="secondary"
+            className=" justify-start border-none"
+
+            data-testid={`badge-category-${feature.id}`}
+          >
+            {feature.category?.name || "Uncategorized"}
+          </Badge>
+        </span>
+        
         
         <span 
-          className="font-medium min-w-0 flex-1 lg:flex-none lg:w-64 truncate"
+          className="font-medium min-w-0 flex-1 lg:flex-none lg:w-64 truncate text-sm"
           data-testid={`text-feature-title-${feature.id}`}
         >
           {feature.title}
         </span>
         
         <span 
-          className="hidden lg:block text-sm text-muted-foreground flex-1 min-w-0 truncate"
+          className="hidden lg:block text-xs text-muted-foreground flex-1 min-w-0 truncate"
           data-testid={`text-feature-description-${feature.id}`}
         >
           {feature.description}
         </span>
         
         <Badge 
-          className={`shrink-0 uppercase ${statusColors[feature.status as FeatureStatus]}`}
+          className={`shrink-0 px-1 py-0.5 rounded-sm uppercase ml-4 font-medium  bg-background border  ${statusColors[feature.status as FeatureStatus]}`}
           size="sm"
           data-testid={`badge-status-${feature.id}`}
         >
           {statusLabels[feature.status as FeatureStatus]}
         </Badge>
+          </Link>
       </div>
-    </Link>
+
   );
 }
 
@@ -81,7 +84,7 @@ export default function AppFeatures() {
   usePageTitle("Features");
   const [selectedStatuses, setSelectedStatuses] = useState<(string | number)[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<(string | number)[]>([]);
-  const [groupBy, setGroupBy] = useState<GroupBy>("none");
+  const [groupBy, setGroupBy] = useState<GroupBy>("status");
 
   const { data: features = [], isLoading: featuresLoading } = useQuery<AppFeatureWithRelations[]>({
     queryKey: ["/api/features"],
@@ -164,9 +167,9 @@ export default function AppFeatures() {
         variant: "default",
       }}
     >
-      <div className="overflow-hidden flex flex-col h-full ">
+      <div className="overflow-hidden flex flex-col h-full p-4 md:p-6 gap-4 md:gap-6 ">
         
-        <div className="border-b p-4">
+        <div className="">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
             <MultiSelect
               triggerLabel="Status"
@@ -175,8 +178,8 @@ export default function AppFeatures() {
               itemLabels={statusLabels}
               selectedIds={selectedStatuses}
               onSelectionChange={setSelectedStatuses}
-              showSelectAll={false}
-              showSearch={false}
+              showSelectAll={true}
+              showSearch={true}
               testIdPrefix="status-filter"
             />
             <MultiSelect
@@ -186,20 +189,25 @@ export default function AppFeatures() {
               itemLabels={categoryLabels}
               selectedIds={selectedCategories}
               onSelectionChange={setSelectedCategories}
-              showSelectAll={false}
-              showSearch={false}
+              showSelectAll={true}
+              showSearch={true}
               testIdPrefix="category-filter"
             />
-            <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-muted-foreground" />
+            <div className=" ">
               <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
-                <SelectTrigger className="w-[140px]" data-testid="select-group-by">
-                  <SelectValue placeholder="Group by" />
+                <SelectTrigger className="w-[180px] flex rounded-full bg-foreground/10  font-medium h-9  px-3 text-xs gap-2" data-testid="select-group-by">
+                  <span className="flex shrink-0 gap-2">
+                    <Layers className="h-4 w-4 " />
+                    <SelectValue placeholder="Group by" />
+
+                  </span>
+                  
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="status">Group by Status</SelectItem>
+                  <SelectItem value="category">Group by Category</SelectItem>
                   <SelectItem value="none">No Grouping</SelectItem>
-                  <SelectItem value="status">By Status</SelectItem>
-                  <SelectItem value="category">By Category</SelectItem>
+                 
                 </SelectContent>
               </Select>
             </div>
@@ -207,7 +215,7 @@ export default function AppFeatures() {
         </div>
 
 
-        <div className="overflow-y-scroll">
+        <div className="overflow-y-scroll border rounded-lg h-full">
           {filteredFeatures.length === 0 ? (
             <Card className="p-12">
               <div className="flex flex-col items-center justify-center text-center">
@@ -229,16 +237,16 @@ export default function AppFeatures() {
               {groupedFeatures.map(([groupKey, { label, color, features: groupFeatures }]) => (
                 <div key={groupKey} data-testid={`group-${groupKey}`}>
                   <div 
-                    className="px-4 py-2 bg-muted/50 border-b flex items-center gap-2 sticky top-0 z-50"
+                    className="px-4 py-3 bg-muted/50 border-b flex items-center gap-2 sticky top-0 z-50 "
                   >
                     {color && (
                       <div 
-                        className="w-3 h-3 rounded-full shrink-0" 
+                        className="w-3 h-3 rounded-full shrink-0 " 
                         style={{ backgroundColor: color }}
                       />
                     )}
                     <span className="font-semibold text-sm" data-testid={`text-group-label-${groupKey}`}>{label}</span>
-                    <Badge variant="outline" size="sm" data-testid={`badge-group-count-${groupKey}`}>{groupFeatures.length}</Badge>
+                    <Badge variant="secondary" size="sm" className="px-1.5" data-testid={`badge-group-count-${groupKey}`}>{groupFeatures.length}</Badge>
                   </div>
                   {groupFeatures.map((feature) => (
                     <FeatureRow key={feature.id} feature={feature} />
@@ -247,7 +255,7 @@ export default function AppFeatures() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col">
+            <div className="">
               {filteredFeatures.map((feature) => (
                 <FeatureRow key={feature.id} feature={feature} />
               ))}

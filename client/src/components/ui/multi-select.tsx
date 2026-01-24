@@ -117,7 +117,7 @@ function MultiSelectContent({
           </div>
         )}
       </div>
-      <div className="p-2 flex">
+      <div className="p-2 pt-0 flex">
         {showSelectAll && (
           <Button
             variant="ghost"
@@ -180,7 +180,7 @@ function MultiSelectContent({
                         }
                       }}
                     >
-                      <span className="absolute border border-border rounded-sm left-2 flex h-6 w-6 items-center justify-center">
+                      <span className="absolute border border-input rounded-sm left-2 flex h-6 w-6 items-center justify-center">
                         {selectedIds.includes(id) && <Check className="h-4 w-4" />}
                       </span>
                       {itemLabels[id] || String(id)}
@@ -229,7 +229,7 @@ function MultiSelectContent({
                       }
                     }}
                   >
-                    <span className="absolute border border-border rounded-sm left-2 flex h-6 w-6 items-center justify-center">
+                    <span className="absolute border border-input rounded-sm left-2 flex h-6 w-6 items-center justify-center">
                       {selectedIds.includes(item.id) && <Check className="h-3 w-3" />}
                     </span>
                     {item.label}
