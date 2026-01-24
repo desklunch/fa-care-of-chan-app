@@ -6,16 +6,15 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, Save, X, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +26,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureCategory, FeatureType } from "@shared/schema";
 import { insertAppFeatureSchema, featureTypes } from "@shared/schema";
 import { z } from "zod";
@@ -147,61 +145,70 @@ export default function AppFeatureForm() {
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
   const isLoading = categoriesLoading || (isEditMode && featureLoading);
 
+  const handleHeaderSubmit = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  const handleCancel = () => {
+    setLocation(isEditMode && featureId ? `/app/features/${featureId}` : "/app/features");
+  };
+
   if (isLoading) {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "App"}, { label: "Features", href: "/app/features" },
-          { label: isEditMode ? "Edit " : "New " }
+          { label: "App"}, 
+          { label: "Features", href: "/app/features" },
+          { label: isEditMode ? "Edit" : "New" }
         ]}
       >
-        <div className="p-6 max-w-2xl mx-auto">
-          <Skeleton className="h-10 w-64 mb-6" />
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       </PageLayout>
     );
   }
 
-  const backUrl = isEditMode && featureId ? `/app/features/${featureId}` : "/app/features";
-
   return (
     <PageLayout 
       breadcrumbs={[
-        { label: "App"}, { label: "Features", href: "/app/features" },
+        { label: "App"}, 
+        { label: "Features", href: "/app/features" },
         ...(isEditMode && existingFeature ? [{ label: existingFeature.title, href: `/app/features/${featureId}` }] : []),
         { label: isEditMode ? "Edit" : "New" }
       ]}
+      primaryAction={{
+        label: isEditMode ? "Update Feature" : "Create Feature",
+        icon: Save,
+        onClick: handleHeaderSubmit,
+      }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          icon: X,
+          onClick: handleCancel,
+        },
+      ]}
     >
-      <div className="p-0 md:p-6 max-w-2xl mx-auto">
-  
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{isEditMode ? "Edit Feature Request" : "New Feature Request"}</CardTitle>
-            <CardDescription>
-              {isEditMode 
-                ? "Update the details of this feature request."
-                : "Share your idea for improving the application. Others can vote and comment on it."
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="max-w-2xl p-4 md:p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle data-testid="text-form-title">
+                  {isEditMode ? "Edit Feature Request" : "Feature Info"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Title</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
                       <FormControl>
                         <Input 
                           placeholder="Brief summary of your idea" 
@@ -209,6 +216,9 @@ export default function AppFeatureForm() {
                           data-testid="input-feature-title"
                         />
                       </FormControl>
+                      <FormDescription>
+                        A short, descriptive title for your feature request.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -228,12 +238,15 @@ export default function AppFeatureForm() {
                         </FormControl>
                         <SelectContent>
                           {featureTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
+                            <SelectItem key={type} value={type} data-testid={`select-option-type-${type}`}>
                               {featureTypeLabels[type]}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        Ideas are suggestions; requirements are essential features.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -244,7 +257,10 @@ export default function AppFeatureForm() {
                   name="categoryId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Category</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-feature-category">
@@ -253,12 +269,15 @@ export default function AppFeatureForm() {
                         </FormControl>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
+                            <SelectItem key={cat.id} value={cat.id} data-testid={`select-option-category-${cat.id}`}>
                               {cat.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        The area of the application this feature relates to.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -278,72 +297,72 @@ export default function AppFeatureForm() {
                           data-testid="textarea-feature-description"
                         />
                       </FormControl>
+                      <FormDescription>
+                        Provide as much detail as possible about what you'd like to see.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
-                <div className="flex gap-3 pt-4 justify-between">
-                  <div className="flex gap-3">
-                    <Link href={backUrl}>
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        data-testid="button-cancel-feature"
-                      >
-                        Cancel
-                      </Button>
-                    </Link>
+            <div className="flex justify-between gap-3 flex-wrap">
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  data-testid="button-submit-feature"
+                >
+                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {isEditMode ? "Update Feature" : "Create Feature"}
+                </Button>
+              </div>
+              {isEditMode && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
                     <Button 
-                      type="submit" 
+                      type="button" 
+                      variant="destructive"
                       disabled={isPending}
-                      data-testid="button-submit-feature"
+                      data-testid="button-delete-feature"
                     >
-                      <Save className="h-4 w-4 mr-2" />
-                      {isPending 
-                        ? (isEditMode ? "Saving..." : "Submitting...") 
-                        : (isEditMode ? "Save" : "Submit")
-                      }
+                      <Trash2 className="h-4 w-4" />
+                      Delete
                     </Button>
-                  </div>
-                  {isEditMode && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          type="button" 
-                          variant="destructive"
-                          disabled={isPending}
-                          data-testid="button-delete-feature"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Feature Request</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this feature request? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate()}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            data-testid="button-confirm-delete"
-                          >
-                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Feature Request</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this feature request? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        data-testid="button-confirm-delete"
+                      >
+                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+          </form>
+        </Form>
       </div>
     </PageLayout>
   );
