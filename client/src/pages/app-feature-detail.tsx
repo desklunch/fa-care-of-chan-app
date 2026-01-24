@@ -4,16 +4,14 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CommentList } from "@/components/ui/comments";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { ThumbsUp, MessageSquare, SquarePen } from "lucide-react";
-import { format } from "date-fns";
+import { ThumbsUp, Loader2, SquarePen } from "lucide-react";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureStatus, FeatureType } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
@@ -110,15 +108,12 @@ export default function AppFeatureDetail() {
   });
 
   const isAdmin = user?.role === "admin";
-  const isLoading = featureLoading;
 
-  if (isLoading) {
+  if (featureLoading) {
     return (
       <PageLayout breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: "Loading..." }]}>
-        <div className="p-6 space-y-6 max-w-4xl mx-auto">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-48 w-full" />
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       </PageLayout>
     );
@@ -127,17 +122,15 @@ export default function AppFeatureDetail() {
   if (!feature) {
     return (
       <PageLayout breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: "Not Found" }]}>
-        <div className="p-6 text-center">
-          <h2 className="text-xl font-semibold">Feature not found</h2>
-          <p className="text-muted-foreground mt-2">The feature you're looking for doesn't exist or has been removed.</p>
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <p className="text-muted-foreground">Feature not found</p>
+          <Link href="/app/features">
+            <Button variant="outline">Back to Features</Button>
+          </Link>
         </div>
       </PageLayout>
     );
   }
-
-  const createdByName = [feature.createdBy.firstName, feature.createdBy.lastName]
-    .filter(Boolean)
-    .join(" ") || "Unknown";
 
   return (
     <PageLayout 
@@ -149,16 +142,17 @@ export default function AppFeatureDetail() {
         variant: "outline",
       } : undefined}
     >
-      <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="space-y-4">
-                <div>
+      <Tabs defaultValue="overview" className="w-full">
+        <div className="sticky top-0 bg-background z-[9999]">
+          <div className="p-4 md:p-6 pb-2 md:pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold" data-testid="text-feature-title">
+                  {feature.title}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge 
                     variant="outline"
-                    className="inline-flex"
-
                     style={{ 
                       borderColor: feature.category.color || undefined,
                       color: feature.category.color || undefined 
@@ -167,12 +161,6 @@ export default function AppFeatureDetail() {
                   >
                     {feature.category.name}
                   </Badge>
-                </div>
-
-                <CardTitle className="text-2xl" data-testid="text-feature-title">
-                  {feature.title}
-                </CardTitle>
-                <div className="flex items-center gap-2 flex-wrap">
                   {feature.featureType && (
                     <Badge 
                       className={featureTypeColors[feature.featureType as FeatureType]}
@@ -202,62 +190,90 @@ export default function AppFeatureDetail() {
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground whitespace-pre-wrap" data-testid="text-feature-description">
-              {feature.description}
-            </p>
-            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-   
-              <span>{feature.createdBy?.firstName || ""} {feature.createdBy.lastName?.[0] || ""}</span>
-              {feature.createdAt && (
-                <span>
-                  {formatTimeAgo(new Date(feature.createdAt))}
+          </div>
 
-                </span>
-      
-              )}
-            </div>
-          </CardContent>
-          {isAdmin && (
-            <CardFooter className="border-t pt-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">Update Status:</span>
-                <Select 
-                  value={feature.status} 
-                  onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
-                  disabled={statusMutation.isPending}
-                >
-                  <SelectTrigger className="w-[180px]" data-testid="select-feature-status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(statusLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardFooter>
-          )}
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
+          <TabsList data-testid="tabs-feature" className="px-4 md:px-6">
+            <TabsTrigger value="overview" data-testid="tab-overview">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="comments" data-testid="tab-comments">
               Comments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CommentList 
-              entityType="app_feature" 
-              entityId={featureId!} 
-              currentUser={user || undefined} 
-            />
-          </CardContent>
-        </Card>
-      </div>
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="overview" className="mt-0">
+          <div className="max-w-4xl space-y-6 p-4 md:p-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Description</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground whitespace-pre-wrap" data-testid="text-feature-description">
+                  {feature.description || "No description provided."}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Submitted by</span>
+                  <span className="text-sm" data-testid="text-created-by">
+                    {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName || ""}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Submitted</span>
+                  <span className="text-sm" data-testid="text-created-at">
+                    {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Votes</span>
+                  <span className="text-sm" data-testid="text-vote-count-detail">{feature.voteCount}</span>
+                </div>
+                {isAdmin && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">Update Status</span>
+                    <Select 
+                      value={feature.status} 
+                      onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
+                      disabled={statusMutation.isPending}
+                    >
+                      <SelectTrigger className="w-[180px]" data-testid="select-feature-status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value} data-testid={`select-option-${value}`}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="comments" className="mt-0">
+          <div className="max-w-4xl p-4 md:p-6">
+            <Card>
+              <CardContent className="pt-6">
+                <CommentList 
+                  entityType="app_feature" 
+                  entityId={featureId!} 
+                  currentUser={user || undefined} 
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </PageLayout>
   );
 }
