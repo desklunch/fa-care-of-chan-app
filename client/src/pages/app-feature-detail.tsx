@@ -147,20 +147,21 @@ export default function AppFeatureDetail() {
           <div className="p-4 md:p-6 pb-2 md:pb-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
               <div className="space-y-2">
+                <Badge 
+                  variant="outline"
+                  style={{ 
+                    borderColor: feature.category.color || undefined,
+                    color: feature.category.color || undefined 
+                  }}
+                  data-testid="badge-feature-category"
+                >
+                  {feature.category.name}
+                </Badge>
                 <h1 className="text-3xl font-bold" data-testid="text-feature-title">
                   {feature.title}
                 </h1>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge 
-                    variant="outline"
-                    style={{ 
-                      borderColor: feature.category.color || undefined,
-                      color: feature.category.color || undefined 
-                    }}
-                    data-testid="badge-feature-category"
-                  >
-                    {feature.category.name}
-                  </Badge>
+     
                   {feature.featureType && (
                     <Badge 
                       className={featureTypeColors[feature.featureType as FeatureType]}
