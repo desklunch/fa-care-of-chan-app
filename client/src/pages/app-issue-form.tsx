@@ -1,22 +1,33 @@
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useRoute } from "wouter";
+import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useParams } from "wouter";
-import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, Save, X, Trash2, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import type { AppIssueWithRelations, IssueSeverity } from "@shared/schema";
 import { z } from "zod";
-import { Loader2, AlertCircle, AlertTriangle, Info } from "lucide-react";
-import type { AppIssue, IssueSeverity } from "@shared/schema";
 
 const issueFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(200, "Title must be less than 200 characters"),
@@ -24,61 +35,65 @@ const issueFormSchema = z.object({
   severity: z.enum(["high", "medium", "low"]),
 });
 
-type IssueFormValues = z.infer<typeof issueFormSchema>;
+type FormData = z.infer<typeof issueFormSchema>;
 
-const severityOptions: { value: IssueSeverity; label: string; description: string; icon: typeof AlertCircle }[] = [
-  { 
-    value: "high", 
-    label: "High", 
-    icon: AlertCircle,
-  },
-  { 
-    value: "medium", 
-    label: "Medium", 
-    icon: AlertTriangle,
-  },
-  { 
-    value: "low", 
-    label: "Low", 
-    icon: Info,
-  },
-];
+const severityLabels: Record<IssueSeverity, string> = {
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
+
+const severityIcons: Record<IssueSeverity, typeof AlertCircle> = {
+  high: AlertCircle,
+  medium: AlertTriangle,
+  low: Info,
+};
+
+const severities: IssueSeverity[] = ["high", "medium", "low"];
 
 export default function AppIssueForm() {
-  const { id } = useParams<{ id: string }>();
-  const [, navigate] = useProtectedLocation();
+  const [, setLocation] = useProtectedLocation();
+  const [matchNew] = useRoute("/app/issues/new");
+  const [matchEdit, editParams] = useRoute<{ id: string }>("/app/issues/:id/edit");
+  
+  const isEditMode = !!matchEdit;
+  const issueId = editParams?.id;
   const { toast } = useToast();
-  const isEditing = id && id !== "new";
 
-  const { data: issue, isLoading: issueLoading } = useQuery<AppIssue>({
-    queryKey: ["/api/app-issues", id],
-    enabled: !!isEditing,
+  const { data: existingIssue, isLoading: issueLoading } = useQuery<AppIssueWithRelations>({
+    queryKey: ["/api/app-issues", issueId],
+    enabled: isEditMode && !!issueId,
   });
 
-  usePageTitle(isEditing ? "Edit Issue" : "New Issue");
+  usePageTitle(isEditMode ? "Edit Issue" : "Report Issue");
 
-  const form = useForm<IssueFormValues>({
+  const form = useForm<FormData>({
     resolver: zodResolver(issueFormSchema),
     defaultValues: {
       title: "",
       description: "",
       severity: "medium",
     },
-    values: issue ? {
-      title: issue.title,
-      description: issue.description,
-      severity: issue.severity as IssueSeverity,
-    } : undefined,
   });
 
+  useEffect(() => {
+    if (isEditMode && existingIssue) {
+      form.reset({
+        title: existingIssue.title,
+        description: existingIssue.description,
+        severity: existingIssue.severity as IssueSeverity,
+      });
+    }
+  }, [isEditMode, existingIssue, form]);
+
   const createMutation = useMutation({
-    mutationFn: async (data: IssueFormValues) => {
+    mutationFn: async (data: FormData) => {
       return apiRequest("POST", "/api/app-issues", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/app-issues"] });
-      toast({ title: "Issue reported successfully" });
-      navigate("/app/issues");
+      toast({ title: "Issue reported successfully!" });
+      setLocation("/app/issues");
     },
     onError: (error: Error) => {
       toast({ 
@@ -90,14 +105,14 @@ export default function AppIssueForm() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: IssueFormValues) => {
-      return apiRequest("PATCH", `/api/app-issues/${id}`, data);
+    mutationFn: async (data: FormData) => {
+      return apiRequest("PATCH", `/api/app-issues/${issueId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/app-issues"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/app-issues", id] });
-      toast({ title: "Issue updated successfully" });
-      navigate(`/app/issues/${id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/app-issues", issueId] });
+      toast({ title: "Issue updated successfully!" });
+      setLocation(`/app/issues/${issueId}`);
     },
     onError: (error: Error) => {
       toast({ 
@@ -108,27 +123,54 @@ export default function AppIssueForm() {
     },
   });
 
-  const onSubmit = (data: IssueFormValues) => {
-    if (isEditing) {
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/app-issues/${issueId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/app-issues"] });
+      toast({ title: "Issue deleted successfully!" });
+      setLocation("/app/issues");
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to delete issue", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const onSubmit = (data: FormData) => {
+    if (isEditMode) {
       updateMutation.mutate(data);
     } else {
       createMutation.mutate(data);
     }
   };
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isLoading = isEditMode && issueLoading;
 
-  if (isEditing && issueLoading) {
+  const handleHeaderSubmit = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  const handleCancel = () => {
+    setLocation(isEditMode && issueId ? `/app/issues/${issueId}` : "/app/issues");
+  };
+
+  if (isLoading) {
     return (
       <PageLayout 
         breadcrumbs={[
-          { label: "App", href: "/app/issues" },
-          { label: "Loading..." },
+          { label: "App" }, 
+          { label: "Issues", href: "/app/issues" },
+          { label: isEditMode ? "Edit" : "Report" }
         ]}
       >
-        <div className="p-6 space-y-6 max-w-2xl">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-64 w-full" />
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       </PageLayout>
     );
@@ -137,38 +179,52 @@ export default function AppIssueForm() {
   return (
     <PageLayout 
       breadcrumbs={[
-        { label: "App"}, { label: "Issues", href: "/app/issues" },
-        { label: isEditing ? "Edit" : "Report" },
+        { label: "App" }, 
+        { label: "Issues", href: "/app/issues" },
+        ...(isEditMode && existingIssue ? [{ label: existingIssue.title, href: `/app/issues/${issueId}` }] : []),
+        { label: isEditMode ? "Edit" : "Report" }
+      ]}
+      primaryAction={{
+        label: isEditMode ? "Update Issue" : "Submit Report",
+        icon: Save,
+        onClick: handleHeaderSubmit,
+      }}
+      additionalActions={[
+        {
+          label: "Cancel",
+          icon: X,
+          onClick: handleCancel,
+        },
       ]}
     >
-      <div className="p-0 md:p-6 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>{isEditing ? "Edit Issue" : "Report a Bug or Issue"}</CardTitle>
-            <CardDescription>
-              {isEditing 
-                ? "Update the details of this issue report."
-                : "Help us improve by reporting bugs, issues, or problems you've encountered."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="max-w-2xl p-4 md:p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle data-testid="text-form-title">
+                  {isEditMode ? "Edit Issue Report" : "Issue Info"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Title</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
                       <FormControl>
                         <Input 
                           placeholder="Brief description of the issue" 
-                          data-testid="input-issue-title"
                           {...field} 
+                          data-testid="input-issue-title"
                         />
                       </FormControl>
                       <FormDescription>
-                        A clear and concise title for the issue
+                        A clear and concise title for the issue.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -180,26 +236,28 @@ export default function AppIssueForm() {
                   name="severity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Severity</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value}
-                      >
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Severity</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-issue-severity">
                             <SelectValue placeholder="Select severity level" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {severityOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              <div className="flex items-center gap-2">
-                                <option.icon className="h-4 w-4" />
-                                <span>{option.label}</span>
-   
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {severities.map((severity) => {
+                            const Icon = severityIcons[severity];
+                            return (
+                              <SelectItem key={severity} value={severity} data-testid={`select-option-severity-${severity}`}>
+                                <div className="flex items-center gap-2">
+                                  <Icon className="h-4 w-4" />
+                                  <span>{severityLabels[severity]}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -215,45 +273,84 @@ export default function AppIssueForm() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Description</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                      </div>
                       <FormControl>
                         <Textarea 
                           placeholder="Please describe the issue in detail. Include steps to reproduce, expected behavior, and actual behavior."
-                          className="min-h-[150px] resize-none text-sm"
-                          data-testid="textarea-issue-description"
+                          className="min-h-[150px]"
                           {...field} 
+                          data-testid="textarea-issue-description"
                         />
                       </FormControl>
                       <FormDescription>
-                        Include as much detail as possible to help us understand and fix the issue
+                        Include as much detail as possible to help us understand and fix the issue.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
-                <div className="flex gap-3">
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    data-testid="button-submit-issue"
-                  >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isEditing ? "Update Issue" : "Submit Report"}
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={() => navigate(isEditing ? `/app/issues/${id}` : "/app/issues")}
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between gap-3 flex-wrap">
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  data-testid="button-submit-issue"
+                >
+                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {isEditMode ? "Update Issue" : "Submit Report"}
+                </Button>
+              </div>
+              {isEditMode && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      type="button" 
+                      variant="destructive"
+                      disabled={isPending}
+                      data-testid="button-delete-issue"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Issue</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this issue? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        data-testid="button-confirm-delete"
+                      >
+                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+          </form>
+        </Form>
       </div>
     </PageLayout>
   );
