@@ -373,7 +373,7 @@ export function MultiSelect({
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName} gap-1 h-12 md:h-9 justify-start w-full ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
+      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>

@@ -282,7 +282,7 @@ export function SingleSelect({
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`gap-1 h-12 md:h-9 justify-start w-full bg-foreground/10 rounded-full ${triggerClassName || ""}`}
+      className={`gap-2 h-12 md:h-9 justify-start w-full bg-foreground/10 rounded-full ${triggerClassName || ""}`}
     >
       {triggerIcon}
       <span className="truncate">{displayLabel}</span>

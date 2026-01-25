@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0" +
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus:outline-nonedisabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0" +
   " hover-elevate active-elevate-2",
   {
     variants: {
@@ -32,10 +32,15 @@ const buttonVariants = cva(
         lg: "min-h-10 rounded-md px-8",
         icon: "h-9 w-10",
       },
+      ring: {
+        on: " ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        off: "",
+      }
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      ring: "on",
     },
   },
 )

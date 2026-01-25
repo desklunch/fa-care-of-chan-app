@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { SingleSelect } from "@/components/ui/single-select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CircleFadingPlus, Bug, ListFilter, AlertTriangle, Layers } from "lucide-react";
+import { CircleFadingPlus, Bug, Diamond, AlertTriangle, Layers } from "lucide-react";
 import { Link } from "wouter";
 import type { AppIssueWithRelations, IssueSeverity, IssueStatus } from "@shared/schema";
 
@@ -173,7 +173,7 @@ export default function AppIssues() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
             <MultiSelect
               triggerLabel="Status"
-              triggerIcon={<ListFilter className="h-4 w-4" />}
+              triggerIcon={<Diamond className="h-4 w-4" />}
               items={statusItems}
               itemLabels={statusLabels}
               selectedIds={selectedStatuses}
@@ -197,11 +197,11 @@ export default function AppIssues() {
               triggerLabel="Grouping"
               triggerIcon={<Layers className="h-4 w-4" />}
               items={[
-                { id: "status", label: "By Status" },
-                { id: "severity", label: "By Severity" },
+                { id: "status", label: "Status" },
+                { id: "severity", label: "Severity" },
                 { id: "none", label: "None" },
               ]}
-              itemLabels={{ status: "By Status", severity: "By Severity", none: "None" }}
+              itemLabels={{ status: "Group by Status", severity: "Group by Severity", none: "Grouping" }}
               selectedId={groupBy}
               onSelectionChange={(id) => setGroupBy(id as GroupBy)}
               testIdPrefix="group-by"
