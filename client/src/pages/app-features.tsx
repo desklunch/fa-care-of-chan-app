@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SingleSelect } from "@/components/ui/single-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CircleFadingPlus, Lightbulb, ListFilter, Tag, Layers } from "lucide-react";
 import { Link } from "wouter";
@@ -193,24 +193,20 @@ export default function AppFeatures() {
               showSearch={true}
               testIdPrefix="category-filter"
             />
-            <div className=" ">
-              <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
-                <SelectTrigger className="w-[130px] flex rounded-full bg-foreground/10  font-medium h-9  px-3 text-xs gap-2" data-testid="select-group-by">
-                  <span className="flex shrink-0 gap-2">
-                    <Layers className="h-4 w-4 " />
-                    Grouping
-
-                  </span>
-                  
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="status">By Status</SelectItem>
-                  <SelectItem value="category">By Category</SelectItem>
-                  <SelectItem value="none">None</SelectItem>
-                 
-                </SelectContent>
-              </Select>
-            </div>
+            <SingleSelect
+              triggerLabel="Grouping"
+              triggerIcon={<Layers className="h-4 w-4" />}
+              items={[
+                { id: "status", label: "By Status" },
+                { id: "category", label: "By Category" },
+                { id: "none", label: "None" },
+              ]}
+              itemLabels={{ status: "By Status", category: "By Category", none: "None" }}
+              selectedId={groupBy}
+              onSelectionChange={(id) => setGroupBy(id as GroupBy)}
+              testIdPrefix="group-by"
+              showSearch={false}
+            />
           </div>
         </div>
 
