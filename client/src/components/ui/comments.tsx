@@ -244,8 +244,8 @@ export function CommentItem({
   }
 
   return (
-    <div className={`    ${isReply ? "space-y-4 border-none pt-0 pl-0" : "border-b pt-8  "}`} data-testid={`comment-${comment.id}`}>
-      <div className="flex gap-3 items-cen">
+    <div className={`    ${isReply ? "space-y-4 border-none pt-2  pl-0" : "border-b pb-6  "}`} data-testid={`comment-${comment.id}`}>
+      <div className="flex gap-3 ">
         {isReply && <CornerDownRight className="h-4 w-4 text-muted-foreground shrink-0 mt-3" />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -458,7 +458,7 @@ export function CommentList({ entityType, entityId, currentUser }: CommentListPr
           <p>No comments yet</p>
         </div>
       ) : (
-        <div className="space-y-8 ">
+        <div className="space-y-8 pt-4 ">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}

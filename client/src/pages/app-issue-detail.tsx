@@ -158,8 +158,8 @@ export default function AppIssueDetail() {
       ] : []}
     >
       <Tabs defaultValue="overview" className="w-full">
-        <div className="sticky top-0 bg-background z-[9999]">
-          <div className="p-4 md:p-6 pb-2 md:pb-2">
+        <div className="sticky top-0 bg-background z-[10]">
+          <div className=" px-4 md:px-6 pb-2 md:pb-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold" data-testid="text-issue-title">
@@ -169,8 +169,8 @@ export default function AppIssueDetail() {
             </div>
           </div>
 
-          <div className="px-4 md:px-6">
-            <TabsList className="w-full sm:w-auto">
+          <div className="">
+            <TabsList className="px-4 md:px-6 w-full sm:w-auto">
               <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">Comments</TabsTrigger>
             </TabsList>

@@ -213,10 +213,8 @@ export default function AppIssues() {
 
         <div className="overflow-y-scroll border rounded-lg h-full">
           {filteredIssues.length === 0 ? (
-            <Card className="p-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <Bug className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No issues found</h3>
+            <Card className="p-12 h-full">
+              <div className="flex flex-col h-full items-center justify-center text-center">
                 <p className="text-muted-foreground mb-4">
                   {selectedStatuses.length > 0 || selectedSeverities.length > 0
                     ? "Try adjusting your filters to see more issues."
@@ -235,7 +233,7 @@ export default function AppIssues() {
               {groupedIssues.map(([groupKey, { label, issues: groupIssues }]) => (
                 <div key={groupKey} data-testid={`group-${groupKey}`}>
                   <div 
-                    className="px-4 py-3 bg-muted/50 border-b flex items-center gap-2 sticky top-0 z-[9999]"
+                    className="px-4 py-3 bg-muted/50 border-b flex items-center gap-2 sticky top-0 z-[10]"
                   >
                     <span className="font-semibold text-sm" data-testid={`text-group-label-${groupKey}`}>{label}</span>
                     <Badge variant="secondary" size="sm" className="px-1.5" data-testid={`badge-group-count-${groupKey}`}>{groupIssues.length}</Badge>
