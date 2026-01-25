@@ -215,9 +215,10 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           <Button
             variant="ghost"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="px-0 flex items-center  gap-4    h-[36px]"
+            className="px-0 flex items-center  gap-4  focus:ring-0 focus:ring-offset-0  h-[36px]"
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            
           >
             <Logo width="24" collapsed={!showExpanded} />
           </Button>
@@ -238,7 +239,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
               variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="h-8 w-8 p-0 hidden lg:flex opacity-50 hover:opacity-100"
+              className="h-8 w-8 p-0 hidden lg:flex text-muted-foreground"
               data-testid="button-collapse-sidebar"
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -288,8 +289,9 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           </div>
         )}
 
-        <nav className="flex-1 overflow-y-auto p-2 py-3 space-y-1" data-testid="nav-sidebar">
-          {showExpanded && visibleNavigation.map((section, sectionIndex) => {
+        <nav className="flex-1 overflow-y-auto p-2 py-3 space-y-1" data-testid="nav-sidebar" 
+>
+          {visibleNavigation.map((section, sectionIndex) => {
             const isGroupCollapsed = section.heading
               ? groupCollapsedState[section.heading] || false
               : false;
@@ -414,7 +416,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
                 <Moon className="h-5 w-5" />
               )}
             </Button>
-            {import.meta.env.DEV && (
+            {import.meta.env.DEV && showExpanded && (
               <Button
                 variant="ghost"
                 size="icon"
