@@ -289,9 +289,15 @@ export default function Sidebar({ isMobileOpen, onMobileClose, onSearch }: Sideb
           </div>
         )}
 
-        <nav className="flex-1 overflow-y-auto p-2 py-3 space-y-1" data-testid="nav-sidebar" 
->
-          {visibleNavigation.map((section, sectionIndex) => {
+        <nav 
+          className={cn(
+            "flex-1 overflow-y-auto p-2 py-3 space-y-1",
+            !showExpanded && "cursor-pointer"
+          )}
+          data-testid="nav-sidebar"
+          onClick={!showExpanded ? () => setIsCollapsed(false) : undefined}
+        >
+          {showExpanded && visibleNavigation.map((section, sectionIndex) => {
             const isGroupCollapsed = section.heading
               ? groupCollapsedState[section.heading] || false
               : false;
