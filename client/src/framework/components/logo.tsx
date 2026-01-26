@@ -6,8 +6,8 @@ interface LogoProps {
 
 export default function Logo({ className, width = "32", collapsed = false }: LogoProps) {
   return (
-    <div className={`rounded-md  flex items-center gap-4 ${className || ""}`}>
-      <div className="bg-primary [&_svg]:fill-primary-foreground size-[38px] flex items-center justify-center rounded-md ">
+    <div className={`rounded-md rounded-l-full flex items-center gap-4 ${className || ""}`}>
+      <div className="bg-primary [&_svg]:fill-primary-foreground size-[44px] flex items-center justify-center rounded-full ">
         <svg
           viewBox="0 0 49 44"
           fill="none"
@@ -23,7 +23,7 @@ export default function Logo({ className, width = "32", collapsed = false }: Log
       </div>
 
       {!collapsed && (
-        <span className="font-semibold text-lg tracking-tight mr-3">Care of Chan</span>
+        <span className="font-semibold text-lg tracking-tight mr-3">Care of Chan OS</span>
       )}
     </div>
   );
