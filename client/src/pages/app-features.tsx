@@ -35,7 +35,7 @@ const statusColors: Record<FeatureStatus, string> = {
 function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
   return (
       <div 
-        className=" odd:bg-background even:bg-black/[3%] dark:even:bg-foreground/[2%]"
+        className=" odd:bg-background even:bg-black/[2%] dark:even:bg-foreground/[2%]"
         data-testid={`row-feature-${feature.id}`}
       >
         <Link href={`/app/features/${feature.id}`} className="flex flex-wrap items-center gap-4 px-4 py-4 hover-elevate cursor-pointer">
@@ -233,7 +233,7 @@ export default function AppFeatures() {
               {groupedFeatures.map(([groupKey, { label, color, features: groupFeatures }]) => (
                 <div key={groupKey} data-testid={`group-${groupKey}`}>
                   <div 
-                    className="px-4 py-3 bg-muborder-b flex items-center gap-2 sticky top-0 z-50 "
+                    className="px-4 py-3 bg-muted border-y flex items-center gap-2 sticky top-0 z-50 "
                   >
                     {color && (
                       <div 
@@ -242,7 +242,7 @@ export default function AppFeatures() {
                       />
                     )}
                     <span className="font-semibold text-base capitalize" data-testid={`text-group-label-${groupKey}`}>{label}</span>
-                    <Badge variant="secondary" size="sm" className="px-1.5" data-testid={`badge-group-count-${groupKey}`}>{groupFeatures.length}</Badge>
+                    <Badge variant="secondary" size="sm" className="px-1.5 bg-foreground/210" data-testid={`badge-group-count-${groupKey}`}>{groupFeatures.length}</Badge>
                   </div>
                   {groupFeatures.map((feature) => (
                     <FeatureRow key={feature.id} feature={feature} />
