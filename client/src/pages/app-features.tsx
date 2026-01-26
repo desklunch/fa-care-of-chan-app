@@ -233,7 +233,7 @@ export default function AppFeatures() {
               {groupedFeatures.map(([groupKey, { label, color, features: groupFeatures }]) => (
                 <div key={groupKey} data-testid={`group-${groupKey}`}>
                   <div 
-                    className="px-4 py-3 bg-muted/50 border-b flex items-center gap-2 sticky top-0 z-50 "
+                    className="px-4 py-3 bg-muborder-b flex items-center gap-2 sticky top-0 z-50 "
                   >
                     {color && (
                       <div 
@@ -241,7 +241,7 @@ export default function AppFeatures() {
                         style={{ backgroundColor: color }}
                       />
                     )}
-                    <span className="font-semibold text-sm" data-testid={`text-group-label-${groupKey}`}>{label}</span>
+                    <span className="font-semibold text-base capitalize" data-testid={`text-group-label-${groupKey}`}>{label}</span>
                     <Badge variant="secondary" size="sm" className="px-1.5" data-testid={`badge-group-count-${groupKey}`}>{groupFeatures.length}</Badge>
                   </div>
                   {groupFeatures.map((feature) => (
