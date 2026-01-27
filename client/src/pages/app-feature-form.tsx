@@ -81,7 +81,7 @@ export default function AppFeatureForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest("POST", "/api/features", data);
+      return apiRequest("POST", "/api/features", { ...data, status: "proposed" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/features"] });
