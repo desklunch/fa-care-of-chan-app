@@ -11,10 +11,13 @@ export interface FilterOptionSource<T, C = unknown> {
   options?: Array<{ id: string; label: string }>;
 }
 
+export type FilterType = "multi" | "single";
+
 export interface FilterConfig<T> {
   id: string;
   label: string;
   icon: LucideIcon;
+  type?: FilterType; // defaults to "multi"
   placeholder?: string;
   optionSource: FilterOptionSource<T>;
   matchFn: (item: T, selectedValues: string[]) => boolean;
