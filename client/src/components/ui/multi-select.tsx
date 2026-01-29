@@ -248,7 +248,7 @@ function MultiSelectContent({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm"
+          className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
           onClick={() => setIsOpen(false)}
           data-testid={`button-close-${testIdPrefix}`}
         >
@@ -373,7 +373,7 @@ export function MultiSelect({
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
+      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full focus:ring-0 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>
@@ -385,7 +385,7 @@ export function MultiSelect({
       type="button"
       variant="default"
       size="md"
-      className="rounded-l-none border-l-0 px-2 h-12 md:h-9 "
+      className="rounded-l-none border-l-0 px-2 h-12 md:h-9 focus:ring-0"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -393,7 +393,7 @@ export function MultiSelect({
       }}
       data-testid={`button-clear-${testIdPrefix}`}
     >
-      <X className="h-3 w-3 stroke-[3px]" />
+      <X className="!h-[14px] !w-[14px] stroke-[2.5px]" />
     </Button>
   );
 
