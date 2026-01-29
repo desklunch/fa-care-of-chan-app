@@ -14,6 +14,10 @@ interface FilterBarProps<T, C = unknown> {
   onFilterChange: (filterId: string, values: string[]) => void;
   context?: C;
   defaultExpanded?: boolean;
+  /** Render mobile button + sheet. Default: true */
+  renderMobile?: boolean;
+  /** Render desktop inline filters. Default: true */
+  renderDesktop?: boolean;
 }
 
 interface FilterOption {
@@ -117,7 +121,7 @@ function FilterControls<T, C = unknown>({
   filterState,
   onFilterChange,
   context,
-}: Omit<FilterBarProps<T, C>, "defaultExpanded">) {
+}: Omit<FilterBarProps<T, C>, "defaultExpanded" | "renderMobile" | "renderDesktop">) {
   return (
     <>
       {filters.map((filter) => (
@@ -141,6 +145,8 @@ export function FilterBar<T, C = unknown>({
   onFilterChange,
   context,
   defaultExpanded = false,
+  renderMobile = true,
+  renderDesktop = true,
 }: FilterBarProps<T, C>) {
   const [showFilters, setShowFilters] = useState(defaultExpanded);
   
@@ -153,60 +159,64 @@ export function FilterBar<T, C = unknown>({
   return (
     <>
       {/* Mobile: Filter button that opens sheet */}
-      <div className="md:hidden">
-        <Button
-          variant={showFilters ? "outline" : "ghost"}
-          size="md"
-          onClick={() => setShowFilters(true)}
-          data-testid="button-open-mobile-filters"
-          className={showFilters ? "rounded-full" : "bg-foreground/10 rounded-full"}
-        >
-          <ListFilter className="h-4 w-4" />
-          Filters
-          {hasActiveFilters && (
-            <span className="rounded-full bg-primary text-primary-foreground h-2 w-2" />
-          )}
-        </Button>
+      {renderMobile && (
+        <div className="md:hidden">
+          <Button
+            variant={showFilters ? "outline" : "ghost"}
+            size="md"
+            onClick={() => setShowFilters(true)}
+            data-testid="button-open-mobile-filters"
+            className={showFilters ? "rounded-full" : "bg-foreground/10 rounded-full"}
+          >
+            <ListFilter className="h-4 w-4" />
+            Filters
+            {hasActiveFilters && (
+              <span className="rounded-full bg-primary text-primary-foreground h-2 w-2" />
+            )}
+          </Button>
 
-        <Sheet open={showFilters} onOpenChange={setShowFilters}>
-          <SheetContent side="bottom" className="h-full max-h-[100dvh] flex flex-col p-0">
-            <SheetHeader className="flex flex-row items-center justify-between p-4 border-b">
-              <SheetTitle>Filters</SheetTitle>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto py-0 p-5">
-              <div className="flex flex-col gap-3">
-                <FilterControls
-                  filters={filters}
-                  data={data}
-                  filterState={filterState}
-                  onFilterChange={onFilterChange}
-                  context={context}
-                />
+          <Sheet open={showFilters} onOpenChange={setShowFilters}>
+            <SheetContent side="bottom" className="h-full max-h-[100dvh] flex flex-col p-0">
+              <SheetHeader className="flex flex-row items-center justify-between p-4 border-b">
+                <SheetTitle>Filters</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto py-0 p-5">
+                <div className="flex flex-col gap-3">
+                  <FilterControls
+                    filters={filters}
+                    data={data}
+                    filterState={filterState}
+                    onFilterChange={onFilterChange}
+                    context={context}
+                  />
+                </div>
               </div>
-            </div>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setShowFilters(false)}
-              data-testid="button-close-mobile-filters"
-              className="h-12"
-            >
-              Close
-            </Button>
-          </SheetContent>
-        </Sheet>
-      </div>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => setShowFilters(false)}
+                data-testid="button-close-mobile-filters"
+                className="h-12"
+              >
+                Close
+              </Button>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
 
       {/* Desktop: Inline filters */}
-      <div className="hidden md:flex items-center gap-2 flex-wrap">
-        <FilterControls
-          filters={filters}
-          data={data}
-          filterState={filterState}
-          onFilterChange={onFilterChange}
-          context={context}
-        />
-      </div>
+      {renderDesktop && (
+        <div className="hidden md:flex items-center gap-2 flex-wrap">
+          <FilterControls
+            filters={filters}
+            data={data}
+            filterState={filterState}
+            onFilterChange={onFilterChange}
+            context={context}
+          />
+        </div>
+      )}
     </>
   );
 }

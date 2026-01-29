@@ -1,13 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { SingleSelect } from "@/components/ui/single-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FilterBar } from "@/components/data-grid/filter-bar";
+import type { FilterConfig } from "@/components/data-grid/types";
 import { CircleFadingPlus, Lightbulb, Diamond, Tag, Layers } from "lucide-react";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureCategory, FeatureStatus } from "@shared/schema";
@@ -80,11 +80,57 @@ function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
   );
 }
 
+const featureFilters: FilterConfig<AppFeatureWithRelations>[] = [
+  {
+    id: "status",
+    label: "Status",
+    icon: Diamond,
+    optionSource: {
+      type: "static",
+      options: Object.entries(statusLabels).map(([value, label]) => ({ id: value, label })),
+    },
+    matchFn: (feature, selectedValues) => {
+      if (selectedValues.length === 0) return true;
+      return selectedValues.includes(feature.status);
+    },
+  },
+  {
+    id: "category",
+    label: "Category",
+    icon: Tag,
+    optionSource: {
+      type: "query",
+      queryKey: "/api/categories",
+      labelField: "name",
+      valueField: "id",
+    },
+    matchFn: (feature, selectedValues) => {
+      if (selectedValues.length === 0) return true;
+      return selectedValues.includes(String(feature.categoryId));
+    },
+  },
+  {
+    id: "groupBy",
+    label: "Grouping",
+    icon: Layers,
+    type: "single",
+    optionSource: {
+      type: "static",
+      options: [
+        { id: "status", label: "Group by Status" },
+        { id: "category", label: "Group by Category" },
+        { id: "none", label: "No Grouping" },
+      ],
+    },
+    matchFn: () => true,
+  },
+];
+
 export default function AppFeatures() {
   usePageTitle("Features");
-  const [selectedStatuses, setSelectedStatuses] = useState<(string | number)[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<(string | number)[]>([]);
-  const [groupBy, setGroupBy] = useState<GroupBy>("category");
+  const [filterState, setFilterState] = useState<Record<string, string[]>>({
+    groupBy: ["category"],
+  });
 
   const { data: features = [], isLoading: featuresLoading } = useQuery<AppFeatureWithRelations[]>({
     queryKey: ["/api/features"],
@@ -94,24 +140,17 @@ export default function AppFeatures() {
     queryKey: ["/api/categories"],
   });
 
-  const statusItems = useMemo(() => 
-    Object.entries(statusLabels).map(([value, label]) => ({ id: value, label })),
-    []
-  );
+  const handleFilterChange = useCallback((filterId: string, values: string[]) => {
+    setFilterState(prev => ({ ...prev, [filterId]: values }));
+  }, []);
 
-  const categoryItems = useMemo(() => 
-    categories.map((cat) => ({ id: cat.id, label: cat.name })),
-    [categories]
-  );
-
-  const categoryLabels = useMemo(() => 
-    categories.reduce((acc, cat) => ({ ...acc, [cat.id]: cat.name }), {} as Record<string, string>),
-    [categories]
-  );
+  const selectedStatuses = filterState.status || [];
+  const selectedCategories = filterState.category || [];
+  const groupBy = (filterState.groupBy?.[0] || "category") as GroupBy;
 
   const filteredFeatures = features.filter((f) => {
     if (selectedStatuses.length > 0 && !selectedStatuses.includes(f.status)) return false;
-    if (selectedCategories.length > 0 && !selectedCategories.includes(f.categoryId)) return false;
+    if (selectedCategories.length > 0 && !selectedCategories.includes(String(f.categoryId))) return false;
     return true;
   });
 
@@ -129,7 +168,7 @@ export default function AppFeatures() {
         groupKey = feature.status;
         groupLabel = statusLabels[feature.status as FeatureStatus] || feature.status;
       } else {
-        groupKey = feature.categoryId;
+        groupKey = String(feature.categoryId);
         groupLabel = feature.category?.name || "Uncategorized";
         groupColor = feature.category?.color || undefined;
       }
@@ -170,44 +209,12 @@ export default function AppFeatures() {
       <div className="overflow-hidden flex flex-col h-full p-4 md:p-6 gap-4 md:gap-6 ">
         
         <div className="">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
-            <MultiSelect
-              triggerLabel="Status"
-              triggerIcon={<Diamond className="h-4 w-4" />}
-              items={statusItems}
-              itemLabels={statusLabels}
-              selectedIds={selectedStatuses}
-              onSelectionChange={setSelectedStatuses}
-              showSelectAll={true}
-              showSearch={true}
-              testIdPrefix="status-filter"
-            />
-            <MultiSelect
-              triggerLabel="Category"
-              triggerIcon={<Tag className="h-4 w-4" />}
-              items={categoryItems}
-              itemLabels={categoryLabels}
-              selectedIds={selectedCategories}
-              onSelectionChange={setSelectedCategories}
-              showSelectAll={true}
-              showSearch={true}
-              testIdPrefix="category-filter"
-            />
-            <SingleSelect
-              triggerLabel="Grouping"
-              triggerIcon={<Layers className="h-4 w-4" />}
-              items={[
-                { id: "status", label: "Status" },
-                { id: "category", label: "Category" },
-                { id: "none", label: "None" },
-              ]}
-              itemLabels={{ status: "Group by Status", category: "Group by Category", none: "Grouping" }}
-              selectedId={groupBy}
-              onSelectionChange={(id) => setGroupBy(id as GroupBy)}
-              testIdPrefix="group-by"
-              showSearch={false}
-            />
-          </div>
+          <FilterBar
+            filters={featureFilters}
+            data={features}
+            filterState={filterState}
+            onFilterChange={handleFilterChange}
+          />
         </div>
 
 
@@ -218,7 +225,9 @@ export default function AppFeatures() {
                 <Lightbulb className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No feature requests yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  Be the first to submit an idea for improving the application!
+                  {selectedStatuses.length > 0 || selectedCategories.length > 0
+                    ? "Try adjusting your filters to see more features."
+                    : "Be the first to suggest a new feature or improvement."}
                 </p>
                 <Link href="/app/features/new">
                   <Button data-testid="button-new-feature-empty">
@@ -229,36 +238,32 @@ export default function AppFeatures() {
               </div>
             </Card>
           ) : groupedFeatures ? (
-            <div className="flex flex-col">
-              {groupedFeatures.map(([groupKey, { label, color, features: groupFeatures }]) => (
-                <div key={groupKey} data-testid={`group-${groupKey}`}>
-                  <div 
-                    className="px-4 py-3 bg-muted border-y flex items-center gap-2 sticky top-0 z-50 "
-                  >
-                    {color && (
-                      <div 
-                        className="w-3 h-3 rounded-full shrink-0 " 
-                        style={{ backgroundColor: color }}
-                      />
-                    )}
-                    <span className="font-semibold text-base capitalize" data-testid={`text-group-label-${groupKey}`}>{label}</span>
-                    <Badge variant="secondary" size="sm" className="px-1.5 bg-foreground/210" data-testid={`badge-group-count-${groupKey}`}>{groupFeatures.length}</Badge>
-                  </div>
-                  {groupFeatures.map((feature) => (
-                    <FeatureRow key={feature.id} feature={feature} />
-                  ))}
+            groupedFeatures.map(([groupKey, group]) => (
+              <div key={groupKey}>
+                <div 
+                  className="sticky top-0 z-10 px-4 py-2 text-sm font-medium bg-muted/80 backdrop-blur-sm border-b flex items-center gap-2"
+                  data-testid={`group-header-${groupKey}`}
+                >
+                  {group.color && (
+                    <span 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: group.color }}
+                    />
+                  )}
+                  {group.label}
+                  <span className="text-muted-foreground">({group.features.length})</span>
                 </div>
-              ))}
-            </div>
+                {group.features.map((feature) => (
+                  <FeatureRow key={feature.id} feature={feature} />
+                ))}
+              </div>
+            ))
           ) : (
-            <div className="">
-              {filteredFeatures.map((feature) => (
-                <FeatureRow key={feature.id} feature={feature} />
-              ))}
-            </div>
+            filteredFeatures.map((feature) => (
+              <FeatureRow key={feature.id} feature={feature} />
+            ))
           )}
         </div>
-
       </div>
     </PageLayout>
   );

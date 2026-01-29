@@ -1,13 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { SingleSelect } from "@/components/ui/single-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FilterBar } from "@/components/data-grid/filter-bar";
+import type { FilterConfig } from "@/components/data-grid/types";
 import { CircleFadingPlus, Bug, Diamond, AlertTriangle, Layers } from "lucide-react";
 import { Link } from "wouter";
 import type { AppIssueWithRelations, IssueSeverity, IssueStatus } from "@shared/schema";
@@ -87,25 +87,67 @@ function IssueRow({ issue }: { issue: AppIssueWithRelations }) {
   );
 }
 
+const issueFilters: FilterConfig<AppIssueWithRelations>[] = [
+  {
+    id: "status",
+    label: "Status",
+    icon: Diamond,
+    optionSource: {
+      type: "static",
+      options: Object.entries(statusLabels).map(([value, label]) => ({ id: value, label })),
+    },
+    matchFn: (issue, selectedValues) => {
+      if (selectedValues.length === 0) return true;
+      return selectedValues.includes(issue.status);
+    },
+  },
+  {
+    id: "severity",
+    label: "Severity",
+    icon: AlertTriangle,
+    optionSource: {
+      type: "static",
+      options: Object.entries(severityLabels).map(([value, label]) => ({ id: value, label })),
+    },
+    matchFn: (issue, selectedValues) => {
+      if (selectedValues.length === 0) return true;
+      return selectedValues.includes(issue.severity);
+    },
+  },
+  {
+    id: "groupBy",
+    label: "Grouping",
+    icon: Layers,
+    type: "single",
+    optionSource: {
+      type: "static",
+      options: [
+        { id: "status", label: "Group by Status" },
+        { id: "severity", label: "Group by Severity" },
+        { id: "none", label: "No Grouping" },
+      ],
+    },
+    matchFn: () => true,
+  },
+];
+
 export default function AppIssues() {
   usePageTitle("Issues");
-  const [selectedStatuses, setSelectedStatuses] = useState<(string | number)[]>([]);
-  const [selectedSeverities, setSelectedSeverities] = useState<(string | number)[]>([]);
-  const [groupBy, setGroupBy] = useState<GroupBy>("status");
+  const [filterState, setFilterState] = useState<Record<string, string[]>>({
+    groupBy: ["status"],
+  });
 
   const { data: issues = [], isLoading } = useQuery<AppIssueWithRelations[]>({
     queryKey: ["/api/app-issues"],
   });
 
-  const statusItems = useMemo(() => 
-    Object.entries(statusLabels).map(([value, label]) => ({ id: value, label })),
-    []
-  );
+  const handleFilterChange = useCallback((filterId: string, values: string[]) => {
+    setFilterState(prev => ({ ...prev, [filterId]: values }));
+  }, []);
 
-  const severityItems = useMemo(() => 
-    Object.entries(severityLabels).map(([value, label]) => ({ id: value, label })),
-    []
-  );
+  const selectedStatuses = filterState.status || [];
+  const selectedSeverities = filterState.severity || [];
+  const groupBy = (filterState.groupBy?.[0] || "status") as GroupBy;
 
   const filteredIssues = issues.filter((issue) => {
     if (selectedStatuses.length > 0 && !selectedStatuses.includes(issue.status)) return false;
@@ -170,50 +212,20 @@ export default function AppIssues() {
       <div className="overflow-hidden flex flex-col h-full p-4 md:p-6 gap-4 md:gap-6">
         
         <div className="">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
-            <MultiSelect
-              triggerLabel="Status"
-              triggerIcon={<Diamond className="h-4 w-4" />}
-              items={statusItems}
-              itemLabels={statusLabels}
-              selectedIds={selectedStatuses}
-              onSelectionChange={setSelectedStatuses}
-              showSelectAll={true}
-              showSearch={true}
-              testIdPrefix="status-filter"
-            />
-            <MultiSelect
-              triggerLabel="Severity"
-              triggerIcon={<AlertTriangle className="h-4 w-4" />}
-              items={severityItems}
-              itemLabels={severityLabels}
-              selectedIds={selectedSeverities}
-              onSelectionChange={setSelectedSeverities}
-              showSelectAll={true}
-              showSearch={true}
-              testIdPrefix="severity-filter"
-            />
-            <SingleSelect
-              triggerLabel="Grouping"
-              triggerIcon={<Layers className="h-4 w-4" />}
-              items={[
-                { id: "status", label: "Status" },
-                { id: "severity", label: "Severity" },
-                { id: "none", label: "None" },
-              ]}
-              itemLabels={{ status: "Group by Status", severity: "Group by Severity", none: "Grouping" }}
-              selectedId={groupBy}
-              onSelectionChange={(id) => setGroupBy(id as GroupBy)}
-              testIdPrefix="group-by"
-              showSearch={false}
-            />
-          </div>
+          <FilterBar
+            filters={issueFilters}
+            data={issues}
+            filterState={filterState}
+            onFilterChange={handleFilterChange}
+          />
         </div>
 
         <div className="overflow-y-scroll border rounded-lg h-full">
           {filteredIssues.length === 0 ? (
             <Card className="p-12 h-full">
               <div className="flex flex-col h-full items-center justify-center text-center">
+                <Bug className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No issues found</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedStatuses.length > 0 || selectedSeverities.length > 0
                     ? "Try adjusting your filters to see more issues."
@@ -228,30 +240,26 @@ export default function AppIssues() {
               </div>
             </Card>
           ) : groupedIssues ? (
-            <div className="flex flex-col">
-              {groupedIssues.map(([groupKey, { label, issues: groupIssues }]) => (
-                <div key={groupKey} data-testid={`group-${groupKey}`}>
-                  <div 
-                    className="px-4 py-3 bg-muted/50 border-b flex items-center gap-2 sticky top-0 z-[10]"
-                  >
-                    <span className="font-semibold text-sm" data-testid={`text-group-label-${groupKey}`}>{label}</span>
-                    <Badge variant="secondary" size="sm" className="px-1.5" data-testid={`badge-group-count-${groupKey}`}>{groupIssues.length}</Badge>
-                  </div>
-                  {groupIssues.map((issue) => (
-                    <IssueRow key={issue.id} issue={issue} />
-                  ))}
+            groupedIssues.map(([groupKey, group]) => (
+              <div key={groupKey}>
+                <div 
+                  className="sticky top-0 z-10 px-4 py-2 text-sm font-medium bg-muted/80 backdrop-blur-sm border-b"
+                  data-testid={`group-header-${groupKey}`}
+                >
+                  {group.label}
+                  <span className="text-muted-foreground ml-2">({group.issues.length})</span>
                 </div>
-              ))}
-            </div>
+                {group.issues.map((issue) => (
+                  <IssueRow key={issue.id} issue={issue} />
+                ))}
+              </div>
+            ))
           ) : (
-            <div className="">
-              {filteredIssues.map((issue) => (
-                <IssueRow key={issue.id} issue={issue} />
-              ))}
-            </div>
+            filteredIssues.map((issue) => (
+              <IssueRow key={issue.id} issue={issue} />
+            ))
           )}
         </div>
-
       </div>
     </PageLayout>
   );
