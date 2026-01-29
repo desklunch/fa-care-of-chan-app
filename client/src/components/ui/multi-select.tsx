@@ -373,7 +373,7 @@ export function MultiSelect({
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full focus:ring-0 ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
+      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>
@@ -385,7 +385,7 @@ export function MultiSelect({
       type="button"
       variant="default"
       size="md"
-      className="rounded-l-none border-l-0 px-2 h-12 md:h-9 focus:ring-0"
+      className="rounded-l-none border-l-0 px-2 h-12 md:h-9 Ω"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
