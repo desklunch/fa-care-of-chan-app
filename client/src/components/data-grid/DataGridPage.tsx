@@ -389,21 +389,8 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     return {};
   });
 
-  // Expand filter bar if there are active filters
-  const [showFilters, setShowFilters] = useState(() => {
-    const urlFilters = getFiltersFromUrl();
-    if (Object.keys(urlFilters).some(k => urlFilters[k].length > 0)) {
-      return true;
-    }
-    // Only check session storage if URL has no grid params
-    if (!hasAnyGridParamsInUrl()) {
-      const sessionFilters = getFiltersFromSession(window.location.pathname);
-      if (sessionFilters && Object.keys(sessionFilters).some(k => sessionFilters[k].length > 0)) {
-        return true;
-      }
-    }
-    return false;
-  });
+  // Collapse filter bar by default; user can expand manually
+  const [showFilters, setShowFilters] = useState(false);
 
   // Initialize visibleColumns from URL params or session storage
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
