@@ -88,6 +88,8 @@ function PageLoader() {
     </div>
   );
 }
+import { storeReturnUrl } from "@/lib/return-url";
+
 import {
   CircleUserRound,
   SquareTerminal,
@@ -469,7 +471,13 @@ function RouterContent() {
               }}
             </Route>
             <Route path="/" component={Landing} />
-            <Route component={NotFound} />
+            <Route>
+              {() => {
+                const currentPath = window.location.pathname + window.location.search;
+                storeReturnUrl(currentPath);
+                return <Landing />;
+              }}
+            </Route>
           </>
         )}
       </Switch>

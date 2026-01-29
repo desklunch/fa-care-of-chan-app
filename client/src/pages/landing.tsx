@@ -16,6 +16,7 @@ import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getAndClearReturnUrl } from "@/lib/return-url";
 
 const isDevelopment = import.meta.env.DEV;
 
@@ -31,7 +32,8 @@ export default function Landing() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/");
+      const returnUrl = getAndClearReturnUrl();
+      setLocation(returnUrl || "/");
     },
     onError: (error: any) => {
       if (error.message?.includes("domain")) {
@@ -53,7 +55,8 @@ export default function Landing() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/");
+      const returnUrl = getAndClearReturnUrl();
+      setLocation(returnUrl || "/");
     },
     onError: (error: any) => {
       toast({
