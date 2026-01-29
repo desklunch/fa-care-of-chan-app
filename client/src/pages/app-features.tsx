@@ -84,7 +84,7 @@ export default function AppFeatures() {
   usePageTitle("Features");
   const [selectedStatuses, setSelectedStatuses] = useState<(string | number)[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<(string | number)[]>([]);
-  const [groupBy, setGroupBy] = useState<GroupBy>("status");
+  const [groupBy, setGroupBy] = useState<GroupBy>("category");
 
   const { data: features = [], isLoading: featuresLoading } = useQuery<AppFeatureWithRelations[]>({
     queryKey: ["/api/features"],
