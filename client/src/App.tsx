@@ -29,7 +29,6 @@ const AdminLogs = lazy(() => import("@/pages/admin-logs"));
 const AppFeatures = lazy(() => import("@/pages/app-features"));
 const AppFeatureDetail = lazy(() => import("@/pages/app-feature-detail"));
 const AppFeatureForm = lazy(() => import("@/pages/app-feature-form"));
-const AdminAppFeatures = lazy(() => import("@/pages/admin-app-features"));
 const Contacts = lazy(() => import("@/pages/contacts"));
 const ContactDetail = lazy(() => import("@/pages/contact-detail"));
 const ContactForm = lazy(() => import("@/pages/contact-form"));
@@ -398,7 +397,6 @@ function AuthenticatedRoutes() {
           <Route path="/clients/:id" component={ClientDetail} />
           <Route path="/brands" component={Brands} />
           <Route path="/vendors/contacts" component={VendorContacts} />
-          <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/ai/context" component={AIContext} />
           <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
           <Route path="/forms/templates" component={FormTemplates} />
