@@ -1,6 +1,10 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { SingleSelect } from "@/components/ui/single-select";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ListFilter } from "lucide-react";
 import type { FilterConfig } from "./types";
 
 interface FilterBarProps<T, C = unknown> {
@@ -9,6 +13,7 @@ interface FilterBarProps<T, C = unknown> {
   filterState: Record<string, string[]>;
   onFilterChange: (filterId: string, values: string[]) => void;
   context?: C;
+  defaultExpanded?: boolean;
 }
 
 interface FilterOption {
@@ -30,6 +35,7 @@ function FilterControl<T, C = unknown>({
   context?: C;
 }) {
   const { optionSource } = filter;
+  const filterType = filter.type || "multi";
 
   const { data: queryData = [] } = useQuery<unknown[]>({
     queryKey: [optionSource.queryKey],
@@ -73,6 +79,22 @@ function FilterControl<T, C = unknown>({
 
   const Icon = filter.icon;
 
+  if (filterType === "single") {
+    return (
+      <SingleSelect
+        items={options}
+        selectedId={selectedValues[0] || null}
+        onSelectionChange={(id) => onSelectionChange(id ? [id] : [])}
+        itemLabels={labels}
+        triggerLabel={filter.label}
+        triggerIcon={<Icon className="h-4 w-4" />}
+        placeholder={filter.placeholder || filter.label}
+        testIdPrefix={`filter-${filter.id}`}
+        showSearch={options.length > 6}
+      />
+    );
+  }
+
   return (
     <MultiSelect
       items={options}
@@ -89,19 +111,15 @@ function FilterControl<T, C = unknown>({
   );
 }
 
-export function FilterBar<T, C = unknown>({
+function FilterControls<T, C = unknown>({
   filters,
   data,
   filterState,
   onFilterChange,
   context,
-}: FilterBarProps<T, C>) {
-  if (filters.length === 0) {
-    return null;
-  }
-
+}: Omit<FilterBarProps<T, C>, "defaultExpanded">) {
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-2 md:flex-wrap">
+    <>
       {filters.map((filter) => (
         <FilterControl
           key={filter.id}
@@ -112,6 +130,83 @@ export function FilterBar<T, C = unknown>({
           context={context}
         />
       ))}
-    </div>
+    </>
+  );
+}
+
+export function FilterBar<T, C = unknown>({
+  filters,
+  data,
+  filterState,
+  onFilterChange,
+  context,
+  defaultExpanded = false,
+}: FilterBarProps<T, C>) {
+  const [showFilters, setShowFilters] = useState(defaultExpanded);
+  
+  const hasActiveFilters = Object.values(filterState).some((v) => v.length > 0);
+
+  if (filters.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {/* Mobile: Filter button that opens sheet */}
+      <div className="md:hidden">
+        <Button
+          variant={showFilters ? "outline" : "ghost"}
+          size="md"
+          onClick={() => setShowFilters(true)}
+          data-testid="button-open-mobile-filters"
+          className={showFilters ? "rounded-full" : "bg-foreground/10 rounded-full"}
+        >
+          <ListFilter className="h-4 w-4" />
+          Filters
+          {hasActiveFilters && (
+            <span className="rounded-full bg-primary text-primary-foreground h-2 w-2" />
+          )}
+        </Button>
+
+        <Sheet open={showFilters} onOpenChange={setShowFilters}>
+          <SheetContent side="bottom" className="h-full max-h-[100dvh] flex flex-col p-0">
+            <SheetHeader className="flex flex-row items-center justify-between p-4 border-b">
+              <SheetTitle>Filters</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto py-0 p-5">
+              <div className="flex flex-col gap-3">
+                <FilterControls
+                  filters={filters}
+                  data={data}
+                  filterState={filterState}
+                  onFilterChange={onFilterChange}
+                  context={context}
+                />
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setShowFilters(false)}
+              data-testid="button-close-mobile-filters"
+              className="h-12"
+            >
+              Close
+            </Button>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop: Inline filters */}
+      <div className="hidden md:flex items-center gap-2 flex-wrap">
+        <FilterControls
+          filters={filters}
+          data={data}
+          filterState={filterState}
+          onFilterChange={onFilterChange}
+          context={context}
+        />
+      </div>
+    </>
   );
 }
