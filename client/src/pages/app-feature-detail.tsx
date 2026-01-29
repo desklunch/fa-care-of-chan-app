@@ -213,10 +213,10 @@ export default function AppFeatureDetail() {
 
               <FieldRow label="Vote" testId="field-feature-status">
                 <Button
-                  variant={feature.hasVoted ? "default" : "outline"}
+                  variant={feature.hasVoted ? "default" : "secondary"}
                   onClick={() => voteMutation.mutate()}
                   disabled={voteMutation.isPending}
-                  className="gap-2 h-"
+                  className="gap-3 h-9 w-auto px-3 "
                   data-testid="button-vote"
                 >
                   <ThumbsUp className="h-4 w-4" />
