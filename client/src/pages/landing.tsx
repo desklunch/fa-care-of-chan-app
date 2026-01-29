@@ -65,11 +65,11 @@ export default function Landing() {
   });
 
   return (
-    <div className=" mx-auto h-screen flex flex-col items-center justify-center text-center gap-6 text-primary p-6 ">
-      <div className="w-full bg-background max-w-md rounded-xl shadow-lg border p-6 flex flex-col items-center gap-2 ">
+    <div className="mx-auto h-screen flex flex-col items-center justify-center text-center gap-6 text-primary p-6 bg-secondary ">
+      <div className="w-full bg-background max-w-md rounded-[24px] shadow-lg border border-input p-6 flex flex-col items-center gap-2 ">
 
       
-        <div className="flex justify-center mb-6 [&_*]:fill-primary mt-12">
+        <div className="flex justify-center mb-6 [&_*]:fill-primary mt-4">
           <img 
             src={logoImage} 
             alt="Care of Chan OS" 
@@ -79,7 +79,7 @@ export default function Landing() {
 
         </div>
 
-        <div className="rounded-md border border-primary w-fit p-2 py-1 text-base tracking-wide font-normal">
+        <div className="rounded-md bg-primary text-background w-fit p-2 py-1 text-sm tracking-wide">
           CoCOS 1.4.1
         </div>
         
