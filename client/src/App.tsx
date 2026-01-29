@@ -347,7 +347,7 @@ function AuthenticatedRoutes() {
         <Suspense fallback={<PageLoader />}>
           <Switch>
             <Route path="/" component={Venues} />
-            <Route path="/admin/app/features" component={AdminAppFeatures} />
+            <Route path="/admin/features" component={AdminAppFeatures} />
             <Route path="/admin/releases" component={AdminReleases} />
             <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
             <Route path="/admin/theme" component={AdminThemeEditor} />
