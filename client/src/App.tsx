@@ -268,13 +268,13 @@ function useLayoutConfig() {
           },
           {
             name: "Logs",
-            href: "/admin/logs",
+            href: "/app/logs",
             icon: SquareTerminal,
             requiredPermission: "audit.read",
           },
           {
             name: "Analytics",
-            href: "/admin/analytics",
+            href: "/app/analytics",
             icon: ScanEye,
             requiredPermission: "admin.analytics",
           },
@@ -398,7 +398,6 @@ function AuthenticatedRoutes() {
           <Route path="/vendors/contacts" component={VendorContacts} />
           <Route path="/prototype/event-schedule" component={EventSchedulePrototype} />
           <Route path="/ai/context" component={AIContext} />
-          <Route path="/admin/app/features" component={AdminAppFeatures} />
           <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
           <Route path="/forms/templates" component={FormTemplates} />
           <Route path="/forms/templates/new" component={FormTemplateForm} />
@@ -409,8 +408,8 @@ function AuthenticatedRoutes() {
           <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
           <Route path="/forms/requests/:id" component={FormRequestDetail} />
           <Route path="/admin/theme" component={AdminThemeEditor} />
-          <Route path="/admin/logs" component={AdminLogs} />
-          <Route path="/admin/analytics" component={AdminAnalytics} />
+          <Route path="/app/logs" component={AdminLogs} />
+          <Route path="/app/analytics" component={AdminAnalytics} />
           <Route path="/admin/releases" component={AdminReleases} />
           <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
           <Route path="/guide" component={Guide} />
