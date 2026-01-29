@@ -209,30 +209,21 @@ export default function AppFeatureDetail() {
         <TabsContent value="overview" className="mt-0">
           <div className="max-w-4xl space-y-6 p-4 md:p-6">
             <Card className="">
-              <FieldRow label="Vot" testId="field-feature-status">
+              <CardContent >
+
+              <FieldRow label="Vote" testId="field-feature-status">
                 <Button
                   variant={feature.hasVoted ? "default" : "outline"}
                   onClick={() => voteMutation.mutate()}
                   disabled={voteMutation.isPending}
-                  className="gap-2"
+                  className="gap-2 h-"
                   data-testid="button-vote"
                 >
                   <ThumbsUp className="h-4 w-4" />
                   <span data-testid="text-vote-count">{feature.voteCount}</span>
                 </Button>
               </FieldRow>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={feature.hasVoted ? "default" : "outline"}
-                  onClick={() => voteMutation.mutate()}
-                  disabled={voteMutation.isPending}
-                  className="gap-2"
-                  data-testid="button-vote"
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                  <span data-testid="text-vote-count">{feature.voteCount}</span>
-                </Button>
-              </div>
+       
               <FieldRow label="Status" testId="field-feature-status">
                 {isAdmin ? (
                   <Select 
@@ -240,7 +231,7 @@ export default function AppFeatureDetail() {
                     onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
                     disabled={statusMutation.isPending}
                   >
-                    <SelectTrigger className="w-[180px]" data-testid="select-feature-status">
+                    <SelectTrigger className="w-[180px] h-9" data-testid="select-feature-status">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -258,6 +249,7 @@ export default function AppFeatureDetail() {
                   </Badge>
                 )}
               </FieldRow>
+              </CardContent>
             </Card>
             <Card>
               <CardContent className="py-2">

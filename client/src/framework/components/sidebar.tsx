@@ -236,7 +236,7 @@ export default function Sidebar({
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <Logo width="26" collapsed={!showExpanded} />
+            <Logo width="32" collapsed={!showExpanded} />
           </Button>
 
           <Button
