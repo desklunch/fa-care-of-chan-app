@@ -189,6 +189,16 @@ export default function AppFeatureDetail() {
           <div className="p-4 md:p-6 pb-2 md:pb-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
               <div className="space-y-2">
+                <Badge 
+                  variant="outline"
+                  style={{ 
+                    borderColor: feature.category.color || undefined,
+                    color: feature.category.color || undefined 
+                  }}
+                  data-testid="badge-feature-category"
+                >
+                  {feature.category.name}
+                </Badge>
                 <h1 className="text-3xl font-bold" data-testid="text-feature-title">
                   {feature.title}
                 </h1>
@@ -210,100 +220,80 @@ export default function AppFeatureDetail() {
           <div className="max-w-4xl space-y-6 p-4 md:p-6">
             <Card className="">
               <CardContent >
-
-              <FieldRow label="Vote" testId="field-feature-status">
-                <Button
-                  variant={feature.hasVoted ? "default" : "secondary"}
-                  onClick={() => voteMutation.mutate()}
-                  disabled={voteMutation.isPending}
-                  className="gap-3 h-9 w-auto px-3 "
-                  data-testid="button-vote"
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                  <span data-testid="text-vote-count">{feature.voteCount}</span>
-                </Button>
-              </FieldRow>
-       
-              <FieldRow label="Status" testId="field-feature-status">
-                {isAdmin ? (
-                  <Select 
-                    value={feature.status} 
-                    onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
-                    disabled={statusMutation.isPending}
-                  >
-                    <SelectTrigger className="w-[180px] h-9" data-testid="select-feature-status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(statusLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value} data-testid={`select-option-${value}`}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Badge 
-                    className={statusColors[feature.status as FeatureStatus]}
-                    data-testid="badge-feature-status"
-                  >
-                    {statusLabels[feature.status as FeatureStatus]}
-                  </Badge>
-                )}
-              </FieldRow>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="py-2">
-
-
-                <FieldRow label="Type" testId="field-feature-type">
-                  {feature.featureType ? (
-                    <Badge 
-                      className={featureTypeColors[feature.featureType as FeatureType]}
-                      data-testid="badge-feature-type"
+                <FieldRow label="Status" testId="field-feature-status">
+                  {isAdmin ? (
+                    <Select 
+                      value={feature.status} 
+                      onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
+                      disabled={statusMutation.isPending}
                     >
-                      {featureTypeLabels[feature.featureType as FeatureType]}
-                    </Badge>
+                      <SelectTrigger className="w-[180px] h-9" data-testid="select-feature-status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value} data-testid={`select-option-${value}`}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
-                    <span className="text-muted-foreground">Not set</span>
+                    <Badge 
+                      className={statusColors[feature.status as FeatureStatus]}
+                      data-testid="badge-feature-status"
+                    >
+                      {statusLabels[feature.status as FeatureStatus]}
+                    </Badge>
                   )}
                 </FieldRow>
-
-                <FieldRow label="Category" testId="field-feature-category">
-                  <Badge 
-                    variant="outline"
-                    style={{ 
-                      borderColor: feature.category.color || undefined,
-                      color: feature.category.color || undefined 
-                    }}
-                    data-testid="badge-feature-category"
-                  >
-                    {feature.category.name}
-                  </Badge>
-                </FieldRow>
-
                 <FieldRow label="Description" testId="field-feature-description">
                   <p className="text-sm whitespace-pre-wrap" data-testid="text-feature-description">
                     {feature.description || <span className="text-muted-foreground">No description provided.</span>}
                   </p>
                 </FieldRow>
+                {/* <FieldRow label="Type" testId="field-feature-type">
+                  {feature.featureType ? (
+                    <span  data-testid="badge-feature-type">
+                      {featureTypeLabels[feature.featureType as FeatureType]}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Not set</span>
+                  )}
+                </FieldRow> */}
 
-                <FieldRow label="Submitted By" testId="field-feature-submitted-by">
-                  <span data-testid="text-created-by">
+
+
+
+
+
+                <FieldRow label="Submitted" testId="field-feature-submitted-on" >
+                  <span data-testid="text-created-at ">
+                    {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"} 
+                  </span>
+                  <span className="px-1.5 text-muted-foreground">
+                    by
+                  </span>
+                  <span data-testid="text-created-by" className="">
                     {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName || ""}
+
                   </span>
                 </FieldRow>
-
-                <FieldRow label="Submitted On" testId="field-feature-submitted-on">
-                  <span data-testid="text-created-at">
-                    {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"}
-                  </span>
+                <FieldRow label="Vote" testId="field-feature-status">
+                  <Button
+                    variant={feature.hasVoted ? "default" : "secondary"}
+                    onClick={() => voteMutation.mutate()}
+                    disabled={voteMutation.isPending}
+                    className="gap-3 h-9 w-auto px-3 "
+                    data-testid="button-vote"
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    <span data-testid="text-vote-count">{feature.voteCount}</span>
+                  </Button>
                 </FieldRow>
 
-                <FieldRow label="Votes" testId="field-feature-votes">
-                  <span data-testid="text-vote-count-detail">{feature.voteCount}</span>
-                </FieldRow>
               </CardContent>
+              
             </Card>
+         
           </div>
         </TabsContent>
 
