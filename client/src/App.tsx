@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
@@ -40,7 +39,9 @@ const VenueForm = lazy(() => import("@/pages/venue-form"));
 const VenueDetail = lazy(() => import("@/pages/venue-detail"));
 const VenueCollections = lazy(() => import("@/pages/venue-collections"));
 const VenueCollectionForm = lazy(() => import("@/pages/venue-collection-form"));
-const VenueCollectionDetail = lazy(() => import("@/pages/venue-collection-detail"));
+const VenueCollectionDetail = lazy(
+  () => import("@/pages/venue-collection-detail"),
+);
 const Amenities = lazy(() => import("@/pages/amenities"));
 const Industries = lazy(() => import("@/pages/industries"));
 const ManageTagsPage = lazy(() => import("@/pages/manage-tags"));
@@ -65,7 +66,9 @@ const AdminReleaseDetail = lazy(() => import("@/pages/admin-release-detail"));
 const Guide = lazy(() => import("@/pages/guide"));
 const Feedback = lazy(() => import("@/pages/feedback"));
 const PublicVenueDetail = lazy(() => import("@/pages/public-venue-detail"));
-const PublicVenueCollection = lazy(() => import("@/pages/public-venue-collection"));
+const PublicVenueCollection = lazy(
+  () => import("@/pages/public-venue-collection"),
+);
 const Deals = lazy(() => import("@/pages/deals"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
@@ -76,7 +79,9 @@ const ClientDetail = lazy(() => import("@/pages/client-detail"));
 const ClientContacts = lazy(() => import("@/pages/client-contacts"));
 const Brands = lazy(() => import("@/pages/brands"));
 const VendorContacts = lazy(() => import("@/pages/vendor-contacts"));
-const EventSchedulePrototype = lazy(() => import("@/pages/event-schedule-prototype"));
+const EventSchedulePrototype = lazy(
+  () => import("@/pages/event-schedule-prototype"),
+);
 const AIContext = lazy(() => import("@/pages/ai-context"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
@@ -155,10 +160,9 @@ function useLayoutConfig() {
             icon: ScanEye,
             requiredPermission: "deals.read",
           },
-
         ],
       },
-    
+
       {
         heading: "Venues",
         defaultCollapsed: true,
@@ -174,7 +178,6 @@ function useLayoutConfig() {
             href: "/venues/collections",
             icon: FolderOpen,
           },
-
         ],
       },
 
@@ -198,7 +201,6 @@ function useLayoutConfig() {
             href: "/contacts",
             icon: Contact,
           },
-
         ],
       },
       {
@@ -223,14 +225,12 @@ function useLayoutConfig() {
             icon: Palette,
             requiredPermission: "theme.manage",
           },
-
         ],
       },
       {
         heading: "App",
         defaultCollapsed: true,
         items: [
-  
           {
             name: "Guide",
             href: "/guide",
@@ -282,8 +282,6 @@ function useLayoutConfig() {
         ],
       },
 
- 
-  
       {
         heading: "Developer",
         requiredPermission: "admin.settings",
@@ -295,7 +293,6 @@ function useLayoutConfig() {
             icon: Tags,
             requiredPermission: "app_features.manage",
           },
-
 
           {
             name: "Requests",
@@ -322,11 +319,8 @@ function useLayoutConfig() {
             icon: Link2,
             requiredPermission: "vendor_tokens.manage",
           },
-
         ],
       },
- 
-    
     ],
     onSignOut: async () => {
       try {
@@ -352,72 +346,88 @@ function AuthenticatedRoutes() {
         <Suspense fallback={<PageLoader />}>
           <Switch>
             <Route path="/" component={Venues} />
-          <Route path="/team" component={TeamPage} />
-          <Route path="/team/:id" component={TeamProfile} />
-          <Route path="/team/:id/edit" component={TeamEdit} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/profile/edit" component={ProfileEdit} />
-          <Route path="/app/features" component={AppFeatures} />
-          <Route path="/app/features/new" component={AppFeatureForm} />
-          <Route path="/app/features/:id/edit" component={AppFeatureForm} />
-          <Route path="/app/features/:id" component={AppFeatureDetail} />
-          <Route path="/app/issues" component={AppIssues} />
-          <Route path="/app/issues/new" component={AppIssueForm} />
-          <Route path="/app/issues/:id/edit" component={AppIssueForm} />
-          <Route path="/app/issues/:id" component={AppIssueDetail} />
-          <Route path="/contacts" component={Contacts} />
-          <Route path="/contacts/new" component={ContactForm} />
-          <Route path="/contacts/:id/edit" component={ContactForm} />
-          <Route path="/contacts/:id" component={ContactDetail} />
-          <Route path="/vendors" component={Vendors} />
-          <Route path="/vendors/new" component={VendorForm} />
-          <Route path="/vendors/:id/edit" component={VendorForm} />
-          <Route path="/vendors/:id" component={VendorDetail} />
-          <Route path="/venues" component={Venues} />
-          <Route path="/venues/new" component={VenueForm} />
-          <Route path="/venues/collections" component={VenueCollections} />
-          <Route path="/venues/collections/new" component={VenueCollectionForm} />
-          <Route path="/venues/collections/:id/edit" component={VenueCollectionForm} />
-          <Route path="/venues/collections/:id" component={VenueCollectionDetail} />
-          <Route path="/venues/:id/edit" component={VenueForm} />
-          <Route path="/venues/:id" component={VenueDetail} />
-          <Route path="/comments" component={CommentsPage} />
-          <Route path="/manage/tags" component={ManageTagsPage} />
-          <Route path="/amenities" component={Amenities} />
-          <Route path="/industries" component={Industries} />
-          <Route path="/deals" component={Deals} />
-          <Route path="/deals/reports" component={DealReports} />
-          <Route path="/deals/new" component={DealForm} />
-          <Route path="/deals/:id/edit" component={DealForm} />
-          <Route path="/deals/:id" component={DealDetail} />
-          <Route path="/clients" component={Clients} />
-          <Route path="/clients/contacts" component={ClientContacts} />
-          <Route path="/clients/new" component={ClientForm} />
-          <Route path="/clients/:id/edit" component={ClientForm} />
-          <Route path="/clients/:id" component={ClientDetail} />
-          <Route path="/brands" component={Brands} />
-          <Route path="/vendors/contacts" component={VendorContacts} />
-          <Route path="/ai/context" component={AIContext} />
-          <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
-          <Route path="/forms/templates" component={FormTemplates} />
-          <Route path="/forms/templates/new" component={FormTemplateForm} />
-          <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
-          <Route path="/forms/templates/:id" component={FormTemplateDetail} />
-          <Route path="/forms/requests" component={FormRequests} />
-          <Route path="/forms/requests/new" component={FormRequestForm} />
-          <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
-          <Route path="/forms/requests/:id" component={FormRequestDetail} />
-          <Route path="/admin/theme" component={AdminThemeEditor} />
-          <Route path="/app/logs" component={AdminLogs} />
-          <Route path="/app/analytics" component={AdminAnalytics} />
-          <Route path="/admin/releases" component={AdminReleases} />
-          <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
-          <Route path="/guide" component={Guide} />
-          <Route path="/app/feedback" component={Feedback} />
-          <Route component={NotFound} />
-        </Switch>
-      </Suspense>
-    </AppShell>
+            <Route path="/team" component={TeamPage} />
+            <Route path="/team/:id" component={TeamProfile} />
+            <Route path="/team/:id/edit" component={TeamEdit} />
+            <Route path="/profile" component={Profile} />
+            <Route path="/profile/edit" component={ProfileEdit} />
+            <Route path="/app/feedback" component={Feedback} />
+            <Route path="/app/features" component={AppFeatures} />
+            <Route path="/app/features/new" component={AppFeatureForm} />
+            <Route path="/app/features/:id/edit" component={AppFeatureForm} />
+            <Route path="/app/features/:id" component={AppFeatureDetail} />
+            <Route path="/app/issues" component={AppIssues} />
+            <Route path="/app/issues/new" component={AppIssueForm} />
+            <Route path="/app/issues/:id/edit" component={AppIssueForm} />
+            <Route path="/app/issues/:id" component={AppIssueDetail} />
+            <Route path="/contacts" component={Contacts} />
+            <Route path="/contacts/new" component={ContactForm} />
+            <Route path="/contacts/:id/edit" component={ContactForm} />
+            <Route path="/contacts/:id" component={ContactDetail} />
+            <Route path="/vendors" component={Vendors} />
+            <Route path="/vendors/new" component={VendorForm} />
+            <Route path="/vendors/:id/edit" component={VendorForm} />
+            <Route path="/vendors/:id" component={VendorDetail} />
+            <Route path="/venues" component={Venues} />
+            <Route path="/venues/new" component={VenueForm} />
+            <Route path="/venues/collections" component={VenueCollections} />
+            <Route
+              path="/venues/collections/new"
+              component={VenueCollectionForm}
+            />
+            <Route
+              path="/venues/collections/:id/edit"
+              component={VenueCollectionForm}
+            />
+            <Route
+              path="/venues/collections/:id"
+              component={VenueCollectionDetail}
+            />
+            <Route path="/venues/:id/edit" component={VenueForm} />
+            <Route path="/venues/:id" component={VenueDetail} />
+            <Route path="/comments" component={CommentsPage} />
+            <Route path="/manage/tags" component={ManageTagsPage} />
+            <Route path="/amenities" component={Amenities} />
+            <Route path="/industries" component={Industries} />
+            <Route path="/deals" component={Deals} />
+            <Route path="/deals/reports" component={DealReports} />
+            <Route path="/deals/new" component={DealForm} />
+            <Route path="/deals/:id/edit" component={DealForm} />
+            <Route path="/deals/:id" component={DealDetail} />
+            <Route path="/clients" component={Clients} />
+            <Route path="/clients/contacts" component={ClientContacts} />
+            <Route path="/clients/new" component={ClientForm} />
+            <Route path="/clients/:id/edit" component={ClientForm} />
+            <Route path="/clients/:id" component={ClientDetail} />
+            <Route path="/brands" component={Brands} />
+            <Route path="/vendors/contacts" component={VendorContacts} />
+            <Route path="/ai/context" component={AIContext} />
+            <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
+            <Route path="/forms/templates" component={FormTemplates} />
+            <Route path="/forms/templates/new" component={FormTemplateForm} />
+            <Route
+              path="/forms/templates/:id/edit"
+              component={FormTemplateForm}
+            />
+            <Route path="/forms/templates/:id" component={FormTemplateDetail} />
+            <Route path="/forms/requests" component={FormRequests} />
+            <Route path="/forms/requests/new" component={FormRequestForm} />
+            <Route
+              path="/forms/requests/:id/edit"
+              component={FormRequestForm}
+            />
+            <Route path="/forms/requests/:id" component={FormRequestDetail} />
+            <Route path="/admin/theme" component={AdminThemeEditor} />
+            <Route path="/app/logs" component={AdminLogs} />
+            <Route path="/app/analytics" component={AdminAnalytics} />
+            <Route path="/admin/releases" component={AdminReleases} />
+            <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
+            <Route path="/guide" component={Guide} />
+            <Route path="/app/feedback" component={Feedback} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
+      </AppShell>
     </LayoutProvider>
   );
 }
@@ -449,7 +459,10 @@ function RouterContent() {
         <Route path="/form/:token" component={PublicForm} />
         <Route path="/form/preview/:requestId" component={FormPreview} />
         <Route path="/public/venues/:id" component={PublicVenueDetail} />
-        <Route path="/public/venues/collections/:id" component={PublicVenueCollection} />
+        <Route
+          path="/public/venues/collections/:id"
+          component={PublicVenueCollection}
+        />
         {isAuthenticated ? (
           <Route>
             <AuthenticatedRoutes />
@@ -464,14 +477,17 @@ function RouterContent() {
             </Route>
             <Route path="/venues/collections/:id">
               {(params) => {
-                window.location.replace(`/public/venues/collections/${params.id}`);
+                window.location.replace(
+                  `/public/venues/collections/${params.id}`,
+                );
                 return null;
               }}
             </Route>
             <Route path="/" component={Landing} />
             <Route>
               {() => {
-                const currentPath = window.location.pathname + window.location.search;
+                const currentPath =
+                  window.location.pathname + window.location.search;
                 storeReturnUrl(currentPath);
                 return <Landing />;
               }}
