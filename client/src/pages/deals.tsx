@@ -1160,8 +1160,7 @@ export default function Deals() {
     return (
       <PageLayout breadcrumbs={[{ label: "Deals" }]}>
         <NoPermissionMessage
-          title="Access Denied"
-          message="You don't have permission to view deals. Please contact an administrator if you need access."
+          title="Permission Required"
         />
       </PageLayout>
     );

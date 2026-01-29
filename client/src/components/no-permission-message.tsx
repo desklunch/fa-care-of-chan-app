@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldX, ArrowLeft, Home } from "lucide-react";
 
 interface NoPermissionMessageProps {
   title?: string;
@@ -12,25 +11,25 @@ interface NoPermissionMessageProps {
 
 export function NoPermissionMessage({
   title = "Permission Required",
-  message = "You don't have permission to access this page. Please contact an administrator if you believe you should have access.",
+  message="You don't have permission to view this page. Please contact an administrator if you need access.",
   showBackButton = true,
   showHomeButton = true,
 }: NoPermissionMessageProps) {
   return (
-    <div className="min-h-[50vh] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-card-border">
+    <div className="pt-12 flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
         <CardContent className="py-12 text-center">
    
-          <h1 className="text-xl font-semibold mb-2" data-testid="text-no-permission-title">
+          <h1 className="text-lg font-semibold mb-2" data-testid="text-no-permission-title">
             {title}
           </h1>
-          <p className="text-muted-foreground mb-6" data-testid="text-no-permission-message">
+          <p className="text-muted-foreground mb-6 text-sm" data-testid="text-no-permission-message">
             {message}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             {showBackButton && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => window.history.back()}
                 data-testid="button-permission-go-back"
               >
