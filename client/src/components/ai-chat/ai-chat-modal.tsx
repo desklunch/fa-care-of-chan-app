@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, X, Send, Loader2, Bot, User, Wrench, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Message {
   role: "user" | "assistant";
@@ -39,7 +39,7 @@ interface ChatState {
 }
 
 export function AiChatFab() {
-  const { user } = useAuth();
+  const { isManagerOrAbove } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
@@ -164,10 +164,9 @@ export function AiChatFab() {
     }
   }, [chatState.input, chatState.messages, chatState.isLoading, setMessages, setInput, setIsLoading, setToolActivity]);
 
-  // Only show AI chat FAB to admin and manager roles
-  const canAccessAiChat = user?.role === "admin" || user?.role === "manager";
-  
-  if (!canAccessAiChat) {
+  // Only show AI chat FAB to admin and manager roles (tier 2+)
+  // Uses usePermissions which respects the dev role dropdown override
+  if (!isManagerOrAbove) {
     return null;
   }
 
