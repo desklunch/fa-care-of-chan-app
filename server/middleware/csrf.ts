@@ -12,6 +12,7 @@ const EXCLUDED_PATHS = [
   "/api/auth/dev-login",
   "/api/activity/",
   "/api/places/",
+  "/api/ai/",  // AI chat uses SSE streaming with session auth
 ];
 
 const {
