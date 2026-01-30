@@ -268,6 +268,91 @@ const tools: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "find_venues_by_amenity",
+      description: "Find all venues that have a specific amenity. Use list_amenities first to get amenity IDs.",
+      parameters: {
+        type: "object",
+        properties: {
+          amenity_id: {
+            type: "string",
+            description: "The amenity ID to search for",
+          },
+        },
+        required: ["amenity_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_venues_by_tag",
+      description: "Find all venues that have a specific tag (cuisine or style). Use list_tags first to get tag IDs.",
+      parameters: {
+        type: "object",
+        properties: {
+          tag_id: {
+            type: "string",
+            description: "The tag ID to search for",
+          },
+        },
+        required: ["tag_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_vendors_by_service",
+      description: "Find all vendors that offer a specific service. Use list_vendor_services first to get service IDs.",
+      parameters: {
+        type: "object",
+        properties: {
+          service_id: {
+            type: "string",
+            description: "The vendor service ID to search for",
+          },
+        },
+        required: ["service_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_contacts_for_client",
+      description: "Find all contacts linked to a specific client.",
+      parameters: {
+        type: "object",
+        properties: {
+          client_id: {
+            type: "string",
+            description: "The client ID to find contacts for",
+          },
+        },
+        required: ["client_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_contacts_for_vendor",
+      description: "Find all contacts linked to a specific vendor.",
+      parameters: {
+        type: "object",
+        properties: {
+          vendor_id: {
+            type: "string",
+            description: "The vendor ID to find contacts for",
+          },
+        },
+        required: ["vendor_id"],
+      },
+    },
+  },
 ];
 
 async function executeToolCall(
@@ -553,6 +638,95 @@ async function executeToolCall(
             name: s.name,
           })),
           count: services.length,
+        });
+      }
+
+      case "find_venues_by_amenity": {
+        if (!checkPermissionDirect(permissionContext, "venues.read")) {
+          return JSON.stringify({ error: "You don't have permission to view venues" });
+        }
+        const amenityId = args.amenity_id as string;
+        const venuesList = await venuesStorage.getVenuesByAmenityId(amenityId);
+        return JSON.stringify({
+          venues: venuesList.map((v) => ({
+            id: v.id,
+            name: v.name,
+            city: v.city,
+            state: v.state,
+            link: `/venues/${v.id}`,
+          })),
+          count: venuesList.length,
+        });
+      }
+
+      case "find_venues_by_tag": {
+        if (!checkPermissionDirect(permissionContext, "venues.read")) {
+          return JSON.stringify({ error: "You don't have permission to view venues" });
+        }
+        const tagId = args.tag_id as string;
+        const venuesList = await venuesStorage.getVenuesByTagId(tagId);
+        return JSON.stringify({
+          venues: venuesList.map((v) => ({
+            id: v.id,
+            name: v.name,
+            city: v.city,
+            state: v.state,
+            link: `/venues/${v.id}`,
+          })),
+          count: venuesList.length,
+        });
+      }
+
+      case "find_vendors_by_service": {
+        if (!checkPermissionDirect(permissionContext, "vendors.read")) {
+          return JSON.stringify({ error: "You don't have permission to view vendors" });
+        }
+        const serviceId = args.service_id as string;
+        const vendorsList = await vendorsStorage.getVendorsByServiceId(serviceId);
+        return JSON.stringify({
+          vendors: vendorsList.map((v) => ({
+            id: v.id,
+            name: v.businessName,
+            email: v.email,
+            link: `/vendors/${v.id}`,
+          })),
+          count: vendorsList.length,
+        });
+      }
+
+      case "find_contacts_for_client": {
+        if (!checkPermissionDirect(permissionContext, "clients.read")) {
+          return JSON.stringify({ error: "You don't have permission to view clients" });
+        }
+        const clientId = args.client_id as string;
+        const contactsList = await clientsStorage.getContactsForClient(clientId);
+        return JSON.stringify({
+          contacts: contactsList.map((c) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`.trim(),
+            email: c.emailAddresses?.[0] || null,
+            title: c.jobTitle,
+            link: `/contacts/${c.id}`,
+          })),
+          count: contactsList.length,
+        });
+      }
+
+      case "find_contacts_for_vendor": {
+        if (!checkPermissionDirect(permissionContext, "vendors.read")) {
+          return JSON.stringify({ error: "You don't have permission to view vendors" });
+        }
+        const vendorId = args.vendor_id as string;
+        const contactsList = await vendorsStorage.getContactsForVendor(vendorId);
+        return JSON.stringify({
+          contacts: contactsList.map((c) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`.trim(),
+            email: c.emailAddresses?.[0] || null,
+            title: c.jobTitle,
+            link: `/contacts/${c.id}`,
+          })),
+          count: contactsList.length,
         });
       }
 

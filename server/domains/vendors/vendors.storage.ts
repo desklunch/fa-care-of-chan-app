@@ -149,6 +149,16 @@ class VendorsStorage {
       .orderBy(vendorServices.name);
   }
 
+  async getVendorsByServiceId(serviceId: string): Promise<Vendor[]> {
+    const result = await db
+      .select({ vendor: vendors })
+      .from(vendorServicesVendors)
+      .innerJoin(vendors, eq(vendorServicesVendors.vendorId, vendors.id))
+      .where(eq(vendorServicesVendors.vendorServiceId, serviceId))
+      .orderBy(vendors.businessName);
+    return result.map(r => r.vendor);
+  }
+
   async getVendorServiceById(id: string): Promise<VendorService | undefined> {
     const [service] = await db
       .select()
