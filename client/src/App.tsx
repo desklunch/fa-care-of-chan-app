@@ -85,6 +85,7 @@ const EventSchedulePrototype = lazy(
 );
 const AIContext = lazy(() => import("@/pages/ai-context"));
 const NotFound = lazy(() => import("@/pages/not-found"));
+import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
 function PageLoader() {
   return (
@@ -340,10 +341,13 @@ function useLayoutConfig() {
 
 function AuthenticatedRoutes() {
   const layoutConfig = useLayoutConfig();
+  const { user } = useAuth();
+  const showAiChat = user?.role === "admin" || user?.role === "manager";
 
   return (
     <LayoutProvider config={layoutConfig}>
       <AppShell>
+        {showAiChat && <AiChatFab />}
         <Suspense fallback={<PageLoader />}>
           <Switch>
             <Route path="/" component={Venues} />
