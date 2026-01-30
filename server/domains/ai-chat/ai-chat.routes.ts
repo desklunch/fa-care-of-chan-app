@@ -4,6 +4,7 @@ import { loadPermissions, checkPermission } from "../../middleware/permissions";
 import { venuesStorage } from "../venues/venues.storage";
 import { clientsStorage } from "../clients/clients.storage";
 import { vendorsStorage } from "../vendors/vendors.storage";
+import { referenceDataStorage } from "../reference-data/reference-data.storage";
 import { storage } from "../../storage";
 import { logAuditEvent } from "../../audit";
 import type { PermissionContext } from "../../../shared/permissions";
@@ -207,6 +208,66 @@ const tools: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "list_amenities",
+      description: "List all available amenities that can be assigned to venues.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_tags",
+      description: "List all tags (cuisine and style categories) that can be assigned to venues.",
+      parameters: {
+        type: "object",
+        properties: {
+          category: {
+            type: "string",
+            description: "Filter by category: 'cuisine' or 'style' (optional)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_industries",
+      description: "List all industries that can be assigned to clients and deals.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_vendor_services",
+      description: "List all vendor service categories.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_deal_services",
+      description: "List all deal service types available for deals.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
 ];
 
 async function executeToolCall(
@@ -240,7 +301,7 @@ async function executeToolCall(
         if (!checkPermissionDirect(permissionContext, "venues.read")) {
           return JSON.stringify({ error: "You don't have permission to view venues" });
         }
-        const venue = await venuesStorage.getVenueById(args.venue_id as string);
+        const venue = await venuesStorage.getVenueByIdWithRelations(args.venue_id as string);
         if (!venue) {
           return JSON.stringify({ error: "Venue not found" });
         }
@@ -255,6 +316,12 @@ async function executeToolCall(
           website: venue.website,
           phone: venue.phone,
           venueType: venue.venueType,
+          amenities: venue.amenities?.map((a) => ({ id: a.id, name: a.name, icon: a.icon })),
+          cuisineTags: venue.cuisineTags?.map((t) => ({ id: t.id, name: t.name })),
+          styleTags: venue.styleTags?.map((t) => ({ id: t.id, name: t.name })),
+          photoCount: venue.photos?.length || 0,
+          floorplanCount: venue.floorplans?.length || 0,
+          link: `/venues/${venue.id}`,
         });
       }
 
@@ -363,6 +430,12 @@ async function executeToolCall(
           phone: vendor.phone,
           notes: vendor.notes,
           services: vendor.services?.map((s) => s.name),
+          contacts: vendor.contacts?.map((c) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`.trim(),
+            email: c.emailAddresses?.[0] || null,
+            title: c.jobTitle,
+          })),
           link: `/vendors/${vendor.id}`,
         });
       }
@@ -419,6 +492,67 @@ async function executeToolCall(
           concept: deal.concept,
           notes: deal.notes,
           link: `/deals/${deal.id}`,
+        });
+      }
+
+      case "list_amenities": {
+        const amenities = await referenceDataStorage.getAmenities();
+        return JSON.stringify({
+          amenities: amenities.map((a) => ({
+            id: a.id,
+            name: a.name,
+            icon: a.icon,
+          })),
+          count: amenities.length,
+        });
+      }
+
+      case "list_tags": {
+        const category = args.category as string | undefined;
+        const allTags = await referenceDataStorage.getTags();
+        const filtered = category 
+          ? allTags.filter((t) => t.category === category)
+          : allTags;
+        return JSON.stringify({
+          tags: filtered.map((t) => ({
+            id: t.id,
+            name: t.name,
+            category: t.category,
+          })),
+          count: filtered.length,
+        });
+      }
+
+      case "list_industries": {
+        const industries = await referenceDataStorage.getIndustries();
+        return JSON.stringify({
+          industries: industries.map((i) => ({
+            id: i.id,
+            name: i.name,
+          })),
+          count: industries.length,
+        });
+      }
+
+      case "list_vendor_services": {
+        const services = await vendorsStorage.getVendorServices();
+        return JSON.stringify({
+          services: services.map((s) => ({
+            id: s.id,
+            name: s.name,
+          })),
+          count: services.length,
+        });
+      }
+
+      case "list_deal_services": {
+        const services = await referenceDataStorage.getDealServices();
+        return JSON.stringify({
+          services: services.map((s) => ({
+            id: s.id,
+            name: s.name,
+          })),
+          count: services.length,
         });
       }
 
