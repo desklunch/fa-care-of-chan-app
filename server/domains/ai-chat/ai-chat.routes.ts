@@ -2,6 +2,9 @@ import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
 import { loadPermissions, checkPermission } from "../../middleware/permissions";
 import { venuesStorage } from "../venues/venues.storage";
+import { clientsStorage } from "../clients/clients.storage";
+import { vendorsStorage } from "../vendors/vendors.storage";
+import { storage } from "../../storage";
 import { logAuditEvent } from "../../audit";
 import type { PermissionContext } from "../../../shared/permissions";
 
@@ -10,11 +13,15 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant for Care of Chan OS, an enterprise management system for managing venues, vendors, contacts, and deals.
+const SYSTEM_PROMPT = `You are a helpful AI assistant for Care of Chan OS, an enterprise management system for managing venues, vendors, clients, contacts, and deals.
 
-Your primary capability right now is helping users generate editorial descriptions for venues.
+You have access to read data from all major domains in the system:
+- VENUES: Search and view venue details, generate and update descriptions
+- CLIENTS: Search and view client organizations
+- VENDORS: Search and view vendor companies and their services
+- DEALS: Search and view deals (sales pipeline) - requires manager/admin access
 
-WORKFLOW:
+VENUE DESCRIPTION WORKFLOW:
 1. When a user asks you to generate a description for a venue, first use the search_venues tool to find the venue in the database
 2. Once you have the venue details (name, address, city, state), use the get_venue_details tool to get more information
 3. Based on the venue name and location, use your knowledge and web search capabilities to gather information about the venue
@@ -29,6 +36,13 @@ DESCRIPTION GUIDELINES:
 - Include relevant details about cuisine, ambiance, history, or special offerings
 - Keep each paragraph concise but informative (3-5 sentences each)
 - If you cannot find specific information about a venue, create a compelling general description based on its type and location
+
+GENERAL QUERYING:
+- When users ask about clients, vendors, or deals, use the appropriate search tools
+- Provide concise summaries with links to detail pages where applicable
+- For clients: [View Client](/clients/{id})
+- For vendors: [View Vendor](/vendors/{id})
+- For deals: [View Deal](/deals/{id})
 
 Always be helpful, concise, and professional.`;
 
@@ -85,6 +99,111 @@ const tools: OpenAI.ChatCompletionTool[] = [
           },
         },
         required: ["venue_id", "description"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_clients",
+      description: "Search for clients (organizations) by name. Returns client ID, name, and basic info.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The client name or partial name to search for",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_client_details",
+      description: "Get detailed information about a specific client by ID",
+      parameters: {
+        type: "object",
+        properties: {
+          client_id: {
+            type: "string",
+            description: "The client ID",
+          },
+        },
+        required: ["client_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_vendors",
+      description: "Search for vendors by name. Returns vendor ID, name, website, and services.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The vendor name or partial name to search for",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_vendor_details",
+      description: "Get detailed information about a specific vendor by ID",
+      parameters: {
+        type: "object",
+        properties: {
+          vendor_id: {
+            type: "string",
+            description: "The vendor ID",
+          },
+        },
+        required: ["vendor_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_deals",
+      description: "Search for deals by name or filter by status. Returns deal ID, name, client, status, and value. Requires manager or admin access.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The deal name or partial name to search for (optional)",
+          },
+          status: {
+            type: "string",
+            description: "Filter by deal status: lead, qualified, proposal, negotiation, closed_won, closed_lost (optional)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_deal_details",
+      description: "Get detailed information about a specific deal by ID. Requires manager or admin access.",
+      parameters: {
+        type: "object",
+        properties: {
+          deal_id: {
+            type: "string",
+            description: "The deal ID",
+          },
+        },
+        required: ["deal_id"],
       },
     },
   },
@@ -169,6 +288,137 @@ async function executeToolCall(
           venueId: venue.id,
           venueName: venue.name,
           link: `/venues/${venue.id}`,
+        });
+      }
+
+      case "search_clients": {
+        if (!checkPermissionDirect(permissionContext, "clients.read")) {
+          return JSON.stringify({ error: "You don't have permission to search clients" });
+        }
+        const query = (args.query as string).toLowerCase();
+        const allClients = await clientsStorage.getClients();
+        const matches = allClients
+          .filter((c) => c.name.toLowerCase().includes(query))
+          .slice(0, 10)
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+          }));
+        return JSON.stringify({ clients: matches, count: matches.length });
+      }
+
+      case "get_client_details": {
+        if (!checkPermissionDirect(permissionContext, "clients.read")) {
+          return JSON.stringify({ error: "You don't have permission to view clients" });
+        }
+        const client = await clientsStorage.getClientByIdWithRelations(args.client_id as string);
+        if (!client) {
+          return JSON.stringify({ error: "Client not found" });
+        }
+        return JSON.stringify({
+          id: client.id,
+          name: client.name,
+          website: client.website,
+          contacts: client.contacts?.map((c) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`.trim(),
+            email: c.emailAddresses?.[0] || null,
+            title: c.jobTitle,
+          })),
+          link: `/clients/${client.id}`,
+        });
+      }
+
+      case "search_vendors": {
+        if (!checkPermissionDirect(permissionContext, "vendors.read")) {
+          return JSON.stringify({ error: "You don't have permission to search vendors" });
+        }
+        const query = (args.query as string).toLowerCase();
+        const allVendors = await vendorsStorage.getVendorsWithRelations();
+        const matches = allVendors
+          .filter((v) => v.businessName.toLowerCase().includes(query))
+          .slice(0, 10)
+          .map((v) => ({
+            id: v.id,
+            name: v.businessName,
+            website: v.website,
+            services: v.services?.map((s) => s.name),
+          }));
+        return JSON.stringify({ vendors: matches, count: matches.length });
+      }
+
+      case "get_vendor_details": {
+        if (!checkPermissionDirect(permissionContext, "vendors.read")) {
+          return JSON.stringify({ error: "You don't have permission to view vendors" });
+        }
+        const vendor = await vendorsStorage.getVendorByIdWithRelations(args.vendor_id as string);
+        if (!vendor) {
+          return JSON.stringify({ error: "Vendor not found" });
+        }
+        return JSON.stringify({
+          id: vendor.id,
+          name: vendor.businessName,
+          website: vendor.website,
+          email: vendor.email,
+          phone: vendor.phone,
+          notes: vendor.notes,
+          services: vendor.services?.map((s) => s.name),
+          link: `/vendors/${vendor.id}`,
+        });
+      }
+
+      case "search_deals": {
+        if (!checkPermissionDirect(permissionContext, "deals.read")) {
+          return JSON.stringify({ error: "You don't have permission to search deals" });
+        }
+        const query = args.query as string | undefined;
+        const statusFilter = args.status as string | undefined;
+        
+        let deals = await storage.getDeals(
+          statusFilter ? { status: [statusFilter as any] } : undefined
+        );
+        
+        if (query) {
+          const lowerQuery = query.toLowerCase();
+          deals = deals.filter((d) => d.displayName.toLowerCase().includes(lowerQuery));
+        }
+        
+        const matches = deals.slice(0, 10).map((d) => ({
+          id: d.id,
+          name: d.displayName,
+          dealNumber: d.dealNumber,
+          client: d.client?.name,
+          status: d.status,
+          budgetRange: d.budgetLow && d.budgetHigh 
+            ? `$${d.budgetLow.toLocaleString()} - $${d.budgetHigh.toLocaleString()}`
+            : null,
+        }));
+        return JSON.stringify({ deals: matches, count: matches.length });
+      }
+
+      case "get_deal_details": {
+        if (!checkPermissionDirect(permissionContext, "deals.read")) {
+          return JSON.stringify({ error: "You don't have permission to view deals" });
+        }
+        const deal = await storage.getDealById(args.deal_id as string);
+        if (!deal) {
+          return JSON.stringify({ error: "Deal not found" });
+        }
+        return JSON.stringify({
+          id: deal.id,
+          name: deal.displayName,
+          dealNumber: deal.dealNumber,
+          client: deal.client?.name,
+          primaryContact: deal.primaryContact 
+            ? `${deal.primaryContact.firstName} ${deal.primaryContact.lastName}`.trim()
+            : null,
+          status: deal.status,
+          budgetLow: deal.budgetLow,
+          budgetHigh: deal.budgetHigh,
+          budgetNotes: deal.budgetNotes,
+          concept: deal.concept,
+          notes: deal.notes,
+          link: `/deals/${deal.id}`,
         });
       }
 
