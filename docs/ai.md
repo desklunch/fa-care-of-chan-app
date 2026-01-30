@@ -167,11 +167,35 @@ client/
 
 ### Available Tools
 
+**Venue Tools**
 | Tool | Description | Permission Required |
 |------|-------------|---------------------|
 | `search_venues` | Search venues by name | `venues.read` |
-| `get_venue_details` | Get full venue information | `venues.read` |
+| `get_venue_details` | Get full venue info including amenities, tags, photo count | `venues.read` |
 | `update_venue_description` | Update venue longDescription | `venues.write` |
+
+**Client & Vendor Tools**
+| Tool | Description | Permission Required |
+|------|-------------|---------------------|
+| `search_clients` | Search clients by name | `clients.read` |
+| `get_client_details` | Get client info with contacts and industry | `clients.read` |
+| `search_vendors` | Search vendors by name | `vendors.read` |
+| `get_vendor_details` | Get vendor info with services and contacts | `vendors.read` |
+
+**Deal Tools (Tier 2+ only)**
+| Tool | Description | Permission Required |
+|------|-------------|---------------------|
+| `search_deals` | Search deals by name, filter by status | `deals.read` |
+| `get_deal_details` | Get deal info with client and primary contact | `deals.read` |
+
+**Reference Data Tools**
+| Tool | Description | Permission Required |
+|------|-------------|---------------------|
+| `list_amenities` | List all venue amenities | None |
+| `list_tags` | List tags (optional cuisine/style filter) | None |
+| `list_industries` | List all client industries | None |
+| `list_vendor_services` | List vendor service categories | None |
+| `list_deal_services` | List deal service types | None |
 
 ### Security Considerations
 
@@ -205,10 +229,11 @@ client/
 - [ ] Bulk description generation for multiple venues
 - [ ] Description style presets (formal, casual, luxury, etc.)
 
-### Phase 2: Expanded Domain Coverage
-- [ ] Add contact management tools (search, create, update)
-- [ ] Add vendor management tools
-- [ ] Add deal management tools (for tier 2+ users)
+### Phase 2: Expanded Domain Coverage ✓
+- [x] Add client search and details tools (January 2026)
+- [x] Add vendor search and details tools with contacts (January 2026)
+- [x] Add deal search and details tools for tier 2+ users (January 2026)
+- [x] Add reference data lookup tools (amenities, tags, industries, services)
 - [ ] Cross-domain queries ("Find venues that have worked with client X")
 
 ### Phase 3: Conversation Persistence
@@ -248,7 +273,7 @@ client/
 
 1. **Web Search:** Model uses its training knowledge; real-time web search may have limitations
 2. **Session-Only History:** Conversations are lost when modal closes
-3. **Venue Focus:** Currently only supports venue-related operations
+3. **Write Operations:** Write capability limited to venue descriptions; other domains are read-only
 4. **No Attachments:** Cannot process uploaded files or images
 5. **English Only:** No multi-language support in system prompts
 
