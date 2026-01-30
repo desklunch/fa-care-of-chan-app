@@ -38,7 +38,7 @@ export function AiChatFab() {
       <Button
         onClick={() => setIsOpen(true)}
         size="icon"
-        className="fixed bottom-6 right-6 z-[9999] h-14 w-14 rounded-full shadow-lg"
+        className="!fixed bottom-6 right-6 !z-[1000] h-14 w-14 rounded-full shadow-lg"
         data-testid="button-ai-chat-fab"
       >
         <MessageSquare className="h-6 w-6" />
