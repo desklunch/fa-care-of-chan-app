@@ -113,6 +113,8 @@ function AiChatModal({ onClose }: { onClose: () => void }) {
             try {
               const event: ChatEvent = JSON.parse(line.slice(6));
               
+              console.log("[AI Chat] SSE Event:", JSON.stringify(event, null, 2));
+              
               if (event.type === "content" && event.content) {
                 assistantContent += event.content;
                 setMessages((prev) => {
