@@ -30,50 +30,51 @@ interface ChatEvent {
   message?: string;
 }
 
-export function AiChatFab() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        size="icon"
-        className="!fixed bottom-6 right-6 !z-[1000] h-14 w-14 rounded-full shadow-lg"
-        data-testid="button-ai-chat-fab"
-      >
-        <MessageSquare className="h-6 w-6" />
-      </Button>
-
-      {isOpen && (
-        <AiChatModal onClose={() => setIsOpen(false)} />
-      )}
-    </>
-  );
+interface ChatState {
+  messages: Message[];
+  input: string;
+  isLoading: boolean;
+  toolActivity: (ToolCall | ToolResult)[];
 }
 
-function AiChatModal({ onClose }: { onClose: () => void }) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [toolActivity, setToolActivity] = useState<(ToolCall | ToolResult)[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+export function AiChatFab() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [chatState, setChatState] = useState<ChatState>({
+    messages: [],
+    input: "",
+    isLoading: false,
+    toolActivity: [],
+  });
 
-  useEffect(() => {
-    inputRef.current?.focus();
+  const setMessages = useCallback((updater: Message[] | ((prev: Message[]) => Message[])) => {
+    setChatState((prev) => ({
+      ...prev,
+      messages: typeof updater === "function" ? updater(prev.messages) : updater,
+    }));
   }, []);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, toolActivity]);
+  const setInput = useCallback((value: string) => {
+    setChatState((prev) => ({ ...prev, input: value }));
+  }, []);
+
+  const setIsLoading = useCallback((value: boolean) => {
+    setChatState((prev) => ({ ...prev, isLoading: value }));
+  }, []);
+
+  const setToolActivity = useCallback((updater: (ToolCall | ToolResult)[] | ((prev: (ToolCall | ToolResult)[]) => (ToolCall | ToolResult)[])) => {
+    setChatState((prev) => ({
+      ...prev,
+      toolActivity: typeof updater === "function" ? updater(prev.toolActivity) : updater,
+    }));
+  }, []);
 
   const sendMessage = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
+    if (!chatState.input.trim() || chatState.isLoading) return;
 
-    const userMessage: Message = { role: "user", content: input.trim() };
-    setMessages((prev) => [...prev, userMessage]);
+    const userMessage: Message = { role: "user", content: chatState.input.trim() };
+    const allMessages = [...chatState.messages, userMessage];
+    
+    setMessages(allMessages);
     setInput("");
     setIsLoading(true);
     setToolActivity([]);
@@ -83,7 +84,7 @@ function AiChatModal({ onClose }: { onClose: () => void }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({
+          messages: allMessages.map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -117,13 +118,14 @@ function AiChatModal({ onClose }: { onClose: () => void }) {
               
               if (event.type === "content" && event.content) {
                 assistantContent += event.content;
+                const contentToSet = assistantContent;
                 setMessages((prev) => {
                   const updated = [...prev];
                   const lastMsg = updated[updated.length - 1];
                   if (lastMsg?.role === "assistant") {
-                    lastMsg.content = assistantContent;
+                    lastMsg.content = contentToSet;
                   } else {
-                    updated.push({ role: "assistant", content: assistantContent });
+                    updated.push({ role: "assistant", content: contentToSet });
                   }
                   return updated;
                 });
@@ -158,7 +160,72 @@ function AiChatModal({ onClose }: { onClose: () => void }) {
       setIsLoading(false);
       setToolActivity([]);
     }
-  }, [input, messages, isLoading]);
+  }, [chatState.input, chatState.messages, chatState.isLoading, setMessages, setInput, setIsLoading, setToolActivity]);
+
+  return (
+    <>
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="icon"
+        className={cn(
+          "!fixed bottom-6 right-6 !z-[1000] h-14 w-14 rounded-full shadow-lg",
+          chatState.isLoading && "animate-pulse"
+        )}
+        data-testid="button-ai-chat-fab"
+      >
+        {chatState.isLoading ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
+        ) : (
+          <MessageSquare className="h-6 w-6" />
+        )}
+      </Button>
+
+      {isOpen && (
+        <AiChatModal 
+          onClose={() => setIsOpen(false)}
+          messages={chatState.messages}
+          input={chatState.input}
+          isLoading={chatState.isLoading}
+          toolActivity={chatState.toolActivity}
+          setInput={setInput}
+          sendMessage={sendMessage}
+        />
+      )}
+    </>
+  );
+}
+
+interface AiChatModalProps {
+  onClose: () => void;
+  messages: Message[];
+  input: string;
+  isLoading: boolean;
+  toolActivity: (ToolCall | ToolResult)[];
+  setInput: (value: string) => void;
+  sendMessage: () => void;
+}
+
+function AiChatModal({ 
+  onClose, 
+  messages, 
+  input, 
+  isLoading, 
+  toolActivity,
+  setInput,
+  sendMessage 
+}: AiChatModalProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, toolActivity]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -184,6 +251,9 @@ function AiChatModal({ onClose }: { onClose: () => void }) {
           <div className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-primary" />
             <h2 className="font-semibold">AI Assistant</h2>
+            {isLoading && (
+              <span className="text-xs text-muted-foreground">(processing...)</span>
+            )}
           </div>
           <Button 
             variant="ghost" 
