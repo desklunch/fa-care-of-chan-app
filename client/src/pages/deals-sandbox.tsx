@@ -715,7 +715,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
-    id: "z",
+    id: "services",
     headerName: "Services",
     field: "serviceIds",
     category: "Basic Info",
@@ -1201,8 +1201,8 @@ export default function DealsSandbox() {
         onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
         headerContent={
           <Link href="/deals">
-            <Button variant="outline" size="sm" data-testid="button-back-to-deals">
-              Back to Deals
+            <Button variant="default" size="sm" data-testid="button-back-to-deals">
+              Exit Sandbox 
             </Button>
           </Link>
         }

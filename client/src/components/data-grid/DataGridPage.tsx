@@ -893,6 +893,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
       <div className="p-4  md:p-4 md:py-4  flex items-start justify-between gap-3 ">
         
         <div className="flex items-center gap-2 text-foreground">
+          {headerContent}
 
           {searchFields.length > 0 && (
             <ExpandableSearch
@@ -936,7 +937,6 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
             </>
           )}
   
-          {headerContent}
         </div>
         <div className="flex h-9 items-center gap-4">
           {toolbarActions}
