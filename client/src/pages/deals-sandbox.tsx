@@ -1170,13 +1170,6 @@ export default function DealsSandbox() {
     <PageLayout
       breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}
     >
-      <div className="flex items-center gap-2 px-4 pb-2">
-        <Link href="/deals">
-          <Button variant="outline" size="sm" data-testid="button-back-to-deals">
-            Back to Deals
-          </Button>
-        </Link>
-      </div>
       <DataGridPage
         queryKey="/api/deals"
         columns={responsiveColumns}
@@ -1206,6 +1199,13 @@ export default function DealsSandbox() {
         hideColumnSelector={isMobile}
         enableCellSelection={!isMobile}
         onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
+        headerContent={
+          <Link href="/deals">
+            <Button variant="outline" size="sm" data-testid="button-back-to-deals">
+              Back to Deals
+            </Button>
+          </Link>
+        }
       />
     </PageLayout>
   );

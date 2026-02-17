@@ -1175,13 +1175,6 @@ export default function Deals() {
         icon: CircleFadingPlus,
       } : undefined}
     >
-      <div className="flex items-center gap-2 px-4 pb-2">
-        <Link href="/deals-sandbox">
-          <Button variant="outline" size="sm" data-testid="button-deals-sandbox">
-            Open Sandbox
-          </Button>
-        </Link>
-      </div>
       <DataGridPage
         queryKey="/api/deals"
         columns={responsiveColumns}
@@ -1211,6 +1204,13 @@ export default function Deals() {
         hideColumnSelector={isMobile}
         enableCellSelection={!isMobile}
         onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
+        headerContent={
+          <Link href="/deals-sandbox">
+            <Button variant="outline" size="sm" data-testid="button-deals-sandbox">
+              Open Sandbox
+            </Button>
+          </Link>
+        }
       />
     </PageLayout>
   );
