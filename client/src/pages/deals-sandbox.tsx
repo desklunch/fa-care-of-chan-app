@@ -123,6 +123,8 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "services",
   "locationsText",
   "notes",
+  "budgetLow",
+  "budgetHigh",
   "budgetNotes",
 ];
 
@@ -824,6 +826,44 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
             </ReactMarkdown>
           </div>
         );
+      },
+    },
+  },
+  {
+    id: "budgetLow",
+    headerName: "Budget Low",
+    field: "budgetLow",
+    category: "Budget",
+    colDef: {
+      width: 140,
+      editable: true,
+      valueFormatter: (params: { value: number | null }) => {
+        if (params.value == null) return "";
+        return `$${params.value.toLocaleString()}`;
+      },
+      valueSetter: (params: { data: DealWithRelations; newValue: string | null }) => {
+        const raw = params.newValue?.toString().replace(/[^0-9]/g, "") || "";
+        params.data.budgetLow = raw ? parseInt(raw, 10) : null;
+        return true;
+      },
+    },
+  },
+  {
+    id: "budgetHigh",
+    headerName: "Budget High",
+    field: "budgetHigh",
+    category: "Budget",
+    colDef: {
+      width: 140,
+      editable: true,
+      valueFormatter: (params: { value: number | null }) => {
+        if (params.value == null) return "";
+        return `$${params.value.toLocaleString()}`;
+      },
+      valueSetter: (params: { data: DealWithRelations; newValue: string | null }) => {
+        const raw = params.newValue?.toString().replace(/[^0-9]/g, "") || "";
+        params.data.budgetHigh = raw ? parseInt(raw, 10) : null;
+        return true;
       },
     },
   },
