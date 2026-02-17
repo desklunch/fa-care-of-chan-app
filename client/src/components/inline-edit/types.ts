@@ -7,7 +7,8 @@ export type EditableFieldType =
   | "date" 
   | "multiselect" 
   | "array" 
-  | "switch";
+  | "switch"
+  | "number";
 
 export interface FieldOption {
   value: string;

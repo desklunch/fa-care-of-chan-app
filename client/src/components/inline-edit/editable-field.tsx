@@ -180,6 +180,9 @@ export function EditableField({
       case "switch":
         saveValue = editBoolean;
         break;
+      case "number":
+        saveValue = editValue !== "" ? Number(editValue) : null;
+        break;
       case "date":
         saveValue = editValue || null;
         break;
@@ -428,6 +431,30 @@ export function EditableField({
                 Add
               </Button>
             </div>
+            {errorDisplay}
+          </>
+        );
+
+      case "number":
+        return (
+          <>
+            <Input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type="number"
+              value={editValue}
+              onChange={(e) => {
+                setEditValue(e.target.value);
+                setLocalError(null);
+              }}
+              onKeyDown={handleKeyDown}
+              className={cn(
+                "w-full text-sm",
+                isMobile && "input-prevent-scroll-on-focus",
+                displayError && "border-destructive"
+              )}
+              disabled={isLoading}
+              data-testid={`input-${field}`}
+            />
             {errorDisplay}
           </>
         );

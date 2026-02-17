@@ -465,6 +465,58 @@ export default function DealDetail() {
                 />
 
                 <EditableField
+                  label="Budget Low"
+                  value={deal.budgetLow != null ? String(deal.budgetLow) : ""}
+                  field="budgetLow"
+                  testId="field-budget-low"
+                  type="number"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("budgetLow")}
+                  error={getFieldError("budgetLow")}
+                  displayValue={
+                    deal.budgetLow != null ? (
+                      <span className="font-medium">${deal.budgetLow.toLocaleString()}</span>
+                    ) : undefined
+                  }
+                  placeholder="Not set"
+                  validation={{
+                    customValidator: (val) => {
+                      if (val === null || val === undefined) return null;
+                      const num = Number(val);
+                      if (isNaN(num) || num <= 0) return "Must be greater than 0";
+                      return null;
+                    },
+                  }}
+                />
+
+                <EditableField
+                  label="Budget High"
+                  value={deal.budgetHigh != null ? String(deal.budgetHigh) : ""}
+                  field="budgetHigh"
+                  testId="field-budget-high"
+                  type="number"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("budgetHigh")}
+                  error={getFieldError("budgetHigh")}
+                  displayValue={
+                    deal.budgetHigh != null ? (
+                      <span className="font-medium">${deal.budgetHigh.toLocaleString()}</span>
+                    ) : undefined
+                  }
+                  placeholder="Not set"
+                  validation={{
+                    customValidator: (val) => {
+                      if (val === null || val === undefined) return null;
+                      const num = Number(val);
+                      if (isNaN(num) || num <= 0) return "Must be greater than 0";
+                      return null;
+                    },
+                  }}
+                />
+
+                <EditableField
                   label="Budget Notes"
                   value={deal.budgetNotes || ""}
                   field="budgetNotes"
