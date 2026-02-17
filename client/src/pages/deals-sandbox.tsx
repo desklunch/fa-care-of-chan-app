@@ -837,14 +837,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       width: 140,
       editable: true,
+      cellDataType: "number",
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        min: 0,
+        precision: 0,
+      },
       valueFormatter: (params: { value: number | null }) => {
         if (params.value == null) return "";
         return `$${params.value.toLocaleString()}`;
-      },
-      valueSetter: (params: { data: DealWithRelations; newValue: string | null }) => {
-        const raw = params.newValue?.toString().replace(/[^0-9]/g, "") || "";
-        params.data.budgetLow = raw ? parseInt(raw, 10) : null;
-        return true;
       },
     },
   },
@@ -856,14 +857,15 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       width: 140,
       editable: true,
+      cellDataType: "number",
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        min: 0,
+        precision: 0,
+      },
       valueFormatter: (params: { value: number | null }) => {
         if (params.value == null) return "";
         return `$${params.value.toLocaleString()}`;
-      },
-      valueSetter: (params: { data: DealWithRelations; newValue: string | null }) => {
-        const raw = params.newValue?.toString().replace(/[^0-9]/g, "") || "";
-        params.data.budgetHigh = raw ? parseInt(raw, 10) : null;
-        return true;
       },
     },
   },
