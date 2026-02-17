@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { BrandSearch } from "@/components/brand-search";
+import { LocationSearch } from "@/components/location-search";
 import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -685,10 +686,31 @@ export default function DealForm() {
 
                 <FormField
                   control={form.control}
-                  name="locationsText"
+                  name="locations"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Locations</FormLabel>
+                      <FormControl>
+                        <LocationSearch
+                          value={(field.value as DealLocation[]) || []}
+                          onChange={field.onChange}
+                          testId="location-search"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Search for cities, states, or countries.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="locationsText"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Locations (Text)</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter locations..."
@@ -698,7 +720,7 @@ export default function DealForm() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Event locations (e.g., "New York, Los Angeles").
+                        Free-text event locations (e.g., "New York, Los Angeles").
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

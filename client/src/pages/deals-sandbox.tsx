@@ -24,6 +24,8 @@ import {
   Flag,
   User,
   MapPin,
+  Map as MapIcon,
+  Globe,
   Briefcase,
   SquareArrowOutUpRight,
   Calendar,
@@ -121,6 +123,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "industry",
   "primaryContact",
   "services",
+  "locations",
   "locationsText",
   "notes",
   "budgetLow",
@@ -743,6 +746,43 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               return (
                 <Badge key={serviceId} variant="secondary" className="text-xs">
                   {service?.name || `Service ${serviceId}`}
+                </Badge>
+              );
+            })}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "locations",
+    headerName: "Locations (JSON)",
+    field: "locations",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 220,
+      sortable: false,
+      wrapText: true,
+      autoHeight: true,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        const locations = params.data?.locations as DealLocation[] | null;
+        if (!locations || locations.length === 0) return "";
+        return locations.map((l) => l.displayName).join(", ");
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
+        const locations = params.data?.locations as DealLocation[] | null;
+        if (!locations || locations.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-2.5">
+            {locations.map((loc) => {
+              const isCity = Boolean(loc.city);
+              const isState = !loc.city && Boolean(loc.state);
+              const Icon = isCity ? MapPin : isState ? MapIcon : Globe;
+              return (
+                <Badge key={loc.placeId} variant="secondary" className="text-xs gap-1">
+                  <Icon className="h-3 w-3 shrink-0" />
+                  {loc.displayName}
                 </Badge>
               );
             })}
