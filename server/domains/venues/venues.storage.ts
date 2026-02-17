@@ -186,6 +186,24 @@ class VenuesStorage {
     return results.map(r => r.amenity);
   }
 
+  async getVenuesByAmenityId(amenityId: string): Promise<Venue[]> {
+    const results = await db
+      .select({ venue: venues })
+      .from(venueAmenities)
+      .innerJoin(venues, eq(venueAmenities.venueId, venues.id))
+      .where(eq(venueAmenities.amenityId, amenityId));
+    return results.map(r => r.venue);
+  }
+
+  async getVenuesByTagId(tagId: string): Promise<Venue[]> {
+    const results = await db
+      .select({ venue: venues })
+      .from(venueTags)
+      .innerJoin(venues, eq(venueTags.venueId, venues.id))
+      .where(eq(venueTags.tagId, tagId));
+    return results.map(r => r.venue);
+  }
+
   async setVenueAmenities(venueId: string, amenityIds: string[]): Promise<void> {
     await db.delete(venueAmenities).where(eq(venueAmenities.venueId, venueId));
 
