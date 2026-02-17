@@ -148,7 +148,9 @@ export function LocationSearch({ value, onChange, disabled, testId }: LocationSe
           data-testid={testId ? `${testId}-input` : "input-location-search"}
         />
         {isSearching && (
-          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
         )}
 
         {showDropdown && results.length > 0 && (
