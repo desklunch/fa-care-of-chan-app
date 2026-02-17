@@ -867,8 +867,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
 ];
 
-export default function Deals() {
-  usePageTitle("Deals");
+export default function DealsSandbox() {
+  usePageTitle("Deals Sandbox");
   const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -1158,7 +1158,7 @@ export default function Deals() {
 
   if (!canRead) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Deals" }]}>
+      <PageLayout breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}>
         <NoPermissionMessage
           title="Permission Required"
         />
@@ -1168,17 +1168,12 @@ export default function Deals() {
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Deals" }]}
-      primaryAction={canWrite ? {
-        label: "New Deal",
-        href: "/deals/new",
-        icon: CircleFadingPlus,
-      } : undefined}
+      breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}
     >
       <div className="flex items-center gap-2 px-4 pb-2">
-        <Link href="/deals-sandbox">
-          <Button variant="outline" size="sm" data-testid="button-deals-sandbox">
-            Open Sandbox
+        <Link href="/deals">
+          <Button variant="outline" size="sm" data-testid="button-back-to-deals">
+            Back to Deals
           </Button>
         </Link>
       </div>
