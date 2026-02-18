@@ -281,7 +281,7 @@ export default function DealForm() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="w-full flex justify-between items-center">
-                        <FormLabel>Deal Name</FormLabel>
+                        <FormLabel>Short name to help identify this deal.</FormLabel>
                         <span className="text-xs font-medium text-muted-foreground">Required</span>
                       </div>
                       <FormControl>
@@ -291,9 +291,7 @@ export default function DealForm() {
                           data-testid="input-deal-name"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Short name to help identify this deal.
-                      </FormDescription>
+      
                       <FormMessage />
                     </FormItem>
                   )}
@@ -374,7 +372,7 @@ export default function DealForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="__none__">No primary contact</SelectItem>
+                            <SelectItem value="__none__">None</SelectItem>
                             {linkedContacts.map((contact) => (
                               <SelectItem key={contact.id} value={contact.id}>
                                 {contact.firstName} {contact.lastName}
@@ -383,10 +381,9 @@ export default function DealForm() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>
-                          Select a primary contact at the client organization.
-                          {linkedContacts.length === 0 && " No contacts found for this client."}
-                        </FormDescription>
+                        {linkedContacts.length === 0 && (<FormDescription>No contacts found for this client.                       </FormDescription>)}
+                         {linkedContacts.length === 0 && (No contacts found for this client.                       }
+ 
                         <FormMessage />
                       </FormItem>
                     )}
@@ -478,7 +475,7 @@ export default function DealForm() {
                   )}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="startedOn"
@@ -490,7 +487,7 @@ export default function DealForm() {
                             <FormControl>
                               <Button
                                 variant="outline"
-                                className="border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
+                                className="bg-background border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
                                 data-testid="button-started-on"
                               >
                                 <div className="flex ">
@@ -547,7 +544,7 @@ export default function DealForm() {
                             <FormControl>
                               <Button
                                 variant="outline"
-                                className="border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
+                                className="bg-background border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
                                 data-testid="button-last-contact"
                               >
                                 <div className="flex ">
@@ -612,7 +609,7 @@ export default function DealForm() {
                     <FormItem>
                       <FormLabel>Services</FormLabel>
                       <FormControl>
-                        <div className="space-y-2 ">
+                        <div className="space-y-4 ">
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
@@ -650,7 +647,7 @@ export default function DealForm() {
                             </PopoverContent>
                           </Popover>
                           {field.value.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-2">
                               {field.value.map((serviceId) => {
                                 const service = dealServices.find(s => s.id === serviceId);
                                 if (!service) return null;
@@ -697,9 +694,7 @@ export default function DealForm() {
                           testId="location-search"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Search for cities, states, or countries.
-                      </FormDescription>
+        
                       <FormMessage />
                     </FormItem>
                   )}
@@ -710,18 +705,17 @@ export default function DealForm() {
                   name="locationsText"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Locations (Text)</FormLabel>
+                      <FormLabel>Location Notes</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter locations..."
+                          placeholder="Provide any additional details about the locations.
+"
                           className="min-h-[80px] resize-y"
                           {...field}
                           data-testid="textarea-locations-text"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Free-text event locations (e.g., "New York, Los Angeles").
-                      </FormDescription>
+  
                       <FormMessage />
                     </FormItem>
                   )}
@@ -741,9 +735,7 @@ export default function DealForm() {
                           data-testid="input-project-date"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Freeform text to describe the project timing.
-                      </FormDescription>
+ 
                       <FormMessage />
                     </FormItem>
                   )}
@@ -757,15 +749,14 @@ export default function DealForm() {
                       <FormLabel>Concept</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter concept details..."
+                          placeholder="Describe the concept and provide some context.
+"
                           className="min-h-[120px] resize-y"
                           {...field}
                           data-testid="textarea-concept"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Describe the concept and provide some context.
-                      </FormDescription>
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -779,15 +770,14 @@ export default function DealForm() {
                       <FormLabel>Next Steps</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter next steps..."
+                          placeholder="What are the next steps for this deal?
+"
                           className="min-h-[120px] resize-y"
                           {...field}
                           data-testid="textarea-notes"
                         />
                       </FormControl>
-                      <FormDescription>
-                        What are the next steps for this deal?
-                      </FormDescription>
+       
                       <FormMessage />
                     </FormItem>
                   )}
@@ -808,9 +798,7 @@ export default function DealForm() {
                           data-testid="textarea-budget-notes"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Budget range or pricing details.
-                      </FormDescription>
+
                       <FormMessage />
                     </FormItem>
                   )}

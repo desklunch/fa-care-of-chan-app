@@ -24,8 +24,8 @@ import {
   Flag,
   User,
   MapPin,
-  Map as MapIcon,
-  Globe,
+  MapPinned as MapIcon,
+  MapPinned,
   Briefcase,
   SquareArrowOutUpRight,
   Calendar,
@@ -778,10 +778,9 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
             {locations.map((loc) => {
               const isCity = Boolean(loc.city);
               const isState = !loc.city && Boolean(loc.state);
-              const Icon = isCity ? MapPin : isState ? MapIcon : Globe;
+              const Icon = isCity ? MapPin : isState ? MapIcon : MapPinned;
               return (
-                <Badge key={loc.placeId} variant="secondary" className="text-xs gap-1">
-                  <Icon className="h-3 w-3 shrink-0" />
+                <Badge key={loc.placeId} variant="secondary" className="text-xs px-1 gap-1">
                   {loc.displayName}
                 </Badge>
               );

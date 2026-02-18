@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Map as MapIcon, Globe, X, Search } from "lucide-react";
+import { Loader2, MapPin, MapPinned as MapIcon, Flag, X, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import type { DealLocation } from "@shared/schema";
@@ -26,7 +26,7 @@ interface LocationSearchProps {
 }
 
 function getLocationIcon(loc: { city?: string; state?: string; type?: string }) {
-  if (loc.type === "country" || (!loc.city && !loc.state)) return Globe;
+  if (loc.type === "country" || (!loc.city && !loc.state)) return Flag;
   if (loc.type === "state" || (!loc.city && loc.state)) return MapIcon;
   return MapPin;
 }
@@ -133,7 +133,7 @@ export function LocationSearch({ value, onChange, disabled, testId }: LocationSe
   }, []);
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-2" data-testid={testId}>
+    <div ref={containerRef} className="flex flex-col gap-4" data-testid={testId}>
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
@@ -186,7 +186,7 @@ export function LocationSearch({ value, onChange, disabled, testId }: LocationSe
       </div>
 
       {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {value.map((loc) => {
             const Icon = getLocationIcon(loc);
             return (
