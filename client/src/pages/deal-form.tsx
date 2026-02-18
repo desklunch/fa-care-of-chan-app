@@ -430,7 +430,7 @@ export default function DealForm() {
                       <FormLabel>Deal Owner</FormLabel>
                       <Select 
                         onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || "__none__"}
+                        value={field.value || ""}
                         
                       >
                         <FormControl>
@@ -463,13 +463,10 @@ export default function DealForm() {
                       <FormLabel>Industry</FormLabel>
                       <Select 
                         onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || "__none__"}
+                        value={field.value || ""}
                       >
                         <FormControl>
-                          <SelectTrigger
-                            className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
-
-                            data-testid="select-deal-industry">
+                          <SelectTrigger data-testid="select-deal-industry">
                             <SelectValue placeholder="Select industry..." />
                           </SelectTrigger>
                         </FormControl>
