@@ -26,13 +26,15 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
-import { Loader2, Trash2, PenBox } from "lucide-react";
+import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import type {
   DealWithRelations,
   DealStatus,
+  DealLocation,
+  DealEvent,
   User,
   Client,
   Brand,
@@ -40,6 +42,7 @@ import type {
 } from "@shared/schema";
 import { dealStatuses } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
+import { getEventSummary } from "@/components/event-schedule";
 import {
   EditableField,
   EditableTitle,
@@ -413,6 +416,57 @@ export default function DealDetail() {
                   error={getFieldError("locationsText")}
                   placeholder="Enter locations"
                 />
+
+                <FieldRow label="Locations (JSON)" testId="field-locations-json">
+                  {(() => {
+                    const locations = deal.locations as DealLocation[] | null;
+                    if (!locations || locations.length === 0) {
+                      return <span className="text-muted-foreground">None</span>;
+                    }
+                    return (
+                      <div className="flex flex-wrap gap-1">
+                        {locations.map((loc) => {
+                          const isCity = Boolean(loc.city);
+                          const Icon = isCity ? MapPin : MapPinned;
+                          return (
+                            <Badge key={loc.placeId} variant="secondary" className="text-xs gap-1" data-testid={`badge-location-${loc.placeId}`}>
+                              <Icon className="h-3 w-3" />
+                              {loc.displayName}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </FieldRow>
+
+                <FieldRow label="Event Schedule" testId="field-event-schedule">
+                  {(() => {
+                    const events = deal.eventSchedule as DealEvent[] | null;
+                    if (!events || events.length === 0) {
+                      return <span className="text-muted-foreground">None</span>;
+                    }
+                    return (
+                      <div className="flex flex-col gap-1">
+                        {events.map((event, idx) => {
+                          const summary = getEventSummary(event);
+                          if (!summary) return null;
+                          return (
+                            <div key={idx} className="flex items-center gap-2 text-sm" data-testid={`row-event-schedule-${idx}`}>
+                              <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span>{summary.text}</span>
+                              {summary.altCount > 0 && (
+                                <span className="text-muted-foreground text-xs">
+                                  +{summary.altCount} alt{summary.altCount > 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </FieldRow>
 
                 <EditableField
                   label="Concept"
