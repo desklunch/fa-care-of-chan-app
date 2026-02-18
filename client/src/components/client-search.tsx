@@ -117,7 +117,7 @@ export function ClientSearch({
   return (
     <div className="relative" ref={containerRef}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
         <Input
           ref={inputRef}
           placeholder="Search for a client..."
@@ -144,17 +144,12 @@ export function ClientSearch({
                     <li key={client.id}>
                       <button
                         type="button"
-                        className="w-full text-left px-3 py-2 hover-elevate flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 hover-elevate flex items-center gap-2 text-sm"
                         onClick={() => handleSelectClient(client)}
                         data-testid={`option-client-${client.id}`}
                       >
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
                         <span>{client.name}</span>
-                        {client.industry && (
-                          <Badge variant="secondary" className="ml-auto text-xs">
-                            {client.industry}
-                          </Badge>
-                        )}
+  
                       </button>
                     </li>
                   ))}

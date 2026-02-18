@@ -138,14 +138,14 @@
   --chart-3: 197 37% 60%;
   --chart-4: 43 74% 70%;
   --chart-5: 27 87% 75%;
-  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-2xs: 0px 2px 0px 0px rgba(0, 0, 0, 1.0);
+  --shadow-xs: 0px 2px 0px 0px rgba(0, 0, 0, 1.0);
+  --shadow-sm: 0px 2px 0px 0px rgba(0, 0, 0, 1.0), 0px 1px 2px -1px rgba(0, 0, 0, 1.0);
+  --shadow: 0px 2px 0px 0px rgba(0, 0, 0, 1.0), 0px 1px 2px -1px rgba(0, 0, 0, 1.0);
+  --shadow-md: 0px 2px 0px 0px rgba(0, 0, 0, 1.0), 0px 2px 4px -1px rgba(0, 0, 0, 1.0);
+  --shadow-lg: 0px 2px 0px 0px rgba(0, 0, 0, 1.0), 0px 4px 6px -1px rgba(0, 0, 0, 1.0);
+  --shadow-xl: 0px 2px 0px 0px rgba(0, 0, 0, 1.0), 0px 8px 10px -1px rgba(0, 0, 0, 1.0);
+  --shadow-2xl: 0px 2px 0px 0px rgba(0, 0, 0, 1.0);
 
   /* Status colors for kanban (dark mode) */
   --status-warm-lead: #C293FF;

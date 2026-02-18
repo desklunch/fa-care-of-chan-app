@@ -277,19 +277,19 @@ export default function DealForm() {
               <CardHeader>
                 <CardTitle>Deal Info</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="flex flex-col gap-4">
                 <FormField
                   control={form.control}
                   name="displayName"
                   render={({ field }) => (
                     <FormItem>
                       <div className="w-full flex justify-between items-center">
-                        <FormLabel>Short name to help identify this deal.</FormLabel>
+                        <FormLabel>Deal Name</FormLabel>
                         <span className="text-xs font-medium text-muted-foreground">Required</span>
                       </div>
                       <FormControl>
                         <Input
-                          placeholder="Enter deal name..."
+                          placeholder="Short name to help identify this deal"
                           {...field}
                           data-testid="input-deal-name"
                         />
@@ -427,7 +427,7 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                <Separator className="my-2" />
+                <Separator className="my-4" />
                 
                 <FormField
                   control={form.control}
@@ -492,7 +492,7 @@ export default function DealForm() {
 
 
 
-                <Separator className="my-2" />
+                <Separator className="my-4" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField
@@ -618,9 +618,28 @@ export default function DealForm() {
               <CardHeader>
                 <CardTitle>Project Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="flex flex-col gap-6">
                 {/* Hidden - Locations field temporarily disabled */}
+                <FormField
+                  control={form.control}
+                  name="concept"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Concept</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe the concept and provide some context.
+                "
+                          className="min-h-[120px] resize-y"
+                          {...field}
+                          data-testid="textarea-concept"
+                        />
+                      </FormControl>
 
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="serviceIds"
@@ -664,7 +683,7 @@ export default function DealForm() {
                   )}
                 />
                 
-                <Separator className="my-2" />
+                <Separator className="my-4" />
 
                 <FormField
                   control={form.control}
@@ -705,7 +724,7 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                <Separator className="my-2" />
+                <Separator className="my-4" />
                 <FormField
                   control={form.control}
                   name="eventSchedule"
@@ -742,27 +761,8 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                <Separator className="my-2" />
-                <FormField
-                  control={form.control}
-                  name="concept"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Concept</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe the concept and provide some context.
-"
-                          className="min-h-[120px] resize-y"
-                          {...field}
-                          data-testid="textarea-concept"
-                        />
-                      </FormControl>
+                <Separator className="my-4" />
 
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
@@ -785,63 +785,12 @@ export default function DealForm() {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="budgetLow"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Budget Low</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center rounded-md border px-3 shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
-                            <span className="text-muted-foreground text-sm">$</span>
-                            <input
-                              type="number"
-                              min={0}
-                              placeholder="0"
-                              value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                              className="flex-1 h-9 bg-transparent px-2 text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              data-testid="input-budget-low"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="budgetHigh"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Budget High</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center rounded-md border px-3 shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
-                            <span className="text-muted-foreground text-sm">$</span>
-                            <input
-                              type="number"
-                              min={0}
-                              placeholder="0"
-                              value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                              className="flex-1 h-9 bg-transparent px-2 text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              data-testid="input-budget-high"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <FormField
                   control={form.control}
                   name="budgetNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget Notes</FormLabel>
+                      <FormLabel>Budget</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter budget details..."
