@@ -212,6 +212,9 @@ export default function DealForm() {
     }
   };
 
+  const [formMode, setFormMode] = useState<"classic" | "enhanced">("classic");
+  const isEnhanced = formMode === "enhanced";
+
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   if (isEditing && isLoadingDeal) {
@@ -272,6 +275,37 @@ export default function DealForm() {
       <div className="p-4 md:p-6 max-w-3xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex items-center gap-2" data-testid="toggle-form-mode">
+              <div className="inline-flex rounded-md border p-0.5 bg-muted/50">
+                <button
+                  type="button"
+                  className={cn(
+                    "px-4 py-1.5 text-sm font-medium rounded-sm transition-colors",
+                    formMode === "classic"
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                  onClick={() => setFormMode("classic")}
+                  data-testid="button-mode-classic"
+                >
+                  Classic
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "px-4 py-1.5 text-sm font-medium rounded-sm transition-colors",
+                    formMode === "enhanced"
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                  onClick={() => setFormMode("enhanced")}
+                  data-testid="button-mode-enhanced"
+                >
+                  Enhanced
+                </button>
+              </div>
+            </div>
+
             {/* Card 1: Deal Info */}
             <Card>
               <CardHeader>
@@ -683,64 +717,67 @@ export default function DealForm() {
                   )}
                 />
                 
-                <Separator className="my-4" />
+                {isEnhanced && (
+                  <>
+                    <Separator className="my-4" />
 
-                <FormField
-                  control={form.control}
-                  name="locations"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Locations</FormLabel>
-                      <FormControl>
-                        <LocationSearch
-                          value={(field.value as DealLocation[]) || []}
-                          onChange={field.onChange}
-                          testId="location-search"
-                        />
-                      </FormControl>
-        
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="locations"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Locations</FormLabel>
+                          <FormControl>
+                            <LocationSearch
+                              value={(field.value as DealLocation[]) || []}
+                              onChange={field.onChange}
+                              testId="location-search"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="locationsText"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Provide any additional details about the locations.
-"
-                          className="min-h-[80px] resize-y"
-                          {...field}
-                          data-testid="textarea-locations-text"
-                        />
-                      </FormControl>
-  
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Separator className="my-4" />
-                <FormField
-                  control={form.control}
-                  name="eventSchedule"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Schedule</FormLabel>
-                      <FormControl>
-                        <EventScheduleEditor
-                          value={(field.value as DealEvent[]) || []}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="locationsText"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location Notes</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Provide any additional details about the locations."
+                              className="min-h-[80px] resize-y"
+                              {...field}
+                              data-testid="textarea-locations-text"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Separator className="my-4" />
+
+                    <FormField
+                      control={form.control}
+                      name="eventSchedule"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Event Schedule</FormLabel>
+                          <FormControl>
+                            <EventScheduleEditor
+                              value={(field.value as DealEvent[]) || []}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
 
                 <FormField
                   control={form.control}
@@ -785,6 +822,57 @@ export default function DealForm() {
                   )}
                 />
 
+                {isEnhanced && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="budgetLow"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Budget Low</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                className="pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                value={field.value ?? ""}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                                data-testid="input-budget-low"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="budgetHigh"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Budget High</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                className="pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                value={field.value ?? ""}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                                data-testid="input-budget-high"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
                 <FormField
                   control={form.control}
                   name="budgetNotes"
@@ -800,7 +888,6 @@ export default function DealForm() {
                           data-testid="textarea-budget-notes"
                         />
                       </FormControl>
-
                       <FormMessage />
                     </FormItem>
                   )}
