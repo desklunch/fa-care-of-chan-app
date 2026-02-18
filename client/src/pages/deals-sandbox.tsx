@@ -781,6 +781,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               const Icon = isCity ? MapPin : isState ? MapIcon : Globe;
               return (
                 <Badge key={loc.placeId} variant="secondary" className="text-xs gap-1">
+                  <Icon className="h-3 w-3 shrink-0" />
                   {loc.displayName}
                 </Badge>
               );
