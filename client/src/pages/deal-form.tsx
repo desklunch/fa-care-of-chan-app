@@ -44,6 +44,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry } from "@shared/schema";
 import { dealStatuses, dealLocationSchema } from "@shared/schema";
 import { cn } from "@/lib/utils"
+import {Separator} from "@/components/ui/separator"
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
@@ -393,7 +394,41 @@ export default function DealForm() {
                     )}
                   />
                 )}
-
+                <FormField
+                  control={form.control}
+                  name="industryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industry</FormLabel>
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger
+                            className={cn(!field.value ? "text-muted-foreground" : "")}
+                            data-testid="select-deal-industry"
+                          >
+                            <SelectValue placeholder="Select industry..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No industry</SelectItem>
+                          {industries
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((industry) => (
+                              <SelectItem key={industry.id} value={industry.id}>
+                                {industry.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Separator className="my-2" />
+                
                 <FormField
                   control={form.control}
                   name="status"
@@ -455,39 +490,9 @@ export default function DealForm() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="industryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Industry</FormLabel>
-                      <Select 
-                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger
-                            className={cn(!field.value ? "text-muted-foreground" : "")}
-                            data-testid="select-deal-industry"
-                          >
-                            <SelectValue placeholder="Select industry..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">No industry</SelectItem>
-                          {industries
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((industry) => (
-                              <SelectItem key={industry.id} value={industry.id}>
-                                {industry.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
+
+                <Separator className="my-2" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField
@@ -658,7 +663,8 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-
+                
+                <Separator className="my-2" />
 
                 <FormField
                   control={form.control}
@@ -699,7 +705,7 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-
+                <Separator className="my-2" />
                 <FormField
                   control={form.control}
                   name="eventSchedule"
@@ -736,7 +742,7 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-
+                <Separator className="my-2" />
                 <FormField
                   control={form.control}
                   name="concept"
