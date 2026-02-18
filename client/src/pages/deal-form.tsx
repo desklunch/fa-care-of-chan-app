@@ -619,16 +619,20 @@ export default function DealForm() {
                   control={form.control}
                   name="serviceIds"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-0">
                       <FormLabel>Services</FormLabel>
-                      <FormControl>
-                        <div className="flex flex-wrap gap-1.5">
+                      <FormDescription>
+                        Select one or more services for this deal.
+                      </FormDescription>
+                      <FormControl className="pt-4">
+                        <div className="grid grid-cols-3 gap-3">
                           {dealServices.filter(s => s.isActive).map((service) => {
                             const isSelected = field.value.includes(service.id);
                             return (
                               <Badge
                                 key={service.id}
                                 variant={isSelected ? "default" : "outline"}
+                                
                                 className={cn(
                                   "cursor-pointer select-none toggle-elevate",
                                   isSelected && "toggle-elevated"
