@@ -406,7 +406,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
-          <div className="w-full h-full flex items-start pt-[14px]">
+          <div className="@container w-full h-full flex items-start pt-[14px]">
             <DealStatusBadge
               status={params.value as DealWithRelations["status"]}
             />

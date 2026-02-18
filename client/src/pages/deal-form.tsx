@@ -402,14 +402,17 @@ export default function DealForm() {
                       <FormLabel>Status</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-deal-status">
-                            <SelectValue placeholder="Select status" />
+                          <SelectTrigger data-testid="select-deal-status" >
+                            <SelectValue placeholder="Select status"  />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {dealStatuses.map((status) => (
-                            <SelectItem key={status} value={status}>
+                            <SelectItem key={status} value={status} >
+                              <div className="min-w-48 w-fit ">
                               <DealStatusBadge status={status} />
+                              </div>
+                              
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -428,9 +431,13 @@ export default function DealForm() {
                       <Select 
                         onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
                         value={field.value || "__none__"}
+                        
                       >
                         <FormControl>
-                          <SelectTrigger data-testid="select-deal-owner">
+                          <SelectTrigger
+                            className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
+                            data-testid="select-deal-owner"
+                          >
                             <SelectValue placeholder="Select owner..." />
                           </SelectTrigger>
                         </FormControl>
@@ -459,7 +466,10 @@ export default function DealForm() {
                         value={field.value || "__none__"}
                       >
                         <FormControl>
-                          <SelectTrigger data-testid="select-deal-industry">
+                          <SelectTrigger
+                            className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
+
+                            data-testid="select-deal-industry">
                             <SelectValue placeholder="Select industry..." />
                           </SelectTrigger>
                         </FormControl>
