@@ -544,7 +544,7 @@ export function registerPlacesRoutes(app: Express): void {
         .map((p: any) => parseLocation(p, "state"))
         .filter((s: any) => s.state && s.countryCode === "US");
 
-      const locations = [...countries, ...states, ...cities];
+      const locations = [...cities, ...states, ...countries];
 
       res.json({ locations });
     } catch (error) {
