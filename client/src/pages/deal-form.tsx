@@ -42,6 +42,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry } from "@shared/schema";
 import { dealStatuses, dealLocationSchema } from "@shared/schema";
+import { cn } from "@/lib/utils"
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
@@ -367,22 +368,23 @@ export default function DealForm() {
                           value={field.value || "__none__"}
                         >
                           <FormControl>
-                            <SelectTrigger data-testid="select-primary-contact">
+                            <SelectTrigger
+                              className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
+                              data-testid="select-primary-contact">
                               <SelectValue placeholder="Select primary contact..." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="__none__">None</SelectItem>
+                            <SelectItem value="__none__">{linkedContacts.length === 0 ? (<span className="text-xs">No contacts found for this client. </span>) : "None"}</SelectItem>
                             {linkedContacts.map((contact) => (
                               <SelectItem key={contact.id} value={contact.id}>
                                 {contact.firstName} {contact.lastName}
-                                {contact.jobTitle && ` - ${contact.jobTitle}`}
+                              
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        {linkedContacts.length === 0 && (<FormDescription>No contacts found for this client.                       </FormDescription>)}
-                         {linkedContacts.length === 0 && (No contacts found for this client.                       }
+           
  
                         <FormMessage />
                       </FormItem>

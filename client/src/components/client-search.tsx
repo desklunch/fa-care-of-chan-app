@@ -93,8 +93,8 @@ export function ClientSearch({
 
   if (selectedClientId && selectedClientName) {
     return (
-      <div className="flex items-center gap-2" ref={containerRef}>
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border border-input rounded-md flex-1">
+      <div className="bg-background flex items-center gap-2" ref={containerRef}>
+        <div className="flex items-center justify-between gap-2 pl-3 pr-2 py-2 border border-input rounded-md flex-1">
           
           <span data-testid="text-selected-client" className="text-sm">{selectedClientName}</span>
           {!disabled && (
