@@ -366,6 +366,7 @@ export default function DealForm() {
                         <Select 
                           onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
                           value={field.value || "__none__"}
+                          disabled={linkedContacts.length === 0}
                         >
                           <FormControl>
                             <SelectTrigger
