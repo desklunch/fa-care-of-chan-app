@@ -785,12 +785,63 @@ export default function DealForm() {
                   )}
                 />
 
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="budgetLow"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Low</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center rounded-md border px-3 shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
+                            <span className="text-muted-foreground text-sm">$</span>
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="0"
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                              className="flex-1 h-9 bg-transparent px-2 text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              data-testid="input-budget-low"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="budgetHigh"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget High</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center rounded-md border px-3 shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
+                            <span className="text-muted-foreground text-sm">$</span>
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="0"
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                              className="flex-1 h-9 bg-transparent px-2 text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              data-testid="input-budget-high"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
                   name="budgetNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget</FormLabel>
+                      <FormLabel>Budget Notes</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter budget details..."
