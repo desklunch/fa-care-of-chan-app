@@ -34,6 +34,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { BrandSearch } from "@/components/brand-search";
 import { LocationSearch } from "@/components/location-search";
+import { EventScheduleEditor } from "@/components/event-schedule";
 import { Calendar, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -694,6 +695,23 @@ export default function DealForm() {
                         />
                       </FormControl>
   
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="eventSchedule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Schedule</FormLabel>
+                      <FormControl>
+                        <EventScheduleEditor
+                          value={(field.value as DealEvent[]) || []}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
