@@ -34,12 +34,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { BrandSearch } from "@/components/brand-search";
 import { LocationSearch } from "@/components/location-search";
-import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
+import { Calendar, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DealStatusBadge } from "@/components/deal-status-badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry } from "@shared/schema";
 import { dealStatuses, dealLocationSchema } from "@shared/schema";
@@ -466,7 +465,10 @@ export default function DealForm() {
                         value={field.value || ""}
                       >
                         <FormControl>
-                          <SelectTrigger data-testid="select-deal-industry">
+                          <SelectTrigger
+                            className={cn(!field.value ? "text-muted-foreground" : "")}
+                            data-testid="select-deal-industry"
+                          >
                             <SelectValue placeholder="Select industry..." />
                           </SelectTrigger>
                         </FormControl>
@@ -620,69 +622,30 @@ export default function DealForm() {
                     <FormItem>
                       <FormLabel>Services</FormLabel>
                       <FormControl>
-                        <div className="space-y-4 ">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="h-12 px-3 w-full justify-start font-normal min-h-9 bg-background border-input"
-                                data-testid="button-services-select"
+                        <div className="flex flex-wrap gap-1.5">
+                          {dealServices.filter(s => s.isActive).map((service) => {
+                            const isSelected = field.value.includes(service.id);
+                            return (
+                              <Badge
+                                key={service.id}
+                                variant={isSelected ? "default" : "outline"}
+                                className={cn(
+                                  "cursor-pointer select-none toggle-elevate",
+                                  isSelected && "toggle-elevated"
+                                )}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    field.onChange(field.value.filter((id: number) => id !== service.id));
+                                  } else {
+                                    field.onChange([...field.value, service.id]);
+                                  }
+                                }}
+                                data-testid={`badge-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
                               >
-                                Select services...
-                                <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 p-0" align="start">
-                              <div className="max-h-64 overflow-y-auto p-2">
-                                {dealServices.filter(s => s.isActive).map((service) => {
-                                  const isSelected = field.value.includes(service.id);
-                                  return (
-                                    <div
-                                      key={service.id}
-                                      className="flex items-center gap-2 p-2 rounded-md hover-elevate cursor-pointer"
-                                      onClick={() => {
-                                        if (isSelected) {
-                                          field.onChange(field.value.filter((id) => id !== service.id));
-                                        } else {
-                                          field.onChange([...field.value, service.id]);
-                                        }
-                                      }}
-                                      data-testid={`checkbox-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
-                                    >
-                                      <Checkbox checked={isSelected} />
-                                      <span className="text-sm">{service.name}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          {field.value.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {field.value.map((serviceId) => {
-                                const service = dealServices.find(s => s.id === serviceId);
-                                if (!service) return null;
-                                return (
-                                  <Badge
-                                    key={serviceId}
-                                    variant="secondary"
-                                    className="text-xs gap-1 pr-1"
-                                    data-testid={`badge-selected-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
-                                  >
-                                    {service.name}
-                                    <button
-                                      type="button"
-                                      onClick={() => field.onChange(field.value.filter((id) => id !== serviceId))}
-                                      className="ml-1 rounded-full hover:bg-muted p-0.5"
-                                      data-testid={`button-remove-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </Badge>
-                                );
-                              })}
-                            </div>
-                          )}
+                                {service.name}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </FormControl>
      
