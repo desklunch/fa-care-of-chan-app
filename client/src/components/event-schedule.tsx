@@ -219,11 +219,11 @@ function EventRow({
   const primaryDate = primarySchedule?.startDate ? parseDateOnly(primarySchedule.startDate) ?? undefined : undefined;
 
   return (
-    <div className="border rounded-md p-3 space-y-3 pb-4" data-testid={`event-card-${event.id}`}>
-      <div className="w-full flex items-center justify-between pb-2 border-b">
-        <div className="flex items-center gap-2 text-sm" data-testid={`text-summary-${event.id}`}>
+    <div className=" bg-secondary/50 rounded-lg" data-testid={`event-card-${event.id}`}>
+      <div className="w-full flex items-center justify-between  border-b border-card p-4 py-2">
+        <div className="flex items-center gap-2 text-sm font-medium" data-testid={`text-summary-${event.id}`}>
           <Calendar className="h-4 w-4 shrink-0" />
-          <span>{summary ? summary.text : "Please provide date requirements"}</span>
+          <span>{summary ? summary.text : "Calendar Block"}</span>
           {summary && summary.altCount > 0 && (
             <Badge variant="outline" className="text-muted-foreground text-xs px-1 py-0.5">
               {summary.altCount} Alt Date{summary.altCount > 1 ? "s" : ""}
@@ -238,11 +238,11 @@ function EventRow({
           className="h-8 w-8  hover:text-destructive"
           data-testid={`button-remove-event-${event.id}`}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-4 w-4 stroke-[1.5px]" />
         </Button>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 p-4">
         <div className="flex gap-4 w-full">
           <div className="space-y-1 w-full">
             <Label className="text-xs">Description</Label>
@@ -250,13 +250,13 @@ function EventRow({
               value={event.label}
               onChange={(e) => updateField("label", e.target.value)}
               placeholder="Description (e.g., Main Conference)"
-              className="h-10"
+              className=""
               data-testid={`input-event-label-${event.id}`}
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Duration</Label>
-            <div className="flex h-10 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
+            <div className="flex h-12 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
               <input
                 type="number"
                 min={1}
@@ -273,7 +273,7 @@ function EventRow({
           </div>
           <div className="space-y-1">
             <Label htmlFor={`tbd-${event.id}`} className="text-xs">Date TBD</Label>
-            <div className="h-10 w-16 flex items-center justify-center bg-background border border-input rounded-md">
+            <div className="h-12 w-16 flex items-center justify-center bg-background border border-input rounded-md">
               <Switch
                 id={`tbd-${event.id}`}
                 checked={event.scheduleMode === "flexible"}
@@ -286,7 +286,7 @@ function EventRow({
       </div>
 
       {event.scheduleMode === "specific" && (
-        <div className="space-y-2">
+        <div className="space-y-2 p-4 pt-0">
           <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
             <div className="space-y-1">
               <Label className="text-xs">
@@ -351,7 +351,7 @@ function EventRow({
       )}
 
       {event.scheduleMode === "flexible" && (
-        <div className="space-y-1">
+        <div className="space-y-1 p-4 pt-0 ">
           <Label className="text-xs">Date Window</Label>
           <div className="flex items-center gap-2">
             <Select
@@ -437,7 +437,7 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {value.map((event) => (
         <EventRow
           key={event.id}
@@ -448,14 +448,14 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
       ))}
       <Button
         type="button"
-        variant="default"
-        size="lg"
+        variant="secondary"
+        size="md"
         onClick={addEvent}
-        className="w-full h-10"
+        className="w-auto px-4 h-10"
         data-testid="button-add-event"
       >
         <CalendarPlus className="h-4 w-4 " />
-        Add a Calendar Block
+        Add Event Block
       </Button>
     </div>
   );

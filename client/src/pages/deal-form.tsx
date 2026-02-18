@@ -654,26 +654,7 @@ export default function DealForm() {
               </CardHeader>
               <CardContent className="flex flex-col gap-6">
                 {/* Hidden - Locations field temporarily disabled */}
-                <FormField
-                  control={form.control}
-                  name="concept"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Concept</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe the concept and provide some context.
-                "
-                          className="min-h-[120px] resize-y"
-                          {...field}
-                          data-testid="textarea-concept"
-                        />
-                      </FormControl>
-
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+     
                 <FormField
                   control={form.control}
                   name="serviceIds"
@@ -716,10 +697,30 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                
+                <FormField
+                  control={form.control}
+                  name="concept"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Concept</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe the concept and provide some context.
+                "
+                          className="min-h-[120px] resize-y"
+                          {...field}
+                          data-testid="textarea-concept"
+                        />
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Separator className="my-4" />
+
                 {isEnhanced && (
                   <>
-                    <Separator className="my-4" />
 
                     <FormField
                       control={form.control}
@@ -739,45 +740,28 @@ export default function DealForm() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="locationsText"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location Notes</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Provide any additional details about the locations."
-                              className="min-h-[80px] resize-y"
-                              {...field}
-                              data-testid="textarea-locations-text"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Separator className="my-4" />
-
-                    <FormField
-                      control={form.control}
-                      name="eventSchedule"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Event Schedule</FormLabel>
-                          <FormControl>
-                            <EventScheduleEditor
-                              value={(field.value as DealEvent[]) || []}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+   
                   </>
                 )}
+                <FormField
+                  control={form.control}
+                  name="locationsText"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Provide any additional details about the locations."
+                          className="min-h-[80px] resize-y"
+                          {...field}
+                          data-testid="textarea-locations-text"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Separator className="my-4" />
 
                 <FormField
                   control={form.control}
@@ -798,29 +782,29 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+                {isEnhanced && (
+                  <>
+
+                    <FormField
+                      control={form.control}
+                      name="eventSchedule"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Event Schedule</FormLabel>
+                          <FormControl>
+                            <EventScheduleEditor
+                              value={(field.value as DealEvent[]) || []}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                  </>
+                )}
                 <Separator className="my-4" />
-
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Next Steps</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="What are the next steps for this deal?
-"
-                          className="min-h-[120px] resize-y"
-                          {...field}
-                          data-testid="textarea-notes"
-                        />
-                      </FormControl>
-       
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 {isEnhanced && (
                   <div className="grid grid-cols-2 gap-4">
@@ -878,7 +862,7 @@ export default function DealForm() {
                   name="budgetNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget</FormLabel>
+                      <FormLabel>Budget Notes</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter budget details..."
@@ -892,7 +876,29 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+                        <Separator className="my-4" />
 
+
+                                <FormField
+                                  control={form.control}
+                                  name="notes"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Next Steps</FormLabel>
+                                      <FormControl>
+                                        <Textarea
+                                          placeholder="What are the next steps for this deal?
+                "
+                                          className="min-h-[120px] resize-y"
+                                          {...field}
+                                          data-testid="textarea-notes"
+                                        />
+                                      </FormControl>
+
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
               </CardContent>
             </Card>
 
