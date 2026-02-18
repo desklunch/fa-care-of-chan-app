@@ -38,6 +38,7 @@ import { Calendar, ChevronsUpDown, Loader2, Save, X } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry } from "@shared/schema";
@@ -408,7 +409,7 @@ export default function DealForm() {
                         <SelectContent>
                           {dealStatuses.map((status) => (
                             <SelectItem key={status} value={status}>
-                              {status}
+                              <DealStatusBadge status={status} />
                             </SelectItem>
                           ))}
                         </SelectContent>
