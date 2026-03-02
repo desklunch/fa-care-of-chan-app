@@ -59,12 +59,20 @@ function getInitials(fullName: string): string {
 }
 
 // Context type for the grid - provides user list for Owner dropdown, services, and industries
+interface DealLinkedClientEntry {
+  dealId: string;
+  clientId: string;
+  clientName: string;
+  label: string | null;
+}
+
 interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
   services: DealService[];
   servicesMap: Map<number, DealService>;
   industries: Industry[];
   industriesMap: Map<string, Industry>;
+  linkedClientsMap: Map<string, DealLinkedClientEntry[]>;
 }
 
 /**
@@ -117,6 +125,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "status",
   "projectDate",
   "client",
+  "linkedClients",
   "startedOn",
   "wonOn",
   "lastContactOn",
@@ -444,7 +453,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "client",
-    headerName: "Client",
+    headerName: "Primary Client",
     field: "client",
     category: "Basic Info",
     colDef: {
@@ -470,6 +479,37 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
+  {
+    id: "linkedClients",
+    headerName: "Linked Clients",
+    field: "id",
+    category: "Basic Info",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      sortable: false,
+      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        if (!params.data?.id) return "";
+        const linked = params.context?.linkedClientsMap?.get(params.data.id) || [];
+        return linked.map(lc => lc.label ? `${lc.clientName} (${lc.label})` : lc.clientName).join(", ");
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        if (!params.data?.id) return null;
+        const linked = params.context?.linkedClientsMap?.get(params.data.id) || [];
+        if (linked.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-1">
+            {linked.map((lc) => (
+              <Badge key={lc.clientId} variant="secondary" className="text-xs gap-1 no-default-hover-elevate no-default-active-elevate" data-testid={`badge-linked-client-${lc.clientId}`}>
+                {lc.clientName}
+                {lc.label && <span className="text-muted-foreground">({lc.label})</span>}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+  },
   {
     id: "startedOn",
     headerName: "Started On",
@@ -1071,6 +1111,20 @@ export default function DealsSandbox() {
   // Create industries lookup map
   const industriesMap = new Map(industries.map((i) => [i.id, i]));
 
+  const { data: allLinkedClients = [] } = useQuery<DealLinkedClientEntry[]>({
+    queryKey: ["/api/deals/all-linked-clients"],
+  });
+
+  const linkedClientsMap = useMemo(() => {
+    const map = new Map<string, DealLinkedClientEntry[]>();
+    for (const entry of allLinkedClients) {
+      const existing = map.get(entry.dealId) || [];
+      existing.push(entry);
+      map.set(entry.dealId, existing);
+    }
+    return map;
+  }, [allLinkedClients]);
+
   // Context for the grid - provides user list for Owner dropdown, services, and industries
   const gridContext: DealsGridContext = {
     users,
@@ -1078,6 +1132,7 @@ export default function DealsSandbox() {
     servicesMap,
     industries,
     industriesMap,
+    linkedClientsMap,
   };
 
   // Mobile column configuration: explicit ColDef overrides per column

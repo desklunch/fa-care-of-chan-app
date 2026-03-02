@@ -435,7 +435,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "client",
-    headerName: "Client",
+    headerName: "Primary Client",
     field: "client",
     category: "Basic Info",
     colDef: {

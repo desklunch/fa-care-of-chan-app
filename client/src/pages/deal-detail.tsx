@@ -26,7 +26,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
-import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar, Plus, X, Building2, Search } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -60,6 +61,9 @@ export default function DealDetail() {
   const canWrite = can("deals.write");
   const canDelete = can("deals.delete");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showLinkClient, setShowLinkClient] = useState(false);
+  const [linkClientSearch, setLinkClientSearch] = useState("");
+  const [linkClientLabel, setLinkClientLabel] = useState("");
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -89,6 +93,44 @@ export default function DealDetail() {
   });
 
   const industriesMap = new Map(industries.map(i => [i.id, i]));
+
+  interface DealLinkedClient {
+    dealId: string;
+    clientId: string;
+    clientName: string;
+    label: string | null;
+    createdAt: string | null;
+  }
+
+  const { data: linkedClients = [] } = useQuery<DealLinkedClient[]>({
+    queryKey: ["/api/deals", id, "linked-clients"],
+    enabled: Boolean(id),
+  });
+
+  const linkClientMutation = useMutation({
+    mutationFn: async ({ clientId, label }: { clientId: string; label?: string }) => {
+      await apiRequest("POST", `/api/deals/${id}/linked-clients`, { clientId, label });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "linked-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-linked-clients"] });
+      setShowLinkClient(false);
+      setLinkClientSearch("");
+      setLinkClientLabel("");
+      toast({ title: "Client linked to deal" });
+    },
+  });
+
+  const unlinkClientMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      await apiRequest("DELETE", `/api/deals/${id}/linked-clients/${clientId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "linked-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-linked-clients"] });
+      toast({ title: "Client unlinked from deal" });
+    },
+  });
 
   usePageTitle(deal?.displayName || "Deal");
 
@@ -326,7 +368,7 @@ export default function DealDetail() {
                 />
 
                 <EditableField
-                  label="Client"
+                  label="Primary Client"
                   value={deal.clientId || ""}
                   field="clientId"
                   testId="field-client"
@@ -352,6 +394,117 @@ export default function DealDetail() {
                   }
                   placeholder="Select client"
                 />
+
+                <FieldRow label="Linked Clients" testId="field-linked-clients">
+                  <div className="flex flex-col gap-2">
+                    {linkedClients.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {linkedClients.map((lc) => (
+                          <Badge key={lc.clientId} variant="secondary" className="gap-1 pr-1" data-testid={`badge-linked-client-${lc.clientId}`}>
+                            <Building2 className="h-3 w-3" />
+                            <Link href={`/clients/${lc.clientId}`}>
+                              <span className="hover:underline cursor-pointer">{lc.clientName}</span>
+                            </Link>
+                            {lc.label && (
+                              <span className="text-muted-foreground ml-0.5">({lc.label})</span>
+                            )}
+                            {canWrite && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-4 w-4 ml-0.5"
+                                onClick={() => unlinkClientMutation.mutate(lc.clientId)}
+                                disabled={unlinkClientMutation.isPending}
+                                data-testid={`button-unlink-client-${lc.clientId}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {canWrite && !showLinkClient && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-fit gap-1 text-muted-foreground"
+                        onClick={() => setShowLinkClient(true)}
+                        data-testid="button-link-client"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Link a client
+                      </Button>
+                    )}
+
+                    {canWrite && showLinkClient && (
+                      <div className="flex flex-col gap-2 p-2 border rounded-md" data-testid="form-link-client">
+                        <Input
+                          placeholder="Label (optional)"
+                          value={linkClientLabel}
+                          onChange={(e) => setLinkClientLabel(e.target.value)}
+                          data-testid="input-link-client-label"
+                        />
+                        <div className="relative">
+                          <div className="flex items-center gap-1.5 border rounded-md px-2">
+                            <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <Input
+                              placeholder="Search clients..."
+                              value={linkClientSearch}
+                              onChange={(e) => setLinkClientSearch(e.target.value)}
+                              className="border-0 px-0 focus-visible:ring-0"
+                              data-testid="input-link-client-search"
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => {
+                                setShowLinkClient(false);
+                                setLinkClientSearch("");
+                                setLinkClientLabel("");
+                              }}
+                              data-testid="button-cancel-link-client"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          {linkClientSearch.length > 0 && (
+                            <div className="absolute z-50 mt-1 w-full bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
+                              {(() => {
+                                const linkedIds = new Set(linkedClients.map(lc => lc.clientId));
+                                const filtered = clients.filter(c =>
+                                  c.id !== deal.clientId &&
+                                  !linkedIds.has(c.id) &&
+                                  c.name.toLowerCase().includes(linkClientSearch.toLowerCase())
+                                );
+                                if (filtered.length === 0) {
+                                  return <div className="p-2 text-sm text-muted-foreground">No matching clients</div>;
+                                }
+                                return filtered.slice(0, 10).map(c => (
+                                  <button
+                                    key={c.id}
+                                    className="w-full text-left px-3 py-2 text-sm hover-elevate flex items-center gap-2"
+                                    onClick={() => linkClientMutation.mutate({
+                                      clientId: c.id,
+                                      label: linkClientLabel || undefined,
+                                    })}
+                                    disabled={linkClientMutation.isPending}
+                                    data-testid={`option-link-client-${c.id}`}
+                                  >
+                                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                                    {c.name}
+                                  </button>
+                                ));
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </FieldRow>
 
                 <EditableField
                   label="Industry"

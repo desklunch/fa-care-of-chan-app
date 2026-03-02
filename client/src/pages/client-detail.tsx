@@ -33,9 +33,14 @@ import type {
   Industry,
 } from "@shared/schema";
 
+interface LinkedDealForClient extends DealWithRelations {
+  linkLabel: string | null;
+}
+
 interface ClientWithFullRelations extends Client {
   contacts: Contact[];
   deals: DealWithRelations[];
+  linkedDeals: LinkedDealForClient[];
 }
 import {
   Loader2,
@@ -75,6 +80,7 @@ export default function ClientDetail() {
 
   const client = clientData;
   const deals = clientData?.deals ?? [];
+  const linkedDeals = clientData?.linkedDeals ?? [];
   const linkedContacts = clientData?.contacts ?? [];
   const isLoadingDeals = isLoading;
   const isLoadingContacts = isLoading;
@@ -428,7 +434,7 @@ export default function ClientDetail() {
                 <CardTitle className="flex items-center gap-2 text-base font-bold">
                   Deals
                   <span className="text-muted-foreground text-sm font-medium">
-                    {deals.length}
+                    {deals.length + linkedDeals.length}
                   </span>
                 </CardTitle>
               </div>
@@ -438,7 +444,7 @@ export default function ClientDetail() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : deals.length === 0 ? (
+              ) : deals.length === 0 && linkedDeals.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Handshake className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No deals yet</p>
@@ -452,18 +458,38 @@ export default function ClientDetail() {
                   {deals.map((deal) => (
                     <Link href={`/deals/${deal.id}`} key={deal.id}>
                       <div
-                        className="grid grid-cols-2 n p-3 rounded-md hover-elevate cursor-pointer bg-background/50  dark:bg-foreground/[4%]"
+                        className="grid grid-cols-[1fr_auto] gap-2 p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
                         data-testid={`link-deal-${deal.id}`}
                       >
-                        <div className="shrink-0 w-full items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">
                             {deal.displayName}
                           </span>
+                          <Badge variant="outline" className="text-xs no-default-hover-elevate no-default-active-elevate">Primary</Badge>
                         </div>
-                        <div className="flex-1">
+                        <div>
                           <DealStatusBadge status={deal.status as DealStatus} />
                         </div>
-                        
+                      </div>
+                    </Link>
+                  ))}
+                  {linkedDeals.map((deal) => (
+                    <Link href={`/deals/${deal.id}`} key={`linked-${deal.id}`}>
+                      <div
+                        className="grid grid-cols-[1fr_auto] gap-2 p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
+                        data-testid={`link-linked-deal-${deal.id}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {deal.displayName}
+                          </span>
+                          {deal.linkLabel && (
+                            <Badge variant="secondary" className="text-xs no-default-hover-elevate no-default-active-elevate">{deal.linkLabel}</Badge>
+                          )}
+                        </div>
+                        <div>
+                          <DealStatusBadge status={deal.status as DealStatus} />
+                        </div>
                       </div>
                     </Link>
                   ))}

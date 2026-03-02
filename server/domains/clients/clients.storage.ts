@@ -5,6 +5,7 @@ import {
   clients,
   contacts,
   clientContacts,
+  dealClients,
   deals,
   users,
   brands,
@@ -15,9 +16,14 @@ import {
   type DealWithRelations,
 } from "@shared/schema";
 
+export interface LinkedDealForClient extends DealWithRelations {
+  linkLabel: string | null;
+}
+
 export interface ClientWithFullRelations extends Client {
   contacts: Contact[];
   deals: DealWithRelations[];
+  linkedDeals: LinkedDealForClient[];
 }
 
 export const clientsStorage = {
@@ -133,6 +139,7 @@ export const clientsStorage = {
         locationsText: deals.locationsText,
         concept: deals.concept,
         notes: deals.notes,
+        nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
         industryId: deals.industryId,
         createdById: deals.createdById,
@@ -177,10 +184,84 @@ export const clientsStorage = {
       .where(eq(deals.clientId, id))
       .orderBy(desc(deals.createdAt));
 
+    const ownerUsers2 = alias(users, "owner_users2");
+    const linkedDealResults = await db
+      .select({
+        id: deals.id,
+        externalId: deals.externalId,
+        dealNumber: deals.dealNumber,
+        displayName: deals.displayName,
+        status: deals.status,
+        clientId: deals.clientId,
+        brandId: deals.brandId,
+        primaryContactId: deals.primaryContactId,
+        budgetHigh: deals.budgetHigh,
+        budgetLow: deals.budgetLow,
+        budgetNotes: deals.budgetNotes,
+        startedOn: deals.startedOn,
+        wonOn: deals.wonOn,
+        lastContactOn: deals.lastContactOn,
+        proposalSentOn: deals.proposalSentOn,
+        projectDate: deals.projectDate,
+        earliestEventDate: deals.earliestEventDate,
+        locations: deals.locations,
+        eventSchedule: deals.eventSchedule,
+        serviceIds: deals.serviceIds,
+        locationsText: deals.locationsText,
+        concept: deals.concept,
+        notes: deals.notes,
+        nextSteps: deals.nextSteps,
+        ownerId: deals.ownerId,
+        industryId: deals.industryId,
+        createdById: deals.createdById,
+        createdAt: deals.createdAt,
+        updatedAt: deals.updatedAt,
+        sortOrder: deals.sortOrder,
+        linkLabel: dealClients.label,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+        client: {
+          id: clients.id,
+          name: clients.name,
+        },
+        brand: {
+          id: brands.id,
+          name: brands.name,
+        },
+        owner: {
+          id: ownerUsers2.id,
+          firstName: ownerUsers2.firstName,
+          lastName: ownerUsers2.lastName,
+          profileImageUrl: ownerUsers2.profileImageUrl,
+        },
+        primaryContact: {
+          id: contacts.id,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          emailAddresses: contacts.emailAddresses,
+          phoneNumbers: contacts.phoneNumbers,
+          jobTitle: contacts.jobTitle,
+        },
+      })
+      .from(dealClients)
+      .innerJoin(deals, eq(dealClients.dealId, deals.id))
+      .leftJoin(users, eq(deals.createdById, users.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(brands, eq(deals.brandId, brands.id))
+      .leftJoin(ownerUsers2, eq(deals.ownerId, ownerUsers2.id))
+      .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
+      .where(eq(dealClients.clientId, id))
+      .orderBy(desc(deals.createdAt));
+
     return {
       ...client,
       contacts: linkedContacts.map(r => r.contact),
       deals: clientDeals as DealWithRelations[],
+      linkedDeals: linkedDealResults as LinkedDealForClient[],
     };
   },
 };

@@ -6,6 +6,7 @@ import { handleServiceError } from "../../lib/route-helpers";
 import { storage } from "../../storage";
 import { DealsService } from "../../services/deals.service";
 import { dealStatuses, type DealStatus } from "@shared/schema";
+import { dealsStorage } from "./deals.storage";
 
 const dealsService = new DealsService(storage);
 
@@ -24,6 +25,26 @@ export function registerDealsRoutes(app: Express): void {
       res.json(deals);
     } catch (error) {
       handleServiceError(res, error, "Failed to fetch deals");
+    }
+  });
+
+  app.get("/api/deals/all-linked-clients", isAuthenticated, async (req, res) => {
+    try {
+      const { db } = await import("../../db");
+      const { dealClients, clients } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const results = await db
+        .select({
+          dealId: dealClients.dealId,
+          clientId: dealClients.clientId,
+          clientName: clients.name,
+          label: dealClients.label,
+        })
+        .from(dealClients)
+        .innerJoin(clients, eq(dealClients.clientId, clients.id));
+      res.json(results);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch all linked clients");
     }
   });
 
@@ -178,6 +199,54 @@ export function registerDealsRoutes(app: Express): void {
         metadata: { dealId: req.params.dealId, error: (error as Error).message },
       });
       handleServiceError(res, error, "Failed to update deal task");
+    }
+  });
+
+  app.get("/api/deals/:id/linked-clients", isAuthenticated, async (req, res) => {
+    try {
+      const linkedClients = await dealsStorage.getLinkedClientsByDealId(req.params.id);
+      res.json(linkedClients);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch linked clients");
+    }
+  });
+
+  app.post("/api/deals/:id/linked-clients", isAuthenticated, async (req: any, res) => {
+    try {
+      const { clientId, label } = req.body;
+      if (!clientId) {
+        return res.status(400).json({ message: "clientId is required" });
+      }
+      await dealsStorage.linkDealClient(req.params.id, clientId, label);
+
+      await logAuditEvent(req, {
+        action: "link_client",
+        entityType: "deal",
+        entityId: req.params.id,
+        metadata: { clientId, label },
+      });
+
+      const linkedClients = await dealsStorage.getLinkedClientsByDealId(req.params.id);
+      res.status(201).json(linkedClients);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to link client to deal");
+    }
+  });
+
+  app.delete("/api/deals/:id/linked-clients/:clientId", isAuthenticated, async (req: any, res) => {
+    try {
+      await dealsStorage.unlinkDealClient(req.params.id, req.params.clientId);
+
+      await logAuditEvent(req, {
+        action: "unlink_client",
+        entityType: "deal",
+        entityId: req.params.id,
+        metadata: { clientId: req.params.clientId },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      handleServiceError(res, error, "Failed to unlink client from deal");
     }
   });
 

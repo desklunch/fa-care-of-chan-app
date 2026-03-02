@@ -786,6 +786,24 @@ export const clientContacts = pgTable(
 export type ClientContact = typeof clientContacts.$inferSelect;
 export type InsertClientContact = typeof clientContacts.$inferInsert;
 
+export const dealClients = pgTable(
+  "deal_clients",
+  {
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+    clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: "cascade" }),
+    label: text("label"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.dealId, table.clientId] }),
+    index("idx_deal_clients_deal").on(table.dealId),
+    index("idx_deal_clients_client").on(table.clientId),
+  ],
+);
+
+export type DealClient = typeof dealClients.$inferSelect;
+export type InsertDealClient = typeof dealClients.$inferInsert;
+
 // Entity types that can have comments
 export const commentEntityTypes = [
   "venue",

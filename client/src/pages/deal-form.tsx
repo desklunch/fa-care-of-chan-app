@@ -342,7 +342,7 @@ export default function DealForm() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="w-full flex justify-between items-center">
-                        <FormLabel>Client</FormLabel>
+                        <FormLabel>Primary Client</FormLabel>
                         <span className="text-xs font-medium text-muted-foreground">Required</span>
                       </div>
                       <FormControl>
