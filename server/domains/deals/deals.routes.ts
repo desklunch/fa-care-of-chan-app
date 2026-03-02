@@ -28,6 +28,15 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/deals/all-deal-tags", isAuthenticated, async (req, res) => {
+    try {
+      const results = await dealsStorage.getAllDealTags();
+      res.json(results);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch all deal tags");
+    }
+  });
+
   app.get("/api/deals/all-linked-clients", isAuthenticated, async (req, res) => {
     try {
       const { db } = await import("../../db");
@@ -247,6 +256,36 @@ export function registerDealsRoutes(app: Express): void {
       res.status(204).send();
     } catch (error) {
       handleServiceError(res, error, "Failed to unlink client from deal");
+    }
+  });
+
+  app.get("/api/deals/:id/tags", isAuthenticated, async (req, res) => {
+    try {
+      const tagIds = await dealsStorage.getDealTagIds(req.params.id);
+      res.json(tagIds);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal tags");
+    }
+  });
+
+  app.put("/api/deals/:id/tags", isAuthenticated, async (req: any, res) => {
+    try {
+      const { tagIds } = req.body;
+      if (!Array.isArray(tagIds)) {
+        return res.status(400).json({ message: "tagIds must be an array" });
+      }
+      await dealsStorage.setDealTags(req.params.id, tagIds);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal",
+        entityId: req.params.id,
+        metadata: { field: "tags", tagIds },
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to update deal tags");
     }
   });
 

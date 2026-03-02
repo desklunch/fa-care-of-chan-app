@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
 import { BrandSearch } from "@/components/brand-search";
+import { TagAssignment } from "@/components/ui/tag-assignment";
 import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
 import { Calendar, Loader2, Save, X } from "lucide-react";
@@ -79,6 +80,7 @@ export default function DealForm() {
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<{ id: string; name: string } | null>(null);
   const [initialClientId, setInitialClientId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const { data: deal, isLoading: isLoadingDeal } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -95,6 +97,11 @@ export default function DealForm() {
 
   const { data: industries = [] } = useQuery<Industry[]>({
     queryKey: ["/api/industries"],
+  });
+
+  const { data: existingTagIds } = useQuery<string[]>({
+    queryKey: ["/api/deals", id, "tags"],
+    enabled: isEditing,
   });
 
   usePageTitle(isEditing ? (deal?.displayName ? `Edit ${deal.displayName}` : "Edit Deal") : "New Deal");
@@ -169,19 +176,33 @@ export default function DealForm() {
   }, [deal, isEditing, form]);
 
   useEffect(() => {
+    if (existingTagIds) {
+      setSelectedTagIds(existingTagIds);
+    }
+  }, [existingTagIds]);
+
+  useEffect(() => {
     if (initialClientId !== null && watchedClientId !== initialClientId) {
       form.setValue("primaryContactId", "");
       setInitialClientId(watchedClientId);
     }
   }, [watchedClientId, initialClientId, form]);
 
+  const saveDealTags = async (dealId: string) => {
+    if (selectedTagIds.length > 0 || isEditing) {
+      await apiRequest("PUT", `/api/deals/${dealId}/tags`, { tagIds: selectedTagIds });
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: DealFormValues) => {
       const response = await apiRequest("POST", "/api/deals", data);
       return response.json();
     },
-    onSuccess: (newDeal: Deal) => {
+    onSuccess: async (newDeal: Deal) => {
+      await saveDealTags(newDeal.id);
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-deal-tags"] });
       toast({ title: "Deal created successfully" });
       setLocation(`/deals/${newDeal.id}`);
     },
@@ -195,9 +216,12 @@ export default function DealForm() {
       const response = await apiRequest("PATCH", `/api/deals/${id}`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await saveDealTags(id!);
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/deals", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "tags"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-deal-tags"] });
       toast({ title: "Deal updated successfully" });
       setLocation(`/deals/${id}`);
     },
@@ -699,6 +723,20 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+                <FormItem className="space-y-0">
+                  <FormLabel>Tags</FormLabel>
+                  <FormDescription>
+                    Add tags to categorize this deal.
+                  </FormDescription>
+                  <div className="pt-2">
+                    <TagAssignment
+                      category="Deals"
+                      selectedTagIds={selectedTagIds}
+                      onTagsChange={setSelectedTagIds}
+                    />
+                  </div>
+                </FormItem>
+
                 <FormField
                   control={form.control}
                   name="concept"

@@ -407,6 +407,21 @@ export const venueTags = pgTable(
   ],
 );
 
+// Join table for deals and tags (many-to-many)
+export const dealTags = pgTable(
+  "deal_tags",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+    tagId: varchar("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_deal_tags_deal_id").on(table.dealId),
+    index("idx_deal_tags_tag_id").on(table.tagId),
+  ],
+);
+
 // Venue files (floorplans, attachments, and other documents)
 export const venueFileCategories = ["floorplan", "attachment"] as const;
 export type VenueFileCategory = (typeof venueFileCategories)[number];
@@ -939,6 +954,8 @@ export type Tag = typeof tags.$inferSelect;
 export type InsertTag = typeof tags.$inferInsert;
 export type VenueTag = typeof venueTags.$inferSelect;
 export type InsertVenueTag = typeof venueTags.$inferInsert;
+export type DealTag = typeof dealTags.$inferSelect;
+export type InsertDealTag = typeof dealTags.$inferInsert;
 export type VenueFile = typeof venueFiles.$inferSelect;
 export type InsertVenueFile = typeof venueFiles.$inferInsert;
 export type VenuePhoto = typeof venuePhotos.$inferSelect;

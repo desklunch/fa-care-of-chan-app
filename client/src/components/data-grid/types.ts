@@ -20,7 +20,7 @@ export interface FilterConfig<T> {
   type?: FilterType; // defaults to "multi"
   placeholder?: string;
   optionSource: FilterOptionSource<T>;
-  matchFn: (item: T, selectedValues: string[]) => boolean;
+  matchFn: (item: T, selectedValues: string[], context?: unknown) => boolean;
 }
 
 export interface ColumnConfig<T> {

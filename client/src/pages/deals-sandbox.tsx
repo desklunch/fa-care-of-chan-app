@@ -32,6 +32,7 @@ import {
   SquareArrowOutUpRight,
   Calendar,
   Building2,
+  Tag,
 } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +67,12 @@ interface DealLinkedClientEntry {
   label: string | null;
 }
 
+interface DealTagEntry {
+  dealId: string;
+  tagId: string;
+  tagName: string;
+}
+
 interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
   services: DealService[];
@@ -73,6 +80,7 @@ interface DealsGridContext {
   industries: Industry[];
   industriesMap: Map<string, Industry>;
   linkedClientsMap: Map<string, DealLinkedClientEntry[]>;
+  dealTagsMap: Map<string, DealTagEntry[]>;
 }
 
 /**
@@ -126,6 +134,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "projectDate",
   "client",
   "linkedClients",
+  "tags",
   "startedOn",
   "wonOn",
   "lastContactOn",
@@ -296,6 +305,36 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
       const industryId = deal.industryId;
       if (!industryId) return false;
       return selectedValues.includes(industryId);
+    },
+  },
+  {
+    id: "tags",
+    label: "Tags",
+    icon: Tag,
+    optionSource: {
+      type: "deriveFromData",
+      deriveOptions: (_data, context) => {
+        const ctx = context as DealsGridContext | undefined;
+        if (!ctx?.dealTagsMap) return [];
+        const tagMap = new Map<string, string>();
+        ctx.dealTagsMap.forEach((entries) => {
+          entries.forEach((entry) => {
+            if (!tagMap.has(entry.tagId)) {
+              tagMap.set(entry.tagId, entry.tagName);
+            }
+          });
+        });
+        return Array.from(tagMap.entries())
+          .map(([id, label]) => ({ id, label }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+      },
+    },
+    matchFn: (deal, selectedValues, context) => {
+      const ctx = context as DealsGridContext | undefined;
+      if (!ctx?.dealTagsMap || !deal.id) return false;
+      const dealTags = ctx.dealTagsMap.get(deal.id);
+      if (!dealTags || dealTags.length === 0) return false;
+      return dealTags.some((t) => selectedValues.includes(t.tagId));
     },
   },
 ];
@@ -503,6 +542,36 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               <Badge key={lc.clientId} variant="secondary" className="text-xs gap-1 no-default-hover-elevate no-default-active-elevate" data-testid={`badge-linked-client-${lc.clientId}`}>
                 {lc.clientName}
                 {lc.label && <span className="text-muted-foreground">({lc.label})</span>}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "tags",
+    headerName: "Tags",
+    field: "id",
+    category: "Basic Info",
+    colDef: {
+      flex: 2,
+      minWidth: 180,
+      sortable: false,
+      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        if (!params.data?.id) return "";
+        const tags = params.context?.dealTagsMap?.get(params.data.id) || [];
+        return tags.map(t => t.tagName).join(", ");
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
+        if (!params.data?.id) return null;
+        const tags = params.context?.dealTagsMap?.get(params.data.id) || [];
+        if (tags.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-1">
+            {tags.map((t) => (
+              <Badge key={t.tagId} variant="secondary" className="text-xs no-default-hover-elevate no-default-active-elevate" data-testid={`badge-tag-${t.tagId}`}>
+                {t.tagName}
               </Badge>
             ))}
           </div>
@@ -1125,6 +1194,20 @@ export default function DealsSandbox() {
     return map;
   }, [allLinkedClients]);
 
+  const { data: allDealTags = [] } = useQuery<DealTagEntry[]>({
+    queryKey: ["/api/deals/all-deal-tags"],
+  });
+
+  const dealTagsMap = useMemo(() => {
+    const map = new Map<string, DealTagEntry[]>();
+    for (const entry of allDealTags) {
+      const existing = map.get(entry.dealId) || [];
+      existing.push(entry);
+      map.set(entry.dealId, existing);
+    }
+    return map;
+  }, [allDealTags]);
+
   // Context for the grid - provides user list for Owner dropdown, services, and industries
   const gridContext: DealsGridContext = {
     users,
@@ -1133,6 +1216,7 @@ export default function DealsSandbox() {
     industries,
     industriesMap,
     linkedClientsMap,
+    dealTagsMap,
   };
 
   // Mobile column configuration: explicit ColDef overrides per column

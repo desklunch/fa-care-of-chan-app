@@ -9,7 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { Tag } from "@shared/schema";
 
 interface TagAssignmentProps {
-  category: "Cuisine" | "Style";
+  category: "Cuisine" | "Style" | "Deals";
   selectedTagIds: string[];
   onTagsChange: (tagIds: string[]) => void;
   disabled?: boolean;

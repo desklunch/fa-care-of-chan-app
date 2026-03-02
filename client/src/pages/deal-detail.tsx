@@ -27,6 +27,7 @@ import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
+import { TagAssignment } from "@/components/ui/tag-assignment";
 import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar, Plus, X, Building2, Search } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { parseDateOnly } from "@/lib/date";
@@ -129,6 +130,29 @@ export default function DealDetail() {
       queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "linked-clients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/deals/all-linked-clients"] });
       toast({ title: "Client unlinked from deal" });
+    },
+  });
+
+  const { data: dealTagIds = [] } = useQuery<string[]>({
+    queryKey: ["/api/deals", id, "tags"],
+    enabled: Boolean(id),
+  });
+
+  const { data: allDealsTags = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["/api/tags/category/Deals"],
+    enabled: Boolean(id),
+  });
+
+  const dealTagsMap = new Map(allDealsTags.map(t => [t.id, t]));
+
+  const saveTagsMutation = useMutation({
+    mutationFn: async (tagIds: string[]) => {
+      await apiRequest("PUT", `/api/deals/${id}/tags`, { tagIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "tags"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-deal-tags"] });
+      toast({ title: "Deal tags updated" });
     },
   });
 
@@ -670,6 +694,36 @@ export default function DealDetail() {
                   }
                   placeholder="Select services"
                 />
+
+                <FieldRow label="Tags" testId="field-tags">
+                  <div className="space-y-2">
+                    {dealTagIds.length > 0 && (
+                      <div className="flex flex-wrap gap-2" data-testid="deal-tags">
+                        {dealTagIds.map((tagId) => {
+                          const tag = dealTagsMap.get(tagId);
+                          return (
+                            <Badge
+                              key={tagId}
+                              variant="secondary"
+                              size="lg"
+                              className="py-1 px-2 text-xs no-default-hover-elevate no-default-active-elevate"
+                              data-testid={`badge-tag-${tagId}`}
+                            >
+                              {tag?.name || tagId}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {canWrite && (
+                      <TagAssignment
+                        category="Deals"
+                        selectedTagIds={dealTagIds}
+                        onTagsChange={(tagIds) => saveTagsMutation.mutate(tagIds)}
+                      />
+                    )}
+                  </div>
+                </FieldRow>
 
                 <EditableField
                   label="Budget Low"

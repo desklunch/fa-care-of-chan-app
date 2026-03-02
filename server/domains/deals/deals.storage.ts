@@ -3,12 +3,13 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   dealClients,
+  dealTags,
+  tags,
   clients,
   deals,
   users,
   brands,
   contacts,
-  type DealClient,
   type DealWithRelations,
 } from "@shared/schema";
 
@@ -131,5 +132,34 @@ export const dealsStorage = {
       .where(eq(dealClients.clientId, clientId))
       .orderBy(desc(deals.createdAt));
     return results as LinkedDealForClient[];
+  },
+
+  async getDealTagIds(dealId: string): Promise<string[]> {
+    const results = await db
+      .select({ tagId: dealTags.tagId })
+      .from(dealTags)
+      .where(eq(dealTags.dealId, dealId));
+    return results.map(r => r.tagId);
+  },
+
+  async setDealTags(dealId: string, tagIds: string[]): Promise<void> {
+    await db.delete(dealTags).where(eq(dealTags.dealId, dealId));
+    if (tagIds.length > 0) {
+      await db.insert(dealTags).values(
+        tagIds.map(tagId => ({ dealId, tagId }))
+      );
+    }
+  },
+
+  async getAllDealTags(): Promise<{ dealId: string; tagId: string; tagName: string }[]> {
+    const results = await db
+      .select({
+        dealId: dealTags.dealId,
+        tagId: dealTags.tagId,
+        tagName: tags.name,
+      })
+      .from(dealTags)
+      .innerJoin(tags, eq(dealTags.tagId, tags.id));
+    return results;
   },
 };

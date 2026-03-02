@@ -656,13 +656,13 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
         return filters.every((filter) => {
           const selectedValues = filterState[filter.id] || [];
           if (selectedValues.length === 0) return true;
-          return filter.matchFn(item, selectedValues);
+          return filter.matchFn(item, selectedValues, context);
         });
       });
     }
 
     return result;
-  }, [data, searchText, searchFields, filters, filterState]);
+  }, [data, searchText, searchFields, filters, filterState, context]);
 
   // Note: With rowDragManaged=true, AG Grid handles visual reordering internally.
   // We only sync rowData when drag is NOT in progress to avoid conflicts.
