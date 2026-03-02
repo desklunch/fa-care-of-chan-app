@@ -656,7 +656,7 @@ export default function DealDetail() {
                 />
 
                 <EditableField
-                  label="Next Steps"
+                  label="Notes"
                   value={deal.notes || ""}
                   field="notes"
                   testId="field-notes"
@@ -665,7 +665,7 @@ export default function DealDetail() {
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("notes")}
                   error={getFieldError("notes")}
-                  placeholder="Enter next steps"
+                  placeholder="Enter notes"
                   valueClassName="text-base prose dark:prose-invert "
                 />
               </CardContent>

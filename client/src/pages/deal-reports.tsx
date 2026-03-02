@@ -318,7 +318,7 @@ function SnapshotView30() {
       },
     },
     {
-      headerName: "Next Steps",
+      headerName: "Notes",
       field: "notes" as const,
       flex: 3,
       minWidth: 300,

@@ -884,11 +884,10 @@ export default function DealForm() {
                                   name="notes"
                                   render={({ field }) => (
                                     <FormItem>
-                                      <FormLabel>Next Steps</FormLabel>
+                                      <FormLabel>Notes</FormLabel>
                                       <FormControl>
                                         <Textarea
-                                          placeholder="What are the next steps for this deal?
-                "
+                                          placeholder="Share any critical notes about this deal."
                                           className="min-h-[120px] resize-y"
                                           {...field}
                                           data-testid="textarea-notes"

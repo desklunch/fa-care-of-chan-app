@@ -790,7 +790,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "notes",
-    headerName: "Next Steps",
+    headerName: "Notes",
     field: "notes",
     category: "Basic Info",
     colDef: {
