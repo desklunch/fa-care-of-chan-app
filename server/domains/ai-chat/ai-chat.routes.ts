@@ -576,6 +576,7 @@ async function executeToolCall(
           budgetNotes: deal.budgetNotes,
           concept: deal.concept,
           notes: deal.notes,
+          nextSteps: deal.nextSteps,
           link: `/deals/${deal.id}`,
         });
       }

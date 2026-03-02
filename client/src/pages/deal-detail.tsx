@@ -668,6 +668,20 @@ export default function DealDetail() {
                   placeholder="Enter notes"
                   valueClassName="text-base prose dark:prose-invert "
                 />
+
+                <EditableField
+                  label="Next Steps"
+                  value={deal.nextSteps || ""}
+                  field="nextSteps"
+                  testId="field-next-steps"
+                  type="textarea"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("nextSteps")}
+                  error={getFieldError("nextSteps")}
+                  placeholder="Enter next steps"
+                  valueClassName="text-base prose dark:prose-invert"
+                />
               </CardContent>
             </Card>
 

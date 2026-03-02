@@ -113,6 +113,7 @@ export default function DealForm() {
       locationsText: "",
       concept: "",
       notes: "",
+      nextSteps: "",
       ownerId: "",
       industryId: "",
       budgetHigh: null,
@@ -146,6 +147,7 @@ export default function DealForm() {
         locationsText: deal.locationsText || "",
         concept: deal.concept || "",
         notes: deal.notes || "",
+        nextSteps: deal.nextSteps || "",
         ownerId: deal.ownerId || "",
         industryId: deal.industryId || "",
         budgetHigh: deal.budgetHigh ?? null,
@@ -894,6 +896,26 @@ export default function DealForm() {
                                         />
                                       </FormControl>
 
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="nextSteps"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Next Steps</FormLabel>
+                                      <FormControl>
+                                        <Textarea
+                                          placeholder="Enter next steps for this deal."
+                                          className="min-h-[120px] resize-y"
+                                          {...field}
+                                          value={field.value || ""}
+                                          data-testid="textarea-next-steps"
+                                        />
+                                      </FormControl>
                                       <FormMessage />
                                     </FormItem>
                                   )}

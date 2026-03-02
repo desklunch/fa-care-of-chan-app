@@ -129,6 +129,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "locationsText",
   "eventSchedule",
   "notes",
+  "nextSteps",
   "budgetLow",
   "budgetHigh",
   "budgetNotes",
@@ -920,6 +921,45 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
+    id: "nextSteps",
+    headerName: "Next Steps",
+    field: "nextSteps",
+    category: "Basic Info",
+    colDef: {
+      flex: 3,
+      minWidth: 300,
+      sortable: false,
+      editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 10000,
+        rows: 10,
+        cols: 60,
+      },
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {params.value}
+            </ReactMarkdown>
+          </div>
+        );
+      },
+    },
+  },
+  {
     id: "budgetLow",
     headerName: "Budget Low",
     field: "budgetLow",
@@ -1227,7 +1267,7 @@ export default function DealsSandbox() {
       }
 
       // Handle empty strings as null for nullable text fields
-      const nullableTextFields = ["concept", "notes", "budgetNotes"];
+      const nullableTextFields = ["concept", "notes", "nextSteps", "budgetNotes"];
       if (nullableTextFields.includes(field) && newValue === "") {
         processedValue = null;
       }
