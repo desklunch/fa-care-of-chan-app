@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DealStatusBadge } from "@/components/deal-status-badge";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   ChartContainer,
   ChartTooltip,
@@ -40,6 +43,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  X,
 } from "lucide-react";
 import {
   getPipelineSnapshot,
@@ -455,10 +459,17 @@ function StalledDealsTable({ deals }: { deals: PipelineSnapshot["stalledDeals"] 
 export default function PipelineHealth() {
   usePageTitle("Pipeline Health");
   const [dateRange, setDateRange] = useState<DateRangeFilter>("all");
+  const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
   const snapshot = getPipelineSnapshot(dateRange);
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto" data-testid="page-pipeline-health">
+      {asOfDate && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300" data-testid="banner-simulated-date">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
+          Simulated report date: {format(asOfDate, "MMMM d, yyyy")} (mock data — will use real data when pipeline is connected)
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Pipeline Health</h1>
@@ -466,21 +477,41 @@ export default function PipelineHealth() {
             Overview of your active sales pipeline
           </p>
         </div>
-        <Select
-          value={dateRange}
-          onValueChange={(v) => setDateRange(v as DateRangeFilter)}
-        >
-          <SelectTrigger className="w-[180px]" data-testid="select-date-range">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DATE_RANGE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} data-testid={`option-range-${opt.value}`}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1">
+            <DatePicker
+              date={asOfDate}
+              onSelect={setAsOfDate}
+              placeholder="As of today"
+              data-testid="datepicker-as-of-date"
+            />
+            {asOfDate && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setAsOfDate(undefined)}
+                data-testid="button-clear-as-of-date"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+          <Select
+            value={dateRange}
+            onValueChange={(v) => setDateRange(v as DateRangeFilter)}
+          >
+            <SelectTrigger className="w-[180px]" data-testid="select-date-range">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DATE_RANGE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} data-testid={`option-range-${opt.value}`}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <KPICards kpis={snapshot.kpis} />

@@ -34,7 +34,10 @@ export function registerDealsRoutes(app: Express): void {
       const horizonParam = parseInt(req.query.horizon as string) || 6;
       const horizon = [3, 6, 12].includes(horizonParam) ? horizonParam : 6;
 
-      const now = new Date();
+      const asOfParam = req.query.asOfDate as string | undefined;
+      const now = asOfParam && /^\d{4}-\d{2}-\d{2}$/.test(asOfParam)
+        ? new Date(asOfParam + "T00:00:00")
+        : new Date();
       const startDate = now.toISOString().substring(0, 10);
       const cutoff = new Date(now);
       cutoff.setMonth(cutoff.getMonth() + horizon);

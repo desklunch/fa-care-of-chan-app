@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { usePageHeader } from "@/framework/hooks/page-header-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   DollarSign,
   TrendingUp,
@@ -21,6 +23,7 @@ import {
   MapPin,
   Clock,
   Loader2,
+  X,
 } from "lucide-react";
 import {
   BarChart,
@@ -174,6 +177,7 @@ function getDensityColor(count: number, max: number): string {
 export default function DealForecast() {
   const [horizon, setHorizon] = useState<Horizon>(6);
   const [chartMode, setChartMode] = useState<ChartMode>("both");
+  const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
 
   usePageHeader({
     breadcrumbs: [
@@ -182,10 +186,14 @@ export default function DealForecast() {
     ],
   });
 
+  const asOfParam = asOfDate ? format(asOfDate, "yyyy-MM-dd") : undefined;
+
   const { data, isLoading, error } = useQuery<ForecastData>({
-    queryKey: ['/api/deals/forecast', `?horizon=${horizon}`],
+    queryKey: ['/api/deals/forecast', horizon, asOfParam],
     queryFn: async () => {
-      const res = await fetch(`/api/deals/forecast?horizon=${horizon}`, {
+      const params = new URLSearchParams({ horizon: String(horizon) });
+      if (asOfParam) params.set("asOfDate", asOfParam);
+      const res = await fetch(`/api/deals/forecast?${params}`, {
         credentials: "include",
       });
       if (!res.ok) {
@@ -244,7 +252,25 @@ export default function DealForecast() {
               Pipeline projections and workload overview
             </p>
           </div>
-          <div className="flex items-center gap-2" data-testid="controls-horizon">
+          <div className="flex items-center gap-2 flex-wrap" data-testid="controls-horizon">
+            <div className="flex items-center gap-1">
+              <DatePicker
+                date={asOfDate}
+                onSelect={setAsOfDate}
+                placeholder="As of today"
+                data-testid="datepicker-as-of-date"
+              />
+              {asOfDate && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setAsOfDate(undefined)}
+                  data-testid="button-clear-as-of-date"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
             {([3, 6, 12] as Horizon[]).map((h) => (
               <Button
                 key={h}
@@ -280,6 +306,12 @@ export default function DealForecast() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+      {asOfDate && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300" data-testid="banner-simulated-date">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
+          Simulated report date: {format(asOfDate, "MMMM d, yyyy")}
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-forecast-title">
@@ -289,7 +321,25 @@ export default function DealForecast() {
             Pipeline projections and workload overview
           </p>
         </div>
-        <div className="flex items-center gap-2" data-testid="controls-horizon">
+        <div className="flex items-center gap-2 flex-wrap" data-testid="controls-horizon">
+          <div className="flex items-center gap-1">
+            <DatePicker
+              date={asOfDate}
+              onSelect={setAsOfDate}
+              placeholder="As of today"
+              data-testid="datepicker-as-of-date"
+            />
+            {asOfDate && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setAsOfDate(undefined)}
+                data-testid="button-clear-as-of-date"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
           {([3, 6, 12] as Horizon[]).map((h) => (
             <Button
               key={h}
