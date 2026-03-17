@@ -337,8 +337,8 @@ export function registerDealsRoutes(app: Express): void {
       function filterDeals(dealsList: typeof allDeals, dateRange: { start: Date; end: Date } | null) {
         if (!dateRange) return dealsList;
         return dealsList.filter((d) => {
-          const created = d.createdAt ? new Date(d.createdAt) : null;
-          return created && created <= dateRange.end;
+          const entered = d.startedOn ? new Date(d.startedOn) : (d.createdAt ? new Date(d.createdAt) : null);
+          return entered && entered >= dateRange.start && entered <= dateRange.end;
         });
       }
 
