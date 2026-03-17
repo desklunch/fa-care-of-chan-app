@@ -397,15 +397,16 @@ export function registerDealsRoutes(app: Express): void {
           agingData,
           stalledDeals: stalledDeals
             .map((d) => {
+              const started = d.startedOn || (d.createdAt ? new Date(d.createdAt).toISOString().substring(0, 10) : null);
               const lastContact = d.lastContactOn ? new Date(d.lastContactOn) : null;
-              const daysSince = lastContact ? daysBetween(lastContact, refDate) : 999;
+              const daysSince = lastContact ? daysBetween(lastContact, refDate) : (started ? daysBetween(new Date(started), refDate) : 999);
               return {
                 id: d.id,
                 name: d.displayName,
                 client: d.clientName ?? "Unknown",
                 owner: [d.ownerFirstName, d.ownerLastName].filter(Boolean).join(" ") || "Unassigned",
                 stage: d.status,
-                lastContactDate: d.lastContactOn ?? "",
+                lastContactDate: d.lastContactOn ?? started ?? null,
                 value: Math.round(dealValue(d)),
                 daysSinceContact: daysSince,
               };
@@ -465,59 +466,91 @@ export function registerDealsRoutes(app: Express): void {
       let stageYearLabel = "";
 
       if (range !== "all" && currentRange) {
-        const rangeDays = daysBetween(currentRange.start, currentRange.end);
-
-        const prevEnd = new Date(currentRange.start);
-        prevEnd.setDate(prevEnd.getDate() - 1);
-        const prevStart = new Date(prevEnd);
-        prevStart.setDate(prevStart.getDate() - rangeDays);
-
-        const yearEnd = new Date(currentRange.end);
-        yearEnd.setFullYear(yearEnd.getFullYear() - 1);
-        const yearStart = new Date(currentRange.start);
-        yearStart.setFullYear(yearStart.getFullYear() - 1);
-
-        const prevDeals = filterDeals(allDeals, { start: prevStart, end: prevEnd });
-        const yearDeals = filterDeals(allDeals, { start: yearStart, end: yearEnd });
-
-        const prevSnapshot = computeSnapshot(prevDeals, prevEnd);
-        const yearSnapshot = computeSnapshot(yearDeals, yearEnd);
-
-        prevPeriodStages = prevSnapshot.stageMap;
-        prevYearStages = yearSnapshot.stageMap;
+        let prevPeriodRange: { start: Date; end: Date };
+        let prevYearRange: { start: Date; end: Date };
 
         switch (range) {
           case "30":
-            prevPeriodLabel = "vs prior 30 days";
-            prevYearLabel = "vs same 30 days last year";
-            stagePrevPeriodLabel = "prior 30d";
-            stageYearLabel = "yr ago";
-            break;
           case "60":
-            prevPeriodLabel = "vs prior 60 days";
-            prevYearLabel = "vs same 60 days last year";
-            stagePrevPeriodLabel = "prior 60d";
+          case "90": {
+            const days = parseInt(range);
+            const prevEnd = new Date(currentRange.start);
+            prevEnd.setDate(prevEnd.getDate() - 1);
+            const prevStart = new Date(prevEnd);
+            prevStart.setDate(prevStart.getDate() - days + 1);
+            prevPeriodRange = { start: prevStart, end: prevEnd };
+
+            const yearEnd = new Date(currentRange.end);
+            yearEnd.setFullYear(yearEnd.getFullYear() - 1);
+            const yearStart = new Date(currentRange.start);
+            yearStart.setFullYear(yearStart.getFullYear() - 1);
+            prevYearRange = { start: yearStart, end: yearEnd };
+
+            prevPeriodLabel = `vs prior ${days} days`;
+            prevYearLabel = `vs same ${days} days last year`;
+            stagePrevPeriodLabel = `prior ${days}d`;
             stageYearLabel = "yr ago";
             break;
-          case "90":
-            prevPeriodLabel = "vs prior 90 days";
-            prevYearLabel = "vs same 90 days last year";
-            stagePrevPeriodLabel = "prior 90d";
-            stageYearLabel = "yr ago";
-            break;
-          case "quarter":
+          }
+          case "quarter": {
+            const curQ = Math.floor(now.getMonth() / 3);
+            const curYear = now.getFullYear();
+            const prevQMonth = curQ === 0 ? 9 : (curQ - 1) * 3;
+            const prevQYear = curQ === 0 ? curYear - 1 : curYear;
+            const prevQStart = new Date(prevQYear, prevQMonth, 1);
+            const prevQEnd = new Date(prevQYear, prevQMonth + 3, 0, 23, 59, 59);
+            prevPeriodRange = { start: prevQStart, end: prevQEnd };
+
+            const sameQLastYearStart = new Date(curYear - 1, curQ * 3, 1);
+            const sameQLastYearEnd = new Date(curYear - 1, curQ * 3 + 3, 0, 23, 59, 59);
+            prevYearRange = { start: sameQLastYearStart, end: sameQLastYearEnd };
+
             prevPeriodLabel = "vs last quarter";
             prevYearLabel = "vs same quarter last year";
             stagePrevPeriodLabel = "last qtr";
             stageYearLabel = "yr ago";
             break;
-          case "year":
+          }
+          case "year": {
+            const thisYear = now.getFullYear();
+            const lastYearStart = new Date(thisYear - 1, 0, 1);
+            const lastYearEnd = new Date(thisYear - 1, 11, 31, 23, 59, 59);
+            prevPeriodRange = { start: lastYearStart, end: lastYearEnd };
+
+            const twoYearsStart = new Date(thisYear - 2, 0, 1);
+            const twoYearsEnd = new Date(thisYear - 2, 11, 31, 23, 59, 59);
+            prevYearRange = { start: twoYearsStart, end: twoYearsEnd };
+
             prevPeriodLabel = "vs last year";
             prevYearLabel = "vs 2 years ago";
             stagePrevPeriodLabel = "last yr";
             stageYearLabel = "2yr ago";
             break;
+          }
+          default: {
+            const fallbackDays = daysBetween(currentRange.start, currentRange.end);
+            const fbEnd = new Date(currentRange.start);
+            fbEnd.setDate(fbEnd.getDate() - 1);
+            const fbStart = new Date(fbEnd);
+            fbStart.setDate(fbStart.getDate() - fallbackDays);
+            prevPeriodRange = { start: fbStart, end: fbEnd };
+            const yrEnd = new Date(currentRange.end);
+            yrEnd.setFullYear(yrEnd.getFullYear() - 1);
+            const yrStart = new Date(currentRange.start);
+            yrStart.setFullYear(yrStart.getFullYear() - 1);
+            prevYearRange = { start: yrStart, end: yrEnd };
+            break;
+          }
         }
+
+        const prevDeals = filterDeals(allDeals, prevPeriodRange);
+        const yearDeals = filterDeals(allDeals, prevYearRange);
+
+        const prevSnapshot = computeSnapshot(prevDeals, prevPeriodRange.end);
+        const yearSnapshot = computeSnapshot(yearDeals, prevYearRange.end);
+
+        prevPeriodStages = prevSnapshot.stageMap;
+        prevYearStages = yearSnapshot.stageMap;
 
         history = {
           totalActiveDeals: {

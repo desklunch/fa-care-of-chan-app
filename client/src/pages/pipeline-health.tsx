@@ -107,7 +107,7 @@ interface StalledDeal {
   client: string;
   owner: string;
   stage: string;
-  lastContactDate: string;
+  lastContactDate: string | null;
   value: number;
   daysSinceContact: number;
 }
@@ -498,10 +498,12 @@ function StalledDealsTable({ deals }: { deals: PipelineSnapshot["stalledDeals"] 
                       {deal.daysSinceContact}d
                     </span>
                     <span className="ml-1.5 text-xs text-muted-foreground">
-                      since {new Date(deal.lastContactDate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {deal.lastContactDate
+                        ? `since ${new Date(deal.lastContactDate).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}`
+                        : "no contact recorded"}
                     </span>
                   </TableCell>
                   <TableCell className="font-medium">{deal.name}</TableCell>
