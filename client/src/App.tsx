@@ -75,6 +75,7 @@ const DealsSandbox = lazy(() => import("@/pages/deals-sandbox"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
 const DealReports = lazy(() => import("@/pages/deal-reports"));
+const DealForecast = lazy(() => import("@/pages/deal-forecast"));
 const Clients = lazy(() => import("@/pages/clients"));
 const ClientForm = lazy(() => import("@/pages/client-form"));
 const ClientDetail = lazy(() => import("@/pages/client-detail"));
@@ -125,6 +126,7 @@ import {
   Building2,
   SlidersHorizontal,
   Bot,
+  TrendingUp,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -162,6 +164,12 @@ function useLayoutConfig() {
             href: "/deals/reports",
             icon: ScanEye,
             requiredPermission: "deals.read",
+          },
+          {
+            name: "Forecast",
+            href: "/deals/forecast",
+            icon: TrendingUp,
+            requiredPermission: "admin.settings",
           },
         ],
       },
@@ -384,6 +392,7 @@ function AuthenticatedRoutes() {
             <Route path="/deals" component={Deals} />
             <Route path="/deals-sandbox" component={DealsSandbox} />
             <Route path="/deals/new" component={DealForm} />
+            <Route path="/deals/forecast" component={DealForecast} />
             <Route path="/deals/reports" component={DealReports} />
             <Route path="/deals/:id" component={DealDetail} />
             <Route path="/deals/:id/edit" component={DealForm} />
