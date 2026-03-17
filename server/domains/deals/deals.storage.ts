@@ -1,23 +1,42 @@
 import { db } from "../../db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   dealClients,
   dealTags,
   dealIntakes,
+  dealServices,
   tags,
   clients,
   deals,
   users,
   brands,
   contacts,
+  industries,
   type DealWithRelations,
   type DealIntake,
   type DealIntakeWithRelations,
   type CreateDealIntake,
   type UpdateDealIntake,
   type FormSection,
+  type DealLocation,
+  type DealEvent,
 } from "@shared/schema";
+
+export interface ForecastDealRow {
+  id: string;
+  displayName: string;
+  status: string;
+  clientId: string;
+  clientName: string | null;
+  budgetLow: number | null;
+  budgetHigh: number | null;
+  locations: DealLocation[];
+  eventSchedule: DealEvent[];
+  serviceIds: number[] | null;
+  earliestEventDate: string | null;
+  industryName: string | null;
+}
 
 export interface DealLinkedClient {
   dealId: string;
@@ -246,5 +265,45 @@ export const dealsStorage = {
 
   async deleteDealIntake(dealId: string): Promise<void> {
     await db.delete(dealIntakes).where(eq(dealIntakes.dealId, dealId));
+  },
+
+  async getDealsForForecast(startDate: string, endDate: string): Promise<ForecastDealRow[]> {
+    const results = await db
+      .select({
+        id: deals.id,
+        displayName: deals.displayName,
+        status: deals.status,
+        clientId: deals.clientId,
+        clientName: clients.name,
+        budgetLow: deals.budgetLow,
+        budgetHigh: deals.budgetHigh,
+        locations: deals.locations,
+        eventSchedule: deals.eventSchedule,
+        serviceIds: deals.serviceIds,
+        earliestEventDate: deals.earliestEventDate,
+        industryName: industries.name,
+      })
+      .from(deals)
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(industries, eq(deals.industryId, industries.id))
+      .where(
+        and(
+          isNotNull(deals.earliestEventDate),
+          gte(deals.earliestEventDate, startDate),
+          lte(deals.earliestEventDate, endDate)
+        )
+      )
+      .orderBy(deals.earliestEventDate);
+    return results as ForecastDealRow[];
+  },
+
+  async getAllDealServices(): Promise<{ id: number; name: string }[]> {
+    const results = await db
+      .select({
+        id: dealServices.id,
+        name: dealServices.name,
+      })
+      .from(dealServices);
+    return results;
   },
 };

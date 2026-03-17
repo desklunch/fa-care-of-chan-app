@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { usePageHeader } from "@/framework/hooks/page-header-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign,
   TrendingUp,
@@ -18,6 +20,7 @@ import {
   BarChart3,
   MapPin,
   Clock,
+  Loader2,
 } from "lucide-react";
 import {
   BarChart,
@@ -33,7 +36,82 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { getForecastData, stageProbabilities } from "@/lib/mock-forecast-data";
+
+interface ForecastLocation {
+  displayName: string;
+}
+
+interface ForecastDeal {
+  id: string;
+  name: string;
+  clientName: string;
+  status: string;
+  eventType: string;
+  budgetLow: number;
+  budgetHigh: number;
+  weightedValue: number;
+  probability: number;
+  eventDate: string;
+  locations: ForecastLocation[];
+  durationDays: number;
+  services: string[];
+  industry: string;
+}
+
+interface BreakdownItem {
+  name: string;
+  weighted: number;
+  unweighted: number;
+  dealCount: number;
+}
+
+interface MonthlyRevenue {
+  month: string;
+  monthLabel: string;
+  weighted: number;
+  unweighted: number;
+  dealCount: number;
+}
+
+interface QuarterlyRollup {
+  quarter: string;
+  weighted: number;
+  unweighted: number;
+  dealCount: number;
+}
+
+interface EventDensity {
+  month: string;
+  monthLabel: string;
+  eventCount: number;
+  totalDays: number;
+}
+
+interface ForecastData {
+  deals: ForecastDeal[];
+  monthlyRevenue: MonthlyRevenue[];
+  quarterlyRollups: QuarterlyRollup[];
+  eventDensity: EventDensity[];
+  revenueByService: BreakdownItem[];
+  revenueByIndustry: BreakdownItem[];
+  revenueByLocation: BreakdownItem[];
+  summary: {
+    totalWeighted: number;
+    totalUnweighted: number;
+    dealCount: number;
+    currentQuarterRevenue: number;
+  };
+}
+
+const stageProbabilities: Record<string, number> = {
+  "Prospecting": 0.10,
+  "Warm Lead": 0.15,
+  "Proposal": 0.25,
+  "Feedback": 0.40,
+  "Contracting": 0.60,
+  "In Progress": 0.80,
+  "Final Invoicing": 0.95,
+};
 
 type Horizon = 3 | 6 | 12;
 type ChartMode = "weighted" | "unweighted" | "both";
@@ -104,17 +182,101 @@ export default function DealForecast() {
     ],
   });
 
-  const data = useMemo(() => getForecastData(horizon), [horizon]);
+  const { data, isLoading, error } = useQuery<ForecastData>({
+    queryKey: ['/api/deals/forecast', `?horizon=${horizon}`],
+    queryFn: async () => {
+      const res = await fetch(`/api/deals/forecast?horizon=${horizon}`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text()}`);
+      }
+      return res.json();
+    },
+  });
 
   const maxDensity = useMemo(
-    () => Math.max(...data.eventDensity.map((d) => d.eventCount), 1),
-    [data.eventDensity],
+    () => Math.max(...(data?.eventDensity ?? []).map((d) => d.eventCount), 1),
+    [data?.eventDensity],
   );
 
   const maxDays = useMemo(
-    () => Math.max(...data.eventDensity.map((d) => d.totalDays), 1),
-    [data.eventDensity],
+    () => Math.max(...(data?.eventDensity ?? []).map((d) => d.totalDays), 1),
+    [data?.eventDensity],
   );
+
+  if (error) {
+    return (
+      <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+        <div>
+          <h1 className="text-2xl font-bold" data-testid="text-forecast-title">
+            Revenue Forecast
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Pipeline projections and workload overview
+          </p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-sm text-destructive font-medium" data-testid="text-forecast-error">
+              Failed to load forecast data
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {error.message.includes("403")
+                ? "You do not have permission to view forecast data."
+                : "Please try again later."}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading || !data) {
+    return (
+      <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-forecast-title">
+              Revenue Forecast
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Pipeline projections and workload overview
+            </p>
+          </div>
+          <div className="flex items-center gap-2" data-testid="controls-horizon">
+            {([3, 6, 12] as Horizon[]).map((h) => (
+              <Button
+                key={h}
+                variant={horizon === h ? "default" : "outline"}
+                size="sm"
+                onClick={() => setHorizon(h)}
+                data-testid={`button-horizon-${h}`}
+              >
+                {h}mo
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">

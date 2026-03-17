@@ -29,6 +29,259 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/deals/forecast", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
+    try {
+      const horizonParam = parseInt(req.query.horizon as string) || 6;
+      const horizon = [3, 6, 12].includes(horizonParam) ? horizonParam : 6;
+
+      const now = new Date();
+      const startDate = now.toISOString().substring(0, 10);
+      const cutoff = new Date(now);
+      cutoff.setMonth(cutoff.getMonth() + horizon);
+      const endDate = cutoff.toISOString().substring(0, 10);
+
+      const stageProbabilities: Record<string, number> = {
+        "Prospecting": 0.10,
+        "Warm Lead": 0.15,
+        "Proposal": 0.25,
+        "Feedback": 0.40,
+        "Contracting": 0.60,
+        "In Progress": 0.80,
+        "Final Invoicing": 0.95,
+      };
+
+      const [rawDeals, allServices] = await Promise.all([
+        dealsStorage.getDealsForForecast(startDate, endDate),
+        dealsStorage.getAllDealServices(),
+      ]);
+
+      const serviceMap = new Map<number, string>();
+      for (const svc of allServices) {
+        serviceMap.set(svc.id, svc.name);
+      }
+
+      const deals = rawDeals.map((d) => {
+        const budgetLow = d.budgetLow ?? 0;
+        const budgetHigh = d.budgetHigh ?? 0;
+        const probability = stageProbabilities[d.status] ?? 0;
+        const avg = (budgetLow + budgetHigh) / 2;
+        const totalDurationDays = (d.eventSchedule ?? []).reduce(
+          (sum, ev) => sum + (ev.durationDays || 0),
+          0
+        );
+        const services = (d.serviceIds ?? [])
+          .map((id) => serviceMap.get(id))
+          .filter((name): name is string => !!name);
+
+        return {
+          id: d.id,
+          name: d.displayName,
+          clientName: d.clientName ?? "Unknown",
+          status: d.status,
+          eventType: "",
+          budgetLow,
+          budgetHigh,
+          weightedValue: Math.round(avg * probability),
+          probability,
+          eventDate: d.earliestEventDate!,
+          locations: (d.locations ?? []).map((loc) => ({
+            displayName: loc.displayName,
+          })),
+          durationDays: totalDurationDays || 1,
+          services,
+          industry: d.industryName ?? "Other",
+        };
+      });
+
+      function getMonthKey(dateStr: string): string {
+        return dateStr.substring(0, 7);
+      }
+
+      function getMonthLabel(monthKey: string): string {
+        const [year, month] = monthKey.split("-");
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      }
+
+      function getQuarter(monthKey: string): string {
+        const [year, month] = monthKey.split("-");
+        const q = Math.ceil(parseInt(month) / 3);
+        return `Q${q} ${year}`;
+      }
+
+      const allMonthKeys: string[] = [];
+      const cursor = new Date(now.getFullYear(), now.getMonth(), 1);
+      while (cursor <= cutoff) {
+        const mk = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
+        allMonthKeys.push(mk);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+
+      const monthMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
+      for (const deal of deals) {
+        const mk = getMonthKey(deal.eventDate);
+        const avg = (deal.budgetLow + deal.budgetHigh) / 2;
+        const existing = monthMap.get(mk) || { weighted: 0, unweighted: 0, dealCount: 0 };
+        existing.weighted += avg * deal.probability;
+        existing.unweighted += avg;
+        existing.dealCount += 1;
+        monthMap.set(mk, existing);
+      }
+
+      const monthlyRevenue = allMonthKeys.map((mk) => {
+        const data = monthMap.get(mk) || { weighted: 0, unweighted: 0, dealCount: 0 };
+        return {
+          month: mk,
+          monthLabel: getMonthLabel(mk),
+          weighted: Math.round(data.weighted),
+          unweighted: Math.round(data.unweighted),
+          dealCount: data.dealCount,
+        };
+      });
+
+      const quarterMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
+      for (const mr of monthlyRevenue) {
+        const q = getQuarter(mr.month);
+        const existing = quarterMap.get(q) || { weighted: 0, unweighted: 0, dealCount: 0 };
+        existing.weighted += mr.weighted;
+        existing.unweighted += mr.unweighted;
+        existing.dealCount += mr.dealCount;
+        quarterMap.set(q, existing);
+      }
+
+      const quarterlyRollups = Array.from(quarterMap.entries()).map(
+        ([quarter, data]) => ({
+          quarter,
+          weighted: data.weighted,
+          unweighted: data.unweighted,
+          dealCount: data.dealCount,
+        })
+      );
+
+      const densityMap = new Map<string, { eventCount: number; totalDays: number }>();
+      for (const deal of deals) {
+        const mk = getMonthKey(deal.eventDate);
+        const existing = densityMap.get(mk) || { eventCount: 0, totalDays: 0 };
+        existing.eventCount += 1;
+        existing.totalDays += deal.durationDays;
+        densityMap.set(mk, existing);
+      }
+
+      const eventDensity = allMonthKeys.map((mk) => {
+        const data = densityMap.get(mk) || { eventCount: 0, totalDays: 0 };
+        return {
+          month: mk,
+          monthLabel: getMonthLabel(mk),
+          eventCount: data.eventCount,
+          totalDays: data.totalDays,
+        };
+      });
+
+      const totalWeighted = deals.reduce((sum, d) => {
+        const avg = (d.budgetLow + d.budgetHigh) / 2;
+        return sum + avg * d.probability;
+      }, 0);
+
+      const totalUnweighted = deals.reduce((sum, d) => {
+        return sum + (d.budgetLow + d.budgetHigh) / 2;
+      }, 0);
+
+      const currentQ = Math.ceil((now.getMonth() + 1) / 3);
+      const currentYear = now.getFullYear();
+      const currentQuarterDeals = deals.filter((d) => {
+        const eventMonth = parseInt(d.eventDate.substring(5, 7));
+        const eventQ = Math.ceil(eventMonth / 3);
+        const eventYear = parseInt(d.eventDate.substring(0, 4));
+        return eventQ === currentQ && eventYear === currentYear;
+      });
+
+      const currentQuarterRevenue = currentQuarterDeals.reduce((sum, d) => {
+        const avg = (d.budgetLow + d.budgetHigh) / 2;
+        return sum + avg * d.probability;
+      }, 0);
+
+      const svcBreakdownMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
+      for (const deal of deals) {
+        const avg = (deal.budgetLow + deal.budgetHigh) / 2;
+        const serviceCount = deal.services.length || 1;
+        for (const service of deal.services) {
+          const existing = svcBreakdownMap.get(service) || { weighted: 0, unweighted: 0, dealCount: 0 };
+          existing.weighted += (avg * deal.probability) / serviceCount;
+          existing.unweighted += avg / serviceCount;
+          existing.dealCount += 1;
+          svcBreakdownMap.set(service, existing);
+        }
+      }
+      const revenueByService = Array.from(svcBreakdownMap.entries())
+        .map(([name, data]) => ({
+          name,
+          weighted: Math.round(data.weighted),
+          unweighted: Math.round(data.unweighted),
+          dealCount: data.dealCount,
+        }))
+        .sort((a, b) => b.weighted - a.weighted);
+
+      const industryBreakdownMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
+      for (const deal of deals) {
+        const avg = (deal.budgetLow + deal.budgetHigh) / 2;
+        const existing = industryBreakdownMap.get(deal.industry) || { weighted: 0, unweighted: 0, dealCount: 0 };
+        existing.weighted += avg * deal.probability;
+        existing.unweighted += avg;
+        existing.dealCount += 1;
+        industryBreakdownMap.set(deal.industry, existing);
+      }
+      const revenueByIndustry = Array.from(industryBreakdownMap.entries())
+        .map(([name, data]) => ({
+          name,
+          weighted: Math.round(data.weighted),
+          unweighted: Math.round(data.unweighted),
+          dealCount: data.dealCount,
+        }))
+        .sort((a, b) => b.weighted - a.weighted);
+
+      const locationBreakdownMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
+      for (const deal of deals) {
+        const avg = (deal.budgetLow + deal.budgetHigh) / 2;
+        const locCount = deal.locations.length || 1;
+        for (const loc of deal.locations) {
+          const key = loc.displayName;
+          const existing = locationBreakdownMap.get(key) || { weighted: 0, unweighted: 0, dealCount: 0 };
+          existing.weighted += (avg * deal.probability) / locCount;
+          existing.unweighted += avg / locCount;
+          existing.dealCount += 1;
+          locationBreakdownMap.set(key, existing);
+        }
+      }
+      const revenueByLocation = Array.from(locationBreakdownMap.entries())
+        .map(([name, data]) => ({
+          name,
+          weighted: Math.round(data.weighted),
+          unweighted: Math.round(data.unweighted),
+          dealCount: data.dealCount,
+        }))
+        .sort((a, b) => b.weighted - a.weighted)
+        .slice(0, 10);
+
+      res.json({
+        deals,
+        monthlyRevenue,
+        quarterlyRollups,
+        eventDensity,
+        revenueByService,
+        revenueByIndustry,
+        revenueByLocation,
+        summary: {
+          totalWeighted: Math.round(totalWeighted),
+          totalUnweighted: Math.round(totalUnweighted),
+          dealCount: deals.length,
+          currentQuarterRevenue: Math.round(currentQuarterRevenue),
+        },
+      });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to generate forecast");
+    }
+  });
+
   app.get("/api/deals/all-deal-tags", isAuthenticated, async (req, res) => {
     try {
       const results = await dealsStorage.getAllDealTags();
