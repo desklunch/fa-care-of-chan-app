@@ -109,6 +109,10 @@ function IntakeEmptyState({ dealId, canWrite }: { dealId: string; canWrite: bool
   const createMutation = useMutation({
     mutationFn: async (templateId: string) => {
       const res = await apiRequest("POST", `/api/deals/${dealId}/intake`, { templateId });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("Server returned an unexpected response. Please try again.");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -238,6 +242,10 @@ function IntakeDraftForm({
       const res = await apiRequest("PATCH", `/api/deals/${dealId}/intake`, {
         responseData: data,
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("Server returned an unexpected response. Please try again.");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -255,6 +263,10 @@ function IntakeDraftForm({
         responseData: data,
         status: "completed",
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("Server returned an unexpected response. Please try again.");
+      }
       return res.json();
     },
     onSuccess: () => {
