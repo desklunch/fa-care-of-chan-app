@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,14 +45,80 @@ import {
   TrendingDown,
   Minus,
   X,
+  Loader2,
 } from "lucide-react";
-import {
-  getPipelineSnapshot,
-  DATE_RANGE_OPTIONS,
-  type DateRangeFilter,
-  type PipelineSnapshot,
-  type HistoricalComparison,
-} from "@/lib/pipeline-mock-data";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type DateRangeFilter = "30" | "60" | "90" | "quarter" | "year" | "all";
+
+const DATE_RANGE_OPTIONS: { value: DateRangeFilter; label: string }[] = [
+  { value: "30", label: "Last 30 days" },
+  { value: "60", label: "Last 60 days" },
+  { value: "90", label: "Last 90 days" },
+  { value: "quarter", label: "This quarter" },
+  { value: "year", label: "This year" },
+  { value: "all", label: "All time" },
+];
+
+interface HistoricalComparison {
+  previousPeriod: number;
+  previousPeriodLabel: string;
+  previousYear: number;
+  previousYearLabel: string;
+}
+
+interface PipelineKPIs {
+  totalActiveDeals: number;
+  totalPipelineValue: number;
+  averageDealAgeDays: number;
+  stalledDealsCount: number;
+  history: {
+    totalActiveDeals: HistoricalComparison;
+    totalPipelineValue: HistoricalComparison;
+    averageDealAgeDays: HistoricalComparison;
+    stalledDealsCount: HistoricalComparison;
+  } | null;
+}
+
+interface StageData {
+  stage: string;
+  dealCount: number;
+  totalValue: number;
+  previousPeriodCount: number;
+  previousPeriodLabel: string;
+  previousYearCount: number;
+  previousYearLabel: string;
+}
+
+interface AgingBucket {
+  bucket: string;
+  count: number;
+}
+
+interface ConversionRate {
+  fromStage: string;
+  toStage: string;
+  rate: number;
+}
+
+interface StalledDeal {
+  id: string;
+  name: string;
+  client: string;
+  owner: string;
+  stage: string;
+  lastContactDate: string;
+  value: number;
+  daysSinceContact: number;
+}
+
+interface PipelineSnapshot {
+  kpis: PipelineKPIs;
+  stageData: StageData[];
+  agingData: AgingBucket[];
+  conversionRates: ConversionRate[];
+  stalledDeals: StalledDeal[];
+}
 
 const STAGE_COLORS: Record<string, string> = {
   Prospecting: "var(--status-prospecting)",
@@ -460,14 +527,68 @@ export default function PipelineHealth() {
   usePageTitle("Pipeline Health");
   const [dateRange, setDateRange] = useState<DateRangeFilter>("all");
   const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
-  const snapshot = getPipelineSnapshot(dateRange);
+
+  const asOfDateStr = asOfDate ? format(asOfDate, "yyyy-MM-dd") : undefined;
+
+  const { data: snapshot, isLoading, error } = useQuery<PipelineSnapshot>({
+    queryKey: ["/api/deals/pipeline-health", dateRange, asOfDateStr],
+    queryFn: async () => {
+      const params = new URLSearchParams({ range: dateRange });
+      if (asOfDateStr) params.set("asOfDate", asOfDateStr);
+      const res = await fetch(`/api/deals/pipeline-health?${params}`);
+      if (!res.ok) throw new Error("Failed to load pipeline data");
+      return res.json();
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto" data-testid="page-pipeline-health-loading">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Pipeline Health</h1>
+            <p className="text-sm text-muted-foreground mt-1">Loading pipeline data...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !snapshot) {
+    return (
+      <div className="p-4 md:p-6 max-w-7xl mx-auto" data-testid="page-pipeline-health-error">
+        <h1 className="text-2xl font-bold">Pipeline Health</h1>
+        <Card className="mt-6">
+          <CardContent className="py-8 text-center">
+            <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground">Failed to load pipeline data. Please try again.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto" data-testid="page-pipeline-health">
       {asOfDate && (
         <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300" data-testid="banner-simulated-date">
           <Clock className="h-3.5 w-3.5 shrink-0" />
-          Simulated report date: {format(asOfDate, "MMMM d, yyyy")} (mock data — will use real data when pipeline is connected)
+          Simulated report date: {format(asOfDate, "MMMM d, yyyy")}
         </div>
       )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

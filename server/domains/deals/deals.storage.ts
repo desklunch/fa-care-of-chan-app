@@ -1,7 +1,8 @@
 import { db } from "../../db";
-import { eq, and, desc, sql, gte, lte, isNotNull } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, lt, isNotNull, not, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
+  auditLogs,
   dealClients,
   dealTags,
   dealIntakes,
@@ -48,6 +49,27 @@ export interface DealLinkedClient {
 
 export interface LinkedDealForClient extends DealWithRelations {
   linkLabel: string | null;
+}
+
+export interface PipelineDealRow {
+  id: string;
+  displayName: string;
+  status: string;
+  clientId: string;
+  clientName: string | null;
+  budgetLow: number | null;
+  budgetHigh: number | null;
+  startedOn: string | null;
+  lastContactOn: string | null;
+  createdAt: Date | null;
+  ownerFirstName: string | null;
+  ownerLastName: string | null;
+}
+
+export interface StatusTransitionRow {
+  entityId: string;
+  performedAt: Date | null;
+  changes: unknown;
 }
 
 export const dealsStorage = {
@@ -305,5 +327,50 @@ export const dealsStorage = {
       })
       .from(dealServices);
     return results;
+  },
+
+  async getPipelineDeals(activeStatuses: string[]): Promise<PipelineDealRow[]> {
+    const ownerUsers = alias(users, "owner_users");
+    const results = await db
+      .select({
+        id: deals.id,
+        displayName: deals.displayName,
+        status: deals.status,
+        clientId: deals.clientId,
+        clientName: clients.name,
+        budgetLow: deals.budgetLow,
+        budgetHigh: deals.budgetHigh,
+        startedOn: deals.startedOn,
+        lastContactOn: deals.lastContactOn,
+        createdAt: deals.createdAt,
+        ownerFirstName: ownerUsers.firstName,
+        ownerLastName: ownerUsers.lastName,
+      })
+      .from(deals)
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
+      .where(inArray(deals.status, activeStatuses))
+      .orderBy(deals.createdAt);
+    return results as PipelineDealRow[];
+  },
+
+  async getStatusTransitions(): Promise<StatusTransitionRow[]> {
+    const results = await db
+      .select({
+        entityId: auditLogs.entityId,
+        performedAt: auditLogs.performedAt,
+        changes: auditLogs.changes,
+      })
+      .from(auditLogs)
+      .where(
+        and(
+          eq(auditLogs.entityType, "deal"),
+          eq(auditLogs.action, "update"),
+          eq(auditLogs.status, "success"),
+          sql`${auditLogs.changes}::jsonb->>'status' IS NOT NULL`
+        )
+      )
+      .orderBy(auditLogs.performedAt);
+    return results as StatusTransitionRow[];
   },
 };

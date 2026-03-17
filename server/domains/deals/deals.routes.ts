@@ -285,6 +285,301 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/deals/pipeline-health", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
+    try {
+      const rangeParam = (req.query.range as string) || "all";
+      const validRanges = ["30", "60", "90", "quarter", "year", "all"];
+      const range = validRanges.includes(rangeParam) ? rangeParam : "all";
+
+      const asOfParam = req.query.asOfDate as string | undefined;
+      const now = asOfParam && /^\d{4}-\d{2}-\d{2}$/.test(asOfParam)
+        ? new Date(asOfParam + "T00:00:00")
+        : new Date();
+
+      const ACTIVE_STAGES = [
+        "Prospecting", "Proposal", "Feedback", "Contracting", "In Progress", "Final Invoicing",
+      ];
+
+      const [allDeals, transitions] = await Promise.all([
+        dealsStorage.getPipelineDeals(ACTIVE_STAGES),
+        dealsStorage.getStatusTransitions(),
+      ]);
+
+      function daysBetween(a: Date, b: Date): number {
+        return Math.floor(Math.abs(b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+      }
+
+      function getDateRange(r: string, ref: Date): { start: Date; end: Date } | null {
+        const end = new Date(ref);
+        const start = new Date(ref);
+        switch (r) {
+          case "30": start.setDate(start.getDate() - 30); break;
+          case "60": start.setDate(start.getDate() - 60); break;
+          case "90": start.setDate(start.getDate() - 90); break;
+          case "quarter": {
+            const q = Math.floor(end.getMonth() / 3);
+            start.setMonth(q * 3, 1);
+            start.setHours(0, 0, 0, 0);
+            break;
+          }
+          case "year": {
+            start.setMonth(0, 1);
+            start.setHours(0, 0, 0, 0);
+            break;
+          }
+          case "all":
+          default:
+            return null;
+        }
+        return { start, end };
+      }
+
+      function filterDeals(dealsList: typeof allDeals, dateRange: { start: Date; end: Date } | null) {
+        if (!dateRange) return dealsList;
+        return dealsList.filter((d) => {
+          const created = d.createdAt ? new Date(d.createdAt) : null;
+          return created && created >= dateRange.start && created <= dateRange.end;
+        });
+      }
+
+      const currentRange = getDateRange(range, now);
+      const currentDeals = filterDeals(allDeals, currentRange);
+
+      function dealValue(d: typeof allDeals[0]): number {
+        const low = d.budgetLow ?? 0;
+        const high = d.budgetHigh ?? 0;
+        return (low + high) / 2;
+      }
+
+      function computeSnapshot(dealsList: typeof allDeals, refDate: Date) {
+        const totalActive = dealsList.length;
+        const totalValue = dealsList.reduce((sum, d) => sum + dealValue(d), 0);
+        const ages = dealsList.map((d) => {
+          const started = d.startedOn ? new Date(d.startedOn) : (d.createdAt ? new Date(d.createdAt) : refDate);
+          return daysBetween(started, refDate);
+        });
+        const avgAge = ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+        const stalledDeals = dealsList.filter((d) => {
+          if (!d.lastContactOn) return true;
+          return daysBetween(new Date(d.lastContactOn), refDate) >= 30;
+        });
+
+        const stageMap = new Map<string, { count: number; value: number }>();
+        for (const stage of ACTIVE_STAGES) {
+          stageMap.set(stage, { count: 0, value: 0 });
+        }
+        for (const d of dealsList) {
+          const entry = stageMap.get(d.status);
+          if (entry) {
+            entry.count++;
+            entry.value += dealValue(d);
+          }
+        }
+
+        const agingBuckets = [
+          { bucket: "< 1 week", min: 0, max: 7 },
+          { bucket: "1-2 weeks", min: 7, max: 14 },
+          { bucket: "2-4 weeks", min: 14, max: 28 },
+          { bucket: "1-2 months", min: 28, max: 60 },
+          { bucket: "2+ months", min: 60, max: Infinity },
+        ];
+        const agingData = agingBuckets.map((b) => ({
+          bucket: b.bucket,
+          count: ages.filter((a) => a >= b.min && a < b.max).length,
+        }));
+
+        return {
+          totalActive,
+          totalValue: Math.round(totalValue),
+          avgAge,
+          stalledCount: stalledDeals.length,
+          stageMap,
+          agingData,
+          stalledDeals: stalledDeals
+            .map((d) => {
+              const lastContact = d.lastContactOn ? new Date(d.lastContactOn) : null;
+              const daysSince = lastContact ? daysBetween(lastContact, refDate) : 999;
+              return {
+                id: d.id,
+                name: d.displayName,
+                client: d.clientName ?? "Unknown",
+                owner: [d.ownerFirstName, d.ownerLastName].filter(Boolean).join(" ") || "Unassigned",
+                stage: d.status,
+                lastContactDate: d.lastContactOn ?? "",
+                value: Math.round(dealValue(d)),
+                daysSinceContact: daysSince,
+              };
+            })
+            .sort((a, b) => b.daysSinceContact - a.daysSinceContact),
+        };
+      }
+
+      const current = computeSnapshot(currentDeals, now);
+
+      const conversionMap = new Map<string, Map<string, number>>();
+      for (const t of transitions) {
+        const changes = t.changes as Record<string, unknown> | null;
+        if (!changes || !changes.status) continue;
+        const statusChange = changes.status as { from?: string; to?: string };
+        if (!statusChange.from || !statusChange.to) continue;
+        if (!ACTIVE_STAGES.includes(statusChange.from) || !ACTIVE_STAGES.includes(statusChange.to)) continue;
+        const fromIdx = ACTIVE_STAGES.indexOf(statusChange.from);
+        const toIdx = ACTIVE_STAGES.indexOf(statusChange.to);
+        if (toIdx !== fromIdx + 1) continue;
+        if (!conversionMap.has(statusChange.from)) {
+          conversionMap.set(statusChange.from, new Map());
+        }
+        const toMap = conversionMap.get(statusChange.from)!;
+        toMap.set(statusChange.to, (toMap.get(statusChange.to) || 0) + 1);
+      }
+
+      const fromCounts = new Map<string, number>();
+      for (const t of transitions) {
+        const changes = t.changes as Record<string, unknown> | null;
+        if (!changes || !changes.status) continue;
+        const statusChange = changes.status as { from?: string; to?: string };
+        if (!statusChange.from || !ACTIVE_STAGES.includes(statusChange.from)) continue;
+        fromCounts.set(statusChange.from, (fromCounts.get(statusChange.from) || 0) + 1);
+      }
+
+      const conversionRates = ACTIVE_STAGES.slice(0, -1).map((fromStage, i) => {
+        const toStage = ACTIVE_STAGES[i + 1];
+        const totalFrom = fromCounts.get(fromStage) || 0;
+        const converted = conversionMap.get(fromStage)?.get(toStage) || 0;
+        const rate = totalFrom > 0 ? Math.round((converted / totalFrom) * 100) : 0;
+        return { fromStage, toStage, rate };
+      });
+
+      let history: {
+        totalActiveDeals: { previousPeriod: number; previousPeriodLabel: string; previousYear: number; previousYearLabel: string };
+        totalPipelineValue: { previousPeriod: number; previousPeriodLabel: string; previousYear: number; previousYearLabel: string };
+        averageDealAgeDays: { previousPeriod: number; previousPeriodLabel: string; previousYear: number; previousYearLabel: string };
+        stalledDealsCount: { previousPeriod: number; previousPeriodLabel: string; previousYear: number; previousYearLabel: string };
+      } | null = null;
+
+      let prevPeriodStages: Map<string, { count: number; value: number }> | null = null;
+      let prevYearStages: Map<string, { count: number; value: number }> | null = null;
+      let prevPeriodLabel = "";
+      let prevYearLabel = "";
+      let stagePrevPeriodLabel = "";
+      let stageYearLabel = "";
+
+      if (range !== "all" && currentRange) {
+        const rangeDays = daysBetween(currentRange.start, currentRange.end);
+
+        const prevEnd = new Date(currentRange.start);
+        prevEnd.setDate(prevEnd.getDate() - 1);
+        const prevStart = new Date(prevEnd);
+        prevStart.setDate(prevStart.getDate() - rangeDays);
+
+        const yearEnd = new Date(currentRange.end);
+        yearEnd.setFullYear(yearEnd.getFullYear() - 1);
+        const yearStart = new Date(currentRange.start);
+        yearStart.setFullYear(yearStart.getFullYear() - 1);
+
+        const prevDeals = filterDeals(allDeals, { start: prevStart, end: prevEnd });
+        const yearDeals = filterDeals(allDeals, { start: yearStart, end: yearEnd });
+
+        const prevSnapshot = computeSnapshot(prevDeals, prevEnd);
+        const yearSnapshot = computeSnapshot(yearDeals, yearEnd);
+
+        prevPeriodStages = prevSnapshot.stageMap;
+        prevYearStages = yearSnapshot.stageMap;
+
+        switch (range) {
+          case "30":
+            prevPeriodLabel = "vs prior 30 days";
+            prevYearLabel = "vs same 30 days last year";
+            stagePrevPeriodLabel = "prior 30d";
+            stageYearLabel = "yr ago";
+            break;
+          case "60":
+            prevPeriodLabel = "vs prior 60 days";
+            prevYearLabel = "vs same 60 days last year";
+            stagePrevPeriodLabel = "prior 60d";
+            stageYearLabel = "yr ago";
+            break;
+          case "90":
+            prevPeriodLabel = "vs prior 90 days";
+            prevYearLabel = "vs same 90 days last year";
+            stagePrevPeriodLabel = "prior 90d";
+            stageYearLabel = "yr ago";
+            break;
+          case "quarter":
+            prevPeriodLabel = "vs last quarter";
+            prevYearLabel = "vs same quarter last year";
+            stagePrevPeriodLabel = "last qtr";
+            stageYearLabel = "yr ago";
+            break;
+          case "year":
+            prevPeriodLabel = "vs last year";
+            prevYearLabel = "vs 2 years ago";
+            stagePrevPeriodLabel = "last yr";
+            stageYearLabel = "2yr ago";
+            break;
+        }
+
+        history = {
+          totalActiveDeals: {
+            previousPeriod: prevSnapshot.totalActive,
+            previousPeriodLabel: prevPeriodLabel,
+            previousYear: yearSnapshot.totalActive,
+            previousYearLabel: prevYearLabel,
+          },
+          totalPipelineValue: {
+            previousPeriod: prevSnapshot.totalValue,
+            previousPeriodLabel: prevPeriodLabel,
+            previousYear: yearSnapshot.totalValue,
+            previousYearLabel: prevYearLabel,
+          },
+          averageDealAgeDays: {
+            previousPeriod: prevSnapshot.avgAge,
+            previousPeriodLabel: prevPeriodLabel,
+            previousYear: yearSnapshot.avgAge,
+            previousYearLabel: prevYearLabel,
+          },
+          stalledDealsCount: {
+            previousPeriod: prevSnapshot.stalledCount,
+            previousPeriodLabel: prevPeriodLabel,
+            previousYear: yearSnapshot.stalledCount,
+            previousYearLabel: prevYearLabel,
+          },
+        };
+      }
+
+      const stageData = ACTIVE_STAGES.map((stage) => {
+        const entry = current.stageMap.get(stage) || { count: 0, value: 0 };
+        const prevPeriod = prevPeriodStages?.get(stage) || { count: 0, value: 0 };
+        const prevYear = prevYearStages?.get(stage) || { count: 0, value: 0 };
+        return {
+          stage,
+          dealCount: entry.count,
+          totalValue: Math.round(entry.value),
+          previousPeriodCount: prevPeriod.count,
+          previousPeriodLabel: stagePrevPeriodLabel,
+          previousYearCount: prevYear.count,
+          previousYearLabel: stageYearLabel,
+        };
+      });
+
+      res.json({
+        kpis: {
+          totalActiveDeals: current.totalActive,
+          totalPipelineValue: current.totalValue,
+          averageDealAgeDays: current.avgAge,
+          stalledDealsCount: current.stalledCount,
+          history,
+        },
+        stageData,
+        agingData: current.agingData,
+        conversionRates,
+        stalledDeals: current.stalledDeals,
+      });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to compute pipeline health");
+    }
+  });
+
   app.get("/api/deals/all-deal-tags", isAuthenticated, async (req, res) => {
     try {
       const results = await dealsStorage.getAllDealTags();
