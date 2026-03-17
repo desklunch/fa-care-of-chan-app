@@ -338,7 +338,7 @@ export function registerDealsRoutes(app: Express): void {
         if (!dateRange) return dealsList;
         return dealsList.filter((d) => {
           const created = d.createdAt ? new Date(d.createdAt) : null;
-          return created && created >= dateRange.start && created <= dateRange.end;
+          return created && created <= dateRange.end;
         });
       }
 
@@ -360,8 +360,12 @@ export function registerDealsRoutes(app: Express): void {
         });
         const avgAge = ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
         const stalledDeals = dealsList.filter((d) => {
-          if (!d.lastContactOn) return true;
-          return daysBetween(new Date(d.lastContactOn), refDate) >= 30;
+          if (d.lastContactOn) {
+            return daysBetween(new Date(d.lastContactOn), refDate) >= 30;
+          }
+          const fallbackDate = d.startedOn ? new Date(d.startedOn) : (d.createdAt ? new Date(d.createdAt) : null);
+          if (!fallbackDate) return false;
+          return daysBetween(fallbackDate, refDate) >= 30;
         });
 
         const stageMap = new Map<string, { count: number; value: number }>();
