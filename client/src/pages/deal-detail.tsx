@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar, Plus, X, Building2, Search } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
+import { DealIntakeTab } from "@/components/deal-intake-tab";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import type {
@@ -322,6 +323,9 @@ export default function DealDetail() {
             <TabsList data-testid="tabs-deal" className="px-4 md:px-6">
               <TabsTrigger value="overview" data-testid="tab-overview">
                 Overview
+              </TabsTrigger>
+              <TabsTrigger value="intake" data-testid="tab-intake">
+                Intake
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
                 Comments
@@ -892,6 +896,10 @@ export default function DealDetail() {
               </CardContent>
             </Card>
 
+          </TabsContent>
+
+          <TabsContent value="intake" className="p-4 md:p-6 pt-4 max-w-4xl">
+            <DealIntakeTab dealId={id!} canWrite={canWrite} />
           </TabsContent>
 
           <TabsContent value="comments" className="p-4 md:p-6 pt-4 max-w-4xl">

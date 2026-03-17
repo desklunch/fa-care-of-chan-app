@@ -39,6 +39,7 @@ export default function AdminFormTemplateFormPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [formSchema, setFormSchema] = useState<FormSection[]>([]);
 
   const { data: template, isLoading: isTemplateLoading } = useQuery<FormTemplate>({
@@ -52,6 +53,7 @@ export default function AdminFormTemplateFormPage() {
     if (template) {
       setName(template.name);
       setDescription(template.description || "");
+      setCategory(template.category || "");
       setFormSchema((template.formSchema as FormSection[]) || []);
     }
   }, [template]);
@@ -124,6 +126,7 @@ export default function AdminFormTemplateFormPage() {
     const data = {
       name: name.trim(),
       description: description.trim(),
+      category: category.trim() || null,
       formSchema,
     };
 
@@ -211,17 +214,27 @@ export default function AdminFormTemplateFormPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="template-description">Description (Optional)</Label>
-                <Textarea
-                  id="template-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe the purpose of this template"
-                  className="resize-none"
-                  rows={3}
-                  data-testid="textarea-template-description"
+                <Label htmlFor="template-category">Category (Optional)</Label>
+                <Input
+                  id="template-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g., Client Intake - Corporate Events"
+                  data-testid="input-template-category"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="template-description">Description (Optional)</Label>
+              <Textarea
+                id="template-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the purpose of this template"
+                className="resize-none"
+                rows={3}
+                data-testid="textarea-template-description"
+              />
             </div>
           </CardContent>
         </Card>

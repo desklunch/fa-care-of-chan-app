@@ -5,8 +5,9 @@ import { logAuditEvent } from "../../audit";
 import { handleServiceError } from "../../lib/route-helpers";
 import { storage } from "../../storage";
 import { DealsService } from "../../services/deals.service";
-import { dealStatuses, type DealStatus } from "@shared/schema";
+import { dealStatuses, type DealStatus, insertDealIntakeSchema, updateDealIntakeSchema } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
+import { formsStorage } from "../forms/forms.storage";
 
 const dealsService = new DealsService(storage);
 
@@ -312,6 +313,122 @@ export function registerDealsRoutes(app: Express): void {
         metadata: { dealId: req.params.dealId, error: (error as Error).message },
       });
       handleServiceError(res, error, "Failed to delete deal task");
+    }
+  });
+
+  // ==========================================
+  // DEAL INTAKE ROUTES
+  // ==========================================
+
+  app.get("/api/deals/:dealId/intake", isAuthenticated, async (req, res) => {
+    try {
+      const intake = await dealsStorage.getDealIntake(req.params.dealId);
+      res.json(intake);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal intake");
+    }
+  });
+
+  app.post("/api/deals/:dealId/intake", isAuthenticated, async (req: any, res) => {
+    try {
+      const { templateId } = req.body;
+      if (!templateId) {
+        return res.status(400).json({ message: "templateId is required" });
+      }
+
+      const template = await formsStorage.getFormTemplateById(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      const existing = await dealsStorage.getDealIntake(req.params.dealId);
+      if (existing) {
+        await dealsStorage.deleteDealIntake(req.params.dealId);
+      }
+
+      const actorId = req.user.claims.sub;
+      const intakeData = {
+        dealId: req.params.dealId,
+        templateId: template.id,
+        templateName: template.name,
+        formSchema: template.formSchema,
+        responseData: {},
+        status: "draft" as const,
+      };
+
+      const result = insertDealIntakeSchema.safeParse(intakeData);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const intake = await dealsStorage.createDealIntake(result.data, actorId);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_intake",
+        entityId: intake.id,
+        status: "success",
+        metadata: { dealId: req.params.dealId, templateId, templateName: template.name },
+      });
+
+      res.status(201).json(intake);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to create deal intake");
+    }
+  });
+
+  app.patch("/api/deals/:dealId/intake", isAuthenticated, async (req: any, res) => {
+    try {
+      const existing = await dealsStorage.getDealIntake(req.params.dealId);
+      if (!existing) {
+        return res.status(404).json({ message: "No intake found for this deal" });
+      }
+
+      if (existing.status === "completed") {
+        return res.status(400).json({ message: "Cannot modify a completed intake. Delete it first to start over." });
+      }
+
+      const result = updateDealIntakeSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const intake = await dealsStorage.updateDealIntake(req.params.dealId, result.data);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_intake",
+        entityId: existing.id,
+        status: "success",
+        metadata: { dealId: req.params.dealId, status: result.data.status },
+      });
+
+      res.json(intake);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to update deal intake");
+    }
+  });
+
+  app.delete("/api/deals/:dealId/intake", isAuthenticated, async (req: any, res) => {
+    try {
+      const existing = await dealsStorage.getDealIntake(req.params.dealId);
+      if (!existing) {
+        return res.status(404).json({ message: "No intake found for this deal" });
+      }
+
+      await dealsStorage.deleteDealIntake(req.params.dealId);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_intake",
+        entityId: existing.id,
+        status: "success",
+        metadata: { dealId: req.params.dealId },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      handleServiceError(res, error, "Failed to delete deal intake");
     }
   });
 }

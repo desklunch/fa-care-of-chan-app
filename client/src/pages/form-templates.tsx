@@ -27,6 +27,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
+import { Badge } from "@/components/ui/badge";
 import {
   CircleFadingPlus,
   MoreVertical,
@@ -115,6 +116,15 @@ function ActionsCellRenderer({ data, context }: ICellRendererParams<FormTemplate
   );
 }
 
+function CategoryCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
+  if (!data) return null;
+  return (
+    <Badge variant="secondary" data-testid={`badge-category-${data.id}`}>
+      {data.category || "Uncategorized"}
+    </Badge>
+  );
+}
+
 const templateColumns: ColumnConfig<FormTemplate>[] = [
   {
     id: "name",
@@ -125,6 +135,18 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
       flex: 2,
       minWidth: 200,
       cellRenderer: NameCellRenderer,
+    },
+  },
+  {
+    id: "category",
+    headerName: "Category",
+    field: "category",
+    category: "Info",
+    colDef: {
+      flex: 1,
+      minWidth: 140,
+      cellRenderer: CategoryCellRenderer,
+      valueGetter: (params) => params.data?.category || "",
     },
   },
   {
@@ -203,7 +225,7 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
   },
 ];
 
-const defaultVisibleColumns = ["name", "description", "sections", "fields", "createdBy", "createdAt", "actions"];
+const defaultVisibleColumns = ["name", "category", "description", "sections", "fields", "createdBy", "createdAt", "actions"];
 
 export default function AdminFormTemplatesPage() {
   usePageTitle("Form Templates");
@@ -255,6 +277,7 @@ export default function AdminFormTemplatesPage() {
     createMutation.mutate({
       name: `${template.name} (Copy)`,
       description: template.description,
+      category: template.category,
       formSchema: template.formSchema,
     } as InsertFormTemplate);
   }, [createMutation]);

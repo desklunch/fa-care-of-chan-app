@@ -4,6 +4,7 @@ import { alias } from "drizzle-orm/pg-core";
 import {
   dealClients,
   dealTags,
+  dealIntakes,
   tags,
   clients,
   deals,
@@ -11,6 +12,11 @@ import {
   brands,
   contacts,
   type DealWithRelations,
+  type DealIntake,
+  type DealIntakeWithRelations,
+  type CreateDealIntake,
+  type UpdateDealIntake,
+  type FormSection,
 } from "@shared/schema";
 
 export interface DealLinkedClient {
@@ -161,5 +167,84 @@ export const dealsStorage = {
       .from(dealTags)
       .innerJoin(tags, eq(dealTags.tagId, tags.id));
     return results;
+  },
+
+  async getDealIntake(dealId: string): Promise<DealIntakeWithRelations | null> {
+    const results = await db
+      .select({
+        id: dealIntakes.id,
+        dealId: dealIntakes.dealId,
+        templateId: dealIntakes.templateId,
+        templateName: dealIntakes.templateName,
+        formSchema: dealIntakes.formSchema,
+        responseData: dealIntakes.responseData,
+        status: dealIntakes.status,
+        completedAt: dealIntakes.completedAt,
+        createdById: dealIntakes.createdById,
+        createdAt: dealIntakes.createdAt,
+        updatedAt: dealIntakes.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+      })
+      .from(dealIntakes)
+      .leftJoin(users, eq(dealIntakes.createdById, users.id))
+      .where(eq(dealIntakes.dealId, dealId));
+
+    if (results.length === 0) return null;
+
+    const r = results[0];
+    return {
+      id: r.id,
+      dealId: r.dealId,
+      templateId: r.templateId,
+      templateName: r.templateName,
+      formSchema: r.formSchema as FormSection[],
+      responseData: r.responseData as Record<string, unknown>,
+      status: r.status,
+      completedAt: r.completedAt,
+      createdById: r.createdById,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      createdBy: r.createdById
+        ? {
+            id: r.createdById,
+            firstName: r.createdByFirstName,
+            lastName: r.createdByLastName,
+          }
+        : null,
+    };
+  },
+
+  async createDealIntake(data: CreateDealIntake, createdById: string): Promise<DealIntake> {
+    const [intake] = await db
+      .insert(dealIntakes)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return intake;
+  },
+
+  async updateDealIntake(dealId: string, data: UpdateDealIntake): Promise<DealIntake | null> {
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.responseData !== undefined) updateData.responseData = data.responseData;
+    if (data.status !== undefined) {
+      updateData.status = data.status;
+      if (data.status === "completed") {
+        updateData.completedAt = new Date();
+      }
+    }
+
+    const [intake] = await db
+      .update(dealIntakes)
+      .set(updateData)
+      .where(eq(dealIntakes.dealId, dealId))
+      .returning();
+    return intake || null;
+  },
+
+  async deleteDealIntake(dealId: string): Promise<void> {
+    await db.delete(dealIntakes).where(eq(dealIntakes.dealId, dealId));
   },
 };

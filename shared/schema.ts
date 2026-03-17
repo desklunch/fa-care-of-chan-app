@@ -1794,6 +1794,7 @@ export const formTemplates = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
+    category: varchar("category", { length: 255 }),
     formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
@@ -1802,6 +1803,7 @@ export const formTemplates = pgTable(
   (table) => [
     index("idx_form_templates_name").on(table.name),
     index("idx_form_templates_created_by").on(table.createdById),
+    index("idx_form_templates_category").on(table.category),
   ],
 );
 
@@ -1909,6 +1911,93 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   }),
 }));
 
+// ==========================================
+// Deal Intakes - structured intake questionnaires per deal
+// ==========================================
+
+export const dealIntakeStatuses = ["draft", "completed"] as const;
+export type DealIntakeStatus = (typeof dealIntakeStatuses)[number];
+
+export const dealIntakes = pgTable(
+  "deal_intakes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }).unique(),
+    templateId: varchar("template_id").references(() => formTemplates.id, { onDelete: "set null" }),
+    templateName: varchar("template_name", { length: 255 }).notNull(),
+    formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
+    responseData: jsonb("response_data").$type<Record<string, unknown>>().notNull().default({}),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    completedAt: timestamp("completed_at"),
+    createdById: varchar("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_deal_intakes_deal").on(table.dealId),
+    index("idx_deal_intakes_template").on(table.templateId),
+    index("idx_deal_intakes_status").on(table.status),
+  ],
+);
+
+export const dealIntakesRelations = relations(dealIntakes, ({ one }) => ({
+  deal: one(deals, {
+    fields: [dealIntakes.dealId],
+    references: [deals.id],
+  }),
+  template: one(formTemplates, {
+    fields: [dealIntakes.templateId],
+    references: [formTemplates.id],
+  }),
+  createdBy: one(users, {
+    fields: [dealIntakes.createdById],
+    references: [users.id],
+  }),
+}));
+
+export type DealIntake = typeof dealIntakes.$inferSelect;
+export type InsertDealIntake = typeof dealIntakes.$inferInsert;
+
+export type DealIntakeWithRelations = DealIntake & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName"> | null;
+};
+
+export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
+  id: true,
+  createdById: true,
+  completedAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  dealId: z.string().min(1),
+  templateId: z.string().optional().nullable(),
+  templateName: z.string().min(1),
+  formSchema: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    fields: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(formFieldTypes),
+      placeholder: z.string().optional(),
+      description: z.string().optional(),
+      options: z.array(z.string()).optional(),
+      required: z.boolean().optional(),
+    })),
+  })).default([]),
+  responseData: z.record(z.unknown()).default({}),
+  status: z.enum(dealIntakeStatuses).default("draft"),
+});
+
+export const updateDealIntakeSchema = z.object({
+  responseData: z.record(z.unknown()).optional(),
+  status: z.enum(dealIntakeStatuses).optional(),
+});
+
+export type CreateDealIntake = z.infer<typeof insertDealIntakeSchema>;
+export type UpdateDealIntake = z.infer<typeof updateDealIntakeSchema>;
+
 // Form outreach types
 export type FormTemplate = typeof formTemplates.$inferSelect;
 export type InsertFormTemplate = typeof formTemplates.$inferInsert;
@@ -1964,6 +2053,7 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
   updatedAt: true,
 }).extend({
   name: z.string().min(1, "Name is required").max(255),
+  category: z.string().max(255).optional().nullable(),
   formSchema: z.array(z.object({
     id: z.string(),
     title: z.string(),
