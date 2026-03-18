@@ -198,8 +198,7 @@ export default function AdminFormTemplateFormPage() {
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Template Details</CardTitle>
-            <CardDescription>Basic information about this form template.</CardDescription>
+            <CardTitle>Template Info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

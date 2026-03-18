@@ -898,7 +898,7 @@ export default function DealDetail() {
 
           </TabsContent>
 
-          <TabsContent value="intake" className="p-4 md:p-6 pt-4 max-w-4xl">
+          <TabsContent value="intake" className="p-4 md:p-6 pt-4 max-w-6xl">
             <DealIntakeTab dealId={id!} canWrite={canWrite} />
           </TabsContent>
 

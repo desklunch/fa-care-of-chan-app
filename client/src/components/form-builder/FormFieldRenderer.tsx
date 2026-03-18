@@ -34,7 +34,13 @@ interface SingleFieldRendererProps {
 
 function renderFieldInput(
   fieldDef: FormFieldType,
-  formField: { value: unknown; onChange: (value: unknown) => void; onBlur: () => void; name: string; ref: React.Ref<never> }
+  formField: {
+    value: unknown;
+    onChange: (value: unknown) => void;
+    onBlur: () => void;
+    name: string;
+    ref: React.Ref<never>;
+  },
 ) {
   const { ref: _ref, ...fieldProps } = formField;
   switch (fieldDef.type) {
@@ -42,7 +48,7 @@ function renderFieldInput(
       return (
         <Input
           {...fieldProps}
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder}
           data-testid={`input-${fieldDef.id}`}
         />
@@ -52,7 +58,7 @@ function renderFieldInput(
         <Input
           {...fieldProps}
           type="email"
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder}
           data-testid={`input-${fieldDef.id}`}
         />
@@ -62,7 +68,7 @@ function renderFieldInput(
         <Input
           {...fieldProps}
           type="tel"
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder}
           data-testid={`input-${fieldDef.id}`}
         />
@@ -72,7 +78,7 @@ function renderFieldInput(
         <Input
           {...fieldProps}
           type="url"
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder}
           data-testid={`input-${fieldDef.id}`}
         />
@@ -82,8 +88,10 @@ function renderFieldInput(
         <Input
           {...fieldProps}
           type="number"
-          value={fieldProps.value as number || ""}
-          onChange={(e) => fieldProps.onChange(e.target.value ? Number(e.target.value) : "")}
+          value={(fieldProps.value as number) || ""}
+          onChange={(e) =>
+            fieldProps.onChange(e.target.value ? Number(e.target.value) : "")
+          }
           placeholder={fieldDef.placeholder}
           data-testid={`input-${fieldDef.id}`}
         />
@@ -93,7 +101,7 @@ function renderFieldInput(
         <Input
           {...fieldProps}
           type="date"
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           data-testid={`input-${fieldDef.id}`}
         />
       );
@@ -101,9 +109,9 @@ function renderFieldInput(
       return (
         <Textarea
           {...fieldProps}
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder}
-          className="resize-none"
+          className=""
           rows={4}
           data-testid={`textarea-${fieldDef.id}`}
         />
@@ -111,11 +119,13 @@ function renderFieldInput(
     case "select":
       return (
         <Select
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           onValueChange={fieldProps.onChange}
         >
           <SelectTrigger data-testid={`select-${fieldDef.id}`}>
-            <SelectValue placeholder={fieldDef.placeholder || "Select an option"} />
+            <SelectValue
+              placeholder={fieldDef.placeholder || "Select an option"}
+            />
           </SelectTrigger>
           <SelectContent>
             {fieldDef.options?.map((option) => (
@@ -164,7 +174,7 @@ function renderFieldInput(
       return (
         <Textarea
           {...fieldProps}
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder || "Enter items, one per line"}
           className="resize-none"
           rows={4}
@@ -175,7 +185,7 @@ function renderFieldInput(
       return (
         <Input
           {...fieldProps}
-          value={fieldProps.value as string || ""}
+          value={(fieldProps.value as string) || ""}
           placeholder={fieldDef.placeholder}
           data-testid={`input-${fieldDef.id}`}
         />
@@ -189,15 +199,27 @@ function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
       control={form.control}
       name={field.id}
       render={({ field: formField }) => (
-        <FormItem className="space-y-2" data-testid={`form-item-${field.id}`}>
-          <FormLabel className={field.required ? "after:content-['*'] after:ml-0.5 after:text-destructive" : ""}>
+        <FormItem
+          className="space-y-0 grid grid-cols-12 w-full gap-6"
+          data-testid={`form-item-${field.id}`}
+        >
+          <FormLabel
+            className={
+              field.required
+                ? "col-span-2 after:content-['*'] after:ml-0.5 after:text-destructive"
+                : "col-span-2 "
+            }
+          >
             {field.name}
           </FormLabel>
-          <FormControl>
+          <FormControl className="col-span-6">
             {renderFieldInput(field, formField)}
           </FormControl>
+
           {field.description && (
-            <FormDescription>{field.description}</FormDescription>
+            <FormDescription className="col-span-4">
+              {field.description}
+            </FormDescription>
           )}
           <FormMessage />
         </FormItem>
@@ -217,7 +239,9 @@ function SectionRenderer({ section, form }: SectionRendererProps) {
       <div className="mb-6">
         <h3 className="text-lg font-semibold">{section.title}</h3>
         {section.description && (
-          <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {section.description}
+          </p>
         )}
       </div>
       <div className="space-y-6">
@@ -247,9 +271,11 @@ export function FormFieldRenderer({ schema, form }: FormFieldRendererProps) {
   );
 }
 
-export function buildValidationRules(schema: FormSection[]): Record<string, { required?: boolean }> {
+export function buildValidationRules(
+  schema: FormSection[],
+): Record<string, { required?: boolean }> {
   const rules: Record<string, { required?: boolean }> = {};
-  
+
   schema.forEach((section) => {
     section.fields.forEach((field) => {
       if (field.required) {
@@ -257,13 +283,15 @@ export function buildValidationRules(schema: FormSection[]): Record<string, { re
       }
     });
   });
-  
+
   return rules;
 }
 
-export function buildDefaultValues(schema: FormSection[]): Record<string, unknown> {
+export function buildDefaultValues(
+  schema: FormSection[],
+): Record<string, unknown> {
   const defaults: Record<string, unknown> = {};
-  
+
   schema.forEach((section) => {
     section.fields.forEach((field) => {
       switch (field.type) {
@@ -279,6 +307,6 @@ export function buildDefaultValues(schema: FormSection[]): Record<string, unknow
       }
     });
   });
-  
+
   return defaults;
 }

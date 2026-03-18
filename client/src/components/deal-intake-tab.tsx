@@ -304,7 +304,7 @@ function IntakeDraftForm({
   };
 
   return (
-    <div className="space-y-4" data-testid="intake-draft-form">
+    <div className="space-y-4 " data-testid="intake-draft-form">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <FileText className="h-5 w-5 text-muted-foreground" />
