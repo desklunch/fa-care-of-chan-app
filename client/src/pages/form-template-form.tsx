@@ -15,6 +15,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { PageLayout } from "@/framework";
 import { FormBuilder } from "@/components/form-builder";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -122,11 +123,15 @@ export default function AdminFormTemplateFormPage() {
       toast({ variant: "destructive", title: "Validation error", description: "Template name is required." });
       return;
     }
+    if (!category) {
+      toast({ variant: "destructive", title: "Validation error", description: "Please select a category." });
+      return;
+    }
     
     const data = {
       name: name.trim(),
       description: description.trim(),
-      category: category.trim() || null,
+      category: category || null,
       formSchema,
     };
 
@@ -213,14 +218,16 @@ export default function AdminFormTemplateFormPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="template-category">Category (Optional)</Label>
-                <Input
-                  id="template-category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g., Client Intake - Corporate Events"
-                  data-testid="input-template-category"
-                />
+                <Label htmlFor="template-category">Category</Label>
+                <Select value={category} onValueChange={setCategory} data-testid="select-template-category">
+                  <SelectTrigger id="template-category" data-testid="select-template-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="client_intake" data-testid="option-category-client-intake">Client Intake</SelectItem>
+                    <SelectItem value="vendor_inquiry" data-testid="option-category-vendor-inquiry">Vendor Inquiry</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">
