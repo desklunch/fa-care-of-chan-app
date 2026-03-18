@@ -96,11 +96,17 @@ function ActionsCellRenderer({ data, context }: ICellRendererParams<FormTemplate
   );
 }
 
+const categoryLabels: Record<string, string> = {
+  client_intake: "Client Intake",
+  vendor_inquiry: "Vendor Inquiry",
+  testing: "Testing",
+};
+
 function CategoryCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
   if (!data) return null;
   return (
     <Badge variant="secondary" data-testid={`badge-category-${data.id}`}>
-      {data.category || "Uncategorized"}
+      {categoryLabels[data.category || ""] || data.category || "Uncategorized"}
     </Badge>
   );
 }
