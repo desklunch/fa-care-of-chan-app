@@ -159,7 +159,7 @@ export default function FormTemplateDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template duplicated", description: "Form template has been duplicated successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -178,7 +178,7 @@ export default function FormTemplateDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template deleted", description: "Form template has been deleted." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -196,8 +196,7 @@ export default function FormTemplateDetailPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Forms" },
-          { label: "Templates", href: "/forms/templates" },
+          { label: "Forms", href: "/forms" },
           { label: "Loading..." },
         ]}
       >
@@ -219,8 +218,7 @@ export default function FormTemplateDetailPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Forms" },
-          { label: "Templates", href: "/forms/templates" },
+          { label: "Forms", href: "/forms" },
           { label: "Not Found" },
         ]}
       >
@@ -232,7 +230,7 @@ export default function FormTemplateDetailPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 The template you're looking for doesn't exist or has been deleted.
               </p>
-              <Button onClick={() => navigate("/forms/templates")}>
+              <Button onClick={() => navigate("/forms")}>
                 Back to Templates
               </Button>
             </CardContent>
@@ -249,14 +247,13 @@ export default function FormTemplateDetailPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Forms" },
-        { label: "Templates", href: "/forms/templates" },
+        { label: "Forms", href: "/forms" },
         { label: template.name },
       ]}
       additionalActions={[
         {
           label: "Edit",
-          href: `/forms/templates/${id}/edit`,
+          href: `/forms/${id}/edit`,
           icon: SquarePen,
         },
         {

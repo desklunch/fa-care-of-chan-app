@@ -120,12 +120,12 @@ export default function AdminFormTemplatesPage() {
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
   const handleRowClick = useCallback((template: FormTemplate) => {
-    navigate(`/forms/templates/${template.id}`);
+    navigate(`/forms/${template.id}`);
   }, [navigate]);
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms" }]}>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-10 bg-muted rounded w-64" />
@@ -143,10 +143,10 @@ export default function AdminFormTemplatesPage() {
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Forms" }, { label: "Templates" }]}
+      breadcrumbs={[{ label: "Forms" }]}
       primaryAction={{
         label: "New Template",
-        href: "/forms/templates/new",
+        href: "/forms/new",
         icon: CircleFadingPlus,
         variant: "default",
       }}

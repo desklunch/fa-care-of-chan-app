@@ -252,7 +252,7 @@ function useLayoutConfig() {
           },
           {
             name: "Forms",
-            href: "/forms/templates",
+            href: "/forms",
             icon: FileText,
             requiredPermission: "admin.settings",
           },
@@ -408,10 +408,10 @@ function AuthenticatedRoutes() {
             <Route path="/forms/requests/new" component={FormRequestForm} />
             <Route path="/forms/requests/:id" component={FormRequestDetail} />
             <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
-            <Route path="/forms/templates" component={FormTemplates} />
-            <Route path="/forms/templates/new" component={FormTemplateForm} />
-            <Route path="/forms/templates/:id" component={FormTemplateDetail} />
-            <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
+            <Route path="/forms/new" component={FormTemplateForm} />
+            <Route path="/forms/:id/edit" component={FormTemplateForm} />
+            <Route path="/forms/:id" component={FormTemplateDetail} />
+            <Route path="/forms" component={FormTemplates} />
             <Route path="/guide" component={Guide} />
             <Route path="/industries" component={Industries} />
             <Route path="/manage/tags" component={ManageTagsPage} />

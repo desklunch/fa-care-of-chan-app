@@ -67,7 +67,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template created", description: "Form template has been created successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -87,7 +87,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template updated", description: "Form template has been updated successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -106,7 +106,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template deleted", description: "Form template has been deleted successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -157,13 +157,13 @@ export default function AdminFormTemplateFormPage() {
       label: "Cancel",
       icon: X,
       variant: "outline" as const,
-      onClick: () => navigate("/forms/templates"),
+      onClick: () => navigate("/forms"),
     },
   ];
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates", href: "/forms/templates" }, { label: isEditing ? "Edit" : "New" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms", href: "/forms" }, { label: isEditing ? "Edit" : "New" }]}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -180,7 +180,7 @@ export default function AdminFormTemplateFormPage() {
 
   if (isEditing && isTemplateLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates", href: "/forms/templates" }, { label: "Edit" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms", href: "/forms" }, { label: "Edit" }]}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -193,8 +193,7 @@ export default function AdminFormTemplateFormPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Forms" },
-        { label: "Templates", href: "/forms/templates" },
+        { label: "Forms", href: "/forms" },
         { label: isEditing ? "Edit Template" : "New Template" },
       ]}
       primaryAction={primaryAction}
@@ -260,7 +259,7 @@ export default function AdminFormTemplateFormPage() {
         <div className="flex justify-end gap-3 pt-2">
           <Button
             variant="outline"
-            onClick={() => navigate("/forms/templates")}
+            onClick={() => navigate("/forms")}
             disabled={isPending}
             data-testid="button-cancel-template"
           >
