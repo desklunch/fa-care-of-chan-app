@@ -1754,6 +1754,11 @@ export const formFieldTypes = [
   "url",
   "email",
   "phone",
+  "location",
+  "eventSchedule",
+  "budgetRange",
+  "services",
+  "tags",
 ] as const;
 export type FormFieldType = (typeof formFieldTypes)[number];
 
@@ -1769,6 +1774,74 @@ export type RecipientType = (typeof recipientTypes)[number];
 export const outreachTokenStatuses = ["pending", "responded", "expired"] as const;
 export type OutreachTokenStatus = (typeof outreachTokenStatuses)[number];
 
+export interface EntityMapping {
+  entityType: string;
+  propertyKey: string;
+}
+
+export interface MappableProperty {
+  key: string;
+  label: string;
+  fieldType: FormFieldType;
+  valueSchema: z.ZodType<unknown>;
+}
+
+const locationItemSchema = z.object({
+  placeId: z.string(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  stateCode: z.string().optional(),
+  country: z.string(),
+  countryCode: z.string(),
+  displayName: z.string(),
+});
+
+const eventScheduleItemSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["primary", "alternative", "range"]),
+  startDate: z.string().optional(),
+  rangeStartMonth: z.number().optional(),
+  rangeStartYear: z.number().optional(),
+  rangeEndMonth: z.number().optional(),
+  rangeEndYear: z.number().optional(),
+});
+
+const eventSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  durationDays: z.number(),
+  scheduleMode: z.enum(["specific", "flexible"]),
+  schedules: z.array(eventScheduleItemSchema),
+});
+
+const budgetRangeSchema = z.object({
+  low: z.number().optional(),
+  high: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export const mappableEntities: Record<string, { label: string; properties: MappableProperty[] }> = {
+  deal: {
+    label: "Deal",
+    properties: [
+      { key: "displayName", label: "Deal Name", fieldType: "text", valueSchema: z.string() },
+      { key: "concept", label: "Concept", fieldType: "textarea", valueSchema: z.string() },
+      { key: "notes", label: "Notes", fieldType: "textarea", valueSchema: z.string() },
+      { key: "nextSteps", label: "Next Steps", fieldType: "textarea", valueSchema: z.string() },
+      { key: "locationsText", label: "Location (Text)", fieldType: "text", valueSchema: z.string() },
+      { key: "projectDate", label: "Project Date", fieldType: "text", valueSchema: z.string() },
+      { key: "budgetLow", label: "Budget Low", fieldType: "number", valueSchema: z.number() },
+      { key: "budgetHigh", label: "Budget High", fieldType: "number", valueSchema: z.number() },
+      { key: "budgetNotes", label: "Budget Notes", fieldType: "textarea", valueSchema: z.string() },
+      { key: "budgetRange", label: "Budget Range (Low/High + Notes)", fieldType: "budgetRange", valueSchema: budgetRangeSchema },
+      { key: "locations", label: "Locations (Structured)", fieldType: "location", valueSchema: z.array(locationItemSchema) },
+      { key: "eventSchedule", label: "Event Schedule", fieldType: "eventSchedule", valueSchema: z.array(eventSchema) },
+      { key: "serviceIds", label: "Services", fieldType: "services", valueSchema: z.array(z.number()) },
+      { key: "tags", label: "Tags", fieldType: "tags", valueSchema: z.array(z.string()) },
+    ],
+  },
+};
+
 // Form field interface (for JSONB storage)
 export interface FormField {
   id: string;
@@ -1778,6 +1851,7 @@ export interface FormField {
   description?: string;
   options?: string[];
   required?: boolean;
+  entityMapping?: EntityMapping;
 }
 
 // Form section interface (for JSONB storage)
@@ -1985,6 +2059,10 @@ export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
       description: z.string().optional(),
       options: z.array(z.string()).optional(),
       required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
     })),
   })).default([]),
   responseData: z.record(z.unknown()).default({}),
@@ -2067,6 +2145,10 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
       description: z.string().optional(),
       options: z.array(z.string()).optional(),
       required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
     })),
   })).default([]),
 });
@@ -2099,6 +2181,10 @@ export const insertFormRequestSchema = createInsertSchema(formRequests).omit({
       description: z.string().optional(),
       options: z.array(z.string()).optional(),
       required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
     })),
   })).default([]),
   dueDate: z.string().optional().nullable(),

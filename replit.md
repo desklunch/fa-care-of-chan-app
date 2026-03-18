@@ -37,7 +37,7 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `contacts/` - Contact CRUD with email/social management (12 routes)
     - `clients/` - Client organizations management (10 routes)
     - `vendors/` - Vendor management (14 routes)
-    - `deals/` - Deal pipeline with service layer, linked clients, deal tags, deal intakes (20 routes)
+    - `deals/` - Deal pipeline with service layer, linked clients, deal tags, deal intakes, intake-to-deal sync (21 routes)
     - `places/` - Google Places API integration (10 routes)
     - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
     - `forms/` - Form templates, requests, and public form submission (15 routes)

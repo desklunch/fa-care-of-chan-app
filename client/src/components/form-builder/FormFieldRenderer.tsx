@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   Select,
@@ -21,7 +22,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
-import type { FormSection, FormField as FormFieldType } from "@shared/schema";
+import { LocationSearch } from "@/components/location-search";
+import { EventScheduleEditor } from "@/components/event-schedule";
+import { TagAssignment } from "@/components/ui/tag-assignment";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import type { FormSection, FormField as FormFieldType, DealLocation, DealEvent, DealService } from "@shared/schema";
 
 interface FormFieldRendererProps {
   schema: FormSection[];
@@ -194,6 +200,45 @@ function renderFieldInput(
           data-testid={`array-${fieldDef.id}`}
         />
       );
+    case "location":
+      return (
+        <LocationSearch
+          value={(fieldProps.value as DealLocation[]) || []}
+          onChange={(locations) => fieldProps.onChange(locations)}
+          testId={`location-${fieldDef.id}`}
+        />
+      );
+    case "eventSchedule":
+      return (
+        <EventScheduleEditor
+          value={(fieldProps.value as DealEvent[]) || []}
+          onChange={(events) => fieldProps.onChange(events)}
+        />
+      );
+    case "budgetRange":
+      return (
+        <BudgetRangeInput
+          value={(fieldProps.value as { low?: number; high?: number; notes?: string }) || {}}
+          onChange={(val) => fieldProps.onChange(val)}
+          testId={`budget-${fieldDef.id}`}
+        />
+      );
+    case "services":
+      return (
+        <ServicesFieldRenderer
+          value={(fieldProps.value as number[]) || []}
+          onChange={(ids) => fieldProps.onChange(ids)}
+          testId={`services-${fieldDef.id}`}
+        />
+      );
+    case "tags":
+      return (
+        <TagAssignment
+          category="Deals"
+          selectedTagIds={(fieldProps.value as string[]) || []}
+          onTagsChange={(ids) => fieldProps.onChange(ids)}
+        />
+      );
     default:
       return (
         <Input
@@ -204,6 +249,102 @@ function renderFieldInput(
         />
       );
   }
+}
+
+function BudgetRangeInput({
+  value,
+  onChange,
+  testId,
+}: {
+  value: { low?: number; high?: number; notes?: string };
+  onChange: (val: { low?: number; high?: number; notes?: string }) => void;
+  testId?: string;
+}) {
+  return (
+    <div className="space-y-3" data-testid={testId}>
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs">Low</Label>
+          <Input
+            type="number"
+            value={value.low ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, low: e.target.value ? Number(e.target.value) : undefined })
+            }
+            placeholder="Min budget"
+            data-testid={testId ? `${testId}-low` : "input-budget-low"}
+          />
+        </div>
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs">High</Label>
+          <Input
+            type="number"
+            value={value.high ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, high: e.target.value ? Number(e.target.value) : undefined })
+            }
+            placeholder="Max budget"
+            data-testid={testId ? `${testId}-high` : "input-budget-high"}
+          />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Notes</Label>
+        <Textarea
+          value={value.notes || ""}
+          onChange={(e) => onChange({ ...value, notes: e.target.value })}
+          placeholder="Budget notes..."
+          className="resize-none"
+          rows={2}
+          data-testid={testId ? `${testId}-notes` : "textarea-budget-notes"}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ServicesFieldRenderer({
+  value,
+  onChange,
+  testId,
+}: {
+  value: number[];
+  onChange: (ids: number[]) => void;
+  testId?: string;
+}) {
+  const { data: dealServices = [] } = useQuery<DealService[]>({
+    queryKey: ["/api/deal-services"],
+  });
+
+  return (
+    <div className="grid grid-cols-3 gap-3" data-testid={testId}>
+      {dealServices
+        .filter((s) => s.isActive)
+        .map((service) => {
+          const isSelected = value.includes(service.id);
+          return (
+            <Badge
+              key={service.id}
+              variant={isSelected ? "default" : "outline"}
+              className={cn(
+                "cursor-pointer select-none toggle-elevate",
+                isSelected && "toggle-elevated",
+              )}
+              onClick={() => {
+                if (isSelected) {
+                  onChange(value.filter((id) => id !== service.id));
+                } else {
+                  onChange([...value, service.id]);
+                }
+              }}
+              data-testid={`badge-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              {service.name}
+            </Badge>
+          );
+        })}
+    </div>
+  );
 }
 
 function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
@@ -315,6 +456,21 @@ export function buildDefaultValues(
           break;
         case "number":
           defaults[field.id] = "";
+          break;
+        case "location":
+          defaults[field.id] = [];
+          break;
+        case "eventSchedule":
+          defaults[field.id] = [];
+          break;
+        case "budgetRange":
+          defaults[field.id] = {};
+          break;
+        case "services":
+          defaults[field.id] = [];
+          break;
+        case "tags":
+          defaults[field.id] = [];
           break;
         default:
           defaults[field.id] = "";

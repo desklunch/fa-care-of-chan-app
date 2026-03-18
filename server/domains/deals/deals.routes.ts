@@ -5,7 +5,7 @@ import { logAuditEvent } from "../../audit";
 import { handleServiceError } from "../../lib/route-helpers";
 import { storage } from "../../storage";
 import { DealsService } from "../../services/deals.service";
-import { dealStatuses, type DealStatus, insertDealIntakeSchema, updateDealIntakeSchema } from "@shared/schema";
+import { dealStatuses, type DealStatus, type FormSection, type FormField, insertDealIntakeSchema, updateDealIntakeSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { formsStorage } from "../forms/forms.storage";
 
@@ -1017,6 +1017,173 @@ export function registerDealsRoutes(app: Express): void {
       res.status(204).send();
     } catch (error) {
       handleServiceError(res, error, "Failed to delete deal intake");
+    }
+  });
+
+  app.post("/api/deals/:dealId/intake/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      const { dryRun } = req.body;
+      const dealId = req.params.dealId;
+      const actorId = req.user.claims.sub;
+
+      const intake = await dealsStorage.getDealIntake(dealId);
+      if (!intake) {
+        return res.status(404).json({ message: "No intake found for this deal" });
+      }
+
+      const deal = await dealsService.getById(dealId);
+
+      const formSchema = intake.formSchema as FormSection[];
+      const responseData = intake.responseData as Record<string, unknown>;
+
+      const mappedFields: FormField[] = [];
+      for (const section of formSchema) {
+        for (const field of section.fields) {
+          if (field.entityMapping?.entityType === "deal" && field.entityMapping?.propertyKey) {
+            mappedFields.push(field);
+          }
+        }
+      }
+
+      if (mappedFields.length === 0) {
+        return res.json({ changes: [], message: "No mapped fields found" });
+      }
+
+      const changes: Array<{
+        propertyKey: string;
+        label: string;
+        currentValue: unknown;
+        newValue: unknown;
+        fieldId: string;
+      }> = [];
+
+      const deepEqual = (a: unknown, b: unknown): boolean => {
+        if (a === b) return true;
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        if (typeof a !== typeof b) return false;
+        if (Array.isArray(a) && Array.isArray(b)) {
+          if (a.length !== b.length) return false;
+          return a.every((item, i) => deepEqual(item, b[i]));
+        }
+        if (typeof a === "object" && typeof b === "object") {
+          const aObj = a as Record<string, unknown>;
+          const bObj = b as Record<string, unknown>;
+          const aKeys = Object.keys(aObj).sort();
+          const bKeys = Object.keys(bObj).sort();
+          if (aKeys.length !== bKeys.length) return false;
+          return aKeys.every((key, i) => key === bKeys[i] && deepEqual(aObj[key], bObj[key]));
+        }
+        return a === b;
+      };
+
+      const dealUpdates: Record<string, unknown> = {};
+      let tagIds: string[] | null = null;
+
+      for (const field of mappedFields) {
+        const propKey = field.entityMapping!.propertyKey;
+        const responseValue = responseData[field.id];
+
+        if (responseValue === undefined || responseValue === null || responseValue === "") continue;
+        if (Array.isArray(responseValue) && responseValue.length === 0) continue;
+        if (typeof responseValue === "object" && !Array.isArray(responseValue) && Object.keys(responseValue as object).length === 0) continue;
+
+        const entityDef = mappableEntities.deal;
+        const propDef = entityDef.properties.find(p => p.key === propKey);
+        if (!propDef) continue;
+        const label = propDef.label;
+
+        const parseResult = propDef.valueSchema.safeParse(responseValue);
+        if (!parseResult.success) continue;
+
+        if (propKey === "budgetRange") {
+          const budgetVal = responseValue as { low?: number; high?: number; notes?: string };
+          if (budgetVal.low !== undefined && !deepEqual(deal.budgetLow, budgetVal.low)) {
+            changes.push({
+              propertyKey: "budgetLow",
+              label: "Budget Low",
+              currentValue: deal.budgetLow,
+              newValue: budgetVal.low,
+              fieldId: field.id,
+            });
+            dealUpdates.budgetLow = budgetVal.low;
+          }
+          if (budgetVal.high !== undefined && !deepEqual(deal.budgetHigh, budgetVal.high)) {
+            changes.push({
+              propertyKey: "budgetHigh",
+              label: "Budget High",
+              currentValue: deal.budgetHigh,
+              newValue: budgetVal.high,
+              fieldId: field.id,
+            });
+            dealUpdates.budgetHigh = budgetVal.high;
+          }
+          if (budgetVal.notes && !deepEqual(deal.budgetNotes, budgetVal.notes)) {
+            changes.push({
+              propertyKey: "budgetNotes",
+              label: "Budget Notes",
+              currentValue: deal.budgetNotes,
+              newValue: budgetVal.notes,
+              fieldId: field.id,
+            });
+            dealUpdates.budgetNotes = budgetVal.notes;
+          }
+        } else if (propKey === "tags") {
+          const currentTagIds = await dealsStorage.getDealTagIds(dealId);
+          const newTagIds = responseValue as string[];
+          const tagsMatch = currentTagIds.length === newTagIds.length && [...currentTagIds].sort().every((v, i) => v === [...newTagIds].sort()[i]);
+          if (!tagsMatch) {
+            tagIds = newTagIds;
+            changes.push({
+              propertyKey: "tags",
+              label,
+              currentValue: currentTagIds,
+              newValue: tagIds,
+              fieldId: field.id,
+            });
+          }
+        } else {
+          const currentValue = (deal as Record<string, unknown>)[propKey];
+          if (!deepEqual(currentValue, responseValue)) {
+            changes.push({
+              propertyKey: propKey,
+              label,
+              currentValue,
+              newValue: responseValue,
+              fieldId: field.id,
+            });
+            dealUpdates[propKey] = responseValue;
+          }
+        }
+      }
+
+      if (changes.length === 0) {
+        return res.json({ changes: [], message: "No data to sync" });
+      }
+
+      if (dryRun) {
+        return res.json({ changes, dryRun: true });
+      }
+
+      if (Object.keys(dealUpdates).length > 0) {
+        await dealsService.update(dealId, dealUpdates, actorId);
+      }
+
+      if (tagIds !== null) {
+        await dealsStorage.setDealTags(dealId, tagIds);
+      }
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal",
+        entityId: dealId,
+        status: "success",
+        metadata: { source: "intake_sync", changedProperties: changes.map(c => c.propertyKey) },
+      });
+
+      res.json({ changes, applied: true });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to sync intake to deal");
     }
   });
 }

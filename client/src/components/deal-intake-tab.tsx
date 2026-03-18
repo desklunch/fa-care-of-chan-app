@@ -34,17 +34,51 @@ import {
   Trash2,
   RotateCcw,
   Save,
+  ArrowRightLeft,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
   DealIntakeWithRelations,
   FormTemplate,
   FormSection,
+  FormField,
 } from "@shared/schema";
 
 interface DealIntakeTabProps {
   dealId: string;
   canWrite: boolean;
+}
+
+function formatReadOnlyValue(field: FormField, value: unknown): string {
+  if (value === undefined || value === null || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+
+  if (field.type === "location" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return value.map((v: { displayName?: string }) => v.displayName || "Unknown").join(", ");
+  }
+  if (field.type === "eventSchedule" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return `${value.length} event(s)`;
+  }
+  if (field.type === "budgetRange" && typeof value === "object") {
+    const obj = value as { low?: number; high?: number; notes?: string };
+    const parts: string[] = [];
+    if (obj.low !== undefined) parts.push(`Low: $${obj.low.toLocaleString()}`);
+    if (obj.high !== undefined) parts.push(`High: $${obj.high.toLocaleString()}`);
+    if (obj.notes) parts.push(`Notes: ${obj.notes}`);
+    return parts.length > 0 ? parts.join(" | ") : "—";
+  }
+  if (field.type === "services" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return `${value.length} service(s) selected`;
+  }
+  if (field.type === "tags" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return `${value.length} tag(s) selected`;
+  }
+
+  return String(value);
 }
 
 function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]; responseData: Record<string, unknown> }) {
@@ -61,14 +95,7 @@ function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]
           <div className="space-y-4">
             {section.fields.map((field) => {
               const value = responseData[field.id];
-              let displayValue: string;
-              if (value === undefined || value === null || value === "") {
-                displayValue = "—";
-              } else if (typeof value === "boolean") {
-                displayValue = value ? "Yes" : "No";
-              } else {
-                displayValue = String(value);
-              }
+              const displayValue = formatReadOnlyValue(field, value);
 
               return (
                 <div key={field.id} className="space-y-1" data-testid={`readonly-field-${field.id}`}>
@@ -326,6 +353,7 @@ function IntakeDraftForm({
         </div>
         {canWrite && (
           <div className="flex items-center gap-2">
+            <SyncToDealButton dealId={dealId} intake={intake} canWrite={canWrite} />
             <Button
               variant="outline"
               size="sm"
@@ -423,6 +451,157 @@ function IntakeDraftForm({
   );
 }
 
+function hasMappedFieldsWithData(formSchema: FormSection[], responseData: Record<string, unknown>): boolean {
+  for (const section of formSchema) {
+    for (const field of section.fields) {
+      if (field.entityMapping?.entityType === "deal" && field.entityMapping?.propertyKey) {
+        const value = responseData[field.id];
+        if (value !== undefined && value !== null && value !== "") {
+          if (Array.isArray(value) && value.length === 0) continue;
+          if (typeof value === "object" && !Array.isArray(value) && Object.keys(value as object).length === 0) continue;
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function formatSyncValue(value: unknown): string {
+  if (value === null || value === undefined) return "—";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    if (typeof value[0] === "object" && "displayName" in value[0]) {
+      return value.map((v: { displayName: string }) => v.displayName).join(", ");
+    }
+    return `${value.length} item(s)`;
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const parts: string[] = [];
+    if (obj.low !== undefined) parts.push(`Low: ${obj.low}`);
+    if (obj.high !== undefined) parts.push(`High: ${obj.high}`);
+    if (obj.notes) parts.push(`Notes: ${obj.notes}`);
+    return parts.length > 0 ? parts.join(", ") : JSON.stringify(value);
+  }
+  return String(value);
+}
+
+interface SyncChange {
+  propertyKey: string;
+  label: string;
+  currentValue: unknown;
+  newValue: unknown;
+  fieldId: string;
+}
+
+function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake: DealIntakeWithRelations; canWrite: boolean }) {
+  const { toast } = useToast();
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
+  const [syncChanges, setSyncChanges] = useState<SyncChange[]>([]);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+  const formSchema = intake.formSchema as FormSection[];
+  const responseData = intake.responseData as Record<string, unknown>;
+  const hasMapped = hasMappedFieldsWithData(formSchema, responseData);
+
+  const handlePreview = async () => {
+    setIsPreviewLoading(true);
+    try {
+      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, { dryRun: true });
+      const data = await res.json();
+      setSyncChanges(data.changes || []);
+      setShowSyncDialog(true);
+    } catch (error: unknown) {
+      toast({ variant: "destructive", title: "Failed to preview sync", description: error instanceof Error ? error.message : "Unknown error" });
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, { dryRun: false });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "tags"] });
+      setShowSyncDialog(false);
+      toast({ title: "Deal synced", description: "Deal properties have been updated from intake data." });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: "Failed to sync", description: error.message });
+    },
+  });
+
+  if (!hasMapped || !canWrite) return null;
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handlePreview}
+        disabled={isPreviewLoading}
+        data-testid="button-sync-to-deal"
+      >
+        {isPreviewLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <ArrowRightLeft className="h-4 w-4" />
+        )}
+        Sync to Deal
+      </Button>
+
+      <AlertDialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sync Intake to Deal</AlertDialogTitle>
+            <AlertDialogDescription>
+              The following deal properties will be updated from the intake responses. Existing values will be overwritten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {syncChanges.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">No data to sync. Fields are either empty or have no mapped values.</p>
+          ) : (
+            <div className="max-h-[300px] overflow-auto space-y-3 py-2">
+              {syncChanges.map((change) => (
+                <div key={change.propertyKey} className="border rounded-md p-3 space-y-1" data-testid={`sync-change-${change.propertyKey}`}>
+                  <p className="text-sm font-medium">{change.label}</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Current:</span>
+                      <p className="truncate">{formatSyncValue(change.currentValue)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">New:</span>
+                      <p className="truncate">{formatSyncValue(change.newValue)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-sync">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending || syncChanges.length === 0}
+              data-testid="button-confirm-sync"
+            >
+              {syncMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Apply Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
 function IntakeCompletedView({
   dealId,
   intake,
@@ -469,15 +648,18 @@ function IntakeCompletedView({
           </Badge>
         </div>
         {canWrite && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRestartDialog(true)}
-            data-testid="button-restart-intake"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Restart
-          </Button>
+          <div className="flex items-center gap-2">
+            <SyncToDealButton dealId={dealId} intake={intake} canWrite={canWrite} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowRestartDialog(true)}
+              data-testid="button-restart-intake"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Restart
+            </Button>
+          </div>
         )}
       </div>
 
