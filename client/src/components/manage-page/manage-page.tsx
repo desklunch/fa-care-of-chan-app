@@ -298,6 +298,7 @@ function SectionContent<T extends { id: string }>({
     emptyMessage: config.emptyMessage,
     emptyDescription: config.emptyDescription,
     filters: config.filters,
+    hideColumnSelector: true,
   };
 
   return <DataGridPage {...dataGridProps} />;
