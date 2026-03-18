@@ -280,23 +280,19 @@ export default function DealDetail() {
         { label: "Deals", href: "/deals" },
         { label: deal.displayName },
       ]}
-      primaryAction={canWrite ? {
-        label: "Edit",
-        href: `/deals/${id}/edit`,
-        icon: PenBox,
-      } : undefined}
-      additionalActions={
-        canDelete
-          ? [
-              {
-                label: "Delete",
-                onClick: () => setShowDeleteDialog(true),
-                icon: Trash2,
-                variant: "destructive",
-              },
-            ]
-          : undefined
-      }
+      additionalActions={[
+        ...(canWrite ? [{
+          label: "Edit Deal",
+          href: `/deals/${id}/edit`,
+          icon: PenBox,
+        }] : []),
+        ...(canDelete ? [{
+          label: "Delete Deal",
+          onClick: () => setShowDeleteDialog(true),
+          icon: Trash2,
+          variant: "destructive" as const,
+        }] : []),
+      ]}
     >
       <div className="">
         <Tabs defaultValue="overview" className="w-full">
