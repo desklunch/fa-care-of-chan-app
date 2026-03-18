@@ -33,10 +33,13 @@ import {
 } from "@/components/ui/tooltip";
 
 function SectionTooltip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Tooltip>
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
-        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help inline-block ml-1.5 flex-shrink-0" data-testid="icon-help" />
+        <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex items-center focus:outline-none">
+          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-pointer inline-block ml-1.5 flex-shrink-0" data-testid="icon-help" />
+        </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed p-3">
         {text}
