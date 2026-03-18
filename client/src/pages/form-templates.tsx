@@ -1,49 +1,18 @@
-import { useState, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Badge } from "@/components/ui/badge";
 import {
   CircleFadingPlus,
-  MoreVertical,
-  SquarePen,
-  Trash2,
-  Copy,
   User,
 } from "lucide-react";
-import type { FormTemplate, FormTemplateWithRelations, InsertFormTemplate } from "@shared/schema";
+import type { FormTemplate, FormTemplateWithRelations } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
-
-interface GridContext {
-  onEdit: (template: FormTemplate) => void;
-  onDuplicate: (template: FormTemplate) => void;
-  onDelete: (template: FormTemplate) => void;
-}
 
 function NameCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
   if (!data) return null;
@@ -65,36 +34,6 @@ function CreatedByCellRenderer({ data }: ICellRendererParams<FormTemplateWithRel
   );
 }
 
-function ActionsCellRenderer({ data, context }: ICellRendererParams<FormTemplate, unknown, GridContext>) {
-  if (!data || !context) return null;
-  
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon" data-testid={`button-template-menu-${data.id}`}>
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onEdit(data); }}>
-          <SquarePen className="h-4 w-4 mr-2" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); context.onDuplicate(data); }}>
-          <Copy className="h-4 w-4 mr-2" />
-          Duplicate
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive"
-          onClick={(e) => { e.stopPropagation(); context.onDelete(data); }}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 const categoryLabels: Record<string, string> = {
   client_intake: "Client Intake",
@@ -171,95 +110,18 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
       cellRenderer: DateCellRenderer,
     },
   },
-  {
-    id: "actions",
-    headerName: "",
-    category: "Actions",
-    toggleable: false,
-    colDef: {
-      flex: 1,
-      minWidth: 60,
-      sortable: false,
-      filter: false,
-      cellRenderer: ActionsCellRenderer,
-    },
-  },
 ];
 
-const defaultVisibleColumns = ["name", "category", "description", "createdBy", "createdAt", "actions"];
+const defaultVisibleColumns = ["name", "category", "description", "createdBy", "createdAt"];
 
 export default function AdminFormTemplatesPage() {
   usePageTitle("Form Templates");
   const [, navigate] = useProtectedLocation();
-  const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
-
-  const [deleteTemplate, setDeleteTemplate] = useState<FormTemplate | null>(null);
-
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertFormTemplate) => {
-      const res = await apiRequest("POST", "/api/form-templates", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      toast({ title: "Template duplicated", description: "Form template has been duplicated successfully." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to duplicate template." });
-      }
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/form-templates/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      setDeleteTemplate(null);
-      toast({ title: "Template deleted", description: "Form template has been deleted." });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
-        navigate("/");
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to delete template." });
-      }
-    },
-  });
-
-  const handleDuplicate = useCallback((template: FormTemplate) => {
-    createMutation.mutate({
-      name: `${template.name} (Copy)`,
-      description: template.description,
-      category: template.category,
-      formSchema: template.formSchema,
-    } as InsertFormTemplate);
-  }, [createMutation]);
-
-  const handleEdit = useCallback((template: FormTemplate) => {
-    navigate(`/forms/templates/${template.id}/edit`);
-  }, [navigate]);
-
-  const handleDelete = useCallback((template: FormTemplate) => {
-    setDeleteTemplate(template);
-  }, []);
 
   const handleRowClick = useCallback((template: FormTemplate) => {
     navigate(`/forms/templates/${template.id}`);
   }, [navigate]);
-
-  const gridContext: GridContext = {
-    onEdit: handleEdit,
-    onDuplicate: handleDuplicate,
-    onDelete: handleDelete,
-  };
 
   if (isAuthLoading) {
     return (
@@ -297,30 +159,9 @@ export default function AdminFormTemplatesPage() {
         searchPlaceholder="Search templates..."
         onRowClick={handleRowClick}
         getRowId={(template: FormTemplate) => template.id}
-        context={gridContext}
         emptyMessage="No form templates yet"
         emptyDescription="Create a template to get started with custom forms."
       />
-
-      <AlertDialog open={!!deleteTemplate} onOpenChange={(open) => !open && setDeleteTemplate(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deleteTemplate?.name}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteTemplate && deleteMutation.mutate(deleteTemplate.id)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </PageLayout>
   );
 }
