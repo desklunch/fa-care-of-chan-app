@@ -34,10 +34,9 @@ import {
   SquarePen,
   Trash2,
   Copy,
-  Layers,
   User,
 } from "lucide-react";
-import type { FormTemplate, FormTemplateWithRelations, FormSection, InsertFormTemplate } from "@shared/schema";
+import type { FormTemplate, FormTemplateWithRelations, InsertFormTemplate } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
 interface GridContext {
@@ -55,25 +54,6 @@ function NameCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
   );
 }
 
-function SectionCountCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
-  if (!data) return null;
-  const sectionCount = (data.formSchema as FormSection[])?.length || 0;
-  return (
-    <span className="flex items-center gap-1 text-muted-foreground">
-      <Layers className="h-3 w-3" />
-      {sectionCount}
-    </span>
-  );
-}
-
-function FieldCountCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
-  if (!data) return null;
-  const fieldCount = (data.formSchema as FormSection[])?.reduce(
-    (acc, section) => acc + section.fields.length,
-    0
-  ) || 0;
-  return <span className="text-muted-foreground">{fieldCount}</span>;
-}
 
 function CreatedByCellRenderer({ data }: ICellRendererParams<FormTemplateWithRelations>) {
   if (!data?.createdBy) return <span className="text-muted-foreground">—</span>;
@@ -161,31 +141,6 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
     },
   },
   {
-    id: "sections",
-    headerName: "Sections",
-    category: "Structure",
-    colDef: {
-      flex: 1,
-      minWidth: 100,
-      cellRenderer: SectionCountCellRenderer,
-      valueGetter: (params) => (params.data?.formSchema as FormSection[])?.length || 0,
-    },
-  },
-  {
-    id: "fields",
-    headerName: "Fields",
-    category: "Structure",
-    colDef: {
-      flex: 1,
-      minWidth: 80,
-      cellRenderer: FieldCountCellRenderer,
-      valueGetter: (params) => 
-        (params.data?.formSchema as FormSection[])?.reduce(
-          (acc, section) => acc + section.fields.length, 0
-        ) || 0,
-    },
-  },
-  {
     id: "createdBy",
     headerName: "Created By",
     category: "Info",
@@ -225,7 +180,7 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
   },
 ];
 
-const defaultVisibleColumns = ["name", "category", "description", "sections", "fields", "createdBy", "createdAt", "actions"];
+const defaultVisibleColumns = ["name", "category", "description", "createdBy", "createdAt", "actions"];
 
 export default function AdminFormTemplatesPage() {
   usePageTitle("Form Templates");
