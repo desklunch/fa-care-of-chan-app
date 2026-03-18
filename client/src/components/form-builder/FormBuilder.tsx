@@ -61,7 +61,6 @@ import {
   FileEdit,
   MapPin,
   CalendarRange,
-  DollarSign,
   Briefcase,
   Tag,
   Unlink,
@@ -96,7 +95,6 @@ const fieldTypeIcons: Record<FormFieldType, typeof Type> = {
   array: Layers,
   location: MapPin,
   eventSchedule: CalendarRange,
-  budgetRange: DollarSign,
   services: Briefcase,
   tags: Tag,
 };
@@ -116,7 +114,6 @@ const fieldTypeLabels: Record<FormFieldType, string> = {
   array: "List/Array",
   location: "Location",
   eventSchedule: "Event Schedule",
-  budgetRange: "Budget Range",
   services: "Services",
   tags: "Tags",
 };

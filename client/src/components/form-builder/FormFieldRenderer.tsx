@@ -215,14 +215,6 @@ function renderFieldInput(
           onChange={(events) => fieldProps.onChange(events)}
         />
       );
-    case "budgetRange":
-      return (
-        <BudgetRangeInput
-          value={(fieldProps.value as { low?: number; high?: number; notes?: string }) || {}}
-          onChange={(val) => fieldProps.onChange(val)}
-          testId={`budget-${fieldDef.id}`}
-        />
-      );
     case "services":
       return (
         <ServicesFieldRenderer
@@ -249,58 +241,6 @@ function renderFieldInput(
         />
       );
   }
-}
-
-function BudgetRangeInput({
-  value,
-  onChange,
-  testId,
-}: {
-  value: { low?: number; high?: number; notes?: string };
-  onChange: (val: { low?: number; high?: number; notes?: string }) => void;
-  testId?: string;
-}) {
-  return (
-    <div className="space-y-3" data-testid={testId}>
-      <div className="flex gap-3">
-        <div className="flex-1 space-y-1">
-          <Label className="text-xs">Low</Label>
-          <Input
-            type="number"
-            value={value.low ?? ""}
-            onChange={(e) =>
-              onChange({ ...value, low: e.target.value ? Number(e.target.value) : undefined })
-            }
-            placeholder="Min budget"
-            data-testid={testId ? `${testId}-low` : "input-budget-low"}
-          />
-        </div>
-        <div className="flex-1 space-y-1">
-          <Label className="text-xs">High</Label>
-          <Input
-            type="number"
-            value={value.high ?? ""}
-            onChange={(e) =>
-              onChange({ ...value, high: e.target.value ? Number(e.target.value) : undefined })
-            }
-            placeholder="Max budget"
-            data-testid={testId ? `${testId}-high` : "input-budget-high"}
-          />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Notes</Label>
-        <Textarea
-          value={value.notes || ""}
-          onChange={(e) => onChange({ ...value, notes: e.target.value })}
-          placeholder="Budget notes..."
-          className="resize-none"
-          rows={2}
-          data-testid={testId ? `${testId}-notes` : "textarea-budget-notes"}
-        />
-      </div>
-    </div>
-  );
 }
 
 function ServicesFieldRenderer({
@@ -462,9 +402,6 @@ export function buildDefaultValues(
           break;
         case "eventSchedule":
           defaults[field.id] = [];
-          break;
-        case "budgetRange":
-          defaults[field.id] = {};
           break;
         case "services":
           defaults[field.id] = [];

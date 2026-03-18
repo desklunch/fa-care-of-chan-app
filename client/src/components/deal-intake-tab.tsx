@@ -61,14 +61,6 @@ function formatReadOnlyValue(field: FormField, value: unknown): string {
     if (value.length === 0) return "—";
     return `${value.length} event(s)`;
   }
-  if (field.type === "budgetRange" && typeof value === "object") {
-    const obj = value as { low?: number; high?: number; notes?: string };
-    const parts: string[] = [];
-    if (obj.low !== undefined) parts.push(`Low: $${obj.low.toLocaleString()}`);
-    if (obj.high !== undefined) parts.push(`High: $${obj.high.toLocaleString()}`);
-    if (obj.notes) parts.push(`Notes: ${obj.notes}`);
-    return parts.length > 0 ? parts.join(" | ") : "—";
-  }
   if (field.type === "services" && Array.isArray(value)) {
     if (value.length === 0) return "—";
     return `${value.length} service(s) selected`;

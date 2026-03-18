@@ -1756,7 +1756,6 @@ export const formFieldTypes = [
   "phone",
   "location",
   "eventSchedule",
-  "budgetRange",
   "services",
   "tags",
 ] as const;
@@ -1814,12 +1813,6 @@ const eventSchema = z.object({
   schedules: z.array(eventScheduleItemSchema),
 });
 
-const budgetRangeSchema = z.object({
-  low: z.number().optional(),
-  high: z.number().optional(),
-  notes: z.string().optional(),
-});
-
 export const mappableEntities: Record<string, { label: string; properties: MappableProperty[] }> = {
   deal: {
     label: "Deal",
@@ -1833,7 +1826,6 @@ export const mappableEntities: Record<string, { label: string; properties: Mappa
       { key: "budgetLow", label: "Budget Low", fieldType: "number", valueSchema: z.number() },
       { key: "budgetHigh", label: "Budget High", fieldType: "number", valueSchema: z.number() },
       { key: "budgetNotes", label: "Budget Notes", fieldType: "textarea", valueSchema: z.string() },
-      { key: "budgetRange", label: "Budget Range (Low/High + Notes)", fieldType: "budgetRange", valueSchema: budgetRangeSchema },
       { key: "locations", label: "Locations (Structured)", fieldType: "location", valueSchema: z.array(locationItemSchema) },
       { key: "eventSchedule", label: "Event Schedule", fieldType: "eventSchedule", valueSchema: z.array(eventSchema) },
       { key: "serviceIds", label: "Services", fieldType: "services", valueSchema: z.array(z.number()) },

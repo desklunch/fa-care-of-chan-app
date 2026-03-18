@@ -1096,39 +1096,7 @@ export function registerDealsRoutes(app: Express): void {
         const parseResult = propDef.valueSchema.safeParse(responseValue);
         if (!parseResult.success) continue;
 
-        if (propKey === "budgetRange") {
-          const budgetVal = responseValue as { low?: number; high?: number; notes?: string };
-          if (budgetVal.low !== undefined && !deepEqual(deal.budgetLow, budgetVal.low)) {
-            changes.push({
-              propertyKey: "budgetLow",
-              label: "Budget Low",
-              currentValue: deal.budgetLow,
-              newValue: budgetVal.low,
-              fieldId: field.id,
-            });
-            dealUpdates.budgetLow = budgetVal.low;
-          }
-          if (budgetVal.high !== undefined && !deepEqual(deal.budgetHigh, budgetVal.high)) {
-            changes.push({
-              propertyKey: "budgetHigh",
-              label: "Budget High",
-              currentValue: deal.budgetHigh,
-              newValue: budgetVal.high,
-              fieldId: field.id,
-            });
-            dealUpdates.budgetHigh = budgetVal.high;
-          }
-          if (budgetVal.notes && !deepEqual(deal.budgetNotes, budgetVal.notes)) {
-            changes.push({
-              propertyKey: "budgetNotes",
-              label: "Budget Notes",
-              currentValue: deal.budgetNotes,
-              newValue: budgetVal.notes,
-              fieldId: field.id,
-            });
-            dealUpdates.budgetNotes = budgetVal.notes;
-          }
-        } else if (propKey === "tags") {
+        if (propKey === "tags") {
           const currentTagIds = await dealsStorage.getDealTagIds(dealId);
           const newTagIds = responseValue as string[];
           const tagsMatch = currentTagIds.length === newTagIds.length && [...currentTagIds].sort().every((v, i) => v === [...newTagIds].sort()[i]);
