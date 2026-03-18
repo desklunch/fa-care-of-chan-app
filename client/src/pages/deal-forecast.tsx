@@ -24,7 +24,26 @@ import {
   Clock,
   Loader2,
   X,
+  HelpCircle,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+
+function SectionTooltip({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help inline-block ml-1.5 flex-shrink-0" data-testid="icon-help" />
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed p-3">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 import {
   BarChart,
   Bar,
@@ -357,8 +376,9 @@ export default function DealForecast() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card data-testid="card-weighted-pipeline">
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
               Weighted Pipeline
+              <SectionTooltip text="Sum of the probability-adjusted value of every deal in the forecast. Each deal's weighted value is calculated as: (budget low + budget high) / 2 multiplied by the stage win probability (e.g. Prospecting = 10%, Proposal = 25%, Contracting = 60%, In Progress = 80%, Final Invoicing = 95%). Includes all deals with an earliest event date within the selected horizon from the current or simulated as-of date, regardless of deal status. Deals in stages without a defined probability contribute zero weighted value." />
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -374,8 +394,9 @@ export default function DealForecast() {
 
         <Card data-testid="card-unweighted-pipeline">
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
               Unweighted Pipeline
+              <SectionTooltip text="Sum of the full estimated value of every deal in the forecast without applying any probability weighting. Each deal's value is the average of its low and high budget estimates ((low + high) / 2). This represents the best-case total revenue if every deal closes. Includes all deals with an earliest event date within the selected horizon from the current or simulated as-of date, regardless of deal status." />
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -391,8 +412,9 @@ export default function DealForecast() {
 
         <Card data-testid="card-deal-count">
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
               Deals in Forecast
+              <SectionTooltip text="Total number of deals included in the current forecast. A deal is included when its earliest event date falls within the selected forecast horizon (3, 6, or 12 months from the current or simulated as-of date). The earliest event date is a single stored date on each deal, not every scheduled event. All matching deals are counted regardless of their current pipeline stage or status." />
             </CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -408,8 +430,9 @@ export default function DealForecast() {
 
         <Card data-testid="card-quarter-revenue">
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
               Current Quarter
+              <SectionTooltip text="Weighted pipeline value for deals with event dates in the current calendar quarter only. Calculated by summing each qualifying deal's average budget multiplied by its stage win probability. Includes all deals in the forecast whose event month and year fall in the current quarter, regardless of status." />
             </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -426,8 +449,9 @@ export default function DealForecast() {
 
       <Card data-testid="card-revenue-chart">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-base font-semibold">
+          <CardTitle className="text-base font-semibold flex items-center">
             Revenue Projection by Month
+            <SectionTooltip text="Bar chart showing projected revenue for each month in the forecast horizon. Deals are assigned to months based on their earliest event date. 'Weighted' bars show each deal's average budget multiplied by its stage win probability. 'Unweighted' bars show the full average budget without probability adjustment. All deals in the horizon are included regardless of status. You can toggle between viewing weighted only, unweighted only, or both side by side." />
           </CardTitle>
           <div className="flex items-center gap-2">
             {(["both", "weighted", "unweighted"] as ChartMode[]).map((mode) => (
@@ -499,8 +523,9 @@ export default function DealForecast() {
 
       <Card data-testid="card-workload-timeline">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
+          <CardTitle className="text-base font-semibold flex items-center">
             Workload Density
+            <SectionTooltip text="Visualizes how busy each month will be based on total production days. Deals are grouped by the month of their earliest event date. Each deal contributes its combined event schedule duration (in days); deals with no schedule or zero total duration default to 1 day. Bar height and color intensity reflect total production days per month relative to the busiest month. The count below each bar shows how many deals fall in that month. Use this to spot capacity bottlenecks." />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -573,8 +598,9 @@ export default function DealForecast() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card data-testid="card-revenue-by-service">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold flex items-center">
               Revenue by Service Type
+              <SectionTooltip text="Breaks down weighted pipeline revenue by the services associated with each deal. If a deal has multiple services, its weighted value is divided equally among them. Deals with no services assigned are excluded from this breakdown. Each service shows the number of deals it appears in and the total weighted value attributed to it. Sorted by weighted value (highest first)." />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -616,8 +642,9 @@ export default function DealForecast() {
 
         <Card data-testid="card-revenue-by-industry">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold flex items-center">
               Revenue by Client Industry
+              <SectionTooltip text="Breaks down weighted pipeline revenue by the industry of each deal's client. Each deal's full weighted value (average budget times stage probability) is assigned to its client's industry. Shows the number of deals and total weighted value for each industry, sorted by weighted value (highest first). Clients without an industry are grouped under 'Other'." />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -659,8 +686,9 @@ export default function DealForecast() {
 
         <Card data-testid="card-revenue-by-location">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold flex items-center">
               Revenue by Location
+              <SectionTooltip text="Breaks down weighted pipeline revenue by event location. If a deal has multiple locations, its weighted value is divided equally among them. Deals with no locations assigned are excluded from this breakdown. Shows the number of deals and total weighted value for each location, sorted by weighted value (highest first). Only the top 10 locations are displayed." />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -704,8 +732,9 @@ export default function DealForecast() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card data-testid="card-stage-probabilities">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold flex items-center">
               Stage Win Probabilities
+              <SectionTooltip text="Shows the fixed probability assigned to each pipeline stage, used to weight deal values throughout this forecast. Probabilities are: Prospecting 10%, Warm Lead 15%, Proposal 25%, Feedback 40%, Contracting 60%, In Progress 80%, Final Invoicing 95%. These percentages represent the likelihood that a deal at that stage will ultimately close and generate revenue." />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -736,8 +765,9 @@ export default function DealForecast() {
 
         <Card data-testid="card-quarterly-rollup">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold flex items-center">
               Quarterly Rollup
+              <SectionTooltip text="Aggregates the monthly revenue projections into calendar quarters (Q1 = Jan-Mar, Q2 = Apr-Jun, Q3 = Jul-Sep, Q4 = Oct-Dec). Shows the total weighted pipeline value, total unweighted value, and number of deals for each quarter within the forecast horizon. Values are summed from the individual monthly projections." />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -773,8 +803,9 @@ export default function DealForecast() {
 
       <Card data-testid="card-upcoming-events">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
+          <CardTitle className="text-base font-semibold flex items-center">
             Upcoming Events
+            <SectionTooltip text="Lists all deals in the forecast sorted by earliest event date (soonest first). Shows the deal name, client, date, location(s), current pipeline stage, and estimated budget (average of low and high budget). Includes all deals with an earliest event date in the horizon regardless of status. This gives a chronological view of upcoming work within the selected forecast horizon." />
           </CardTitle>
         </CardHeader>
         <CardContent>

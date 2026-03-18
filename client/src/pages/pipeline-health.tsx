@@ -46,8 +46,27 @@ import {
   Minus,
   X,
   Loader2,
+  HelpCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+
+function SectionTooltip({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help inline-block ml-1.5 flex-shrink-0" data-testid="icon-help" />
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed p-3">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type DateRangeFilter = "30" | "60" | "90" | "quarter" | "year" | "all";
 
@@ -218,6 +237,7 @@ function KPICards({ kpis }: { kpis: PipelineSnapshot["kpis"] }) {
       testId: "kpi-active-deals",
       current: kpis.totalActiveDeals,
       comparison: kpis.history?.totalActiveDeals ?? null,
+      tooltip: "Total number of deals currently in an active pipeline stage (Prospecting, Proposal, Feedback, Contracting, In Progress, or Final Invoicing). When a date range is selected, only deals whose start date (or creation date if no start date exists) falls within that range are counted. Closed, lost, or archived deals are excluded.",
     },
     {
       title: "Pipeline Value",
@@ -226,6 +246,7 @@ function KPICards({ kpis }: { kpis: PipelineSnapshot["kpis"] }) {
       testId: "kpi-pipeline-value",
       current: kpis.totalPipelineValue,
       comparison: kpis.history?.totalPipelineValue ?? null,
+      tooltip: "Sum of the estimated value of every active deal in the pipeline. Each deal's value is calculated as the average of its low and high budget estimates ((low + high) / 2). Only deals in active stages whose start date (or creation date fallback) falls within the selected date range are included.",
     },
     {
       title: "Avg Deal Value",
@@ -239,6 +260,7 @@ function KPICards({ kpis }: { kpis: PipelineSnapshot["kpis"] }) {
         previousYear: prevYearAvgDealValue,
         previousYearLabel: kpis.history.totalActiveDeals.previousYearLabel,
       } : null,
+      tooltip: "Pipeline Value divided by the number of Active Deals. This gives the average estimated value per deal. If there are no active deals, this shows $0.",
     },
     {
       title: "Avg Deal Age",
@@ -248,6 +270,7 @@ function KPICards({ kpis }: { kpis: PipelineSnapshot["kpis"] }) {
       current: kpis.averageDealAgeDays,
       comparison: kpis.history?.averageDealAgeDays ?? null,
       invertColor: true,
+      tooltip: "Average number of days each active deal has been in the pipeline, measured from the deal's start date (or creation date if no start date exists) to the current date (or simulated date if set). A higher number may indicate deals are progressing slowly. Lower is generally better (shown in green when decreasing).",
     },
     {
       title: "Stalled Deals",
@@ -258,6 +281,7 @@ function KPICards({ kpis }: { kpis: PipelineSnapshot["kpis"] }) {
       current: kpis.stalledDealsCount,
       comparison: kpis.history?.stalledDealsCount ?? null,
       invertColor: true,
+      tooltip: "Number of active deals with no recorded contact for 30 or more days. The system checks the last contact date; if none exists, it falls back to the deal's start date or creation date. A lower number is better (shown in green when decreasing). These deals may need follow-up attention.",
     },
   ];
 
@@ -268,8 +292,9 @@ function KPICards({ kpis }: { kpis: PipelineSnapshot["kpis"] }) {
         return (
           <Card key={card.testId} data-testid={card.testId}>
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                 {card.title}
+                <SectionTooltip text={card.tooltip} />
               </CardTitle>
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -317,7 +342,10 @@ function StageFunnel({ stageData }: { stageData: PipelineSnapshot["stageData"] }
   return (
     <Card data-testid="chart-stage-funnel">
       <CardHeader>
-        <CardTitle className="text-base">Stage Funnel</CardTitle>
+        <CardTitle className="text-base flex items-center">
+          Stage Funnel
+          <SectionTooltip text="Shows how many deals are in each active pipeline stage (Prospecting through Final Invoicing) along with their combined value. Bar width is proportional to the deal count relative to the stage with the most deals. When a date range other than 'All time' is selected, percentage changes versus the prior period and the same period last year are shown for each stage's deal count." />
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -375,7 +403,10 @@ function AgingChart({ agingData }: { agingData: PipelineSnapshot["agingData"] })
   return (
     <Card data-testid="chart-deal-aging">
       <CardHeader>
-        <CardTitle className="text-base">Deal Aging</CardTitle>
+        <CardTitle className="text-base flex items-center">
+          Deal Aging
+          <SectionTooltip text="Displays a bar chart showing how long active deals have been in the pipeline, grouped into time buckets: less than 1 week, 1-2 weeks, 2-4 weeks, 1-2 months, and 2+ months. Age is calculated from each deal's start date (or creation date if unavailable) to the current date. This helps identify whether deals are moving through the pipeline at a healthy pace." />
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={agingChartConfig} className="h-[130px] w-full aspect-auto">
@@ -402,7 +433,10 @@ function ConversionRates({ rates }: { rates: PipelineSnapshot["conversionRates"]
   return (
     <Card data-testid="chart-conversion-rates">
       <CardHeader>
-        <CardTitle className="text-base">Stage Conversion Rates</CardTitle>
+        <CardTitle className="text-base flex items-center">
+          Stage Conversion Rates
+          <SectionTooltip text="Shows the historical percentage of deals that advanced from one pipeline stage to the next sequential stage. The rate is calculated by dividing the number of sequential forward transitions (e.g. Prospecting to Proposal) by the total number of transitions out of that source stage recorded in audit history — including backward, skipped, and non-sequential moves. This means the denominator captures all stage departures, while the numerator only counts the next-stage advance. Uses all historical transition records, not just the current date range." />
+        </CardTitle>
         <p className="text-sm text-muted-foreground">
           Historical percentage of deals that moved from one stage to the next
         </p>
@@ -453,7 +487,10 @@ function StalledDealsTable({ deals }: { deals: PipelineSnapshot["stalledDeals"] 
     return (
       <Card data-testid="table-stalled-deals">
         <CardHeader>
-          <CardTitle className="text-base">Stalled Deals</CardTitle>
+          <CardTitle className="text-base flex items-center">
+            Stalled Deals
+            <SectionTooltip text="Lists all active deals where the last recorded contact was 30 or more days ago. If no contact date exists, the deal's start or creation date is used instead. Deals are sorted by the number of days since last contact (longest first). The table shows the stalled duration, deal name, client, owner, current stage, and estimated value. These are deals that may require immediate follow-up." />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -467,8 +504,9 @@ function StalledDealsTable({ deals }: { deals: PipelineSnapshot["stalledDeals"] 
   return (
     <Card data-testid="table-stalled-deals">
       <CardHeader>
-        <CardTitle className="text-base">
+        <CardTitle className="text-base flex items-center">
           Stalled Deals
+          <SectionTooltip text="Lists all active deals where the last recorded contact was 30 or more days ago. If no contact date exists, the deal's start or creation date is used instead. Deals are sorted by the number of days since last contact (longest first). The table shows the stalled duration, deal name, client, owner, current stage, and estimated value. These are deals that may require immediate follow-up." />
           <Badge variant="secondary" className="ml-2">
             {sorted.length}
           </Badge>
