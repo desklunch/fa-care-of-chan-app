@@ -301,8 +301,8 @@ export default function DealForm() {
       <div className="p-4 md:p-6 max-w-3xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex items-center gap-2" data-testid="toggle-form-mode">
-              <div className="inline-flex rounded-md border p-0.5 bg-muted/50">
+            <div className="fixed bottom-6 right-6 z-[9999]" data-testid="toggle-form-mode">
+              <div className="inline-flex rounded-md border p-0.5 bg-muted/50 shadow-lg backdrop-blur-sm">
                 <button
                   type="button"
                   className={cn(
