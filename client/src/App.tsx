@@ -244,6 +244,18 @@ function useLayoutConfig() {
             icon: Palette,
             requiredPermission: "theme.manage",
           },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: RadioTower,
+            requiredPermission: "admin.settings",
+          },
+          {
+            name: "Forms",
+            href: "/forms/templates",
+            icon: FileText,
+            requiredPermission: "admin.settings",
+          },
         ],
       },
       {
@@ -311,19 +323,6 @@ function useLayoutConfig() {
             href: "/admin/app/features",
             icon: Tags,
             requiredPermission: "app_features.manage",
-          },
-
-          {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: RadioTower,
-            requiredPermission: "admin.settings",
-          },
-          {
-            name: "Forms",
-            href: "/forms/templates",
-            icon: FileText,
-            requiredPermission: "admin.settings",
           },
           {
             name: "Comments",
