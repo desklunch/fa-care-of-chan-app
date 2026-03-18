@@ -157,6 +157,7 @@ export default function AdminFormTemplatesPage() {
         defaultVisibleColumns={defaultVisibleColumns}
         searchFields={["name", "description"]}
         searchPlaceholder="Search templates..."
+        hideColumnSelector
         onRowClick={handleRowClick}
         getRowId={(template: FormTemplate) => template.id}
         emptyMessage="No form templates yet"
