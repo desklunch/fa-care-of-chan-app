@@ -76,7 +76,14 @@ function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]
                     {field.name}
                     {field.required && <span className="text-destructive ml-0.5">*</span>}
                   </p>
-                  <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
+                  {field.type === "richtext" && typeof value === "string" && value !== "" ? (
+                    <div
+                      className="text-sm rich-text-html-display"
+                      dangerouslySetInnerHTML={{ __html: value }}
+                    />
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
+                  )}
                 </div>
               );
             })}

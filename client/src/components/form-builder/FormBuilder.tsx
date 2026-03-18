@@ -58,12 +58,14 @@ import {
   Link as LinkIcon,
   ToggleLeft,
   Layers,
+  FileEdit,
 } from "lucide-react";
 import type { FormSection, FormField, FormFieldType } from "@shared/schema";
 
 const fieldTypeIcons: Record<FormFieldType, typeof Type> = {
   text: Type,
   textarea: AlignLeft,
+  richtext: FileEdit,
   number: Hash,
   email: Mail,
   phone: Phone,
@@ -78,6 +80,7 @@ const fieldTypeIcons: Record<FormFieldType, typeof Type> = {
 const fieldTypeLabels: Record<FormFieldType, string> = {
   text: "Short Text",
   textarea: "Long Text",
+  richtext: "Rich Text",
   number: "Number",
   email: "Email",
   phone: "Phone",

@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   Select,
   SelectContent,
@@ -170,6 +171,18 @@ function renderFieldInput(
           )}
         </div>
       );
+    case "richtext":
+      return (
+        <div className="w-full">
+          <RichTextEditor
+            value={(fieldProps.value as string) || ""}
+            onChange={(val) => fieldProps.onChange(val)}
+            onBlur={fieldProps.onBlur}
+            placeholder={fieldDef.placeholder}
+            data-testid={`richtext-${fieldDef.id}`}
+          />
+        </div>
+      );
     case "array":
       return (
         <Textarea
@@ -200,27 +213,28 @@ function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
       name={field.id}
       render={({ field: formField }) => (
         <FormItem
-          className="space-y-0 grid grid-cols-12 w-full gap-6"
+          className=""
           data-testid={`form-item-${field.id}`}
         >
           <FormLabel
             className={
               field.required
-                ? "col-span-2 after:content-['*'] after:ml-0.5 after:text-destructive"
-                : "col-span-2 "
+                ? " after:content-['*'] after:ml-0.5 after:text-destructive"
+                : ""
             }
           >
             {field.name}
           </FormLabel>
-          <FormControl className="col-span-6">
-            {renderFieldInput(field, formField)}
-          </FormControl>
-
           {field.description && (
-            <FormDescription className="col-span-4">
+            <FormDescription className="">
               {field.description}
             </FormDescription>
           )}
+          <FormControl className="">
+            {renderFieldInput(field, formField)}
+          </FormControl>
+  
+
           <FormMessage />
         </FormItem>
       )}
@@ -244,7 +258,7 @@ function SectionRenderer({ section, form }: SectionRendererProps) {
           </p>
         )}
       </div>
-      <div className="space-y-6">
+      <div className="space-y-6 ">
         {section.fields.map((field) => (
           <SingleFieldRenderer key={field.id} field={field} form={form} />
         ))}

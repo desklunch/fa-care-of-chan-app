@@ -276,6 +276,12 @@ function ReadOnlyField({ field }: { field: FormFieldType }) {
             <span className="text-sm text-muted-foreground">{field.placeholder}</span>
           </div>
         );
+      case "richtext":
+        return (
+          <div className="border rounded-md p-3 min-h-[100px] bg-muted/50 text-sm text-muted-foreground">
+            {field.placeholder || "Rich text input"}
+          </div>
+        );
       default:
         return (
           <Input disabled placeholder={field.placeholder} />
@@ -522,7 +528,7 @@ export default function AdminFormRequestDetailPage() {
       const fieldColumns: ColDef<ResponseRow>[] = [];
       for (const section of schema) {
         for (const field of section.fields) {
-          fieldColumns.push({
+          const colDef: ColDef<ResponseRow> = {
             headerName: field.name,
             field: `responseData.${field.id}` as keyof ResponseRow,
             flex: 1,
@@ -534,7 +540,22 @@ export default function AdminFormRequestDetailPage() {
               if (Array.isArray(data)) return data.join(", ");
               return String(data);
             },
-          });
+          };
+          if (field.type === "richtext") {
+            colDef.cellRenderer = (params: ICellRendererParams<ResponseRow>) => {
+              const data = params.data?.responseData?.[field.id];
+              if (!data || typeof data !== "string") return <span className="text-muted-foreground">—</span>;
+              return (
+                <div
+                  className="rich-text-html-display text-sm"
+                  dangerouslySetInnerHTML={{ __html: data }}
+                />
+              );
+            };
+            colDef.autoHeight = true;
+            colDef.minWidth = 250;
+          }
+          fieldColumns.push(colDef);
         }
       }
       return fieldColumns;

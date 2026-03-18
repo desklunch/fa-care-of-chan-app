@@ -1744,6 +1744,7 @@ export type UpdateClient = z.infer<typeof updateClientSchema>;
 export const formFieldTypes = [
   "text",
   "textarea",
+  "richtext",
   "number",
   "date",
   "select",
