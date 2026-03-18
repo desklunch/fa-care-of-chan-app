@@ -245,12 +245,6 @@ function useLayoutConfig() {
             requiredPermission: "theme.manage",
           },
           {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: RadioTower,
-            requiredPermission: "admin.settings",
-          },
-          {
             name: "Forms",
             href: "/forms",
             icon: FileText,
@@ -336,6 +330,12 @@ function useLayoutConfig() {
             href: "/admin/vendors/tokens",
             icon: Link2,
             requiredPermission: "vendor_tokens.manage",
+          },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: RadioTower,
+            requiredPermission: "admin.settings",
           },
         ],
       },
