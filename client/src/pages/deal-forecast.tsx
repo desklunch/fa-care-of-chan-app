@@ -25,7 +25,9 @@ import {
   Loader2,
   X,
   HelpCircle,
+  FlaskConical,
 } from "lucide-react";
+import { MOCK_FORECAST_DATA } from "@/lib/mock-pipeline-forecast-data";
 import {
   Tooltip,
   TooltipTrigger,
@@ -200,6 +202,7 @@ export default function DealForecast() {
   const [horizon, setHorizon] = useState<Horizon>(6);
   const [chartMode, setChartMode] = useState<ChartMode>("both");
   const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
+  const [demoMode, setDemoMode] = useState(false);
 
   usePageHeader({
     breadcrumbs: [
@@ -210,7 +213,7 @@ export default function DealForecast() {
 
   const asOfParam = asOfDate ? format(asOfDate, "yyyy-MM-dd") : undefined;
 
-  const { data, isLoading, error } = useQuery<ForecastData>({
+  const { data: liveData, isLoading, error } = useQuery<ForecastData>({
     queryKey: ['/api/deals/forecast', horizon, asOfParam],
     queryFn: async () => {
       const params = new URLSearchParams({ horizon: String(horizon) });
@@ -223,7 +226,10 @@ export default function DealForecast() {
       }
       return res.json();
     },
+    enabled: !demoMode,
   });
+
+  const data = demoMode ? MOCK_FORECAST_DATA : liveData;
 
   const maxDensity = useMemo(
     () => Math.max(...(data?.eventDensity ?? []).map((d) => d.eventCount), 1),
@@ -235,16 +241,27 @@ export default function DealForecast() {
     [data?.eventDensity],
   );
 
-  if (error) {
+  if (error && !demoMode) {
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="text-forecast-title">
-            Revenue Forecast
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Pipeline projections and workload overview
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-forecast-title">
+              Revenue Forecast
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Pipeline projections and workload overview
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDemoMode(true)}
+            data-testid="button-toggle-demo"
+          >
+            <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+            View Demo Data
+          </Button>
         </div>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -262,7 +279,7 @@ export default function DealForecast() {
     );
   }
 
-  if (isLoading || !data) {
+  if ((isLoading || !data) && !demoMode) {
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -275,6 +292,15 @@ export default function DealForecast() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap" data-testid="controls-horizon">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDemoMode(true)}
+              data-testid="button-toggle-demo"
+            >
+              <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+              View Demo Data
+            </Button>
             <div className="flex items-center gap-1">
               <DatePicker
                 date={asOfDate}
@@ -326,9 +352,17 @@ export default function DealForecast() {
     );
   }
 
+  if (!data) return null;
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      {asOfDate && (
+      {demoMode && (
+        <div className="flex items-center gap-2 rounded-md border border-violet-500/30 bg-violet-50 dark:bg-violet-950/20 px-3 py-2 text-xs text-violet-800 dark:text-violet-300" data-testid="banner-demo-mode">
+          <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+          Viewing demo data — these numbers are for demonstration purposes only
+        </div>
+      )}
+      {asOfDate && !demoMode && (
         <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300" data-testid="banner-simulated-date">
           <Clock className="h-3.5 w-3.5 shrink-0" />
           Simulated report date: {format(asOfDate, "MMMM d, yyyy")}
@@ -344,35 +378,58 @@ export default function DealForecast() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap" data-testid="controls-horizon">
-          <div className="flex items-center gap-1">
-            <DatePicker
-              date={asOfDate}
-              onSelect={setAsOfDate}
-              placeholder="As of today"
-              data-testid="datepicker-as-of-date"
-            />
-            {asOfDate && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setAsOfDate(undefined)}
-                data-testid="button-clear-as-of-date"
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
+          <Button
+            variant={demoMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDemoMode((v) => !v)}
+            data-testid="button-toggle-demo"
+          >
+            <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+            {demoMode ? "Demo Data" : "Live Data"}
+          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative" data-testid="filter-group-forecast">
+                <div className={`flex items-center gap-2 flex-wrap ${demoMode ? "opacity-50" : ""}`}>
+                  <div className="flex items-center gap-1">
+                    <DatePicker
+                      date={asOfDate}
+                      onSelect={demoMode ? undefined : setAsOfDate}
+                      placeholder="As of today"
+                      data-testid="datepicker-as-of-date"
+                    />
+                    {asOfDate && !demoMode && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setAsOfDate(undefined)}
+                        data-testid="button-clear-as-of-date"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  {([3, 6, 12] as Horizon[]).map((h) => (
+                    <Button
+                      key={h}
+                      variant={horizon === h ? "default" : "outline"}
+                      size="sm"
+                      onClick={demoMode ? undefined : () => setHorizon(h)}
+                      disabled={demoMode}
+                      data-testid={`button-horizon-${h}`}
+                    >
+                      {h}mo
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </TooltipTrigger>
+            {demoMode && (
+              <TooltipContent side="bottom" className="text-xs">
+                Filters are disabled while viewing demo data
+              </TooltipContent>
             )}
-          </div>
-          {([3, 6, 12] as Horizon[]).map((h) => (
-            <Button
-              key={h}
-              variant={horizon === h ? "default" : "outline"}
-              size="sm"
-              onClick={() => setHorizon(h)}
-              data-testid={`button-horizon-${h}`}
-            >
-              {h}mo
-            </Button>
-          ))}
+          </Tooltip>
         </div>
       </div>
 

@@ -47,6 +47,7 @@ import {
   X,
   Loader2,
   HelpCircle,
+  FlaskConical,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -54,6 +55,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { MOCK_PIPELINE_SNAPSHOT } from "@/lib/mock-pipeline-forecast-data";
 
 function SectionTooltip({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
@@ -570,10 +572,11 @@ export default function PipelineHealth() {
   usePageTitle("Pipeline Health");
   const [dateRange, setDateRange] = useState<DateRangeFilter>("all");
   const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
+  const [demoMode, setDemoMode] = useState(false);
 
   const asOfDateStr = asOfDate ? format(asOfDate, "yyyy-MM-dd") : undefined;
 
-  const { data: snapshot, isLoading, error } = useQuery<PipelineSnapshot>({
+  const { data: liveSnapshot, isLoading, error } = useQuery<PipelineSnapshot>({
     queryKey: ["/api/deals/pipeline-health", dateRange, asOfDateStr],
     queryFn: async () => {
       const params = new URLSearchParams({ range: dateRange });
@@ -582,9 +585,12 @@ export default function PipelineHealth() {
       if (!res.ok) throw new Error("Failed to load pipeline data");
       return res.json();
     },
+    enabled: !demoMode,
   });
 
-  if (isLoading) {
+  const snapshot = demoMode ? MOCK_PIPELINE_SNAPSHOT : liveSnapshot;
+
+  if (isLoading && !demoMode) {
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto" data-testid="page-pipeline-health-loading">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -592,6 +598,15 @@ export default function PipelineHealth() {
             <h1 className="text-2xl font-bold">Pipeline Health</h1>
             <p className="text-sm text-muted-foreground mt-1">Loading pipeline data...</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDemoMode(true)}
+            data-testid="button-toggle-demo"
+          >
+            <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+            View Demo Data
+          </Button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -612,10 +627,21 @@ export default function PipelineHealth() {
     );
   }
 
-  if (error || !snapshot) {
+  if ((error || !snapshot) && !demoMode) {
     return (
       <div className="p-4 md:p-6 max-w-7xl mx-auto" data-testid="page-pipeline-health-error">
-        <h1 className="text-2xl font-bold">Pipeline Health</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold">Pipeline Health</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDemoMode(true)}
+            data-testid="button-toggle-demo"
+          >
+            <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+            View Demo Data
+          </Button>
+        </div>
         <Card className="mt-6">
           <CardContent className="py-8 text-center">
             <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -626,9 +652,17 @@ export default function PipelineHealth() {
     );
   }
 
+  if (!snapshot) return null;
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto" data-testid="page-pipeline-health">
-      {asOfDate && (
+      {demoMode && (
+        <div className="flex items-center gap-2 rounded-md border border-violet-500/30 bg-violet-50 dark:bg-violet-950/20 px-3 py-2 text-xs text-violet-800 dark:text-violet-300" data-testid="banner-demo-mode">
+          <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+          Viewing demo data — these numbers are for demonstration purposes only
+        </div>
+      )}
+      {asOfDate && !demoMode && (
         <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300" data-testid="banner-simulated-date">
           <Clock className="h-3.5 w-3.5 shrink-0" />
           Simulated report date: {format(asOfDate, "MMMM d, yyyy")}
@@ -642,39 +676,62 @@ export default function PipelineHealth() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1">
-            <DatePicker
-              date={asOfDate}
-              onSelect={setAsOfDate}
-              placeholder="As of today"
-              data-testid="datepicker-as-of-date"
-            />
-            {asOfDate && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setAsOfDate(undefined)}
-                data-testid="button-clear-as-of-date"
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            )}
-          </div>
-          <Select
-            value={dateRange}
-            onValueChange={(v) => setDateRange(v as DateRangeFilter)}
+          <Button
+            variant={demoMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDemoMode((v) => !v)}
+            data-testid="button-toggle-demo"
           >
-            <SelectTrigger className="w-[180px]" data-testid="select-date-range">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DATE_RANGE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} data-testid={`option-range-${opt.value}`}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+            {demoMode ? "Demo Data" : "Live Data"}
+          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative" data-testid="filter-group-pipeline">
+                <div className={`flex items-center gap-2 flex-wrap ${demoMode ? "opacity-50" : ""}`}>
+                  <div className="flex items-center gap-1">
+                    <DatePicker
+                      date={asOfDate}
+                      onSelect={demoMode ? undefined : setAsOfDate}
+                      placeholder="As of today"
+                      data-testid="datepicker-as-of-date"
+                    />
+                    {asOfDate && !demoMode && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setAsOfDate(undefined)}
+                        data-testid="button-clear-as-of-date"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <Select
+                    value={dateRange}
+                    onValueChange={demoMode ? undefined : (v) => setDateRange(v as DateRangeFilter)}
+                    disabled={demoMode}
+                  >
+                    <SelectTrigger className="w-[180px]" data-testid="select-date-range">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DATE_RANGE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} data-testid={`option-range-${opt.value}`}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </TooltipTrigger>
+            {demoMode && (
+              <TooltipContent side="bottom" className="text-xs">
+                Filters are disabled while viewing demo data
+              </TooltipContent>
+            )}
+          </Tooltip>
         </div>
       </div>
 
