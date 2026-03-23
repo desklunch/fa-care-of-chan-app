@@ -168,16 +168,16 @@ function useLayoutConfig() {
             allowedRoles: ["admin"],
           },
           {
-            name: "Views",
-            href: "/deals/reports",
-            icon: ScanEye,
-            requiredPermission: "deals.read",
-          },
-          {
             name: "Forecast",
             href: "/deals/forecast",
             icon: TrendingUp,
             requiredPermission: "admin.settings",
+          },
+          {
+            name: "Views",
+            href: "/deals/reports",
+            icon: ScanEye,
+            requiredPermission: "deals.read",
           },
         ],
       },
