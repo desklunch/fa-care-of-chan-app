@@ -5,9 +5,9 @@ import { PageLayout } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
 import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
-import type { ColumnConfig } from "@/components/data-grid/types";
+import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { Badge } from "@/components/ui/badge";
-import { CircleFadingPlus, User } from "lucide-react";
+import { CircleFadingPlus, Tag, User } from "lucide-react";
 import type { FormTemplate, FormTemplateWithRelations } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -115,6 +115,23 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
   },
 ];
 
+const templateFilters: FilterConfig<FormTemplate>[] = [
+  {
+    id: "category",
+    label: "Category",
+    icon: Tag,
+    type: "single",
+    optionSource: {
+      type: "static",
+      options: Object.entries(categoryLabels).map(([value, label]) => ({ id: value, label })),
+    },
+    matchFn: (template, selectedValues) => {
+      if (selectedValues.length === 0) return true;
+      return selectedValues.includes(template.category || "");
+    },
+  },
+];
+
 const defaultVisibleColumns = [
   "name",
   "category",
@@ -167,6 +184,7 @@ export default function AdminFormTemplatesPage() {
         queryKey="/api/form-templates"
         columns={templateColumns}
         defaultVisibleColumns={defaultVisibleColumns}
+        filters={templateFilters}
         searchFields={["name", "description"]}
         searchPlaceholder="Search templates..."
         hideColumnSelector
