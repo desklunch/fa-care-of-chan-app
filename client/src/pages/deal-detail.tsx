@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar, Plus, X, Building2, Search } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
+import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -325,6 +326,9 @@ export default function DealDetail() {
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
                 Comments
+              </TabsTrigger>
+              <TabsTrigger value="files" data-testid="tab-files">
+                Files
               </TabsTrigger>
             </TabsList>
           </div>
@@ -904,6 +908,10 @@ export default function DealDetail() {
               entityId={id}
               currentUser={user || undefined}
             />
+          </TabsContent>
+
+          <TabsContent value="files" className="p-4 md:p-6 pt-4 max-w-4xl">
+            <GoogleDriveAttachments entityType="deal" entityId={id!} />
           </TabsContent>
         </Tabs>
       </div>

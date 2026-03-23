@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import type { Contact, Client, Vendor, DealWithRelations, DealStatus } from "@shared/schema";
+import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 
 interface ContactWithFullRelations extends Contact {
   linkedClients: Client[];
@@ -616,6 +617,12 @@ export default function ContactDetail() {
             </CardContent>
           </Card>
         </PermissionGate>
+
+        <Card>
+          <CardContent className="py-4">
+            {id && <GoogleDriveAttachments entityType="contact" entityId={id} />}
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

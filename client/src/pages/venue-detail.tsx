@@ -18,6 +18,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AmenityDisplay } from "@/components/ui/amenity-toggle";
 import { AddToCollectionDialog } from "@/components/add-to-collection-dialog";
 import { CommentList } from "@/components/ui/comments";
+import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -317,6 +318,7 @@ export default function VenueDetailPage() {
             <TabsList data-testid="tabs-venue" className="px-4 md:px-6">
               <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">Notes</TabsTrigger>
+              <TabsTrigger value="files" data-testid="tab-files">Files</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1144,6 +1146,10 @@ export default function VenueDetailPage() {
               entityId={id!}
               currentUser={user || undefined}
             />
+          </TabsContent>
+
+          <TabsContent value="files" className="max-w-4xl p-4 md:p-6">
+            <GoogleDriveAttachments entityType="venue" entityId={id!} />
           </TabsContent>
         </Tabs>
       </div>

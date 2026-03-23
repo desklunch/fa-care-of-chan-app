@@ -67,6 +67,7 @@ import { registerPlacesRoutes } from "./domains/places";
 import { registerVenuesRoutes } from "./domains/venues";
 import { registerFormsRoutes } from "./domains/forms";
 import { registerAiChatRoutes } from "./domains/ai-chat";
+import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { setupCsrf } from "./middleware/csrf";
 
@@ -107,6 +108,7 @@ export async function registerRoutes(
   registerPlacesRoutes(app);
   registerVenuesRoutes(app);
   registerFormsRoutes(app);
+  registerDriveAttachmentsRoutes(app);
   registerAiChatRoutes(app);
 
   // NOTE: Contacts routes moved to server/domains/contacts/

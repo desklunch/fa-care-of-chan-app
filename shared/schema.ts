@@ -854,6 +854,53 @@ export const comments = pgTable(
   ],
 );
 
+// Google Drive attachments - polymorphic entity attachments
+export const driveAttachmentEntityTypes = [
+  "deal",
+  "venue",
+  "client",
+  "vendor",
+  "contact",
+] as const;
+export type DriveAttachmentEntityType = (typeof driveAttachmentEntityTypes)[number];
+
+export const googleDriveAttachments = pgTable(
+  "google_drive_attachments",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    driveFileId: varchar("drive_file_id", { length: 255 }).notNull(),
+    name: varchar("name", { length: 500 }).notNull(),
+    mimeType: varchar("mime_type", { length: 255 }),
+    iconUrl: varchar("icon_url", { length: 500 }),
+    webViewLink: varchar("web_view_link", { length: 1000 }),
+    attachedById: varchar("attached_by_id").notNull().references(() => users.id),
+    attachedAt: timestamp("attached_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_drive_attachments_entity").on(table.entityType, table.entityId),
+    index("idx_drive_attachments_attached_by").on(table.attachedById),
+  ],
+);
+
+export type GoogleDriveAttachment = typeof googleDriveAttachments.$inferSelect;
+export type InsertGoogleDriveAttachment = typeof googleDriveAttachments.$inferInsert;
+
+export const insertGoogleDriveAttachmentSchema = createInsertSchema(googleDriveAttachments).omit({
+  id: true,
+  attachedAt: true,
+});
+
+export interface DriveAttachmentWithUser extends GoogleDriveAttachment {
+  attachedBy?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+}
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   auditLogs: many(auditLogs),
@@ -1055,7 +1102,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas

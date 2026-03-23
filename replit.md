@@ -41,6 +41,7 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `places/` - Google Places API integration (10 routes)
     - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
     - `forms/` - Form templates, requests, and public form submission (15 routes)
+    - `drive-attachments/` - Google Drive file attachments for deals, venues, clients, vendors, contacts (3 routes)
     
     **Refactor Status (January 2026):**
     - `routes.ts` reduced from 6,714 to 506 lines (92% reduction)
@@ -75,6 +76,7 @@ The system includes modules for:
 -   **Google Places Integration:** Facilitates searching for venues, extracting details (address, phone, website), and importing photos from Google Places.
 -   **Photo Management:** Stores venue-related photos in Replit App Storage, generates thumbnails, handles uploads from various sources (direct, URL, Google Places), and supports drag-and-drop reordering with a hero image flag.
 -   **File Management:** Manages venue floorplans and general attachments, supporting various file types, secure storage, and detailed metadata.
+-   **Google Drive Attachments:** Allows users to attach Google Drive files (Docs, Sheets, Slides, PDFs, etc.) to deals, venues, clients, vendors, and contacts by pasting Drive sharing links. Uses the Google Drive connector for metadata resolution. Attached files display name, type icon, who attached them, and when. Files open in Google Drive in a new tab.
 
 ### System Design Choices
 -   **Database Schema:** Comprehensive schemas for users, invites, sessions, audit logs, app features, releases, contacts, venue photos, and venue files, including relationships and specific data types for each entity.
