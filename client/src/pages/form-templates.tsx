@@ -7,10 +7,7 @@ import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Badge } from "@/components/ui/badge";
-import {
-  CircleFadingPlus,
-  User,
-} from "lucide-react";
+import { CircleFadingPlus, User } from "lucide-react";
 import type { FormTemplate, FormTemplateWithRelations } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -23,8 +20,9 @@ function NameCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
   );
 }
 
-
-function CreatedByCellRenderer({ data }: ICellRendererParams<FormTemplateWithRelations>) {
+function CreatedByCellRenderer({
+  data,
+}: ICellRendererParams<FormTemplateWithRelations>) {
   if (!data?.createdBy) return <span className="text-muted-foreground">—</span>;
   return (
     <span className="flex items-center gap-1">
@@ -33,7 +31,6 @@ function CreatedByCellRenderer({ data }: ICellRendererParams<FormTemplateWithRel
     </span>
   );
 }
-
 
 const categoryLabels: Record<string, string> = {
   client_intake: "Client Intake",
@@ -44,9 +41,13 @@ const categoryLabels: Record<string, string> = {
 function CategoryCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
   if (!data) return null;
   return (
-    <Badge variant="secondary" data-testid={`badge-category-${data.id}`}>
-      {categoryLabels[data.category || ""] || data.category || "Uncategorized"}
-    </Badge>
+    <div className="pt-[14px]">
+      <Badge variant="secondary" data-testid={`badge-category-${data.id}`}>
+        {categoryLabels[data.category || ""] ||
+          data.category ||
+          "Uncategorized"}
+      </Badge>
+    </div>
   );
 }
 
@@ -95,7 +96,9 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
       cellRenderer: CreatedByCellRenderer,
       valueGetter: (params) => {
         const data = params.data as FormTemplateWithRelations;
-        return data?.createdBy ? `${data.createdBy.firstName} ${data.createdBy.lastName}` : "";
+        return data?.createdBy
+          ? `${data.createdBy.firstName} ${data.createdBy.lastName}`
+          : "";
       },
     },
   },
@@ -112,16 +115,25 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
   },
 ];
 
-const defaultVisibleColumns = ["name", "category", "description", "createdBy", "createdAt"];
+const defaultVisibleColumns = [
+  "name",
+  "category",
+  "description",
+  "createdBy",
+  "createdAt",
+];
 
 export default function AdminFormTemplatesPage() {
   usePageTitle("Form Templates");
   const [, navigate] = useProtectedLocation();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
-  const handleRowClick = useCallback((template: FormTemplate) => {
-    navigate(`/forms/${template.id}`);
-  }, [navigate]);
+  const handleRowClick = useCallback(
+    (template: FormTemplate) => {
+      navigate(`/forms/${template.id}`);
+    },
+    [navigate],
+  );
 
   if (isAuthLoading) {
     return (
