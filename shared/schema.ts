@@ -1144,7 +1144,6 @@ export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   id: true,
   createdById: true,
   voteCount: true,
-  status: true,
   priority: true,
   ownerId: true,
   estimatedDelivery: true,
@@ -1155,6 +1154,7 @@ export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   description: z.string().min(10, "Description must be at least 10 characters"),
   categoryId: z.string().min(1, "Category is required"),
   featureType: z.enum(featureTypes, { required_error: "Please select Idea or Requirement" }),
+  status: z.enum(featureStatuses).default("proposed"),
 });
 
 export const updateAppFeatureSchema = createInsertSchema(appFeatures).pick({

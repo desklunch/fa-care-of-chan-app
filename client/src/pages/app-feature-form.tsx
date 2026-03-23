@@ -26,13 +26,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { AppFeatureWithRelations, FeatureCategory, FeatureType } from "@shared/schema";
-import { insertAppFeatureSchema, featureTypes } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureCategory, FeatureType, FeatureStatus } from "@shared/schema";
+import { insertAppFeatureSchema, featureTypes, featureStatuses } from "@shared/schema";
 import { z } from "zod";
 
 const featureTypeLabels: Record<FeatureType, string> = {
   idea: "Idea",
   requirement: "Requirement",
+};
+
+const featureStatusLabels: Record<FeatureStatus, string> = {
+  proposed: "Proposed",
+  under_review: "Under Review",
+  planned: "Planned",
+  in_progress: "In Progress",
+  completed: "Completed",
+  archived: "Archived",
 };
 
 const formSchema = insertAppFeatureSchema;
@@ -65,6 +74,7 @@ export default function AppFeatureForm() {
       description: "",
       categoryId: "",
       featureType: undefined,
+      status: "proposed",
     },
   });
 
@@ -75,13 +85,14 @@ export default function AppFeatureForm() {
         description: existingFeature.description,
         categoryId: existingFeature.categoryId,
         featureType: existingFeature.featureType as FeatureType,
+        status: existingFeature.status as FeatureStatus,
       });
     }
   }, [isEditMode, existingFeature, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest("POST", "/api/features", { ...data, status: "proposed" });
+      return apiRequest("POST", "/api/features", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/features"] });
@@ -246,6 +257,34 @@ export default function AppFeatureForm() {
                       </Select>
                       <FormDescription>
                         Ideas are suggestions; requirements are essential features.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-feature-status">
+                            <SelectValue placeholder="Select a status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {featureStatuses.map((status) => (
+                            <SelectItem key={status} value={status} data-testid={`select-option-status-${status}`}>
+                              {featureStatusLabels[status]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        The current status of this feature request.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
