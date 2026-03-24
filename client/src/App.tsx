@@ -165,13 +165,13 @@ function useLayoutConfig() {
             name: "Pipeline",
             href: "/deals/pipeline",
             icon: Activity,
-            allowedRoles: ["admin"],
+          requiredPermission: "deals.read",
           },
           {
             name: "Forecast",
             href: "/deals/forecast",
             icon: TrendingUp,
-            requiredPermission: "admin.settings",
+          requiredPermission: "deals.read",
           },
           {
             name: "Views",

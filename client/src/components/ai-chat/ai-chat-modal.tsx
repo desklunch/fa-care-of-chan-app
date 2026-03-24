@@ -2,7 +2,16 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, X, Send, Loader2, Bot, User, Wrench, ExternalLink } from "lucide-react";
+import {
+  MessageSquare,
+  X,
+  Send,
+  Loader2,
+  Bot,
+  User,
+  Wrench,
+  ExternalLink,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -39,7 +48,7 @@ interface ChatState {
 }
 
 export function AiChatFab() {
-  const { isManagerOrAbove } = usePermissions();
+  const { isAdmin } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
@@ -48,12 +57,16 @@ export function AiChatFab() {
     toolActivity: [],
   });
 
-  const setMessages = useCallback((updater: Message[] | ((prev: Message[]) => Message[])) => {
-    setChatState((prev) => ({
-      ...prev,
-      messages: typeof updater === "function" ? updater(prev.messages) : updater,
-    }));
-  }, []);
+  const setMessages = useCallback(
+    (updater: Message[] | ((prev: Message[]) => Message[])) => {
+      setChatState((prev) => ({
+        ...prev,
+        messages:
+          typeof updater === "function" ? updater(prev.messages) : updater,
+      }));
+    },
+    [],
+  );
 
   const setInput = useCallback((value: string) => {
     setChatState((prev) => ({ ...prev, input: value }));
@@ -63,19 +76,30 @@ export function AiChatFab() {
     setChatState((prev) => ({ ...prev, isLoading: value }));
   }, []);
 
-  const setToolActivity = useCallback((updater: (ToolCall | ToolResult)[] | ((prev: (ToolCall | ToolResult)[]) => (ToolCall | ToolResult)[])) => {
-    setChatState((prev) => ({
-      ...prev,
-      toolActivity: typeof updater === "function" ? updater(prev.toolActivity) : updater,
-    }));
-  }, []);
+  const setToolActivity = useCallback(
+    (
+      updater:
+        | (ToolCall | ToolResult)[]
+        | ((prev: (ToolCall | ToolResult)[]) => (ToolCall | ToolResult)[]),
+    ) => {
+      setChatState((prev) => ({
+        ...prev,
+        toolActivity:
+          typeof updater === "function" ? updater(prev.toolActivity) : updater,
+      }));
+    },
+    [],
+  );
 
   const sendMessage = useCallback(async () => {
     if (!chatState.input.trim() || chatState.isLoading) return;
 
-    const userMessage: Message = { role: "user", content: chatState.input.trim() };
+    const userMessage: Message = {
+      role: "user",
+      content: chatState.input.trim(),
+    };
     const allMessages = [...chatState.messages, userMessage];
-    
+
     setMessages(allMessages);
     setInput("");
     setIsLoading(true);
@@ -115,9 +139,12 @@ export function AiChatFab() {
           if (line.startsWith("data: ")) {
             try {
               const event: ChatEvent = JSON.parse(line.slice(6));
-              
-              console.log("[AI Chat] SSE Event:", JSON.stringify(event, null, 2));
-              
+
+              console.log(
+                "[AI Chat] SSE Event:",
+                JSON.stringify(event, null, 2),
+              );
+
               if (event.type === "content" && event.content) {
                 assistantContent += event.content;
                 const contentToSet = assistantContent;
@@ -132,41 +159,60 @@ export function AiChatFab() {
                   return updated;
                 });
               } else if (event.type === "tool_call" && event.name) {
-                setToolActivity((prev) => [...prev, { 
-                  name: event.name!, 
-                  arguments: event.arguments || {} 
-                }]);
+                setToolActivity((prev) => [
+                  ...prev,
+                  {
+                    name: event.name!,
+                    arguments: event.arguments || {},
+                  },
+                ]);
               } else if (event.type === "tool_result" && event.name) {
-                setToolActivity((prev) => [...prev, { 
-                  name: event.name!, 
-                  result: event.result || {} 
-                }]);
+                setToolActivity((prev) => [
+                  ...prev,
+                  {
+                    name: event.name!,
+                    result: event.result || {},
+                  },
+                ]);
               } else if (event.type === "error") {
-                setMessages((prev) => [...prev, { 
-                  role: "assistant", 
-                  content: `Error: ${event.message || "An error occurred"}` 
-                }]);
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    role: "assistant",
+                    content: `Error: ${event.message || "An error occurred"}`,
+                  },
+                ]);
               }
-            } catch (e) {
-            }
+            } catch (e) {}
           }
         }
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages((prev) => [...prev, { 
-        role: "assistant", 
-        content: `Error: ${error instanceof Error ? error.message : "Failed to send message"}` 
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${error instanceof Error ? error.message : "Failed to send message"}`,
+        },
+      ]);
     } finally {
       setIsLoading(false);
       setToolActivity([]);
     }
-  }, [chatState.input, chatState.messages, chatState.isLoading, setMessages, setInput, setIsLoading, setToolActivity]);
+  }, [
+    chatState.input,
+    chatState.messages,
+    chatState.isLoading,
+    setMessages,
+    setInput,
+    setIsLoading,
+    setToolActivity,
+  ]);
 
   // Only show AI chat FAB to admin and manager roles (tier 2+)
   // Uses usePermissions which respects the dev role dropdown override
-  if (!isManagerOrAbove) {
+  if (!isAdmin) {
     return null;
   }
 
@@ -177,7 +223,7 @@ export function AiChatFab() {
         size="icon"
         className={cn(
           "!fixed bottom-6 right-6 !z-[1000] h-14 w-14 rounded-full shadow-lg",
-          chatState.isLoading && "animate-pulse"
+          chatState.isLoading && "animate-pulse",
         )}
         data-testid="button-ai-chat-fab"
       >
@@ -189,7 +235,7 @@ export function AiChatFab() {
       </Button>
 
       {isOpen && (
-        <AiChatModal 
+        <AiChatModal
           onClose={() => setIsOpen(false)}
           messages={chatState.messages}
           input={chatState.input}
@@ -213,14 +259,14 @@ interface AiChatModalProps {
   sendMessage: () => void;
 }
 
-function AiChatModal({ 
-  onClose, 
-  messages, 
-  input, 
-  isLoading, 
+function AiChatModal({
+  onClose,
+  messages,
+  input,
+  isLoading,
   toolActivity,
   setInput,
-  sendMessage 
+  sendMessage,
 }: AiChatModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -243,14 +289,14 @@ function AiChatModal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
       data-testid="ai-chat-modal-backdrop"
     >
-      <div 
+      <div
         className="bg-background border rounded-lg shadow-xl flex flex-col w-full max-w-2xl mx-4"
         style={{ height: "calc(100vh - 32px)" }}
         data-testid="ai-chat-modal"
@@ -260,12 +306,14 @@ function AiChatModal({
             <Bot className="h-5 w-5 text-primary" />
             <h2 className="font-semibold">AI Assistant</h2>
             {isLoading && (
-              <span className="text-xs text-muted-foreground">(processing...)</span>
+              <span className="text-xs text-muted-foreground">
+                (processing...)
+              </span>
             )}
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             data-testid="button-close-ai-chat"
           >
@@ -277,10 +325,12 @@ function AiChatModal({
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <Bot className="h-12 w-12 mb-4 opacity-50" />
-              <div className="text-lg font-medium">How can I help you today?</div>
+              <div className="text-lg font-medium">
+                How can I help you today?
+              </div>
               <div className="text-sm mt-2 max-w-md">
-                I can help you generate editorial descriptions for venues. 
-                Just tell me which venue you'd like me to write about.
+                I can help you generate editorial descriptions for venues. Just
+                tell me which venue you'd like me to write about.
               </div>
             </div>
           ) : (
@@ -290,7 +340,7 @@ function AiChatModal({
                   key={index}
                   className={cn(
                     "flex gap-3",
-                    message.role === "user" ? "justify-end" : "justify-start"
+                    message.role === "user" ? "justify-end" : "justify-start",
                   )}
                 >
                   {message.role === "assistant" && (
@@ -303,7 +353,7 @@ function AiChatModal({
                       "rounded-lg px-4 py-2 max-w-[80%]",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        : "bg-muted",
                     )}
                   >
                     <MessageContent content={message.content} />
@@ -408,8 +458,8 @@ function MessageContent({ content }: { content: string }) {
         typeof part === "string" ? (
           <span key={i}>{part}</span>
         ) : part.href.startsWith("/") ? (
-          <Link 
-            key={i} 
+          <Link
+            key={i}
             href={part.href}
             className="text-primary underline underline-offset-2 hover:no-underline inline-flex items-center gap-1"
           >
@@ -427,7 +477,7 @@ function MessageContent({ content }: { content: string }) {
             {part.text}
             <ExternalLink className="h-3 w-3" />
           </a>
-        )
+        ),
       )}
     </div>
   );
