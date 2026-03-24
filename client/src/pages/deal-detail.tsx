@@ -34,6 +34,7 @@ import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 import type {
   DealWithRelations,
   DealStatus,
@@ -44,7 +45,6 @@ import type {
   Brand,
   Industry,
 } from "@shared/schema";
-import { dealStatuses } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
 import { getEventSummary } from "@/components/event-schedule";
 import {
@@ -67,6 +67,7 @@ export default function DealDetail() {
   const [showLinkClient, setShowLinkClient] = useState(false);
   const [linkClientSearch, setLinkClientSearch] = useState("");
   const [linkClientLabel, setLinkClientLabel] = useState("");
+  const { statuses: dealStatusList, statusById } = useDealStatuses();
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -379,17 +380,17 @@ export default function DealDetail() {
 
                 <EditableField
                   label="Status"
-                  value={deal.status}
+                  value={String(deal.status)}
                   field="status"
                   testId="field-status"
                   type="select"
                   disabled={!canWrite}
-                  options={dealStatuses.map((s) => ({ value: s, label: s }))}
-                  onSave={handleFieldSave}
+                  options={dealStatusList.map((s) => ({ value: String(s.id), label: s.name }))}
+                  onSave={(field, value) => handleFieldSave(field, Number(value))}
                   isLoading={isFieldLoading("status")}
                   error={getFieldError("status")}
                   displayValue={
-                    <DealStatusBadge status={deal.status as DealStatus} />
+                    <DealStatusBadge status={deal.statusName || "Unknown"} />
 
                   }
                   placeholder="Select status"

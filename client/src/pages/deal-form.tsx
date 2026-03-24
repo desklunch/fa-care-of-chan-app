@@ -42,14 +42,15 @@ import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry } from "@shared/schema";
-import { dealStatuses, dealLocationSchema } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry, DealStatusRecord } from "@shared/schema";
+import { dealLocationSchema } from "@shared/schema";
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 import { cn } from "@/lib/utils"
 import {Separator} from "@/components/ui/separator"
 
 const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
-  status: z.enum(dealStatuses).default("Prospecting"),
+  status: z.number().int(),
   clientId: z.string().min(1, "Client is required"),
   brandId: z.string().optional().nullable().transform(val => val || null),
   primaryContactId: z.string().optional().transform(val => val || undefined),
@@ -106,11 +107,13 @@ export default function DealForm() {
 
   usePageTitle(isEditing ? (deal?.displayName ? `Edit ${deal.displayName}` : "Edit Deal") : "New Deal");
 
+  const { statuses: dealStatusList, defaultStatus, isLoading: isLoadingStatuses } = useDealStatuses();
+
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
       displayName: "",
-      status: "Prospecting",
+      status: 0,
       clientId: "",
       brandId: null,
       primaryContactId: "",
@@ -133,6 +136,12 @@ export default function DealForm() {
     },
   });
 
+  useEffect(() => {
+    if (!isEditing && defaultStatus && form.getValues("status") === 0) {
+      form.setValue("status", defaultStatus.id);
+    }
+  }, [defaultStatus, isEditing, form]);
+
   const watchedClientId = form.watch("clientId");
 
   const { data: linkedContacts = [] } = useQuery<Contact[]>({
@@ -144,7 +153,7 @@ export default function DealForm() {
     if (deal && isEditing) {
       form.reset({
         displayName: deal.displayName,
-        status: deal.status as DealStatus,
+        status: deal.status,
         clientId: deal.clientId || "",
         brandId: deal.brandId || null,
         primaryContactId: deal.primaryContactId || "",
@@ -495,17 +504,17 @@ export default function DealForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
                         <FormControl>
                           <SelectTrigger data-testid="select-deal-status" >
                             <SelectValue placeholder="Select status"  />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {dealStatuses.map((status) => (
-                            <SelectItem key={status} value={status} >
+                          {dealStatusList.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)} >
                               <div className="min-w-48 w-fit ">
-                              <DealStatusBadge status={status} />
+                              <DealStatusBadge status={s.name} />
                               </div>
                               
                             </SelectItem>

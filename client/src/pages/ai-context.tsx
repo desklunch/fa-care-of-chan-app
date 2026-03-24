@@ -124,7 +124,7 @@ export default function AIContextPage() {
                       <div className="flex items-center gap-2">
                         <span className="truncate max-w-[200px]">{deal.displayName}</span>
                         <Badge variant="secondary" className="text-xs">
-                          {deal.status}
+                          {deal.statusName || String(deal.status)}
                         </Badge>
                       </div>
                     </SelectItem>

@@ -5,13 +5,22 @@ import { logAuditEvent } from "../../audit";
 import { handleServiceError } from "../../lib/route-helpers";
 import { storage } from "../../storage";
 import { DealsService } from "../../services/deals.service";
-import { dealStatuses, type DealStatus, type FormSection, type FormField, insertDealIntakeSchema, updateDealIntakeSchema, mappableEntities } from "@shared/schema";
+import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, insertDealIntakeSchema, updateDealIntakeSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { formsStorage } from "../forms/forms.storage";
 
 const dealsService = new DealsService(storage);
 
 export function registerDealsRoutes(app: Express): void {
+  app.get("/api/deal-statuses", isAuthenticated, async (_req, res) => {
+    try {
+      const statuses = await storage.getDealStatuses();
+      res.json(statuses);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal statuses");
+    }
+  });
+
   app.get("/api/deals", isAuthenticated, async (req, res) => {
     try {
       const { status } = req.query;
@@ -19,7 +28,7 @@ export function registerDealsRoutes(app: Express): void {
       
       if (status) {
         const statusArray = Array.isArray(status) ? status : [status];
-        statusFilter = statusArray.filter(s => dealStatuses.includes(s as DealStatus)) as DealStatus[];
+        statusFilter = statusArray as DealStatus[];
       }
       
       const deals = await dealsService.list({ status: statusFilter });
@@ -43,15 +52,11 @@ export function registerDealsRoutes(app: Express): void {
       cutoff.setMonth(cutoff.getMonth() + horizon);
       const endDate = cutoff.toISOString().substring(0, 10);
 
-      const stageProbabilities: Record<string, number> = {
-        "Prospecting": 0.10,
-        "Warm Lead": 0.15,
-        "Proposal": 0.25,
-        "Feedback": 0.40,
-        "Contracting": 0.60,
-        "In Progress": 0.80,
-        "Final Invoicing": 0.95,
-      };
+      const allStatuses = await storage.getDealStatuses();
+      const stageProbabilities: Record<string, number> = {};
+      for (const s of allStatuses) {
+        stageProbabilities[s.name] = s.winProbability / 100;
+      }
 
       const [rawDeals, allServices] = await Promise.all([
         dealsStorage.getDealsForForecast(startDate, endDate),
@@ -66,7 +71,7 @@ export function registerDealsRoutes(app: Express): void {
       const deals = rawDeals.map((d) => {
         const budgetLow = d.budgetLow ?? 0;
         const budgetHigh = d.budgetHigh ?? 0;
-        const probability = stageProbabilities[d.status] ?? 0;
+        const probability = stageProbabilities[d.statusName ?? ""] ?? 0;
         const avg = (budgetLow + budgetHigh) / 2;
         const totalDurationDays = (d.eventSchedule ?? []).reduce(
           (sum, ev) => sum + (ev.durationDays || 0),
@@ -80,7 +85,7 @@ export function registerDealsRoutes(app: Express): void {
           id: d.id,
           name: d.displayName,
           clientName: d.clientName ?? "Unknown",
-          status: d.status,
+          status: d.statusName ?? "Unknown",
           eventType: "",
           budgetLow,
           budgetHigh,
@@ -296,9 +301,8 @@ export function registerDealsRoutes(app: Express): void {
         ? new Date(asOfParam + "T00:00:00")
         : new Date();
 
-      const ACTIVE_STAGES = [
-        "Prospecting", "Proposal", "Feedback", "Contracting", "In Progress", "Final Invoicing",
-      ];
+      const allPipelineStatuses = await storage.getDealStatuses();
+      const ACTIVE_STAGES = allPipelineStatuses.filter(s => s.isActive).map(s => s.name);
 
       const [allDeals, transitions] = await Promise.all([
         dealsStorage.getPipelineDeals(ACTIVE_STAGES),
@@ -373,7 +377,7 @@ export function registerDealsRoutes(app: Express): void {
           stageMap.set(stage, { count: 0, value: 0 });
         }
         for (const d of dealsList) {
-          const entry = stageMap.get(d.status);
+          const entry = stageMap.get(d.statusName ?? "");
           if (entry) {
             entry.count++;
             entry.value += dealValue(d);
@@ -409,7 +413,7 @@ export function registerDealsRoutes(app: Express): void {
                 name: d.displayName,
                 client: d.clientName ?? "Unknown",
                 owner: [d.ownerFirstName, d.ownerLastName].filter(Boolean).join(" ") || "Unassigned",
-                stage: d.status,
+                stage: d.statusName ?? "Unknown",
                 lastContactDate: d.lastContactOn ?? started ?? null,
                 value: Math.round(dealValue(d)),
                 daysSinceContact: daysSince,

@@ -1,13 +1,20 @@
 import { cn } from "@/lib/utils";
-import type { DealStatus } from "@shared/schema";
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 
 interface DealStatusBadgeProps {
-  status: DealStatus | string;
+  status: string;
   className?: string;
 }
 
-const statusStyleMap: Record<string, string> = {
+const fallbackStyleMap: Record<string, string> = {
   "Prospecting": "deal-status-prospecting",
+  "Initial Contact": "deal-status-warm-lead",
+  "Qualified Lead": "deal-status-proposal",
+  "Negotiation": "deal-status-contracting",
+  "Closed Won": "deal-status-complete",
+  "Closed Lost": "deal-status-no-go",
+  "Declined by Us": "deal-status-canceled",
+  "Legacy": "deal-status-waiting",
   "Warm Lead": "deal-status-warm-lead",
   "Proposal": "deal-status-proposal",
   "Feedback": "deal-status-waiting",
@@ -20,8 +27,23 @@ const statusStyleMap: Record<string, string> = {
 };
 
 export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
-  const statusClass = statusStyleMap[status] || "deal-status-fallback";
-  
+  const { statusMap } = useDealStatuses();
+  const record = statusMap.get(status);
+
+  const useInlineColors = record && record.colorLight !== "#888888";
+
+  const inlineStyle = useInlineColors
+    ? {
+        "--status-bg": record.colorLight,
+        "--status-bg-dark": record.colorDark,
+        backgroundColor: "var(--status-bg)",
+        borderColor: "var(--status-bg)",
+        color: "#fff",
+      } as React.CSSProperties
+    : undefined;
+
+  const statusClass = useInlineColors ? "" : (fallbackStyleMap[status] || "deal-status-fallback");
+
   return (
     <div className="@container/status w-full flex flex-0 items-center  ">
 
@@ -34,6 +56,7 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
         "@[100px]/status:px-1.5 @[100px]/status:py-0.5 @[100px]/status:text-xs @[100px]/status:rounded-[5px] @[100px]/status:mt-0 @[100px]/status:size-auto @[100px]/status:!border-[1.25px] ",
 
       )}
+      style={inlineStyle}
       data-testid={`badge-deal-status-${status.toLowerCase().replace(/\s+/g, "-")}`}
       title={status}
     >

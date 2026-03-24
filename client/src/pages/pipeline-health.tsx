@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -144,14 +144,7 @@ interface PipelineSnapshot {
   stalledDeals: StalledDeal[];
 }
 
-const STAGE_COLORS: Record<string, string> = {
-  Prospecting: "var(--status-prospecting)",
-  Proposal: "var(--status-proposal)",
-  Feedback: "var(--status-feedback)",
-  Contracting: "var(--status-contracting)",
-  "In Progress": "var(--status-in-progress)",
-  "Final Invoicing": "var(--status-invoicing)",
-};
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 
 function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -343,20 +336,21 @@ function StageChangeTag({ current, previous, label }: { current: number; previou
 
 function StageFunnel({ stageData }: { stageData: PipelineSnapshot["stageData"] }) {
   const maxCount = Math.max(...stageData.map((s) => s.dealCount), 1);
+  const { statusMap } = useDealStatuses();
 
   return (
     <Card data-testid="chart-stage-funnel">
       <CardHeader>
         <CardTitle className="text-base flex items-center">
           Stage Funnel
-          <SectionTooltip text="Shows how many deals are in each active pipeline stage (Prospecting through Final Invoicing) along with their combined value. Bar width is proportional to the deal count relative to the stage with the most deals. When a date range other than 'All time' is selected, percentage changes versus the prior period and the same period last year are shown for each stage's deal count." />
+          <SectionTooltip text="Shows how many deals are in each active pipeline stage along with their combined value. Bar width is proportional to the deal count relative to the stage with the most deals. When a date range other than 'All time' is selected, percentage changes versus the prior period and the same period last year are shown for each stage's deal count." />
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {stageData.map((stage) => {
             const widthPercent = Math.max((stage.dealCount / maxCount) * 100, 8);
-            const color = STAGE_COLORS[stage.stage] || "hsl(var(--primary))";
+            const color = statusMap.get(stage.stage)?.colorLight || "hsl(var(--primary))";
             return (
               <div key={stage.stage} className="space-y-1">
                 <div className="flex items-center justify-between text-sm gap-2 flex-wrap">
@@ -435,6 +429,7 @@ function AgingChart({ agingData }: { agingData: PipelineSnapshot["agingData"] })
 }
 
 function ConversionRates({ rates }: { rates: PipelineSnapshot["conversionRates"] }) {
+  const { statusMap } = useDealStatuses();
   return (
     <Card data-testid="chart-conversion-rates">
       <CardHeader>
@@ -450,7 +445,7 @@ function ConversionRates({ rates }: { rates: PipelineSnapshot["conversionRates"]
         <div className="space-y-3">
           {rates.map((rate) => {
             const widthPercent = Math.max(rate.rate, 8);
-            const color = STAGE_COLORS[rate.fromStage] || "hsl(var(--primary))";
+            const color = statusMap.get(rate.fromStage)?.colorLight || "hsl(var(--primary))";
             return (
               <div key={`${rate.fromStage}-${rate.toStage}`} className="space-y-1">
                 <div className="flex items-center justify-between text-sm gap-2 flex-wrap">

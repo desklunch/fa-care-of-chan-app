@@ -7,6 +7,7 @@ import {
   dealTags,
   dealIntakes,
   dealServices,
+  dealStatuses,
   tags,
   clients,
   deals,
@@ -27,7 +28,8 @@ import {
 export interface ForecastDealRow {
   id: string;
   displayName: string;
-  status: string;
+  status: number;
+  statusName: string | null;
   clientId: string;
   clientName: string | null;
   budgetLow: number | null;
@@ -54,7 +56,8 @@ export interface LinkedDealForClient extends DealWithRelations {
 export interface PipelineDealRow {
   id: string;
   displayName: string;
-  status: string;
+  status: number;
+  statusName: string | null;
   clientId: string;
   clientName: string | null;
   budgetLow: number | null;
@@ -295,6 +298,7 @@ export const dealsStorage = {
         id: deals.id,
         displayName: deals.displayName,
         status: deals.status,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         clientName: clients.name,
         budgetLow: deals.budgetLow,
@@ -306,6 +310,7 @@ export const dealsStorage = {
         industryName: industries.name,
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(industries, eq(deals.industryId, industries.id))
       .where(
@@ -336,6 +341,7 @@ export const dealsStorage = {
         id: deals.id,
         displayName: deals.displayName,
         status: deals.status,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         clientName: clients.name,
         budgetLow: deals.budgetLow,
@@ -347,9 +353,10 @@ export const dealsStorage = {
         ownerLastName: ownerUsers.lastName,
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
-      .where(inArray(deals.status, activeStatuses))
+      .where(inArray(dealStatuses.name, activeStatuses))
       .orderBy(deals.createdAt);
     return results as PipelineDealRow[];
   },

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { domainEvents } from "../lib/events";
-import { dealStatuses, type DealWithRelations, type DealStatus } from "@shared/schema";
+import { type DealWithRelations, type DealStatus, type DealStatusRecord } from "@shared/schema";
 
 const router = Router();
 
@@ -25,7 +25,7 @@ interface DealContextResponse {
   }>;
 }
 
-function formatDealContext(deal: DealWithRelations): DealContextResponse {
+async function formatDealContext(deal: DealWithRelations): Promise<DealContextResponse> {
   const ownerName = deal.owner
     ? `${deal.owner.firstName || ""} ${deal.owner.lastName || ""}`.trim()
     : null;
@@ -34,14 +34,14 @@ function formatDealContext(deal: DealWithRelations): DealContextResponse {
     : null;
   const contactEmail = deal.primaryContact?.emailAddresses?.[0] || null;
 
-  const suggestedActions = getSuggestedActions(deal);
+  const suggestedActions = await getSuggestedActions(deal);
   const summary = generateDealSummary(deal, ownerName, contactName);
 
   return {
     deal: {
       id: deal.id,
       displayName: deal.displayName,
-      status: deal.status as DealStatus,
+      status: (deal.statusName || "") as DealStatus,
       budget: {
         low: deal.budgetLow,
         high: deal.budgetHigh,
@@ -66,7 +66,7 @@ function generateDealSummary(
 ): string {
   const parts: string[] = [];
 
-  parts.push(`${deal.status} stage deal`);
+  parts.push(`${deal.statusName || "Unknown"} stage deal`);
 
   if (deal.client?.name) {
     parts.push(`for ${deal.client.name}`);
@@ -100,22 +100,33 @@ function generateDealSummary(
   return parts.join(", ");
 }
 
-const stageProgression: Partial<Record<DealStatus, DealStatus>> = {
-  "Warm Lead": "Prospecting",
-  "Prospecting": "Proposal",
-  "Proposal": "Feedback",
-  "Feedback": "Contracting",
-  "Contracting": "In Progress",
-  "In Progress": "Final Invoicing",
-  "Final Invoicing": "Complete",
-};
+let cachedStatuses: DealStatusRecord[] | null = null;
+async function getCachedStatuses(): Promise<DealStatusRecord[]> {
+  if (!cachedStatuses) {
+    cachedStatuses = await storage.getDealStatuses();
+    setTimeout(() => { cachedStatuses = null; }, 60000);
+  }
+  return cachedStatuses;
+}
 
-function getSuggestedActions(
+function buildStageProgression(statuses: DealStatusRecord[]): Record<string, string> {
+  const activeStatuses = statuses.filter(s => s.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
+  const progression: Record<string, string> = {};
+  for (let i = 0; i < activeStatuses.length - 1; i++) {
+    progression[activeStatuses[i].name] = activeStatuses[i + 1].name;
+  }
+  return progression;
+}
+
+async function getSuggestedActions(
   deal: DealWithRelations
-): DealContextResponse["suggestedActions"] {
+): Promise<DealContextResponse["suggestedActions"]> {
   const actions: DealContextResponse["suggestedActions"] = [];
+  const statuses = await getCachedStatuses();
+  const stageProgression = buildStageProgression(statuses);
 
-  const nextStage = stageProgression[deal.status as DealStatus];
+  const statusName = deal.statusName || "";
+  const nextStage = stageProgression[statusName];
   if (nextStage) {
     actions.push({
       action: "deals.move_stage",
@@ -167,7 +178,7 @@ router.get("/context/deal/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Deal not found" });
     }
 
-    const context = formatDealContext(deal);
+    const context = await formatDealContext(deal);
     return res.json(context);
   } catch (error) {
     console.error("Error fetching deal context:", error);
@@ -195,14 +206,16 @@ router.get("/context/workspace", async (req: Request, res: Response) => {
     const user = req.user as { id: string; firstName?: string; lastName?: string; role?: string } | undefined;
 
     const allDeals = await storage.getDeals();
+    const statuses = await getCachedStatuses();
     const byStatus: Record<string, number> = {};
 
-    for (const status of dealStatuses) {
-      byStatus[status] = 0;
+    for (const s of statuses) {
+      byStatus[s.name] = 0;
     }
 
     for (const deal of allDeals) {
-      byStatus[deal.status] = (byStatus[deal.status] || 0) + 1;
+      const name = deal.statusName || "Unknown";
+      byStatus[name] = (byStatus[name] || 0) + 1;
     }
 
     const now = new Date();

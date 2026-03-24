@@ -66,6 +66,19 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - Other domains use direct storage access from domain storage files
     - Cross-domain queries (e.g., getDealsByClientId) remain in main storage.ts
 
+    **Deal Status Reference Table (March 2026):**
+    - `deal_statuses` table replaces hardcoded `dealStatuses` array
+    - `deals.status` is now an integer FK to `deal_statuses.id`
+    - `deals.status_legacy` preserves old string status values
+    - 8 pipeline stages seeded: Prospecting, Initial Contact, Qualified Lead, Negotiation, Closed Won, Closed Lost, Declined by Us, Legacy
+    - Active pipeline stages: Prospecting, Initial Contact, Qualified Lead, Negotiation (isActive=true)
+    - Terminal/inactive stages: Closed Won, Closed Lost, Declined by Us, Legacy (isActive=false)
+    - `GET /api/deal-statuses` endpoint returns all status metadata (colors, sort order, win probabilities, active/inactive flags)
+    - Frontend uses `useDealStatuses()` hook to fetch status data from API
+    - `DealWithRelations` includes `statusName` field from JOIN with `deal_statuses`
+    - Migration order for deployments: run `scripts/migrations/001-deal-statuses.sql` before `db:push`
+    - App startup seeds deal_statuses if empty (idempotent, for fresh databases only)
+
 ### Feature Specifications
 The system includes modules for:
 -   **User Management:** Role-based access, employee directory.

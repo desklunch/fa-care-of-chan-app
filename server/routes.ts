@@ -66,6 +66,7 @@ import { registerDealsRoutes } from "./domains/deals";
 import { registerPlacesRoutes } from "./domains/places";
 import { registerVenuesRoutes } from "./domains/venues";
 import { registerFormsRoutes, seedEventProductionTemplate } from "./domains/forms";
+import { seedDealStatuses } from "./domains/deals/deals.seed";
 import { registerAiChatRoutes } from "./domains/ai-chat";
 import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
 import { initializeAuditBridge } from "./lib/audit-bridge";
@@ -109,6 +110,7 @@ export async function registerRoutes(
   registerVenuesRoutes(app);
   registerFormsRoutes(app);
   await seedEventProductionTemplate();
+  await seedDealStatuses();
   registerDriveAttachmentsRoutes(app);
   registerAiChatRoutes(app);
 

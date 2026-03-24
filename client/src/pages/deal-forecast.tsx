@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { usePageHeader } from "@/framework/hooks/page-header-context";
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -130,15 +131,6 @@ interface ForecastData {
   };
 }
 
-const stageProbabilities: Record<string, number> = {
-  "Prospecting": 0.10,
-  "Warm Lead": 0.15,
-  "Proposal": 0.25,
-  "Feedback": 0.40,
-  "Contracting": 0.60,
-  "In Progress": 0.80,
-  "Final Invoicing": 0.95,
-};
 
 type Horizon = 3 | 6 | 12;
 type ChartMode = "weighted" | "unweighted" | "both";
@@ -203,6 +195,17 @@ export default function DealForecast() {
   const [chartMode, setChartMode] = useState<ChartMode>("both");
   const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
   const [demoMode, setDemoMode] = useState(false);
+  const { statuses: allDealStatuses } = useDealStatuses();
+
+  const stageProbabilities = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const s of allDealStatuses) {
+      if (s.winProbability > 0 && s.winProbability < 100) {
+        map[s.name] = s.winProbability / 100;
+      }
+    }
+    return map;
+  }, [allDealStatuses]);
 
   usePageHeader({
     breadcrumbs: [
@@ -794,7 +797,7 @@ export default function DealForecast() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center">
               Stage Win Probabilities
-              <SectionTooltip text="Shows the fixed probability assigned to each pipeline stage, used to weight deal values throughout this forecast. Probabilities are: Prospecting 10%, Warm Lead 15%, Proposal 25%, Feedback 40%, Contracting 60%, In Progress 80%, Final Invoicing 95%. These percentages represent the likelihood that a deal at that stage will ultimately close and generate revenue." />
+              <SectionTooltip text="Shows the probability assigned to each active pipeline stage, used to weight deal values throughout this forecast. These percentages represent the likelihood that a deal at that stage will ultimately close and generate revenue." />
             </CardTitle>
           </CardHeader>
           <CardContent>

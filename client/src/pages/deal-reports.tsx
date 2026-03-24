@@ -14,26 +14,11 @@ import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { gridTheme } from "@/lib/ag-grid-theme";
 import ReactMarkdown from "react-markdown";
-import type { Deal, DealStatus, DealWithRelations, DealService, User as UserType } from "@shared/schema";
+import type { DealWithRelations, DealService, User as UserType } from "@shared/schema";
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 import { usePageHeader } from "@/framework/hooks/page-header-context";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-const SNAPSHOT_STATUSES: DealStatus[] = [
-  "Warm Lead",
-  "Prospecting",
-  "Proposal",
-  "Feedback",
-  "Contracting",
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  "Warm Lead": "var(--status-warm-lead)",
-  "Prospecting": "var(--status-prospecting)",
-  "Proposal": "var(--status-proposal)",
-  "Feedback": "var(--status-feedback)",
-  "Contracting": "var(--status-contracting)",
-};
 
 const REPORT_TABS = [
   { id: "snapshot-30", label: "30 Day New Biz" },
@@ -59,13 +44,20 @@ function getInitials(fullName: string): string {
 }
 
 function SnapshotViewSusana() {
-  const { data: deals = [], isLoading } = useQuery<Deal[]>({
+  const { data: deals = [], isLoading } = useQuery<DealWithRelations[]>({
     queryKey: ["/api/deals"],
   });
 
   const { data: dealServices = [] } = useQuery<DealService[]>({
     queryKey: ["/api/deal-services"],
   });
+
+  const { activeStatuses, statusMap } = useDealStatuses();
+
+  const activeStatusNames = useMemo(
+    () => activeStatuses.filter((s) => s.winProbability > 0 && s.winProbability < 100).map((s) => s.name),
+    [activeStatuses],
+  );
 
   const servicesMap = useMemo(() => {
     return new Map(dealServices.map((s) => [s.id, s.name]));
@@ -75,26 +67,24 @@ function SnapshotViewSusana() {
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
-      // Filter by owner (Susana)
       if (deal.ownerId !== SUSANA_USER_ID) {
         return false;
       }
-      // Filter by status
-      if (!SNAPSHOT_STATUSES.includes(deal.status as DealStatus)) {
+      if (!activeStatusNames.includes(deal.statusName || "")) {
         return false;
       }
       return true;
     });
-  }, [deals]);
+  }, [deals, activeStatusNames]);
 
-  const columns: KanbanColumn<Deal>[] = useMemo(() => {
-    return SNAPSHOT_STATUSES.map((status) => ({
+  const columns: KanbanColumn<DealWithRelations>[] = useMemo(() => {
+    return activeStatusNames.map((status) => ({
       id: status.toLowerCase().replace(/\s+/g, "-"),
       title: status,
-      color: STATUS_COLORS[status] || "#888888",
-      items: filteredDeals.filter((deal) => deal.status === status),
+      color: statusMap.get(status)?.colorLight || "#888888",
+      items: filteredDeals.filter((deal) => deal.statusName === status),
     }));
-  }, [filteredDeals]);
+  }, [filteredDeals, activeStatusNames, statusMap]);
 
   if (isLoading) {
     return (
@@ -127,6 +117,13 @@ function SnapshotView30() {
     queryKey: ["/api/deal-services"],
   });
 
+  const { activeStatuses } = useDealStatuses();
+
+  const activeStatusNames = useMemo(
+    () => activeStatuses.filter((s) => s.winProbability > 0 && s.winProbability < 100).map((s) => s.name),
+    [activeStatuses],
+  );
+
   const servicesMap = useMemo(() => {
     return new Map(dealServices.map((s) => [s.id, s.name]));
   }, [dealServices]);
@@ -139,7 +136,7 @@ function SnapshotView30() {
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
-      if (!SNAPSHOT_STATUSES.includes(deal.status as DealStatus)) {
+      if (!activeStatusNames.includes(deal.statusName || "")) {
         return false;
       }
       if (!deal.lastContactOn) {
@@ -148,7 +145,7 @@ function SnapshotView30() {
       const lastContact = new Date(deal.lastContactOn);
       return lastContact >= fourteenDaysAgo;
     });
-  }, [deals, fourteenDaysAgo]);
+  }, [deals, fourteenDaysAgo, activeStatusNames]);
 
   const columnDefs = useMemo(() => [
     {
@@ -171,7 +168,7 @@ function SnapshotView30() {
     },
     {
       headerName: "Status",
-      field: "status" as const,
+      field: "statusName" as const,
       flex: 1,
       minWidth: 130,
       maxWidth: 160,
@@ -180,7 +177,7 @@ function SnapshotView30() {
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
-          <DealStatusBadge status={params.value as DealWithRelations["status"]} />
+          <DealStatusBadge status={params.value} />
         );
       },
     },

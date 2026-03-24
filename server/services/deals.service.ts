@@ -40,6 +40,14 @@ export class DealsService extends BaseService {
   }
 
   async create(data: CreateDeal, actorId: string): Promise<Deal> {
+    if (!data.status) {
+      const allStatuses = await this.storage.getDealStatuses();
+      const defaultStatus = allStatuses.find(s => s.isDefault);
+      if (defaultStatus) {
+        data = { ...data, status: defaultStatus.id };
+      }
+    }
+
     const parsed = insertDealSchema.safeParse(data);
     if (!parsed.success) {
       throw ServiceError.validation("Invalid deal data", {
@@ -89,11 +97,15 @@ export class DealsService extends BaseService {
     });
 
     if (existingDeal.status !== updatedDeal.status) {
+      const fromName = (existingDeal as DealWithRelations).statusName || String(existingDeal.status);
+      const allStatuses = await this.storage.getDealStatuses();
+      const toStatusRecord = allStatuses.find(s => s.id === updatedDeal.status);
+      const toName = toStatusRecord?.name || String(updatedDeal.status);
       domainEvents.emit({
         type: "deal:stage_changed",
         deal: updatedDeal,
-        fromStage: existingDeal.status as DealStatus,
-        toStage: updatedDeal.status as DealStatus,
+        fromStage: fromName as DealStatus,
+        toStage: toName as DealStatus,
         actorId,
         timestamp: new Date(),
       });
@@ -138,11 +150,16 @@ export class DealsService extends BaseService {
       id
     );
 
-    if (existingDeal.status === newStage) {
+    const targetStatus = await this.storage.getDealStatusByName(newStage);
+    if (!targetStatus) {
+      throw ServiceError.validation(`Invalid status: ${newStage}`);
+    }
+
+    if (existingDeal.status === targetStatus.id) {
       return existingDeal;
     }
 
-    const updatedDeal = await this.storage.updateDeal(id, { status: newStage });
+    const updatedDeal = await this.storage.updateDeal(id, { status: targetStatus.id });
     if (!updatedDeal) {
       throw ServiceError.notFound("Deal", id);
     }
@@ -150,7 +167,7 @@ export class DealsService extends BaseService {
     domainEvents.emit({
       type: "deal:stage_changed",
       deal: updatedDeal,
-      fromStage: existingDeal.status as DealStatus,
+      fromStage: (existingDeal.statusName || String(existingDeal.status)) as DealStatus,
       toStage: newStage,
       actorId,
       timestamp: new Date(),

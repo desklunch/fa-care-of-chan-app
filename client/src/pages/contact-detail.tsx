@@ -608,7 +608,7 @@ export default function ContactDetail() {
                             {deal.displayName}
                           </span>
                         </div>
-                        <DealStatusBadge status={deal.status as DealStatus} />
+                        <DealStatusBadge status={deal.statusName || "Unknown"} />
                       </div>
                     </Link>
                   ))}

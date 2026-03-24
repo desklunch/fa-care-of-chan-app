@@ -552,20 +552,23 @@ export const vendorUpdateTokens = pgTable(
   ],
 );
 
-// Deal status enum values
-export const dealStatuses = [
-  "Prospecting",
-  "Proposal",
-  "Feedback",
-  "Contracting",
-  "In Progress",
-  "Final Invoicing",
-  "Complete",
-  "No-Go",
-  "Canceled",
-  "Warm Lead",
-] as const;
-export type DealStatus = (typeof dealStatuses)[number];
+// Deal statuses reference table
+export const dealStatuses = pgTable("deal_statuses", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  colorLight: varchar("color_light", { length: 100 }).notNull().default("#888888"),
+  colorDark: varchar("color_dark", { length: 100 }).notNull().default("#aaaaaa"),
+  winProbability: integer("win_probability").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isDefault: boolean("is_default").notNull().default(false),
+});
+
+export type DealStatusRecord = typeof dealStatuses.$inferSelect;
+export type InsertDealStatus = typeof dealStatuses.$inferInsert;
+export const insertDealStatusSchema = createInsertSchema(dealStatuses).omit({ id: true });
+
+export type DealStatus = string;
 
 // Deal location type for city or country assignments
 export interface DealLocation {
@@ -694,7 +697,8 @@ export const deals = pgTable(
     externalId: integer("external_id"),
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
-    status: varchar("status", { length: 50 }).notNull().default("Prospecting"),
+    status: integer("status").notNull().references(() => dealStatuses.id),
+    statusLegacy: varchar("status_legacy", { length: 100 }),
     clientId: varchar("client_id").notNull(),
     brandId: varchar("brand_id").references(() => brands.id),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
@@ -1666,6 +1670,7 @@ export type InsertDeal = typeof deals.$inferInsert;
 
 // Deal with relations
 export type DealWithRelations = Deal & {
+  statusName?: string;
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   client?: Pick<Client, "id" | "name"> | null;
   brand?: Pick<Brand, "id" | "name"> | null;
@@ -1691,9 +1696,10 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   createdById: true,
   createdAt: true,
   updatedAt: true,
+  statusLegacy: true,
 }).extend({
   displayName: z.string().min(1, "Display name is required").max(255),
-  status: z.enum(dealStatuses).default("Prospecting"),
+  status: z.number().int(),
   clientId: z.string().min(1, "Client is required"),
   locations: z.array(dealLocationSchema).default([]),
   budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),

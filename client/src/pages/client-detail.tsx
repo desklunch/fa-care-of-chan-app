@@ -472,7 +472,7 @@ export default function ClientDetail() {
                           <Badge variant="outline" className="text-xs no-default-hover-elevate no-default-active-elevate">Primary</Badge>
                         </div>
                         <div>
-                          <DealStatusBadge status={deal.status as DealStatus} />
+                          <DealStatusBadge status={deal.statusName || "Unknown"} />
                         </div>
                       </div>
                     </Link>
@@ -492,7 +492,7 @@ export default function ClientDetail() {
                           )}
                         </div>
                         <div>
-                          <DealStatusBadge status={deal.status as DealStatus} />
+                          <DealStatusBadge status={deal.statusName || "Unknown"} />
                         </div>
                       </div>
                     </Link>

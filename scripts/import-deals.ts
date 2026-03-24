@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { db } from "../server/db";
-import { deals, clients, contacts, users } from "../shared/schema";
+import { deals, clients, contacts, users, dealStatuses } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 interface ImportLog {
@@ -175,6 +175,16 @@ async function main() {
   const existingContacts = await db.select({ id: contacts.id }).from(contacts);
   const contactIdSet = new Set(existingContacts.map((c) => c.id));
 
+  const allStatuses = await db.select().from(dealStatuses);
+  if (allStatuses.length === 0) {
+    throw new Error("deal_statuses table is empty. Run 'npx tsx scripts/migrate-deal-statuses.ts' first to seed statuses.");
+  }
+  const statusNameToId = new Map(allStatuses.map((s) => [s.name, s.id]));
+  const legacyStatusId = statusNameToId.get("Legacy");
+  if (!legacyStatusId) {
+    throw new Error("'Legacy' status not found in deal_statuses table. Ensure statuses are seeded correctly.");
+  }
+
   const dataRows = rows.slice(1);
   for (let i = 0; i < dataRows.length; i++) {
     const values = dataRows[i];
@@ -238,7 +248,7 @@ async function main() {
       await db.insert(deals).values({
         externalId: externalId,
         displayName: displayName,
-        status: data["status"] || "Prospecting",
+        status: statusNameToId.get(data["status"]) ?? legacyStatusId,
         clientId: clientId,
         locations: locations,
         services: services,
