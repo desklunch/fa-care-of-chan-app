@@ -3,7 +3,7 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { DealsService } from "../services/deals.service";
 import { ServiceError } from "../services/base.service";
-import { dealStatuses, type DealStatus } from "@shared/schema";
+import { type DealStatus, type DealStatusRecord } from "@shared/schema";
 
 const dealsService = new DealsService(storage);
 
@@ -23,18 +23,21 @@ function formatError(error: unknown): string {
   return String(error);
 }
 
-export function createMcpServer(): McpServer {
+export async function createMcpServer(): Promise<McpServer> {
   const server = new McpServer({
     name: "coca-mcp-server",
     version: "1.0.0",
   });
 
+  const allStatuses = await storage.getDealStatuses();
+  const statusNameList = allStatuses.map((s) => s.name).join(", ");
+
   server.tool(
     "deals_list",
     "Search and filter deals by status. Returns a list of deals with their key information.",
     {
-      status: z.array(z.enum(dealStatuses as unknown as [string, ...string[]])).optional()
-        .describe("Filter by deal status(es). Available statuses: Prospecting, Proposal, Feedback, Contracting, In Progress, Final Invoicing, Complete, No-Go, Canceled, Warm Lead"),
+      status: z.array(z.string()).optional()
+        .describe(`Filter by deal status name(s). Available statuses: ${statusNameList}`),
     },
     async ({ status }) => {
       try {
@@ -119,18 +122,26 @@ export function createMcpServer(): McpServer {
     {
       displayName: z.string().min(1).describe("Name of the deal (e.g., 'Acme Corp Holiday Party')"),
       clientId: z.string().describe("The client ID to associate with this deal"),
-      status: z.enum(dealStatuses as unknown as [string, ...string[]]).optional()
-        .describe("Initial status (default: Prospecting)"),
+      status: z.string().optional()
+        .describe("Initial status name (default: uses the default status from the deal_statuses table)"),
       budgetLow: z.number().optional().describe("Minimum budget in dollars"),
       budgetHigh: z.number().optional().describe("Maximum budget in dollars"),
     },
     async ({ displayName, clientId, status, budgetLow, budgetHigh }) => {
       try {
+        const allStatuses = await storage.getDealStatuses();
+        let statusId: number;
+        if (status) {
+          const found = allStatuses.find(s => s.name === status);
+          statusId = found ? found.id : (allStatuses.find(s => s.isDefault)?.id ?? allStatuses[0].id);
+        } else {
+          statusId = allStatuses.find(s => s.isDefault)?.id ?? allStatuses[0].id;
+        }
         const deal = await dealsService.create(
           {
             displayName,
             clientId,
-            status: (status as DealStatus) || "Prospecting",
+            status: statusId,
             budgetLow: budgetLow ?? null,
             budgetHigh: budgetHigh ?? null,
             locations: [],
@@ -203,8 +214,8 @@ export function createMcpServer(): McpServer {
     "Move a deal to a different pipeline stage.",
     {
       id: z.string().describe("The deal ID"),
-      stage: z.enum(dealStatuses as unknown as [string, ...string[]])
-        .describe("Target stage: Prospecting, Proposal, Feedback, Contracting, In Progress, Final Invoicing, Complete, No-Go, Canceled, or Warm Lead"),
+      stage: z.string()
+        .describe(`Target stage name: ${allStatuses.filter(s => s.isActive).map(s => s.name).join(", ")}`),
     },
     async ({ id, stage }) => {
       try {
@@ -431,20 +442,25 @@ export function createMcpServer(): McpServer {
     {},
     async () => {
       try {
-        const deals = await storage.getDeals();
+        const [deals, allStatuses] = await Promise.all([
+          storage.getDeals(),
+          storage.getDealStatuses(),
+        ]);
         const byStatus: Record<string, number> = {};
-        for (const status of dealStatuses) {
-          byStatus[status] = 0;
+        for (const s of allStatuses) {
+          byStatus[s.name] = 0;
         }
+        const activeStatusNames = new Set(allStatuses.filter(s => s.isActive).map(s => s.name));
         for (const deal of deals) {
-          byStatus[deal.status] = (byStatus[deal.status] || 0) + 1;
+          const name = deal.statusName || "Unknown";
+          byStatus[name] = (byStatus[name] || 0) + 1;
         }
         
         const result = {
           totalDeals: deals.length,
           dealsByStatus: byStatus,
           activeDeals: deals.filter(
-            (d) => !["Complete", "No-Go", "Canceled"].includes(d.status)
+            (d) => activeStatusNames.has(d.statusName || "")
           ).length,
         };
         

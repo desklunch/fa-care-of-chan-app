@@ -37,10 +37,11 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `contacts/` - Contact CRUD with email/social management (12 routes)
     - `clients/` - Client organizations management (10 routes)
     - `vendors/` - Vendor management (14 routes)
-    - `deals/` - Deal pipeline with service layer, linked clients, deal tags (16 routes)
+    - `deals/` - Deal pipeline with service layer, linked clients, deal tags, deal intakes, intake-to-deal sync (21 routes)
     - `places/` - Google Places API integration (10 routes)
     - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
     - `forms/` - Form templates, requests, and public form submission (15 routes)
+    - `drive-attachments/` - Google Drive file attachments for deals, venues, clients, vendors, contacts (3 routes)
     
     **Refactor Status (January 2026):**
     - `routes.ts` reduced from 6,714 to 506 lines (92% reduction)
@@ -65,6 +66,19 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - Other domains use direct storage access from domain storage files
     - Cross-domain queries (e.g., getDealsByClientId) remain in main storage.ts
 
+    **Deal Status Reference Table (March 2026):**
+    - `deal_statuses` table replaces hardcoded `dealStatuses` array
+    - `deals.status` is now an integer FK to `deal_statuses.id`
+    - `deals.status_legacy` preserves old string status values
+    - 8 pipeline stages seeded: Prospecting, Initial Contact, Qualified Lead, Negotiation, Closed Won, Closed Lost, Declined by Us, Legacy
+    - Active pipeline stages: Prospecting, Initial Contact, Qualified Lead, Negotiation (isActive=true)
+    - Terminal/inactive stages: Closed Won, Closed Lost, Declined by Us, Legacy (isActive=false)
+    - `GET /api/deal-statuses` endpoint returns all status metadata (colors, sort order, win probabilities, active/inactive flags)
+    - Frontend uses `useDealStatuses()` hook to fetch status data from API
+    - `DealWithRelations` includes `statusName` field from JOIN with `deal_statuses`
+    - Migration order for deployments: run `scripts/migrations/001-deal-statuses.sql` before `db:push`
+    - App startup seeds deal_statuses if empty (idempotent, for fresh databases only)
+
 ### Feature Specifications
 The system includes modules for:
 -   **User Management:** Role-based access, employee directory.
@@ -75,6 +89,7 @@ The system includes modules for:
 -   **Google Places Integration:** Facilitates searching for venues, extracting details (address, phone, website), and importing photos from Google Places.
 -   **Photo Management:** Stores venue-related photos in Replit App Storage, generates thumbnails, handles uploads from various sources (direct, URL, Google Places), and supports drag-and-drop reordering with a hero image flag.
 -   **File Management:** Manages venue floorplans and general attachments, supporting various file types, secure storage, and detailed metadata.
+-   **Google Drive Attachments:** Allows users to attach Google Drive files (Docs, Sheets, Slides, PDFs, etc.) to deals, venues, clients, vendors, and contacts by pasting Drive sharing links. Uses the Google Drive connector for metadata resolution. Attached files display name, type icon, who attached them, and when. Files open in Google Drive in a new tab.
 
 ### System Design Choices
 -   **Database Schema:** Comprehensive schemas for users, invites, sessions, audit logs, app features, releases, contacts, venue photos, and venue files, including relationships and specific data types for each entity.

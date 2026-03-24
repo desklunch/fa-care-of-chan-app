@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
@@ -16,11 +17,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { SquarePen, FileText, Calendar, Layers } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { SquarePen, FileText, Calendar, Layers, Trash2, Copy } from "lucide-react";
 import { format } from "date-fns";
-import type { FormTemplate, FormSection, FormField as FormFieldType } from "@shared/schema";
+import type { FormTemplate, InsertFormTemplate, FormSection, FormField as FormFieldType } from "@shared/schema";
 
 function ReadOnlyFormRenderer({ schema }: { schema: FormSection[] }) {
   if (!schema || schema.length === 0) {
@@ -134,14 +148,55 @@ export default function FormTemplateDetailPage() {
     enabled: !!id && isAuthenticated,
   });
 
+  const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const duplicateMutation = useMutation({
+    mutationFn: async (data: InsertFormTemplate) => {
+      const res = await apiRequest("POST", "/api/form-templates", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      toast({ title: "Template duplicated", description: "Form template has been duplicated successfully." });
+      navigate("/forms");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
+        navigate("/");
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Failed to duplicate template." });
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      await apiRequest("DELETE", `/api/form-templates/${templateId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      toast({ title: "Template deleted", description: "Form template has been deleted." });
+      navigate("/forms");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
+        navigate("/");
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Failed to delete template." });
+      }
+    },
+  });
+
   usePageTitle(template?.name || "Form Template");
 
   if (isAuthLoading || isLoading) {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Forms" },
-          { label: "Templates", href: "/forms/templates" },
+          { label: "Forms", href: "/forms" },
           { label: "Loading..." },
         ]}
       >
@@ -163,8 +218,7 @@ export default function FormTemplateDetailPage() {
     return (
       <PageLayout
         breadcrumbs={[
-          { label: "Forms" },
-          { label: "Templates", href: "/forms/templates" },
+          { label: "Forms", href: "/forms" },
           { label: "Not Found" },
         ]}
       >
@@ -176,7 +230,7 @@ export default function FormTemplateDetailPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 The template you're looking for doesn't exist or has been deleted.
               </p>
-              <Button onClick={() => navigate("/forms/templates")}>
+              <Button onClick={() => navigate("/forms")}>
                 Back to Templates
               </Button>
             </CardContent>
@@ -193,16 +247,34 @@ export default function FormTemplateDetailPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Forms" },
-        { label: "Templates", href: "/forms/templates" },
+        { label: "Forms", href: "/forms" },
         { label: template.name },
       ]}
-      primaryAction={{
-        label: "Edit",
-        href: `/forms/templates/${id}/edit`,
-        icon: SquarePen,
-        variant: "default",
-      }}
+      additionalActions={[
+        {
+          label: "Edit",
+          href: `/forms/${id}/edit`,
+          icon: SquarePen,
+        },
+        {
+          label: "Duplicate",
+          icon: Copy,
+          onClick: () => {
+            duplicateMutation.mutate({
+              name: `${template.name} (Copy)`,
+              description: template.description,
+              category: template.category,
+              formSchema: template.formSchema,
+            } as InsertFormTemplate);
+          },
+        },
+        {
+          label: "Delete",
+          icon: Trash2,
+          variant: "destructive" as const,
+          onClick: () => setShowDeleteDialog(true),
+        },
+      ]}
     >
       <div className="p-6 space-y-6 max-w-4xl">
         <Card>
@@ -248,6 +320,27 @@ export default function FormTemplateDetailPage() {
           <ReadOnlyFormRenderer schema={formSchema} />
         </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{template.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate(template.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }

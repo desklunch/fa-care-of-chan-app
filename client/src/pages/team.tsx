@@ -177,6 +177,7 @@ export default function Team() {
           "location",
         ]}
         searchPlaceholder="Search team..."
+        hideColumnSelector
         onRowClick={(user) => setLocation(`/team/${user.id}`)}
         getRowId={(user) => user.id || ""}
         emptyMessage="No team members found"

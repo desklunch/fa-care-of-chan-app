@@ -1,17 +1,45 @@
 import { db } from "../../db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, lt, isNotNull, not, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
+  auditLogs,
   dealClients,
   dealTags,
+  dealIntakes,
+  dealServices,
+  dealStatuses,
   tags,
   clients,
   deals,
   users,
   brands,
   contacts,
+  industries,
   type DealWithRelations,
+  type DealIntake,
+  type DealIntakeWithRelations,
+  type CreateDealIntake,
+  type UpdateDealIntake,
+  type FormSection,
+  type DealLocation,
+  type DealEvent,
 } from "@shared/schema";
+
+export interface ForecastDealRow {
+  id: string;
+  displayName: string;
+  status: number;
+  statusName: string | null;
+  clientId: string;
+  clientName: string | null;
+  budgetLow: number | null;
+  budgetHigh: number | null;
+  locations: DealLocation[];
+  eventSchedule: DealEvent[];
+  serviceIds: number[] | null;
+  earliestEventDate: string | null;
+  industryName: string | null;
+}
 
 export interface DealLinkedClient {
   dealId: string;
@@ -23,6 +51,28 @@ export interface DealLinkedClient {
 
 export interface LinkedDealForClient extends DealWithRelations {
   linkLabel: string | null;
+}
+
+export interface PipelineDealRow {
+  id: string;
+  displayName: string;
+  status: number;
+  statusName: string | null;
+  clientId: string;
+  clientName: string | null;
+  budgetLow: number | null;
+  budgetHigh: number | null;
+  startedOn: string | null;
+  lastContactOn: string | null;
+  createdAt: Date | null;
+  ownerFirstName: string | null;
+  ownerLastName: string | null;
+}
+
+export interface StatusTransitionRow {
+  entityId: string;
+  performedAt: Date | null;
+  changes: unknown;
 }
 
 export const dealsStorage = {
@@ -161,5 +211,173 @@ export const dealsStorage = {
       .from(dealTags)
       .innerJoin(tags, eq(dealTags.tagId, tags.id));
     return results;
+  },
+
+  async getDealIntake(dealId: string): Promise<DealIntakeWithRelations | null> {
+    const results = await db
+      .select({
+        id: dealIntakes.id,
+        dealId: dealIntakes.dealId,
+        templateId: dealIntakes.templateId,
+        templateName: dealIntakes.templateName,
+        formSchema: dealIntakes.formSchema,
+        responseData: dealIntakes.responseData,
+        status: dealIntakes.status,
+        completedAt: dealIntakes.completedAt,
+        createdById: dealIntakes.createdById,
+        createdAt: dealIntakes.createdAt,
+        updatedAt: dealIntakes.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+      })
+      .from(dealIntakes)
+      .leftJoin(users, eq(dealIntakes.createdById, users.id))
+      .where(eq(dealIntakes.dealId, dealId));
+
+    if (results.length === 0) return null;
+
+    const r = results[0];
+    return {
+      id: r.id,
+      dealId: r.dealId,
+      templateId: r.templateId,
+      templateName: r.templateName,
+      formSchema: r.formSchema as FormSection[],
+      responseData: r.responseData as Record<string, unknown>,
+      status: r.status,
+      completedAt: r.completedAt,
+      createdById: r.createdById,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      createdBy: r.createdById
+        ? {
+            id: r.createdById,
+            firstName: r.createdByFirstName,
+            lastName: r.createdByLastName,
+          }
+        : null,
+    };
+  },
+
+  async createDealIntake(data: CreateDealIntake, createdById: string): Promise<DealIntake> {
+    const [intake] = await db
+      .insert(dealIntakes)
+      .values({
+        ...data,
+        createdById,
+      })
+      .returning();
+    return intake;
+  },
+
+  async updateDealIntake(dealId: string, data: UpdateDealIntake): Promise<DealIntake | null> {
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.responseData !== undefined) updateData.responseData = data.responseData;
+    if (data.status !== undefined) {
+      updateData.status = data.status;
+      if (data.status === "completed") {
+        updateData.completedAt = new Date();
+      }
+    }
+
+    const [intake] = await db
+      .update(dealIntakes)
+      .set(updateData)
+      .where(eq(dealIntakes.dealId, dealId))
+      .returning();
+    return intake || null;
+  },
+
+  async deleteDealIntake(dealId: string): Promise<void> {
+    await db.delete(dealIntakes).where(eq(dealIntakes.dealId, dealId));
+  },
+
+  async getDealsForForecast(startDate: string, endDate: string): Promise<ForecastDealRow[]> {
+    const results = await db
+      .select({
+        id: deals.id,
+        displayName: deals.displayName,
+        status: deals.status,
+        statusName: dealStatuses.name,
+        clientId: deals.clientId,
+        clientName: clients.name,
+        budgetLow: deals.budgetLow,
+        budgetHigh: deals.budgetHigh,
+        locations: deals.locations,
+        eventSchedule: deals.eventSchedule,
+        serviceIds: deals.serviceIds,
+        earliestEventDate: deals.earliestEventDate,
+        industryName: industries.name,
+      })
+      .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(industries, eq(deals.industryId, industries.id))
+      .where(
+        and(
+          isNotNull(deals.earliestEventDate),
+          gte(deals.earliestEventDate, startDate),
+          lte(deals.earliestEventDate, endDate)
+        )
+      )
+      .orderBy(deals.earliestEventDate);
+    return results as ForecastDealRow[];
+  },
+
+  async getAllDealServices(): Promise<{ id: number; name: string }[]> {
+    const results = await db
+      .select({
+        id: dealServices.id,
+        name: dealServices.name,
+      })
+      .from(dealServices);
+    return results;
+  },
+
+  async getPipelineDeals(activeStatuses: string[]): Promise<PipelineDealRow[]> {
+    const ownerUsers = alias(users, "owner_users");
+    const results = await db
+      .select({
+        id: deals.id,
+        displayName: deals.displayName,
+        status: deals.status,
+        statusName: dealStatuses.name,
+        clientId: deals.clientId,
+        clientName: clients.name,
+        budgetLow: deals.budgetLow,
+        budgetHigh: deals.budgetHigh,
+        startedOn: deals.startedOn,
+        lastContactOn: deals.lastContactOn,
+        createdAt: deals.createdAt,
+        ownerFirstName: ownerUsers.firstName,
+        ownerLastName: ownerUsers.lastName,
+      })
+      .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
+      .where(inArray(dealStatuses.name, activeStatuses))
+      .orderBy(deals.createdAt);
+    return results as PipelineDealRow[];
+  },
+
+  async getStatusTransitions(): Promise<StatusTransitionRow[]> {
+    const results = await db
+      .select({
+        entityId: auditLogs.entityId,
+        performedAt: auditLogs.performedAt,
+        changes: auditLogs.changes,
+      })
+      .from(auditLogs)
+      .where(
+        and(
+          eq(auditLogs.entityType, "deal"),
+          eq(auditLogs.action, "update"),
+          eq(auditLogs.status, "success"),
+          sql`${auditLogs.changes}::jsonb->>'status' IS NOT NULL`
+        )
+      )
+      .orderBy(auditLogs.performedAt);
+    return results as StatusTransitionRow[];
   },
 };

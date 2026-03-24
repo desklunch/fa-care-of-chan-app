@@ -15,6 +15,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { PageLayout } from "@/framework";
 import { FormBuilder } from "@/components/form-builder";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -39,6 +40,7 @@ export default function AdminFormTemplateFormPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [formSchema, setFormSchema] = useState<FormSection[]>([]);
 
   const { data: template, isLoading: isTemplateLoading } = useQuery<FormTemplate>({
@@ -52,6 +54,7 @@ export default function AdminFormTemplateFormPage() {
     if (template) {
       setName(template.name);
       setDescription(template.description || "");
+      setCategory(template.category || "");
       setFormSchema((template.formSchema as FormSection[]) || []);
     }
   }, [template]);
@@ -64,7 +67,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template created", description: "Form template has been created successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -84,7 +87,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template updated", description: "Form template has been updated successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -103,7 +106,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template deleted", description: "Form template has been deleted successfully." });
-      navigate("/forms/templates");
+      navigate("/forms");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -120,10 +123,15 @@ export default function AdminFormTemplateFormPage() {
       toast({ variant: "destructive", title: "Validation error", description: "Template name is required." });
       return;
     }
+    if (!category) {
+      toast({ variant: "destructive", title: "Validation error", description: "Please select a category." });
+      return;
+    }
     
     const data = {
       name: name.trim(),
       description: description.trim(),
+      category: category || null,
       formSchema,
     };
 
@@ -149,13 +157,13 @@ export default function AdminFormTemplateFormPage() {
       label: "Cancel",
       icon: X,
       variant: "outline" as const,
-      onClick: () => navigate("/forms/templates"),
+      onClick: () => navigate("/forms"),
     },
   ];
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates", href: "/forms/templates" }, { label: isEditing ? "Edit" : "New" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms", href: "/forms" }, { label: isEditing ? "Edit" : "New" }]}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -172,7 +180,7 @@ export default function AdminFormTemplateFormPage() {
 
   if (isEditing && isTemplateLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms" }, { label: "Templates", href: "/forms/templates" }, { label: "Edit" }]}>
+      <PageLayout breadcrumbs={[{ label: "Forms", href: "/forms" }, { label: "Edit" }]}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -185,8 +193,7 @@ export default function AdminFormTemplateFormPage() {
   return (
     <PageLayout
       breadcrumbs={[
-        { label: "Forms" },
-        { label: "Templates", href: "/forms/templates" },
+        { label: "Forms", href: "/forms" },
         { label: isEditing ? "Edit Template" : "New Template" },
       ]}
       primaryAction={primaryAction}
@@ -195,8 +202,7 @@ export default function AdminFormTemplateFormPage() {
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Template Details</CardTitle>
-            <CardDescription>Basic information about this form template.</CardDescription>
+            <CardTitle>Template Info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -211,17 +217,29 @@ export default function AdminFormTemplateFormPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="template-description">Description (Optional)</Label>
-                <Textarea
-                  id="template-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe the purpose of this template"
-                  className="resize-none"
-                  rows={3}
-                  data-testid="textarea-template-description"
-                />
+                <Label htmlFor="template-category">Category</Label>
+                <Select value={category} onValueChange={setCategory} data-testid="select-template-category">
+                  <SelectTrigger id="template-category" data-testid="select-template-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="client_intake" data-testid="option-category-client-intake">Client Intake</SelectItem>
+                    <SelectItem value="vendor_inquiry" data-testid="option-category-vendor-inquiry">Vendor Inquiry</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="template-description">Description (Optional)</Label>
+              <Textarea
+                id="template-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the purpose of this template"
+                className="resize-none"
+                rows={3}
+                data-testid="textarea-template-description"
+              />
             </div>
           </CardContent>
         </Card>
@@ -241,7 +259,7 @@ export default function AdminFormTemplateFormPage() {
         <div className="flex justify-end gap-3 pt-2">
           <Button
             variant="outline"
-            onClick={() => navigate("/forms/templates")}
+            onClick={() => navigate("/forms")}
             disabled={isPending}
             data-testid="button-cancel-template"
           >

@@ -58,12 +58,32 @@ import {
   Link as LinkIcon,
   ToggleLeft,
   Layers,
+  FileEdit,
+  MapPin,
+  CalendarRange,
+  Briefcase,
+  Tag,
+  Unlink,
 } from "lucide-react";
-import type { FormSection, FormField, FormFieldType } from "@shared/schema";
+import type { FormSection, FormField, FormFieldType, EntityMapping } from "@shared/schema";
+import { mappableEntities } from "@shared/schema";
+
+const textCompatibleTypes: FormFieldType[] = ["text", "textarea", "richtext", "email", "phone", "url"];
+
+function isFieldTypeCompatible(fieldType: FormFieldType, propertyFieldType: FormFieldType): boolean {
+  if (fieldType === propertyFieldType) return true;
+  if (propertyFieldType === "text" && textCompatibleTypes.includes(fieldType)) return true;
+  if (propertyFieldType === "textarea" && textCompatibleTypes.includes(fieldType)) return true;
+  if (fieldType === "text" && (propertyFieldType === "textarea" || propertyFieldType === "richtext")) return true;
+  if (fieldType === "textarea" && (propertyFieldType === "text" || propertyFieldType === "richtext")) return true;
+  if (fieldType === "richtext" && (propertyFieldType === "text" || propertyFieldType === "textarea")) return true;
+  return false;
+}
 
 const fieldTypeIcons: Record<FormFieldType, typeof Type> = {
   text: Type,
   textarea: AlignLeft,
+  richtext: FileEdit,
   number: Hash,
   email: Mail,
   phone: Phone,
@@ -73,11 +93,16 @@ const fieldTypeIcons: Record<FormFieldType, typeof Type> = {
   date: Calendar,
   toggle: ToggleLeft,
   array: Layers,
+  location: MapPin,
+  eventSchedule: CalendarRange,
+  services: Briefcase,
+  tags: Tag,
 };
 
 const fieldTypeLabels: Record<FormFieldType, string> = {
   text: "Short Text",
   textarea: "Long Text",
+  richtext: "Rich Text",
   number: "Number",
   email: "Email",
   phone: "Phone",
@@ -87,6 +112,10 @@ const fieldTypeLabels: Record<FormFieldType, string> = {
   date: "Date",
   toggle: "Toggle",
   array: "List/Array",
+  location: "Location",
+  eventSchedule: "Event Schedule",
+  services: "Services",
+  tags: "Tags",
 };
 
 interface FormBuilderProps {
@@ -430,18 +459,40 @@ function FieldEditorDialog({ field, open, onOpenChange, onSave }: FieldEditorDia
             <Select
               value={editedField.type}
               onValueChange={(value: FormFieldType) => updateField({ type: value, options: value === "select" ? [] : undefined })}
+              disabled={(() => {
+                if (!editedField.entityMapping?.propertyKey) return false;
+                const entity = mappableEntities[editedField.entityMapping.entityType];
+                const prop = entity?.properties.find((p) => p.key === editedField.entityMapping!.propertyKey);
+                if (!prop) return false;
+                return !textCompatibleTypes.includes(prop.fieldType);
+              })()}
             >
               <SelectTrigger id="field-type" data-testid="select-field-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(fieldTypeLabels).map(([type, label]) => (
+                {Object.entries(fieldTypeLabels)
+                  .filter(([type]) => {
+                    if (!editedField.entityMapping?.propertyKey) return true;
+                    const entity = mappableEntities[editedField.entityMapping.entityType];
+                    const prop = entity?.properties.find((p) => p.key === editedField.entityMapping!.propertyKey);
+                    if (!prop) return true;
+                    return isFieldTypeCompatible(type as FormFieldType, prop.fieldType);
+                  })
+                  .map(([type, label]) => (
                   <SelectItem key={type} value={type}>
                     {label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {editedField.entityMapping?.propertyKey && (() => {
+              const entity = mappableEntities[editedField.entityMapping!.entityType];
+              const prop = entity?.properties.find((p) => p.key === editedField.entityMapping!.propertyKey);
+              return prop && !textCompatibleTypes.includes(prop.fieldType)
+                ? <p className="text-xs text-muted-foreground">Type is locked by property mapping.</p>
+                : <p className="text-xs text-muted-foreground">Type is limited to compatible types by property mapping.</p>;
+            })()}
           </div>
 
           <div className="space-y-2">
@@ -476,6 +527,87 @@ function FieldEditorDialog({ field, open, onOpenChange, onSave }: FieldEditorDia
               data-testid="checkbox-field-required"
             />
             <Label htmlFor="field-required" className="cursor-pointer">Required field</Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Property Mapping</Label>
+            <p className="text-xs text-muted-foreground">
+              Optionally map this field to an entity property for data sync.
+            </p>
+            <Select
+              value={editedField.entityMapping?.entityType || "__none__"}
+              onValueChange={(val) => {
+                if (val === "__none__") {
+                  updateField({ entityMapping: undefined });
+                } else {
+                  updateField({
+                    entityMapping: { entityType: val, propertyKey: "" },
+                  });
+                }
+              }}
+            >
+              <SelectTrigger data-testid="select-entity-type">
+                <SelectValue placeholder="No mapping" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">No mapping</SelectItem>
+                {Object.entries(mappableEntities).map(([key, entity]) => (
+                  <SelectItem key={key} value={key}>
+                    {entity.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {editedField.entityMapping?.entityType && mappableEntities[editedField.entityMapping.entityType] && (
+              <Select
+                value={editedField.entityMapping.propertyKey || "__none__"}
+                onValueChange={(propKey) => {
+                  if (propKey === "__none__") {
+                    updateField({
+                      entityMapping: { ...editedField.entityMapping!, propertyKey: "" },
+                    });
+                    return;
+                  }
+                  const entity = mappableEntities[editedField.entityMapping!.entityType];
+                  const prop = entity?.properties.find((p) => p.key === propKey);
+                  if (prop) {
+                    const updates: Partial<FormField> = {
+                      entityMapping: { ...editedField.entityMapping!, propertyKey: propKey },
+                    };
+                    if (!isFieldTypeCompatible(editedField.type, prop.fieldType)) {
+                      updates.type = prop.fieldType;
+                    }
+                    updateField(updates);
+                  }
+                }}
+              >
+                <SelectTrigger data-testid="select-entity-property">
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Select property...</SelectItem>
+                  {mappableEntities[editedField.entityMapping.entityType].properties
+                    .filter((prop) => isFieldTypeCompatible(editedField.type, prop.fieldType))
+                    .map((prop) => (
+                    <SelectItem key={prop.key} value={prop.key}>
+                      {prop.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {editedField.entityMapping?.propertyKey && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => updateField({ entityMapping: undefined })}
+                className="text-muted-foreground gap-1"
+                data-testid="button-clear-mapping"
+              >
+                <Unlink className="h-3 w-3" />
+                Clear Mapping
+              </Button>
+            )}
           </div>
 
           {editedField.type === "select" && (

@@ -151,6 +151,7 @@ import {
   type UpdateDeal,
   type DealStatus,
   type DealEvent,
+  type DealStatusRecord,
   dealStatuses,
   dealTasks,
   computeEarliestEventDate,
@@ -327,6 +328,10 @@ export interface IStorage {
   getCompletedFeaturesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; completedAt: Date | null }[]>;
   getFixedIssuesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; fixedAt: Date | null }[]>;
   getLatestReleasedVersion(): Promise<AppRelease | undefined>;
+  
+  // Deal status operations
+  getDealStatuses(): Promise<DealStatusRecord[]>;
+  getDealStatusByName(name: string): Promise<DealStatusRecord | undefined>;
   
   // Deal operations
   getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]>;
@@ -1912,6 +1917,16 @@ export class DatabaseStorage implements IStorage {
     return release;
   }
 
+  // Deal status operations
+  async getDealStatuses(): Promise<DealStatusRecord[]> {
+    return db.select().from(dealStatuses).orderBy(asc(dealStatuses.sortOrder));
+  }
+
+  async getDealStatusByName(name: string): Promise<DealStatusRecord | undefined> {
+    const [result] = await db.select().from(dealStatuses).where(eq(dealStatuses.name, name));
+    return result;
+  }
+  
   // Deal operations
   // Note: eventSchedule is excluded from list view as it's only needed for deal editing
   async getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]> {
@@ -1923,6 +1938,8 @@ export class DatabaseStorage implements IStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        statusLegacy: deals.statusLegacy,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         brandId: deals.brandId,
         budgetHigh: deals.budgetHigh,
@@ -1977,6 +1994,7 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(brands, eq(deals.brandId, brands.id))
@@ -1984,7 +2002,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id));
 
     if (options?.status && options.status.length > 0) {
-      query = query.where(inArray(deals.status, options.status)) as any;
+      query = query.where(inArray(dealStatuses.name, options.status)) as any;
     }
 
     const results = await query.orderBy(desc(deals.sortOrder), desc(deals.dealNumber));
@@ -2000,6 +2018,8 @@ export class DatabaseStorage implements IStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        statusLegacy: deals.statusLegacy,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
@@ -2055,6 +2075,7 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(brands, eq(deals.brandId, brands.id))
@@ -2073,6 +2094,8 @@ export class DatabaseStorage implements IStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        statusLegacy: deals.statusLegacy,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
@@ -2120,6 +2143,7 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(brands, eq(deals.brandId, brands.id))
@@ -2138,6 +2162,8 @@ export class DatabaseStorage implements IStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        statusLegacy: deals.statusLegacy,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
@@ -2185,6 +2211,7 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(brands, eq(deals.brandId, brands.id))

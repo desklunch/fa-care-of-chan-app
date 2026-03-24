@@ -1,0 +1,95 @@
+SECTION_NAME,FIELD_LABEL,FIELD_DESCRIPTION,FIELD TYPE
+Event Overview,Event Name,,Short Text
+Event Overview,Context + Concept,Can you tell me more about the event concept you have in mind?,Rich Text
+Event Overview,Event Purpose,"Our most successful events are ones that have depth to it, meaning that there is a larger purpose outside of just promoting the brand. The event needs to have meaning so you're guests leave feeling like the event was impactful. 
+
+With that, what message do you want guests to leave with? What are the brand values that you want to portray with this event? Can you tell me the purpose behind why you are gathering this group of people? 
+
+Double down on the purpose:
+- Why here? Why now?
+- What problem are you trying to solve?
+- Why is this important?
+- What is your desired outcome?",Rich Text
+Event Overview,Marketing Goals,"What are your specific marketing goals for this event?
+Is it Press Coverage, UGC/Social Coverage, Community Building, Etc?",Rich Text
+Event Overview,Event KPIs,"What is the one thing that would make this event a major success?
+When thinking about how you'd recap this event to your team, what elements would you be highlighting as the recap stats?",Rich Text
+Event Overview,Event Format,"How are you envisioning guest experience?
+Can you walk me through the high level run of show you're thinking of?",Rich Text
+Guests,Target Guest Count,"Can you confirm the target guest count?
+Can you confirm how many folks from your team will be attending? Confirming they are a part of this final guest count?
+Do you need us to budget for Uber Codes?",Rich Text
+Guests,Target Demo,"""Can you confirm if this is an invite only event or an event for public consumers?
+Can you confirm what your target demo is? Do you have some sample names you are hoping to attend?""
+Can you describe the audience that your brand is trying to target?",Rich Text
+Guests,Invites + Check-In,"Who is handling invites? Client? PR team? Care of Chan?
+Who is handling check-in? PR team? Care of Chan?
+Do you want us to budget for uber codes?
+
+ONLY FOR PRODUCTIONS WE WANT TO INVITE OUR NETWORK TO: For our productions, Care of Chan offers to invite a small amount of our network to the event. Confirming all names will be shared with the client in advance for approval before invites go out. We typically offer 10 invites for standing events and 5 invites for seated. ",Rich Text
+Guests,RSVP Management SOW,"What percentage of the full list would you like Care of Chan to own?
+Do you need us to facilitate dressing for guests ahead of the event?
+Do you need us to work check-in?
+Do you need us to own the invite graphic? If you are owning, would Care of Chan be able to consult on the invite to ensure its enticing enough for guests?
+Can you walk me through some of the target names you are hoping to secure for this event?",Rich Text
+Creative,Programming/Brand Moments,"Is there a specific way that you'd like your brand to show up at the event? i.e. photo moment, product display, speaking moment, etc.
+Is there specific programming that you'd like? Illustrators, workshops, talks, etc. ",Rich Text
+Creative,High-level creative direction/vibe,"How do you describe the aesthetic of your brand? 
+Give us three adjectives, phrases or references to help us understand the look & feel you're going for. Please be as specific as possible, and please send photos if you have them. 
+- Example of adjectives, phrases or references: French boulangerie in the countryside, Sex-in-the-City, 1980s, Mid-century modern, undone 
+Is there a specific campaign brief we should be working off when we're ideating creative?
+What should the event color palette be?
+What is the vibe that you'd like this event to evoke with guests?
+Do you have lighting preferences?",Rich Text
+Creative,Brand Guidelines,Can you share official brand guidelines and logo usage?,Rich Text
+Logistics,Date(s),"When are you hoping to host your event?
+Are these dates firm or flexible?
+If flexible, what are your back up dates?",Event Schedule
+Logistics,Time(s)/Run Time,"What time do you want to host your event?
+How long do you want the event to run for?",Short Text
+Logistics,Location(s),"What city are you hosting this in?
+Is there a specific neighborhood that you would like us to host this?
+Where are most of your guests traveling in from?",Locations
+Logistics,Venue Type,"What type of venue are you hoping for?
+Restaurant or Raw Space? (museum, gallery, pop-up shop, etc)?
+When doing walkthroughs of the venue options, will client team require they be on a site visit to determine a venue?",Short Text
+Logistics,Venue in Mind,,Rich Text
+Services,CoC Services,,Services
+Services,Food & Beverage,"What is your specific serving style for food? Seated Dinner, Passed Canapes, Grazing Table?
+What level of service are you expecting? White glove service, family style?
+Are there any dietary restrictions from your team or guests of honor that we need to be aware of as we ideate?",Rich Text
+Services,Chef in Mind?,"Is it important to you that the chef is a known name?
+If yes, can you tell me if you need that chef to post about the event to social? This affects how much we need to budget for the chef. 
+Are there any other social or talent requirements that you would need the chef for?",Rich Text
+Services,Decor Needs,Can you share what your decor needs are? Branded buildouts? Photo moments? Printed Collateral Direction?,Rich Text
+Services,Florals,Is there a specific floral direction you are looking for? Bountiful vs minimal?,Rich Text
+Services,Takeaways,"Would you like us to ideate a takeaway?
+Are you offering any of your products as a takeaway at the event? 
+Are you looking for custom or premium packaging? Please note custom/premium packaging must be confirmed at least 12 to 14 weeks in advance to allow for Creative development, deck build, sampling, and internal approvals. Requests made outside this window may not be feasible. In those cases, Care of Chan will recommend standard packaging or no packaging to ensure quality and alignment.",Rich Text
+Services,Music,"Do you have any specific requests around music?
+Playlist? DJ? House Music?",Rich Text
+Services,Photographer,Do you need us to budget and source for a photographer?,Rich Text
+Services,BFA Photographer,"Do you need us to budget and source for a wired photographer? Typically BFA is only required if your PR team wants to pitch the event to event press. 
+Do you need us to budget and source for an on-site editor? Typically this is required if your PR team needs a less than 24 hour turn around.",Rich Text
+Services,Graphic Designer,Do you need us to budget and source for a graphic designer?,Rich Text
+Services,Design Needs,"Will you need physical samples?
+Do you need us to create a new visual identity for the event graphic design?
+Will you need renderings? Do you need architectural or stylized renderings?
+
+For context, there are two types of renders:
+- Architectural renders: These are the """"not so pretty"""" renders that fabricators make to show the scale. Think of this as an architectural drawing. Architectural renders are the first step which take about 1-2 weeks including internal feedback from our team. 
+- Stylized renders: These are the final, final """"pretty"""" renders, that take all of the architectural drawings from the venue as well as the custom pieces we fabricated and place them to scale so the client can better see. Stylized renders come afterwards which take another 1-2 weeks (this bakes in, internal and external client reviews/edits)",Rich Text
+Services,Videographer,"Do you need us to budget and source for a videographer?
+Can you tell me what the videos will be used for? Full event sizzle reel, social, website, tv?",Rich Text
+Services,Other Confirmed Vendors,Are there any preferred vendors on your end that you'd like us to work with?,Rich Text
+Talent,Talent,"Can you tell me what you want the talent to do?
+What will be there contractual obligations?
+Will you need them to promo the event on social? If so, what does that specific ask look like?",Rich Text
+Talent,Talent in Mind?,,Rich Text
+Talent,Talent Accomodations,"Who is responsible for locking in the talent?
+Does Talent Fee need to be accounted for in our budget?
+Does Talent Rider and T&E need to be accounted for in our budget?",Rich Text
+Talent,Talent Contract Requirements,"If the talent is already locked in, can you please share what their SOW is so we understand their involvement with the event?",Rich Text
+Other,Liquor Cabinet Inclusion,"Please know that on our end, we have a couple of preferred beverage partners. This means that if the beverage partner fits with the overall vision for the event, we ask our venue and/or bar staff to use our preferred beverage partners for the drinks. The two brands we work with are:
+- Doladira - an elevated aperitif insoured by the Italian Alps founded by Meredith Erickson, the author of Alpine Cooking and the Joe Beef Cookbook. ",Rich Text
+Other,Additional Notes,,Rich Text

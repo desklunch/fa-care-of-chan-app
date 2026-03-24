@@ -17,7 +17,7 @@ import type {
   User as UserType,
   Industry,
 } from "@shared/schema";
-import { dealStatuses } from "@shared/schema";
+import { useDealStatuses } from "@/hooks/useDealStatuses";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { formatDateOnly } from "@/lib/date";
 import { getEventSummary } from "@/components/event-schedule";
@@ -153,26 +153,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "budgetNotes",
 ];
 
-/**
- * Status priority order for sorting (lower number = higher priority in ascending sort)
- */
-const STATUS_SORT_ORDER: Record<string, number> = {
-  Prospecting: 1,
-  "Warm Lead": 2,
-  Proposal: 3,
-  Feedback: 4,
-  Contracting: 5,
-  "In Progress": 6,
-  "Final Invoicing": 7,
-  Complete: 8,
-  "No Go": 9,
-  Cancelled: 10,
-};
-
-/**
- * Creates a comparator for the status column that sorts by pipeline stage order
- */
-function createStatusComparator() {
+function createStatusComparator(sortOrderByName: Map<string, number>) {
   return (
     valueA: unknown,
     valueB: unknown,
@@ -180,12 +161,11 @@ function createStatusComparator() {
     nodeB: { data: DealWithRelations | undefined },
     isDescending: boolean,
   ): number => {
-    const statusA = nodeA.data?.status;
-    const statusB = nodeB.data?.status;
+    const statusA = nodeA.data?.statusName;
+    const statusB = nodeB.data?.statusName;
 
-    // Get priority (unknown statuses get high number to sort to end)
-    const priorityA = statusA ? (STATUS_SORT_ORDER[statusA] ?? 999) : 999;
-    const priorityB = statusB ? (STATUS_SORT_ORDER[statusB] ?? 999) : 999;
+    const priorityA = statusA ? (sortOrderByName.get(statusA) ?? 999) : 999;
+    const priorityB = statusB ? (sortOrderByName.get(statusB) ?? 999) : 999;
 
     return priorityA - priorityB;
   };
@@ -228,10 +208,19 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
     label: "Status",
     icon: Flag,
     optionSource: {
-      type: "static",
-      options: dealStatuses.map((status) => ({ id: status, label: status })),
+      type: "deriveFromData",
+      deriveOptions: (data) => {
+        const seen = new Map<string, string>();
+        data.forEach((deal) => {
+          const name = deal.statusName || String(deal.status);
+          if (!seen.has(name)) {
+            seen.set(name, name);
+          }
+        });
+        return Array.from(seen.entries()).map(([id, label]) => ({ id, label }));
+      },
     },
-    matchFn: (deal, selectedValues) => selectedValues.includes(deal.status),
+    matchFn: (deal, selectedValues) => selectedValues.includes(deal.statusName || String(deal.status)),
   },
 
   {
@@ -447,25 +436,20 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
     id: "status",
     headerName: "Status",
-    field: "status",
+    field: "statusName",
     category: "Basic Info",
     colDef: {
       width: 150,
       resizable: false,
 
-      editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: dealStatuses,
-      },
-      comparator: createStatusComparator(),
+      editable: false,
 
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
           <div className="w-full h-full flex items-start pt-[14px]">
             <DealStatusBadge
-              status={params.value as DealWithRelations["status"]}
+              status={params.value}
             />
           </div>
         );
@@ -1148,14 +1132,19 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
 ];
 
-export default function DealsSandbox() {
-  usePageTitle("Deals Sandbox");
+export default function DealsPage() {
+  usePageTitle("Deals");
   const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { can } = usePermissions();
   const canRead = can("deals.read");
   const canWrite = can("deals.write");
+
+  const { statuses: dealStatusList } = useDealStatuses();
+  const statusSortOrderByName = useMemo(() => {
+    return new Map(dealStatusList.map((s) => [s.name, s.sortOrder]));
+  }, [dealStatusList]);
 
   // Fetch users for the Owner dropdown
   const { data: users = [] } = useQuery<
@@ -1255,13 +1244,21 @@ export default function DealsSandbox() {
     },
   };
 
-  // On mobile, show only essential columns with explicit config
+  const columnsWithStatusSort = useMemo(() => {
+    const comparator = createStatusComparator(statusSortOrderByName);
+    return dealColumns.map((col) =>
+      col.id === "status"
+        ? { ...col, colDef: { ...col.colDef, comparator } }
+        : col,
+    );
+  }, [statusSortOrderByName]);
+
   const responsiveColumns = useMemo(() => {
-    if (!isMobile) return dealColumns;
+    if (!isMobile) return columnsWithStatusSort;
     
     const mobileColumnIds = Object.keys(mobileColumnConfig);
     
-    return dealColumns
+    return columnsWithStatusSort
       .filter((col) => mobileColumnIds.includes(col.id))
       .map((col) => {
         const { pinned, lockPinned, width, minWidth, maxWidth, resizable, flex, ...restColDef } = col.colDef || {};
@@ -1274,7 +1271,7 @@ export default function DealsSandbox() {
           },
         };
       });
-  }, [isMobile]);
+  }, [isMobile, columnsWithStatusSort]);
 
   // Mutation to update a single deal field with optimistic updates
   const updateDealMutation = useMutation({
@@ -1469,7 +1466,7 @@ export default function DealsSandbox() {
 
   if (!canRead) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}>
+      <PageLayout breadcrumbs={[{ label: "Deals" }]}>
         <NoPermissionMessage
           title="Permission Required"
         />
@@ -1479,7 +1476,7 @@ export default function DealsSandbox() {
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}
+      breadcrumbs={[{ label: "Deals" }]}
     >
       <DataGridPage
         queryKey="/api/deals"
@@ -1510,13 +1507,7 @@ export default function DealsSandbox() {
         hideColumnSelector={isMobile}
         enableCellSelection={!isMobile}
         onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
-        headerContent={
-          <Link href="/deals">
-            <Button variant="default" size="sm" data-testid="button-back-to-deals">
-              Exit Sandbox 
-            </Button>
-          </Link>
-        }
+        headerContent={undefined}
       />
     </PageLayout>
   );

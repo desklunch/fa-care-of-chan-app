@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { randomBytes } from "crypto";
 import { createMcpServer } from "./index";
 import { mcpRateLimit, getRateLimitStats } from "./rate-limit";
@@ -8,7 +9,14 @@ const router = Router();
 
 router.use(mcpRateLimit);
 
-const mcpServer = createMcpServer();
+let mcpServerPromise: Promise<McpServer> | null = null;
+
+async function getMcpServer() {
+  if (!mcpServerPromise) {
+    mcpServerPromise = createMcpServer();
+  }
+  return mcpServerPromise;
+}
 
 const transports = new Map<string, SSEServerTransport>();
 
@@ -17,6 +25,7 @@ function generateSecureSessionId(): string {
 }
 
 router.get("/sse", async (_req: Request, res: Response) => {
+  const mcpServer = await getMcpServer();
   const sessionId = generateSecureSessionId();
   
   console.log(`[MCP] New SSE connection: ${sessionId.substring(0, 8)}...`);

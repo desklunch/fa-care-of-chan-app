@@ -66,6 +66,8 @@
   --status-proposal: #DE72BA;
   --status-feedback: #BE8B51;
   --status-contracting: #DB7052;
+  --status-in-progress: #64A334;
+  --status-invoicing: #608CD4;
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -153,6 +155,8 @@
   --status-proposal: #FF93DB;
   --status-feedback: #FFC583;
   --status-contracting: #FF9173;
+  --status-in-progress: #85CF36;
+  --status-invoicing: #5893F2;
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -432,4 +436,102 @@
 
 .input-prevent-scroll-on-focus {
   animation: blink_input_opacity_to_prevent_scrolling_when_focus 0.01s;
+}
+
+.rich-text-editor-wrapper {
+  border: 1px solid hsl(var(--input));
+  border-radius: calc(var(--radius) - 2px);
+  overflow: visible;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rich-text-editor-wrapper .ql-toolbar {
+  border-top-left-radius: calc(var(--radius) - 3px);
+  border-top-right-radius: calc(var(--radius) - 3px);
+}
+.rich-text-editor-wrapper .ql-container {
+  border-bottom-left-radius: calc(var(--radius) - 3px);
+  border-bottom-right-radius: calc(var(--radius) - 3px);
+}
+.rich-text-editor-wrapper:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 1px hsl(var(--ring));
+}
+.rich-text-editor-wrapper .ql-toolbar {
+  border: none !important;
+  border-bottom: 1px solid hsl(var(--input)) !important;
+  background: hsl(var(--card));
+}
+.rich-text-editor-wrapper .ql-container {
+  border: none !important;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+.rich-text-editor-wrapper .ql-editor {
+  min-height: 100px;
+  resize: vertical;
+  overflow: auto;
+  background: hsl(var(--background));
+
+  color: hsl(var(--foreground));
+}
+.rich-text-editor-wrapper .ql-editor a {
+  color: hsl(var(--primary)) !important;
+  text-decoration: underline;
+}
+.rich-text-editor-wrapper .ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground));
+  font-style: normal;
+}
+.rich-text-editor-wrapper .ql-toolbar button svg {
+  color: hsl(var(--muted-foreground));
+}
+.rich-text-editor-wrapper .ql-toolbar button:hover svg,
+.rich-text-editor-wrapper .ql-toolbar button.ql-active svg {
+  color: hsl(var(--foreground));
+}
+.rich-text-editor-wrapper .ql-stroke {
+  stroke: hsl(var(--foreground)) !important;
+}
+.rich-text-editor-wrapper .ql-fill {
+  fill: hsl(var(--foreground)) !important;
+}
+.rich-text-editor-wrapper .ql-picker-label {
+  color: hsl(var(--foreground)) !important;
+}
+.rich-text-editor-wrapper .ql-picker-options {
+  background: hsl(var(--popover)) !important;
+  border-color: hsl(var(--input)) !important;
+}
+.dark .rich-text-editor-wrapper .ql-snow .ql-picker.ql-expanded .ql-picker-label {
+  border-color: hsl(var(--input));
+}
+.rich-text-editor-wrapper .ql-snow .ql-tooltip {
+  background: hsl(var(--popover));
+  border-color: hsl(var(--input));
+  color: hsl(var(--foreground));
+  box-shadow: 0 2px 8px hsl(var(--foreground) / 0.08);
+  z-index: 10;
+  transform: none !important;
+  margin-left: 0 !important;
+}
+.rich-text-editor-wrapper .ql-snow .ql-tooltip input[type="text"] {
+  background: hsl(var(--background));
+  border-color: hsl(var(--input));
+  color: hsl(var(--foreground));
+}
+.rich-text-editor-wrapper .ql-snow .ql-tooltip a {
+  color: hsl(var(--primary));
+}
+
+.rich-text-html-display a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+.rich-text-html-display ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+.rich-text-html-display ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
 }

@@ -552,20 +552,23 @@ export const vendorUpdateTokens = pgTable(
   ],
 );
 
-// Deal status enum values
-export const dealStatuses = [
-  "Prospecting",
-  "Proposal",
-  "Feedback",
-  "Contracting",
-  "In Progress",
-  "Final Invoicing",
-  "Complete",
-  "No-Go",
-  "Canceled",
-  "Warm Lead",
-] as const;
-export type DealStatus = (typeof dealStatuses)[number];
+// Deal statuses reference table
+export const dealStatuses = pgTable("deal_statuses", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  colorLight: varchar("color_light", { length: 100 }).notNull().default("#888888"),
+  colorDark: varchar("color_dark", { length: 100 }).notNull().default("#aaaaaa"),
+  winProbability: integer("win_probability").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isDefault: boolean("is_default").notNull().default(false),
+});
+
+export type DealStatusRecord = typeof dealStatuses.$inferSelect;
+export type InsertDealStatus = typeof dealStatuses.$inferInsert;
+export const insertDealStatusSchema = createInsertSchema(dealStatuses).omit({ id: true });
+
+export type DealStatus = string;
 
 // Deal location type for city or country assignments
 export interface DealLocation {
@@ -694,7 +697,8 @@ export const deals = pgTable(
     externalId: integer("external_id"),
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
-    status: varchar("status", { length: 50 }).notNull().default("Prospecting"),
+    status: integer("status").notNull().references(() => dealStatuses.id),
+    statusLegacy: varchar("status_legacy", { length: 100 }),
     clientId: varchar("client_id").notNull(),
     brandId: varchar("brand_id").references(() => brands.id),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
@@ -853,6 +857,53 @@ export const comments = pgTable(
     index("idx_comments_created_at").on(table.createdAt),
   ],
 );
+
+// Google Drive attachments - polymorphic entity attachments
+export const driveAttachmentEntityTypes = [
+  "deal",
+  "venue",
+  "client",
+  "vendor",
+  "contact",
+] as const;
+export type DriveAttachmentEntityType = (typeof driveAttachmentEntityTypes)[number];
+
+export const googleDriveAttachments = pgTable(
+  "google_drive_attachments",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    driveFileId: varchar("drive_file_id", { length: 255 }).notNull(),
+    name: varchar("name", { length: 500 }).notNull(),
+    mimeType: varchar("mime_type", { length: 255 }),
+    iconUrl: varchar("icon_url", { length: 500 }),
+    webViewLink: varchar("web_view_link", { length: 1000 }),
+    attachedById: varchar("attached_by_id").notNull().references(() => users.id),
+    attachedAt: timestamp("attached_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_drive_attachments_entity").on(table.entityType, table.entityId),
+    index("idx_drive_attachments_attached_by").on(table.attachedById),
+  ],
+);
+
+export type GoogleDriveAttachment = typeof googleDriveAttachments.$inferSelect;
+export type InsertGoogleDriveAttachment = typeof googleDriveAttachments.$inferInsert;
+
+export const insertGoogleDriveAttachmentSchema = createInsertSchema(googleDriveAttachments).omit({
+  id: true,
+  attachedAt: true,
+});
+
+export interface DriveAttachmentWithUser extends GoogleDriveAttachment {
+  attachedBy?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+}
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -1055,7 +1106,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -1097,7 +1148,6 @@ export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   id: true,
   createdById: true,
   voteCount: true,
-  status: true,
   priority: true,
   ownerId: true,
   estimatedDelivery: true,
@@ -1108,6 +1158,7 @@ export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   description: z.string().min(10, "Description must be at least 10 characters"),
   categoryId: z.string().min(1, "Category is required"),
   featureType: z.enum(featureTypes, { required_error: "Please select Idea or Requirement" }),
+  status: z.enum(featureStatuses).default("proposed"),
 });
 
 export const updateAppFeatureSchema = createInsertSchema(appFeatures).pick({
@@ -1619,6 +1670,7 @@ export type InsertDeal = typeof deals.$inferInsert;
 
 // Deal with relations
 export type DealWithRelations = Deal & {
+  statusName?: string;
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   client?: Pick<Client, "id" | "name"> | null;
   brand?: Pick<Brand, "id" | "name"> | null;
@@ -1644,9 +1696,10 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   createdById: true,
   createdAt: true,
   updatedAt: true,
+  statusLegacy: true,
 }).extend({
   displayName: z.string().min(1, "Display name is required").max(255),
-  status: z.enum(dealStatuses).default("Prospecting"),
+  status: z.number().int(),
   clientId: z.string().min(1, "Client is required"),
   locations: z.array(dealLocationSchema).default([]),
   budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
@@ -1744,6 +1797,7 @@ export type UpdateClient = z.infer<typeof updateClientSchema>;
 export const formFieldTypes = [
   "text",
   "textarea",
+  "richtext",
   "number",
   "date",
   "select",
@@ -1753,6 +1807,10 @@ export const formFieldTypes = [
   "url",
   "email",
   "phone",
+  "location",
+  "eventSchedule",
+  "services",
+  "tags",
 ] as const;
 export type FormFieldType = (typeof formFieldTypes)[number];
 
@@ -1768,6 +1826,67 @@ export type RecipientType = (typeof recipientTypes)[number];
 export const outreachTokenStatuses = ["pending", "responded", "expired"] as const;
 export type OutreachTokenStatus = (typeof outreachTokenStatuses)[number];
 
+export interface EntityMapping {
+  entityType: string;
+  propertyKey: string;
+}
+
+export interface MappableProperty {
+  key: string;
+  label: string;
+  fieldType: FormFieldType;
+  valueSchema: z.ZodType<unknown>;
+}
+
+const locationItemSchema = z.object({
+  placeId: z.string(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  stateCode: z.string().optional(),
+  country: z.string(),
+  countryCode: z.string(),
+  displayName: z.string(),
+});
+
+const eventScheduleItemSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["primary", "alternative", "range"]),
+  startDate: z.string().optional(),
+  rangeStartMonth: z.number().optional(),
+  rangeStartYear: z.number().optional(),
+  rangeEndMonth: z.number().optional(),
+  rangeEndYear: z.number().optional(),
+});
+
+const eventSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  durationDays: z.number(),
+  scheduleMode: z.enum(["specific", "flexible"]),
+  schedules: z.array(eventScheduleItemSchema),
+});
+
+export const mappableEntities: Record<string, { label: string; properties: MappableProperty[] }> = {
+  deal: {
+    label: "Deal",
+    properties: [
+      { key: "displayName", label: "Deal Name", fieldType: "text", valueSchema: z.string() },
+      { key: "concept", label: "Concept", fieldType: "textarea", valueSchema: z.string() },
+      { key: "notes", label: "Notes", fieldType: "textarea", valueSchema: z.string() },
+      { key: "nextSteps", label: "Next Steps", fieldType: "textarea", valueSchema: z.string() },
+      { key: "locationsText", label: "Location (Text)", fieldType: "text", valueSchema: z.string() },
+      { key: "projectDate", label: "Project Date", fieldType: "text", valueSchema: z.string() },
+      { key: "budgetLow", label: "Budget Low", fieldType: "number", valueSchema: z.number() },
+      { key: "budgetHigh", label: "Budget High", fieldType: "number", valueSchema: z.number() },
+      { key: "budgetNotes", label: "Budget Notes", fieldType: "textarea", valueSchema: z.string() },
+      { key: "locations", label: "Locations (Structured)", fieldType: "location", valueSchema: z.array(locationItemSchema) },
+      { key: "eventSchedule", label: "Event Schedule", fieldType: "eventSchedule", valueSchema: z.array(eventSchema) },
+      { key: "serviceIds", label: "Services", fieldType: "services", valueSchema: z.array(z.number()) },
+      { key: "tags", label: "Tags", fieldType: "tags", valueSchema: z.array(z.string()) },
+    ],
+  },
+};
+
 // Form field interface (for JSONB storage)
 export interface FormField {
   id: string;
@@ -1777,6 +1896,7 @@ export interface FormField {
   description?: string;
   options?: string[];
   required?: boolean;
+  entityMapping?: EntityMapping;
 }
 
 // Form section interface (for JSONB storage)
@@ -1794,6 +1914,7 @@ export const formTemplates = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
+    category: varchar("category", { length: 255 }),
     formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
@@ -1802,6 +1923,7 @@ export const formTemplates = pgTable(
   (table) => [
     index("idx_form_templates_name").on(table.name),
     index("idx_form_templates_created_by").on(table.createdById),
+    index("idx_form_templates_category").on(table.category),
   ],
 );
 
@@ -1909,6 +2031,97 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   }),
 }));
 
+// ==========================================
+// Deal Intakes - structured intake questionnaires per deal
+// ==========================================
+
+export const dealIntakeStatuses = ["draft", "completed"] as const;
+export type DealIntakeStatus = (typeof dealIntakeStatuses)[number];
+
+export const dealIntakes = pgTable(
+  "deal_intakes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }).unique(),
+    templateId: varchar("template_id").references(() => formTemplates.id, { onDelete: "set null" }),
+    templateName: varchar("template_name", { length: 255 }).notNull(),
+    formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
+    responseData: jsonb("response_data").$type<Record<string, unknown>>().notNull().default({}),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    completedAt: timestamp("completed_at"),
+    createdById: varchar("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_deal_intakes_deal").on(table.dealId),
+    index("idx_deal_intakes_template").on(table.templateId),
+    index("idx_deal_intakes_status").on(table.status),
+  ],
+);
+
+export const dealIntakesRelations = relations(dealIntakes, ({ one }) => ({
+  deal: one(deals, {
+    fields: [dealIntakes.dealId],
+    references: [deals.id],
+  }),
+  template: one(formTemplates, {
+    fields: [dealIntakes.templateId],
+    references: [formTemplates.id],
+  }),
+  createdBy: one(users, {
+    fields: [dealIntakes.createdById],
+    references: [users.id],
+  }),
+}));
+
+export type DealIntake = typeof dealIntakes.$inferSelect;
+export type InsertDealIntake = typeof dealIntakes.$inferInsert;
+
+export type DealIntakeWithRelations = DealIntake & {
+  createdBy: Pick<User, "id" | "firstName" | "lastName"> | null;
+};
+
+export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
+  id: true,
+  createdById: true,
+  completedAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  dealId: z.string().min(1),
+  templateId: z.string().optional().nullable(),
+  templateName: z.string().min(1),
+  formSchema: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    fields: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(formFieldTypes),
+      placeholder: z.string().optional(),
+      description: z.string().optional(),
+      options: z.array(z.string()).optional(),
+      required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
+    })),
+  })).default([]),
+  responseData: z.record(z.unknown()).default({}),
+  status: z.enum(dealIntakeStatuses).default("draft"),
+});
+
+export const updateDealIntakeSchema = z.object({
+  responseData: z.record(z.unknown()).optional(),
+  status: z.enum(dealIntakeStatuses).optional(),
+});
+
+export type CreateDealIntake = z.infer<typeof insertDealIntakeSchema>;
+export type UpdateDealIntake = z.infer<typeof updateDealIntakeSchema>;
+
 // Form outreach types
 export type FormTemplate = typeof formTemplates.$inferSelect;
 export type InsertFormTemplate = typeof formTemplates.$inferInsert;
@@ -1964,6 +2177,7 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
   updatedAt: true,
 }).extend({
   name: z.string().min(1, "Name is required").max(255),
+  category: z.string().max(255).optional().nullable(),
   formSchema: z.array(z.object({
     id: z.string(),
     title: z.string(),
@@ -1976,6 +2190,10 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
       description: z.string().optional(),
       options: z.array(z.string()).optional(),
       required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
     })),
   })).default([]),
 });
@@ -2008,6 +2226,10 @@ export const insertFormRequestSchema = createInsertSchema(formRequests).omit({
       description: z.string().optional(),
       options: z.array(z.string()).optional(),
       required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
     })),
   })).default([]),
   dueDate: z.string().optional().nullable(),

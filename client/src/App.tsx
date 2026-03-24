@@ -70,11 +70,12 @@ const PublicVenueDetail = lazy(() => import("@/pages/public-venue-detail"));
 const PublicVenueCollection = lazy(
   () => import("@/pages/public-venue-collection"),
 );
-const Deals = lazy(() => import("@/pages/deals"));
-const DealsSandbox = lazy(() => import("@/pages/deals-sandbox"));
+const Deals = lazy(() => import("@/pages/deals-sandbox"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
 const DealReports = lazy(() => import("@/pages/deal-reports"));
+const DealForecast = lazy(() => import("@/pages/deal-forecast"));
+const PipelineHealth = lazy(() => import("@/pages/pipeline-health"));
 const Clients = lazy(() => import("@/pages/clients"));
 const ClientForm = lazy(() => import("@/pages/client-form"));
 const ClientDetail = lazy(() => import("@/pages/client-detail"));
@@ -125,6 +126,8 @@ import {
   Building2,
   SlidersHorizontal,
   Bot,
+  TrendingUp,
+  Activity,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -156,6 +159,18 @@ function useLayoutConfig() {
             href: "/deals",
             icon: Tickets,
             requiredPermission: "deals.read",
+          },
+          {
+            name: "Pipeline",
+            href: "/deals/pipeline",
+            icon: Activity,
+          requiredPermission: "deals.read",
+          },
+          {
+            name: "Forecast",
+            href: "/deals/forecast",
+            icon: TrendingUp,
+          requiredPermission: "deals.read",
           },
           {
             name: "Views",
@@ -228,6 +243,12 @@ function useLayoutConfig() {
             icon: Palette,
             requiredPermission: "theme.manage",
           },
+          {
+            name: "Forms",
+            href: "/forms",
+            icon: FileText,
+            requiredPermission: "admin.settings",
+          },
         ],
       },
       {
@@ -296,19 +317,6 @@ function useLayoutConfig() {
             icon: Tags,
             requiredPermission: "app_features.manage",
           },
-
-          {
-            name: "Requests",
-            href: "/forms/requests",
-            icon: RadioTower,
-            requiredPermission: "admin.settings",
-          },
-          {
-            name: "Forms",
-            href: "/forms/templates",
-            icon: FileText,
-            requiredPermission: "admin.settings",
-          },
           {
             name: "Comments",
             href: "/comments",
@@ -321,6 +329,12 @@ function useLayoutConfig() {
             href: "/admin/vendors/tokens",
             icon: Link2,
             requiredPermission: "vendor_tokens.manage",
+          },
+          {
+            name: "Requests",
+            href: "/forms/requests",
+            icon: RadioTower,
+            requiredPermission: "admin.settings",
           },
         ],
       },
@@ -382,8 +396,9 @@ function AuthenticatedRoutes() {
             <Route path="/contacts/:id" component={ContactDetail} />
             <Route path="/contacts/:id/edit" component={ContactForm} />
             <Route path="/deals" component={Deals} />
-            <Route path="/deals-sandbox" component={DealsSandbox} />
             <Route path="/deals/new" component={DealForm} />
+            <Route path="/deals/forecast" component={DealForecast} />
+            <Route path="/deals/pipeline" component={PipelineHealth} />
             <Route path="/deals/reports" component={DealReports} />
             <Route path="/deals/:id" component={DealDetail} />
             <Route path="/deals/:id/edit" component={DealForm} />
@@ -391,10 +406,10 @@ function AuthenticatedRoutes() {
             <Route path="/forms/requests/new" component={FormRequestForm} />
             <Route path="/forms/requests/:id" component={FormRequestDetail} />
             <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
-            <Route path="/forms/templates" component={FormTemplates} />
-            <Route path="/forms/templates/new" component={FormTemplateForm} />
-            <Route path="/forms/templates/:id" component={FormTemplateDetail} />
-            <Route path="/forms/templates/:id/edit" component={FormTemplateForm} />
+            <Route path="/forms/new" component={FormTemplateForm} />
+            <Route path="/forms/:id/edit" component={FormTemplateForm} />
+            <Route path="/forms/:id" component={FormTemplateDetail} />
+            <Route path="/forms" component={FormTemplates} />
             <Route path="/guide" component={Guide} />
             <Route path="/industries" component={Industries} />
             <Route path="/manage/tags" component={ManageTagsPage} />

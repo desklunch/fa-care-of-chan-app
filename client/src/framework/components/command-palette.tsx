@@ -294,9 +294,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Tickets className="mr-2 h-4 w-4 text-muted-foreground" />
                   <div className="flex flex-col">
                     <span>{deal.displayName}</span>
-                    {deal.status && (
+                    {(deal.statusName || deal.status) && (
                       <span className="text-xs text-muted-foreground capitalize">
-                        {deal.status.replace(/_/g, " ")}
+                        {(deal.statusName || String(deal.status)).replace(/_/g, " ")}
                       </span>
                     )}
                   </div>
