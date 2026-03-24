@@ -38,7 +38,7 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/deals/forecast", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
+  app.get("/api/deals/forecast", isAuthenticated, requirePermission("deals.read"), async (req, res) => {
     try {
       const horizonParam = parseInt(req.query.horizon as string) || 6;
       const horizon = [3, 6, 12].includes(horizonParam) ? horizonParam : 6;
@@ -290,7 +290,7 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/deals/pipeline-health", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
+  app.get("/api/deals/pipeline-health", isAuthenticated, requirePermission("deals.read"), async (req, res) => {
     try {
       const rangeParam = (req.query.range as string) || "all";
       const validRanges = ["30", "60", "90", "quarter", "year", "all"];
