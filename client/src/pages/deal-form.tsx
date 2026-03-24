@@ -247,8 +247,6 @@ export default function DealForm() {
     }
   };
 
-  const [formMode, setFormMode] = useState<"classic" | "enhanced">("classic");
-  const isEnhanced = formMode === "enhanced";
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -310,37 +308,6 @@ export default function DealForm() {
       <div className="p-4 md:p-6 max-w-3xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="sticky top-0 z-[9999] py-1" data-testid="toggle-form-mode">
-              <div className="inline-flex rounded-md border p-0.5 bg-muted/50 shadow-sm backdrop-blur-sm">
-                <button
-                  type="button"
-                  className={cn(
-                    "px-4 py-1.5 text-sm font-medium rounded-sm transition-colors",
-                    formMode === "classic"
-                      ? "bg-background shadow-sm text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                  onClick={() => setFormMode("classic")}
-                  data-testid="button-mode-classic"
-                >
-                  Classic
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "px-4 py-1.5 text-sm font-medium rounded-sm transition-colors",
-                    formMode === "enhanced"
-                      ? "bg-background shadow-sm text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                  onClick={() => setFormMode("enhanced")}
-                  data-testid="button-mode-enhanced"
-                >
-                  Enhanced
-                </button>
-              </div>
-            </div>
-
             {/* Card 1: Deal Info */}
             <Card>
               <CardHeader>
@@ -768,9 +735,6 @@ export default function DealForm() {
                 />
                 <Separator className="my-4" />
 
-                {isEnhanced && (
-                  <>
-
                     <FormField
                       control={form.control}
                       name="locations"
@@ -789,9 +753,6 @@ export default function DealForm() {
                       )}
                     />
 
-   
-                  </>
-                )}
                 <FormField
                   control={form.control}
                   name="locationsText"
@@ -831,9 +792,6 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                {isEnhanced && (
-                  <>
-
                     <FormField
                       control={form.control}
                       name="eventSchedule"
@@ -851,11 +809,8 @@ export default function DealForm() {
                       )}
                     />
 
-                  </>
-                )}
                 <Separator className="my-4" />
 
-                {isEnhanced && (
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -904,7 +859,6 @@ export default function DealForm() {
                       )}
                     />
                   </div>
-                )}
 
                 <FormField
                   control={form.control}
