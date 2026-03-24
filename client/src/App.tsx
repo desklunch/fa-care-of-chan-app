@@ -70,8 +70,7 @@ const PublicVenueDetail = lazy(() => import("@/pages/public-venue-detail"));
 const PublicVenueCollection = lazy(
   () => import("@/pages/public-venue-collection"),
 );
-const Deals = lazy(() => import("@/pages/deals"));
-const DealsSandbox = lazy(() => import("@/pages/deals-sandbox"));
+const Deals = lazy(() => import("@/pages/deals-sandbox"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
 const DealReports = lazy(() => import("@/pages/deal-reports"));
@@ -397,7 +396,6 @@ function AuthenticatedRoutes() {
             <Route path="/contacts/:id" component={ContactDetail} />
             <Route path="/contacts/:id/edit" component={ContactForm} />
             <Route path="/deals" component={Deals} />
-            <Route path="/deals-sandbox" component={DealsSandbox} />
             <Route path="/deals/new" component={DealForm} />
             <Route path="/deals/forecast" component={DealForecast} />
             <Route path="/deals/pipeline" component={PipelineHealth} />

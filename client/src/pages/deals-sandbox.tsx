@@ -1132,8 +1132,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
 ];
 
-export default function DealsSandbox() {
-  usePageTitle("Deals Sandbox");
+export default function DealsPage() {
+  usePageTitle("Deals");
   const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -1466,7 +1466,7 @@ export default function DealsSandbox() {
 
   if (!canRead) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}>
+      <PageLayout breadcrumbs={[{ label: "Deals" }]}>
         <NoPermissionMessage
           title="Permission Required"
         />
@@ -1476,7 +1476,7 @@ export default function DealsSandbox() {
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Sandbox" }]}
+      breadcrumbs={[{ label: "Deals" }]}
     >
       <DataGridPage
         queryKey="/api/deals"
@@ -1507,13 +1507,7 @@ export default function DealsSandbox() {
         hideColumnSelector={isMobile}
         enableCellSelection={!isMobile}
         onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
-        headerContent={
-          <Link href="/deals">
-            <Button variant="default" size="sm" data-testid="button-back-to-deals">
-              Exit Sandbox 
-            </Button>
-          </Link>
-        }
+        headerContent={undefined}
       />
     </PageLayout>
   );
