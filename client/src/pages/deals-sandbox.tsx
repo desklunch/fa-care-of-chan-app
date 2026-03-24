@@ -220,7 +220,8 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
         return Array.from(seen.entries()).map(([id, label]) => ({ id, label }));
       },
     },
-    matchFn: (deal, selectedValues) => selectedValues.includes(deal.statusName || String(deal.status)),
+    matchFn: (deal, selectedValues) =>
+      selectedValues.includes(deal.statusName || String(deal.status)),
   },
 
   {
@@ -338,19 +339,22 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 2,
       minWidth: 240,
-      width:240,
+      width: 240,
       maxWidth: 320,
       pinned: "left",
       lockPinned: true,
       sortable: false,
       editable: true,
- 
+
       cellRenderer: (params: { data: DealWithRelations; value: string }) => {
         if (!params.data) return null;
         return (
           <span className="flex items-start  gap-3 w-full flex-row-reverse md:flex-row">
             <span className="flex-1 truncate">{params.value}</span>
-            <Link href={`/deals/${params.data.id}`} className="hidden md:block flex-shrink-0">
+            <Link
+              href={`/deals/${params.data.id}`}
+              className="hidden md:block flex-shrink-0"
+            >
               <Button
                 size="sm"
                 variant="ghost"
@@ -448,9 +452,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return null;
         return (
           <div className="w-full h-full flex items-start pt-[14px]">
-            <DealStatusBadge
-              status={params.value}
-            />
+            <DealStatusBadge status={params.value} />
           </div>
         );
       },
@@ -502,67 +504,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
 
-  {
-    id: "linkedClients",
-    headerName: "Linked Clients",
-    field: "id",
-    category: "Basic Info",
-    colDef: {
-      flex: 2,
-      minWidth: 200,
-      sortable: false,
-      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
-        if (!params.data?.id) return "";
-        const linked = params.context?.linkedClientsMap?.get(params.data.id) || [];
-        return linked.map(lc => lc.label ? `${lc.clientName} (${lc.label})` : lc.clientName).join(", ");
-      },
-      cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
-        if (!params.data?.id) return null;
-        const linked = params.context?.linkedClientsMap?.get(params.data.id) || [];
-        if (linked.length === 0) return null;
-        return (
-          <div className="flex flex-wrap gap-1 py-1">
-            {linked.map((lc) => (
-              <Badge key={lc.clientId} variant="secondary" className="text-xs gap-1 no-default-hover-elevate no-default-active-elevate" data-testid={`badge-linked-client-${lc.clientId}`}>
-                {lc.clientName}
-                {lc.label && <span className="text-muted-foreground">({lc.label})</span>}
-              </Badge>
-            ))}
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "tags",
-    headerName: "Tags",
-    field: "id",
-    category: "Basic Info",
-    colDef: {
-      flex: 2,
-      minWidth: 180,
-      sortable: false,
-      valueGetter: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
-        if (!params.data?.id) return "";
-        const tags = params.context?.dealTagsMap?.get(params.data.id) || [];
-        return tags.map(t => t.tagName).join(", ");
-      },
-      cellRenderer: (params: { data: DealWithRelations | undefined; context: DealsGridContext }) => {
-        if (!params.data?.id) return null;
-        const tags = params.context?.dealTagsMap?.get(params.data.id) || [];
-        if (tags.length === 0) return null;
-        return (
-          <div className="flex flex-wrap gap-1 py-1">
-            {tags.map((t) => (
-              <Badge key={t.tagId} variant="secondary" className="text-xs no-default-hover-elevate no-default-active-elevate" data-testid={`badge-tag-${t.tagId}`}>
-                {t.tagName}
-              </Badge>
-            ))}
-          </div>
-        );
-      },
-    },
-  },
   {
     id: "startedOn",
     headerName: "Started On",
@@ -707,7 +648,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "industry",
-    headerName: "Industry",
+    headerName: "Client Industry",
     field: "industryId",
     category: "Basic Info",
     colDef: {
@@ -853,7 +794,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "locations",
-    headerName: "Locations (JSON)",
+    headerName: "Locations",
     field: "locations",
     category: "Basic Info",
     colDef: {
@@ -877,7 +818,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
               const isState = !loc.city && Boolean(loc.state);
               const Icon = isCity ? MapPin : isState ? MapIcon : MapPinned;
               return (
-                <Badge key={loc.placeId} variant="secondary" className="text-xs px-1 gap-1">
+                <Badge
+                  key={loc.placeId}
+                  variant="secondary"
+                  className="text-xs px-1 gap-1"
+                >
                   {loc.displayName}
                 </Badge>
               );
@@ -889,7 +834,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "locationsText",
-    headerName: "Locations",
+    headerName: "Location Notes",
     field: "locationsText",
     category: "Basic Info",
     colDef: {
@@ -951,9 +896,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { data: DealWithRelations | undefined }) => {
         const events = params.data?.eventSchedule as DealEvent[] | null;
         if (!events || events.length === 0) return null;
-        const summaries = events
-          .map((e) => getEventSummary(e))
-          .filter(Boolean);
+        const summaries = events.map((e) => getEventSummary(e)).filter(Boolean);
         if (summaries.length === 0) return null;
         return (
           <div className="flex flex-col gap-1 py-2.5">
@@ -974,45 +917,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "notes",
-    headerName: "Notes",
-    field: "notes",
-    category: "Basic Info",
-    colDef: {
-      flex: 3,
-      minWidth: 300,
-      sortable: false,
-      editable: true,
-      cellEditor: "agLargeTextCellEditor",
-      cellEditorPopup: true,
-      cellEditorParams: {
-        maxLength: 10000,
-        rows: 10,
-        cols: 60,
-      },
-      wrapText: true,
-      autoHeight: true,
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        return (
-          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
-            <ReactMarkdown
-              components={{
-                a: ({ href, children }) => (
-                  <a href={href} target="_blank" rel="noopener noreferrer">
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {params.value}
-            </ReactMarkdown>
-          </div>
-        );
-      },
-    },
-  },
+
   {
     id: "nextSteps",
     headerName: "Next Steps",
@@ -1130,6 +1035,136 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
+  {
+    id: "notes",
+    headerName: "Notes",
+    field: "notes",
+    category: "Basic Info",
+    colDef: {
+      flex: 3,
+      minWidth: 300,
+      sortable: false,
+      editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 10000,
+        rows: 10,
+        cols: 60,
+      },
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {params.value}
+            </ReactMarkdown>
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "linkedClients",
+    headerName: "Linked Clients",
+    field: "id",
+    category: "Basic Info",
+    colDef: {
+      flex: 2,
+      minWidth: 200,
+      sortable: false,
+      valueGetter: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
+        if (!params.data?.id) return "";
+        const linked =
+          params.context?.linkedClientsMap?.get(params.data.id) || [];
+        return linked
+          .map((lc) =>
+            lc.label ? `${lc.clientName} (${lc.label})` : lc.clientName,
+          )
+          .join(", ");
+      },
+      cellRenderer: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
+        if (!params.data?.id) return null;
+        const linked =
+          params.context?.linkedClientsMap?.get(params.data.id) || [];
+        if (linked.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-1">
+            {linked.map((lc) => (
+              <Badge
+                key={lc.clientId}
+                variant="secondary"
+                className="text-xs gap-1 no-default-hover-elevate no-default-active-elevate"
+                data-testid={`badge-linked-client-${lc.clientId}`}
+              >
+                {lc.clientName}
+                {lc.label && (
+                  <span className="text-muted-foreground">({lc.label})</span>
+                )}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "tags",
+    headerName: "Tags",
+    field: "id",
+    category: "Basic Info",
+    colDef: {
+      flex: 2,
+      minWidth: 180,
+      sortable: false,
+      valueGetter: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
+        if (!params.data?.id) return "";
+        const tags = params.context?.dealTagsMap?.get(params.data.id) || [];
+        return tags.map((t) => t.tagName).join(", ");
+      },
+      cellRenderer: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
+        if (!params.data?.id) return null;
+        const tags = params.context?.dealTagsMap?.get(params.data.id) || [];
+        if (tags.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 py-1">
+            {tags.map((t) => (
+              <Badge
+                key={t.tagId}
+                variant="secondary"
+                className="text-xs no-default-hover-elevate no-default-active-elevate"
+                data-testid={`badge-tag-${t.tagId}`}
+              >
+                {t.tagName}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+  },
 ];
 
 export default function DealsPage() {
@@ -1209,17 +1244,20 @@ export default function DealsPage() {
   };
 
   // Mobile column configuration: explicit ColDef overrides per column
-  const mobileColumnConfig: Record<string, {
-    pinned?: "left" | "right" | boolean;
-    lockPinned?: boolean;
-    width?: number;
-    minWidth?: number;
-    maxWidth?: number;
-    resizable?: boolean;
-    flex?: number;
-    headerName?: string;
-    editable?: boolean;
-  }> = {
+  const mobileColumnConfig: Record<
+    string,
+    {
+      pinned?: "left" | "right" | boolean;
+      lockPinned?: boolean;
+      width?: number;
+      minWidth?: number;
+      maxWidth?: number;
+      resizable?: boolean;
+      flex?: number;
+      headerName?: string;
+      editable?: boolean;
+    }
+  > = {
     displayName: {
       flex: 1,
       resizable: false,
@@ -1255,13 +1293,22 @@ export default function DealsPage() {
 
   const responsiveColumns = useMemo(() => {
     if (!isMobile) return columnsWithStatusSort;
-    
+
     const mobileColumnIds = Object.keys(mobileColumnConfig);
-    
+
     return columnsWithStatusSort
       .filter((col) => mobileColumnIds.includes(col.id))
       .map((col) => {
-        const { pinned, lockPinned, width, minWidth, maxWidth, resizable, flex, ...restColDef } = col.colDef || {};
+        const {
+          pinned,
+          lockPinned,
+          width,
+          minWidth,
+          maxWidth,
+          resizable,
+          flex,
+          ...restColDef
+        } = col.colDef || {};
         const mobileConfig = mobileColumnConfig[col.id] || {};
         return {
           ...col,
@@ -1403,7 +1450,12 @@ export default function DealsPage() {
       }
 
       // Handle empty strings as null for nullable text fields
-      const nullableTextFields = ["concept", "notes", "nextSteps", "budgetNotes"];
+      const nullableTextFields = [
+        "concept",
+        "notes",
+        "nextSteps",
+        "budgetNotes",
+      ];
       if (nullableTextFields.includes(field) && newValue === "") {
         processedValue = null;
       }
@@ -1467,17 +1519,13 @@ export default function DealsPage() {
   if (!canRead) {
     return (
       <PageLayout breadcrumbs={[{ label: "Deals" }]}>
-        <NoPermissionMessage
-          title="Permission Required"
-        />
+        <NoPermissionMessage title="Permission Required" />
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout
-      breadcrumbs={[{ label: "Deals" }]}
-    >
+    <PageLayout breadcrumbs={[{ label: "Deals" }]}>
       <DataGridPage
         queryKey="/api/deals"
         columns={responsiveColumns}
@@ -1506,7 +1554,9 @@ export default function DealsPage() {
         onCellValueChanged={handleCellValueChanged}
         hideColumnSelector={isMobile}
         enableCellSelection={!isMobile}
-        onRowClick={isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined}
+        onRowClick={
+          isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined
+        }
         headerContent={undefined}
       />
     </PageLayout>
