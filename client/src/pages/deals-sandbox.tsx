@@ -43,6 +43,8 @@ import ReactMarkdown from "react-markdown";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
+import StatusCellEditor from "@/components/ag-grid/status-cell-editor";
+import type { DealStatusRecord } from "@shared/schema";
 
 // Helper to get full name from user
 function getUserFullName(
@@ -82,6 +84,7 @@ interface DealsGridContext {
   industriesMap: Map<string, Industry>;
   linkedClientsMap: Map<string, DealLinkedClientEntry[]>;
   dealTagsMap: Map<string, DealTagEntry[]>;
+  dealStatuses: DealStatusRecord[];
 }
 
 /**
@@ -446,7 +449,24 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       width: 150,
       resizable: false,
 
-      editable: false,
+      editable: true,
+      cellEditor: StatusCellEditor,
+      cellEditorPopup: true,
+
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: number | null;
+        context: DealsGridContext;
+      }) => {
+        if (params.newValue == null) return false;
+        const statusRecord = params.context?.dealStatuses?.find(
+          (s) => s.id === params.newValue
+        );
+        if (!statusRecord) return false;
+        params.data.status = params.newValue;
+        params.data.statusName = statusRecord.name;
+        return true;
+      },
 
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
@@ -1204,6 +1224,7 @@ export default function DealsPage() {
     industriesMap,
     linkedClientsMap,
     dealTagsMap,
+    dealStatuses: dealStatusList,
   };
 
   // Mobile column configuration: explicit ColDef overrides per column
@@ -1376,6 +1397,15 @@ export default function DealsPage() {
       } else {
         // For non-array fields, check equality normally
         if (newValue === oldValue) return;
+      }
+
+      if (field === "statusName") {
+        const statusId = typeof data.status === "number" ? data.status : parseInt(String(data.status), 10);
+        if (!isNaN(statusId)) {
+          const updates: Record<string, unknown> = { status: statusId };
+          updateDealMutation.mutate({ dealId: data.id, updates });
+        }
+        return;
       }
 
       // Handle owner field - valueSetter already updated data.ownerId, so use that
