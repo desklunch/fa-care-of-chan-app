@@ -147,7 +147,6 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "locations",
   "locationsText",
   "eventSchedule",
-  "notes",
   "nextSteps",
   "budgetLow",
   "budgetHigh",
@@ -530,32 +529,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createDateComparator((data) => data?.startedOn),
     },
   },
-  {
-    id: "wonOn",
-    headerName: "Won On",
-    field: "wonOn",
-    category: "Dates",
-    colDef: {
-      minWidth: 130,
-      maxWidth: 130,
-      editable: true,
-      cellEditor: "agDateCellEditor",
-      cellEditorPopup: true,
-      valueFormatter: (params: { value: string | null }) => {
-        if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yy");
-      },
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
-          </span>
-        );
-      },
-      comparator: createDateComparator((data) => data?.wonOn),
-    },
-  },
+
   {
     id: "lastContactOn",
     headerName: "Last Contact",
@@ -606,6 +580,32 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         );
       },
       comparator: createDateComparator((data) => data?.proposalSentOn),
+    },
+  },
+  {
+    id: "wonOn",
+    headerName: "Won On",
+    field: "wonOn",
+    category: "Dates",
+    colDef: {
+      minWidth: 130,
+      maxWidth: 130,
+      editable: true,
+      cellEditor: "agDateCellEditor",
+      cellEditorPopup: true,
+      valueFormatter: (params: { value: string | null }) => {
+        if (!params.value) return "";
+        return formatDateOnly(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
+            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+          </span>
+        );
+      },
+      comparator: createDateComparator((data) => data?.wonOn),
     },
   },
   {
@@ -1036,45 +1036,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "notes",
-    headerName: "Notes",
-    field: "notes",
-    category: "Basic Info",
-    colDef: {
-      flex: 3,
-      minWidth: 300,
-      sortable: false,
-      editable: true,
-      cellEditor: "agLargeTextCellEditor",
-      cellEditorPopup: true,
-      cellEditorParams: {
-        maxLength: 10000,
-        rows: 10,
-        cols: 60,
-      },
-      wrapText: true,
-      autoHeight: true,
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        return (
-          <div className="text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1 ">
-            <ReactMarkdown
-              components={{
-                a: ({ href, children }) => (
-                  <a href={href} target="_blank" rel="noopener noreferrer">
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {params.value}
-            </ReactMarkdown>
-          </div>
-        );
-      },
-    },
-  },
+  
   {
     id: "linkedClients",
     headerName: "Linked Clients",

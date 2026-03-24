@@ -28,7 +28,18 @@ import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { TagAssignment } from "@/components/ui/tag-assignment";
-import { Loader2, Trash2, PenBox, MapPin, MapPinned, Calendar, Plus, X, Building2, Search } from "lucide-react";
+import {
+  Loader2,
+  Trash2,
+  PenBox,
+  MapPin,
+  MapPinned,
+  Calendar,
+  Plus,
+  X,
+  Building2,
+  Search,
+} from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
@@ -74,11 +85,15 @@ export default function DealDetail() {
     enabled: Boolean(id),
   });
 
-  const { data: users = [] } = useQuery<Pick<User, "id" | "firstName" | "lastName">[]>({
+  const { data: users = [] } = useQuery<
+    Pick<User, "id" | "firstName" | "lastName">[]
+  >({
     queryKey: ["/api/users"],
   });
 
-  const { data: clients = [] } = useQuery<Pick<Client, "id" | "name" | "industryId">[]>({
+  const { data: clients = [] } = useQuery<
+    Pick<Client, "id" | "name" | "industryId">[]
+  >({
     queryKey: ["/api/clients"],
   });
 
@@ -86,9 +101,11 @@ export default function DealDetail() {
     queryKey: ["/api/deal-services"],
   });
 
-  const servicesMap = new Map(dealServices.map(s => [s.id, s]));
+  const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
 
-  const { data: brands = [] } = useQuery<Pick<Brand, "id" | "name" | "industry">[]>({
+  const { data: brands = [] } = useQuery<
+    Pick<Brand, "id" | "name" | "industry">[]
+  >({
     queryKey: ["/api/brands"],
   });
 
@@ -96,7 +113,7 @@ export default function DealDetail() {
     queryKey: ["/api/industries"],
   });
 
-  const industriesMap = new Map(industries.map(i => [i.id, i]));
+  const industriesMap = new Map(industries.map((i) => [i.id, i]));
 
   interface DealLinkedClient {
     dealId: string;
@@ -112,12 +129,25 @@ export default function DealDetail() {
   });
 
   const linkClientMutation = useMutation({
-    mutationFn: async ({ clientId, label }: { clientId: string; label?: string }) => {
-      await apiRequest("POST", `/api/deals/${id}/linked-clients`, { clientId, label });
+    mutationFn: async ({
+      clientId,
+      label,
+    }: {
+      clientId: string;
+      label?: string;
+    }) => {
+      await apiRequest("POST", `/api/deals/${id}/linked-clients`, {
+        clientId,
+        label,
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "linked-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-linked-clients"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", id, "linked-clients"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals/all-linked-clients"],
+      });
       setShowLinkClient(false);
       setLinkClientSearch("");
       setLinkClientLabel("");
@@ -130,8 +160,12 @@ export default function DealDetail() {
       await apiRequest("DELETE", `/api/deals/${id}/linked-clients/${clientId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "linked-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/deals/all-linked-clients"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", id, "linked-clients"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals/all-linked-clients"],
+      });
       toast({ title: "Client unlinked from deal" });
     },
   });
@@ -146,7 +180,7 @@ export default function DealDetail() {
     enabled: Boolean(id),
   });
 
-  const dealTagsMap = new Map(allDealsTags.map(t => [t.id, t]));
+  const dealTagsMap = new Map(allDealsTags.map((t) => [t.id, t]));
 
   const saveTagsMutation = useMutation({
     mutationFn: async (tagIds: string[]) => {
@@ -161,11 +195,7 @@ export default function DealDetail() {
 
   usePageTitle(deal?.displayName || "Deal");
 
-  const {
-    saveField,
-    isFieldLoading,
-    getFieldError,
-  } = useFieldMutation({
+  const { saveField, isFieldLoading, getFieldError } = useFieldMutation({
     entityType: "deals",
     entityId: id || "",
     queryKey: ["/api/deals", id],
@@ -177,7 +207,14 @@ export default function DealDetail() {
 
   const handleFieldSave = (field: string, value: unknown) => {
     let processedValue = value;
-    if (value === "" && (field === "ownerId" || field === "clientId" || field === "brandId" || field === "primaryContactId" || field === "industryId")) {
+    if (
+      value === "" &&
+      (field === "ownerId" ||
+        field === "clientId" ||
+        field === "brandId" ||
+        field === "primaryContactId" ||
+        field === "industryId")
+    ) {
       processedValue = null;
     }
     saveField(field, processedValue);
@@ -263,10 +300,7 @@ export default function DealDetail() {
   if (!canRead) {
     return (
       <PageLayout
-        breadcrumbs={[
-          { label: "Deals", href: "/deals" },
-          { label: "Deal" },
-        ]}
+        breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Deal" }]}
       >
         <NoPermissionMessage
           title="Access Denied"
@@ -283,23 +317,31 @@ export default function DealDetail() {
         { label: deal.displayName },
       ]}
       additionalActions={[
-        ...(canWrite ? [{
-          label: "Edit Deal",
-          href: `/deals/${id}/edit`,
-          icon: PenBox,
-        }] : []),
-        ...(canDelete ? [{
-          label: "Delete Deal",
-          onClick: () => setShowDeleteDialog(true),
-          icon: Trash2,
-          variant: "destructive" as const,
-        }] : []),
+        ...(canWrite
+          ? [
+              {
+                label: "Edit Deal",
+                href: `/deals/${id}/edit`,
+                icon: PenBox,
+              },
+            ]
+          : []),
+        ...(canDelete
+          ? [
+              {
+                label: "Delete Deal",
+                onClick: () => setShowDeleteDialog(true),
+                icon: Trash2,
+                variant: "destructive" as const,
+              },
+            ]
+          : []),
       ]}
     >
       <div className="">
         <Tabs defaultValue="overview" className="w-full">
           <div className="sticky top-0 bg-background z-10">
-            <div className="p-4 md:p-6 pb-2 md:pb-2">
+            <div className="max-w-4xl p-4 md:px-6 pb-2 md:pb-2">
               <div className="flex flex-col gap-2 ">
                 <span className="text-sm font-semibold">
                   {deal.client?.name}
@@ -314,7 +356,6 @@ export default function DealDetail() {
                   error={getFieldError("displayName")}
                   validation={{ required: true }}
                 />
-
               </div>
             </div>
 
@@ -351,7 +392,9 @@ export default function DealDetail() {
                     { value: "", label: "Unassigned" },
                     ...users.map((u) => ({
                       value: u.id,
-                      label: [u.firstName, u.lastName].filter(Boolean).join(" ") || "Unknown",
+                      label:
+                        [u.firstName, u.lastName].filter(Boolean).join(" ") ||
+                        "Unknown",
                     })),
                   ]}
                   onSave={handleFieldSave}
@@ -385,13 +428,17 @@ export default function DealDetail() {
                   testId="field-status"
                   type="select"
                   disabled={!canWrite}
-                  options={dealStatusList.map((s) => ({ value: String(s.id), label: s.name }))}
-                  onSave={(field, value) => handleFieldSave(field, Number(value))}
+                  options={dealStatusList.map((s) => ({
+                    value: String(s.id),
+                    label: s.name,
+                  }))}
+                  onSave={(field, value) =>
+                    handleFieldSave(field, Number(value))
+                  }
                   isLoading={isFieldLoading("status")}
                   error={getFieldError("status")}
                   displayValue={
                     <DealStatusBadge status={deal.statusName || "Unknown"} />
-
                   }
                   placeholder="Select status"
                 />
@@ -418,7 +465,9 @@ export default function DealDetail() {
                         </span>
                       </Link>
                     ) : (
-                      <span className="text-muted-foreground">No client assigned</span>
+                      <span className="text-muted-foreground">
+                        No client assigned
+                      </span>
                     )
                   }
                   placeholder="Select client"
@@ -429,20 +478,31 @@ export default function DealDetail() {
                     {linkedClients.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {linkedClients.map((lc) => (
-                          <Badge key={lc.clientId} variant="secondary" className="gap-1 pr-1" data-testid={`badge-linked-client-${lc.clientId}`}>
+                          <Badge
+                            key={lc.clientId}
+                            variant="secondary"
+                            className="gap-1 pr-1"
+                            data-testid={`badge-linked-client-${lc.clientId}`}
+                          >
                             <Building2 className="h-3 w-3" />
                             <Link href={`/clients/${lc.clientId}`}>
-                              <span className="hover:underline cursor-pointer">{lc.clientName}</span>
+                              <span className="hover:underline cursor-pointer">
+                                {lc.clientName}
+                              </span>
                             </Link>
                             {lc.label && (
-                              <span className="text-muted-foreground ml-0.5">({lc.label})</span>
+                              <span className="text-muted-foreground ml-0.5">
+                                ({lc.label})
+                              </span>
                             )}
                             {canWrite && (
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 className="h-4 w-4 ml-0.5"
-                                onClick={() => unlinkClientMutation.mutate(lc.clientId)}
+                                onClick={() =>
+                                  unlinkClientMutation.mutate(lc.clientId)
+                                }
                                 disabled={unlinkClientMutation.isPending}
                                 data-testid={`button-unlink-client-${lc.clientId}`}
                               >
@@ -468,7 +528,10 @@ export default function DealDetail() {
                     )}
 
                     {canWrite && showLinkClient && (
-                      <div className="flex flex-col gap-2 p-2 border rounded-md" data-testid="form-link-client">
+                      <div
+                        className="flex flex-col gap-2 p-2 border rounded-md"
+                        data-testid="form-link-client"
+                      >
                         <Input
                           placeholder="Label (optional)"
                           value={linkClientLabel}
@@ -481,7 +544,9 @@ export default function DealDetail() {
                             <Input
                               placeholder="Search clients..."
                               value={linkClientSearch}
-                              onChange={(e) => setLinkClientSearch(e.target.value)}
+                              onChange={(e) =>
+                                setLinkClientSearch(e.target.value)
+                              }
                               className="border-0 px-0 focus-visible:ring-0"
                               data-testid="input-link-client-search"
                             />
@@ -502,23 +567,34 @@ export default function DealDetail() {
                           {linkClientSearch.length > 0 && (
                             <div className="absolute z-50 mt-1 w-full bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
                               {(() => {
-                                const linkedIds = new Set(linkedClients.map(lc => lc.clientId));
-                                const filtered = clients.filter(c =>
-                                  c.id !== deal.clientId &&
-                                  !linkedIds.has(c.id) &&
-                                  c.name.toLowerCase().includes(linkClientSearch.toLowerCase())
+                                const linkedIds = new Set(
+                                  linkedClients.map((lc) => lc.clientId),
+                                );
+                                const filtered = clients.filter(
+                                  (c) =>
+                                    c.id !== deal.clientId &&
+                                    !linkedIds.has(c.id) &&
+                                    c.name
+                                      .toLowerCase()
+                                      .includes(linkClientSearch.toLowerCase()),
                                 );
                                 if (filtered.length === 0) {
-                                  return <div className="p-2 text-sm text-muted-foreground">No matching clients</div>;
+                                  return (
+                                    <div className="p-2 text-sm text-muted-foreground">
+                                      No matching clients
+                                    </div>
+                                  );
                                 }
-                                return filtered.slice(0, 10).map(c => (
+                                return filtered.slice(0, 10).map((c) => (
                                   <button
                                     key={c.id}
                                     className="w-full text-left px-3 py-2 text-sm hover-elevate flex items-center gap-2"
-                                    onClick={() => linkClientMutation.mutate({
-                                      clientId: c.id,
-                                      label: linkClientLabel || undefined,
-                                    })}
+                                    onClick={() =>
+                                      linkClientMutation.mutate({
+                                        clientId: c.id,
+                                        label: linkClientLabel || undefined,
+                                      })
+                                    }
                                     disabled={linkClientMutation.isPending}
                                     data-testid={`option-link-client-${c.id}`}
                                   >
@@ -535,21 +611,25 @@ export default function DealDetail() {
                   </div>
                 </FieldRow>
 
-                <EditableField
+                {/* <EditableField
                   label="Industry"
                   value={deal.industryId || ""}
                   field="industryId"
                   testId="field-industry"
                   type="select"
                   disabled={!canWrite}
-                  options={industries.map((i) => ({ value: i.id, label: i.name }))}
+                  options={industries.map((i) => ({
+                    value: i.id,
+                    label: i.name,
+                  }))}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("industryId")}
                   error={getFieldError("industryId")}
                   displayValue={
                     deal.industryId ? (
                       <span data-testid="text-industry">
-                        {industriesMap.get(deal.industryId)?.name || deal.industryId}
+                        {industriesMap.get(deal.industryId)?.name ||
+                          deal.industryId}
                       </span>
                     ) : (
                       <span className="text-muted-foreground">No industry</span>
@@ -558,20 +638,26 @@ export default function DealDetail() {
                   placeholder="Select industry"
                 />
 
-                <FieldRow label="Primary Contact" testId="field-primary-contact">
+                <FieldRow
+                  label="Primary Contact"
+                  testId="field-primary-contact"
+                >
                   {deal.primaryContact ? (
                     <Link href={`/contacts/${deal.primaryContact.id}`}>
                       <p
                         className="text-primary hover:underline cursor-pointer"
                         data-testid="link-deal-primary-contact"
                       >
-                        {deal.primaryContact.firstName} {deal.primaryContact.lastName}
+                        {deal.primaryContact.firstName}{" "}
+                        {deal.primaryContact.lastName}
                       </p>
                     </Link>
                   ) : (
-                    <span className="text-muted-foreground">No primary contact</span>
+                    <span className="text-muted-foreground">
+                      No primary contact
+                    </span>
                   )}
-                </FieldRow>
+                </FieldRow> */}
 
                 <EditableField
                   label="Project Date"
@@ -599,11 +685,13 @@ export default function DealDetail() {
                   placeholder="Enter locations"
                 />
 
-                <FieldRow label="Locations (JSON)" testId="field-locations-json">
+                <FieldRow label="Locations" testId="field-locations-json">
                   {(() => {
                     const locations = deal.locations as DealLocation[] | null;
                     if (!locations || locations.length === 0) {
-                      return <span className="text-muted-foreground">None</span>;
+                      return (
+                        <span className="text-muted-foreground">None</span>
+                      );
                     }
                     return (
                       <div className="flex flex-wrap gap-1">
@@ -611,7 +699,12 @@ export default function DealDetail() {
                           const isCity = Boolean(loc.city);
                           const Icon = isCity ? MapPin : MapPinned;
                           return (
-                            <Badge key={loc.placeId} variant="secondary" className="text-xs gap-1" data-testid={`badge-location-${loc.placeId}`}>
+                            <Badge
+                              key={loc.placeId}
+                              variant="secondary"
+                              className="text-xs gap-1"
+                              data-testid={`badge-location-${loc.placeId}`}
+                            >
                               <Icon className="h-3 w-3" />
                               {loc.displayName}
                             </Badge>
@@ -626,7 +719,9 @@ export default function DealDetail() {
                   {(() => {
                     const events = deal.eventSchedule as DealEvent[] | null;
                     if (!events || events.length === 0) {
-                      return <span className="text-muted-foreground">None</span>;
+                      return (
+                        <span className="text-muted-foreground">None</span>
+                      );
                     }
                     return (
                       <div className="flex flex-col gap-1">
@@ -634,12 +729,17 @@ export default function DealDetail() {
                           const summary = getEventSummary(event);
                           if (!summary) return null;
                           return (
-                            <div key={idx} className="flex items-center gap-2 text-sm" data-testid={`row-event-schedule-${idx}`}>
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2 text-sm"
+                              data-testid={`row-event-schedule-${idx}`}
+                            >
                               <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                               <span>{summary.text}</span>
                               {summary.altCount > 0 && (
                                 <span className="text-muted-foreground text-xs">
-                                  +{summary.altCount} alt{summary.altCount > 1 ? "s" : ""}
+                                  +{summary.altCount} alt
+                                  {summary.altCount > 1 ? "s" : ""}
                                 </span>
                               )}
                             </div>
@@ -671,17 +771,23 @@ export default function DealDetail() {
                   testId="field-services"
                   type="multiselect"
                   disabled={!canWrite}
-                  options={dealServices.filter(s => s.isActive).map((s) => ({ value: String(s.id), label: s.name }))}
+                  options={dealServices
+                    .filter((s) => s.isActive)
+                    .map((s) => ({ value: String(s.id), label: s.name }))}
                   multiSelectValues={serviceIds.map(String)}
                   onSave={handleServicesSave}
                   isLoading={isFieldLoading("serviceIds")}
                   error={getFieldError("serviceIds")}
                   displayValue={
                     serviceIds.length > 0 ? (
-                      <div className="flex flex-wrap gap-2" data-testid="deal-services">
+                      <div
+                        className="flex flex-wrap gap-2"
+                        data-testid="deal-services"
+                      >
                         {serviceIds.map((serviceId) => {
                           const service = servicesMap.get(serviceId);
-                          const serviceName = service?.name || `Service ${serviceId}`;
+                          const serviceName =
+                            service?.name || `Service ${serviceId}`;
                           return (
                             <Badge
                               key={serviceId}
@@ -700,10 +806,83 @@ export default function DealDetail() {
                   placeholder="Select services"
                 />
 
+                <EditableField
+                  label="Budget Low"
+                  value={deal.budgetLow != null ? String(deal.budgetLow) : ""}
+                  field="budgetLow"
+                  testId="field-budget-low"
+                  type="number"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("budgetLow")}
+                  error={getFieldError("budgetLow")}
+                  displayValue={
+                    deal.budgetLow != null ? (
+                      <span className="font-medium">
+                        ${deal.budgetLow.toLocaleString()}
+                      </span>
+                    ) : undefined
+                  }
+                  placeholder="Not set"
+                  validation={{
+                    customValidator: (val) => {
+                      if (val === null || val === undefined) return null;
+                      const num = Number(val);
+                      if (isNaN(num) || num <= 0)
+                        return "Must be greater than 0";
+                      return null;
+                    },
+                  }}
+                />
+
+                <EditableField
+                  label="Budget High"
+                  value={deal.budgetHigh != null ? String(deal.budgetHigh) : ""}
+                  field="budgetHigh"
+                  testId="field-budget-high"
+                  type="number"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("budgetHigh")}
+                  error={getFieldError("budgetHigh")}
+                  displayValue={
+                    deal.budgetHigh != null ? (
+                      <span className="font-medium">
+                        ${deal.budgetHigh.toLocaleString()}
+                      </span>
+                    ) : undefined
+                  }
+                  placeholder="Not set"
+                  validation={{
+                    customValidator: (val) => {
+                      if (val === null || val === undefined) return null;
+                      const num = Number(val);
+                      if (isNaN(num) || num <= 0)
+                        return "Must be greater than 0";
+                      return null;
+                    },
+                  }}
+                />
+
+                <EditableField
+                  label="Budget Notes"
+                  value={deal.budgetNotes || ""}
+                  field="budgetNotes"
+                  testId="field-budget-notes"
+                  type="textarea"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("budgetNotes")}
+                  error={getFieldError("budgetNotes")}
+                  placeholder="Enter budget notes"
+                />
                 <FieldRow label="Tags" testId="field-tags">
                   <div className="space-y-2">
                     {dealTagIds.length > 0 && (
-                      <div className="flex flex-wrap gap-2" data-testid="deal-tags">
+                      <div
+                        className="flex flex-wrap gap-2"
+                        data-testid="deal-tags"
+                      >
                         {dealTagIds.map((tagId) => {
                           const tag = dealTagsMap.get(tagId);
                           return (
@@ -724,77 +903,13 @@ export default function DealDetail() {
                       <TagAssignment
                         category="Deals"
                         selectedTagIds={dealTagIds}
-                        onTagsChange={(tagIds) => saveTagsMutation.mutate(tagIds)}
+                        onTagsChange={(tagIds) =>
+                          saveTagsMutation.mutate(tagIds)
+                        }
                       />
                     )}
                   </div>
                 </FieldRow>
-
-                <EditableField
-                  label="Budget Low"
-                  value={deal.budgetLow != null ? String(deal.budgetLow) : ""}
-                  field="budgetLow"
-                  testId="field-budget-low"
-                  type="number"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("budgetLow")}
-                  error={getFieldError("budgetLow")}
-                  displayValue={
-                    deal.budgetLow != null ? (
-                      <span className="font-medium">${deal.budgetLow.toLocaleString()}</span>
-                    ) : undefined
-                  }
-                  placeholder="Not set"
-                  validation={{
-                    customValidator: (val) => {
-                      if (val === null || val === undefined) return null;
-                      const num = Number(val);
-                      if (isNaN(num) || num <= 0) return "Must be greater than 0";
-                      return null;
-                    },
-                  }}
-                />
-
-                <EditableField
-                  label="Budget High"
-                  value={deal.budgetHigh != null ? String(deal.budgetHigh) : ""}
-                  field="budgetHigh"
-                  testId="field-budget-high"
-                  type="number"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("budgetHigh")}
-                  error={getFieldError("budgetHigh")}
-                  displayValue={
-                    deal.budgetHigh != null ? (
-                      <span className="font-medium">${deal.budgetHigh.toLocaleString()}</span>
-                    ) : undefined
-                  }
-                  placeholder="Not set"
-                  validation={{
-                    customValidator: (val) => {
-                      if (val === null || val === undefined) return null;
-                      const num = Number(val);
-                      if (isNaN(num) || num <= 0) return "Must be greater than 0";
-                      return null;
-                    },
-                  }}
-                />
-
-                <EditableField
-                  label="Budget Notes"
-                  value={deal.budgetNotes || ""}
-                  field="budgetNotes"
-                  testId="field-budget-notes"
-                  type="textarea"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("budgetNotes")}
-                  error={getFieldError("budgetNotes")}
-                  placeholder="Enter budget notes"
-                />
-
                 <EditableField
                   label="Started"
                   value={deal.startedOn || ""}
@@ -807,7 +922,9 @@ export default function DealDetail() {
                   error={getFieldError("startedOn")}
                   displayValue={
                     deal.startedOn && parseDateOnly(deal.startedOn) ? (
-                      <span className="font-medium">{format(parseDateOnly(deal.startedOn)!, "MMM d, yyyy")}</span>
+                      <span className="font-medium">
+                        {format(parseDateOnly(deal.startedOn)!, "MMM d, yyyy")}
+                      </span>
                     ) : undefined
                   }
                   placeholder="Select date"
@@ -825,7 +942,12 @@ export default function DealDetail() {
                   error={getFieldError("lastContactOn")}
                   displayValue={
                     deal.lastContactOn && parseDateOnly(deal.lastContactOn) ? (
-                      <span className="font-medium">{format(parseDateOnly(deal.lastContactOn)!, "MMM d, yyyy")}</span>
+                      <span className="font-medium">
+                        {format(
+                          parseDateOnly(deal.lastContactOn)!,
+                          "MMM d, yyyy",
+                        )}
+                      </span>
                     ) : undefined
                   }
                   placeholder="Select date"
@@ -843,7 +965,9 @@ export default function DealDetail() {
                   error={getFieldError("wonOn")}
                   displayValue={
                     deal.wonOn && parseDateOnly(deal.wonOn) ? (
-                      <span className="font-medium">{format(parseDateOnly(deal.wonOn)!, "MMM d, yyyy")}</span>
+                      <span className="font-medium">
+                        {format(parseDateOnly(deal.wonOn)!, "MMM d, yyyy")}
+                      </span>
                     ) : undefined
                   }
                   placeholder="Select date"
@@ -860,14 +984,20 @@ export default function DealDetail() {
                   isLoading={isFieldLoading("proposalSentOn")}
                   error={getFieldError("proposalSentOn")}
                   displayValue={
-                    deal.proposalSentOn && parseDateOnly(deal.proposalSentOn) ? (
-                      <span className="font-medium">{format(parseDateOnly(deal.proposalSentOn)!, "MMM d, yyyy")}</span>
+                    deal.proposalSentOn &&
+                    parseDateOnly(deal.proposalSentOn) ? (
+                      <span className="font-medium">
+                        {format(
+                          parseDateOnly(deal.proposalSentOn)!,
+                          "MMM d, yyyy",
+                        )}
+                      </span>
                     ) : undefined
                   }
                   placeholder="Select date"
                 />
 
-                <EditableField
+                {/* <EditableField
                   label="Notes"
                   value={deal.notes || ""}
                   field="notes"
@@ -879,7 +1009,7 @@ export default function DealDetail() {
                   error={getFieldError("notes")}
                   placeholder="Enter notes"
                   valueClassName="text-base prose dark:prose-invert "
-                />
+                /> */}
 
                 <EditableField
                   label="Next Steps"
@@ -896,7 +1026,6 @@ export default function DealDetail() {
                 />
               </CardContent>
             </Card>
-
           </TabsContent>
 
           <TabsContent value="intake" className="p-4 md:p-6 pt-4 max-w-6xl">
@@ -944,7 +1073,6 @@ export default function DealDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </PageLayout>
   );
 }
