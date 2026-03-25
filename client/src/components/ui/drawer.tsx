@@ -93,14 +93,17 @@ const DrawerTitle = React.forwardRef<
 DrawerTitle.displayName = DrawerPrimitive.Title.displayName
 
 const DrawerDescription = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Description>
->(({ className, ...props }, ref) => (
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, children, ...props }, ref) => (
+  // @ts-expect-error Radix v1.1.7 narrowed Description types but the primitive still renders a <p> and accepts standard HTML attributes
   <DrawerPrimitive.Description
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
-  />
+  >
+    {children}
+  </DrawerPrimitive.Description>
 ))
 DrawerDescription.displayName = DrawerPrimitive.Description.displayName
 

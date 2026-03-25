@@ -115,14 +115,17 @@ const SheetTitle = React.forwardRef<
 SheetTitle.displayName = SheetPrimitive.Title.displayName
 
 const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
->(({ className, ...props }, ref) => (
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, children, ...props }, ref) => (
+  // @ts-expect-error Radix v1.1.7 narrowed Description types but the primitive still renders a <p> and accepts standard HTML attributes
   <SheetPrimitive.Description
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
-  />
+  >
+    {children}
+  </SheetPrimitive.Description>
 ))
 SheetDescription.displayName = SheetPrimitive.Description.displayName
 

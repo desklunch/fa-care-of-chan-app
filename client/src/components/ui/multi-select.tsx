@@ -15,7 +15,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type Item = {
@@ -425,6 +425,7 @@ export function MultiSelect({
             data-testid={`dialog-${testIdPrefix}`}
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
+            <DialogDescription className="sr-only">Select options</DialogDescription>
             <MultiSelectContent {...contentProps} isDropdown={false} />
           </DialogContent>
         </Dialog>

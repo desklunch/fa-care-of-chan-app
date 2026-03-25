@@ -84,14 +84,17 @@ const AlertDialogTitle = React.forwardRef<
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
 
 const AlertDialogDescription = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
->(({ className, ...props }, ref) => (
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, children, ...props }, ref) => (
+  // @ts-expect-error Radix v1.1.7 narrowed Description types but the primitive still renders a <p> and accepts standard HTML attributes
   <AlertDialogPrimitive.Description
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
-  />
+  >
+    {children}
+  </AlertDialogPrimitive.Description>
 ))
 AlertDialogDescription.displayName =
   AlertDialogPrimitive.Description.displayName

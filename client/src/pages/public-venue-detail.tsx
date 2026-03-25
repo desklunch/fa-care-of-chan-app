@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { AmenityDisplay } from "@/components/ui/amenity-toggle";
 import {
@@ -175,6 +175,7 @@ export default function PublicVenueDetailPage() {
                 className="w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-w-none p-0 border-0 bg-black/95 overflow-hidden flex flex-col cursor-pointer"
                 onClick={() => setLightboxOpen(false)}
               >
+                <DialogDescription className="sr-only">Photo lightbox viewer</DialogDescription>
                 <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
                   <img
                     src={venue.photos[lightboxIndex].url}
