@@ -232,7 +232,7 @@ export default function Sidebar({
           <Button
             variant="ghost"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="px-0  w-full flex flex-2 items-center justify-start gap-3  focus:ring-0 focus:ring-offset-0  h-[36px] "
+            className="px-0  w-full flex flex-2 items-center justify-start gap-3  focus:ring-0 focus:ring-offset-0  h-[36px] bg-sidebar hover:bg-background "
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
