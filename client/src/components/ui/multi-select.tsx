@@ -15,11 +15,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type Item = {
@@ -92,8 +88,6 @@ function MultiSelectContent({
   return (
     <>
       <div className="grid grid-cols-2 gap-4 md:gap-2 p-2">
-
-
         {showSearch && (
           <div className="flex items-center gap-2 col-span-2 relative">
             <Search className="absolute left-3 md:left-2 top-1/2 -translate-y-1/2 h-5 md:h-4 w-5 md:w-4 text-muted-foreground" />
@@ -126,7 +120,7 @@ function MultiSelectContent({
             className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
             data-testid={`button-select-all-${testIdPrefix}`}
           >
-            <ListChecks  className="h-4 w-4"/>
+            <ListChecks className="h-4 w-4" />
             Select All
           </Button>
         )}
@@ -137,7 +131,7 @@ function MultiSelectContent({
           className="w-full text-sm md:text-xs h-10 md:h-8 rounded-lg md:rounded-sm "
           data-testid={`button-reset-${testIdPrefix}`}
         >
-          <ListRestart className="h-4 w-4"/>
+          <ListRestart className="h-4 w-4" />
           Reset
         </Button>
       </div>
@@ -152,7 +146,7 @@ function MultiSelectContent({
                 <div className="px-2 py-0 text-xs font-semibold text-muted-foreground mb-1">
                   {category}
                 </div>
-                
+
                 {ids.map((id) =>
                   isDropdown ? (
                     <DropdownMenuCheckboxItem
@@ -174,18 +168,20 @@ function MultiSelectContent({
                       aria-checked={selectedIds.includes(id)}
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           toggleItem(id);
                         }
                       }}
                     >
                       <span className="absolute border border-input rounded-sm left-2 flex h-6 w-6 items-center justify-center">
-                        {selectedIds.includes(id) && <Check className="h-4 w-4" />}
+                        {selectedIds.includes(id) && (
+                          <Check className="h-4 w-4" />
+                        )}
                       </span>
                       {itemLabels[id] || String(id)}
                     </div>
-                  )
+                  ),
                 )}
               </div>
             ))}
@@ -223,18 +219,20 @@ function MultiSelectContent({
                     aria-checked={selectedIds.includes(item.id)}
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         toggleItem(item.id);
                       }
                     }}
                   >
                     <span className="absolute border border-input rounded-sm left-2 flex h-6 w-6 items-center justify-center">
-                      {selectedIds.includes(item.id) && <Check className="h-3 w-3" />}
+                      {selectedIds.includes(item.id) && (
+                        <Check className="h-3 w-3" />
+                      )}
                     </span>
                     {item.label}
                   </div>
-                )
+                ),
               )
             )}
           </>
@@ -244,7 +242,6 @@ function MultiSelectContent({
       <div className="h-px bg-border mx-1 mt-1" />
 
       <div className="p-2 flex">
-
         <Button
           variant="ghost"
           size="sm"
@@ -366,14 +363,16 @@ export function MultiSelect({
   const appliedButtonClassName = isDifferentFromDefaults ? buttonClassName : "";
 
   const displayLabel =
-    selectedIds.length === 0 ? triggerLabel : `${selectedIds.length} ${triggerLabel}`;
+    selectedIds.length === 0
+      ? triggerLabel
+      : `${selectedIds.length} ${triggerLabel}`;
 
   const triggerButton = (
     <Button
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
+      className={`${appliedButtonClassName}  gap-2 h-12 md:h-9 justify-start w-full focus:ring-0 focus:outline-none ${isDifferentFromDefaults ? "rounded-r-none border-r-0" : "bg-foreground/10 rounded-full "}`}
     >
       {triggerIcon}
       <span>{displayLabel}</span>
@@ -446,4 +445,7 @@ export function MultiSelect({
   );
 }
 
-export type { Item as MultiSelectItem, ItemsByCategory as MultiSelectItemsByCategory };
+export type {
+  Item as MultiSelectItem,
+  ItemsByCategory as MultiSelectItemsByCategory,
+};

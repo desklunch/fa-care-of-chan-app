@@ -8,11 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type Item = {
@@ -104,7 +100,7 @@ function SingleSelectContent({
                 <div className="px-2 py-0 text-xs font-semibold text-muted-foreground mb-1">
                   {category}
                 </div>
-                
+
                 {ids.map((id) =>
                   isDropdown ? (
                     <DropdownMenuItem
@@ -128,7 +124,7 @@ function SingleSelectContent({
                       aria-selected={selectedId === id}
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           selectItem(id);
                         }
@@ -139,7 +135,7 @@ function SingleSelectContent({
                       </span>
                       {itemLabels[id] || String(id)}
                     </div>
-                  )
+                  ),
                 )}
               </div>
             ))}
@@ -179,7 +175,7 @@ function SingleSelectContent({
                     aria-selected={selectedId === item.id}
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         selectItem(item.id);
                       }
@@ -190,7 +186,7 @@ function SingleSelectContent({
                     </span>
                     {item.label}
                   </div>
-                )
+                ),
               )
             )}
           </>
@@ -273,16 +269,17 @@ export function SingleSelect({
     setSearchQuery("");
   };
 
-  const displayLabel = selectedId !== null 
-    ? (itemLabels[selectedId] || String(selectedId))
-    : triggerLabel;
+  const displayLabel =
+    selectedId !== null
+      ? itemLabels[selectedId] || String(selectedId)
+      : triggerLabel;
 
   const triggerButton = (
     <Button
       size="md"
       variant="ghost"
       data-testid={`button-${testIdPrefix}`}
-      className={`gap-2 h-12 md:h-9 justify-start w-full bg-foreground/10 rounded-full ${triggerClassName || ""}`}
+      className={`gap-2 h-12 md:h-9 justify-start w-full bg-foreground/10 rounded-full focus:ring-0 focus:outline-none ${triggerClassName || ""}`}
     >
       {triggerIcon}
       <span className="truncate">{displayLabel}</span>
@@ -306,10 +303,13 @@ export function SingleSelect({
   return (
     <div className="inline-flex w-full md:w-auto items-center">
       {isMobile ? (
-        <Dialog open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) setSearchQuery("");
-        }}>
+        <Dialog
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) setSearchQuery("");
+          }}
+        >
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>
           <DialogContent
             className={`!p-0 !inset-2 !w-[calc(100vw-2rem)] !h-[calc(100dvh-2rem)] !max-w-none !flex !flex-col !overflow-hidden !translate-x-0 !translate-y-0 !left-[1rem] !top-[1rem] !right-[1rem] !bottom-[1rem] gap-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:zoom-in-50 data-[state=closed]:zoom-out-50 duration-500 rounded-xl ${contentClassName || ""}`}
@@ -320,10 +320,13 @@ export function SingleSelect({
           </DialogContent>
         </Dialog>
       ) : (
-        <DropdownMenu open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) setSearchQuery("");
-        }}>
+        <DropdownMenu
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) setSearchQuery("");
+          }}
+        >
           <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
           <DropdownMenuContent
             align={align}
@@ -338,4 +341,7 @@ export function SingleSelect({
   );
 }
 
-export type { Item as SingleSelectItem, ItemsByCategory as SingleSelectItemsByCategory };
+export type {
+  Item as SingleSelectItem,
+  ItemsByCategory as SingleSelectItemsByCategory,
+};
