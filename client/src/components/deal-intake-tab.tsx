@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,9 +32,9 @@ import {
   CheckCircle,
   ClipboardList,
   Trash2,
-  RotateCcw,
-  Save,
   ArrowRightLeft,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -47,70 +47,6 @@ import type {
 interface DealIntakeTabProps {
   dealId: string;
   canWrite: boolean;
-}
-
-function formatReadOnlyValue(field: FormField, value: unknown): string {
-  if (value === undefined || value === null || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-
-  if (field.type === "location" && Array.isArray(value)) {
-    if (value.length === 0) return "—";
-    return value.map((v: { displayName?: string }) => v.displayName || "Unknown").join(", ");
-  }
-  if (field.type === "eventSchedule" && Array.isArray(value)) {
-    if (value.length === 0) return "—";
-    return `${value.length} event(s)`;
-  }
-  if (field.type === "services" && Array.isArray(value)) {
-    if (value.length === 0) return "—";
-    return `${value.length} service(s) selected`;
-  }
-  if (field.type === "tags" && Array.isArray(value)) {
-    if (value.length === 0) return "—";
-    return `${value.length} tag(s) selected`;
-  }
-
-  return String(value);
-}
-
-function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]; responseData: Record<string, unknown> }) {
-  return (
-    <div className="space-y-6" data-testid="intake-readonly">
-      {schema.map((section) => (
-        <Card key={section.id} className="p-6" data-testid={`readonly-section-${section.id}`}>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold">{section.title}</h3>
-            {section.description && (
-              <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
-            )}
-          </div>
-          <div className="space-y-4">
-            {section.fields.map((field) => {
-              const value = responseData[field.id];
-              const displayValue = formatReadOnlyValue(field, value);
-
-              return (
-                <div key={field.id} className="space-y-1" data-testid={`readonly-field-${field.id}`}>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {field.name}
-                    {field.required && <span className="text-destructive ml-0.5">*</span>}
-                  </p>
-                  {field.type === "richtext" && typeof value === "string" && value !== "" ? (
-                    <div
-                      className="text-sm rich-text-html-display"
-                      dangerouslySetInnerHTML={{ __html: value }}
-                    />
-                  ) : (
-                    <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
 }
 
 function isIntakeCategory(category: string | null | undefined): boolean {
@@ -230,6 +166,38 @@ function IntakeEmptyState({ dealId, canWrite }: { dealId: string; canWrite: bool
   );
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  if (status === "idle") return null;
+
+  return (
+    <span
+      className="flex items-center gap-1.5 text-xs"
+      data-testid="save-status-indicator"
+    >
+      {status === "saving" && (
+        <>
+          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+          <span className="text-muted-foreground">Saving…</span>
+        </>
+      )}
+      {status === "saved" && (
+        <>
+          <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+          <span className="text-green-600 dark:text-green-400">Saved</span>
+        </>
+      )}
+      {status === "error" && (
+        <>
+          <AlertCircle className="h-3 w-3 text-destructive" />
+          <span className="text-destructive">Save failed</span>
+        </>
+      )}
+    </span>
+  );
+}
+
 function IntakeDraftForm({
   dealId,
   intake,
@@ -241,7 +209,9 @@ function IntakeDraftForm({
 }) {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMount = useRef(true);
 
   const formSchema = intake.formSchema as FormSection[];
   const existingData = intake.responseData as Record<string, unknown>;
@@ -261,9 +231,11 @@ function IntakeDraftForm({
       ...existingData,
     };
     form.reset(merged);
+    isInitialMount.current = true;
+    setSaveStatus("idle");
   }, [intake.id]);
 
-  const saveDraftMutation = useMutation({
+  const autosaveMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
       const res = await apiRequest("PATCH", `/api/deals/${dealId}/intake`, {
         responseData: data,
@@ -275,34 +247,46 @@ function IntakeDraftForm({
       return res.json();
     },
     onSuccess: () => {
+      setSaveStatus("saved");
       queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "intake"] });
-      toast({ title: "Draft saved", description: "Your intake responses have been saved." });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Failed to save", description: error.message });
+      setSaveStatus("error");
+      toast({ variant: "destructive", title: "Autosave failed", description: error.message });
     },
   });
 
-  const completeMutation = useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      const res = await apiRequest("PATCH", `/api/deals/${dealId}/intake`, {
-        responseData: data,
-        status: "completed",
-      });
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        throw new Error("Server returned an unexpected response. Please try again.");
+  const debouncedSave = useCallback(
+    (data: Record<string, unknown>) => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
       }
-      return res.json();
+      debounceTimer.current = setTimeout(() => {
+        setSaveStatus("saving");
+        autosaveMutation.mutate(data);
+      }, 2000);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "intake"] });
-      toast({ title: "Intake completed", description: "The questionnaire has been marked as complete." });
-    },
-    onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Failed to complete", description: error.message });
-    },
-  });
+    [dealId],
+  );
+
+  useEffect(() => {
+    if (!canWrite) return;
+
+    const subscription = form.watch((values) => {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+      debouncedSave(values as Record<string, unknown>);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [form, debouncedSave, canWrite]);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -318,17 +302,6 @@ function IntakeDraftForm({
     },
   });
 
-  const handleSaveDraft = () => {
-    const data = form.getValues();
-    saveDraftMutation.mutate(data);
-  };
-
-  const handleComplete = () => {
-    const data = form.getValues();
-    completeMutation.mutate(data);
-    setShowCompleteDialog(false);
-  };
-
   return (
     <div className="space-y-4 " data-testid="intake-draft-form">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -341,7 +314,7 @@ function IntakeDraftForm({
               {intake.createdBy && ` by ${intake.createdBy.firstName} ${intake.createdBy.lastName}`}
             </p>
           </div>
-          <Badge variant="secondary" data-testid="badge-intake-status">Draft</Badge>
+          <SaveStatusIndicator status={saveStatus} />
         </div>
         {canWrite && (
           <div className="flex items-center gap-2">
@@ -362,36 +335,6 @@ function IntakeDraftForm({
       <Form {...form}>
         <div className="space-y-6">
           <FormFieldRenderer schema={formSchema} form={form as never} />
-
-          {canWrite && (
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={handleSaveDraft}
-                disabled={saveDraftMutation.isPending}
-                data-testid="button-save-draft"
-              >
-                {saveDraftMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save Draft
-              </Button>
-              <Button
-                onClick={() => setShowCompleteDialog(true)}
-                disabled={completeMutation.isPending}
-                data-testid="button-mark-complete"
-              >
-                {completeMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle className="h-4 w-4" />
-                )}
-                Mark Complete
-              </Button>
-            </div>
-          )}
         </div>
       </Form>
 
@@ -413,28 +356,6 @@ function IntakeDraftForm({
             >
               {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Complete Intake</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to mark this intake as complete? The form will become read-only after completion.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-complete">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleComplete}
-              disabled={completeMutation.isPending}
-              data-testid="button-confirm-complete"
-            >
-              {completeMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Complete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -594,95 +515,6 @@ function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake
   );
 }
 
-function IntakeCompletedView({
-  dealId,
-  intake,
-  canWrite,
-}: {
-  dealId: string;
-  intake: DealIntakeWithRelations;
-  canWrite: boolean;
-}) {
-  const { toast } = useToast();
-  const [showRestartDialog, setShowRestartDialog] = useState(false);
-
-  const formSchema = intake.formSchema as FormSection[];
-  const responseData = intake.responseData as Record<string, unknown>;
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/deals/${dealId}/intake`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "intake"] });
-      setShowRestartDialog(false);
-      toast({ title: "Intake removed", description: "You can now start a new intake questionnaire." });
-    },
-    onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Failed to remove", description: error.message });
-    },
-  });
-
-  return (
-    <div className="space-y-4" data-testid="intake-completed-view">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <div>
-            <h3 className="font-semibold">{intake.templateName}</h3>
-            <p className="text-sm text-muted-foreground">
-              Completed {intake.completedAt ? format(new Date(intake.completedAt), "MMM d, yyyy") : ""}
-              {intake.createdBy && ` by ${intake.createdBy.firstName} ${intake.createdBy.lastName}`}
-            </p>
-          </div>
-          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" data-testid="badge-intake-status">
-            Completed
-          </Badge>
-        </div>
-        {canWrite && (
-          <div className="flex items-center gap-2">
-            <SyncToDealButton dealId={dealId} intake={intake} canWrite={canWrite} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowRestartDialog(true)}
-              data-testid="button-restart-intake"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Restart
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <ReadOnlyFieldRenderer schema={formSchema} responseData={responseData} />
-
-      <AlertDialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restart Intake</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove this completed intake? All responses will be lost and you'll need to start a new questionnaire.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-restart">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteMutation.mutate()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteMutation.isPending}
-              data-testid="button-confirm-restart"
-            >
-              {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Remove & Restart
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
 export function DealIntakeTab({ dealId, canWrite }: DealIntakeTabProps) {
   const { data: intake, isLoading } = useQuery<DealIntakeWithRelations | null>({
     queryKey: ["/api/deals", dealId, "intake"],
@@ -700,10 +532,6 @@ export function DealIntakeTab({ dealId, canWrite }: DealIntakeTabProps) {
 
   if (!intake) {
     return <IntakeEmptyState dealId={dealId} canWrite={canWrite} />;
-  }
-
-  if (intake.status === "completed") {
-    return <IntakeCompletedView dealId={dealId} intake={intake} canWrite={canWrite} />;
   }
 
   return <IntakeDraftForm dealId={dealId} intake={intake} canWrite={canWrite} />;

@@ -976,23 +976,20 @@ export function registerDealsRoutes(app: Express): void {
         return res.status(404).json({ message: "No intake found for this deal" });
       }
 
-      if (existing.status === "completed") {
-        return res.status(400).json({ message: "Cannot modify a completed intake. Delete it first to start over." });
-      }
-
       const result = updateDealIntakeSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const intake = await dealsStorage.updateDealIntake(req.params.dealId, result.data);
+      const { status: _status, ...safeData } = result.data;
+      const intake = await dealsStorage.updateDealIntake(req.params.dealId, safeData);
 
       await logAuditEvent(req, {
         action: "update",
         entityType: "deal_intake",
         entityId: existing.id,
         status: "success",
-        metadata: { dealId: req.params.dealId, status: result.data.status },
+        metadata: { dealId: req.params.dealId },
       });
 
       res.json(intake);

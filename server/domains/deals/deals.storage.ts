@@ -271,14 +271,12 @@ export const dealsStorage = {
   },
 
   async updateDealIntake(dealId: string, data: UpdateDealIntake): Promise<DealIntake | null> {
-    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+      status: "draft",
+      completedAt: null,
+    };
     if (data.responseData !== undefined) updateData.responseData = data.responseData;
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-      if (data.status === "completed") {
-        updateData.completedAt = new Date();
-      }
-    }
 
     const [intake] = await db
       .update(dealIntakes)
