@@ -31,7 +31,7 @@ import { z } from "zod";
 
 const issueFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(200, "Title must be less than 200 characters"),
-  description: z.string().min(20, "Description must be at least 20 characters").max(5000, "Description must be less than 5000 characters"),
+  description: z.string().max(5000, "Description must be less than 5000 characters").nullable().optional(),
   severity: z.enum(["high", "medium", "low"]),
 });
 
@@ -275,7 +275,7 @@ export default function AppIssueForm() {
                     <FormItem>
                       <div className="w-full flex justify-between items-center gap-2">
                         <FormLabel>Description</FormLabel>
-                        <span className="text-xs font-medium text-muted-foreground">Required</span>
+                        <span className="text-xs font-medium text-muted-foreground">Optional</span>
                       </div>
                       <FormControl>
                         <Textarea 

@@ -116,7 +116,7 @@ export const appFeatures = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     title: varchar("title", { length: 200 }).notNull(),
-    description: text("description").notNull(),
+    description: text("description"),
     featureType: varchar("feature_type", { length: 20 }).default("idea").notNull(),
     categoryId: varchar("category_id")
       .notNull()
@@ -1155,7 +1155,7 @@ export const insertAppFeatureSchema = createInsertSchema(appFeatures).omit({
   updatedAt: true,
 }).extend({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.string().nullable().optional(),
   categoryId: z.string().min(1, "Category is required"),
   featureType: z.enum(featureTypes, { required_error: "Please select Idea or Requirement" }),
   status: z.enum(featureStatuses).default("proposed"),
@@ -1590,7 +1590,7 @@ export const appIssues = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     title: varchar("title", { length: 200 }).notNull(),
-    description: text("description").notNull(),
+    description: text("description"),
     severity: varchar("severity", { length: 20 }).notNull(),
     status: varchar("status", { length: 20 }).default("reported").notNull(),
     createdById: varchar("created_by_id")
@@ -1634,7 +1634,7 @@ export const insertAppIssueSchema = createInsertSchema(appIssues).omit({
   updatedAt: true,
 }).extend({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.string().nullable().optional(),
   severity: z.enum(issueSeverities, { required_error: "Please select a severity level" }),
 });
 
