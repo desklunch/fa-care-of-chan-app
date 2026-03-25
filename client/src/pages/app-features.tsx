@@ -23,6 +23,15 @@ const statusLabels: Record<FeatureStatus, string> = {
   archived: "Archived",
 };
 
+const statusSortOrder: Record<FeatureStatus, number> = {
+  completed: 0,
+  in_progress: 1,
+  planned: 2,
+  under_review: 3,
+  proposed: 4,
+  archived: 5,
+};
+
 const statusColors: Record<FeatureStatus, string> = {
   proposed: "border-blue-800 text-blue-800 dark:border-blue-400 dark:text-blue-400",
   under_review: "border-yellow-800 text-yellow-800 dark:border-yellow-400 dark:text-yellow-400",
@@ -152,6 +161,10 @@ export default function AppFeatures() {
     if (selectedStatuses.length > 0 && !selectedStatuses.includes(f.status)) return false;
     if (selectedCategories.length > 0 && !selectedCategories.includes(String(f.categoryId))) return false;
     return true;
+  }).sort((a, b) => {
+    const aOrder = statusSortOrder[a.status as FeatureStatus] ?? 99;
+    const bOrder = statusSortOrder[b.status as FeatureStatus] ?? 99;
+    return aOrder - bOrder;
   });
 
   const groupedFeatures = useMemo(() => {
