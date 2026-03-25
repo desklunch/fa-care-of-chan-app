@@ -3,6 +3,7 @@ import Sidebar from "./sidebar";
 import Header from "./header";
 import { PageHeaderProvider, usePageHeaderContext } from "../hooks/page-header-context";
 import { CommandPalette, useCommandPalette } from "./command-palette";
+import { QuickCreateProvider } from "./quick-create-dialogs";
 
 interface AppShellProps {
   children: ReactNode;
@@ -40,7 +41,9 @@ function AppShellContent({ children }: AppShellProps) {
 export default function AppShell({ children }: AppShellProps) {
   return (
     <PageHeaderProvider>
-      <AppShellContent>{children}</AppShellContent>
+      <QuickCreateProvider>
+        <AppShellContent>{children}</AppShellContent>
+      </QuickCreateProvider>
     </PageHeaderProvider>
   );
 }

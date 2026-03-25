@@ -1,4 +1,4 @@
-import { ChevronRight, MoreVertical, Menu } from "lucide-react";
+import { ChevronRight, MoreVertical, Menu, Bug, Lightbulb } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,9 +6,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Breadcrumb, ActionButton } from "../types/layout";
+import { useQuickCreate } from "./quick-create-dialogs";
 
 interface HeaderProps {
   isMobileOpen: boolean;
@@ -75,6 +77,10 @@ function renderDropdownItem(action: ActionButton, index: number) {
   );
 }
 
+function isMacOS() {
+  return typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
+}
+
 export default function Header({
   isMobileOpen,
   onToggle,
@@ -82,11 +88,13 @@ export default function Header({
   primaryAction,
   additionalActions,
 }: HeaderProps) {
-  const hasActions = primaryAction || (additionalActions && additionalActions.length > 0);
+  const { openIssueDialog, openFeatureDialog } = useQuickCreate();
+  const hasPageActions = primaryAction || (additionalActions && additionalActions.length > 0);
   const allDropdownActions = [
     ...(primaryAction ? [primaryAction] : []),
     ...(additionalActions || []),
   ];
+  const modKey = isMacOS() ? "\u2318" : "Ctrl+";
 
   return (
     <header
@@ -145,24 +153,43 @@ export default function Header({
           </div>
         )}
 
-        {hasActions && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-9 w-9 p-0 ${additionalActions && additionalActions.length > 0 ? "" : "md:hidden"}`}
-                data-testid="button-actions-menu"
-                aria-label="Actions menu"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" data-testid="dropdown-actions-menu">
-              {allDropdownActions.map((action, index) => renderDropdownItem(action, index))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 p-0"
+              data-testid="button-actions-menu"
+              aria-label="Actions menu"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" data-testid="dropdown-actions-menu">
+            {hasPageActions && (
+              <>
+                {allDropdownActions.map((action, index) => renderDropdownItem(action, index))}
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem
+              onClick={openIssueDialog}
+              data-testid="menu-item-report-issue"
+            >
+              <Bug className="h-4 w-4 mr-2" />
+              Report Issue
+              <DropdownMenuShortcut>{modKey}I</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={openFeatureDialog}
+              data-testid="menu-item-request-feature"
+            >
+              <Lightbulb className="h-4 w-4 mr-2" />
+              Request Feature
+              <DropdownMenuShortcut>{isMacOS() ? "\u2318\u21E7F" : "Ctrl+Shift+F"}</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
