@@ -157,7 +157,10 @@ function ReportIssueDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="w-full flex justify-between items-center gap-2">
+                    <FormLabel>Description</FormLabel>
+                    <span className="text-xs font-medium text-muted-foreground">Optional</span>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Describe the issue in detail..."
@@ -328,7 +331,10 @@ function RequestFeatureDialog({ open, onOpenChange }: { open: boolean; onOpenCha
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="w-full flex justify-between items-center gap-2">
+                    <FormLabel>Description</FormLabel>
+                    <span className="text-xs font-medium text-muted-foreground">Optional</span>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Describe your feature request..."

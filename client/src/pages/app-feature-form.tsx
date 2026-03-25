@@ -327,7 +327,10 @@ export default function AppFeatureForm() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Description</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Optional</span>
+                      </div>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe your feature request in detail..."
