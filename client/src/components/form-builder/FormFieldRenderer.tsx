@@ -1,5 +1,6 @@
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -92,9 +93,9 @@ function renderFieldInput(
       );
     case "number":
       return (
-        <Input
-          {...fieldProps}
-          type="number"
+        <NumericInput
+          name={fieldProps.name}
+          onBlur={fieldProps.onBlur}
           value={(fieldProps.value as number) || ""}
           onChange={(e) =>
             fieldProps.onChange(e.target.value ? Number(e.target.value) : "")

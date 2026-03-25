@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -821,10 +822,9 @@ export default function DealForm() {
                           <FormControl>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                              <Input
-                                type="number"
+                              <NumericInput
                                 placeholder="0"
-                                className="pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="pl-7"
                                 value={field.value ?? ""}
                                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                                 data-testid="input-budget-low"
@@ -844,10 +844,9 @@ export default function DealForm() {
                           <FormControl>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                              <Input
-                                type="number"
+                              <NumericInput
                                 placeholder="0"
-                                className="pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="pl-7"
                                 value={field.value ?? ""}
                                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                                 data-testid="input-budget-high"

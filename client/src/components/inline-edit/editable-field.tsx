@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -438,9 +439,8 @@ export function EditableField({
       case "number":
         return (
           <>
-            <Input
+            <NumericInput
               ref={inputRef as React.RefObject<HTMLInputElement>}
-              type="number"
               value={editValue}
               onChange={(e) => {
                 setEditValue(e.target.value);

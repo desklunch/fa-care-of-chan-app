@@ -10,6 +10,7 @@ import { PageLayout } from "@/framework";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -2225,9 +2226,8 @@ export default function VenueFormPage() {
                                           </Label>
                                           <div className="relative">
                                             <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input
+                                            <NumericInput
                                               id={`space-max-seated-${space.id}`}
-                                              type="number"
                                               min={1}
                                               value={space.maxCapacitySeated ?? ""}
                                               onChange={(e) => updateSpace(space.id, { maxCapacitySeated: e.target.value ? parseInt(e.target.value) : null })}
@@ -2254,9 +2254,8 @@ export default function VenueFormPage() {
                                         <Label htmlFor={`space-max-standing-${space.id}`} className="text-xs text-muted-foreground">
                                           Maximum Standing Capacity
                                         </Label>
-                                        <Input
+                                        <NumericInput
                                           id={`space-max-standing-${space.id}`}
-                                          type="number"
                                           min={1}
                                           value={space.maxCapacityStanding || ""}
                                           onChange={(e) => updateSpace(space.id, { maxCapacityStanding: e.target.value ? parseInt(e.target.value) : null })}
@@ -2268,9 +2267,8 @@ export default function VenueFormPage() {
                                         <Label htmlFor={`space-min-capacity-${space.id}`} className="text-xs text-muted-foreground">
                                           Min Capacity (optional)
                                         </Label>
-                                        <Input
+                                        <NumericInput
                                           id={`space-min-capacity-${space.id}`}
-                                          type="number"
                                           min={1}
                                           value={space.minCapacity || ""}
                                           onChange={(e) => updateSpace(space.id, { minCapacity: e.target.value ? parseInt(e.target.value) : null })}
@@ -2282,9 +2280,8 @@ export default function VenueFormPage() {
                                         <Label htmlFor={`space-size-${space.id}`} className="text-xs text-muted-foreground">
                                           Size (sq ft, optional)
                                         </Label>
-                                        <Input
+                                        <NumericInput
                                           id={`space-size-${space.id}`}
-                                          type="number"
                                           min={1}
                                           value={space.sizeSqft || ""}
                                           onChange={(e) => updateSpace(space.id, { sizeSqft: e.target.value ? parseInt(e.target.value) : null })}

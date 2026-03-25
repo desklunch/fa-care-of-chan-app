@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -257,13 +258,13 @@ function EventRow({
           <div className="space-y-1">
             <Label className="text-xs">Duration</Label>
             <div className="flex h-12 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
-              <input
-                type="number"
-                min={1}
-                max={30}
+              <NumericInput
                 value={event.durationDays}
-                onChange={(e) => updateField("durationDays", Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-4 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateField("durationDays", Math.min(30, Math.max(1, parseInt(val) || 1)));
+                }}
+                className="w-auto border-0 shadow-none p-0 h-auto focus-visible:ring-0 bg-transparent"
                 data-testid={`input-duration-${event.id}`}
               />
               <span className="text-muted-foreground text-xs">
