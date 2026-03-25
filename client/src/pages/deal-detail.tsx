@@ -39,6 +39,7 @@ import {
   X,
   Building2,
   Search,
+  Pencil,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
@@ -57,7 +58,8 @@ import type {
   Industry,
 } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
-import { getEventSummary } from "@/components/event-schedule";
+import { getEventSummary, EventScheduleEditor } from "@/components/event-schedule";
+import { LocationSearch } from "@/components/location-search";
 import {
   EditableField,
   EditableTitle,
@@ -78,6 +80,11 @@ export default function DealDetail() {
   const [showLinkClient, setShowLinkClient] = useState(false);
   const [linkClientSearch, setLinkClientSearch] = useState("");
   const [linkClientLabel, setLinkClientLabel] = useState("");
+  const [isEditingEventSchedule, setIsEditingEventSchedule] = useState(false);
+  const [editingEventSchedule, setEditingEventSchedule] = useState<DealEvent[]>([]);
+  const [isEditingLocations, setIsEditingLocations] = useState(false);
+  const [editingLocations, setEditingLocations] = useState<DealLocation[]>([]);
+  const [isEditingTags, setIsEditingTags] = useState(false);
   const { statuses: dealStatusList, statusById } = useDealStatuses();
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
@@ -660,19 +667,6 @@ export default function DealDetail() {
                 </FieldRow> */}
 
                 <EditableField
-                  label="Project Date"
-                  value={deal.projectDate || ""}
-                  field="projectDate"
-                  testId="field-project-date"
-                  type="text"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("projectDate")}
-                  error={getFieldError("projectDate")}
-                  placeholder="e.g., Q1 2025, March 15-17"
-                />
-
-                <EditableField
                   label="Locations"
                   value={deal.locationsText || ""}
                   field="locationsText"
@@ -686,69 +680,189 @@ export default function DealDetail() {
                 />
 
                 <FieldRow label="Locations" testId="field-locations-json">
-                  {(() => {
-                    const locations = deal.locations as DealLocation[] | null;
-                    if (!locations || locations.length === 0) {
-                      return (
-                        <span className="text-muted-foreground">None</span>
-                      );
-                    }
-                    return (
-                      <div className="flex flex-wrap gap-1">
-                        {locations.map((loc) => {
-                          const isCity = Boolean(loc.city);
-                          const Icon = isCity ? MapPin : MapPinned;
-                          return (
-                            <Badge
-                              key={loc.placeId}
-                              variant="secondary"
-                              className="text-xs gap-1"
-                              data-testid={`badge-location-${loc.placeId}`}
-                            >
-                              <Icon className="h-3 w-3" />
-                              {loc.displayName}
-                            </Badge>
-                          );
-                        })}
+                  {isEditingLocations ? (
+                    <div className="space-y-3">
+                      <LocationSearch
+                        value={editingLocations}
+                        onChange={setEditingLocations}
+                        testId="inline-edit-locations"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            saveField("locations", editingLocations);
+                            setIsEditingLocations(false);
+                          }}
+                          disabled={isFieldLoading("locations")}
+                          data-testid="button-save-locations"
+                        >
+                          {isFieldLoading("locations") ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Save"
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsEditingLocations(false)}
+                          disabled={isFieldLoading("locations")}
+                          data-testid="button-cancel-locations"
+                        >
+                          Cancel
+                        </Button>
                       </div>
-                    );
-                  })()}
-                </FieldRow>
-
-                <FieldRow label="Event Schedule" testId="field-event-schedule">
-                  {(() => {
-                    const events = deal.eventSchedule as DealEvent[] | null;
-                    if (!events || events.length === 0) {
-                      return (
-                        <span className="text-muted-foreground">None</span>
-                      );
-                    }
-                    return (
-                      <div className="flex flex-col gap-1">
-                        {events.map((event, idx) => {
-                          const summary = getEventSummary(event);
-                          if (!summary) return null;
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 group">
+                      <div className="flex-1">
+                        {(() => {
+                          const locations = deal.locations as DealLocation[] | null;
+                          if (!locations || locations.length === 0) {
+                            return (
+                              <span className="text-muted-foreground">None</span>
+                            );
+                          }
                           return (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-2 text-sm"
-                              data-testid={`row-event-schedule-${idx}`}
-                            >
-                              <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span>{summary.text}</span>
-                              {summary.altCount > 0 && (
-                                <span className="text-muted-foreground text-xs">
-                                  +{summary.altCount} alt
-                                  {summary.altCount > 1 ? "s" : ""}
-                                </span>
-                              )}
+                            <div className="flex flex-wrap gap-1">
+                              {locations.map((loc) => {
+                                const isCity = Boolean(loc.city);
+                                const Icon = isCity ? MapPin : MapPinned;
+                                return (
+                                  <Badge
+                                    key={loc.placeId}
+                                    variant="secondary"
+                                    className="text-xs gap-1"
+                                    data-testid={`badge-location-${loc.placeId}`}
+                                  >
+                                    <Icon className="h-3 w-3" />
+                                    {loc.displayName}
+                                  </Badge>
+                                );
+                              })}
                             </div>
                           );
-                        })}
+                        })()}
                       </div>
-                    );
-                  })()}
+                      {canWrite && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          onClick={() => {
+                            setEditingLocations((deal.locations as DealLocation[] | null) || []);
+                            setIsEditingLocations(true);
+                          }}
+                          data-testid="button-edit-locations"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </FieldRow>
+
+                <FieldRow label="Project Dates" testId="field-event-schedule">
+                  {isEditingEventSchedule ? (
+                    <div className="space-y-3">
+                      <EventScheduleEditor
+                        value={editingEventSchedule}
+                        onChange={setEditingEventSchedule}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            saveField("eventSchedule", editingEventSchedule);
+                            setIsEditingEventSchedule(false);
+                          }}
+                          disabled={isFieldLoading("eventSchedule")}
+                          data-testid="button-save-event-schedule"
+                        >
+                          {isFieldLoading("eventSchedule") ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Save"
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsEditingEventSchedule(false)}
+                          disabled={isFieldLoading("eventSchedule")}
+                          data-testid="button-cancel-event-schedule"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 group">
+                      <div className="flex-1">
+                        {(() => {
+                          const events = deal.eventSchedule as DealEvent[] | null;
+                          if (!events || events.length === 0) {
+                            return (
+                              <span className="text-muted-foreground">None</span>
+                            );
+                          }
+                          return (
+                            <div className="flex flex-col gap-1">
+                              {events.map((event, idx) => {
+                                const summary = getEventSummary(event);
+                                if (!summary) return null;
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center gap-2 text-sm"
+                                    data-testid={`row-event-schedule-${idx}`}
+                                  >
+                                    <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    <span>{summary.text}</span>
+                                    {summary.altCount > 0 && (
+                                      <span className="text-muted-foreground text-xs">
+                                        +{summary.altCount} alt
+                                        {summary.altCount > 1 ? "s" : ""}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      {canWrite && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          onClick={() => {
+                            setEditingEventSchedule((deal.eventSchedule as DealEvent[] | null) || []);
+                            setIsEditingEventSchedule(true);
+                          }}
+                          data-testid="button-edit-event-schedule"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </FieldRow>
+
+                <EditableField
+                  label="Project Date Notes"
+                  value={deal.projectDate || ""}
+                  field="projectDate"
+                  testId="field-project-date"
+                  type="text"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("projectDate")}
+                  error={getFieldError("projectDate")}
+                  placeholder="e.g., Q1 2025, March 15-17"
+                />
 
                 <EditableField
                   label="Concept"
@@ -877,29 +991,8 @@ export default function DealDetail() {
                   placeholder="Enter budget notes"
                 />
                 <FieldRow label="Tags" testId="field-tags">
-                  <div className="space-y-2">
-                    {dealTagIds.length > 0 && (
-                      <div
-                        className="flex flex-wrap gap-2"
-                        data-testid="deal-tags"
-                      >
-                        {dealTagIds.map((tagId) => {
-                          const tag = dealTagsMap.get(tagId);
-                          return (
-                            <Badge
-                              key={tagId}
-                              variant="secondary"
-                              size="lg"
-                              className="py-1 px-2 text-xs no-default-hover-elevate no-default-active-elevate"
-                              data-testid={`badge-tag-${tagId}`}
-                            >
-                              {tag?.name || tagId}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {canWrite && (
+                  {isEditingTags ? (
+                    <div className="space-y-2">
                       <TagAssignment
                         category="Deals"
                         selectedTagIds={dealTagIds}
@@ -907,8 +1000,57 @@ export default function DealDetail() {
                           saveTagsMutation.mutate(tagIds)
                         }
                       />
-                    )}
-                  </div>
+                      <div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsEditingTags(false)}
+                          data-testid="button-done-tags"
+                        >
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 group">
+                      <div className="flex-1">
+                        {dealTagIds.length > 0 ? (
+                          <div
+                            className="flex flex-wrap gap-2"
+                            data-testid="deal-tags"
+                          >
+                            {dealTagIds.map((tagId) => {
+                              const tag = dealTagsMap.get(tagId);
+                              return (
+                                <Badge
+                                  key={tagId}
+                                  variant="secondary"
+                                  size="lg"
+                                  className="py-1 px-2 text-xs no-default-hover-elevate no-default-active-elevate"
+                                  data-testid={`badge-tag-${tagId}`}
+                                >
+                                  {tag?.name || tagId}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">None</span>
+                        )}
+                      </div>
+                      {canWrite && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          onClick={() => setIsEditingTags(true)}
+                          data-testid="button-edit-tags"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </FieldRow>
                 <EditableField
                   label="Started"
