@@ -861,7 +861,7 @@ export default function DealDetail() {
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("projectDate")}
                   error={getFieldError("projectDate")}
-                  placeholder="e.g., Q1 2025, March 15-17"
+                  placeholder="Add additional de"
                 />
 
                 <EditableField
