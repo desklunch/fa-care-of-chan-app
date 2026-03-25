@@ -69,6 +69,7 @@ import {
   FieldRow,
   useFieldMutation,
 } from "@/components/inline-edit";
+import { DealTasksTab } from "@/components/deal-tasks-tab";
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -383,6 +384,10 @@ export default function DealDetail() {
               </TabsTrigger>
               <TabsTrigger value="files" data-testid="tab-files">
                 Files
+              </TabsTrigger>
+              <TabsTrigger value="tasks" data-testid="tab-tasks">
+                Tasks
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -1205,6 +1210,10 @@ export default function DealDetail() {
 
           <TabsContent value="files" className="p-4 md:p-6 pt-4 max-w-4xl">
             <GoogleDriveAttachments entityType="deal" entityId={id!} />
+          </TabsContent>
+
+          <TabsContent value="tasks" className="p-4 md:p-6 pt-4 max-w-4xl">
+            <DealTasksTab dealId={id!} canWrite={canWrite} users={users} />
           </TabsContent>
         </Tabs>
       </div>

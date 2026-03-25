@@ -1747,6 +1747,7 @@ export const insertDealTaskSchema = z.object({
 });
 
 export const updateDealTaskSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
   completed: z.boolean().optional(),
   dueDate: z.string().nullable().optional(),
   assignedUserId: z.string().nullable().optional(),
