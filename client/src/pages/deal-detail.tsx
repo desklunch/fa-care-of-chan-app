@@ -58,7 +58,10 @@ import type {
   Industry,
 } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
-import { getEventSummary, EventScheduleEditor } from "@/components/event-schedule";
+import {
+  getEventSummary,
+  EventScheduleEditor,
+} from "@/components/event-schedule";
 import { LocationSearch } from "@/components/location-search";
 import {
   EditableField,
@@ -81,7 +84,9 @@ export default function DealDetail() {
   const [linkClientSearch, setLinkClientSearch] = useState("");
   const [linkClientLabel, setLinkClientLabel] = useState("");
   const [isEditingEventSchedule, setIsEditingEventSchedule] = useState(false);
-  const [editingEventSchedule, setEditingEventSchedule] = useState<DealEvent[]>([]);
+  const [editingEventSchedule, setEditingEventSchedule] = useState<DealEvent[]>(
+    [],
+  );
   const [isEditingLocations, setIsEditingLocations] = useState(false);
   const [editingLocations, setEditingLocations] = useState<DealLocation[]>([]);
   const [isEditingTags, setIsEditingTags] = useState(false);
@@ -480,7 +485,7 @@ export default function DealDetail() {
                   placeholder="Select client"
                 />
 
-                <FieldRow label="Linked Clients" testId="field-linked-clients">
+                <FieldRow label="Client Partners" testId="field-linked-clients">
                   <div className="flex flex-col gap-2">
                     {linkedClients.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
@@ -523,14 +528,14 @@ export default function DealDetail() {
 
                     {canWrite && !showLinkClient && (
                       <Button
-                        variant="ghost"
+                        variant="secondary"
                         size="sm"
                         className="w-fit gap-1 text-muted-foreground"
                         onClick={() => setShowLinkClient(true)}
                         data-testid="button-link-client"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        Link a client
+                        Link related companies or brands
                       </Button>
                     )}
 
@@ -667,18 +672,60 @@ export default function DealDetail() {
                 </FieldRow> */}
 
                 <EditableField
-                  label="Locations"
-                  value={deal.locationsText || ""}
-                  field="locationsText"
-                  testId="field-locations-text"
+                  label="Services"
+                  value=""
+                  field="serviceIds"
+                  testId="field-services"
+                  type="multiselect"
+                  disabled={!canWrite}
+                  options={dealServices
+                    .filter((s) => s.isActive)
+                    .map((s) => ({ value: String(s.id), label: s.name }))}
+                  multiSelectValues={serviceIds.map(String)}
+                  onSave={handleServicesSave}
+                  isLoading={isFieldLoading("serviceIds")}
+                  error={getFieldError("serviceIds")}
+                  displayValue={
+                    serviceIds.length > 0 ? (
+                      <div
+                        className="flex flex-wrap gap-2"
+                        data-testid="deal-services"
+                      >
+                        {serviceIds.map((serviceId) => {
+                          const service = servicesMap.get(serviceId);
+                          const serviceName =
+                            service?.name || `Service ${serviceId}`;
+                          return (
+                            <Badge
+                              key={serviceId}
+                              variant="secondary"
+                              data-testid={`badge-service-${serviceId}`}
+                              size="lg"
+                              className="py-1 px-2 text-xs"
+                            >
+                              {serviceName}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    ) : undefined
+                  }
+                  placeholder="What services are we providing?"
+                />
+
+                <EditableField
+                  label="Concept & Context"
+                  value={deal.concept || ""}
+                  field="concept"
+                  testId="field-concept"
                   type="textarea"
                   disabled={!canWrite}
                   onSave={handleFieldSave}
-                  isLoading={isFieldLoading("locationsText")}
-                  error={getFieldError("locationsText")}
-                  placeholder="Enter locations"
+                  isLoading={isFieldLoading("concept")}
+                  error={getFieldError("concept")}
+                  placeholder="Describe the project"
+                  valueClassName="text-base prose dark:prose-invert "
                 />
-
                 <FieldRow label="Locations" testId="field-locations-json">
                   {isEditingLocations ? (
                     <div className="space-y-3">
@@ -718,14 +765,18 @@ export default function DealDetail() {
                     <div className="flex items-start gap-2 group">
                       <div className="flex-1">
                         {(() => {
-                          const locations = deal.locations as DealLocation[] | null;
+                          const locations = deal.locations as
+                            | DealLocation[]
+                            | null;
                           if (!locations || locations.length === 0) {
                             return (
-                              <span className="text-muted-foreground">None</span>
+                              <span className="text-muted-foreground">
+                                None
+                              </span>
                             );
                           }
                           return (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-2">
                               {locations.map((loc) => {
                                 const isCity = Boolean(loc.city);
                                 const Icon = isCity ? MapPin : MapPinned;
@@ -751,7 +802,9 @@ export default function DealDetail() {
                           variant="ghost"
                           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                           onClick={() => {
-                            setEditingLocations((deal.locations as DealLocation[] | null) || []);
+                            setEditingLocations(
+                              (deal.locations as DealLocation[] | null) || [],
+                            );
                             setIsEditingLocations(true);
                           }}
                           data-testid="button-edit-locations"
@@ -762,7 +815,18 @@ export default function DealDetail() {
                     </div>
                   )}
                 </FieldRow>
-
+                <EditableField
+                  label="Location Notes"
+                  value={deal.locationsText || ""}
+                  field="locationsText"
+                  testId="field-locations-text"
+                  type="textarea"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("locationsText")}
+                  error={getFieldError("locationsText")}
+                  placeholder="Provide additional details and context."
+                />
                 <FieldRow label="Project Dates" testId="field-event-schedule">
                   {isEditingEventSchedule ? (
                     <div className="space-y-3">
@@ -801,17 +865,26 @@ export default function DealDetail() {
                     <div className="flex items-start gap-2 group">
                       <div className="flex-1">
                         {(() => {
-                          const events = deal.eventSchedule as DealEvent[] | null;
+                          const events = deal.eventSchedule as
+                            | DealEvent[]
+                            | null;
                           if (!events || events.length === 0) {
                             return (
-                              <span className="text-muted-foreground">None</span>
+                              <span className="text-muted-foreground">
+                                None
+                              </span>
                             );
                           }
                           return (
                             <div className="flex flex-col gap-1">
                               {events.map((event, idx) => {
                                 const summary = getEventSummary(event);
-                                if (!summary) return null;
+                                if (!summary)
+                                  return (
+                                    <span className="text-muted-foreground text-sm">
+                                      List specific dates or general timeframes
+                                    </span>
+                                  );
                                 return (
                                   <div
                                     key={idx}
@@ -839,7 +912,9 @@ export default function DealDetail() {
                           variant="ghost"
                           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                           onClick={() => {
-                            setEditingEventSchedule((deal.eventSchedule as DealEvent[] | null) || []);
+                            setEditingEventSchedule(
+                              (deal.eventSchedule as DealEvent[] | null) || [],
+                            );
                             setIsEditingEventSchedule(true);
                           }}
                           data-testid="button-edit-event-schedule"
@@ -861,63 +936,7 @@ export default function DealDetail() {
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("projectDate")}
                   error={getFieldError("projectDate")}
-                  placeholder="Add additional de"
-                />
-
-                <EditableField
-                  label="Concept"
-                  value={deal.concept || ""}
-                  field="concept"
-                  testId="field-concept"
-                  type="textarea"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("concept")}
-                  error={getFieldError("concept")}
-                  placeholder="Enter concept description"
-                  valueClassName="text-base prose dark:prose-invert "
-                />
-
-                <EditableField
-                  label="Services"
-                  value=""
-                  field="serviceIds"
-                  testId="field-services"
-                  type="multiselect"
-                  disabled={!canWrite}
-                  options={dealServices
-                    .filter((s) => s.isActive)
-                    .map((s) => ({ value: String(s.id), label: s.name }))}
-                  multiSelectValues={serviceIds.map(String)}
-                  onSave={handleServicesSave}
-                  isLoading={isFieldLoading("serviceIds")}
-                  error={getFieldError("serviceIds")}
-                  displayValue={
-                    serviceIds.length > 0 ? (
-                      <div
-                        className="flex flex-wrap gap-2"
-                        data-testid="deal-services"
-                      >
-                        {serviceIds.map((serviceId) => {
-                          const service = servicesMap.get(serviceId);
-                          const serviceName =
-                            service?.name || `Service ${serviceId}`;
-                          return (
-                            <Badge
-                              key={serviceId}
-                              variant="secondary"
-                              data-testid={`badge-service-${serviceId}`}
-                              size="lg"
-                              className="py-1 px-2 text-xs"
-                            >
-                              {serviceName}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    ) : undefined
-                  }
-                  placeholder="Select services"
+                  placeholder="Provide additional details and context"
                 />
 
                 <EditableField
@@ -1035,7 +1054,9 @@ export default function DealDetail() {
                             })}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">None</span>
+                          <span className="text-muted-foreground">
+                            Group this deal with similar ones
+                          </span>
                         )}
                       </div>
                       {canWrite && (
@@ -1053,7 +1074,7 @@ export default function DealDetail() {
                   )}
                 </FieldRow>
                 <EditableField
-                  label="Started"
+                  label="Deal Start Date"
                   value={deal.startedOn || ""}
                   field="startedOn"
                   testId="field-started-on"
@@ -1069,11 +1090,11 @@ export default function DealDetail() {
                       </span>
                     ) : undefined
                   }
-                  placeholder="Select date"
+                  placeholder="Select date "
                 />
 
                 <EditableField
-                  label="Last Contact"
+                  label="Last Client Contact"
                   value={deal.lastContactOn || ""}
                   field="lastContactOn"
                   testId="field-last-contact"
@@ -1096,7 +1117,7 @@ export default function DealDetail() {
                 />
 
                 <EditableField
-                  label="Won"
+                  label="Deal Won On"
                   value={deal.wonOn || ""}
                   field="wonOn"
                   testId="field-won-on"
@@ -1116,7 +1137,7 @@ export default function DealDetail() {
                 />
 
                 <EditableField
-                  label="Proposal Sent"
+                  label="Proposal Sent On"
                   value={deal.proposalSentOn || ""}
                   field="proposalSentOn"
                   testId="field-proposal-sent-on"

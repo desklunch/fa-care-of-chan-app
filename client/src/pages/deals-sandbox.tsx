@@ -33,7 +33,7 @@ import {
   Calendar,
   Building2,
   Tag,
-  Plus,
+  CircleFadingPlus,
 } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -1520,7 +1520,7 @@ export default function DealsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Deals" }]}
-      primaryAction={{ label: "New Deal", icon: Plus, href: "/deals/new" }}
+      primaryAction={{ label: "New Deal", icon: CircleFadingPlus, href: "/deals/new" }}
     >
       <DataGridPage
         queryKey="/api/deals"
