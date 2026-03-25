@@ -391,7 +391,7 @@ export function QuickCreateProvider({ children }: QuickCreateProviderProps) {
         setIssueOpen((prev) => !prev);
       }
 
-      if (e.key === "F" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+      if (e.key === "o" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
         e.preventDefault();
         setFeatureOpen((prev) => !prev);
       }

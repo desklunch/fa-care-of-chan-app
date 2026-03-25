@@ -186,7 +186,7 @@ export default function Header({
             >
               <Lightbulb className="h-4 w-4 mr-2" />
               Request Feature
-              <DropdownMenuShortcut>{isMacOS() ? "\u2318\u21E7F" : "Ctrl+Shift+F"}</DropdownMenuShortcut>
+              <DropdownMenuShortcut>{isMacOS() ? "\u2318O" : "Ctrl+O"}</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
