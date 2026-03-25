@@ -33,7 +33,6 @@ import {
   Calendar,
   Building2,
   Tag,
-  CircleFadingPlus,
 } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
