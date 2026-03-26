@@ -6,7 +6,7 @@ import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -397,6 +397,9 @@ export default function DealDetail() {
             className="max-w-4xl space-y-4 p-4 md:p-6 pt-4"
           >
             <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base" data-testid="heading-deal-overview">Deal Overview</CardTitle>
+              </CardHeader>
               <CardContent className="py-2">
                 <EditableField
                   label="Owner"
@@ -731,6 +734,27 @@ export default function DealDetail() {
                   placeholder="Describe the project"
                   valueClassName="text-base prose dark:prose-invert "
                 />
+                <EditableField
+                  label="Next Steps"
+                  value={deal.nextSteps || ""}
+                  field="nextSteps"
+                  testId="field-next-steps"
+                  type="textarea"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("nextSteps")}
+                  error={getFieldError("nextSteps")}
+                  placeholder="Enter next steps"
+                  valueClassName="text-base prose dark:prose-invert"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base" data-testid="heading-project-info">Project Info</CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
                 <FieldRow label="Locations" testId="field-locations-json">
                   {isEditingLocations ? (
                     <div className="space-y-3">
@@ -1014,6 +1038,14 @@ export default function DealDetail() {
                   error={getFieldError("budgetNotes")}
                   placeholder="Enter budget notes"
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base" data-testid="heading-deal-details">Deal Details</CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
                 <FieldRow label="Tags" testId="field-tags">
                   {isEditingTags ? (
                     <div className="space-y-2">
@@ -1165,33 +1197,6 @@ export default function DealDetail() {
                   placeholder="Select date"
                 />
 
-                {/* <EditableField
-                  label="Notes"
-                  value={deal.notes || ""}
-                  field="notes"
-                  testId="field-notes"
-                  type="textarea"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("notes")}
-                  error={getFieldError("notes")}
-                  placeholder="Enter notes"
-                  valueClassName="text-base prose dark:prose-invert "
-                /> */}
-
-                <EditableField
-                  label="Next Steps"
-                  value={deal.nextSteps || ""}
-                  field="nextSteps"
-                  testId="field-next-steps"
-                  type="textarea"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("nextSteps")}
-                  error={getFieldError("nextSteps")}
-                  placeholder="Enter next steps"
-                  valueClassName="text-base prose dark:prose-invert"
-                />
               </CardContent>
             </Card>
           </TabsContent>
