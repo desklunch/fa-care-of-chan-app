@@ -18,6 +18,9 @@ import { Loader2, Pencil, Check, X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { parseDateOnly } from "@/lib/date";
 import { cn } from "@/lib/utils";
+import { RichTextEditor } from "@/components/rich-text-editor";
+import { MarkdownDisplay } from "@/components/markdown-display";
+import { normalizeToMarkdown } from "@/lib/markdown-utils";
 import type { EditableFieldProps } from "./types";
 
 const MOBILE_BREAKPOINT = 768;
@@ -213,7 +216,7 @@ export function EditableField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && type !== "textarea" && type !== "array") {
+    if (e.key === "Enter" && type !== "textarea" && type !== "array" && type !== "richtext") {
       e.preventDefault();
       handleSave();
     } else if (e.key === "Escape") {
@@ -478,6 +481,22 @@ export function EditableField({
           </>
         );
 
+      case "richtext":
+        return (
+          <>
+            <RichTextEditor
+              value={editValue}
+              onChange={(val) => {
+                setEditValue(val);
+                setLocalError(null);
+              }}
+              placeholder={placeholder}
+              data-testid={`richtext-${field}`}
+            />
+            {errorDisplay}
+          </>
+        );
+
       default:
         return (
           <>
@@ -554,7 +573,13 @@ export function EditableField({
               ) : displayValue !== undefined ? (
                 displayValue
               ) : value ? (
-                <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
+                type === "richtext" ? (
+                  <MarkdownDisplay className={cn("prose dark:prose-invert max-w-none text-sm [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0", valueClassName)}>
+                    {normalizeToMarkdown(value)}
+                  </MarkdownDisplay>
+                ) : (
+                  <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
+                )
               ) : (
                 <span className="text-muted-foreground">{placeholder}</span>
               )}

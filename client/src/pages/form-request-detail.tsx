@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import { MarkdownDisplay } from "@/components/markdown-display";
+import { normalizeToMarkdown } from "@/lib/markdown-utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
@@ -546,10 +548,9 @@ export default function AdminFormRequestDetailPage() {
               const data = params.data?.responseData?.[field.id];
               if (!data || typeof data !== "string") return <span className="text-muted-foreground">—</span>;
               return (
-                <div
-                  className="rich-text-html-display text-sm"
-                  dangerouslySetInnerHTML={{ __html: data }}
-                />
+                <MarkdownDisplay className="text-sm prose dark:prose-invert max-w-none [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                  {normalizeToMarkdown(data)}
+                </MarkdownDisplay>
               );
             };
             colDef.autoHeight = true;

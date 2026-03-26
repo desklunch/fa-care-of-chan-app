@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { MarkdownDisplay } from "@/components/markdown-display";
+import { normalizeToMarkdown } from "@/lib/markdown-utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -49,6 +51,68 @@ interface DealIntakeTabProps {
   canWrite: boolean;
 }
 
+function formatReadOnlyValue(field: FormField, value: unknown): string {
+  if (value === undefined || value === null || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+
+  if (field.type === "location" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return value.map((v: { displayName?: string }) => v.displayName || "Unknown").join(", ");
+  }
+  if (field.type === "eventSchedule" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return `${value.length} event(s)`;
+  }
+  if (field.type === "services" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return `${value.length} service(s) selected`;
+  }
+  if (field.type === "tags" && Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    return `${value.length} tag(s) selected`;
+  }
+
+  return String(value);
+}
+
+function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]; responseData: Record<string, unknown> }) {
+  return (
+    <div className="space-y-6" data-testid="intake-readonly">
+      {schema.map((section) => (
+        <Card key={section.id} className="p-6" data-testid={`readonly-section-${section.id}`}>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold">{section.title}</h3>
+            {section.description && (
+              <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+            )}
+          </div>
+          <div className="space-y-4">
+            {section.fields.map((field) => {
+              const value = responseData[field.id];
+              const displayValue = formatReadOnlyValue(field, value);
+
+              return (
+                <div key={field.id} className="space-y-1" data-testid={`readonly-field-${field.id}`}>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {field.name}
+                    {field.required && <span className="text-destructive ml-0.5">*</span>}
+                  </p>
+                  {field.type === "richtext" && typeof value === "string" && value !== "" ? (
+                    <MarkdownDisplay className="text-sm prose dark:prose-invert max-w-none [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      {normalizeToMarkdown(value as string)}
+                    </MarkdownDisplay>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
 function isIntakeCategory(category: string | null | undefined): boolean {
   if (!category) return false;
   const lower = category.toLowerCase();

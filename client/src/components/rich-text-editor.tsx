@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { markdownToHtml, htmlToMarkdown } from "@/lib/markdown-utils";
 
 function getPrimaryHslColor(): string {
   const style = getComputedStyle(document.documentElement);
@@ -74,11 +75,40 @@ export function RichTextEditor({
   "data-testid": testId,
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<ReactQuill>(null);
+  const internalChangeRef = useRef(false);
+  const lastExternalValueRef = useRef(value || "");
+
+  useEffect(() => {
+    if (internalChangeRef.current) {
+      internalChangeRef.current = false;
+      return;
+    }
+    if (value !== lastExternalValueRef.current) {
+      lastExternalValueRef.current = value || "";
+      const quill = quillRef.current?.getEditor();
+      if (quill) {
+        const html = markdownToHtml(value || "");
+        const currentHtml = quill.root.innerHTML;
+        if (html !== currentHtml) {
+          const selection = quill.getSelection();
+          quill.root.innerHTML = html;
+          if (selection) {
+            try {
+              quill.setSelection(selection);
+            } catch (_) {}
+          }
+        }
+      }
+    }
+  }, [value]);
 
   const handleChange = useCallback(
     (content: string) => {
-      const isEmpty = content === "<p><br></p>" || content === "<p></p>";
-      onChange(isEmpty ? "" : content);
+      const md = htmlToMarkdown(content);
+      internalChangeRef.current = true;
+      lastExternalValueRef.current = md;
+      onChange(md);
     },
     [onChange],
   );
@@ -97,34 +127,7 @@ export function RichTextEditor({
     }
   }, []);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const tooltip = container.querySelector(".ql-tooltip") as HTMLElement | null;
-    if (!tooltip) return;
-
-    const observer = new MutationObserver(() => {
-      if (tooltip.classList.contains("ql-hidden")) return;
-      const editor = container.querySelector(".ql-editor") as HTMLElement | null;
-      if (!editor) return;
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return;
-      const range = selection.getRangeAt(0);
-      const rangeRect = range.getBoundingClientRect();
-      const editorRect = editor.getBoundingClientRect();
-      let left = rangeRect.left - editorRect.left;
-      const tooltipWidth = tooltip.offsetWidth;
-      const editorWidth = editorRect.width;
-      if (left + tooltipWidth > editorWidth) {
-        left = Math.max(0, editorWidth - tooltipWidth);
-      }
-      tooltip.style.left = `${left}px`;
-      tooltip.style.marginLeft = "0";
-    });
-
-    observer.observe(tooltip, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
+  const initialHtml = markdownToHtml(value || "");
 
   return (
     <div
@@ -133,8 +136,9 @@ export function RichTextEditor({
       data-testid={testId}
     >
       <ReactQuill
+        ref={quillRef}
         theme="snow"
-        value={value || ""}
+        defaultValue={initialHtml}
         onChange={handleChange}
         onBlur={onBlur}
         modules={modules}

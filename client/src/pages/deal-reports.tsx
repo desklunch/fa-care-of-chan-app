@@ -218,7 +218,7 @@ function SnapshotView30() {
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -270,7 +270,7 @@ function SnapshotView30() {
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -298,7 +298,7 @@ function SnapshotView30() {
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
@@ -326,7 +326,7 @@ function SnapshotView30() {
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-0 [&>ul]:my-1 [&>ol]:my-1">
+          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[16px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (

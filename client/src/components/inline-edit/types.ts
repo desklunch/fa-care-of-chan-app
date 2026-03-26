@@ -8,7 +8,8 @@ export type EditableFieldType =
   | "multiselect" 
   | "array" 
   | "switch"
-  | "number";
+  | "number"
+  | "richtext";
 
 export interface FieldOption {
   value: string;

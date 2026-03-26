@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ const dealFormSchema = z.object({
   locationsText: z.string().optional().transform(val => val || undefined),
   concept: z.string().optional().transform(val => val || undefined),
   notes: z.string().optional().transform(val => val || undefined),
+  nextSteps: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
   industryId: z.string().optional().transform(val => val || undefined),
   budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
@@ -721,12 +723,12 @@ export default function DealForm() {
                     <FormItem>
                       <FormLabel>Concept & Context</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder="Describe the concept and provide some context.
-                "
-                          className="min-h-[120px] resize-y"
-                          {...field}
-                          data-testid="textarea-concept"
+                        <RichTextEditor
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder="Describe the concept and provide some context."
+                          data-testid="richtext-concept"
                         />
                       </FormControl>
 
@@ -908,12 +910,12 @@ export default function DealForm() {
                                     <FormItem>
                                       <FormLabel>Next Steps</FormLabel>
                                       <FormControl>
-                                        <Textarea
-                                          placeholder="Enter next steps for this deal."
-                                          className="min-h-[120px] resize-y"
-                                          {...field}
+                                        <RichTextEditor
                                           value={field.value || ""}
-                                          data-testid="textarea-next-steps"
+                                          onChange={field.onChange}
+                                          onBlur={field.onBlur}
+                                          placeholder="Enter next steps for this deal."
+                                          data-testid="richtext-next-steps"
                                         />
                                       </FormControl>
                                       <FormMessage />

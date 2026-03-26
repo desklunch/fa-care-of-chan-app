@@ -726,20 +726,20 @@ export default function DealDetail() {
                   value={deal.concept || ""}
                   field="concept"
                   testId="field-concept"
-                  type="textarea"
+                  type="richtext"
                   disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("concept")}
                   error={getFieldError("concept")}
                   placeholder="Describe the project"
-                  valueClassName="text-base prose dark:prose-invert "
+                  valueClassName="text-base"
                 />
                 <EditableField
                   label="Next Steps"
                   value={deal.nextSteps || ""}
                   field="nextSteps"
                   testId="field-next-steps"
-                  type="textarea"
+                  type="richtext"
                   disabled={!canWrite}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("nextSteps")}
@@ -1196,7 +1196,6 @@ export default function DealDetail() {
                   }
                   placeholder="Select date"
                 />
-
               </CardContent>
             </Card>
           </TabsContent>
