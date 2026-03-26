@@ -719,7 +719,7 @@ export default function DealForm() {
                   name="concept"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Concept</FormLabel>
+                      <FormLabel>Concept & Context</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Describe the concept and provide some context.
@@ -773,13 +773,28 @@ export default function DealForm() {
                   )}
                 />
                 <Separator className="my-4" />
-
+                <FormField
+                  control={form.control}
+                  name="eventSchedule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Dates</FormLabel>
+                      <FormControl>
+                        <EventScheduleEditor
+                          value={(field.value as DealEvent[]) || []}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="projectDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project Date</FormLabel>
+                      <FormLabel>Project Date Notes</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="e.g., Q2 2025, Summer 2025, TBD..."
@@ -793,22 +808,7 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                    <FormField
-                      control={form.control}
-                      name="eventSchedule"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Event Schedule</FormLabel>
-                          <FormControl>
-                            <EventScheduleEditor
-                              value={(field.value as DealEvent[]) || []}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+         
 
                 <Separator className="my-4" />
 
