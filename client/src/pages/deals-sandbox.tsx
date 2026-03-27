@@ -341,8 +341,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     toggleable: false,
     colDef: {
       flex: 2,
-      minWidth: 240,
-      width: 240,
+      minWidth: 260,
+      width: 260,
       maxWidth: 320,
       pinned: "left",
       lockPinned: true,
@@ -460,7 +460,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       }) => {
         if (params.newValue == null) return false;
         const statusRecord = params.context?.dealStatuses?.find(
-          (s) => s.id === params.newValue
+          (s) => s.id === params.newValue,
         );
         if (!statusRecord) return false;
         params.data.status = params.newValue;
@@ -645,8 +645,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="richtext-cell-content max-h-[160px] overflow-hidden">
-            <MarkdownDisplay className="prose dark:prose-invert text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+          <div className="richtext-cell-content max-h-[105px] overflow-hidden">
+            <MarkdownDisplay className="prose dark:prose-invert text-sm/6  font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>
           </div>
@@ -943,7 +943,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="richtext-cell-content max-h-[160px] overflow-hidden">
+          <div className="richtext-cell-content max-h-[120px] overflow-hidden">
             <MarkdownDisplay className="prose dark:prose-invert text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>
@@ -1030,7 +1030,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  
+
   {
     id: "linkedClients",
     headerName: "Linked Clients",
@@ -1374,7 +1374,10 @@ export default function DealsPage() {
       }
 
       if (field === "statusName") {
-        const statusId = typeof data.status === "number" ? data.status : parseInt(String(data.status), 10);
+        const statusId =
+          typeof data.status === "number"
+            ? data.status
+            : parseInt(String(data.status), 10);
         if (!isNaN(statusId)) {
           const updates: Record<string, unknown> = { status: statusId };
           updateDealMutation.mutate({ dealId: data.id, updates });
@@ -1494,7 +1497,11 @@ export default function DealsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Deals" }]}
-      primaryAction={{ label: "New Deal", icon: CircleFadingPlus, href: "/deals/new" }}
+      primaryAction={{
+        label: "New Deal",
+        icon: CircleFadingPlus,
+        href: "/deals/new",
+      }}
     >
       <DataGridPage
         queryKey="/api/deals"

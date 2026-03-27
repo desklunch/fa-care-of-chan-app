@@ -177,8 +177,9 @@ function SnapshotView30() {
       cellRenderer: (params: { value: string }) => {
         if (!params.value) return null;
         return (
+        <div className="w-full h-full flex items-start pt-[14px]">
           <DealStatusBadge status={params.value} />
-        );
+        </div>        );
       },
     },
     {
