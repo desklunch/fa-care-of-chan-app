@@ -63,18 +63,7 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
       cellRenderer: NameCellRenderer,
     },
   },
-  {
-    id: "category",
-    headerName: "Category",
-    field: "category",
-    category: "Info",
-    colDef: {
-      flex: 1,
-      minWidth: 140,
-      cellRenderer: CategoryCellRenderer,
-      valueGetter: (params) => params.data?.category || "",
-    },
-  },
+
   {
     id: "description",
     headerName: "Description",
@@ -142,7 +131,7 @@ export default function DealIntakeFormsPage() {
 
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Client Intake Forms" }]}>
+      <PageLayout breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Intake Forms" }]}>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-10 bg-muted rounded w-64" />
@@ -167,7 +156,7 @@ export default function DealIntakeFormsPage() {
 
   return (
     <PageLayout
-      breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Client Intake Forms" }]}
+      breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Intake Forms" }]}
       primaryAction={primaryAction}
     >
       <DataGridPage

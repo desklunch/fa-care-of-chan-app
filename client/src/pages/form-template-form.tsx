@@ -3,7 +3,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +21,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { PageLayout } from "@/framework";
 import { FormBuilder } from "@/components/form-builder";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Save, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -28,7 +40,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { FormTemplate, InsertFormTemplate, FormSection } from "@shared/schema";
+import type {
+  FormTemplate,
+  InsertFormTemplate,
+  FormSection,
+} from "@shared/schema";
 
 export default function AdminFormTemplateFormPage() {
   const [location, navigate] = useProtectedLocation();
@@ -43,13 +59,16 @@ export default function AdminFormTemplateFormPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState(isDealsContext && !isEditing ? "client_intake" : "");
+  const [category, setCategory] = useState(
+    isDealsContext && !isEditing ? "client_intake" : "",
+  );
   const [formSchema, setFormSchema] = useState<FormSection[]>([]);
 
-  const { data: template, isLoading: isTemplateLoading } = useQuery<FormTemplate>({
-    queryKey: ["/api/form-templates", id],
-    enabled: isAuthenticated && isEditing,
-  });
+  const { data: template, isLoading: isTemplateLoading } =
+    useQuery<FormTemplate>({
+      queryKey: ["/api/form-templates", id],
+      enabled: isAuthenticated && isEditing,
+    });
 
   usePageTitle(isEditing ? "Edit Form Template" : "New Form Template");
 
@@ -69,35 +88,63 @@ export default function AdminFormTemplateFormPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      toast({ title: "Template created", description: "Form template has been created successfully." });
+      toast({
+        title: "Template created",
+        description: "Form template has been created successfully.",
+      });
       navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
+        toast({
+          variant: "destructive",
+          title: "Session expired",
+          description: "Please log in again.",
+        });
         navigate("/");
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to create template." });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create template.",
+        });
       }
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertFormTemplate> }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<InsertFormTemplate>;
+    }) => {
       const res = await apiRequest("PATCH", `/api/form-templates/${id}`, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      toast({ title: "Template updated", description: "Form template has been updated successfully." });
+      toast({
+        title: "Template updated",
+        description: "Form template has been updated successfully.",
+      });
       navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
+        toast({
+          variant: "destructive",
+          title: "Session expired",
+          description: "Please log in again.",
+        });
         navigate("/");
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update template." });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update template.",
+        });
       }
     },
   });
@@ -108,29 +155,48 @@ export default function AdminFormTemplateFormPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      toast({ title: "Template deleted", description: "Form template has been deleted successfully." });
+      toast({
+        title: "Template deleted",
+        description: "Form template has been deleted successfully.",
+      });
       navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        toast({ variant: "destructive", title: "Session expired", description: "Please log in again." });
+        toast({
+          variant: "destructive",
+          title: "Session expired",
+          description: "Please log in again.",
+        });
         navigate("/");
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to delete template." });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete template.",
+        });
       }
     },
   });
 
   const handleSave = () => {
     if (!name.trim()) {
-      toast({ variant: "destructive", title: "Validation error", description: "Template name is required." });
+      toast({
+        variant: "destructive",
+        title: "Validation error",
+        description: "Template name is required.",
+      });
       return;
     }
     if (!category) {
-      toast({ variant: "destructive", title: "Validation error", description: "Please select a category." });
+      toast({
+        variant: "destructive",
+        title: "Validation error",
+        description: "Please select a category.",
+      });
       return;
     }
-    
+
     const data = {
       name: name.trim(),
       description: description.trim(),
@@ -145,7 +211,10 @@ export default function AdminFormTemplateFormPage() {
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isPending =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const primaryAction = {
@@ -167,12 +236,12 @@ export default function AdminFormTemplateFormPage() {
   const breadcrumbs = isDealsContext
     ? [
         { label: "Deals", href: "/deals" },
-        { label: "Client Intake Forms", href: "/deals/forms" },
-        { label: isEditing ? "Edit Template" : "New Template" },
+        { label: "Intake Forms", href: "/deals/forms" },
+        { label: isEditing ? "Edit" : "New" },
       ]
     : [
         { label: "Forms", href: "/forms" },
-        { label: isEditing ? "Edit Template" : "New Template" },
+        { label: isEditing ? "Edit" : "New" },
       ];
 
   if (isAuthLoading) {
@@ -216,8 +285,8 @@ export default function AdminFormTemplateFormPage() {
             <CardTitle>Template Info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="template-name">Template Name *</Label>
                 <Input
                   id="template-name"
@@ -228,22 +297,39 @@ export default function AdminFormTemplateFormPage() {
                 />
               </div>
               {!(isDealsContext && !isEditing) && (
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   <Label htmlFor="template-category">Category</Label>
-                  <Select value={category} onValueChange={setCategory} data-testid="select-template-category">
-                    <SelectTrigger id="template-category" data-testid="select-template-category">
+                  <Select
+                    value={category}
+                    onValueChange={setCategory}
+                    data-testid="select-template-category"
+                  >
+                    <SelectTrigger
+                      id="template-category"
+                      data-testid="select-template-category"
+                    >
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="client_intake" data-testid="option-category-client-intake">Client Intake</SelectItem>
-                      <SelectItem value="vendor_inquiry" data-testid="option-category-vendor-inquiry">Vendor Inquiry</SelectItem>
+                      <SelectItem
+                        value="client_intake"
+                        data-testid="option-category-client-intake"
+                      >
+                        Client Intake
+                      </SelectItem>
+                      <SelectItem
+                        value="vendor_inquiry"
+                        data-testid="option-category-vendor-inquiry"
+                      >
+                        Vendor Inquiry
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="template-description">Description (Optional)</Label>
+              <Label htmlFor="template-description">Description</Label>
               <Textarea
                 id="template-description"
                 value={description}
@@ -283,7 +369,11 @@ export default function AdminFormTemplateFormPage() {
             disabled={!name.trim() || isPending}
             data-testid="button-submit-template"
           >
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             {isEditing ? "Update Template" : "Create Template"}
           </Button>
         </div>
@@ -294,7 +384,8 @@ export default function AdminFormTemplateFormPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Form Template</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this form template? This action cannot be undone.
+              Are you sure you want to delete this form template? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
