@@ -65,7 +65,7 @@ import { registerVendorsRoutes } from "./domains/vendors";
 import { registerDealsRoutes } from "./domains/deals";
 import { registerPlacesRoutes } from "./domains/places";
 import { registerVenuesRoutes } from "./domains/venues";
-import { registerFormsRoutes, seedEventProductionTemplate } from "./domains/forms";
+import { registerFormsRoutes, seedEventProductionTemplate, seedNewIntakeTemplates } from "./domains/forms";
 import { seedDealStatuses } from "./domains/deals/deals.seed";
 import { registerAiChatRoutes } from "./domains/ai-chat";
 import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
@@ -110,6 +110,7 @@ export async function registerRoutes(
   registerVenuesRoutes(app);
   registerFormsRoutes(app);
   await seedEventProductionTemplate();
+  await seedNewIntakeTemplates();
   await seedDealStatuses();
   registerDriveAttachmentsRoutes(app);
   registerAiChatRoutes(app);

@@ -1,2 +1,2 @@
 export { registerFormsRoutes } from "./forms.routes";
-export { seedEventProductionTemplate } from "./forms.seed";
+export { seedEventProductionTemplate, seedNewIntakeTemplates } from "./forms.seed";

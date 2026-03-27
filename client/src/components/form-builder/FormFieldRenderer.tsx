@@ -308,7 +308,7 @@ function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
             {field.name}
           </FormLabel>
           {field.description && (
-            <FormDescription className="">
+            <FormDescription className="whitespace-pre-wrap">
               {field.description}
             </FormDescription>
           )}
