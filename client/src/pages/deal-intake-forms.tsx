@@ -7,7 +7,7 @@ import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Badge } from "@/components/ui/badge";
-import { User, Plus } from "lucide-react";
+import { User, Plus, CircleFadingPlus } from "lucide-react";
 import type { FormTemplate, FormTemplateWithRelations } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -149,7 +149,7 @@ export default function DealIntakeFormsPage() {
 
   const primaryAction = {
     label: "New Template",
-    icon: Plus,
+    icon: CircleFadingPlus,
     variant: "default" as const,
     onClick: () => navigate("/deals/forms/new"),
   };
