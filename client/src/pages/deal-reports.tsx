@@ -21,7 +21,7 @@ import { usePageHeader } from "@/framework/hooks/page-header-context";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const REPORT_TABS = [
-  { id: "snapshot-30", label: "30 Day New Biz" },
+  { id: "snapshot-30", label: "14 Day New Biz" },
   { id: "susanas-deals", label: "Susana's Deals" },
 ] as const;
 
@@ -130,7 +130,7 @@ function SnapshotView30() {
 
   const fourteenDaysAgo = useMemo(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 30);
+    date.setDate(date.getDate() - 14);
     return date;
   }, []);
 
