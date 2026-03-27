@@ -194,7 +194,7 @@ export default function DealForecast() {
   const [horizon, setHorizon] = useState<Horizon>(6);
   const [chartMode, setChartMode] = useState<ChartMode>("both");
   const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(true);
   const { statuses: allDealStatuses } = useDealStatuses();
 
   const stageProbabilities = useMemo(() => {

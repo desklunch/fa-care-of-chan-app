@@ -567,7 +567,7 @@ export default function PipelineHealth() {
   usePageTitle("Pipeline Health");
   const [dateRange, setDateRange] = useState<DateRangeFilter>("all");
   const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(true);
 
   const asOfDateStr = asOfDate ? format(asOfDate, "yyyy-MM-dd") : undefined;
 
