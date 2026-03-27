@@ -71,6 +71,7 @@ const PublicVenueCollection = lazy(
   () => import("@/pages/public-venue-collection"),
 );
 const Deals = lazy(() => import("@/pages/deals-sandbox"));
+const DealIntakeForms = lazy(() => import("@/pages/deal-intake-forms"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
 const DealReports = lazy(() => import("@/pages/deal-reports"));
@@ -176,6 +177,12 @@ function useLayoutConfig() {
             name: "Views",
             href: "/deals/reports",
             icon: ScanEye,
+            requiredPermission: "deals.read",
+          },
+          {
+            name: "Intake Forms",
+            href: "/deals/forms",
+            icon: FileText,
             requiredPermission: "deals.read",
           },
         ],
@@ -397,6 +404,7 @@ function AuthenticatedRoutes() {
             <Route path="/contacts/:id/edit" component={ContactForm} />
             <Route path="/deals" component={Deals} />
             <Route path="/deals/new" component={DealForm} />
+            <Route path="/deals/forms" component={DealIntakeForms} />
             <Route path="/deals/forecast" component={DealForecast} />
             <Route path="/deals/pipeline" component={PipelineHealth} />
             <Route path="/deals/reports" component={DealReports} />

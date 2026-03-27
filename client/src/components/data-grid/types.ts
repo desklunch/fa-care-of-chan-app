@@ -73,6 +73,9 @@ export interface DataGridPageProps<T, C = unknown> {
   
   // Hide column selector (useful for mobile)
   hideColumnSelector?: boolean;
+
+  // Transform data before filtering/display (e.g. for client-side pre-filtering)
+  transformData?: (data: T[]) => T[];
 }
 
 export interface ColumnSelectorProps {
