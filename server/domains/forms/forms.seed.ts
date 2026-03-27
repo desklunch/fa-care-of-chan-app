@@ -698,6 +698,169 @@ const resyProjectSchema: FormSection[] = [
   },
 ];
 
+const marketingCpgSchema: FormSection[] = [
+  {
+    id: "section-overview",
+    title: "Overview",
+    fields: [
+      { id: "field-about-client", name: "About Client", type: "richtext", description: "How would you describe your brand?\nCan you walk me through what makes you stand out within the market? How would you describe your competitive edge?" },
+      { id: "field-goals-objectives", name: "Goals & Objectives", type: "richtext", description: "Can you give us some insight on your marketing strategy for the year? What are you focusing on? What is the central messaging for this year for the brand? What is your north star for 2025?" },
+      { id: "field-kpis", name: "KPIs", type: "richtext", description: "How are you measuring success with these goals? Is it specific sales goals, press coverage, social coverage, in-person interaction with the product, VIP relations?" },
+      { id: "field-target-demo", name: "Target Demo", type: "richtext", description: "Can you describe the audience that your brand is trying to target?" },
+      { id: "field-target-markets", name: "Target Markets", type: "richtext", description: "What markets are you focusing on?" },
+      { id: "field-service-needs", name: "Service Needs", type: "richtext", description: "What specific services are you looking for in an agency partner?" },
+      { id: "field-coc-services", name: "CoC Services", type: "services" },
+    ],
+  },
+  {
+    id: "section-details",
+    title: "Details",
+    fields: [
+      { id: "field-goal", name: "Goal", type: "richtext", description: "You told me your goal is X. With that, can you tell me what are your hurdles in getting to that goal?" },
+      { id: "field-strategy", name: "Strategy", type: "richtext", description: "Offer up what Care of Chan's typical solutions are to the problem they are trying to solve.\n- VIP Gifting\n- VIP Talent Programs\n- Event Placement" },
+      { id: "field-dream-partners", name: "Dream Partners", type: "richtext", description: "Are there specific VIPs that you existing relationships that really champion your product?\nAre their dream partners that you are hoping to court?" },
+      { id: "field-frequency", name: "Frequency", type: "richtext", description: "How often are you hoping to activate? \nHow frequent do you want to activate?" },
+      { id: "field-tentpole-moments", name: "Tentpole Moments", type: "richtext", description: "Are there particular moments in the year that are important to your brand/venue?" },
+      { id: "field-partner-requirements", name: "Partner Requirements", type: "richtext", description: "What are partner expectations? Social Following, IRL influence, etc. " },
+      { id: "field-contracting-invoicing", name: "Contracting & Invoicing", type: "richtext", description: "Would you need us to own contracting and invoicing of the partners?" },
+      { id: "field-gifting-infrastructure", name: "Gifting Infrastructure", type: "richtext", description: "Do you need us to handle shipping and logistics?\nHow much product can you gift at a time?\nIf client can own, can you walk me through your gifting process? What information would you need us to get from the recipient to fulfill? \nHow long does it typically take to ship?" },
+      { id: "field-event-placement-infrastructure", name: "Event Placement Infrastructure", type: "richtext", description: "[IF EVENT PLACEMENT]\nCan you tell me lead time for product?\nWhat are typical quantities for events that you are open to gifting?\nIf we secure sales, what does event sale pricing look like?" },
+      { id: "field-talent-program-expectations", name: "Talent Program Expectations", type: "richtext", description: "[IF TALENT PROGRAM]\nWhat are your desired talent requirements?" },
+      { id: "field-pr", name: "PR", type: "richtext", description: "Do you have a PR agency? What agency do you work with?" },
+      { id: "field-social", name: "Social", type: "richtext", description: "What is your social media strategy? Who owns this?" },
+      { id: "field-additional-notes", name: "Additional Notes", type: "richtext" },
+    ],
+  },
+  {
+    id: "section-proposal",
+    title: "Proposal",
+    fields: [
+      { id: "field-marketing-budget", name: "Marketing Budget", type: "richtext", description: "Do you have a budget earmarked for this work? Are there pricing considerations we should know?\nIs that a typical budget for you for this kind of work?\nIf the budget feels tight - Is the budget flexible at all?" },
+      { id: "field-samples", name: "Samples", type: "richtext", description: "We'd love to try samples!" },
+      { id: "field-press-kit", name: "Press Kit", type: "richtext", description: "Do you have a press kit?" },
+      { id: "field-stakeholders", name: "Stakeholders", type: "richtext", description: "Can you share who on your team is involved with decision making? What do they care to see in the proposal?\nCan you share insight on what your approval process and timelines typically look like?\nWhat does the review process look like once we submit the proposal?\nI'm curious; is there anything that might get in the way of us working together on this?" },
+      { id: "field-agency-partners", name: "Agency Partners", type: "richtext", description: "Are you talking to other agencies for this event?\nWould you be comfortable sharing with us who else you are talking to?" },
+      { id: "field-timeline", name: "Timeline", type: "richtext", description: "What\u2019s your timeline? By when are you looking to make a decision? Why is the timeline set this way?" },
+    ],
+  },
+];
+
+const marketingVenuesSchema: FormSection[] = [
+  {
+    id: "section-overview",
+    title: "Overview",
+    fields: [
+      { id: "field-about-client", name: "About Client", type: "richtext", description: "How would you describe your brand?\nCan you walk me through what makes you stand out within the market? How would you describe your competitive edge?" },
+      { id: "field-goals-objectives", name: "Goals & Objectives", type: "richtext", description: "Can you give us some insight on your marketing strategy for the year? What are you focusing on? What is the central messaging for this year for the brand? What is your north star for 2026?" },
+      { id: "field-kpis", name: "KPIs", type: "richtext", description: "How are you measuring success with these goals? Is it specific sales goals, press coverage, social coverage, in-person interaction with the product, VIP relations?" },
+      { id: "field-target-demo", name: "Target Demo", type: "richtext", description: "Can you describe the audience that your brand is trying to target?" },
+      { id: "field-service-needs", name: "Service Needs", type: "richtext", description: "What specific services are you looking for in an agency partner?" },
+      { id: "field-coc-services", name: "CoC Services", type: "services" },
+    ],
+  },
+  {
+    id: "section-details",
+    title: "Details",
+    fields: [
+      { id: "field-goal", name: "Goal", type: "richtext", description: "You told me your goal is X. With that, can you tell me what are your hurdles in getting to that goal?" },
+      { id: "field-strategy", name: "Strategy", type: "richtext", description: "Offer up what Care of Chan's typical solutions are to the problem they are trying to solve." },
+      { id: "field-programming-formats", name: "Programming Formats", type: "richtext", description: "What type of programming are you looking to secure? Arts & Culture, Culinary, Wellness. \nHave you hosted programming the space before?\nIf yes, what has worked well in your space? What hasn't worked well?\nAre there specific needs or requests your seeing from your patrons?\nAre there specific days or times of the week you are hoping to activate the space?" },
+      { id: "field-frequency", name: "Frequency", type: "richtext", description: "How often are you hoping to program?" },
+      { id: "field-tentpole-moments", name: "Tentpole Moments", type: "richtext", description: "Are there particular moments in the year that are important to your brand/venue?" },
+      { id: "field-kpis-details", name: "KPIs", type: "richtext", description: "How will you measure success of the program? # of attendees, # of ticket sales, quality guests?\nHow would you rank those KPIs?" },
+      { id: "field-location", name: "Location", type: "richtext", description: "Can you specify what rooms in your venue you would like us to program?" },
+      { id: "field-day-times-operation", name: "Day & Times of Operation", type: "richtext" },
+      { id: "field-capacity", name: "Capacity", type: "richtext", description: "Can you tell me guest capacity? Seated vs Standing. \nHow many covers a night do you typically see?\nHow many turns do you do a night?" },
+      { id: "field-dream-partners", name: "Dream Partners", type: "richtext" },
+      { id: "field-partner-requirements", name: "Partner Requirements", type: "richtext", description: "What are partner expectations? On-Site Needs, Social Post Needs, Guest Invites, etc. " },
+      { id: "field-contracting-invoicing", name: "Contracting & Invoicing", type: "richtext", description: "Would you need us to own contracting and invoicing of the partners?" },
+      { id: "field-client-support", name: "Client Support", type: "richtext", description: "In order to court partners, there needs to be a level of investment in that partner. With that, how are you able to support your partners? Talent Fee, free venue, ingredient sourcing, comp'd hotel stays, marketing, etc. " },
+      { id: "field-boh-capabilities", name: "BOH Capabilities", type: "richtext", description: "Can you specify what BOH support/infrastructure you have?\nDo you have an events team?\nWhat staff will the partner have access to?\nCan you tell me about the kitchen and its capabilties?" },
+      { id: "field-foh-capabilities", name: "FOH Capabilities", type: "richtext", description: "Can you specify what BOH support/infrastructure you have?\nWhat staff will the partner have access to?" },
+      { id: "field-ticketing-platform", name: "Ticketing Platform", type: "richtext", description: "What reservation or ticketing platform do you use?" },
+      { id: "field-marketing", name: "Marketing", type: "richtext", description: "How do you typically market these programs?\nDo you have a PR agency? What agency do you work with?" },
+      { id: "field-vip-engagement", name: "VIP Engagement", type: "richtext", description: "Would you also want us to secure VIP reservations and invite our network to the programs?" },
+      { id: "field-additional-notes", name: "Additional Notes", type: "richtext" },
+    ],
+  },
+  {
+    id: "section-proposal",
+    title: "Proposal",
+    fields: [
+      { id: "field-marketing-budget", name: "Marketing Budget", type: "richtext", description: "Do you have a budget earmarked for this work? Are there pricing considerations we should know?" },
+      { id: "field-site-visit", name: "Site Visit", type: "richtext", description: "We'd love to set up a site visit to the see the space we would be programming. \nWe'd also love to set up a reservation to experience the space as a diner and try the food. " },
+      { id: "field-events-deck", name: "Events Deck", type: "richtext", description: "Do you have an events deck with buyout costs? It'd be helpful to have on hand for our event clients as well. " },
+      { id: "field-stakeholders", name: "Stakeholders", type: "richtext", description: "Can you share who on your team is involved with decision making? What do they care to see in the proposal?\nCan you share insight on what your approval process and timelines typically look like?\nWhat does the review process look like once we submit the proposal?\nI'm curious; is there anything that might get in the way of us working together on this?" },
+      { id: "field-agency-partners", name: "Agency Partners", type: "richtext", description: "Are you talking to other agencies?\nWould you be comfortable sharing with us who else you are talking to?" },
+      { id: "field-timeline", name: "Timeline", type: "richtext", description: "What\u2019s your timeline? By when are you looking to make a decision? Why is the timeline set this way?" },
+    ],
+  },
+];
+
+const rsvpSchema: FormSection[] = [
+  {
+    id: "section-event-details",
+    title: "Event Details",
+    fields: [
+      { id: "field-event-name", name: "Event Name", type: "text" },
+      { id: "field-creative-direction-vibe", name: "Creative Direction & Vibe", type: "richtext", description: "How do you describe the aesthetic of your brand? \nCan you share some buzzwords we can work off of? \nIs there a specific campaign brief we should be working off when we're ideating creative?\nWhat should the event color palette be?\nWhat is the vibe that you'd like this event to evoke with guests?\nDo you have lighting preferences?" },
+      { id: "field-event-dates", name: "Event Date(s)", type: "eventSchedule", description: "When are you hoping to host your event?\nAre these dates firm or flexible?\nIf flexible, what are your back up dates?" },
+      { id: "field-event-date-notes", name: "Event Date Notes", type: "richtext" },
+      { id: "field-start-run-times", name: "Start & Run Times", type: "text", description: "What time do you want to host your event?\nHow long do you want the event to run for?" },
+      { id: "field-locations", name: "Location(s)", type: "location", description: "What city are you hosting this in?" },
+      { id: "field-location-notes", name: "Location Notes", type: "richtext", description: "Is there a specific neighborhood that you would like us to host this?\nWhere are most of your guests traveling in from?" },
+      { id: "field-venue", name: "Venue", type: "richtext" },
+      { id: "field-food-beverage", name: "Food & Beverage", type: "richtext", description: "What is your specific serving style for food? Seated Dinner, Passed Canapes, Grazing Table?" },
+      { id: "field-talent", name: "Talent", type: "richtext", description: "Do you have special talent that we should denote on the event invite?" },
+      { id: "field-sponsors", name: "Sponsors", type: "richtext", description: "Are there any sponsors that we need to call out in the invite copy + graphic?" },
+      { id: "field-liquor-cabinet-inclusion", name: "Liquor Cabinet Inclusion", type: "richtext", description: "Please know that on our end, we have a couple of preferred beverage partners that would be open to donating product if you'd be interested. \n- Doladira - an elevated aperitif insoured by the Italian Alps founded by Meredith Erickson, the author of Alpine Cooking and the Joe Beef Cookbook. \n- Villbrygg - a zero proof botanical spirit from Norway. " },
+      { id: "field-additional-notes", name: "Additional Notes", type: "richtext" },
+    ],
+  },
+  {
+    id: "section-overview",
+    title: "Overview",
+    fields: [
+      { id: "field-context-concept", name: "Context + Concept", type: "richtext" },
+      { id: "field-event-purpose", name: "Event Purpose", type: "richtext", description: "We feel strongly that all of our events must have a purpose - a product launch or general brand awareness is not a purpose per se, so if you have something in mind can you share? For instance, are you celebrating a tradition, holiday, or cultural phenomenon? Are you teaching guests a new skill? Are there tentpole moments for your brand that might make sense to build a goal around?" },
+      { id: "field-event-host", name: "Event Host", type: "richtext", description: "Is there anyone specific that should be identified as a \"host\"?" },
+      { id: "field-clients-goals", name: "Client's Goals", type: "richtext", description: "What are your specific marketing goals for this event?\nIs it Press Coverage, UGC/Social Coverage, Community Building, Etc?" },
+      { id: "field-event-kpis", name: "Event KPIs", type: "richtext", description: "What is the one thing that would make this event a major success?\nWhen thinking about how you'd recap this event to your team, what elements would you be highlighting as the recap stats?" },
+      { id: "field-event-format", name: "Event Format", type: "richtext", description: "How are you envisioning guest experience?\nCan you walk me through the high level run of show you're thinking of?" },
+    ],
+  },
+  {
+    id: "section-creative",
+    title: "Creative",
+    fields: [
+      { id: "field-programming-brand-moments", name: "Programming & Brand Moments", type: "richtext", description: "Is there a specific way that you'd like your brand to show up at the event? i.e. photo moment, product display, speaking moment, etc.\nIs there specific programming that you'd like? Illustrators, workshops, talks, etc. " },
+    ],
+  },
+  {
+    id: "section-rsvp-details",
+    title: "RSVP Details",
+    fields: [
+      { id: "field-rsvp-management-sow", name: "RSVP Management SOW", type: "richtext" },
+      { id: "field-coc-percent", name: "CoC %", type: "richtext", description: "What percentage of the guest list are we responsible for securing?" },
+      { id: "field-invites-check-in", name: "Invites & Check-In", type: "richtext", description: "Who is handling invites? Client? PR team? Care of Chan?\nWho is handling check-in? PR team? Care of Chan?" },
+      { id: "field-graphic-designer", name: "Graphic Designer", type: "richtext", description: "Will your team own the invite graphic or will you need us to create the invite graphic?\nCan you share brand logos + brand guidelines?\nCan you share any relevant creative/moodboard/campaign imagery that we should use?" },
+      { id: "field-brand-guidelines", name: "Brand Guidelines", type: "richtext", description: "Can you share official brand guidelines and logo usage?" },
+      { id: "field-target-guest-count", name: "Target Guest Count", type: "richtext", description: "Can you confirm the target guest count?\nCan you confirm how many folks from your team will be attending? Confirming they are a part of this final guest count?" },
+      { id: "field-max-venue-capacity", name: "Max Venue Capacity", type: "text" },
+      { id: "field-guest-type", name: "Guest Type", type: "richtext", description: "Can you confirm what your target demo is? Do you have some sample names you are hoping to attend?" },
+      { id: "field-plus-ones", name: "Plus Ones", type: "text", description: "What is your preferred plus one policy?" },
+      { id: "field-seating-chart", name: "Seating Chart", type: "richtext", description: "Who from your team is sitting? What are your preferences for the client team for the seating chart? " },
+      { id: "field-client-team", name: "Client Team", type: "richtext", description: "How many people from your team will be in attendance?\nIs this guest count inclusive of your team?" },
+      { id: "field-dietary-restrictions", name: "Dietary Restrictions", type: "richtext", description: "Does your chef talent need dietary restrictions for the menu? When do they need this by?" },
+      { id: "field-brand-dressing", name: "Brand Dressing", type: "richtext", description: "Will you need to dress your guests? \nCan you walk me through how you handle that process?\nDoes your team invite guests to pick up in-store or will you need to ship clothes to their homes?\nIf the latter, will your team handle all fulfilling and shipping or do you need our production team to handle this?" },
+      { id: "field-photographer", name: "Photographer", type: "richtext", description: "Will there be a photographer on-site?\nCan they turnaround a few images for our attendee thank you note within 24 hours from the event date?" },
+      { id: "field-photo-release", name: "Photo Release", type: "richtext", description: "Do you need guests to sign a photo release ahead of the event day?" },
+      { id: "field-uber-codes", name: "Uber Codes", type: "richtext", description: "Are you offering guests Uber codes? \nFor events where the venue is not central or easy to get to in relation to where your guests are traveling in from, we highly recommend offering an uber code, as guests will have a stronger sense of obligation to attend and we can avoid drop off and higher attendance. " },
+      { id: "field-additional-notes-rsvp", name: "Additional Notes", type: "richtext" },
+    ],
+  },
+];
+
 interface TemplateDefinition {
   id: string;
   name: string;
@@ -735,6 +898,24 @@ const NEW_TEMPLATES: TemplateDefinition[] = [
     name: "Resy Project",
     description: "Intake questionnaire for Resy project deals — covers overview, logistics, guests, creative with venue and F&B details, talent, services, and proposal.",
     formSchema: resyProjectSchema,
+  },
+  {
+    id: "marketing-cpg-intake",
+    name: "Marketing CPG",
+    description: "Intake questionnaire for marketing CPG deals — covers client overview, marketing details including gifting and talent programs, and proposal.",
+    formSchema: marketingCpgSchema,
+  },
+  {
+    id: "marketing-venues-intake",
+    name: "Marketing Venues",
+    description: "Intake questionnaire for marketing venue deals — covers client overview, venue programming details including BOH/FOH capabilities, and proposal.",
+    formSchema: marketingVenuesSchema,
+  },
+  {
+    id: "rsvp-intake",
+    name: "RSVP",
+    description: "Intake questionnaire for RSVP management — covers event details, overview, creative direction, and comprehensive RSVP logistics.",
+    formSchema: rsvpSchema,
   },
 ];
 
@@ -777,6 +958,16 @@ export async function seedNewIntakeTemplates(): Promise<void> {
         .where(eq(formTemplates.id, template.id));
 
       if (existing.length > 0) {
+        await db
+          .update(formTemplates)
+          .set({
+            name: template.name,
+            description: template.description,
+            category: "client_intake",
+            formSchema: template.formSchema,
+            updatedAt: new Date(),
+          })
+          .where(eq(formTemplates.id, template.id));
         continue;
       }
 
