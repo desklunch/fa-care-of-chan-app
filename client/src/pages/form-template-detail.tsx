@@ -139,9 +139,12 @@ function ReadOnlyField({ field }: { field: FormFieldType }) {
 }
 
 export default function FormTemplateDetailPage() {
-  const [, navigate] = useProtectedLocation();
+  const [location, navigate] = useProtectedLocation();
   const { id } = useParams<{ id: string }>();
   const { isLoading: isAuthLoading, isAuthenticated } = useAuth();
+
+  const isDealsContext = location.startsWith("/deals/forms");
+  const backPath = isDealsContext ? "/deals/forms" : "/forms";
 
   const { data: template, isLoading } = useQuery<FormTemplate>({
     queryKey: ["/api/form-templates", id],
@@ -159,7 +162,7 @@ export default function FormTemplateDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template duplicated", description: "Form template has been duplicated successfully." });
-      navigate("/forms");
+      navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -178,7 +181,7 @@ export default function FormTemplateDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template deleted", description: "Form template has been deleted." });
-      navigate("/forms");
+      navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -192,14 +195,20 @@ export default function FormTemplateDetailPage() {
 
   usePageTitle(template?.name || "Form Template");
 
+  const loadingBreadcrumbs = isDealsContext
+    ? [
+        { label: "Deals", href: "/deals" },
+        { label: "Client Intake Forms", href: "/deals/forms" },
+        { label: "Loading..." },
+      ]
+    : [
+        { label: "Forms", href: "/forms" },
+        { label: "Loading..." },
+      ];
+
   if (isAuthLoading || isLoading) {
     return (
-      <PageLayout
-        breadcrumbs={[
-          { label: "Forms", href: "/forms" },
-          { label: "Loading..." },
-        ]}
-      >
+      <PageLayout breadcrumbs={loadingBreadcrumbs}>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32 w-full" />
@@ -215,13 +224,19 @@ export default function FormTemplateDetailPage() {
   }
 
   if (!template) {
-    return (
-      <PageLayout
-        breadcrumbs={[
+    const notFoundBreadcrumbs = isDealsContext
+      ? [
+          { label: "Deals", href: "/deals" },
+          { label: "Client Intake Forms", href: "/deals/forms" },
+          { label: "Not Found" },
+        ]
+      : [
           { label: "Forms", href: "/forms" },
           { label: "Not Found" },
-        ]}
-      >
+        ];
+
+    return (
+      <PageLayout breadcrumbs={notFoundBreadcrumbs}>
         <div className="p-6">
           <Card>
             <CardContent className="py-12 text-center">
@@ -230,7 +245,7 @@ export default function FormTemplateDetailPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 The template you're looking for doesn't exist or has been deleted.
               </p>
-              <Button onClick={() => navigate("/forms")}>
+              <Button onClick={() => navigate(backPath)}>
                 Back to Templates
               </Button>
             </CardContent>
@@ -244,16 +259,24 @@ export default function FormTemplateDetailPage() {
   const sectionCount = formSchema.length;
   const fieldCount = formSchema.reduce((acc, section) => acc + section.fields.length, 0);
 
-  return (
-    <PageLayout
-      breadcrumbs={[
+  const detailBreadcrumbs = isDealsContext
+    ? [
+        { label: "Deals", href: "/deals" },
+        { label: "Client Intake Forms", href: "/deals/forms" },
+        { label: template.name },
+      ]
+    : [
         { label: "Forms", href: "/forms" },
         { label: template.name },
-      ]}
+      ];
+
+  return (
+    <PageLayout
+      breadcrumbs={detailBreadcrumbs}
       additionalActions={[
         {
           label: "Edit",
-          href: `/forms/${id}/edit`,
+          href: isDealsContext ? `/deals/forms/${id}/edit` : `/forms/${id}/edit`,
           icon: SquarePen,
         },
         {

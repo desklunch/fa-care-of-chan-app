@@ -7,7 +7,7 @@ import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { User, Plus } from "lucide-react";
 import type { FormTemplate, FormTemplateWithRelations } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -130,7 +130,7 @@ export default function DealIntakeFormsPage() {
 
   const handleRowClick = useCallback(
     (template: FormTemplate) => {
-      navigate(`/forms/${template.id}`);
+      navigate(`/deals/forms/${template.id}`);
     },
     [navigate],
   );
@@ -158,9 +158,17 @@ export default function DealIntakeFormsPage() {
     return null;
   }
 
+  const primaryAction = {
+    label: "New Template",
+    icon: Plus,
+    variant: "default" as const,
+    onClick: () => navigate("/deals/forms/new"),
+  };
+
   return (
     <PageLayout
       breadcrumbs={[{ label: "Deals", href: "/deals" }, { label: "Client Intake Forms" }]}
+      primaryAction={primaryAction}
     >
       <DataGridPage
         queryKey="/api/form-templates"

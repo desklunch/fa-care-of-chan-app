@@ -404,6 +404,9 @@ function AuthenticatedRoutes() {
             <Route path="/contacts/:id/edit" component={ContactForm} />
             <Route path="/deals" component={Deals} />
             <Route path="/deals/new" component={DealForm} />
+            <Route path="/deals/forms/new" component={FormTemplateForm} />
+            <Route path="/deals/forms/:id/edit" component={FormTemplateForm} />
+            <Route path="/deals/forms/:id" component={FormTemplateDetail} />
             <Route path="/deals/forms" component={DealIntakeForms} />
             <Route path="/deals/forecast" component={DealForecast} />
             <Route path="/deals/pipeline" component={PipelineHealth} />

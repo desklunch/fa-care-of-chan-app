@@ -31,16 +31,19 @@ import {
 import type { FormTemplate, InsertFormTemplate, FormSection } from "@shared/schema";
 
 export default function AdminFormTemplateFormPage() {
-  const [, navigate] = useProtectedLocation();
+  const [location, navigate] = useProtectedLocation();
   const { id } = useParams<{ id?: string }>();
   const { toast } = useToast();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
+
+  const isDealsContext = location.startsWith("/deals/forms");
+  const backPath = isDealsContext ? "/deals/forms" : "/forms";
 
   const isEditing = !!id;
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(isDealsContext && !isEditing ? "client_intake" : "");
   const [formSchema, setFormSchema] = useState<FormSection[]>([]);
 
   const { data: template, isLoading: isTemplateLoading } = useQuery<FormTemplate>({
@@ -67,7 +70,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template created", description: "Form template has been created successfully." });
-      navigate("/forms");
+      navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -87,7 +90,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template updated", description: "Form template has been updated successfully." });
-      navigate("/forms");
+      navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -106,7 +109,7 @@ export default function AdminFormTemplateFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({ title: "Template deleted", description: "Form template has been deleted successfully." });
-      navigate("/forms");
+      navigate(backPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -157,13 +160,24 @@ export default function AdminFormTemplateFormPage() {
       label: "Cancel",
       icon: X,
       variant: "outline" as const,
-      onClick: () => navigate("/forms"),
+      onClick: () => navigate(backPath),
     },
   ];
 
+  const breadcrumbs = isDealsContext
+    ? [
+        { label: "Deals", href: "/deals" },
+        { label: "Client Intake Forms", href: "/deals/forms" },
+        { label: isEditing ? "Edit Template" : "New Template" },
+      ]
+    : [
+        { label: "Forms", href: "/forms" },
+        { label: isEditing ? "Edit Template" : "New Template" },
+      ];
+
   if (isAuthLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms", href: "/forms" }, { label: isEditing ? "Edit" : "New" }]}>
+      <PageLayout breadcrumbs={breadcrumbs}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -180,7 +194,7 @@ export default function AdminFormTemplateFormPage() {
 
   if (isEditing && isTemplateLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Forms", href: "/forms" }, { label: "Edit" }]}>
+      <PageLayout breadcrumbs={breadcrumbs}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-32" />
@@ -192,10 +206,7 @@ export default function AdminFormTemplateFormPage() {
 
   return (
     <PageLayout
-      breadcrumbs={[
-        { label: "Forms", href: "/forms" },
-        { label: isEditing ? "Edit Template" : "New Template" },
-      ]}
+      breadcrumbs={breadcrumbs}
       primaryAction={primaryAction}
       additionalActions={additionalActions}
     >
@@ -216,18 +227,20 @@ export default function AdminFormTemplateFormPage() {
                   data-testid="input-template-name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="template-category">Category</Label>
-                <Select value={category} onValueChange={setCategory} data-testid="select-template-category">
-                  <SelectTrigger id="template-category" data-testid="select-template-category">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client_intake" data-testid="option-category-client-intake">Client Intake</SelectItem>
-                    <SelectItem value="vendor_inquiry" data-testid="option-category-vendor-inquiry">Vendor Inquiry</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {!(isDealsContext && !isEditing) && (
+                <div className="space-y-2">
+                  <Label htmlFor="template-category">Category</Label>
+                  <Select value={category} onValueChange={setCategory} data-testid="select-template-category">
+                    <SelectTrigger id="template-category" data-testid="select-template-category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="client_intake" data-testid="option-category-client-intake">Client Intake</SelectItem>
+                      <SelectItem value="vendor_inquiry" data-testid="option-category-vendor-inquiry">Vendor Inquiry</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="template-description">Description (Optional)</Label>
@@ -259,7 +272,7 @@ export default function AdminFormTemplateFormPage() {
         <div className="flex justify-end gap-3 pt-2">
           <Button
             variant="outline"
-            onClick={() => navigate("/forms")}
+            onClick={() => navigate(backPath)}
             disabled={isPending}
             data-testid="button-cancel-template"
           >
