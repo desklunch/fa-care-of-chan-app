@@ -684,30 +684,13 @@ export default function PipelineHealth() {
             <TooltipTrigger asChild>
               <div className="relative" data-testid="filter-group-pipeline">
                 <div className={`flex items-center gap-2 flex-wrap ${demoMode ? "opacity-50" : ""}`}>
-                  <div className="flex items-center gap-1">
-                    <DatePicker
-                      date={asOfDate}
-                      onSelect={demoMode ? undefined : setAsOfDate}
-                      placeholder="As of today"
-                      data-testid="datepicker-as-of-date"
-                    />
-                    {asOfDate && !demoMode && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setAsOfDate(undefined)}
-                        data-testid="button-clear-as-of-date"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
+         
                   <Select
                     value={dateRange}
                     onValueChange={demoMode ? undefined : (v) => setDateRange(v as DateRangeFilter)}
                     disabled={demoMode}
                   >
-                    <SelectTrigger className="w-[180px]" data-testid="select-date-range">
+                    <SelectTrigger className="w-[160px] h-9" data-testid="select-date-range">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -718,6 +701,24 @@ export default function PipelineHealth() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="flex items-center gap-1">
+                    <DatePicker
+                      date={asOfDate}
+                      onSelect={demoMode ? undefined : setAsOfDate}
+                      placeholder="As of today"
+                      data-testid="datepicker-as-of-date"
+                    />
+                    {asOfDate && !demoMode && (
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        onClick={() => setAsOfDate(undefined)}
+                        data-testid="button-clear-as-of-date"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </TooltipTrigger>
