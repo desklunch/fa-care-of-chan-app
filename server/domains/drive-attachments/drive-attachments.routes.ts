@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
+import { getDriveAccessToken } from "../../googleAuth";
 import { loadPermissions, checkPermission, checkAnyPermission } from "../../middleware/permissions";
 import { logAuditEvent } from "../../audit";
 import { driveAttachmentsStorage } from "./drive-attachments.storage";
 import { driveAttachmentEntityTypes, type DriveAttachmentEntityType } from "@shared/schema";
-import { getDriveFileMetadata, extractDriveFileId } from "../../googleDrive";
+import { getDriveFileMetadata, extractDriveFileId, searchDriveFiles } from "../../googleDrive";
 import type { Permission } from "../../../shared/permissions";
 import { z } from "zod";
-import { ReplitConnectors } from "@replit/connectors-sdk";
 
 const ATTACHMENT_READ_PERMISSIONS: Record<DriveAttachmentEntityType, Permission> = {
   deal: "deals.read",
@@ -98,8 +98,16 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(400).json({ message: "Drive file ID is required" });
       }
 
+      const accessToken = await getDriveAccessToken(req.session);
+      if (!accessToken) {
+        return res.status(403).json({
+          message: "Google Drive access not authorized",
+          code: "drive_auth_required",
+        });
+      }
+
       try {
-        const metadata = await getDriveFileMetadata(driveFileId);
+        const metadata = await getDriveFileMetadata(driveFileId, accessToken);
         name = metadata.name || name;
         mimeType = metadata.mimeType || mimeType;
         iconUrl = metadata.iconLink || iconUrl;
@@ -207,39 +215,18 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(403).json({ message: "Forbidden" });
       }
 
+      const accessToken = await getDriveAccessToken(req.session);
+      if (!accessToken) {
+        return res.status(403).json({
+          message: "Google Drive access not authorized",
+          code: "drive_auth_required",
+        });
+      }
+
       const query = req.query.q as string || "";
       const pageToken = req.query.pageToken as string || "";
 
-      const connectors = new ReplitConnectors();
-
-      const params = new URLSearchParams({
-        fields: "files(id,name,mimeType,iconLink,webViewLink,modifiedTime,owners),nextPageToken",
-        pageSize: "20",
-        orderBy: "modifiedByMeTime desc,viewedByMeTime desc",
-      });
-
-      if (query) {
-        const words = query.trim().split(/\s+/).filter(Boolean);
-        const clauses = words.map((word) => {
-          const escaped = word.replace(/'/g, "\\'");
-          return `name contains '${escaped}'`;
-        });
-        params.set("q", `${clauses.join(" and ")} and trashed=false`);
-      } else {
-        params.set("q", "trashed=false");
-      }
-
-      if (pageToken) {
-        params.set("pageToken", pageToken);
-      }
-
-      const apiPath = `/drive/v3/files?${params.toString()}`;
-
-      const response = await connectors.proxy("google-drive", apiPath, { method: "GET" });
-      if (!response.ok) {
-        return res.status(502).json({ message: "Failed to search Drive files" });
-      }
-      const data = await response.json();
+      const data = await searchDriveFiles(accessToken, query, pageToken || undefined);
       res.json(data);
     } catch (error) {
       console.error("Error searching Drive files:", error);

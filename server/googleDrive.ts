@@ -1,15 +1,57 @@
-import { ReplitConnectors } from "@replit/connectors-sdk";
-
-export async function getDriveFileMetadata(fileId: string) {
-  const connectors = new ReplitConnectors();
-  const response = await connectors.proxy(
-    "google-drive",
-    `/drive/v3/files/${fileId}?fields=id,name,mimeType,iconLink,webViewLink`,
-    { method: "GET" }
-  );
+export async function getDriveFileMetadata(fileId: string, accessToken: string) {
+  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,mimeType,iconLink,webViewLink`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
   if (!response.ok) {
-    throw new Error(`Failed to fetch Drive file metadata: ${response.status}`);
+    const text = await response.text();
+    throw new Error(`Failed to fetch Drive file metadata: ${response.status} ${text}`);
   }
+  return response.json();
+}
+
+export async function searchDriveFiles(
+  accessToken: string,
+  query: string,
+  pageToken?: string,
+) {
+  const params = new URLSearchParams({
+    fields: "files(id,name,mimeType,iconLink,webViewLink,modifiedTime,owners),nextPageToken",
+    pageSize: "20",
+    orderBy: "modifiedByMeTime desc,viewedByMeTime desc",
+  });
+
+  if (query) {
+    const words = query.trim().split(/\s+/).filter(Boolean);
+    const clauses = words.map((word) => {
+      const escaped = word.replace(/'/g, "\\'");
+      return `name contains '${escaped}'`;
+    });
+    params.set("q", `${clauses.join(" and ")} and trashed=false`);
+  } else {
+    params.set("q", "trashed=false");
+  }
+
+  if (pageToken) {
+    params.set("pageToken", pageToken);
+  }
+
+  const url = `https://www.googleapis.com/drive/v3/files?${params.toString()}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to search Drive files: ${response.status} ${text}`);
+  }
+
   return response.json();
 }
 

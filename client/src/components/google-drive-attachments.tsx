@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useDriveAuth } from "@/lib/google-auth";
 import { formatTimeAgo } from "@/lib/format-time";
 import type { DriveAttachmentWithUser } from "@shared/schema";
 import {
@@ -34,6 +35,7 @@ import {
   FileAudio,
   Search,
   Check,
+  LogIn,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -98,20 +100,48 @@ interface DriveSearchResult {
   nextPageToken?: string;
 }
 
+function DriveAuthPrompt({ onAuthorize }: { onAuthorize: () => void }) {
+  return (
+    <Card>
+      <CardContent className="p-4 flex flex-col items-center gap-3 text-center">
+        <LogIn className="h-8 w-8 text-muted-foreground" />
+        <div>
+          <p className="text-sm font-medium">Connect your Google Drive</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Grant access to browse and attach files from your personal Google Drive.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onAuthorize}
+          data-testid="button-connect-drive"
+        >
+          <LogIn className="h-4 w-4 mr-1" />
+          Connect Google Drive
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function DriveFilePickerDialog({
   open,
   onOpenChange,
   onSelect,
   isPending,
+  onDriveAuthRequired,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (file: DriveFile) => void;
   isPending: boolean;
+  onDriveAuthRequired: () => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [needsDriveAuth, setNeedsDriveAuth] = useState(false);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -120,17 +150,45 @@ function DriveFilePickerDialog({
     setDebounceTimer(timer);
   };
 
-  const { data: searchResults, isLoading: isSearching } = useQuery<DriveSearchResult>({
+  const { data: searchResults, isLoading: isSearching, error: searchError } = useQuery<DriveSearchResult>({
     queryKey: ["/api/drive/search", debouncedQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (debouncedQuery) params.set("q", debouncedQuery);
       const res = await fetch(`/api/drive/search?${params.toString()}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to search Drive");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        if (body.code === "drive_auth_required") {
+          setNeedsDriveAuth(true);
+          throw new Error("drive_auth_required");
+        }
+        throw new Error("Failed to search Drive");
+      }
+      setNeedsDriveAuth(false);
       return res.json();
     },
     enabled: open,
+    retry: false,
   });
+
+  if (needsDriveAuth) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Browse Google Drive</DialogTitle>
+            <DialogDescription>
+              Connect your Google Drive to browse and attach files.
+            </DialogDescription>
+          </DialogHeader>
+          <DriveAuthPrompt onAuthorize={() => {
+            onDriveAuthRequired();
+            onOpenChange(false);
+          }} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -204,10 +262,12 @@ interface GoogleDriveAttachmentsProps {
 export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAttachmentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { promptDriveAuth } = useDriveAuth();
   const [showPicker, setShowPicker] = useState(false);
   const [showPasteInput, setShowPasteInput] = useState(false);
   const [driveUrl, setDriveUrl] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDriveAuthPrompt, setShowDriveAuthPrompt] = useState(false);
 
   const { data: attachments, isLoading } = useQuery<DriveAttachmentWithUser[]>({
     queryKey: ["/api/drive-attachments", entityType, entityId],
@@ -218,6 +278,15 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
     },
     enabled: !!entityId,
   });
+
+  const handleDriveAuthRequired = () => {
+    setShowDriveAuthPrompt(true);
+  };
+
+  const handleConnectDrive = () => {
+    promptDriveAuth();
+    setShowDriveAuthPrompt(false);
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: { driveUrl?: string; driveFileId?: string; name?: string; mimeType?: string; iconUrl?: string; webViewLink?: string }) => {
@@ -236,6 +305,10 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
       toast({ title: "File attached successfully" });
     },
     onError: (error: Error) => {
+      if (error.message?.includes("drive_auth_required")) {
+        handleDriveAuthRequired();
+        return;
+      }
       toast({ title: "Failed to attach file", description: error.message, variant: "destructive" });
     },
   });
@@ -306,11 +379,18 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
         </div>
       </div>
 
+      {showDriveAuthPrompt && (
+        <DriveAuthPrompt onAuthorize={handleConnectDrive} />
+      )}
+
       <DriveFilePickerDialog
         open={showPicker}
         onOpenChange={setShowPicker}
         onSelect={handlePickerSelect}
         isPending={createMutation.isPending}
+        onDriveAuthRequired={() => {
+          promptDriveAuth();
+        }}
       />
 
       {showPasteInput && (
