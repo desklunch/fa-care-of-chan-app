@@ -183,7 +183,6 @@ function DriveFilePickerDialog({
           </DialogHeader>
           <DriveAuthPrompt onAuthorize={() => {
             onDriveAuthRequired();
-            onOpenChange(false);
           }} />
         </DialogContent>
       </Dialog>
