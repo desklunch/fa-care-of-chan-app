@@ -143,6 +143,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "tags",
   "startedOn",
   "lastContactOn",
+  "dealAge",
   "concept",
   "industry",
   "primaryContact",
@@ -626,6 +627,81 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         );
       },
       comparator: createDateComparator((data) => data?.wonOn),
+    },
+  },
+  {
+    id: "dealAge",
+    headerName: "Deal Age",
+    field: "dealAge",
+    category: "Dates",
+    colDef: {
+      width: 100,
+      editable: false,
+      valueGetter: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
+        const deal = params.data;
+        if (!deal || !deal.startedOn) return null;
+
+        const toStartOfDay = (dateStr: string) => {
+          const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const startDate = toStartOfDay(deal.startedOn);
+        let endDate: Date | null = null;
+
+        const statusRecord = params.context?.dealStatuses?.find(
+          (s) => s.name === deal.statusName,
+        );
+
+        if (statusRecord?.isActive) {
+          const now = new Date();
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (statusRecord?.name === "Closed Won") {
+          if (deal.wonOn) {
+            endDate = toStartOfDay(deal.wonOn);
+          } else if (deal.lastContactOn) {
+            endDate = toStartOfDay(deal.lastContactOn);
+          }
+        } else {
+          if (deal.lastContactOn) {
+            endDate = toStartOfDay(deal.lastContactOn);
+          }
+        }
+
+        if (!endDate) return null;
+
+        const diffMs = endDate.getTime() - startDate.getTime();
+        return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+      },
+      valueFormatter: (params: { value: number | null }) => {
+        if (params.value == null) return "";
+        return `${params.value}d`;
+      },
+      cellRenderer: (params: { value: number | null }) => {
+        if (params.value == null) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
+            {params.value}d
+          </span>
+        );
+      },
+      comparator: (
+        valueA: number | null,
+        valueB: number | null,
+        _nodeA: unknown,
+        _nodeB: unknown,
+        isDescending: boolean,
+      ): number => {
+        const aIsNull = valueA == null;
+        const bIsNull = valueB == null;
+        if (aIsNull && bIsNull) return 0;
+        if (aIsNull) return isDescending ? -1 : 1;
+        if (bIsNull) return isDescending ? 1 : -1;
+        return valueA - valueB;
+      },
     },
   },
   {
