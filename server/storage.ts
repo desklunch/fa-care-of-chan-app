@@ -1990,6 +1990,8 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
+          industryId: clients.industryId,
+          industryName: industries.name,
         },
         brand: {
           id: brands.id,
@@ -2014,6 +2016,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
+      .leftJoin(industries, eq(clients.industryId, industries.id))
       .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id));

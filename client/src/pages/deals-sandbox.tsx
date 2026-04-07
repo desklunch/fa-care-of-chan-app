@@ -498,7 +498,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
   },
   {
     id: "client",
-    headerName: "Primary Client",
+    headerName: "Client",
     field: "client",
     category: "Basic Info",
     colDef: {
@@ -511,14 +511,21 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const client = params.data?.client;
         if (!client) return null;
         return (
-          <Link
-            href={`/clients/${client.id}`}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            className="text-foreground hover:underline truncate"
-            data-testid={`link-client-${client.id}`}
-          >
-            {client.name}
-          </Link>
+          <div className="flex flex-col justify-center min-w-0">
+            <Link
+              href={`/clients/${client.id}`}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="text-foreground hover:underline truncate"
+              data-testid={`link-client-${client.id}`}
+            >
+              {client.name}
+            </Link>
+            {client.industryName && (
+              <span className="text-xs text-muted-foreground truncate" data-testid={`text-client-industry-${client.id}`}>
+                {client.industryName}
+              </span>
+            )}
+          </div>
         );
       },
     },
