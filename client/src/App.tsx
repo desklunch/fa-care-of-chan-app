@@ -132,6 +132,7 @@ import {
   TrendingUp,
   Activity,
   Shield,
+  Loader,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -193,15 +194,15 @@ function useLayoutConfig() {
         items: [
 
           {
-            name: "Intake Templates",
+            name: "Intakes",
             href: "/deals/forms",
             icon: FileText,
             requiredPermission: "sales.manage",
           },
           {
-            name: "Deal Statuses",
+            name: "Statuses",
             href: "/manage/deal-statuses",
-            icon: SlidersHorizontal,
+            icon: Loader,
             requiredPermission: "sales.manage",
           },
         ],
