@@ -19,7 +19,7 @@ import type {
 } from "@shared/schema";
 import { useDealStatuses } from "@/hooks/useDealStatuses";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { formatDateOnly } from "@/lib/date";
+import { formatDateOnly, parseDateOnly } from "@/lib/date";
 import { getEventSummary } from "@/components/event-schedule";
 import {
   CircleFadingPlus,
@@ -556,8 +556,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
     field: "lastContactOn",
     category: "Dates",
     colDef: {
-      minWidth: 130,
-      maxWidth: 130,
+      minWidth: 170,
+      maxWidth: 200,
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
@@ -565,11 +565,31 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return "";
         return formatDateOnly(params.value, "MM/dd/yy");
       },
-      cellRenderer: (params: { value: string | null }) => {
+      cellRenderer: (params: { value: string | null; data: DealWithRelations; context: DealsGridContext }) => {
         if (!params.value) return null;
+        const formattedDate = formatDateOnly(params.value, "MM/dd/yy");
+        const statusRecord = params.context?.dealStatuses?.find(
+          (s) => s.id === params.data?.status,
+        );
+        const isActive = statusRecord?.isActive ?? false;
+        if (isActive) {
+          const contactDate = parseDateOnly(params.value);
+          if (!contactDate) return null;
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const diffMs = today.getTime() - contactDate.getTime();
+          const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+          const daysLabel = `${diffDays}d ago`;
+          return (
+            <span className="flex items-center gap-1.5 text-xs py-[16px] tracking-wide">
+              <span className="font-semibold text-muted-foreground" data-testid="text-last-contact-days">{daysLabel}</span>
+              <span className="font-normal opacity-50 text-muted-foreground" data-testid="text-last-contact-date">{formattedDate}</span>
+            </span>
+          );
+        }
         return (
           <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+            <span data-testid="text-last-contact-date">{formattedDate}</span>
           </span>
         );
       },
