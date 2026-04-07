@@ -1,11 +1,11 @@
 import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
 import { requirePermission } from "../../middleware/permissions";
-import { logAuditEvent } from "../../audit";
+import { logAuditEvent, getChangedFields } from "../../audit";
 import { handleServiceError } from "../../lib/route-helpers";
 import { storage } from "../../storage";
 import { DealsService } from "../../services/deals.service";
-import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, insertDealIntakeSchema, updateDealIntakeSchema, mappableEntities } from "@shared/schema";
+import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { formsStorage } from "../forms/forms.storage";
 
@@ -18,6 +18,43 @@ export function registerDealsRoutes(app: Express): void {
       res.json(statuses);
     } catch (error) {
       handleServiceError(res, error, "Failed to fetch deal statuses");
+    }
+  });
+
+  app.patch("/api/deal-statuses/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const validatedData = insertDealStatusSchema.partial().safeParse(req.body);
+      if (!validatedData.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validatedData.error.errors,
+        });
+      }
+      const original = await storage.getDealStatusById(parseInt(req.params.id));
+      const status = await storage.updateDealStatus(parseInt(req.params.id), validatedData.data);
+      if (!status) {
+        return res.status(404).json({ message: "Deal status not found" });
+      }
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_status",
+        entityId: req.params.id,
+        status: "success",
+        changes: getChangedFields(original, status),
+      });
+
+      res.json(status);
+    } catch (error) {
+      console.error("Error updating deal status:", error);
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "deal_status",
+        entityId: req.params.id,
+        status: "failure",
+        metadata: { error: (error as Error).message },
+      });
+      res.status(500).json({ message: "Failed to update deal status" });
     }
   });
 

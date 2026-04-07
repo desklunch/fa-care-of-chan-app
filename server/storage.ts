@@ -152,6 +152,7 @@ import {
   type DealStatus,
   type DealEvent,
   type DealStatusRecord,
+  type InsertDealStatus,
   dealStatuses,
   dealTasks,
   computeEarliestEventDate,
@@ -332,6 +333,8 @@ export interface IStorage {
   // Deal status operations
   getDealStatuses(): Promise<DealStatusRecord[]>;
   getDealStatusByName(name: string): Promise<DealStatusRecord | undefined>;
+  getDealStatusById(id: number): Promise<DealStatusRecord | undefined>;
+  updateDealStatus(id: number, data: Partial<InsertDealStatus>): Promise<DealStatusRecord | undefined>;
   
   // Deal operations
   getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]>;
@@ -1924,6 +1927,20 @@ export class DatabaseStorage implements IStorage {
 
   async getDealStatusByName(name: string): Promise<DealStatusRecord | undefined> {
     const [result] = await db.select().from(dealStatuses).where(eq(dealStatuses.name, name));
+    return result;
+  }
+
+  async getDealStatusById(id: number): Promise<DealStatusRecord | undefined> {
+    const [result] = await db.select().from(dealStatuses).where(eq(dealStatuses.id, id));
+    return result;
+  }
+
+  async updateDealStatus(id: number, data: Partial<InsertDealStatus>): Promise<DealStatusRecord | undefined> {
+    const [result] = await db
+      .update(dealStatuses)
+      .set(data)
+      .where(eq(dealStatuses.id, id))
+      .returning();
     return result;
   }
   

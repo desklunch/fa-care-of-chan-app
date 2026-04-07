@@ -46,6 +46,7 @@ const VenueCollectionDetail = lazy(
 const Amenities = lazy(() => import("@/pages/amenities"));
 const Industries = lazy(() => import("@/pages/industries"));
 const ManageTagsPage = lazy(() => import("@/pages/manage-tags"));
+const ManageDealStatuses = lazy(() => import("@/pages/manage-deal-statuses"));
 const AdminThemeEditor = lazy(() => import("@/pages/admin-theme-editor"));
 const AdminVendorTokens = lazy(() => import("@/pages/admin-vendor-tokens"));
 const VendorUpdateForm = lazy(() => import("@/pages/vendor-update-form"));
@@ -184,6 +185,12 @@ function useLayoutConfig() {
             href: "/deals/forms",
             icon: FileText,
             requiredPermission: "deals.read",
+          },
+          {
+            name: "Deal Statuses",
+            href: "/manage/deal-statuses",
+            icon: SlidersHorizontal,
+            requiredPermission: "admin.settings",
           },
         ],
       },
@@ -423,6 +430,7 @@ function AuthenticatedRoutes() {
             <Route path="/forms" component={FormTemplates} />
             <Route path="/guide" component={Guide} />
             <Route path="/industries" component={Industries} />
+            <Route path="/manage/deal-statuses" component={ManageDealStatuses} />
             <Route path="/manage/tags" component={ManageTagsPage} />
             <Route path="/profile" component={Profile} />
             <Route path="/profile/edit" component={ProfileEdit} />
