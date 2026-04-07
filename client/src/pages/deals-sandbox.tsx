@@ -141,7 +141,6 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "client",
   "linkedClients",
   "tags",
-  "startedOn",
   "lastContactOn",
   "dealAge",
   "concept",
