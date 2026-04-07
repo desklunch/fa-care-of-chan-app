@@ -135,7 +135,7 @@ function ManageDealStatuses() {
     );
   }
 
-  if (!can("admin.settings")) {
+  if (!can("sales.manage")) {
     return <NoPermissionMessage />;
   }
 

@@ -21,7 +21,7 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
-  app.patch("/api/deal-statuses/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+  app.patch("/api/deal-statuses/:id", isAuthenticated, requirePermission("sales.manage"), async (req: any, res) => {
     try {
       const validatedData = insertDealStatusSchema.partial().safeParse(req.body);
       if (!validatedData.success) {

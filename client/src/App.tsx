@@ -182,21 +182,30 @@ function useLayoutConfig() {
             icon: ScanEye,
             requiredPermission: "deals.read",
           },
+
+        ],
+      },
+      {
+        heading: "Sales Admin",
+        defaultCollapsed: false,
+
+        requiredPermission: "sales.manage",
+        items: [
+
           {
             name: "Intake Templates",
             href: "/deals/forms",
             icon: FileText,
-            requiredPermission: "deals.read",
+            requiredPermission: "sales.manage",
           },
           {
             name: "Deal Statuses",
             href: "/manage/deal-statuses",
             icon: SlidersHorizontal,
-            requiredPermission: "admin.settings",
+            requiredPermission: "sales.manage",
           },
         ],
       },
-
       {
         heading: "Venues",
         defaultCollapsed: false,
