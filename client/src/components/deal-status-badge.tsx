@@ -61,9 +61,10 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
       data-testid={`badge-deal-status-${status.toLowerCase().replace(/\s+/g, "-")}`}
       title={status}
     >
-      {record && record.winProbability > 0 && record.winProbability < 100
-        ? `${status} (${record.winProbability}%)`
-        : status}
+      {status}
+      {record && record.winProbability > 0 && record.winProbability < 100 && (
+        <span className="ml-1 font-semibold opacity-50">{record.winProbability}%</span>
+      )}
     </span>
     </div>
   );
