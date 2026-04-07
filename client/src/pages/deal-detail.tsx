@@ -99,7 +99,7 @@ export default function DealDetail() {
   });
 
   const { data: users = [] } = useQuery<
-    Pick<User, "id" | "firstName" | "lastName">[]
+    Pick<User, "id" | "firstName" | "lastName" | "role" | "isActive">[]
   >({
     queryKey: ["/api/users"],
   });
@@ -410,7 +410,7 @@ export default function DealDetail() {
                   disabled={!canWrite}
                   options={[
                     { value: "", label: "Unassigned" },
-                    ...users.map((u) => ({
+                    ...users.filter((u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((u) => ({
                       value: u.id,
                       label:
                         [u.firstName, u.lastName].filter(Boolean).join(" ") ||

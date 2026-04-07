@@ -517,7 +517,7 @@ export default function DealForm() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="__none__">No owner</SelectItem>
-                          {users.filter(u => u.isActive).map((user) => (
+                          {users.filter(u => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.firstName} {user.lastName}
                             </SelectItem>

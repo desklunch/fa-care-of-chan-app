@@ -79,7 +79,7 @@ interface DealTagEntry {
 }
 
 interface DealsGridContext {
-  users: Array<Pick<UserType, "id" | "firstName" | "lastName">>;
+  users: Array<Pick<UserType, "id" | "firstName" | "lastName" | "role" | "isActive">>;
   services: DealService[];
   servicesMap: Map<number, DealService>;
   industries: Industry[];
@@ -387,7 +387,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
       sortable: false,
 
       cellEditorParams: (params: { context: DealsGridContext }) => {
-        const users = params.context?.users || [];
+        const users = (params.context?.users || []).filter((u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"));
         return {
           values: [
             "none",
@@ -426,8 +426,8 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
           params.data.owner = null;
           return true;
         }
-        // Find user by matching initials
-        const users = params.context?.users || [];
+        // Find user by matching initials (only from Sales/Sales Admin roles)
+        const users = (params.context?.users || []).filter((u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"));
         const user = users.find(
           (u) => getInitials(getUserFullName(u)) === params.newValue,
         );
@@ -1140,7 +1140,7 @@ export default function DealsPage() {
 
   // Fetch users for the Owner dropdown
   const { data: users = [] } = useQuery<
-    Array<Pick<UserType, "id" | "firstName" | "lastName">>
+    Array<Pick<UserType, "id" | "firstName" | "lastName" | "role" | "isActive">>
   >({
     queryKey: ["/api/users"],
   });
