@@ -2631,3 +2631,28 @@ export const updateBrandSchema = insertBrandSchema.partial();
 
 export type CreateBrand = z.infer<typeof insertBrandSchema>;
 export type UpdateBrand = z.infer<typeof updateBrandSchema>;
+
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  permissions: text("permissions").array().notNull().default([]),
+  isSystem: boolean("is_system").default(false).notNull(),
+  description: text("description"),
+});
+
+export type RoleRecord = typeof roles.$inferSelect;
+export type InsertRole = typeof roles.$inferInsert;
+
+export const insertRoleSchema = createInsertSchema(roles).omit({
+  id: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(100),
+  permissions: z.array(z.string()),
+  isSystem: z.boolean().optional().default(false),
+  description: z.string().nullish(),
+});
+
+export const updateRoleSchema = insertRoleSchema.partial().omit({ isSystem: true });
+
+export type CreateRole = z.infer<typeof insertRoleSchema>;
+export type UpdateRole = z.infer<typeof updateRoleSchema>;

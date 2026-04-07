@@ -26,12 +26,10 @@ export const ROLES = {
   viewer: "viewer",
 } as const;
 
-export type Role = (typeof ROLES)[keyof typeof ROLES];
+export type Role = string;
 
-// Role tiers for hierarchy
-// Higher tier = more permissions
-// Multiple roles can exist at the same tier level
-export const ROLE_TIERS: Record<Role, number> = {
+// Role tiers for the 4 original system roles
+export const ROLE_TIERS: Record<string, number> = {
   admin: 3,
   manager: 2,
   employee: 1,
@@ -118,7 +116,7 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 // Each tier inherits all permissions from lower tiers
 
 // Tier 0 (viewer) permissions - read-only access
-const TIER_0_PERMISSIONS: Permission[] = [
+export const TIER_0_PERMISSIONS: Permission[] = [
   "venues.read",
   "clients.read",
   "contacts.read",
@@ -130,7 +128,7 @@ const TIER_0_PERMISSIONS: Permission[] = [
 ];
 
 // Tier 1 (employee) permissions - inherits tier 0 + basic CRUD for general entities
-const TIER_1_PERMISSIONS: Permission[] = [
+export const TIER_1_PERMISSIONS: Permission[] = [
   ...TIER_0_PERMISSIONS,
   "venues.write",
   "venues.delete",
@@ -145,7 +143,7 @@ const TIER_1_PERMISSIONS: Permission[] = [
 ];
 
 // Tier 2 (manager) permissions - inherits tier 1 + deals and sales access
-const TIER_2_PERMISSIONS: Permission[] = [
+export const TIER_2_PERMISSIONS: Permission[] = [
   ...TIER_1_PERMISSIONS,
   "deals.read",
   "deals.write",
@@ -156,7 +154,7 @@ const TIER_2_PERMISSIONS: Permission[] = [
 ];
 
 // Tier 3 (admin) permissions - inherits tier 2 + full admin access
-const TIER_3_PERMISSIONS: Permission[] = [
+export const TIER_3_PERMISSIONS: Permission[] = [
   ...TIER_2_PERMISSIONS,
   "team.manage",
   "audit.read",
@@ -170,12 +168,34 @@ const TIER_3_PERMISSIONS: Permission[] = [
   "search.all",
 ];
 
-// Role to permissions mapping
-export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+// Role to permissions mapping (legacy - kept for backward compatibility)
+export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   viewer: TIER_0_PERMISSIONS,
   employee: TIER_1_PERMISSIONS,
   manager: TIER_2_PERMISSIONS,
   admin: TIER_3_PERMISSIONS,
+};
+
+// Tier presets for the admin UI "start from preset" feature
+export const TIER_PRESETS: Record<string, { label: string; permissions: Permission[] }> = {
+  "0": { label: "Tier 0 (Viewer)", permissions: TIER_0_PERMISSIONS },
+  "1": { label: "Tier 1 (Employee)", permissions: TIER_1_PERMISSIONS },
+  "2": { label: "Tier 2 (Manager)", permissions: TIER_2_PERMISSIONS },
+  "3": { label: "Tier 3 (Admin)", permissions: TIER_3_PERMISSIONS },
+};
+
+// All known permissions as an array for the admin UI
+export const ALL_PERMISSIONS: Permission[] = Object.values(PERMISSIONS);
+
+// Group permissions by resource for the admin UI
+export function getPermissionsByResource(): Record<string, Permission[]> {
+  const groups: Record<string, Permission[]> = {};
+  for (const perm of ALL_PERMISSIONS) {
+    const resource = perm.split(".")[0];
+    if (!groups[resource]) groups[resource] = [];
+    groups[resource].push(perm);
+  }
+  return groups;
 };
 
 // ============================================
@@ -220,10 +240,25 @@ export function roleHasAllPermissions(
 }
 
 /**
- * Get the tier level for a role
+ * Get the tier level for a role.
+ * For system roles, uses the static mapping. For custom roles, returns 0.
+ * Use inferTierFromPermissions() for custom roles to derive tier from their permission set.
  */
 export function getRoleTier(role: Role): number {
-  return ROLE_TIERS[role] || 0;
+  return ROLE_TIERS[role] ?? 0;
+}
+
+/**
+ * Infer approximate tier level from a permission set.
+ * Useful for custom roles where no static tier mapping exists.
+ */
+export function inferTierFromPermissions(permissions: Permission[]): number {
+  const permSet = new Set(permissions);
+  if (TIER_3_PERMISSIONS.every(p => permSet.has(p))) return 3;
+  if (TIER_2_PERMISSIONS.every(p => permSet.has(p))) return 2;
+  if (TIER_1_PERMISSIONS.every(p => permSet.has(p))) return 1;
+  if (TIER_0_PERMISSIONS.every(p => permSet.has(p))) return 0;
+  return 0;
 }
 
 /**
@@ -261,15 +296,16 @@ export interface PermissionContext {
 }
 
 /**
- * Create a permission context for a user
- * This should be called on login and cached in the session
+ * Create a permission context for a user.
+ * When permissionsList is provided (from DB), it is used directly.
+ * Otherwise falls back to the hardcoded ROLE_PERMISSIONS mapping.
  */
-export function createPermissionContext(role: Role): PermissionContext {
-  return {
-    role,
-    permissions: getPermissionsForRole(role),
-    tier: getRoleTier(role),
-  };
+export function createPermissionContext(role: Role, permissionsList?: Permission[]): PermissionContext {
+  const permissions = permissionsList ?? getPermissionsForRole(role);
+  const tier = ROLE_TIERS[role] !== undefined
+    ? ROLE_TIERS[role]
+    : inferTierFromPermissions(permissions);
+  return { role, permissions, tier };
 }
 
 /**
@@ -324,6 +360,7 @@ export const NAV_PERMISSIONS: Record<string, Permission> = {
   "/app/issues": "app_features.read",
   "/app/releases": "releases.read",
   "/admin/theme": "theme.manage",
+  "/admin/roles": "admin.settings",
 };
 
 /**

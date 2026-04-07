@@ -21,11 +21,13 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
 **Backend:**
 -   **Framework:** Express.js with TypeScript.
 -   **Authentication:** Replit OIDC via `passport.js` with session storage in PostgreSQL (`connect-pg-simple`).
--   **Authorization:** Role-based access control with tiered permissions middleware.
-    - **Tier 3 (admin):** Full access to everything including team management, invites, audit logs, releases, admin settings
-    - **Tier 2 (manager):** Deals, sales management, team read access, plus all tier 1 permissions
-    - **Tier 1 (employee):** Full CRUD access to venues, clients, contacts, vendors, app features voting
-    - **Tier 0 (viewer):** Read-only access to venues, clients, contacts, vendors, app features
+-   **Authorization:** Database-backed role-based access control with tiered permissions middleware.
+    - Roles are stored in the `roles` table with explicit per-role permission arrays
+    - System roles: admin, manager, employee, viewer (cannot be deleted)
+    - Custom roles: Sales Admin, Sales (and any user-created roles)
+    - Permission resolution: middleware fetches from `roles` table, falls back to hardcoded tier presets
+    - Tier presets available for creating new roles: Tier 0 (Viewer), Tier 1 (Employee), Tier 2 (Manager), Tier 3 (Admin)
+    - Admin UI for role management at `/admin/roles` (requires `admin.settings` permission)
 -   **Database ORM:** Drizzle ORM with Neon serverless PostgreSQL driver for type-safe queries.
 -   **API:** RESTful endpoints under `/api`, consistent JSON request/response, and error handling.
 -   **Domain-Based Modules:** Backend organized into domain modules under `server/domains/`:

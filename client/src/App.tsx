@@ -88,6 +88,7 @@ const EventSchedulePrototype = lazy(
   () => import("@/pages/event-schedule-prototype"),
 );
 const AIContext = lazy(() => import("@/pages/ai-context"));
+const AdminRoles = lazy(() => import("@/pages/admin-roles"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
@@ -130,6 +131,7 @@ import {
   Bot,
   TrendingUp,
   Activity,
+  Shield,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -250,6 +252,12 @@ function useLayoutConfig() {
             href: "/manage/tags",
             icon: Tags,
             requiredPermission: "venues.write",
+          },
+          {
+            name: "Roles",
+            href: "/admin/roles",
+            icon: Shield,
+            requiredPermission: "admin.settings",
           },
           {
             name: "Theme",
@@ -384,6 +392,7 @@ function AuthenticatedRoutes() {
             <Route path="/admin/releases" component={AdminReleases} />
             <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
             <Route path="/admin/theme" component={AdminThemeEditor} />
+            <Route path="/admin/roles" component={AdminRoles} />
             <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
             <Route path="/ai/context" component={AIContext} />
             <Route path="/amenities" component={Amenities} />

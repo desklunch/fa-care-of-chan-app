@@ -55,7 +55,7 @@ import aiRoutes from "./routes/ai.routes";
 import mcpRoutes from "./mcp/transport";
 import { requestContextMiddleware, updateRequestContext } from "./lib/request-context";
 import { registerReferenceDataRoutes } from "./domains/reference-data";
-import { registerAdminRoutes } from "./domains/admin";
+import { registerAdminRoutes, seedRoles } from "./domains/admin";
 import { registerSettingsCommentsRoutes } from "./domains/settings-comments";
 import { registerIssuesFeaturesRoutes } from "./domains/issues-features";
 import { registerReleasesRoutes } from "./domains/releases";
@@ -112,6 +112,7 @@ export async function registerRoutes(
   await seedEventProductionTemplate();
   await seedNewIntakeTemplates();
   await seedDealStatuses();
+  await seedRoles();
   registerDriveAttachmentsRoutes(app);
   registerAiChatRoutes(app);
 
@@ -131,9 +132,13 @@ export async function registerRoutes(
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Include permission context in response for frontend caching
-      const { createPermissionContext, Role } = await import("../shared/permissions");
-      const permissionContext = createPermissionContext(user.role as Role);
+      const permissions = await import("../shared/permissions");
+      const { adminStorage } = await import("./domains/admin/admin.storage");
+      const roleRecord = await adminStorage.getRoleByName(user.role);
+      const permissionContext = permissions.createPermissionContext(
+        user.role,
+        roleRecord ? (roleRecord.permissions as string[]) : undefined
+      );
       
       res.json({
         ...user,

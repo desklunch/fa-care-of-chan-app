@@ -9,3 +9,4 @@
 
 export { registerAdminRoutes } from "./admin.routes";
 export { adminStorage } from "./admin.storage";
+export { seedRoles } from "./admin.seed";

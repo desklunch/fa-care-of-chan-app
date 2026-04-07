@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import {
   PanelLeftClose,
@@ -35,6 +36,57 @@ import { useTierOverride } from "@/contexts/tier-override-context";
 import Logo from "./logo";
 import type { NavItem, NavSection } from "../types/layout";
 import type { Role } from "@shared/permissions";
+
+function DevRoleSelector({
+  overrideRole,
+  setOverrideRole,
+  clearOverride,
+}: {
+  overrideRole: Role | null;
+  setOverrideRole: (role: Role) => void;
+  clearOverride: () => void;
+}) {
+  const { data: roles } = useQuery<{ id: number; name: string; description: string | null }[]>({
+    queryKey: ["/api/roles/names"],
+    enabled: import.meta.env.DEV,
+  });
+
+  return (
+    <div className="w-full">
+      <Select
+        value={overrideRole || "actual"}
+        onValueChange={(value) => {
+          if (value === "actual") {
+            clearOverride();
+          } else {
+            setOverrideRole(value as Role);
+          }
+        }}
+      >
+        <SelectTrigger
+          className="h-9 text-xs"
+          data-testid="select-tier-override"
+        >
+          <SelectValue placeholder="Select role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="actual" data-testid="option-tier-actual">
+            Admin (actual)
+          </SelectItem>
+          {roles?.map((r) => (
+            <SelectItem
+              key={r.id}
+              value={r.name}
+              data-testid={`option-role-${r.name.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              {r.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -490,45 +542,11 @@ export default function Sidebar({
             )}
           >
             {import.meta.env.DEV && isActualAdmin && showExpanded && (
-              <div className="w-full">
-                <Select
-                  value={overrideRole || "actual"}
-                  onValueChange={(value) => {
-                    if (value === "actual") {
-                      clearOverride();
-                    } else {
-                      setOverrideRole(value as Role);
-                    }
-                  }}
-                >
-                  <SelectTrigger
-                    className="h-9 text-xs"
-                    data-testid="select-tier-override"
-                  >
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="actual" data-testid="option-tier-actual">
-                      Admin (T3)
-                    </SelectItem>
-                    <SelectItem
-                      value="manager"
-                      data-testid="option-tier-manager"
-                    >
-                      Manager (T2)
-                    </SelectItem>
-                    <SelectItem
-                      value="employee"
-                      data-testid="option-tier-employee"
-                    >
-                      Employee (T1)
-                    </SelectItem>
-                    <SelectItem value="viewer" data-testid="option-tier-viewer">
-                      Viewer (T0)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <DevRoleSelector
+                overrideRole={overrideRole}
+                setOverrideRole={setOverrideRole}
+                clearOverride={clearOverride}
+              />
             )}
             <div
               className={cn(

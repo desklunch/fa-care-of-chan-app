@@ -37,6 +37,25 @@ import { updateProfileSchema, type UpdateProfile, type User } from "@shared/sche
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
 
+function RoleSelect({ value, onValueChange }: { value: string; onValueChange: (v: string) => void }) {
+  const { data: rolesData } = useQuery<{ id: number; name: string; description: string | null }[]>({ queryKey: ["/api/roles/names"] });
+
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger data-testid="select-role">
+        <SelectValue placeholder="Select role" />
+      </SelectTrigger>
+      <SelectContent>
+        {rolesData?.map((role) => (
+          <SelectItem key={role.id} value={role.name} data-testid={`select-role-option-${role.name}`}>
+            {role.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function TeamEdit() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useProtectedLocation();
@@ -307,20 +326,7 @@ export default function TeamEdit() {
                         <Shield className="h-4 w-4" />
                         Role
                       </FormLabel>
-                      <Select
-                        value={selectedRole}
-                        onValueChange={setSelectedRole}
-                      >
-                        <SelectTrigger data-testid="select-role">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                          <SelectItem value="employee">Employee</SelectItem>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <RoleSelect value={selectedRole} onValueChange={setSelectedRole} />
                       <p className="text-xs text-muted-foreground mt-1">
                         Controls what this user can access in the application.
                       </p>

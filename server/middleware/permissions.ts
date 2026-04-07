@@ -7,6 +7,7 @@
 
 import type { RequestHandler, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
+import { adminStorage } from "../domains/admin/admin.storage";
 import {
   Permission,
   Role,
@@ -53,8 +54,10 @@ export const loadPermissions: RequestHandler = async (req, res, next) => {
       return res.status(401).json({ message: "User not found" });
     }
 
-    // Create and cache permission context in session
-    const permissionContext = createPermissionContext(user.role as Role);
+    // Fetch role permissions from DB, fall back to hardcoded mapping
+    const roleRecord = await adminStorage.getRoleByName(user.role);
+    const permissions = roleRecord?.permissions as Permission[] | undefined;
+    const permissionContext = createPermissionContext(user.role as Role, permissions);
     session.permissionContext = permissionContext;
     
     req.permissionContext = permissionContext;
@@ -86,20 +89,20 @@ export function clearPermissionCache(session: any): void {
  */
 export function requirePermission(permission: Permission): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    // Ensure permissions are loaded
     if (!req.permissionContext) {
       const session = req.session as any;
       if (!session?.userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Load permissions if not already loaded
       try {
         const user = await storage.getUser(session.userId);
         if (!user) {
           return res.status(401).json({ message: "User not found" });
         }
-        req.permissionContext = createPermissionContext(user.role as Role);
+        const roleRecord = await adminStorage.getRoleByName(user.role);
+        const permissions = roleRecord?.permissions as Permission[] | undefined;
+        req.permissionContext = createPermissionContext(user.role as Role, permissions);
         req.userId = session.userId;
         (req as any).user = { claims: session.claims };
       } catch (error) {
@@ -137,7 +140,9 @@ export function requireAnyPermission(permissions: Permission[]): RequestHandler 
         if (!user) {
           return res.status(401).json({ message: "User not found" });
         }
-        req.permissionContext = createPermissionContext(user.role as Role);
+        const roleRecord = await adminStorage.getRoleByName(user.role);
+        const perms = roleRecord?.permissions as Permission[] | undefined;
+        req.permissionContext = createPermissionContext(user.role as Role, perms);
         req.userId = session.userId;
         (req as any).user = { claims: session.claims };
       } catch (error) {
@@ -175,7 +180,9 @@ export function requireAllPermissions(permissions: Permission[]): RequestHandler
         if (!user) {
           return res.status(401).json({ message: "User not found" });
         }
-        req.permissionContext = createPermissionContext(user.role as Role);
+        const roleRecord = await adminStorage.getRoleByName(user.role);
+        const perms = roleRecord?.permissions as Permission[] | undefined;
+        req.permissionContext = createPermissionContext(user.role as Role, perms);
         req.userId = session.userId;
         (req as any).user = { claims: session.claims };
       } catch (error) {

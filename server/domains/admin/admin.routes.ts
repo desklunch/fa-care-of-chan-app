@@ -16,7 +16,14 @@ import { requirePermission } from "../../middleware/permissions";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { adminStorage } from "./admin.storage";
 import { storage } from "../../storage";
-import { updateProfileSchema } from "@shared/schema";
+import { updateProfileSchema, insertRoleSchema, updateRoleSchema } from "@shared/schema";
+import { ALL_PERMISSIONS, type Permission } from "../../../shared/permissions";
+
+const allPermissionsSet = new Set<string>(ALL_PERMISSIONS);
+
+function isValidPermission(p: string): p is Permission {
+  return allPermissionsSet.has(p);
+}
 
 export function registerAdminRoutes(app: Express): void {
   // ==================== Team Routes ====================
@@ -59,8 +66,13 @@ export function registerAdminRoutes(app: Express): void {
       const { id } = req.params;
       const { role } = req.body;
       
-      if (!role || !["admin", "manager", "employee", "viewer"].includes(role)) {
-        return res.status(400).json({ message: "Invalid role. Must be 'admin', 'manager', 'employee', or 'viewer'" });
+      if (!role) {
+        return res.status(400).json({ message: "Role is required" });
+      }
+      
+      const roleRecord = await adminStorage.getRoleByName(role);
+      if (!roleRecord) {
+        return res.status(400).json({ message: `Invalid role: '${role}'. Role not found in the system.` });
       }
 
       const userBefore = await storage.getUser(id);
@@ -85,6 +97,7 @@ export function registerAdminRoutes(app: Express): void {
       if (id === req.user.claims.sub) {
         clearPermissionCache(req.session);
       }
+      await adminStorage.invalidatePermissionCacheForUser(id);
 
       res.json(updatedUser);
     } catch (error) {
@@ -105,19 +118,26 @@ export function registerAdminRoutes(app: Express): void {
         });
       }
 
+      const { role, isActive } = req.body;
+
+      if (role) {
+        const roleRecord = await adminStorage.getRoleByName(role);
+        if (!roleRecord) {
+          return res.status(400).json({ message: `Invalid role: '${role}'. Role not found in the system.` });
+        }
+      }
+
       const userBefore = await storage.getUser(id);
       if (!userBefore) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const { role, isActive } = req.body;
-      
       let updatedUser = await storage.updateUser(id, result.data);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      if (role && ["admin", "manager", "employee", "viewer"].includes(role)) {
+      if (role) {
         updatedUser = await storage.updateUser(id, { role });
       }
       
@@ -136,6 +156,14 @@ export function registerAdminRoutes(app: Express): void {
         changes,
         metadata: { changedBy: req.user.claims.sub },
       });
+
+      if (role) {
+        await adminStorage.invalidatePermissionCacheForUser(id);
+      }
+      const { clearPermissionCache } = await import("../../middleware/permissions");
+      if (id === req.user.claims.sub) {
+        clearPermissionCache(req.session);
+      }
 
       res.json(updatedUser);
     } catch (error) {
@@ -173,6 +201,192 @@ export function registerAdminRoutes(app: Express): void {
     } catch (error) {
       console.error("Error fetching audit logs:", error);
       res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  // ==================== Role Management Routes ====================
+
+  app.get("/api/roles", isAuthenticated, requirePermission("admin.settings"), async (req, res) => {
+    try {
+      const allRoles = await adminStorage.getAllRoles();
+      res.json(allRoles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  app.get("/api/roles/names", isAuthenticated, requirePermission("team.manage"), async (req, res) => {
+    try {
+      const allRoles = await adminStorage.getAllRoles();
+      res.json(allRoles.map(r => ({ id: r.id, name: r.name, description: r.description })));
+    } catch (error) {
+      console.error("Error fetching role names:", error);
+      res.status(500).json({ message: "Failed to fetch role names" });
+    }
+  });
+
+  app.get("/api/roles/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid role ID" });
+      
+      const role = await adminStorage.getRoleById(id);
+      if (!role) return res.status(404).json({ message: "Role not found" });
+      
+      const userCount = await adminStorage.getUserCountByRole(role.name);
+      res.json({ ...role, userCount });
+    } catch (error) {
+      console.error("Error fetching role:", error);
+      res.status(500).json({ message: "Failed to fetch role" });
+    }
+  });
+
+  app.post("/api/roles", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const result = insertRoleSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const invalidPermissions = result.data.permissions.filter(p => !isValidPermission(p));
+      if (invalidPermissions.length > 0) {
+        return res.status(400).json({ message: `Unknown permissions: ${invalidPermissions.join(", ")}` });
+      }
+      
+      const existing = await adminStorage.getRoleByName(result.data.name);
+      if (existing) {
+        return res.status(409).json({ message: "A role with this name already exists" });
+      }
+
+      const role = await adminStorage.createRole({
+        ...result.data,
+        permissions: result.data.permissions,
+        isSystem: false,
+      });
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "role",
+        entityId: String(role.id),
+        metadata: { roleName: role.name },
+      });
+
+      res.status(201).json(role);
+    } catch (error) {
+      console.error("Error creating role:", error);
+      res.status(500).json({ message: "Failed to create role" });
+    }
+  });
+
+  app.patch("/api/roles/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid role ID" });
+
+      const existing = await adminStorage.getRoleById(id);
+      if (!existing) return res.status(404).json({ message: "Role not found" });
+
+      const result = updateRoleSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const updateData: { name?: string; description?: string | null; permissions?: string[] } = { ...result.data };
+      if (updateData.permissions) {
+        const invalidPerms = updateData.permissions.filter(p => !isValidPermission(p));
+        if (invalidPerms.length > 0) {
+          return res.status(400).json({ message: `Unknown permissions: ${invalidPerms.join(", ")}` });
+        }
+      }
+
+      if (existing.isSystem && updateData.name && updateData.name !== existing.name) {
+        return res.status(403).json({ message: "System roles cannot be renamed" });
+      }
+
+      if (updateData.name && updateData.name !== existing.name) {
+        const nameConflict = await adminStorage.getRoleByName(updateData.name);
+        if (nameConflict) {
+          return res.status(409).json({ message: "A role with this name already exists" });
+        }
+      }
+
+      const isRename = updateData.name && updateData.name !== existing.name;
+      const role = await adminStorage.updateRole(id, updateData);
+
+      if (isRename) {
+        await adminStorage.renameUsersRole(existing.name, updateData.name!);
+      }
+
+      await adminStorage.invalidatePermissionCacheForRole(existing.name);
+      if (isRename) {
+        await adminStorage.invalidatePermissionCacheForRole(updateData.name!);
+      }
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "role",
+        entityId: String(id),
+        changes: { before: { permissions: existing.permissions }, after: { permissions: role?.permissions } },
+        metadata: { roleName: role?.name },
+      });
+
+      res.json(role);
+    } catch (error) {
+      console.error("Error updating role:", error);
+      res.status(500).json({ message: "Failed to update role" });
+    }
+  });
+
+  app.delete("/api/roles/:id", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid role ID" });
+
+      const existing = await adminStorage.getRoleById(id);
+      if (!existing) return res.status(404).json({ message: "Role not found" });
+
+      if (existing.isSystem) {
+        return res.status(403).json({ message: "System roles cannot be deleted" });
+      }
+
+      const userCount = await adminStorage.getUserCountByRole(existing.name);
+      if (userCount > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete role "${existing.name}" — ${userCount} user(s) currently have this role. Reassign them first.`,
+          userCount,
+        });
+      }
+
+      await adminStorage.deleteRole(id);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "role",
+        entityId: String(id),
+        metadata: { roleName: existing.name },
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting role:", error);
+      res.status(500).json({ message: "Failed to delete role" });
+    }
+  });
+
+  app.get("/api/roles/:id/users/count", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid role ID" });
+
+      const role = await adminStorage.getRoleById(id);
+      if (!role) return res.status(404).json({ message: "Role not found" });
+
+      const userCount = await adminStorage.getUserCountByRole(role.name);
+      res.json({ count: userCount });
+    } catch (error) {
+      console.error("Error fetching user count:", error);
+      res.status(500).json({ message: "Failed to fetch user count" });
     }
   });
 

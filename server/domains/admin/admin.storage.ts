@@ -10,12 +10,14 @@
  */
 
 import { db } from "../../db";
+import { pool } from "../../db";
 import { 
   users, 
   auditLogs,
   analyticsSessions,
   analyticsPageViews,
-  analyticsEvents
+  analyticsEvents,
+  roles
 } from "@shared/schema";
 import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
 import type { 
@@ -25,7 +27,9 @@ import type {
   InsertAnalyticsEvent,
   AnalyticsSession,
   AnalyticsPageView,
-  AnalyticsEvent
+  AnalyticsEvent,
+  RoleRecord,
+  InsertRole
 } from "@shared/schema";
 
 export interface AuditLogWithName {
@@ -292,5 +296,68 @@ export const adminStorage = {
       .limit(limit);
 
     return pageViews as Array<AnalyticsPageView & { userName?: string }>;
+  },
+
+  async getAllRoles(): Promise<RoleRecord[]> {
+    return db.select().from(roles).orderBy(roles.id);
+  },
+
+  async getRoleByName(name: string): Promise<RoleRecord | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.name, name));
+    return role;
+  },
+
+  async getRoleById(id: number): Promise<RoleRecord | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
+    return role;
+  },
+
+  async createRole(data: InsertRole): Promise<RoleRecord> {
+    const [role] = await db.insert(roles).values(data).returning();
+    return role;
+  },
+
+  async updateRole(id: number, data: Partial<InsertRole>): Promise<RoleRecord | undefined> {
+    const [role] = await db.update(roles).set(data).where(eq(roles.id, id)).returning();
+    return role;
+  },
+
+  async deleteRole(id: number): Promise<void> {
+    await db.delete(roles).where(eq(roles.id, id));
+  },
+
+  async getUserCountByRole(roleName: string): Promise<number> {
+    const result = await db.select({ count: count() }).from(users).where(eq(users.role, roleName));
+    return result[0]?.count ?? 0;
+  },
+
+  async renameUsersRole(oldName: string, newName: string): Promise<void> {
+    await db.update(users).set({ role: newName }).where(eq(users.role, oldName));
+  },
+
+  async invalidatePermissionCacheForUser(userId: string): Promise<void> {
+    try {
+      await pool.query(
+        `UPDATE sessions
+         SET sess = sess #- '{permissionContext}'
+         WHERE sess->>'userId' = $1`,
+        [userId]
+      );
+    } catch (error) {
+      console.error("Error invalidating permission cache for user:", userId, error);
+    }
+  },
+
+  async invalidatePermissionCacheForRole(roleName: string): Promise<void> {
+    try {
+      await pool.query(
+        `UPDATE sessions
+         SET sess = sess #- '{permissionContext}'
+         WHERE sess->'permissionContext'->>'role' = $1`,
+        [roleName]
+      );
+    } catch (error) {
+      console.error("Error invalidating permission cache for role:", roleName, error);
+    }
   },
 };
