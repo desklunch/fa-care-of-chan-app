@@ -10,6 +10,7 @@ const fallbackStyleMap: Record<string, string> = {
   "Prospecting": "deal-status-prospecting",
   "Initial Contact": "deal-status-warm-lead",
   "Qualified Lead": "deal-status-proposal",
+  "Proposal Sent": "deal-status-proposal",
   "Negotiation": "deal-status-contracting",
   "Closed Won": "deal-status-complete",
   "Closed Lost": "deal-status-no-go",
@@ -60,7 +61,9 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
       data-testid={`badge-deal-status-${status.toLowerCase().replace(/\s+/g, "-")}`}
       title={status}
     >
-      {status}
+      {record && record.winProbability > 0 && record.winProbability < 100
+        ? `${status} (${record.winProbability}%)`
+        : status}
     </span>
     </div>
   );
