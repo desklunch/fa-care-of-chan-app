@@ -219,7 +219,7 @@ export function registerAdminRoutes(app: Express): void {
   app.get("/api/roles/names", isAuthenticated, requirePermission("team.manage"), async (req, res) => {
     try {
       const allRoles = await adminStorage.getAllRoles();
-      res.json(allRoles.map(r => ({ id: r.id, name: r.name, description: r.description })));
+      res.json(allRoles.map(r => ({ id: r.id, name: r.name, description: r.description, permissions: r.permissions })));
     } catch (error) {
       console.error("Error fetching role names:", error);
       res.status(500).json({ message: "Failed to fetch role names" });

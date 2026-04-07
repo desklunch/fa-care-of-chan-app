@@ -15,7 +15,7 @@ export function TierOverrideProvider({ children }: { children: ReactNode }) {
   const [overrideRole, setOverrideRoleState] = useState<Role | null>(() => {
     if (typeof window === "undefined") return null;
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && ["admin", "manager", "employee", "viewer"].includes(saved)) {
+    if (saved) {
       return saved as Role;
     }
     return null;
