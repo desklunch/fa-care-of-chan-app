@@ -151,7 +151,7 @@ function useLayoutConfig() {
     navigation: [
       {
         heading: "Sales",
-        defaultCollapsed: true,
+        defaultCollapsed: false,
 
         requiredPermission: "deals.read",
         items: [
@@ -180,7 +180,7 @@ function useLayoutConfig() {
             requiredPermission: "deals.read",
           },
           {
-            name: "Intake Forms",
+            name: "Intake Templates",
             href: "/deals/forms",
             icon: FileText,
             requiredPermission: "deals.read",
@@ -190,7 +190,7 @@ function useLayoutConfig() {
 
       {
         heading: "Venues",
-        defaultCollapsed: true,
+        defaultCollapsed: false,
 
         items: [
           {
@@ -208,7 +208,7 @@ function useLayoutConfig() {
 
       {
         heading: "Contacts",
-        defaultCollapsed: true,
+        defaultCollapsed: false,
 
         items: [
           {
