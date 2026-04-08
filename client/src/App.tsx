@@ -72,6 +72,7 @@ const PublicVenueCollection = lazy(
   () => import("@/pages/public-venue-collection"),
 );
 const Deals = lazy(() => import("@/pages/deals-sandbox"));
+const MyDeals = lazy(() => import("@/pages/my-deals"));
 const DealIntakeForms = lazy(() => import("@/pages/deal-intake-forms"));
 const DealForm = lazy(() => import("@/pages/deal-form"));
 const DealDetail = lazy(() => import("@/pages/deal-detail"));
@@ -133,6 +134,7 @@ import {
   Activity,
   Shield,
   Loader,
+  UserCheck,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -164,6 +166,12 @@ function useLayoutConfig() {
             href: "/deals",
             icon: Tickets,
             requiredPermission: "deals.read",
+          },
+          {
+            name: "My Deals",
+            href: "/deals/mine",
+            icon: UserCheck,
+            requiredPermission: "deals.write",
           },
           {
             name: "Pipeline",
@@ -429,6 +437,7 @@ function AuthenticatedRoutes() {
             <Route path="/contacts/:id" component={ContactDetail} />
             <Route path="/contacts/:id/edit" component={ContactForm} />
             <Route path="/deals" component={Deals} />
+            <Route path="/deals/mine" component={MyDeals} />
             <Route path="/deals/new" component={DealForm} />
             <Route path="/deals/forms/new" component={FormTemplateForm} />
             <Route path="/deals/forms/:id/edit" component={FormTemplateForm} />

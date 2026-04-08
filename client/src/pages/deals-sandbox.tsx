@@ -63,20 +63,20 @@ function getInitials(fullName: string): string {
 }
 
 // Context type for the grid - provides user list for Owner dropdown, services, and industries
-interface DealLinkedClientEntry {
+export interface DealLinkedClientEntry {
   dealId: string;
   clientId: string;
   clientName: string;
   label: string | null;
 }
 
-interface DealTagEntry {
+export interface DealTagEntry {
   dealId: string;
   tagId: string;
   tagName: string;
 }
 
-interface DealsGridContext {
+export interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName" | "role" | "isActive">>;
   services: DealService[];
   servicesMap: Map<number, DealService>;
@@ -129,7 +129,7 @@ function createDateComparator(
   };
 }
 
-const DEFAULT_VISIBLE_COLUMNS = [
+export const DEFAULT_VISIBLE_COLUMNS = [
   "displayName",
   "owner",
   "status",
@@ -169,8 +169,9 @@ function createStatusComparator(sortOrderByName: Map<string, number>) {
   };
 }
 
-// Filter configurations
-const dealFilters: FilterConfig<DealWithRelations>[] = [
+export { createStatusComparator };
+
+export const dealFilters: FilterConfig<DealWithRelations>[] = [
   {
     id: "owner",
     label: "Owner",
@@ -307,7 +308,7 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
   },
 ];
 
-const dealColumns: ColumnConfig<DealWithRelations>[] = [
+export const dealColumns: ColumnConfig<DealWithRelations>[] = [
   {
     id: "displayName",
     headerName: "Deal",
