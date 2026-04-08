@@ -63,13 +63,10 @@ const StatusCellEditor = forwardRef<StatusCellEditorRef, StatusCellEditorProps>(
       valueRef.current = statusId;
       setSelectedId(statusId);
 
-      const field = column.getColId();
-      if (node && field) {
-        node.setDataValue(field, statusId);
-      }
-
-      props.api?.stopEditing();
-    }, [props.api, column, node]);
+      setTimeout(() => {
+        props.api?.stopEditing();
+      }, 0);
+    }, [props.api]);
 
     return (
       <div

@@ -4,10 +4,10 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   browserColorScheme: "inherit",
   spacing: 12,
   foregroundColor: "hsl(var(--foreground))",
-  backgroundColor: "hsl(var(--background))",
+  backgroundColor: "hsl(var(--card-background))",
   headerColumnResizeHandleColor: "hsl(var(--input))",
-  oddRowBackgroundColor: "#8888880F",
-  rowBorder: false,
+  oddRowBackgroundColor: "#FFFFFF0F",
+  rowBorder: true,
   columnBorder: false,
   headerRowBorder: true,
   iconColor: "hsl(var(--muted-foreground))",
@@ -19,5 +19,4 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   pinnedColumnBorder: true,
   wrapperBorder: true,
   headerHeight: 48,
-
 });

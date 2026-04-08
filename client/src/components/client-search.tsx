@@ -59,12 +59,15 @@ export function ClientSearch({
   });
 
   const filteredClients = clients.filter((client) =>
-    client.name.toLowerCase().includes(searchQuery.toLowerCase())
+    client.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
         setShowCreateForm(false);
       }
@@ -95,8 +98,9 @@ export function ClientSearch({
     return (
       <div className="bg-background flex items-center gap-2" ref={containerRef}>
         <div className="flex items-center justify-between gap-2 pl-3 pr-2 py-2 border border-input rounded-md flex-1">
-          
-          <span data-testid="text-selected-client" className="text-sm">{selectedClientName}</span>
+          <span data-testid="text-selected-client" className="text-sm">
+            {selectedClientName}
+          </span>
           {!disabled && (
             <Button
               type="button"
@@ -109,7 +113,6 @@ export function ClientSearch({
             </Button>
           )}
         </div>
- 
       </div>
     );
   }
@@ -149,7 +152,6 @@ export function ClientSearch({
                         data-testid={`option-client-${client.id}`}
                       >
                         <span>{client.name}</span>
-  
                       </button>
                     </li>
                   ))}
@@ -185,13 +187,16 @@ export function ClientSearch({
                         type="button"
                         size="sm"
                         onClick={handleCreateClient}
-                        disabled={!newClientName.trim() || createClientMutation.isPending}
+                        disabled={
+                          !newClientName.trim() ||
+                          createClientMutation.isPending
+                        }
                         data-testid="button-create-new-client"
                       >
                         {createClientMutation.isPending && (
                           <Loader2 className="h-3 w-3 animate-spin mr-1" />
                         )}
-                        Create
+                        Create Client
                       </Button>
                       <Button
                         type="button"
@@ -219,8 +224,8 @@ export function ClientSearch({
                     }}
                     data-testid="button-add-new-client"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add new client
+                    <Plus className="h-4 w-4" />
+                    Add a new Client
                   </Button>
                 )}
               </div>

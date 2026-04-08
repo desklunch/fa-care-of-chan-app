@@ -4,15 +4,14 @@
 
 /* LIGHT MODE */
 :root {
-  --grid-foreground:#0c140b;
   --breakpoint-xs: 30rem;
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0, 0, 0, .10);
+  --badge-outline: rgba(0, 0, 0, .05);
   --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0, 0, 0, .03);
+  --elevate-2: rgba(0, 0, 0, .08);
   --background: #efe4d7;
-  --foreground:#0c140b;
+  --foreground: #0c140b;
   --border: 0 0% 90%;
   --card: rgb(246, 240, 233);
   --card-foreground: 0 0% 9%;
@@ -69,7 +68,7 @@
   --status-in-progress: #64A334;
   --status-invoicing: #608CD4;
 
-/* Fallback for older browsers */
+  /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 
@@ -99,13 +98,13 @@
 }
 
 .dark {
-  --grid-foreground:#0c140b;
   --breakpoint-xs: 30rem;
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+
+  --button-outline: rgba(255, 255, 255, .10);
+  --badge-outline: rgba(255, 255, 255, .05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255, 255, 255, .04);
+  --elevate-2: rgba(255, 255, 255, .09);
   --background: #171717;
   --foreground: #fafafa;
   --border: 0 0% 16%;
@@ -158,7 +157,7 @@
   --status-in-progress: #85CF36;
   --status-invoicing: #5893F2;
 
-/* Fallback for older browsers */
+  /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 
@@ -314,6 +313,7 @@
     border: 1px solid #0088B288;
     color: #0088B2;
   }
+
   .dark .deal-status-prospecting {
     background: rgba(131, 226, 255, 0.2);
     border-color: #83E2FF;
@@ -325,6 +325,7 @@
     border: 1px solid #5E1DB288;
     color: #5E1DB2;
   }
+
   .dark .deal-status-warm-lead {
     background: rgba(194, 147, 255, 0.2);
     border-color: #C293FF;
@@ -337,6 +338,7 @@
     border: 1px solid #DE72BA88;
     color: #efe4d7;
   }
+
   .dark .deal-status-proposal {
     background: #FF93DB;
     border-color: #FF93DB;
@@ -349,6 +351,7 @@
     color: #efe4d7;
 
   }
+
   .dark .deal-status-waiting {
     background: #FFC583;
     border-color: #FFC583;
@@ -361,6 +364,7 @@
     color: #efe4d7;
 
   }
+
   .dark .deal-status-contracting {
     background: #FF9173;
     border-color: #FF9173;
@@ -373,6 +377,7 @@
     color: #efe4d7;
 
   }
+
   .dark .deal-status-in-progress {
     background: #85CF36;
     border-color: #85CF36;
@@ -385,6 +390,7 @@
     color: #efe4d7;
 
   }
+
   .dark .deal-status-invoicing {
     background: #5893F2;
     border-color: #5893F2;
@@ -396,12 +402,14 @@
     background: #E2FF00;
     color: #171717;
   }
+
   /* Complete is same in dark mode */
 
   .deal-status-no-go {
     background: #E6D5C1;
     color: #DC4D54;
   }
+
   .dark .deal-status-no-go {
     background: #292929;
     color: #C76165;
@@ -411,6 +419,7 @@
     background: #E6D5C1;
     color: #1a1a1a;
   }
+
   .dark .deal-status-canceled {
     background: #292929;
     color: #a0a0a0;
@@ -430,8 +439,13 @@
 
 /* Prevents iOS Safari from auto-scrolling when input receives focus */
 @keyframes blink_input_opacity_to_prevent_scrolling_when_focus {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 .input-prevent-scroll-on-focus {
@@ -444,28 +458,34 @@
   overflow: visible;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
+
 .rich-text-editor-wrapper .ql-toolbar {
   border-top-left-radius: calc(var(--radius) - 3px);
   border-top-right-radius: calc(var(--radius) - 3px);
 }
+
 .rich-text-editor-wrapper .ql-container {
   border-bottom-left-radius: calc(var(--radius) - 3px);
   border-bottom-right-radius: calc(var(--radius) - 3px);
 }
+
 .rich-text-editor-wrapper:focus-within {
   border-color: hsl(var(--ring));
   box-shadow: 0 0 0 1px hsl(var(--ring));
 }
+
 .rich-text-editor-wrapper .ql-toolbar {
   border: none !important;
   border-bottom: 1px solid hsl(var(--input)) !important;
   background: hsl(var(--card));
 }
+
 .rich-text-editor-wrapper .ql-container {
   border: none !important;
   font-family: inherit;
   font-size: 0.875rem;
 }
+
 .rich-text-editor-wrapper .ql-editor {
   min-height: 100px;
   resize: vertical;
@@ -474,37 +494,47 @@
 
   color: hsl(var(--foreground));
 }
+
 .rich-text-editor-wrapper .ql-editor a {
   color: hsl(var(--primary)) !important;
   text-decoration: underline;
 }
+
 .rich-text-editor-wrapper .ql-editor.ql-blank::before {
   color: hsl(var(--muted-foreground));
   font-style: normal;
 }
+
 .rich-text-editor-wrapper .ql-toolbar button svg {
   color: hsl(var(--muted-foreground));
 }
+
 .rich-text-editor-wrapper .ql-toolbar button:hover svg,
 .rich-text-editor-wrapper .ql-toolbar button.ql-active svg {
   color: hsl(var(--foreground));
 }
+
 .rich-text-editor-wrapper .ql-stroke {
   stroke: hsl(var(--foreground)) !important;
 }
+
 .rich-text-editor-wrapper .ql-fill {
   fill: hsl(var(--foreground)) !important;
 }
+
 .rich-text-editor-wrapper .ql-picker-label {
   color: hsl(var(--foreground)) !important;
 }
+
 .rich-text-editor-wrapper .ql-picker-options {
   background: hsl(var(--popover)) !important;
   border-color: hsl(var(--input)) !important;
 }
+
 .dark .rich-text-editor-wrapper .ql-snow .ql-picker.ql-expanded .ql-picker-label {
   border-color: hsl(var(--input));
 }
+
 .rich-text-editor-wrapper .ql-snow .ql-tooltip {
   background: hsl(var(--popover));
   border-color: hsl(var(--input));
@@ -524,17 +554,20 @@
   box-sizing: border-box;
   padding: 8px 12px !important;
 }
+
 .rich-text-editor-wrapper .ql-snow .ql-tooltip.ql-editing {
   left: 0 !important;
   right: 0 !important;
   width: auto !important;
 }
+
 .rich-text-editor-wrapper .ql-snow .ql-tooltip input[type="text"] {
   background: hsl(var(--background));
   border-color: hsl(var(--input));
   color: hsl(var(--foreground));
   width: calc(100% - 80px) !important;
 }
+
 .rich-text-editor-wrapper .ql-snow .ql-tooltip a {
   color: hsl(var(--primary));
 }
@@ -543,10 +576,12 @@
   color: hsl(var(--primary));
   text-decoration: underline;
 }
+
 .rich-text-html-display ul {
   list-style-type: disc;
   padding-left: 1.5rem;
 }
+
 .rich-text-html-display ol {
   list-style-type: decimal;
   padding-left: 1.5rem;
