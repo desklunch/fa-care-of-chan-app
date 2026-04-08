@@ -70,22 +70,14 @@ export default function Landing() {
   return (
     <div className="mx-auto h-screen flex flex-col items-center justify-center text-center gap-6 text-primary p-6 bg-card ">
       <div className="w-full bg-background max-w-md rounded-[24px] shadow-lg border border-input p-6 flex flex-col items-center gap-2 ">
-
-      
         <div className="flex justify-center mb-6 [&_*]:fill-primary mt-4">
-          <img 
-            src={logoImage} 
-            alt="Care of Chan OS" 
-            className="rounded-xl"
-          />
-        
-
+          <img src={logoImage} alt="Care of Chan OS" className="rounded-xl" />
         </div>
 
         <div className="rounded-md bg-primary text-background w-fit p-2 py-1 text-sm tracking-wide">
-          CoCOS 1.4.1
+          CoCOS 1.8.0
         </div>
-        
+
         {/* Desktop: Show sign-in */}
         <div
           className="flex flex-col items-center gap-6 my-6"
@@ -119,7 +111,9 @@ export default function Landing() {
               shape="pill"
             />
           ) : (
-            <p className="text-sm text-muted-foreground">Google sign-in is not configured</p>
+            <p className="text-sm text-muted-foreground">
+              Google sign-in is not configured
+            </p>
           )}
 
           <p className="text-xs max-w-64 text-muted-foreground leading-[1.5em]">
@@ -127,15 +121,15 @@ export default function Landing() {
             desktop computer.
           </p>
         </div>
-        
-
 
         {isDevelopment && (
           <div className="">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => devLoginMutation.mutate("omar@functionalartists.ai")}
+              onClick={() =>
+                devLoginMutation.mutate("omar@functionalartists.ai")
+              }
               disabled={devLoginMutation.isPending}
               data-testid="button-dev-login"
             >
@@ -154,18 +148,9 @@ export default function Landing() {
           </div>
         )}
 
-        
         {/* Mobile: Show not optimized message */}
-        <div
-          className="flex items-center"
-          data-testid="mobile-notice"
-        >
-   
-        </div>
-
- 
+        <div className="flex items-center" data-testid="mobile-notice"></div>
       </div>
-
     </div>
   );
 }
