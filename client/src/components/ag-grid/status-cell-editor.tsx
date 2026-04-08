@@ -14,7 +14,7 @@ interface StatusCellEditorProps extends ICellEditorParams {
 
 const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
   (props, ref) => {
-    const { value, context, column, node } = props;
+    const { value, context, stopEditing } = props;
 
     const statuses = context?.dealStatuses || [];
     const currentStatus = statuses.find((s) => s.name === value);
@@ -22,16 +22,10 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     const [selectedId, setSelectedId] = useState<number | null>(valueRef.current);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const fieldName = column.getColDef().field || "statusName";
-    const colId = column.getColId();
-
     console.log("[StatusCellEditor] MOUNTED", {
       value,
-      fieldName,
-      colId,
       currentStatusId: currentStatus?.id,
       statusCount: statuses.length,
-      nodeId: node?.id,
     });
 
     useImperativeHandle(ref, () => ({
@@ -49,54 +43,28 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     useEffect(() => {
       const el = containerRef.current;
       if (!el) return;
-      console.log("[StatusCellEditor] Setting up native event listeners on container");
-      const handler = (e: MouseEvent) => {
+      const preventAgGridClose = (e: MouseEvent) => {
         (e as any).__ag_Grid_Stop_Propagation = true;
-        console.log("[StatusCellEditor] Native", e.type, "- set __ag_Grid_Stop_Propagation", {
-          target: (e.target as HTMLElement)?.tagName,
-          targetClass: (e.target as HTMLElement)?.className?.substring(0, 50),
-        });
       };
-      el.addEventListener("mousedown", handler, true);
-      el.addEventListener("click", handler, true);
-      containerRef.current?.focus();
+      el.addEventListener("mousedown", preventAgGridClose, true);
+      el.addEventListener("click", preventAgGridClose, true);
+      el.focus();
       return () => {
-        console.log("[StatusCellEditor] UNMOUNTING - removing listeners");
-        el.removeEventListener("mousedown", handler, true);
-        el.removeEventListener("click", handler, true);
+        console.log("[StatusCellEditor] UNMOUNTING");
+        el.removeEventListener("mousedown", preventAgGridClose, true);
+        el.removeEventListener("click", preventAgGridClose, true);
       };
     }, []);
 
     const handleSelect = useCallback(
       (statusId: number, statusName: string) => {
-        console.log("[StatusCellEditor] handleSelect called:", {
-          statusId,
-          statusName,
-          previousValueRef: valueRef.current,
-          fieldName,
-          colId,
-          nodeExists: !!node,
-        });
-
+        console.log("[StatusCellEditor] handleSelect:", { statusId, statusName });
         valueRef.current = statusId;
         setSelectedId(statusId);
-
-        if (node && fieldName) {
-          console.log("[StatusCellEditor] Calling node.setDataValue:", { fieldName, statusId });
-          try {
-            const result = node.setDataValue(fieldName, statusId);
-            console.log("[StatusCellEditor] setDataValue result:", result);
-          } catch (err) {
-            console.error("[StatusCellEditor] setDataValue ERROR:", err);
-          }
-        } else {
-          console.warn("[StatusCellEditor] Cannot setDataValue - node:", !!node, "fieldName:", fieldName);
-        }
-
-        console.log("[StatusCellEditor] Calling stopEditing");
-        props.api?.stopEditing();
+        console.log("[StatusCellEditor] calling props.stopEditing()");
+        stopEditing();
       },
-      [props.api, fieldName, colId, node],
+      [stopEditing],
     );
 
     return (
@@ -115,14 +83,13 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
                 selectedId === status.id && "bg-accent",
               )}
               onMouseDown={(e) => {
-                console.log("[StatusCellEditor] Option mousedown:", status.name);
                 e.preventDefault();
                 e.stopPropagation();
               }}
               onClick={(e) => {
-                console.log("[StatusCellEditor] Option onClick:", status.name, status.id);
                 e.preventDefault();
                 e.stopPropagation();
+                console.log("[StatusCellEditor] onClick:", status.name, status.id);
                 handleSelect(status.id, status.name);
               }}
               data-testid={`status-option-${status.id}`}
