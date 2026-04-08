@@ -162,7 +162,7 @@ function useLayoutConfig() {
         requiredPermission: "deals.read",
         items: [
           {
-            name: "Deals",
+            name: "All Deals",
             href: "/deals",
             icon: Tickets,
             requiredPermission: "deals.read",
