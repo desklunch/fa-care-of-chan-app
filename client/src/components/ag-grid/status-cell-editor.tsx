@@ -12,19 +12,11 @@ interface StatusCellEditorProps extends ICellEditorParams {
   };
 }
 
-export interface StatusCellEditorRef {
-  getValue: () => number | null;
-  isPopup: () => boolean;
-  focusIn: () => void;
-  getPopupPosition: () => string;
-}
-
-const StatusCellEditor = forwardRef<StatusCellEditorRef, StatusCellEditorProps>(
+const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
   (props, ref) => {
-    const { value, context } = props;
+    const { value, context, column, node } = props;
 
     const statuses = context?.dealStatuses || [];
-
     const currentStatus = statuses.find((s) => s.name === value);
     const valueRef = useRef<number | null>(currentStatus?.id ?? null);
     const [selectedId, setSelectedId] = useState<number | null>(valueRef.current);
@@ -36,8 +28,11 @@ const StatusCellEditor = forwardRef<StatusCellEditorRef, StatusCellEditorProps>(
       focusIn: () => {
         containerRef.current?.focus();
       },
-      getPopupPosition: () => "under",
     }));
+
+    const handleContainerMouseDown = useCallback((event: React.MouseEvent) => {
+      (event.nativeEvent as any).__ag_Grid_Stop_Propagation = true;
+    }, []);
 
     useEffect(() => {
       containerRef.current?.focus();
@@ -50,19 +45,20 @@ const StatusCellEditor = forwardRef<StatusCellEditorRef, StatusCellEditorProps>(
       valueRef.current = statusId;
       setSelectedId(statusId);
 
-      setTimeout(() => {
-        props.api?.stopEditing();
-      }, 0);
-    }, [props.api]);
+      const field = column.getColId();
+      if (node && field) {
+        node.setDataValue(field, statusId);
+      }
+
+      props.api?.stopEditing();
+    }, [props.api, column, node]);
 
     return (
       <div
         ref={containerRef}
         className="ag-custom-component-popup bg-background border rounded-md shadow-lg min-w-[200px]"
         tabIndex={0}
-        onMouseDown={(e) => {
-          e.stopPropagation();
-        }}
+        onMouseDown={handleContainerMouseDown}
         data-testid="status-cell-editor"
       >
         <div className="max-h-[280px] overflow-y-auto p-1">
@@ -73,11 +69,7 @@ const StatusCellEditor = forwardRef<StatusCellEditorRef, StatusCellEditorProps>(
                 "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm",
                 selectedId === status.id && "bg-accent"
               )}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleSelect(status.id, e);
-              }}
+              onClick={(e) => handleSelect(status.id, e)}
               data-testid={`status-option-${status.id}`}
             >
               <span className="w-4 h-4 flex items-center justify-center">
