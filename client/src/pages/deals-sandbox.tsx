@@ -424,6 +424,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       width: 150,
       resizable: false,
+      cellDataType: false,
 
       editable: true,
       cellEditor: StatusCellEditor,

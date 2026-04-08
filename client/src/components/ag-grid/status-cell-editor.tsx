@@ -22,22 +22,8 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     const [selectedId, setSelectedId] = useState<number | null>(valueRef.current);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const colId = column.getColId();
-    const fieldName = column.getColDef().field;
-
-    console.log("[StatusCellEditor] MOUNTED", {
-      value,
-      colId,
-      fieldName,
-      currentStatusId: currentStatus?.id,
-      statusCount: statuses.length,
-    });
-
     useImperativeHandle(ref, () => ({
-      getValue: () => {
-        console.log("[StatusCellEditor] getValue called, returning:", valueRef.current);
-        return valueRef.current;
-      },
+      getValue: () => valueRef.current,
       isPopup: () => true,
       isCancelAfterEnd: () => false,
       focusIn: () => {
@@ -55,43 +41,24 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
       el.addEventListener("click", preventAgGridClose, true);
       el.focus();
       return () => {
-        console.log("[StatusCellEditor] UNMOUNTING");
         el.removeEventListener("mousedown", preventAgGridClose, true);
         el.removeEventListener("click", preventAgGridClose, true);
       };
     }, []);
 
     const handleSelect = useCallback(
-      (statusId: number, statusName: string) => {
-        console.log("[StatusCellEditor] handleSelect:", { statusId, statusName });
+      (statusId: number) => {
         valueRef.current = statusId;
         setSelectedId(statusId);
 
-        console.log("[StatusCellEditor] Trying setDataValue with Column object");
-        try {
-          const r1 = node.setDataValue(column, statusId);
-          console.log("[StatusCellEditor] setDataValue(column, statusId) result:", r1);
-        } catch (e1) {
-          console.error("[StatusCellEditor] setDataValue(column) error:", e1);
-          try {
-            console.log("[StatusCellEditor] Trying setDataValue with colId:", colId);
-            const r2 = node.setDataValue(colId, statusId);
-            console.log("[StatusCellEditor] setDataValue(colId) result:", r2);
-          } catch (e2) {
-            console.error("[StatusCellEditor] setDataValue(colId) error:", e2);
-            try {
-              console.log("[StatusCellEditor] Trying setDataValue with fieldName:", fieldName);
-              const r3 = node.setDataValue(fieldName!, statusId);
-              console.log("[StatusCellEditor] setDataValue(fieldName) result:", r3);
-            } catch (e3) {
-              console.error("[StatusCellEditor] setDataValue(fieldName) error:", e3);
-            }
-          }
+        const field = column.getColId();
+        if (node && field) {
+          node.setDataValue(field, statusId);
         }
 
         props.api?.stopEditing();
       },
-      [props.api, column, colId, fieldName, node],
+      [props.api, column, node],
     );
 
     return (
@@ -116,8 +83,7 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log("[StatusCellEditor] onClick:", status.name, status.id);
-                handleSelect(status.id, status.name);
+                handleSelect(status.id);
               }}
               data-testid={`status-option-${status.id}`}
             >
