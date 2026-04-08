@@ -30,18 +30,22 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
       },
     }));
 
-    const handleContainerMouseDown = useCallback((event: React.MouseEvent) => {
-      (event.nativeEvent as any).__ag_Grid_Stop_Propagation = true;
-    }, []);
-
     useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      const handler = (e: MouseEvent) => {
+        (e as any).__ag_Grid_Stop_Propagation = true;
+      };
+      el.addEventListener('mousedown', handler, true);
+      el.addEventListener('click', handler, true);
       containerRef.current?.focus();
+      return () => {
+        el.removeEventListener('mousedown', handler, true);
+        el.removeEventListener('click', handler, true);
+      };
     }, []);
 
-    const handleSelect = useCallback((statusId: number, event: React.MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-
+    const handleSelect = useCallback((statusId: number) => {
       valueRef.current = statusId;
       setSelectedId(statusId);
 
@@ -58,7 +62,6 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
         ref={containerRef}
         className="ag-custom-component-popup bg-background border rounded-md shadow-lg min-w-[200px]"
         tabIndex={0}
-        onMouseDown={handleContainerMouseDown}
         data-testid="status-cell-editor"
       >
         <div className="max-h-[280px] overflow-y-auto p-1">
@@ -69,13 +72,23 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
                 "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm",
                 selectedId === status.id && "bg-accent"
               )}
-              onClick={(e) => handleSelect(status.id, e)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelect(status.id);
+              }}
               data-testid={`status-option-${status.id}`}
             >
               <span className="w-4 h-4 flex items-center justify-center">
                 {selectedId === status.id && <Check className="h-4 w-4" />}
               </span>
-              <DealStatusBadge status={status.name} />
+              <span className="pointer-events-none">
+                <DealStatusBadge status={status.name} />
+              </span>
             </div>
           ))}
         </div>
