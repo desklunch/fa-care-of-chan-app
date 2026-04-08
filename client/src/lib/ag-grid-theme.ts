@@ -4,7 +4,7 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   browserColorScheme: "inherit",
   spacing: 12,
   foregroundColor: "hsl(var(--foreground))",
-  backgroundColor: "hsl(var(--card-background))",
+  backgroundColor: "hsl(var(--background))",
   headerColumnResizeHandleColor: "hsl(var(--input))",
   oddRowBackgroundColor: "#FFFFFF0F",
   rowBorder: true,

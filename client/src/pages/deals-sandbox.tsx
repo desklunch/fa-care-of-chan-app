@@ -542,6 +542,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       minWidth: 170,
       maxWidth: 200,
+      cellDataType: false,
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
