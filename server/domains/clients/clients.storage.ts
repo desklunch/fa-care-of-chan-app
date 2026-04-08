@@ -8,7 +8,6 @@ import {
   dealClients,
   deals,
   users,
-  brands,
   type Client,
   type Contact,
   type CreateClient,
@@ -117,12 +116,10 @@ export const clientsStorage = {
     const clientDeals = await db
       .select({
         id: deals.id,
-        externalId: deals.externalId,
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
         clientId: deals.clientId,
-        brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
@@ -141,7 +138,6 @@ export const clientsStorage = {
         notes: deals.notes,
         nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
-        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -155,10 +151,6 @@ export const clientsStorage = {
         client: {
           id: clients.id,
           name: clients.name,
-        },
-        brand: {
-          id: brands.id,
-          name: brands.name,
         },
         owner: {
           id: ownerUsers.id,
@@ -178,7 +170,6 @@ export const clientsStorage = {
       .from(deals)
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
       .where(eq(deals.clientId, id))
@@ -188,12 +179,10 @@ export const clientsStorage = {
     const linkedDealResults = await db
       .select({
         id: deals.id,
-        externalId: deals.externalId,
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
         clientId: deals.clientId,
-        brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
@@ -212,7 +201,6 @@ export const clientsStorage = {
         notes: deals.notes,
         nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
-        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -227,10 +215,6 @@ export const clientsStorage = {
         client: {
           id: clients.id,
           name: clients.name,
-        },
-        brand: {
-          id: brands.id,
-          name: brands.name,
         },
         owner: {
           id: ownerUsers2.id,
@@ -251,7 +235,6 @@ export const clientsStorage = {
       .innerJoin(deals, eq(dealClients.dealId, deals.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers2, eq(deals.ownerId, ownerUsers2.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
       .where(eq(dealClients.clientId, id))

@@ -15,7 +15,6 @@ import type {
   DealLocation,
   DealEvent,
   User as UserType,
-  Industry,
 } from "@shared/schema";
 import { useDealStatuses } from "@/hooks/useDealStatuses";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
@@ -31,7 +30,6 @@ import {
   Briefcase,
   SquareArrowOutUpRight,
   Calendar,
-  Building2,
   Tag,
 } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -82,8 +80,6 @@ interface DealsGridContext {
   users: Array<Pick<UserType, "id" | "firstName" | "lastName" | "role" | "isActive">>;
   services: DealService[];
   servicesMap: Map<number, DealService>;
-  industries: Industry[];
-  industriesMap: Map<string, Industry>;
   linkedClientsMap: Map<string, DealLinkedClientEntry[]>;
   dealTagsMap: Map<string, DealTagEntry[]>;
   dealStatuses: DealStatusRecord[];
@@ -277,26 +273,6 @@ const dealFilters: FilterConfig<DealWithRelations>[] = [
       const serviceIds = deal.serviceIds as number[] | null;
       if (!serviceIds || serviceIds.length === 0) return false;
       return serviceIds.some((id) => selectedValues.includes(String(id)));
-    },
-  },
-  {
-    id: "industry",
-    label: "Industry",
-    icon: Building2,
-    optionSource: {
-      type: "deriveFromData",
-      deriveOptions: (_data, context) => {
-        const ctx = context as DealsGridContext | undefined;
-        if (!ctx?.industries) return [];
-        return ctx.industries
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((industry) => ({ id: industry.id, label: industry.name }));
-      },
-    },
-    matchFn: (deal, selectedValues) => {
-      const industryId = deal.industryId;
-      if (!industryId) return false;
-      return selectedValues.includes(industryId);
     },
   },
   {
@@ -514,7 +490,7 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
             <Link
               href={`/clients/${client.id}`}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="text-foreground hover:underline truncatep-0 h-auto leading-normal"
+              className="text-foreground hover:underline truncate p-0 h-auto leading-normal"
               data-testid={`link-client-${client.id}`}
             >
               {client.name}
@@ -750,76 +726,6 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
             <MarkdownDisplay className="prose dark:prose-invert text-sm/6  font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "industry",
-    headerName: "Client Industry",
-    field: "industryId",
-    category: "Basic Info",
-    colDef: {
-      flex: 1,
-      minWidth: 140,
-      editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: (params: { context: DealsGridContext }) => {
-        const industries = params.context?.industries || [];
-        return {
-          values: [
-            "(None)",
-            ...industries
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((industry) => industry.name),
-          ],
-        };
-      },
-      valueGetter: (params: {
-        data: DealWithRelations | undefined;
-        context: DealsGridContext;
-      }) => {
-        const industryId = params.data?.industryId;
-        if (!industryId) return "(None)";
-        const industry = params.context?.industriesMap?.get(industryId);
-        return industry?.name || "(None)";
-      },
-      valueSetter: (params: {
-        data: DealWithRelations;
-        newValue: string | null;
-        context: DealsGridContext;
-      }) => {
-        // Handle empty/none selection
-        if (
-          params.newValue === null ||
-          params.newValue === "" ||
-          params.newValue === "(None)"
-        ) {
-          params.data.industryId = null;
-          return true;
-        }
-        // Look up the industry by name to get the ID
-        const industries = params.context?.industries || [];
-        const industry = industries.find((i) => i.name === params.newValue);
-        if (industry) {
-          params.data.industryId = industry.id;
-          return true;
-        }
-        return false;
-      },
-      cellRenderer: (params: {
-        data: DealWithRelations | undefined;
-        context: DealsGridContext;
-      }) => {
-        const industryId = params.data?.industryId;
-        if (!industryId) return null;
-        const industry = params.context?.industriesMap?.get(industryId);
-        return (
-          <div className="flex flex-wrap gap-1 pt-2.5">
-            <Badge variant="secondary" className="text-xs">
-              {industry?.name || industryId}
-            </Badge>
           </div>
         );
       },
@@ -1254,14 +1160,6 @@ export default function DealsPage() {
   // Create a services lookup map
   const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
 
-  // Fetch industries for the Industry column and filter
-  const { data: industries = [] } = useQuery<Industry[]>({
-    queryKey: ["/api/industries"],
-  });
-
-  // Create industries lookup map
-  const industriesMap = new Map(industries.map((i) => [i.id, i]));
-
   const { data: allLinkedClients = [] } = useQuery<DealLinkedClientEntry[]>({
     queryKey: ["/api/deals/all-linked-clients"],
   });
@@ -1290,13 +1188,10 @@ export default function DealsPage() {
     return map;
   }, [allDealTags]);
 
-  // Context for the grid - provides user list for Owner dropdown, services, and industries
   const gridContext: DealsGridContext = {
     users,
     services: dealServices,
     servicesMap,
-    industries,
-    industriesMap,
     linkedClientsMap,
     dealTagsMap,
     dealStatuses: dealStatusList,
@@ -1494,14 +1389,6 @@ export default function DealsPage() {
         }
       }
 
-      // Handle industry field - valueSetter already updated data.industryId, so use that
-      if (field === "industryId") {
-        processedValue = data.industryId;
-        if (processedValue === "") {
-          processedValue = null;
-        }
-      }
-
       // Handle empty strings as null for date fields
       const dateFields = [
         "startedOn",
@@ -1515,7 +1402,7 @@ export default function DealsPage() {
       }
 
       // Handle empty strings as null for nullable ID fields (foreign keys)
-      const nullableIdFields = ["clientId", "industryId"];
+      const nullableIdFields = ["clientId"];
       if (nullableIdFields.includes(field) && newValue === "") {
         processedValue = null;
       }

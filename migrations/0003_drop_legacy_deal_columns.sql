@@ -1,0 +1,8 @@
+ALTER TABLE deals DROP COLUMN IF EXISTS services;
+ALTER TABLE deals DROP COLUMN IF EXISTS external_id;
+ALTER TABLE deals DROP COLUMN IF EXISTS status_legacy;
+ALTER TABLE deals DROP COLUMN IF EXISTS brand_id;
+ALTER TABLE deals DROP COLUMN IF EXISTS industry_id;
+
+DROP INDEX IF EXISTS idx_deals_external_id;
+DROP INDEX IF EXISTS idx_deals_industry;

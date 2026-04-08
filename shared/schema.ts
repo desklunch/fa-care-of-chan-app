@@ -694,13 +694,10 @@ export const deals = pgTable(
   "deals",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    externalId: integer("external_id"),
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: integer("status").notNull().references(() => dealStatuses.id),
-    statusLegacy: varchar("status_legacy", { length: 100 }),
     clientId: varchar("client_id").notNull(),
-    brandId: varchar("brand_id").references(() => brands.id),
     locations: jsonb("locations").$type<DealLocation[]>().default([]),
     eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
     serviceIds: integer("service_ids").array().default([]),
@@ -710,7 +707,6 @@ export const deals = pgTable(
     nextSteps: text("next_steps"),
     primaryContactId: varchar("primary_contact_id").references(() => contacts.id),
     ownerId: varchar("owner_id").references(() => users.id),
-    industryId: varchar("industry_id").references(() => industries.id),
     budgetHigh: integer("budget_high"),
     budgetLow: integer("budget_low"),
     budgetNotes: text("budget_notes"),
@@ -727,7 +723,6 @@ export const deals = pgTable(
   },
   (table) => [
     index("idx_deals_deal_number").on(table.dealNumber),
-    index("idx_deals_external_id").on(table.externalId),
     index("idx_deals_status").on(table.status),
     index("idx_deals_client_id").on(table.clientId),
     index("idx_deals_created_by").on(table.createdById),
@@ -736,7 +731,6 @@ export const deals = pgTable(
     index("idx_deals_primary_contact").on(table.primaryContactId),
     index("idx_deals_earliest_event_date").on(table.earliestEventDate),
     index("idx_deals_sort_order").on(table.sortOrder),
-    index("idx_deals_industry").on(table.industryId),
   ],
 );
 
@@ -1673,7 +1667,6 @@ export type DealWithRelations = Deal & {
   statusName?: string;
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   client?: (Pick<Client, "id" | "name" | "industryId"> & { industryName?: string | null }) | null;
-  brand?: Pick<Brand, "id" | "name"> | null;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   primaryContact?: Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers" | "jobTitle"> | null;
 };
@@ -1696,7 +1689,6 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   createdById: true,
   createdAt: true,
   updatedAt: true,
-  statusLegacy: true,
 }).extend({
   displayName: z.string().min(1, "Display name is required").max(255),
   status: z.number().int(),
@@ -1714,7 +1706,6 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   displayName: true,
   status: true,
   clientId: true,
-  brandId: true,
   primaryContactId: true,
   locations: true,
   locationsText: true,
@@ -1723,7 +1714,6 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   notes: true,
   nextSteps: true,
   ownerId: true,
-  industryId: true,
   budgetHigh: true,
   budgetLow: true,
   budgetNotes: true,

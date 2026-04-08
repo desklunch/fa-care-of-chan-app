@@ -1951,14 +1951,11 @@ export class DatabaseStorage implements IStorage {
     let query = db
       .select({
         id: deals.id,
-        externalId: deals.externalId,
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
-        statusLegacy: deals.statusLegacy,
         statusName: dealStatuses.name,
         clientId: deals.clientId,
-        brandId: deals.brandId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
         budgetNotes: deals.budgetNotes,
@@ -1974,7 +1971,6 @@ export class DatabaseStorage implements IStorage {
         notes: deals.notes,
         nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
-        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -1992,10 +1988,6 @@ export class DatabaseStorage implements IStorage {
           name: clients.name,
           industryId: clients.industryId,
           industryName: industries.name,
-        },
-        brand: {
-          id: brands.id,
-          name: brands.name,
         },
         owner: {
           id: ownerUsers.id,
@@ -2017,7 +2009,6 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(industries, eq(clients.industryId, industries.id))
-      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id));
 
@@ -2034,14 +2025,11 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .select({
         id: deals.id,
-        externalId: deals.externalId,
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
-        statusLegacy: deals.statusLegacy,
         statusName: dealStatuses.name,
         clientId: deals.clientId,
-        brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
@@ -2060,7 +2048,6 @@ export class DatabaseStorage implements IStorage {
         notes: deals.notes,
         nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
-        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -2074,10 +2061,6 @@ export class DatabaseStorage implements IStorage {
         client: {
           id: clients.id,
           name: clients.name,
-        },
-        brand: {
-          id: brands.id,
-          name: brands.name,
         },
         owner: {
           id: ownerUsers.id,
@@ -2098,7 +2081,6 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
       .where(eq(deals.id, id));
@@ -2110,14 +2092,11 @@ export class DatabaseStorage implements IStorage {
     const results = await db
       .select({
         id: deals.id,
-        externalId: deals.externalId,
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
-        statusLegacy: deals.statusLegacy,
         statusName: dealStatuses.name,
         clientId: deals.clientId,
-        brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
@@ -2136,7 +2115,6 @@ export class DatabaseStorage implements IStorage {
         notes: deals.notes,
         nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
-        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -2151,10 +2129,6 @@ export class DatabaseStorage implements IStorage {
           id: clients.id,
           name: clients.name,
         },
-        brand: {
-          id: brands.id,
-          name: brands.name,
-        },
         owner: {
           id: ownerUsers.id,
           firstName: ownerUsers.firstName,
@@ -2166,7 +2140,6 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .where(eq(deals.clientId, clientId))
       .orderBy(desc(deals.createdAt));
@@ -2178,14 +2151,11 @@ export class DatabaseStorage implements IStorage {
     const results = await db
       .select({
         id: deals.id,
-        externalId: deals.externalId,
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
-        statusLegacy: deals.statusLegacy,
         statusName: dealStatuses.name,
         clientId: deals.clientId,
-        brandId: deals.brandId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
         budgetLow: deals.budgetLow,
@@ -2204,7 +2174,6 @@ export class DatabaseStorage implements IStorage {
         notes: deals.notes,
         nextSteps: deals.nextSteps,
         ownerId: deals.ownerId,
-        industryId: deals.industryId,
         createdById: deals.createdById,
         createdAt: deals.createdAt,
         updatedAt: deals.updatedAt,
@@ -2219,10 +2188,6 @@ export class DatabaseStorage implements IStorage {
           id: clients.id,
           name: clients.name,
         },
-        brand: {
-          id: brands.id,
-          name: brands.name,
-        },
         owner: {
           id: ownerUsers.id,
           firstName: ownerUsers.firstName,
@@ -2234,7 +2199,6 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(brands, eq(deals.brandId, brands.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .where(eq(deals.primaryContactId, contactId))
       .orderBy(desc(deals.createdAt));

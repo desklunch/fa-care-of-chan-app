@@ -83,7 +83,6 @@ interface ForecastDeal {
   locations: ForecastLocation[];
   durationDays: number;
   services: string[];
-  industry: string;
 }
 
 interface BreakdownItem {
@@ -121,7 +120,6 @@ interface ForecastData {
   quarterlyRollups: QuarterlyRollup[];
   eventDensity: EventDensity[];
   revenueByService: BreakdownItem[];
-  revenueByIndustry: BreakdownItem[];
   revenueByLocation: BreakdownItem[];
   summary: {
     totalWeighted: number;
@@ -675,50 +673,6 @@ export default function DealForecast() {
                     key={item.name}
                     className="space-y-1"
                     data-testid={`row-service-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium truncate flex-1">
-                        {item.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                        {item.dealCount} {item.dealCount === 1 ? "deal" : "deals"}
-                      </span>
-                      <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
-                        {formatCurrency(item.weighted)}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${(item.weighted / maxWeighted) * 100}%`,
-                          backgroundColor: BREAKDOWN_COLORS[idx % BREAKDOWN_COLORS.length],
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card data-testid="card-revenue-by-industry">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center">
-              Revenue by Client Industry
-              <SectionTooltip text="Breaks down weighted pipeline revenue by the industry of each deal's client. Each deal's full weighted value (average budget times stage probability) is assigned to its client's industry. Shows the number of deals and total weighted value for each industry, sorted by weighted value (highest first). Clients without an industry are grouped under 'Other'." />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {data.revenueByIndustry.map((item, idx) => {
-                const maxWeighted = data.revenueByIndustry[0]?.weighted || 1;
-                return (
-                  <div
-                    key={item.name}
-                    className="space-y-1"
-                    data-testid={`row-industry-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium truncate flex-1">

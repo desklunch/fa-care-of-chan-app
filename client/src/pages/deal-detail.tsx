@@ -54,8 +54,6 @@ import type {
   DealEvent,
   User,
   Client,
-  Brand,
-  Industry,
 } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
 import {
@@ -116,17 +114,6 @@ export default function DealDetail() {
 
   const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
 
-  const { data: brands = [] } = useQuery<
-    Pick<Brand, "id" | "name" | "industry">[]
-  >({
-    queryKey: ["/api/brands"],
-  });
-
-  const { data: industries = [] } = useQuery<Industry[]>({
-    queryKey: ["/api/industries"],
-  });
-
-  const industriesMap = new Map(industries.map((i) => [i.id, i]));
 
   interface DealLinkedClient {
     dealId: string;
@@ -224,9 +211,7 @@ export default function DealDetail() {
       value === "" &&
       (field === "ownerId" ||
         field === "clientId" ||
-        field === "brandId" ||
-        field === "primaryContactId" ||
-        field === "industryId")
+        field === "primaryContactId")
     ) {
       processedValue = null;
     }
@@ -631,33 +616,6 @@ export default function DealDetail() {
                   </div>
                 </FieldRow>
 
-                {/* <EditableField
-                  label="Industry"
-                  value={deal.industryId || ""}
-                  field="industryId"
-                  testId="field-industry"
-                  type="select"
-                  disabled={!canWrite}
-                  options={industries.map((i) => ({
-                    value: i.id,
-                    label: i.name,
-                  }))}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("industryId")}
-                  error={getFieldError("industryId")}
-                  displayValue={
-                    deal.industryId ? (
-                      <span data-testid="text-industry">
-                        {industriesMap.get(deal.industryId)?.name ||
-                          deal.industryId}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">No industry</span>
-                    )
-                  }
-                  placeholder="Select industry"
-                />
-
                 <FieldRow
                   label="Primary Contact"
                   testId="field-primary-contact"
@@ -677,7 +635,7 @@ export default function DealDetail() {
                       No primary contact
                     </span>
                   )}
-                </FieldRow> */}
+                </FieldRow>
 
                 <EditableField
                   label="Services"

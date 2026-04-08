@@ -134,7 +134,6 @@ export function registerDealsRoutes(app: Express): void {
           })),
           durationDays: totalDurationDays || 1,
           services,
-          industry: d.industryName ?? "Other",
         };
       });
 
@@ -266,24 +265,6 @@ export function registerDealsRoutes(app: Express): void {
         }))
         .sort((a, b) => b.weighted - a.weighted);
 
-      const industryBreakdownMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
-      for (const deal of deals) {
-        const avg = (deal.budgetLow + deal.budgetHigh) / 2;
-        const existing = industryBreakdownMap.get(deal.industry) || { weighted: 0, unweighted: 0, dealCount: 0 };
-        existing.weighted += avg * deal.probability;
-        existing.unweighted += avg;
-        existing.dealCount += 1;
-        industryBreakdownMap.set(deal.industry, existing);
-      }
-      const revenueByIndustry = Array.from(industryBreakdownMap.entries())
-        .map(([name, data]) => ({
-          name,
-          weighted: Math.round(data.weighted),
-          unweighted: Math.round(data.unweighted),
-          dealCount: data.dealCount,
-        }))
-        .sort((a, b) => b.weighted - a.weighted);
-
       const locationBreakdownMap = new Map<string, { weighted: number; unweighted: number; dealCount: number }>();
       for (const deal of deals) {
         const avg = (deal.budgetLow + deal.budgetHigh) / 2;
@@ -313,7 +294,6 @@ export function registerDealsRoutes(app: Express): void {
         quarterlyRollups,
         eventDensity,
         revenueByService,
-        revenueByIndustry,
         revenueByLocation,
         summary: {
           totalWeighted: Math.round(totalWeighted),

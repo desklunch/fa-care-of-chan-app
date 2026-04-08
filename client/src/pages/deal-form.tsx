@@ -34,7 +34,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ClientSearch } from "@/components/client-search";
-import { BrandSearch } from "@/components/brand-search";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
@@ -44,7 +43,7 @@ import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, Industry, DealStatusRecord } from "@shared/schema";
+import type { DealWithRelations, DealStatus, DealLocation, Deal, DealEvent, DealService, User, Contact, DealStatusRecord } from "@shared/schema";
 import { dealLocationSchema } from "@shared/schema";
 import { useDealStatuses } from "@/hooks/useDealStatuses";
 import { cn } from "@/lib/utils"
@@ -54,7 +53,6 @@ const dealFormSchema = z.object({
   displayName: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or less"),
   status: z.number().int(),
   clientId: z.string().min(1, "Client is required"),
-  brandId: z.string().optional().nullable().transform(val => val || null),
   primaryContactId: z.string().optional().transform(val => val || undefined),
   locations: z.array(dealLocationSchema).default([]),
   eventSchedule: z.array(z.any()).default([]),
@@ -64,7 +62,6 @@ const dealFormSchema = z.object({
   notes: z.string().optional().transform(val => val || undefined),
   nextSteps: z.string().optional().transform(val => val || undefined),
   ownerId: z.string().optional().transform(val => val || undefined),
-  industryId: z.string().optional().transform(val => val || undefined),
   budgetHigh: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
   budgetLow: z.number().int().min(1000, "Minimum budget is $1,000").nullable().optional(),
   budgetNotes: z.string().optional().transform(val => val || undefined),
@@ -82,7 +79,6 @@ export default function DealForm() {
   const { toast } = useToast();
   const isEditing = Boolean(id);
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState<{ id: string; name: string } | null>(null);
   const [initialClientId, setInitialClientId] = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
@@ -97,10 +93,6 @@ export default function DealForm() {
 
   const { data: dealServices = [] } = useQuery<DealService[]>({
     queryKey: ["/api/deal-services"],
-  });
-
-  const { data: industries = [] } = useQuery<Industry[]>({
-    queryKey: ["/api/industries"],
   });
 
   const { data: existingTagIds } = useQuery<string[]>({
@@ -118,7 +110,6 @@ export default function DealForm() {
       displayName: "",
       status: 0,
       clientId: "",
-      brandId: null,
       primaryContactId: "",
       locations: [],
       eventSchedule: [],
@@ -128,7 +119,6 @@ export default function DealForm() {
       notes: "",
       nextSteps: "",
       ownerId: "",
-      industryId: "",
       budgetHigh: null,
       budgetLow: null,
       budgetNotes: "",
@@ -158,7 +148,6 @@ export default function DealForm() {
         displayName: deal.displayName,
         status: deal.status,
         clientId: deal.clientId || "",
-        brandId: deal.brandId || null,
         primaryContactId: deal.primaryContactId || "",
         locations: (deal.locations as DealLocation[]) || [],
         eventSchedule: (deal.eventSchedule as DealEvent[]) || [],
@@ -168,7 +157,6 @@ export default function DealForm() {
         notes: deal.notes || "",
         nextSteps: deal.nextSteps || "",
         ownerId: deal.ownerId || "",
-        industryId: deal.industryId || "",
         budgetHigh: deal.budgetHigh ?? null,
         budgetLow: deal.budgetLow ?? null,
         budgetNotes: deal.budgetNotes || "",
@@ -179,9 +167,6 @@ export default function DealForm() {
       });
       if (deal.client) {
         setSelectedClient({ id: deal.client.id, name: deal.client.name });
-      }
-      if (deal.brand) {
-        setSelectedBrand({ id: deal.brand.id, name: deal.brand.name });
       }
       setInitialClientId(deal.clientId || null);
     }
@@ -368,35 +353,6 @@ export default function DealForm() {
                   )}
                 />
 
-                {/* <FormField
-                  control={form.control}
-                  name="brandId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Brand</FormLabel>
-                      <FormControl>
-                        <BrandSearch
-                          selectedBrandId={field.value || null}
-                          selectedBrandName={selectedBrand?.name || null}
-                          onSelect={(brand) => {
-                            if (brand) {
-                              field.onChange(brand.id);
-                              setSelectedBrand(brand);
-                            } else {
-                              field.onChange(null);
-                              setSelectedBrand(null);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        The brand associated with this deal (optional).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                /> */}
-
                 {watchedClientId && (
                   <FormField
                     control={form.control}
@@ -433,39 +389,6 @@ export default function DealForm() {
                     )}
                   />
                 )}
-                <FormField
-                  control={form.control}
-                  name="industryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Industry</FormLabel>
-                      <Select 
-                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger
-                            className={cn(!field.value ? "text-muted-foreground" : "")}
-                            data-testid="select-deal-industry"
-                          >
-                            <SelectValue placeholder="Select industry..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">No industry</SelectItem>
-                          {industries
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((industry) => (
-                              <SelectItem key={industry.id} value={industry.id}>
-                                {industry.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <Separator className="my-4" />
                 
                 <FormField
