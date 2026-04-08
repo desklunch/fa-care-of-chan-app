@@ -1,13 +1,16 @@
 import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
-import { requirePermission } from "../../middleware/permissions";
+import { getDriveAccessToken } from "../../googleAuth";
+import { requirePermission, loadPermissions, checkPermission } from "../../middleware/permissions";
 import { logAuditEvent, getChangedFields } from "../../audit";
 import { handleServiceError } from "../../lib/route-helpers";
 import { storage } from "../../storage";
 import { DealsService } from "../../services/deals.service";
-import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
+import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, type DealWithRelations, type DealEvent, type DealLocation, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { formsStorage } from "../forms/forms.storage";
+import { createGoogleDoc } from "../../googleDrive";
+import { driveAttachmentsStorage } from "../drive-attachments/drive-attachments.storage";
 
 const dealsService = new DealsService(storage);
 
@@ -1172,4 +1175,180 @@ export function registerDealsRoutes(app: Express): void {
       handleServiceError(res, error, "Failed to sync intake to deal");
     }
   });
+
+  app.post("/api/deals/:id/generate-doc", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      if (!checkPermission(req, "deals.read")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const dealId = req.params.id;
+      const { folderId } = req.body;
+
+      if (!folderId) {
+        return res.status(400).json({ message: "folderId is required" });
+      }
+
+      const userId = req.user.claims.sub;
+      const accessToken = await getDriveAccessToken(req.session);
+      if (!accessToken) {
+        return res.status(403).json({
+          message: "Google Drive access not authorized",
+          code: "drive_auth_required",
+        });
+      }
+
+      const deal = await storage.getDealById(dealId);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      const allServices = await storage.getDealServices();
+      const servicesMap = new Map(allServices.map((s) => [s.id, s.name]));
+
+      const htmlContent = buildDealDocHtml(deal, servicesMap);
+      const docTitle = `${deal.displayName} - Deal Summary`;
+
+      let docResult;
+      try {
+        docResult = await createGoogleDoc(accessToken, docTitle, folderId, htmlContent);
+      } catch (driveError: any) {
+        const msg = driveError?.message || "";
+        if (msg.includes("403") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
+          return res.status(403).json({
+            message: "Insufficient Google Drive permissions. Please reconnect your Google Drive with updated permissions.",
+            code: "drive_auth_required",
+          });
+        }
+        throw driveError;
+      }
+
+      const attachment = await driveAttachmentsStorage.createAttachment({
+        entityType: "deal",
+        entityId: dealId,
+        driveFileId: docResult.id,
+        name: docResult.name,
+        mimeType: docResult.mimeType,
+        webViewLink: docResult.webViewLink,
+        attachedById: userId,
+      });
+
+      const attachmentWithUser = await driveAttachmentsStorage.getAttachmentById(attachment.id);
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "drive_attachment",
+        entityId: attachment.id,
+        status: "success",
+        metadata: { source: "generate_doc", dealId, docId: docResult.id },
+      });
+
+      res.json({
+        doc: docResult,
+        attachment: attachmentWithUser,
+      });
+    } catch (error) {
+      console.error("Error generating deal doc:", error);
+      res.status(500).json({ message: "Failed to generate document" });
+    }
+  });
+}
+
+function buildDealDocHtml(deal: DealWithRelations, servicesMap: Map<number, string>): string {
+  const escape = (str: string | null | undefined) =>
+    (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const ownerName = deal.owner
+    ? [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ")
+    : "Unassigned";
+
+  const clientName = deal.client?.name || "No client";
+
+  const serviceIds = (deal.serviceIds as number[]) || [];
+  const serviceNames = serviceIds
+    .map((id) => servicesMap.get(id))
+    .filter(Boolean)
+    .join(", ");
+
+  const locations = (deal.locations as DealLocation[]) || [];
+  const locationNames = locations.map((l) => l.displayName).join(", ");
+
+  const events = (deal.eventSchedule as DealEvent[]) || [];
+  const eventLines = events.map((ev) => {
+    const scheduleInfo = ev.schedules
+      .map((s) => {
+        if (s.startDate) return s.startDate;
+        if (s.rangeStartMonth && s.rangeStartYear) {
+          const startLabel = `${s.rangeStartMonth}/${s.rangeStartYear}`;
+          if (s.rangeEndMonth && s.rangeEndYear) {
+            return `${startLabel} - ${s.rangeEndMonth}/${s.rangeEndYear}`;
+          }
+          return startLabel;
+        }
+        return "TBD";
+      })
+      .join(", ");
+    return `<li><strong>${escape(ev.label)}</strong> (${ev.durationDays} day${ev.durationDays !== 1 ? "s" : ""}) &mdash; ${scheduleInfo}</li>`;
+  });
+
+  const budgetRange =
+    deal.budgetLow || deal.budgetHigh
+      ? `$${(deal.budgetLow || 0).toLocaleString()} - $${(deal.budgetHigh || 0).toLocaleString()}`
+      : "Not specified";
+
+  const sections: string[] = [];
+
+  sections.push(`<h1>${escape(deal.displayName)}</h1>`);
+  sections.push(`<p style="color:#666;font-size:12px;">Generated on ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>`);
+  sections.push(`<hr/>`);
+
+  sections.push(`<h2>Deal Overview</h2>`);
+  sections.push(`<table style="border-collapse:collapse;width:100%;">`);
+  sections.push(tableRow("Client", escape(clientName)));
+  sections.push(tableRow("Status", escape(deal.statusName || "Unknown")));
+  sections.push(tableRow("Owner", escape(ownerName)));
+  if (deal.brand) sections.push(tableRow("Brand", escape(deal.brand.name)));
+  if (serviceNames) sections.push(tableRow("Services", escape(serviceNames)));
+  sections.push(tableRow("Budget Range", escape(budgetRange)));
+  if (deal.budgetNotes) sections.push(tableRow("Budget Notes", escape(deal.budgetNotes)));
+  sections.push(`</table>`);
+
+  if (locationNames) {
+    sections.push(`<h2>Locations</h2>`);
+    sections.push(`<p>${escape(locationNames)}</p>`);
+  }
+
+  if (events.length > 0) {
+    sections.push(`<h2>Event Schedule</h2>`);
+    sections.push(`<ul>${eventLines.join("")}</ul>`);
+  }
+
+  if (deal.concept) {
+    sections.push(`<h2>Concept</h2>`);
+    sections.push(`<p>${escape(deal.concept)}</p>`);
+  }
+
+  if (deal.nextSteps) {
+    sections.push(`<h2>Next Steps</h2>`);
+    sections.push(`<p>${escape(deal.nextSteps)}</p>`);
+  }
+
+  if (deal.notes) {
+    sections.push(`<h2>Notes</h2>`);
+    sections.push(`<p>${escape(deal.notes)}</p>`);
+  }
+
+  if (deal.primaryContact) {
+    sections.push(`<h2>Primary Contact</h2>`);
+    const contactName = [deal.primaryContact.firstName, deal.primaryContact.lastName].filter(Boolean).join(" ");
+    sections.push(`<p>${escape(contactName)}`);
+    if (deal.primaryContact.jobTitle) sections.push(` &mdash; ${escape(deal.primaryContact.jobTitle)}`);
+    sections.push(`</p>`);
+  }
+
+  return `<html><body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:20px;">${sections.join("\n")}</body></html>`;
+}
+
+function tableRow(label: string, value: string): string {
+  return `<tr><td style="padding:6px 12px 6px 0;font-weight:bold;vertical-align:top;white-space:nowrap;">${label}</td><td style="padding:6px 0;">${value}</td></tr>`;
 }

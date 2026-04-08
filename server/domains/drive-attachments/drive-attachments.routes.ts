@@ -5,7 +5,7 @@ import { loadPermissions, checkPermission, checkAnyPermission } from "../../midd
 import { logAuditEvent } from "../../audit";
 import { driveAttachmentsStorage } from "./drive-attachments.storage";
 import { driveAttachmentEntityTypes, type DriveAttachmentEntityType } from "@shared/schema";
-import { getDriveFileMetadata, extractDriveFileId, searchDriveFiles } from "../../googleDrive";
+import { getDriveFileMetadata, extractDriveFileId, searchDriveFiles, listDriveFolders } from "../../googleDrive";
 import type { Permission } from "../../../shared/permissions";
 import { z } from "zod";
 
@@ -231,6 +231,29 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
     } catch (error) {
       console.error("Error searching Drive files:", error);
       res.status(500).json({ message: "Failed to search Drive files" });
+    }
+  });
+
+  app.get("/api/drive/folders", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      if (!checkAnyPermission(req, MINIMUM_DRIVE_ACCESS_PERMISSIONS)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const accessToken = await getDriveAccessToken(req.session);
+      if (!accessToken) {
+        return res.status(403).json({
+          message: "Google Drive access not authorized",
+          code: "drive_auth_required",
+        });
+      }
+
+      const parentId = req.query.parentId as string | undefined;
+      const data = await listDriveFolders(accessToken, parentId || undefined);
+      res.json(data);
+    } catch (error) {
+      console.error("Error listing Drive folders:", error);
+      res.status(500).json({ message: "Failed to list Drive folders" });
     }
   });
 }

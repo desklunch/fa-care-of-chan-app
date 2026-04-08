@@ -40,9 +40,11 @@ import {
   Building2,
   Search,
   Pencil,
+  FileText,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
+import { GenerateDealDocDialog } from "@/components/generate-deal-doc-dialog";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -89,6 +91,7 @@ export default function DealDetail() {
   const [isEditingLocations, setIsEditingLocations] = useState(false);
   const [editingLocations, setEditingLocations] = useState<DealLocation[]>([]);
   const [isEditingTags, setIsEditingTags] = useState(false);
+  const [showGenerateDoc, setShowGenerateDoc] = useState(false);
   const { statuses: dealStatusList, statusById } = useDealStatuses();
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
@@ -315,6 +318,15 @@ export default function DealDetail() {
         { label: deal.displayName },
       ]}
       additionalActions={[
+        ...(canRead
+          ? [
+              {
+                label: "Generate Doc",
+                onClick: () => setShowGenerateDoc(true),
+                icon: FileText,
+              },
+            ]
+          : []),
         ...(canWrite
           ? [
               {
@@ -1179,6 +1191,13 @@ export default function DealDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <GenerateDealDocDialog
+        deal={deal}
+        servicesMap={servicesMap}
+        open={showGenerateDoc}
+        onOpenChange={setShowGenerateDoc}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
