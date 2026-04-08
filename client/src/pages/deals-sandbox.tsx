@@ -716,6 +716,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 3,
       minWidth: 300,
+      cellDataType: false,
       editable: true,
       sortable: false,
       cellEditor: RichTextCellEditor,
@@ -944,6 +945,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       flex: 3,
       minWidth: 300,
+      cellDataType: false,
       sortable: false,
       editable: true,
       cellEditor: RichTextCellEditor,

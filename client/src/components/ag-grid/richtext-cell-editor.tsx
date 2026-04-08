@@ -4,10 +4,6 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 
-interface AgGridMouseEvent extends MouseEvent {
-  __ag_Grid_Stop_Propagation?: boolean;
-}
-
 interface RichTextCellEditorProps extends ICellEditorParams {
   value: string;
 }
@@ -24,6 +20,8 @@ const RichTextCellEditor = forwardRef<RichTextCellEditorRef, RichTextCellEditorP
     const containerRef = useRef<HTMLDivElement>(null);
     const valueRef = useRef<string>(props.value || "");
 
+    const fieldName = props.column.getColDef().field;
+
     useImperativeHandle(ref, () => ({
       getValue: () => valueRef.current,
       isPopup: () => true,
@@ -35,7 +33,7 @@ const RichTextCellEditor = forwardRef<RichTextCellEditorRef, RichTextCellEditorP
     useEffect(() => {
       const handleDocumentMouseDown = (event: MouseEvent) => {
         if (containerRef.current?.contains(event.target as Node)) {
-          (event as AgGridMouseEvent).__ag_Grid_Stop_Propagation = true;
+          (event as any).__ag_Grid_Stop_Propagation = true;
         }
       };
 
@@ -63,6 +61,9 @@ const RichTextCellEditor = forwardRef<RichTextCellEditorRef, RichTextCellEditorP
 
     const handleSave = () => {
       valueRef.current = editValue;
+      if (props.node && fieldName) {
+        props.node.setDataValue(fieldName, editValue);
+      }
       props.api?.stopEditing();
     };
 
