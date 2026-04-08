@@ -22,6 +22,8 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     const [selectedId, setSelectedId] = useState<number | null>(valueRef.current);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const fieldName = column.getColDef().field || "statusName";
+
     useImperativeHandle(ref, () => ({
       getValue: () => valueRef.current,
       isPopup: () => true,
@@ -36,26 +38,28 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
       const handler = (e: MouseEvent) => {
         (e as any).__ag_Grid_Stop_Propagation = true;
       };
-      el.addEventListener('mousedown', handler, true);
-      el.addEventListener('click', handler, true);
+      el.addEventListener("mousedown", handler, true);
+      el.addEventListener("click", handler, true);
       containerRef.current?.focus();
       return () => {
-        el.removeEventListener('mousedown', handler, true);
-        el.removeEventListener('click', handler, true);
+        el.removeEventListener("mousedown", handler, true);
+        el.removeEventListener("click", handler, true);
       };
     }, []);
 
-    const handleSelect = useCallback((statusId: number) => {
-      valueRef.current = statusId;
-      setSelectedId(statusId);
+    const handleSelect = useCallback(
+      (statusId: number) => {
+        valueRef.current = statusId;
+        setSelectedId(statusId);
 
-      const field = column.getColId();
-      if (node && field) {
-        node.setDataValue(field, statusId);
-      }
+        if (node && fieldName) {
+          node.setDataValue(fieldName, statusId);
+        }
 
-      props.api?.stopEditing();
-    }, [props.api, column, node]);
+        props.api?.stopEditing();
+      },
+      [props.api, fieldName, node],
+    );
 
     return (
       <div
@@ -70,7 +74,7 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
               key={status.id}
               className={cn(
                 "flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1.5 rounded-sm",
-                selectedId === status.id && "bg-accent"
+                selectedId === status.id && "bg-accent",
               )}
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -83,18 +87,18 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
               }}
               data-testid={`status-option-${status.id}`}
             >
-              <span className="w-4 h-4 flex items-center justify-center">
+              <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                 {selectedId === status.id && <Check className="h-4 w-4" />}
               </span>
-              <span className="pointer-events-none">
+              <div className="flex-1 min-w-0 pointer-events-none">
                 <DealStatusBadge status={status.name} />
-              </span>
+              </div>
             </div>
           ))}
         </div>
       </div>
     );
-  }
+  },
 );
 
 StatusCellEditor.displayName = "StatusCellEditor";
