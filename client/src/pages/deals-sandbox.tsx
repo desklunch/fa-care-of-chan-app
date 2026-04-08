@@ -144,7 +144,6 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "lastContactOn",
   "dealAge",
   "concept",
-  "industry",
   "primaryContact",
   "services",
   "locations",
@@ -511,11 +510,11 @@ const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const client = params.data?.client;
         if (!client) return null;
         return (
-          <div className="flex flex-col justify-center min-w-0">
+          <div className="flex flex-col justify-center min-w-0 py-[16px]">
             <Link
               href={`/clients/${client.id}`}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="text-foreground hover:underline truncate"
+              className="text-foreground hover:underline truncatep-0 h-auto leading-normal"
               data-testid={`link-client-${client.id}`}
             >
               {client.name}
