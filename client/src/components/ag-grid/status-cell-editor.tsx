@@ -14,7 +14,7 @@ interface StatusCellEditorProps extends ICellEditorParams {
 
 const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
   (props, ref) => {
-    const { value, context, stopEditing } = props;
+    const { value, context, column, node } = props;
 
     const statuses = context?.dealStatuses || [];
     const currentStatus = statuses.find((s) => s.name === value);
@@ -22,8 +22,13 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     const [selectedId, setSelectedId] = useState<number | null>(valueRef.current);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const colId = column.getColId();
+    const fieldName = column.getColDef().field;
+
     console.log("[StatusCellEditor] MOUNTED", {
       value,
+      colId,
+      fieldName,
       currentStatusId: currentStatus?.id,
       statusCount: statuses.length,
     });
@@ -61,10 +66,32 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
         console.log("[StatusCellEditor] handleSelect:", { statusId, statusName });
         valueRef.current = statusId;
         setSelectedId(statusId);
-        console.log("[StatusCellEditor] calling props.stopEditing()");
-        stopEditing();
+
+        console.log("[StatusCellEditor] Trying setDataValue with Column object");
+        try {
+          const r1 = node.setDataValue(column, statusId);
+          console.log("[StatusCellEditor] setDataValue(column, statusId) result:", r1);
+        } catch (e1) {
+          console.error("[StatusCellEditor] setDataValue(column) error:", e1);
+          try {
+            console.log("[StatusCellEditor] Trying setDataValue with colId:", colId);
+            const r2 = node.setDataValue(colId, statusId);
+            console.log("[StatusCellEditor] setDataValue(colId) result:", r2);
+          } catch (e2) {
+            console.error("[StatusCellEditor] setDataValue(colId) error:", e2);
+            try {
+              console.log("[StatusCellEditor] Trying setDataValue with fieldName:", fieldName);
+              const r3 = node.setDataValue(fieldName!, statusId);
+              console.log("[StatusCellEditor] setDataValue(fieldName) result:", r3);
+            } catch (e3) {
+              console.error("[StatusCellEditor] setDataValue(fieldName) error:", e3);
+            }
+          }
+        }
+
+        props.api?.stopEditing();
       },
-      [stopEditing],
+      [props.api, column, colId, fieldName, node],
     );
 
     return (
