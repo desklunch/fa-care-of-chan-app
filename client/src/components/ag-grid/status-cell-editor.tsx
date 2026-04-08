@@ -23,10 +23,24 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     const containerRef = useRef<HTMLDivElement>(null);
 
     const fieldName = column.getColDef().field || "statusName";
+    const colId = column.getColId();
+
+    console.log("[StatusCellEditor] MOUNTED", {
+      value,
+      fieldName,
+      colId,
+      currentStatusId: currentStatus?.id,
+      statusCount: statuses.length,
+      nodeId: node?.id,
+    });
 
     useImperativeHandle(ref, () => ({
-      getValue: () => valueRef.current,
+      getValue: () => {
+        console.log("[StatusCellEditor] getValue called, returning:", valueRef.current);
+        return valueRef.current;
+      },
       isPopup: () => true,
+      isCancelAfterEnd: () => false,
       focusIn: () => {
         containerRef.current?.focus();
       },
@@ -35,30 +49,54 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
     useEffect(() => {
       const el = containerRef.current;
       if (!el) return;
+      console.log("[StatusCellEditor] Setting up native event listeners on container");
       const handler = (e: MouseEvent) => {
         (e as any).__ag_Grid_Stop_Propagation = true;
+        console.log("[StatusCellEditor] Native", e.type, "- set __ag_Grid_Stop_Propagation", {
+          target: (e.target as HTMLElement)?.tagName,
+          targetClass: (e.target as HTMLElement)?.className?.substring(0, 50),
+        });
       };
       el.addEventListener("mousedown", handler, true);
       el.addEventListener("click", handler, true);
       containerRef.current?.focus();
       return () => {
+        console.log("[StatusCellEditor] UNMOUNTING - removing listeners");
         el.removeEventListener("mousedown", handler, true);
         el.removeEventListener("click", handler, true);
       };
     }, []);
 
     const handleSelect = useCallback(
-      (statusId: number) => {
+      (statusId: number, statusName: string) => {
+        console.log("[StatusCellEditor] handleSelect called:", {
+          statusId,
+          statusName,
+          previousValueRef: valueRef.current,
+          fieldName,
+          colId,
+          nodeExists: !!node,
+        });
+
         valueRef.current = statusId;
         setSelectedId(statusId);
 
         if (node && fieldName) {
-          node.setDataValue(fieldName, statusId);
+          console.log("[StatusCellEditor] Calling node.setDataValue:", { fieldName, statusId });
+          try {
+            const result = node.setDataValue(fieldName, statusId);
+            console.log("[StatusCellEditor] setDataValue result:", result);
+          } catch (err) {
+            console.error("[StatusCellEditor] setDataValue ERROR:", err);
+          }
+        } else {
+          console.warn("[StatusCellEditor] Cannot setDataValue - node:", !!node, "fieldName:", fieldName);
         }
 
+        console.log("[StatusCellEditor] Calling stopEditing");
         props.api?.stopEditing();
       },
-      [props.api, fieldName, node],
+      [props.api, fieldName, colId, node],
     );
 
     return (
@@ -77,13 +115,15 @@ const StatusCellEditor = forwardRef<any, StatusCellEditorProps>(
                 selectedId === status.id && "bg-accent",
               )}
               onMouseDown={(e) => {
+                console.log("[StatusCellEditor] Option mousedown:", status.name);
                 e.preventDefault();
                 e.stopPropagation();
               }}
               onClick={(e) => {
+                console.log("[StatusCellEditor] Option onClick:", status.name, status.id);
                 e.preventDefault();
                 e.stopPropagation();
-                handleSelect(status.id);
+                handleSelect(status.id, status.name);
               }}
               data-testid={`status-option-${status.id}`}
             >
