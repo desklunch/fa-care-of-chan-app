@@ -379,7 +379,7 @@ export default function DealDetail() {
               <TabsTrigger value="comments" data-testid="tab-comments">
                 Comments
               </TabsTrigger>
-              <TabsTrigger value="files" data-testid="tab-files">
+              <TabsTrigger value="files" data-testid="tab-files" className="hidden">
                 Files
               </TabsTrigger>
               <TabsTrigger value="tasks" data-testid="tab-tasks">
