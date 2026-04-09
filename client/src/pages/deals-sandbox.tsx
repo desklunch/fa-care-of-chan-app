@@ -1,6 +1,7 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
+import { NewDealDialog } from "@/components/new-deal-dialog";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CellValueChangedEvent } from "ag-grid-community";
 import { PageLayout } from "@/framework";
@@ -32,6 +33,7 @@ import {
   SquareArrowOutUpRight,
   Calendar,
   Tag,
+  Zap,
 } from "lucide-react";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -1285,6 +1287,7 @@ export default function DealsPage() {
   const canRead = can("deals.read");
   const canWrite = can("deals.write");
 
+  const [newDealDialogOpen, setNewDealDialogOpen] = useState(false);
   const { statuses: dealStatusList } = useDealStatuses();
   const statusSortOrderByName = useMemo(() => {
     return new Map(dealStatusList.map((s) => [s.name, s.sortOrder]));
@@ -1638,12 +1641,25 @@ export default function DealsPage() {
   return (
     <PageLayout
       breadcrumbs={[{ label: "Deals" }]}
-      primaryAction={{
+      primaryAction={canWrite ? {
         label: "New Deal",
         icon: CircleFadingPlus,
         href: "/deals/new",
-      }}
+      } : undefined}
+      additionalActions={canWrite ? [
+        {
+          label: "Quick Create",
+          icon: Zap,
+          variant: "outline",
+          onClick: () => setNewDealDialogOpen(true),
+        },
+      ] : undefined}
     >
+      <NewDealDialog
+        open={newDealDialogOpen}
+        onOpenChange={setNewDealDialogOpen}
+        onCreatedAndEdit={(dealId) => setLocation(`/deals/${dealId}/edit`)}
+      />
       <DataGridPage
         queryKey="/api/deals"
         columns={responsiveColumns}
