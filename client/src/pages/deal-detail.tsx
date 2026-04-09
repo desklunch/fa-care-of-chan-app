@@ -377,15 +377,17 @@ export default function DealDetail() {
               <TabsTrigger value="intake" data-testid="tab-intake">
                 Intake
               </TabsTrigger>
-              <TabsTrigger value="comments" data-testid="tab-comments">
-                Comments
-              </TabsTrigger>
-              <TabsTrigger value="files" data-testid="tab-files" className="hidden">
-                Files
-              </TabsTrigger>
               <TabsTrigger value="links" data-testid="tab-links">
                 Links
               </TabsTrigger>
+              <TabsTrigger value="comments" data-testid="tab-comments">
+                Comments                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
+
+              </TabsTrigger>
+              {/* <TabsTrigger value="files" data-testid="tab-files" className="hidden">
+                Files
+              </TabsTrigger> */}
+   
               <TabsTrigger value="tasks" data-testid="tab-tasks">
                 Tasks
                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
