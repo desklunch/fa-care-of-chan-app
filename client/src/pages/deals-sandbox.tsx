@@ -18,6 +18,7 @@ import type {
 } from "@shared/schema";
 import { useDealStatuses } from "@/hooks/useDealStatuses";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
+import { format } from "date-fns";
 import { formatDateOnly, parseDateOnly } from "@/lib/date";
 import { getEventSummary } from "@/components/event-schedule";
 import {
@@ -515,18 +516,33 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Dates",
     colDef: {
       width: 130,
+      cellDataType: false,
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
-      valueFormatter: (params: { value: string | null }) => {
-        if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yy");
+      valueGetter: (params: { data: DealWithRelations }) => {
+        return params.data?.startedOn ? parseDateOnly(params.data.startedOn) : null;
       },
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
+      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
+        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+          const y = params.newValue.getFullYear();
+          const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
+          const d = String(params.newValue.getDate()).padStart(2, "0");
+          params.data.startedOn = `${y}-${m}-${d}`;
+        } else {
+          params.data.startedOn = null as any;
+        }
+        return true;
+      },
+      valueFormatter: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return "";
+        return format(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return null;
         return (
           <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+            <span>{format(params.value, "MM/dd/yy")}</span>
           </span>
         );
       },
@@ -546,23 +562,35 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
-      valueFormatter: (params: { value: string | null }) => {
-        if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yy");
+      valueGetter: (params: { data: DealWithRelations }) => {
+        return params.data?.lastContactOn ? parseDateOnly(params.data.lastContactOn) : null;
       },
-      cellRenderer: (params: { value: string | null; data: DealWithRelations; context: DealsGridContext }) => {
-        if (!params.value) return null;
-        const formattedDate = formatDateOnly(params.value, "MM/dd/yy");
+      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
+        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+          const y = params.newValue.getFullYear();
+          const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
+          const d = String(params.newValue.getDate()).padStart(2, "0");
+          params.data.lastContactOn = `${y}-${m}-${d}`;
+        } else {
+          params.data.lastContactOn = null as any;
+        }
+        return true;
+      },
+      valueFormatter: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return "";
+        return format(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: Date | null; data: DealWithRelations; context: DealsGridContext }) => {
+        if (!params.value || !(params.value instanceof Date)) return null;
+        const formattedDate = format(params.value, "MM/dd/yy");
         const statusRecord = params.context?.dealStatuses?.find(
           (s) => s.id === params.data?.status,
         );
         const isActive = statusRecord?.isActive ?? false;
         if (isActive) {
-          const contactDate = parseDateOnly(params.value);
-          if (!contactDate) return null;
           const now = new Date();
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const diffMs = today.getTime() - contactDate.getTime();
+          const diffMs = today.getTime() - params.value.getTime();
           const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
           const daysLabel = `${diffDays}d ago`;
           return (
@@ -589,18 +617,33 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       minWidth: 130,
       maxWidth: 130,
+      cellDataType: false,
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
-      valueFormatter: (params: { value: string | null }) => {
-        if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yy");
+      valueGetter: (params: { data: DealWithRelations }) => {
+        return params.data?.proposalSentOn ? parseDateOnly(params.data.proposalSentOn) : null;
       },
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
+      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
+        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+          const y = params.newValue.getFullYear();
+          const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
+          const d = String(params.newValue.getDate()).padStart(2, "0");
+          params.data.proposalSentOn = `${y}-${m}-${d}`;
+        } else {
+          params.data.proposalSentOn = null as any;
+        }
+        return true;
+      },
+      valueFormatter: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return "";
+        return format(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return null;
         return (
           <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+            <span>{format(params.value, "MM/dd/yy")}</span>
           </span>
         );
       },
@@ -615,18 +658,33 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     colDef: {
       minWidth: 130,
       maxWidth: 130,
+      cellDataType: false,
       editable: true,
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
-      valueFormatter: (params: { value: string | null }) => {
-        if (!params.value) return "";
-        return formatDateOnly(params.value, "MM/dd/yy");
+      valueGetter: (params: { data: DealWithRelations }) => {
+        return params.data?.wonOn ? parseDateOnly(params.data.wonOn) : null;
       },
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
+      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
+        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+          const y = params.newValue.getFullYear();
+          const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
+          const d = String(params.newValue.getDate()).padStart(2, "0");
+          params.data.wonOn = `${y}-${m}-${d}`;
+        } else {
+          params.data.wonOn = null as any;
+        }
+        return true;
+      },
+      valueFormatter: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return "";
+        return format(params.value, "MM/dd/yy");
+      },
+      cellRenderer: (params: { value: Date | null }) => {
+        if (!params.value || !(params.value instanceof Date)) return null;
         return (
           <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            <span>{formatDateOnly(params.value, "MM/dd/yy")}</span>
+            <span>{format(params.value, "MM/dd/yy")}</span>
           </span>
         );
       },
@@ -1394,7 +1452,6 @@ export default function DealsPage() {
         }
       }
 
-      // Handle empty strings as null for date fields
       const dateFields = [
         "startedOn",
         "wonOn",
@@ -1403,7 +1460,7 @@ export default function DealsPage() {
         "projectDate",
       ];
       if (dateFields.includes(field)) {
-        processedValue = newValue === "" ? null : newValue;
+        processedValue = (data as any)[field] || null;
       }
 
       // Handle empty strings as null for nullable ID fields (foreign keys)
