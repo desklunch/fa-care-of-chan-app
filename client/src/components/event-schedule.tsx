@@ -115,7 +115,7 @@ export function getEventSummary(event: DealEvent): EventSummary | null {
       range.rangeEndYear,
     );
     return {
-      text: `${dayText} in ${monthRange}`,
+      text: `${monthRange}`,
       altCount: 0,
     };
   }
