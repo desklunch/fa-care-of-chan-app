@@ -173,6 +173,9 @@ export function NewDealDialog({ open, onOpenChange, onCreatedAndEdit }: NewDealD
       toast({ title: "Deal created successfully" });
       onOpenChange(false);
       resetForm();
+      setTimeout(() => {
+        document.body.style.removeProperty("pointer-events");
+      }, 300);
       if (andEdit && onCreatedAndEdit) {
         onCreatedAndEdit(newDeal.id);
       }
@@ -186,6 +189,11 @@ export function NewDealDialog({ open, onOpenChange, onCreatedAndEdit }: NewDealD
       resetForm();
     }
     onOpenChange(newOpen);
+    if (!newOpen) {
+      setTimeout(() => {
+        document.body.style.removeProperty("pointer-events");
+      }, 300);
+    }
   };
 
   return (

@@ -144,6 +144,8 @@ export default function ClientDetail() {
         title: "Client deleted",
         description: "The client has been removed from your directory.",
       });
+      setShowDeleteDialog(false);
+      setTimeout(() => document.body.style.removeProperty("pointer-events"), 300);
       setLocation("/clients");
     },
     onError: (error: Error) => {

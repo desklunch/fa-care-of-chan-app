@@ -101,6 +101,8 @@ export default function VenueDetailPage() {
         title: "Venue deleted",
         description: "The venue has been deleted successfully.",
       });
+      setDeleteDialogOpen(false);
+      setTimeout(() => document.body.style.removeProperty("pointer-events"), 300);
       setLocation("/venues");
     },
     onError: (error: Error) => {

@@ -300,6 +300,8 @@ export default function VendorDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
       toast({ title: "Vendor deleted" });
+      setShowDeleteDialog(false);
+      setTimeout(() => document.body.style.removeProperty("pointer-events"), 300);
       setLocation("/vendors");
     },
     onError: (error: Error) => {
