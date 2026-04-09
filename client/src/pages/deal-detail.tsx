@@ -381,7 +381,7 @@ export default function DealDetail() {
                 Links
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
-                Comments                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
+                Comments <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
 
               </TabsTrigger>
               {/* <TabsTrigger value="files" data-testid="tab-files" className="hidden">
