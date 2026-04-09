@@ -761,6 +761,41 @@ export const dealTasks = pgTable(
 export type DealTask = typeof dealTasks.$inferSelect;
 export type InsertDealTask = typeof dealTasks.$inferInsert;
 
+export const dealLinks = pgTable(
+  "deal_links",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+    url: varchar("url", { length: 2000 }).notNull(),
+    label: varchar("label", { length: 500 }),
+    previewTitle: varchar("preview_title", { length: 500 }),
+    previewDescription: varchar("preview_description", { length: 2000 }),
+    previewImage: varchar("preview_image", { length: 2000 }),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_deal_links_deal").on(table.dealId),
+    index("idx_deal_links_created_by").on(table.createdById),
+  ],
+);
+
+export type DealLink = typeof dealLinks.$inferSelect;
+export type InsertDealLink = typeof dealLinks.$inferInsert;
+
+export const insertDealLinkSchema = createInsertSchema(dealLinks).omit({
+  id: true,
+  createdAt: true,
+  previewTitle: true,
+  previewDescription: true,
+  previewImage: true,
+  createdById: true,
+});
+
+export type DealLinkWithUser = DealLink & {
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+};
+
 // Clients table for client company directory
 export const clients = pgTable(
   "clients",
@@ -1100,7 +1135,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -1647,7 +1682,7 @@ export type UpdateAppIssue = z.infer<typeof updateAppIssueSchema>;
 // ==========================================
 
 // Deals relations
-export const dealsRelations = relations(deals, ({ one }) => ({
+export const dealsRelations = relations(deals, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [deals.createdById],
     references: [users.id],
@@ -1655,6 +1690,18 @@ export const dealsRelations = relations(deals, ({ one }) => ({
   client: one(clients, {
     fields: [deals.clientId],
     references: [clients.id],
+  }),
+  links: many(dealLinks),
+}));
+
+export const dealLinksRelations = relations(dealLinks, ({ one }) => ({
+  deal: one(deals, {
+    fields: [dealLinks.dealId],
+    references: [deals.id],
+  }),
+  createdBy: one(users, {
+    fields: [dealLinks.createdById],
+    references: [users.id],
   }),
 }));
 

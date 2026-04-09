@@ -8,6 +8,7 @@ import {
   dealIntakes,
   dealServices,
   dealStatuses,
+  dealLinks,
   tags,
   clients,
   deals,
@@ -21,6 +22,8 @@ import {
   type FormSection,
   type DealLocation,
   type DealEvent,
+  type DealLink,
+  type DealLinkWithUser,
 } from "@shared/schema";
 
 export interface ForecastDealRow {
@@ -364,5 +367,67 @@ export const dealsStorage = {
       )
       .orderBy(auditLogs.performedAt);
     return results as StatusTransitionRow[];
+  },
+
+  async getDealLinks(dealId: string): Promise<DealLinkWithUser[]> {
+    const results = await db
+      .select({
+        id: dealLinks.id,
+        dealId: dealLinks.dealId,
+        url: dealLinks.url,
+        label: dealLinks.label,
+        previewTitle: dealLinks.previewTitle,
+        previewDescription: dealLinks.previewDescription,
+        previewImage: dealLinks.previewImage,
+        createdById: dealLinks.createdById,
+        createdAt: dealLinks.createdAt,
+        createdBy: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(dealLinks)
+      .leftJoin(users, eq(dealLinks.createdById, users.id))
+      .where(eq(dealLinks.dealId, dealId))
+      .orderBy(desc(dealLinks.createdAt));
+    return results as DealLinkWithUser[];
+  },
+
+  async createDealLink(data: {
+    dealId: string;
+    url: string;
+    label?: string | null;
+    previewTitle?: string | null;
+    previewDescription?: string | null;
+    previewImage?: string | null;
+    createdById: string;
+  }): Promise<DealLink> {
+    const [link] = await db
+      .insert(dealLinks)
+      .values({
+        dealId: data.dealId,
+        url: data.url,
+        label: data.label || null,
+        previewTitle: data.previewTitle || null,
+        previewDescription: data.previewDescription || null,
+        previewImage: data.previewImage || null,
+        createdById: data.createdById,
+      })
+      .returning();
+    return link;
+  },
+
+  async getDealLinkById(linkId: string): Promise<DealLink | null> {
+    const [link] = await db
+      .select()
+      .from(dealLinks)
+      .where(eq(dealLinks.id, linkId));
+    return link || null;
+  },
+
+  async deleteDealLink(linkId: string): Promise<void> {
+    await db.delete(dealLinks).where(eq(dealLinks.id, linkId));
   },
 };

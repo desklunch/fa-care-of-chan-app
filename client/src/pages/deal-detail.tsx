@@ -70,6 +70,7 @@ import {
   useFieldMutation,
 } from "@/components/inline-edit";
 import { DealTasksTab } from "@/components/deal-tasks-tab";
+import { DealLinksTab } from "@/components/deal-links-tab";
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -381,6 +382,9 @@ export default function DealDetail() {
               </TabsTrigger>
               <TabsTrigger value="files" data-testid="tab-files" className="hidden">
                 Files
+              </TabsTrigger>
+              <TabsTrigger value="links" data-testid="tab-links">
+                Links
               </TabsTrigger>
               <TabsTrigger value="tasks" data-testid="tab-tasks">
                 Tasks
@@ -1184,6 +1188,10 @@ export default function DealDetail() {
 
           <TabsContent value="files" className="p-4 md:p-6 pt-4 max-w-4xl">
             <GoogleDriveAttachments entityType="deal" entityId={id!} />
+          </TabsContent>
+
+          <TabsContent value="links" className="p-4 md:p-6 pt-4 max-w-4xl">
+            <DealLinksTab dealId={id!} canWrite={canWrite} />
           </TabsContent>
 
           <TabsContent value="tasks" className="p-4 md:p-6 pt-4 max-w-4xl">

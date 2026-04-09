@@ -929,6 +929,129 @@ export function registerDealsRoutes(app: Express): void {
   });
 
   // ==========================================
+  // DEAL LINKS ROUTES
+  // ==========================================
+
+  app.get("/api/deals/:dealId/links", isAuthenticated, requirePermission("deals.read"), async (req, res) => {
+    try {
+      const links = await dealsStorage.getDealLinks(req.params.dealId);
+      res.json(links);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal links");
+    }
+  });
+
+  app.post("/api/deals/:dealId/links", isAuthenticated, requirePermission("deals.write"), async (req: any, res) => {
+    try {
+      const actorId = req.user.claims.sub;
+      const { url, label } = req.body;
+
+      if (!url || typeof url !== "string") {
+        return res.status(400).json({ message: "url is required" });
+      }
+
+      if (!label || typeof label !== "string" || !label.trim()) {
+        return res.status(400).json({ message: "label is required" });
+      }
+
+      if (url.length > 2000) {
+        return res.status(400).json({ message: "URL must be 2000 characters or fewer" });
+      }
+
+      if (label.length > 500) {
+        return res.status(400).json({ message: "Label must be 500 characters or fewer" });
+      }
+
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url);
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+          return res.status(400).json({ message: "URL must use http or https" });
+        }
+      } catch {
+        return res.status(400).json({ message: "Invalid URL format" });
+      }
+
+      const { unfurlUrl } = await import("../../lib/unfurl");
+      const preview = await unfurlUrl(parsedUrl.href);
+
+      const link = await dealsStorage.createDealLink({
+        dealId: req.params.dealId,
+        url: parsedUrl.href,
+        label: label.trim(),
+        previewTitle: preview.title,
+        previewDescription: preview.description,
+        previewImage: preview.image,
+        createdById: actorId,
+      });
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_link",
+        entityId: link.id,
+        status: "success",
+        metadata: { dealId: req.params.dealId, url: parsedUrl.href },
+      });
+
+      res.status(201).json(link);
+    } catch (error) {
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal_link",
+        entityId: null,
+        status: "failure",
+        metadata: { dealId: req.params.dealId, error: (error as Error).message },
+      });
+      handleServiceError(res, error, "Failed to create deal link");
+    }
+  });
+
+  app.delete("/api/deals/:dealId/links/:linkId", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      if (!checkPermission(req, "deals.write")) {
+        return res.status(403).json({ message: "Forbidden", required: "deals.write" });
+      }
+
+      const actorId = req.user.claims.sub;
+      const link = await dealsStorage.getDealLinkById(req.params.linkId);
+
+      if (!link) {
+        return res.status(404).json({ message: "Link not found" });
+      }
+
+      if (link.dealId !== req.params.dealId) {
+        return res.status(404).json({ message: "Link not found" });
+      }
+
+      const isAdmin = checkPermission(req, "deals.delete");
+      if (link.createdById !== actorId && !isAdmin) {
+        return res.status(403).json({ message: "You can only delete links you created" });
+      }
+
+      await dealsStorage.deleteDealLink(req.params.linkId);
+
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_link",
+        entityId: req.params.linkId,
+        status: "success",
+        metadata: { dealId: req.params.dealId },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      await logAuditEvent(req, {
+        action: "delete",
+        entityType: "deal_link",
+        entityId: req.params.linkId,
+        status: "failure",
+        metadata: { dealId: req.params.dealId, error: (error as Error).message },
+      });
+      handleServiceError(res, error, "Failed to delete deal link");
+    }
+  });
+
+  // ==========================================
   // DEAL INTAKE ROUTES
   // ==========================================
 
