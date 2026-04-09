@@ -17,7 +17,7 @@ function AppShellContent({ children }: AppShellProps) {
   return (
     <div className="flex flex-col bg-muted overflow-hidden overscroll-contain w-screen h-dvh">
       <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
-      <div className="flex flex-1 bg-background rounded-none md:rounded-xl md:rounded-tl-[32px] ring ring-[1.5px] ring-black/5 shadow-lg overflow-hidden overscroll-contain md:m-3 shadow-4xl">
+      <div className="flex flex-1 bg-background rounded-none md:rounded-lg md:rounded-tl-[32px] ring ring-[1.5px] ring-black/5 shadow-lg overflow-hidden overscroll-contain md:m-3 shadow-4xl border">
         <Sidebar
           isMobileOpen={isMobileOpen}
           onMobileClose={() => setIsMobileOpen(false)}

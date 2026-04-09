@@ -107,7 +107,7 @@ export function TagAssignment({
         />
         
         {showSuggestions && (
-          <div className="absolute z-50 bottom-full mb-1 w-full rounded-md border bg-popover shadow-md">
+          <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md">
             <ScrollArea className="max-h-[200px]">
               <div className="p-1">
                 {filteredTags.length === 0 && !showCreateOption && (

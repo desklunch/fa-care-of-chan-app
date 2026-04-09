@@ -78,7 +78,9 @@ export interface DealTagEntry {
 }
 
 export interface DealsGridContext {
-  users: Array<Pick<UserType, "id" | "firstName" | "lastName" | "role" | "isActive">>;
+  users: Array<
+    Pick<UserType, "id" | "firstName" | "lastName" | "role" | "isActive">
+  >;
   services: DealService[];
   servicesMap: Map<number, DealService>;
   linkedClientsMap: Map<string, DealLinkedClientEntry[]>;
@@ -364,7 +366,9 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       sortable: false,
 
       cellEditorParams: (params: { context: DealsGridContext }) => {
-        const users = (params.context?.users || []).filter((u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"));
+        const users = (params.context?.users || []).filter(
+          (u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"),
+        );
         return {
           values: [
             "none",
@@ -404,7 +408,9 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
           return true;
         }
         // Find user by matching initials (only from Sales/Sales Admin roles)
-        const users = (params.context?.users || []).filter((u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"));
+        const users = (params.context?.users || []).filter(
+          (u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"),
+        );
         const user = users.find(
           (u) => getInitials(getUserFullName(u)) === params.newValue,
         );
@@ -457,6 +463,52 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     },
   },
   {
+    id: "eventSchedule",
+    headerName: "Event Schedule",
+    field: "eventSchedule",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 220,
+      sortable: false,
+      wrapText: true,
+      autoHeight: true,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        const events = params.data?.eventSchedule as DealEvent[] | null;
+        if (!events || events.length === 0) return "";
+        return events
+          .map((e) => {
+            const s = getEventSummary(e);
+            return s ? s.text : null;
+          })
+          .filter(Boolean)
+          .join("; ");
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
+        const events = params.data?.eventSchedule as DealEvent[] | null;
+        if (!events || events.length === 0) return null;
+        const summaries = events.map((e) => getEventSummary(e)).filter(Boolean);
+        if (summaries.length === 0) return null;
+        return (
+          <div className="flex flex-col gap-1 py-2.5">
+            {summaries.map((summary, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 text-xs">
+                <Badge variant="secondary" className="text-xs gap-1">
+                  {summary!.text}
+                  {summary!.altCount > 0 && (
+                    <span className="text-muted-foreground ml-0.5">
+                      +{summary!.altCount}
+                    </span>
+                  )}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        );
+      },
+    },
+  },
+  {
     id: "projectDate",
     headerName: "Project Date",
     field: "projectDate",
@@ -475,9 +527,12 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            <span>{params.value}</span>
-          </span>
+          <div
+            className=" text-xs text-muted-foreground text-wrap py-[16px]
+"
+          >
+            <span className="leading-[18px]">{params.value}</span>
+          </div>
         );
       },
     },
@@ -507,7 +562,10 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
               {client.name}
             </Link>
             {client.industryName && (
-              <span className="text-xs text-muted-foreground truncate" data-testid={`text-client-industry-${client.id}`}>
+              <span
+                className="text-xs text-muted-foreground truncate"
+                data-testid={`text-client-industry-${client.id}`}
+              >
                 {client.industryName}
               </span>
             )}
@@ -529,10 +587,18 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
       valueGetter: (params: { data: DealWithRelations }) => {
-        return params.data?.startedOn ? parseDateOnly(params.data.startedOn) : null;
+        return params.data?.startedOn
+          ? parseDateOnly(params.data.startedOn)
+          : null;
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
-        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: Date | null;
+      }) => {
+        if (
+          params.newValue instanceof Date &&
+          !isNaN(params.newValue.getTime())
+        ) {
           const y = params.newValue.getFullYear();
           const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
           const d = String(params.newValue.getDate()).padStart(2, "0");
@@ -571,10 +637,18 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
       valueGetter: (params: { data: DealWithRelations }) => {
-        return params.data?.lastContactOn ? parseDateOnly(params.data.lastContactOn) : null;
+        return params.data?.lastContactOn
+          ? parseDateOnly(params.data.lastContactOn)
+          : null;
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
-        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: Date | null;
+      }) => {
+        if (
+          params.newValue instanceof Date &&
+          !isNaN(params.newValue.getTime())
+        ) {
           const y = params.newValue.getFullYear();
           const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
           const d = String(params.newValue.getDate()).padStart(2, "0");
@@ -588,7 +662,11 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value || !(params.value instanceof Date)) return "";
         return format(params.value, "MM/dd/yy");
       },
-      cellRenderer: (params: { value: Date | null; data: DealWithRelations; context: DealsGridContext }) => {
+      cellRenderer: (params: {
+        value: Date | null;
+        data: DealWithRelations;
+        context: DealsGridContext;
+      }) => {
         if (!params.value || !(params.value instanceof Date)) return null;
         const formattedDate = format(params.value, "MM/dd/yy");
         const statusRecord = params.context?.dealStatuses?.find(
@@ -597,14 +675,31 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
         const isActive = statusRecord?.isActive ?? false;
         if (isActive) {
           const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+          );
           const diffMs = today.getTime() - params.value.getTime();
-          const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+          const diffDays = Math.max(
+            0,
+            Math.floor(diffMs / (1000 * 60 * 60 * 24)),
+          );
           const daysLabel = `${diffDays}d ago`;
           return (
             <span className="flex items-center gap-1.5 text-xs py-[16px] tracking-wide">
-              <span className="font-semibold text-muted-foreground" data-testid="text-last-contact-days">{daysLabel}</span>
-              <span className="font-normal opacity-50 text-muted-foreground" data-testid="text-last-contact-date">{formattedDate}</span>
+              <span
+                className="font-semibold text-muted-foreground"
+                data-testid="text-last-contact-days"
+              >
+                {daysLabel}
+              </span>
+              <span
+                className="font-normal opacity-50 text-muted-foreground"
+                data-testid="text-last-contact-date"
+              >
+                {formattedDate}
+              </span>
             </span>
           );
         }
@@ -630,10 +725,18 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellEditor: "agDateCellEditor",
       cellEditorPopup: true,
       valueGetter: (params: { data: DealWithRelations }) => {
-        return params.data?.proposalSentOn ? parseDateOnly(params.data.proposalSentOn) : null;
+        return params.data?.proposalSentOn
+          ? parseDateOnly(params.data.proposalSentOn)
+          : null;
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
-        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: Date | null;
+      }) => {
+        if (
+          params.newValue instanceof Date &&
+          !isNaN(params.newValue.getTime())
+        ) {
           const y = params.newValue.getFullYear();
           const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
           const d = String(params.newValue.getDate()).padStart(2, "0");
@@ -673,8 +776,14 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       valueGetter: (params: { data: DealWithRelations }) => {
         return params.data?.wonOn ? parseDateOnly(params.data.wonOn) : null;
       },
-      valueSetter: (params: { data: DealWithRelations; newValue: Date | null }) => {
-        if (params.newValue instanceof Date && !isNaN(params.newValue.getTime())) {
+      valueSetter: (params: {
+        data: DealWithRelations;
+        newValue: Date | null;
+      }) => {
+        if (
+          params.newValue instanceof Date &&
+          !isNaN(params.newValue.getTime())
+        ) {
           const y = params.newValue.getFullYear();
           const m = String(params.newValue.getMonth() + 1).padStart(2, "0");
           const d = String(params.newValue.getDate()).padStart(2, "0");
@@ -951,52 +1060,6 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
             >
               {params.value}
             </ReactMarkdown>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "eventSchedule",
-    headerName: "Event Schedule",
-    field: "eventSchedule",
-    category: "Basic Info",
-    colDef: {
-      flex: 1.5,
-      minWidth: 220,
-      sortable: false,
-      wrapText: true,
-      autoHeight: true,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const events = params.data?.eventSchedule as DealEvent[] | null;
-        if (!events || events.length === 0) return "";
-        return events
-          .map((e) => {
-            const s = getEventSummary(e);
-            return s ? s.text : null;
-          })
-          .filter(Boolean)
-          .join("; ");
-      },
-      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
-        const events = params.data?.eventSchedule as DealEvent[] | null;
-        if (!events || events.length === 0) return null;
-        const summaries = events.map((e) => getEventSummary(e)).filter(Boolean);
-        if (summaries.length === 0) return null;
-        return (
-          <div className="flex flex-col gap-1 py-2.5">
-            {summaries.map((summary, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 text-xs">
-                <Badge variant="secondary" className="text-xs gap-1">
-                  {summary!.text}
-                  {summary!.altCount > 0 && (
-                    <span className="text-muted-foreground ml-0.5">
-                      +{summary!.altCount}
-                    </span>
-                  )}
-                </Badge>
-              </div>
-            ))}
           </div>
         );
       },

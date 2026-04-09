@@ -362,7 +362,7 @@ export default function DealForm() {
               <CardHeader>
                 <CardTitle>Deal Info</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-4">
+              <CardContent className="flex flex-col gap-6">
                 <FormField
                   control={form.control}
                   name="displayName"
@@ -374,17 +374,81 @@ export default function DealForm() {
                       </div>
                       <FormControl>
                         <Input
-                          placeholder="Short name to help identify this deal"
+                          placeholder="Short name that idenfies the client and project to make this deal easy to find."
                           {...field}
                           data-testid="input-deal-name"
                         />
                       </FormControl>
       
                       <FormMessage />
+
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-deal-status" >
+                            <SelectValue placeholder="Select status"  />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {dealStatusList.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)} >
+                              <div className="min-w-48 w-fit ">
+                              <DealStatusBadge status={s.name} />
+                              </div>
+
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="ownerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Deal Owner</FormLabel>
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                        value={field.value || ""}
+
+                      >
+                        <FormControl>
+                          <SelectTrigger
+                            className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
+                            data-testid="select-deal-owner"
+                          >
+                            <SelectValue placeholder="Select owner..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No owner</SelectItem>
+                          {users.filter(u => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.firstName} {user.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+
+
+                <Separator className="my-4" />
                 <FormField
                   control={form.control}
                   name="clientId"
@@ -519,70 +583,7 @@ export default function DealForm() {
                 </Dialog>
                 <Separator className="my-4" />
                 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-deal-status" >
-                            <SelectValue placeholder="Select status"  />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {dealStatusList.map((s) => (
-                            <SelectItem key={s.id} value={String(s.id)} >
-                              <div className="min-w-48 w-fit ">
-                              <DealStatusBadge status={s.name} />
-                              </div>
-                              
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="ownerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deal Owner</FormLabel>
-                      <Select 
-                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || ""}
-                        
-                      >
-                        <FormControl>
-                          <SelectTrigger
-                            className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
-                            data-testid="select-deal-owner"
-                          >
-                            <SelectValue placeholder="Select owner..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">No owner</SelectItem>
-                          {users.filter(u => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.firstName} {user.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-
-
-                <Separator className="my-4" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField
@@ -702,7 +703,6 @@ export default function DealForm() {
                 </div>
               </CardContent>
             </Card>
-
             {/* Card 2: Project Details */}
             <Card>
               <CardHeader>
@@ -753,19 +753,6 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                <FormItem className="space-y-0">
-                  <FormLabel>Tags</FormLabel>
-                  <FormDescription>
-                    Add tags to categorize this deal.
-                  </FormDescription>
-                  <div className="pt-2">
-                    <TagAssignment
-                      category="Deals"
-                      selectedTagIds={selectedTagIds}
-                      onTagsChange={setSelectedTagIds}
-                    />
-                  </div>
-                </FormItem>
 
                 <FormField
                   control={form.control}
@@ -787,6 +774,18 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+                <FormItem className="space-y-0">
+                  <FormLabel>Tags</FormLabel>
+     
+                  <div className="pt-2">
+                    <TagAssignment
+                      category="Deals"
+                      selectedTagIds={selectedTagIds}
+                      onTagsChange={setSelectedTagIds}
+                    />
+                  </div>
+                </FormItem>
+
                 <Separator className="my-4" />
 
                     <FormField

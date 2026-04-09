@@ -12,7 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Loader2, Pencil, Check, X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -46,7 +50,8 @@ export function EditableField({
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
-  const [selectedMulti, setSelectedMulti] = useState<string[]>(multiSelectValues);
+  const [selectedMulti, setSelectedMulti] =
+    useState<string[]>(multiSelectValues);
   const [editArray, setEditArray] = useState<string[]>(arrayValue);
   const [editBoolean, setEditBoolean] = useState(booleanValue);
   const [dateOpen, setDateOpen] = useState(false);
@@ -56,14 +61,15 @@ export function EditableField({
   const prevArrayRef = useRef<string>(JSON.stringify(arrayValue));
   const prevValueRef = useRef<string | null | undefined>(value);
   const prevBooleanRef = useRef<boolean>(booleanValue);
-  
+
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(800);
 
   useEffect(() => {
     const checkMobile = () => window.innerWidth < MOBILE_BREAKPOINT;
-    const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
-    
+    const getViewportHeight = () =>
+      window.visualViewport?.height ?? window.innerHeight;
+
     setIsMobile(checkMobile());
     setViewportHeight(getViewportHeight());
 
@@ -72,7 +78,7 @@ export function EditableField({
     };
 
     window.addEventListener("resize", handleResize);
-    
+
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -81,7 +87,8 @@ export function EditableField({
   useEffect(() => {
     if (!isEditing || !isMobile) return;
 
-    const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
+    const getViewportHeight = () =>
+      window.visualViewport?.height ?? window.innerHeight;
     setViewportHeight(getViewportHeight());
 
     const handleViewportResize = () => {
@@ -89,9 +96,12 @@ export function EditableField({
     };
 
     window.visualViewport?.addEventListener("resize", handleViewportResize);
-    
+
     return () => {
-      window.visualViewport?.removeEventListener("resize", handleViewportResize);
+      window.visualViewport?.removeEventListener(
+        "resize",
+        handleViewportResize,
+      );
     };
   }, [isEditing, isMobile]);
 
@@ -106,23 +116,23 @@ export function EditableField({
 
   useEffect(() => {
     if (isEditing) return;
-    
+
     if (prevValueRef.current !== value) {
       prevValueRef.current = value;
       setEditValue(value || "");
     }
-    
+
     if (prevBooleanRef.current !== booleanValue) {
       prevBooleanRef.current = booleanValue;
       setEditBoolean(booleanValue);
     }
-    
+
     const currentArrayStr = JSON.stringify(arrayValue);
     if (prevArrayRef.current !== currentArrayStr) {
       prevArrayRef.current = currentArrayStr;
       setEditArray(arrayValue);
     }
-    
+
     const currentMultiStr = JSON.stringify(multiSelectValues);
     if (prevMultiRef.current !== currentMultiStr) {
       prevMultiRef.current = currentMultiStr;
@@ -145,41 +155,47 @@ export function EditableField({
     }
   }, [isEditing, isMobile]);
 
-  const validateLocally = useCallback((val: unknown): string | null => {
-    if (!validation) return null;
-    
-    if (validation.required && (val === null || val === undefined || val === "")) {
-      return "This field is required";
-    }
-    
-    if (typeof val === "string") {
-      if (validation.minLength && val.length < validation.minLength) {
-        return `Must be at least ${validation.minLength} characters`;
+  const validateLocally = useCallback(
+    (val: unknown): string | null => {
+      if (!validation) return null;
+
+      if (
+        validation.required &&
+        (val === null || val === undefined || val === "")
+      ) {
+        return "This field is required";
       }
-      if (validation.maxLength && val.length > validation.maxLength) {
-        return `Must be no more than ${validation.maxLength} characters`;
+
+      if (typeof val === "string") {
+        if (validation.minLength && val.length < validation.minLength) {
+          return `Must be at least ${validation.minLength} characters`;
+        }
+        if (validation.maxLength && val.length > validation.maxLength) {
+          return `Must be no more than ${validation.maxLength} characters`;
+        }
+        if (validation.pattern && !validation.pattern.test(val)) {
+          return "Invalid format";
+        }
       }
-      if (validation.pattern && !validation.pattern.test(val)) {
-        return "Invalid format";
+
+      if (validation.customValidator) {
+        return validation.customValidator(val);
       }
-    }
-    
-    if (validation.customValidator) {
-      return validation.customValidator(val);
-    }
-    
-    return null;
-  }, [validation]);
+
+      return null;
+    },
+    [validation],
+  );
 
   const handleSave = () => {
     let saveValue: unknown;
-    
+
     switch (type) {
       case "multiselect":
         saveValue = selectedMulti;
         break;
       case "array":
-        saveValue = editArray.filter(v => v.trim() !== "");
+        saveValue = editArray.filter((v) => v.trim() !== "");
         break;
       case "switch":
         saveValue = editBoolean;
@@ -193,13 +209,13 @@ export function EditableField({
       default:
         saveValue = editValue || null;
     }
-    
+
     const validationError = validateLocally(saveValue);
     if (validationError) {
       setLocalError(validationError);
       return;
     }
-    
+
     setLocalError(null);
     onSave(field, saveValue);
     setIsEditing(false);
@@ -216,7 +232,12 @@ export function EditableField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && type !== "textarea" && type !== "array" && type !== "richtext") {
+    if (
+      e.key === "Enter" &&
+      type !== "textarea" &&
+      type !== "array" &&
+      type !== "richtext"
+    ) {
       e.preventDefault();
       handleSave();
     } else if (e.key === "Escape") {
@@ -232,29 +253,31 @@ export function EditableField({
   };
 
   const toggleMultiSelect = (val: string) => {
-    setSelectedMulti(prev => 
-      prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
+    setSelectedMulti((prev) =>
+      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val],
     );
   };
 
   const displayError = localError || error;
 
   const errorDisplay = displayError && (
-    <p className="text-sm text-destructive" data-testid={`error-${field}`}>{displayError}</p>
+    <p className="text-sm text-destructive" data-testid={`error-${field}`}>
+      {displayError}
+    </p>
   );
 
   const actionButtons = (
     <div className="flex gap-3 justify-end">
-      <Button 
-        variant="outline" 
-        onClick={handleCancel} 
+      <Button
+        variant="outline"
+        onClick={handleCancel}
         disabled={isLoading}
         data-testid={`button-cancel-${field}`}
       >
         <X className="h-4 w-4" />
       </Button>
-      <Button 
-        onClick={handleSave} 
+      <Button
+        onClick={handleSave}
         disabled={isLoading}
         data-testid={`button-save-${field}`}
       >
@@ -285,7 +308,7 @@ export function EditableField({
               className={cn(
                 "min-h-[150px] text-base leading-[1.6em] flex-1",
                 isMobile && "min-h-0 input-prevent-scroll-on-focus",
-                displayError && "border-destructive"
+                displayError && "border-destructive",
               )}
               disabled={isLoading}
               data-testid={`input-${field}`}
@@ -307,15 +330,18 @@ export function EditableField({
               }}
               disabled={isLoading}
             >
-              <SelectTrigger 
-                className={cn("w-full", displayError && "border-destructive")} 
+              <SelectTrigger
+                className={cn("w-full", displayError && "border-destructive")}
                 data-testid={`select-${field}`}
               >
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
               <SelectContent>
                 {options.map((opt) => (
-                  <SelectItem key={opt.value || "__none__"} value={opt.value || "__none__"}>
+                  <SelectItem
+                    key={opt.value || "__none__"}
+                    value={opt.value || "__none__"}
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -336,7 +362,7 @@ export function EditableField({
                   className={cn(
                     "w-full justify-start text-left font-normal",
                     !editValue && "text-muted-foreground",
-                    displayError && "border-destructive"
+                    displayError && "border-destructive",
                   )}
                   disabled={isLoading}
                   data-testid={`datepicker-${field}`}
@@ -374,7 +400,9 @@ export function EditableField({
               {options.map((opt) => (
                 <Badge
                   key={opt.value}
-                  variant={selectedMulti.includes(opt.value) ? "default" : "outline"}
+                  variant={
+                    selectedMulti.includes(opt.value) ? "default" : "outline"
+                  }
                   className="cursor-pointer"
                   onClick={() => {
                     toggleMultiSelect(opt.value);
@@ -453,7 +481,7 @@ export function EditableField({
               className={cn(
                 "w-full text-sm",
                 isMobile && "input-prevent-scroll-on-focus",
-                displayError && "border-destructive"
+                displayError && "border-destructive",
               )}
               disabled={isLoading}
               data-testid={`input-${field}`}
@@ -511,7 +539,7 @@ export function EditableField({
               className={cn(
                 "w-full text-sm",
                 isMobile && "input-prevent-scroll-on-focus",
-                displayError && "border-destructive"
+                displayError && "border-destructive",
               )}
               disabled={isLoading}
               data-testid={`input-${field}`}
@@ -525,19 +553,14 @@ export function EditableField({
   const renderEditor = () => {
     if (isMobile) {
       return (
-        <div 
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm z-50"
-        >
-          <div 
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm z-50">
+          <div
             className="fixed inset-4  rounded-lg border border-input  flex flex-col gap-4 p-6 flex flex-col justify-center"
-            style={{ height: viewportHeight-36 }}
-
+            style={{ height: viewportHeight - 36 }}
             data-testid={`mobile-editor-${field}`}
           >
             <div className="text-base font-medium shrink-0">{label}</div>
-            <div className=" flex flex-col gap-2">
-              {renderEditorContent()}
-            </div>
+            <div className=" flex flex-col gap-2">{renderEditorContent()}</div>
             {actionButtons}
           </div>
         </div>
@@ -559,12 +582,12 @@ export function EditableField({
       onDoubleClick={handleDoubleClick}
     >
       <div className="w-2/5 text-sm font-semibold shrink-0">{label}</div>
-      <div className="flex-1 text-sm">
+      <div className="w-3/5 flex-1 text-sm min-w-0">
         {isEditing ? (
           renderEditor()
         ) : (
-          <div className="flex items-start gap-2 group">
-            <div className="flex-1 ">
+          <div className="flex items-start gap-2 group  ">
+            <div className="flex-1 min-w-0 ">
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -574,11 +597,18 @@ export function EditableField({
                 displayValue
               ) : value ? (
                 type === "richtext" ? (
-                  <MarkdownDisplay className={cn("prose dark:prose-invert max-w-none text-sm [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0", valueClassName)}>
+                  <MarkdownDisplay
+                    className={cn(
+                      "prose dark:prose-invert max-w-none text-sm [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 break-words ",
+                      valueClassName,
+                    )}
+                  >
                     {normalizeToMarkdown(value)}
                   </MarkdownDisplay>
                 ) : (
-                  <span className={cn("whitespace-pre-wrap", valueClassName)}>{value}</span>
+                  <span className={cn("whitespace-pre-wrap", valueClassName)}>
+                    {value}
+                  </span>
                 )
               ) : (
                 <span className="text-muted-foreground">{placeholder}</span>
