@@ -138,8 +138,7 @@ export const DEFAULT_VISIBLE_COLUMNS = [
   "status",
   "projectDate",
   "client",
-  "linkedClients",
-  "tags",
+
   "lastContactOn",
   "dealAge",
   "concept",
@@ -972,7 +971,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
           <div className="flex flex-col gap-1 py-2.5">
             {summaries.map((summary, idx) => (
               <div key={idx} className="flex items-center gap-1.5 text-xs">
-                <Badge variant="ghost" className="text-xs gap-1">
+                <Badge variant="secondary" className="text-xs gap-1">
                   {summary!.text}
                   {summary!.altCount > 0 && (
                     <span className="text-muted-foreground ml-0.5">
