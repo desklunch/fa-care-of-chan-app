@@ -37,7 +37,15 @@ import { ClientSearch } from "@/components/client-search";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
-import { Calendar, Loader2, Save, X } from "lucide-react";
+import { Calendar, Loader2, Save, X, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -138,8 +146,61 @@ export default function DealForm() {
   const watchedClientId = form.watch("clientId");
 
   const { data: linkedContacts = [] } = useQuery<Contact[]>({
-    queryKey: [`/api/clients/${watchedClientId}/contacts`],
+    queryKey: ['/api/clients', watchedClientId, 'contacts'],
     enabled: Boolean(watchedClientId),
+  });
+
+  const [createContactOpen, setCreateContactOpen] = useState(false);
+  const [newContactFirstName, setNewContactFirstName] = useState("");
+  const [newContactLastName, setNewContactLastName] = useState("");
+  const [newContactEmail, setNewContactEmail] = useState("");
+  const [newContactErrors, setNewContactErrors] = useState<Record<string, string>>({});
+
+  const createContactMutation = useMutation({
+    mutationFn: async () => {
+      if (!watchedClientId) {
+        throw new Error("No client selected");
+      }
+      const errors: Record<string, string> = {};
+      if (!newContactFirstName.trim()) errors.firstName = "First name is required";
+      if (!newContactLastName.trim()) errors.lastName = "Last name is required";
+      if (!newContactEmail.trim()) errors.email = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newContactEmail.trim())) errors.email = "Invalid email address";
+      if (Object.keys(errors).length > 0) {
+        setNewContactErrors(errors);
+        throw new Error("Validation failed");
+      }
+
+      const contactRes = await apiRequest("POST", "/api/contacts", {
+        firstName: newContactFirstName.trim(),
+        lastName: newContactLastName.trim(),
+        emailAddresses: [newContactEmail.trim()],
+      });
+      const contact = await contactRes.json();
+
+      await apiRequest("POST", `/api/contacts/${contact.id}/clients/${watchedClientId}`);
+
+      return contact;
+    },
+    onSuccess: (contact) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients', watchedClientId, 'contacts'] });
+      form.setValue("primaryContactId", contact.id);
+      setCreateContactOpen(false);
+      setNewContactFirstName("");
+      setNewContactLastName("");
+      setNewContactEmail("");
+      setNewContactErrors({});
+      toast({ title: "Contact created", description: `${contact.firstName} ${contact.lastName} has been created and linked.` });
+    },
+    onError: (error) => {
+      if (error.message !== "Validation failed") {
+        toast({
+          title: "Error",
+          description: error.message === "No client selected" ? "Please select a client first." : "Failed to create contact. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
   });
 
   useEffect(() => {
@@ -361,9 +422,14 @@ export default function DealForm() {
                       <FormItem>
                         <FormLabel>Primary Contact</FormLabel>
                         <Select 
-                          onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                          onValueChange={(val) => {
+                            if (val === "__create_new__") {
+                              setCreateContactOpen(true);
+                              return;
+                            }
+                            field.onChange(val === "__none__" ? "" : val);
+                          }} 
                           value={field.value || "__none__"}
-                          disabled={linkedContacts.length === 0}
                         >
                           <FormControl>
                             <SelectTrigger
@@ -373,22 +439,84 @@ export default function DealForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="__none__">{linkedContacts.length === 0 ? (<span className="text-xs">No contacts found for this client. </span>) : "None"}</SelectItem>
+                            <SelectItem value="__none__">{linkedContacts.length === 0 ? (<span className="text-xs">No contacts found for this client</span>) : "None"}</SelectItem>
                             {linkedContacts.map((contact) => (
-                              <SelectItem key={contact.id} value={contact.id}>
+                              <SelectItem key={contact.id} value={contact.id} data-testid={`select-contact-${contact.id}`}>
                                 {contact.firstName} {contact.lastName}
-                              
                               </SelectItem>
                             ))}
+                            <SelectItem value="__create_new__" data-testid="select-create-new-contact">
+                              <span className="flex items-center gap-2">
+                                <Plus className="h-3.5 w-3.5" />
+                                Create New Contact
+                              </span>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
-           
- 
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 )}
+
+                <Dialog open={createContactOpen} onOpenChange={(open) => {
+                  setCreateContactOpen(open);
+                  if (!open) {
+                    setNewContactErrors({});
+                    setNewContactFirstName("");
+                    setNewContactLastName("");
+                    setNewContactEmail("");
+                  }
+                }}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Contact</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="new-contact-first-name">First Name</Label>
+                        <Input
+                          id="new-contact-first-name"
+                          data-testid="input-new-contact-first-name"
+                          value={newContactFirstName}
+                          onChange={(e) => { setNewContactFirstName(e.target.value); setNewContactErrors((prev) => { const { firstName, ...rest } = prev; return rest; }); }}
+                          placeholder="First name"
+                        />
+                        {newContactErrors.firstName && <p className="text-sm text-destructive">{newContactErrors.firstName}</p>}
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="new-contact-last-name">Last Name</Label>
+                        <Input
+                          id="new-contact-last-name"
+                          data-testid="input-new-contact-last-name"
+                          value={newContactLastName}
+                          onChange={(e) => { setNewContactLastName(e.target.value); setNewContactErrors((prev) => { const { lastName, ...rest } = prev; return rest; }); }}
+                          placeholder="Last name"
+                        />
+                        {newContactErrors.lastName && <p className="text-sm text-destructive">{newContactErrors.lastName}</p>}
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="new-contact-email">Email</Label>
+                        <Input
+                          id="new-contact-email"
+                          data-testid="input-new-contact-email"
+                          type="email"
+                          value={newContactEmail}
+                          onChange={(e) => { setNewContactEmail(e.target.value); setNewContactErrors((prev) => { const { email, ...rest } = prev; return rest; }); }}
+                          placeholder="Email address"
+                        />
+                        {newContactErrors.email && <p className="text-sm text-destructive">{newContactErrors.email}</p>}
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setCreateContactOpen(false)} data-testid="button-cancel-create-contact">Cancel</Button>
+                      <Button onClick={() => createContactMutation.mutate()} disabled={createContactMutation.isPending} data-testid="button-submit-create-contact">
+                        {createContactMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Create Contact
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
                 <Separator className="my-4" />
                 
                 <FormField
