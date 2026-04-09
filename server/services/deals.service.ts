@@ -311,6 +311,44 @@ export class DealsService extends BaseService {
     });
   }
 
+  async duplicate(id: string, actorId: string): Promise<Deal> {
+    const existingDeal = this.ensureExists(
+      await this.storage.getDealById(id),
+      "Deal",
+      id
+    );
+
+    const createData: CreateDeal = {
+      displayName: `Copy of ${existingDeal.displayName}`,
+      status: existingDeal.status,
+      clientId: existingDeal.clientId,
+      primaryContactId: existingDeal.primaryContactId,
+      ownerId: existingDeal.ownerId,
+      budgetHigh: existingDeal.budgetHigh,
+      budgetLow: existingDeal.budgetLow,
+      budgetNotes: existingDeal.budgetNotes,
+      locations: existingDeal.locations ?? [],
+      eventSchedule: existingDeal.eventSchedule ?? [],
+      serviceIds: existingDeal.serviceIds,
+      locationsText: existingDeal.locationsText,
+      concept: existingDeal.concept,
+      notes: existingDeal.notes,
+      nextSteps: existingDeal.nextSteps,
+      projectDate: existingDeal.projectDate,
+    };
+
+    const newDeal = await this.storage.createDeal(createData, actorId);
+
+    domainEvents.emit({
+      type: "deal:created",
+      deal: newDeal,
+      actorId,
+      timestamp: new Date(),
+    });
+
+    return newDeal;
+  }
+
   private computeChanges(before: DealWithRelations, after: Deal): Partial<Deal> {
     const changes: Partial<Deal> = {};
     const keys = Object.keys(after) as (keyof Deal)[];

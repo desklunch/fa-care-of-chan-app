@@ -679,6 +679,36 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
+  app.post("/api/deals/:id/duplicate", isAuthenticated, requirePermission("deals.write"), async (req: any, res) => {
+    try {
+      const actorId = req.user.claims.sub;
+      const sourceId = req.params.id;
+
+      const newDeal = await dealsService.duplicate(sourceId, actorId);
+
+      const linkedClients = await dealsStorage.getLinkedClientsByDealId(sourceId);
+      for (const lc of linkedClients) {
+        await dealsStorage.linkDealClient(newDeal.id, lc.clientId, lc.label);
+      }
+
+      const tagIds = await dealsStorage.getDealTagIds(sourceId);
+      if (tagIds.length > 0) {
+        await dealsStorage.setDealTags(newDeal.id, tagIds);
+      }
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "deal",
+        entityId: newDeal.id,
+        metadata: { displayName: newDeal.displayName, duplicatedFrom: sourceId },
+      });
+
+      res.status(201).json(newDeal);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to duplicate deal");
+    }
+  });
+
   app.post("/api/deals", isAuthenticated, async (req: any, res) => {
     try {
       const actorId = req.user.claims.sub;

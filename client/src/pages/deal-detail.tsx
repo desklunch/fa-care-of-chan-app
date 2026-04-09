@@ -41,6 +41,7 @@ import {
   Search,
   Pencil,
   FileText,
+  Copy,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
@@ -226,6 +227,25 @@ export default function DealDetail() {
     saveField(field, ids);
   };
 
+  const duplicateMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/deals/${id}/duplicate`);
+      return res.json();
+    },
+    onSuccess: (newDeal: { id: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      toast({ title: "Deal duplicated successfully" });
+      setLocation(`/deals/${newDeal.id}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to duplicate deal",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("DELETE", `/api/deals/${id}`);
@@ -333,6 +353,11 @@ export default function DealDetail() {
                 label: "Edit Deal",
                 href: `/deals/${id}/edit`,
                 icon: PenBox,
+              },
+              {
+                label: duplicateMutation.isPending ? "Duplicating..." : "Duplicate Deal",
+                onClick: () => { if (!duplicateMutation.isPending) duplicateMutation.mutate(); },
+                icon: Copy,
               },
             ]
           : []),
