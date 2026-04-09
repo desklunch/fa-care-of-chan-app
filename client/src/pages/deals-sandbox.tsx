@@ -472,6 +472,14 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
         rows: 3,
         cols: 30,
       },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
+            <span>{params.value}</span>
+          </span>
+        );
+      },
     },
   },
   {
