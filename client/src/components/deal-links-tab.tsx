@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Link as LinkIcon,
   Globe,
+  Bookmark,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { DealLinkWithUser } from "@shared/schema";
@@ -143,7 +144,7 @@ export function DealLinksTab({ dealId, canWrite }: DealLinksTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium" data-testid="heading-links">Share links to files</h3>
+        <h3 className="text-sm font-medium" data-testid="heading-links">Share links to Google Drive documents, websites, etc.</h3>
       </div>
       {canWrite && (
         <div>
@@ -151,13 +152,13 @@ export function DealLinksTab({ dealId, canWrite }: DealLinksTabProps) {
 
           {!showCreateForm ? (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="gap-1"
+              className="gap-2"
               onClick={() => setShowCreateForm(true)}
               data-testid="button-add-link"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Bookmark className="h-3.5 w-3.5" />
               Add Link
             </Button>
           ) : (

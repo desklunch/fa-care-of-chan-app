@@ -118,7 +118,6 @@ export default function DealDetail() {
 
   const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
 
-
   interface DealLinkedClient {
     dealId: string;
     clientId: string;
@@ -319,7 +318,7 @@ export default function DealDetail() {
         { label: deal.displayName },
       ]}
       additionalActions={[
-        ...(canRead
+        ...(user?.role === "admin"
           ? [
               {
                 label: "Generate Doc",
@@ -381,16 +380,26 @@ export default function DealDetail() {
                 Links
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
-                Comments <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
-
+                Comments{" "}
+                <Badge
+                  variant="secondary"
+                  className="ml-1 text-[10px] px-1.5 py-0"
+                >
+                  BETA
+                </Badge>
               </TabsTrigger>
               {/* <TabsTrigger value="files" data-testid="tab-files" className="hidden">
                 Files
               </TabsTrigger> */}
-   
+
               <TabsTrigger value="tasks" data-testid="tab-tasks">
                 Tasks
-                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">BETA</Badge>
+                <Badge
+                  variant="secondary"
+                  className="ml-1 text-[10px] px-1.5 py-0"
+                >
+                  BETA
+                </Badge>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -401,7 +410,12 @@ export default function DealDetail() {
           >
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base" data-testid="heading-deal-overview">Deal Overview</CardTitle>
+                <CardTitle
+                  className="text-base"
+                  data-testid="heading-deal-overview"
+                >
+                  Deal Overview
+                </CardTitle>
               </CardHeader>
               <CardContent className="py-2">
                 <EditableField
@@ -413,12 +427,18 @@ export default function DealDetail() {
                   disabled={!canWrite}
                   options={[
                     { value: "", label: "Unassigned" },
-                    ...users.filter((u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((u) => ({
-                      value: u.id,
-                      label:
-                        [u.firstName, u.lastName].filter(Boolean).join(" ") ||
-                        "Unknown",
-                    })),
+                    ...users
+                      .filter(
+                        (u) =>
+                          u.isActive &&
+                          (u.role === "Sales" || u.role === "Sales Admin"),
+                      )
+                      .map((u) => ({
+                        value: u.id,
+                        label:
+                          [u.firstName, u.lastName].filter(Boolean).join(" ") ||
+                          "Unknown",
+                      })),
                   ]}
                   onSave={handleFieldSave}
                   isLoading={isFieldLoading("ownerId")}
@@ -728,7 +748,12 @@ export default function DealDetail() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base" data-testid="heading-project-info">Project Info</CardTitle>
+                <CardTitle
+                  className="text-base"
+                  data-testid="heading-project-info"
+                >
+                  Project Info
+                </CardTitle>
               </CardHeader>
               <CardContent className="py-2">
                 <FieldRow label="Locations" testId="field-locations-json">
@@ -1019,7 +1044,12 @@ export default function DealDetail() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base" data-testid="heading-deal-details">Deal Details</CardTitle>
+                <CardTitle
+                  className="text-base"
+                  data-testid="heading-deal-details"
+                >
+                  Deal Details
+                </CardTitle>
               </CardHeader>
               <CardContent className="py-2">
                 <FieldRow label="Tags" testId="field-tags">
