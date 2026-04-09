@@ -340,15 +340,7 @@ export default function DealDetail() {
         { label: deal.displayName },
       ]}
       additionalActions={[
-        ...(user?.role === "admin"
-          ? [
-              {
-                label: "Generate Doc",
-                onClick: () => setShowGenerateDoc(true),
-                icon: FileText,
-              },
-            ]
-          : []),
+
         ...(canWrite
           ? [
               {
@@ -370,6 +362,15 @@ export default function DealDetail() {
                 onClick: () => setShowDeleteDialog(true),
                 icon: Trash2,
                 variant: "destructive" as const,
+              },
+            ]
+          : []),
+        ...(user?.role === "admin"
+          ? [
+              {
+                label: "Generate Doc",
+                onClick: () => setShowGenerateDoc(true),
+                icon: FileText,
               },
             ]
           : []),
