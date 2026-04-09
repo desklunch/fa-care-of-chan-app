@@ -1,5 +1,17 @@
 import TurndownService from "turndown";
 import { marked } from "marked";
+import type { Root, Text } from "hast";
+import { visit } from "unist-util-visit";
+
+export function rehypeNonBreakingHyphens() {
+  return (tree: Root) => {
+    visit(tree, "text", (node: Text, _index, parent) => {
+      const parentTag = parent && "tagName" in parent ? parent.tagName : "";
+      if (parentTag === "code" || parentTag === "pre") return;
+      node.value = node.value.replace(/-/g, "\u2011");
+    });
+  };
+}
 
 marked.setOptions({
   breaks: true,

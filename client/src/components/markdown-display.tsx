@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkBreaks from "remark-breaks";
+import { rehypeNonBreakingHyphens } from "@/lib/markdown-utils";
 
 interface MarkdownDisplayProps {
   children: string;
@@ -11,7 +12,7 @@ export function MarkdownDisplay({ children, className }: MarkdownDisplayProps) {
   return (
     <div className={className}>
       <ReactMarkdown
-        rehypePlugins={[rehypeRaw]}
+        rehypePlugins={[rehypeRaw, rehypeNonBreakingHyphens]}
         remarkPlugins={[remarkBreaks]}
         components={{
           a: ({ href, children: linkChildren }) => (
