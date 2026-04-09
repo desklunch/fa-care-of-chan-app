@@ -41,6 +41,7 @@ import ReactMarkdown from "react-markdown";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
+import { LocationsCellEditor } from "@/components/ag-grid/locations-cell-editor";
 import StatusCellEditor from "@/components/ag-grid/status-cell-editor";
 import RichTextCellEditor from "@/components/ag-grid/richtext-cell-editor";
 import { normalizeToMarkdown } from "@/lib/markdown-utils";
@@ -997,13 +998,23 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       sortable: false,
       wrapText: true,
       autoHeight: true,
+      editable: true,
+      cellEditor: LocationsCellEditor,
+      cellEditorPopup: true,
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        return (params.data?.locations as DealLocation[] | null) || [];
+      },
+      valueSetter: (params: { data: DealWithRelations; newValue: DealLocation[] }) => {
+        params.data.locations = params.newValue;
+        return true;
+      },
+      getQuickFilterText: (params: { data: DealWithRelations | undefined }) => {
         const locations = params.data?.locations as DealLocation[] | null;
         if (!locations || locations.length === 0) return "";
         return locations.map((l) => l.displayName).join(", ");
       },
-      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
-        const locations = params.data?.locations as DealLocation[] | null;
+      cellRenderer: (params: { value: DealLocation[] | null; data: DealWithRelations | undefined }) => {
+        const locations = params.value as DealLocation[] | null;
         if (!locations || locations.length === 0) return null;
         return (
           <div className="flex flex-wrap gap-1 py-2.5">
@@ -1490,7 +1501,6 @@ export default function DealsPage() {
       if (field === "serviceIds") {
         const oldIds = (oldValue as number[] | null) || [];
         const newIds = (newValue as number[] | null) || [];
-        // Check if arrays are equal
         if (
           oldIds.length === newIds.length &&
           oldIds.every((id, i) => id === newIds[i])
@@ -1498,6 +1508,16 @@ export default function DealsPage() {
           return; // No change
         }
         processedValue = newIds;
+      } else if (field === "locations") {
+        const oldLocs = (oldValue as DealLocation[] | null) || [];
+        const newLocs = (newValue as DealLocation[] | null) || [];
+        if (
+          oldLocs.length === newLocs.length &&
+          oldLocs.every((loc, i) => loc.placeId === newLocs[i]?.placeId)
+        ) {
+          return;
+        }
+        processedValue = newLocs;
       } else {
         // For non-array fields, check equality normally
         if (newValue === oldValue) return;
