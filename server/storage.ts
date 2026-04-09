@@ -1945,7 +1945,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Deal operations
-  // Note: eventSchedule is excluded from list view as it's only needed for deal editing
+  // Note: eventSchedule is included for list view display of event summaries
   async getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]> {
     const ownerUsers = alias(users, "owner_users");
     let query = db
@@ -1965,6 +1965,7 @@ export class DatabaseStorage implements IStorage {
         proposalSentOn: deals.proposalSentOn,
         projectDate: deals.projectDate,
         locations: deals.locations,
+        eventSchedule: deals.eventSchedule,
         serviceIds: deals.serviceIds,
         locationsText: deals.locationsText,
         concept: deals.concept,
