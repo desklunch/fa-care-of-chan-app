@@ -46,6 +46,7 @@ import { ServicesCellEditor } from "@/components/ag-grid/services-cell-editor";
 import { LocationsCellEditor } from "@/components/ag-grid/locations-cell-editor";
 import StatusCellEditor from "@/components/ag-grid/status-cell-editor";
 import RichTextCellEditor from "@/components/ag-grid/richtext-cell-editor";
+import EventScheduleCellEditor from "@/components/ag-grid/event-schedule-cell-editor";
 import { normalizeToMarkdown } from "@/lib/markdown-utils";
 import { MarkdownDisplay } from "@/components/markdown-display";
 import type { DealStatusRecord } from "@shared/schema";
@@ -89,6 +90,7 @@ export interface DealsGridContext {
   linkedClientsMap: Map<string, DealLinkedClientEntry[]>;
   dealTagsMap: Map<string, DealTagEntry[]>;
   dealStatuses: DealStatusRecord[];
+  onUpdateDeal?: (dealId: string, updates: Record<string, unknown>) => void;
 }
 
 /**
@@ -954,6 +956,16 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       sortable: false,
       wrapText: true,
       autoHeight: true,
+      cellDataType: false,
+      editable: true,
+      cellEditor: EventScheduleCellEditor,
+      cellEditorPopup: true,
+      valueSetter: (params: { data: DealWithRelations; newValue: DealEvent[] }) => {
+        if (params.data) {
+          params.data.eventSchedule = params.newValue;
+        }
+        return true;
+      },
       valueGetter: (params: { data: DealWithRelations | undefined }) => {
         const events = params.data?.eventSchedule as DealEvent[] | null;
         if (!events || events.length === 0) return "";
@@ -1336,15 +1348,6 @@ export default function DealsPage() {
     return map;
   }, [allDealTags]);
 
-  const gridContext: DealsGridContext = {
-    users,
-    services: dealServices,
-    servicesMap,
-    linkedClientsMap,
-    dealTagsMap,
-    dealStatuses: dealStatusList,
-  };
-
   // Mobile column configuration: explicit ColDef overrides per column
   const mobileColumnConfig: Record<
     string,
@@ -1485,6 +1488,23 @@ export default function DealsPage() {
     },
   });
 
+  const handleDirectDealUpdate = useCallback(
+    (dealId: string, updates: Record<string, unknown>) => {
+      updateDealMutation.mutate({ dealId, updates });
+    },
+    [updateDealMutation],
+  );
+
+  const gridContext: DealsGridContext = {
+    users,
+    services: dealServices,
+    servicesMap,
+    linkedClientsMap,
+    dealTagsMap,
+    dealStatuses: dealStatusList,
+    onUpdateDeal: handleDirectDealUpdate,
+  };
+
   // Handle cell value changes - persist to server
   const handleCellValueChanged = useCallback(
     (event: CellValueChangedEvent<DealWithRelations>) => {
@@ -1508,7 +1528,7 @@ export default function DealsPage() {
           oldIds.length === newIds.length &&
           oldIds.every((id, i) => id === newIds[i])
         ) {
-          return; // No change
+          return;
         }
         processedValue = newIds;
       } else if (field === "locations") {
@@ -1521,8 +1541,9 @@ export default function DealsPage() {
           return;
         }
         processedValue = newLocs;
+      } else if (field === "eventSchedule") {
+        return;
       } else {
-        // For non-array fields, check equality normally
         if (newValue === oldValue) return;
       }
 
