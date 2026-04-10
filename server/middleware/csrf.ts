@@ -13,6 +13,7 @@ const EXCLUDED_PATHS = [
   "/api/activity/",
   "/api/places/",
   "/api/ai/",  // AI chat uses SSE streaming with session auth
+  "/api/webhooks/",
 ];
 
 const {

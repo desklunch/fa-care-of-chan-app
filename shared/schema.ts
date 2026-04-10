@@ -689,6 +689,7 @@ export const deals = pgTable(
   "deals",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    externalId: varchar("external_id", { length: 255 }), // Unique constraint managed by migration 0006 (partial unique index WHERE NOT NULL)
     dealNumber: serial("deal_number").notNull().unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     status: integer("status").notNull().references(() => dealStatuses.id),
@@ -1740,6 +1741,7 @@ export const insertDealSchema = createInsertSchema(deals).omit({
   wonOn: z.string().nullable().optional(),
   lastContactOn: z.string().nullable().optional(),
   projectDate: z.string().nullable().optional(),
+  externalId: z.string().nullable().optional(),
 });
 
 export const updateDealSchema = createInsertSchema(deals).pick({

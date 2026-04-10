@@ -69,6 +69,7 @@ import { registerFormsRoutes, seedEventProductionTemplate, seedNewIntakeTemplate
 import { seedDealStatuses } from "./domains/deals/deals.seed";
 import { registerAiChatRoutes } from "./domains/ai-chat";
 import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
+import { registerTypeformWebhookRoutes } from "./domains/typeform-webhook";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { setupCsrf } from "./middleware/csrf";
 
@@ -95,6 +96,9 @@ export async function registerRoutes(
 
   // Initialize audit bridge - domain events will be persisted to audit_logs
   initializeAuditBridge();
+
+  // Register webhook routes (no auth required, before domain routes)
+  registerTypeformWebhookRoutes(app);
 
   // Register domain routes
   registerReferenceDataRoutes(app);

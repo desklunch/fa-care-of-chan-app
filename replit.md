@@ -62,6 +62,8 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `contacts.storage.ts` (224 lines) - contact CRUD, relations, linking
     - `settings-comments.storage.ts` (217 lines) - theme settings, entity comments
     - `clients.storage.ts` (83 lines) - client CRUD, contact linking
+    - `typeform-webhook.storage.ts` - Typeform webhook find-or-create logic for deals/contacts/clients
+    - `typeform-webhook.routes.ts` - POST /api/webhooks/typeform endpoint with signature verification
     
     **Hybrid Service Layer:**
     - DealsService uses main storage interface for business logic with domain events
