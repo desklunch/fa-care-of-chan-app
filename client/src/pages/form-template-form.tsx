@@ -86,13 +86,16 @@ export default function AdminFormTemplateFormPage() {
       const res = await apiRequest("POST", "/api/form-templates", data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (created: { id: string }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
       toast({
         title: "Template created",
         description: "Form template has been created successfully.",
       });
-      navigate(backPath);
+      const detailPath = isDealsContext
+        ? `/deals/forms/${created.id}`
+        : `/forms/${created.id}`;
+      navigate(detailPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -125,11 +128,15 @@ export default function AdminFormTemplateFormPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/form-templates", id] });
       toast({
         title: "Template updated",
         description: "Form template has been updated successfully.",
       });
-      navigate(backPath);
+      const detailPath = isDealsContext
+        ? `/deals/forms/${id}`
+        : `/forms/${id}`;
+      navigate(detailPath);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
