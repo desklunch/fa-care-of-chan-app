@@ -206,9 +206,13 @@ export function registerTypeformWebhookRoutes(app: Express) {
         client = await typeformWebhookStorage.createClient({ name: companyName });
       }
       if (!client) {
-        client = await typeformWebhookStorage.createClient({
-          name: firstName && lastName ? `${firstName} ${lastName}` : "Unknown Client",
-        });
+        const DEFAULT_CLIENT_ID = "12e82994-9c2a-474c-bb50-328e7808f6d4";
+        const defaultClient = await typeformWebhookStorage.findClientById(DEFAULT_CLIENT_ID);
+        if (defaultClient) {
+          client = defaultClient;
+        } else {
+          throw new Error(`Default client ${DEFAULT_CLIENT_ID} not found`);
+        }
       }
 
       if (contact) {

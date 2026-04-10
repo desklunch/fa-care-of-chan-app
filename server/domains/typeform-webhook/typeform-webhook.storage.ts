@@ -59,6 +59,14 @@ export const typeformWebhookStorage = {
     return contact;
   },
 
+  async findClientById(id: string): Promise<Client | undefined> {
+    const [client] = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, id));
+    return client;
+  },
+
   async findClientByName(name: string): Promise<Client | undefined> {
     const [client] = await db
       .select()
