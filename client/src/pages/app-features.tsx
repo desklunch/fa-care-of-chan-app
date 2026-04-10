@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilterBar } from "@/components/data-grid/filter-bar";
 import type { FilterConfig } from "@/components/data-grid/types";
-import { CircleFadingPlus, Lightbulb, Diamond, Tag, Layers, ChevronRight, Archive } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { CircleFadingPlus, Lightbulb, Diamond, Tag, Layers, ChevronRight, Archive, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureCategory, FeatureStatus } from "@shared/schema";
+import { featureStatuses } from "@shared/schema";
 import { PriorityIcon } from "@/components/priority-icon";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 type GroupBy = "none" | "status" | "category";
 
@@ -44,12 +53,26 @@ const statusColors: Record<FeatureStatus, string> = {
 };
 
 function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
+  const { toast } = useToast();
+  const statusMutation = useMutation({
+    mutationFn: async (newStatus: FeatureStatus) => {
+      const res = await apiRequest("PATCH", `/api/features/${feature.id}`, { status: newStatus });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    },
+  });
+
   return (
       <div 
-        className=" odd:bg-background even:bg-black/[2%] dark:even:bg-foreground/[2%]"
+        className="relative odd:bg-background even:bg-black/[2%] dark:even:bg-foreground/[2%]"
         data-testid={`row-feature-${feature.id}`}
       >
-        <Link href={`/app/features/${feature.id}`} className="flex flex-wrap items-center gap-2 px-4 py-4 hover-elevate cursor-pointer">
+        <Link href={`/app/features/${feature.id}`} className="flex flex-wrap items-center gap-2 px-4 py-4 hover-elevate cursor-pointer pr-28">
 
         <span  className="shrink-0 w-20 "
 >
@@ -82,15 +105,52 @@ function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
         >
           {feature.description}
         </span>
-        
-        <Badge 
-          className={`shrink-0 px-1 py-0.5 rounded-sm uppercase ml-4 font-medium  bg-background border  ${statusColors[feature.status as FeatureStatus]}`}
-          size="sm"
-          data-testid={`badge-status-${feature.id}`}
-        >
-          {statusLabels[feature.status as FeatureStatus]}
-        </Badge>
-          </Link>
+        </Link>
+
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild disabled={statusMutation.isPending}>
+              <button
+                type="button"
+                className="shrink-0 cursor-pointer bg-transparent border-none p-0"
+                disabled={statusMutation.isPending}
+                data-testid={`dropdown-trigger-status-${feature.id}`}
+              >
+                <Badge 
+                  className={`px-1 py-0.5 rounded-sm uppercase font-medium bg-background border ${statusColors[feature.status as FeatureStatus]} no-default-hover-elevate no-default-active-elevate`}
+                  size="sm"
+                  data-testid={`badge-status-${feature.id}`}
+                >
+                  {statusMutation.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    statusLabels[feature.status as FeatureStatus]
+                  )}
+                </Badge>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {featureStatuses.map((status) => (
+                <DropdownMenuItem
+                  key={status}
+                  onSelect={() => {
+                    if (status !== feature.status) {
+                      statusMutation.mutate(status);
+                    }
+                  }}
+                  data-testid={`dropdown-item-status-${status}-${feature.id}`}
+                >
+                  <Badge
+                    className={`px-1 py-0.5 rounded-sm uppercase font-medium bg-background border ${statusColors[status]} no-default-hover-elevate no-default-active-elevate`}
+                    size="sm"
+                  >
+                    {statusLabels[status]}
+                  </Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
   );
