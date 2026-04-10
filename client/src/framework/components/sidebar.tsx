@@ -46,7 +46,9 @@ function DevRoleSelector({
   setOverrideRole: (role: Role) => void;
   clearOverride: () => void;
 }) {
-  const { data: roles } = useQuery<{ id: number; name: string; description: string | null }[]>({
+  const { data: roles } = useQuery<
+    { id: number; name: string; description: string | null }[]
+  >({
     queryKey: ["/api/roles/names"],
     enabled: import.meta.env.DEV,
   });
@@ -288,7 +290,7 @@ export default function Sidebar({
             data-testid="button-toggle-sidebar"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <Logo width="32" collapsed={!showExpanded} />
+            <Logo width="42" collapsed={!showExpanded} />
           </Button>
 
           <Button
@@ -424,11 +426,11 @@ export default function Sidebar({
                             onClick={onMobileClose}
                           >
                             <Icon
-                              className="h-5 w-5 flex-shrink-0"
+                              className="h-5 w-5 flex-shrink-0 stroke-[1.5px] "
                               aria-hidden="true"
                             />
                             {showExpanded && (
-                              <span className="text-sm flex-1">
+                              <span className="text-[14px] leading-[10px] flex-1 font-normal ">
                                 {item.name}
                               </span>
                             )}

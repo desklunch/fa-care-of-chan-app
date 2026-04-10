@@ -1,4 +1,4 @@
-import chanseyGif from "@assets/chansey_1775846628800.gif";
+import chanseyGif from "@assets/chansey_1775839823271.gif";
 
 interface LogoProps {
   className?: string;
@@ -25,7 +25,7 @@ export default function Logo({
       </div>
 
       {!collapsed && (
-        <span className="font-medium text-pink-800 text-base  mr-3 text-foreground">
+        <span className="font-medium text-pink-800 dark:text-pink-200 text-base  mr-3 ">
           Care of Chansey
         </span>
       )}
