@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
+import { useForm } from "react-hook-form";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
@@ -12,17 +13,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,14 +39,21 @@ import {
   Copy,
 } from "lucide-react";
 import { format } from "date-fns";
+import {
+  FormFieldRenderer,
+  buildDefaultValues,
+} from "@/components/form-builder/FormFieldRenderer";
 import type {
   FormTemplate,
   InsertFormTemplate,
   FormSection,
-  FormField as FormFieldType,
 } from "@shared/schema";
 
-function ReadOnlyFormRenderer({ schema }: { schema: FormSection[] }) {
+function InteractiveFormPreview({ schema }: { schema: FormSection[] }) {
+  const form = useForm<Record<string, unknown>>({
+    defaultValues: buildDefaultValues(schema),
+  });
+
   if (!schema || schema.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -65,116 +64,11 @@ function ReadOnlyFormRenderer({ schema }: { schema: FormSection[] }) {
   }
 
   return (
-    <div className="space-y-6">
-      {schema.map((section) => (
-        <Card key={section.id}>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {section.title || "Untitled Section"}
-            </CardTitle>
-            {section.description && (
-              <CardDescription>{section.description}</CardDescription>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {section.fields.map((field) => (
-              <ReadOnlyField key={field.id} field={field} />
-            ))}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-function ReadOnlyField({ field }: { field: FormFieldType }) {
-  const renderInput = () => {
-    switch (field.type) {
-      case "text":
-      case "email":
-      case "phone":
-      case "url":
-      case "number":
-      case "date":
-        return (
-          <Input
-            disabled
-            placeholder={
-              field.placeholder || `Enter ${field.name.toLowerCase()}`
-            }
-            type={
-              field.type === "number"
-                ? "number"
-                : field.type === "date"
-                  ? "date"
-                  : "text"
-            }
-          />
-        );
-      case "textarea":
-        return (
-          <Textarea
-            disabled
-            placeholder={
-              field.placeholder || `Enter ${field.name.toLowerCase()}`
-            }
-            className="resize-none"
-            rows={4}
-          />
-        );
-      case "select":
-        return (
-          <Select disabled>
-            <SelectTrigger>
-              <SelectValue
-                placeholder={field.placeholder || "Select an option"}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-      case "checkbox":
-        return (
-          <div className="flex items-center gap-2">
-            <input type="checkbox" disabled className="h-4 w-4" />
-            <span className="text-sm text-muted-foreground">
-              {field.placeholder}
-            </span>
-          </div>
-        );
-      case "toggle":
-        return (
-          <div className="flex items-center gap-2">
-            <Switch disabled />
-            <span className="text-sm text-muted-foreground">
-              {field.placeholder}
-            </span>
-          </div>
-        );
-      default:
-        return <Input disabled placeholder={field.placeholder} />;
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <Label
-        className={
-          field.required
-            ? "after:content-['*'] after:ml-0.5 after:text-destructive"
-            : ""
-        }
-      >
-        {field.name}
-      </Label>
-      {renderInput()}
-    </div>
+    <Form {...form}>
+      <div className="space-y-6">
+        <FormFieldRenderer schema={schema} form={form as never} />
+      </div>
+    </Form>
   );
 }
 
@@ -411,7 +305,7 @@ export default function FormTemplateDetailPage() {
 
         <div>
           <h3 className="text-lg font-semibold mb-4">Form Preview</h3>
-          <ReadOnlyFormRenderer schema={formSchema} />
+          <InteractiveFormPreview schema={formSchema} />
         </div>
       </div>
 
