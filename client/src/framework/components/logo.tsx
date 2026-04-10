@@ -8,14 +8,14 @@ interface LogoProps {
 
 export default function Logo({
   className,
-  width = "48",
+  width = "60px",
   collapsed = false,
 }: LogoProps) {
   return (
     <div
       className={`rounded-md rounded-l-full flex items-center gap-2 ${className || ""}`}
     >
-      <div className="size-[48px] flex items-center justify-center rounded-full bg-white">
+      <div className=" flex items-center justify-center rounded-full">
         <img
           src={chanseyGif}
           alt="Chansey logo"
@@ -25,8 +25,8 @@ export default function Logo({
       </div>
 
       {!collapsed && (
-        <span className="font-semibold text-base  mr-3 text-foreground">
-          Care of Chan
+        <span className="font-medium text-pink-800 text-base  mr-3 text-foreground">
+          Care of Chansey
         </span>
       )}
     </div>

@@ -499,9 +499,7 @@ export default function AppFeatureDetail() {
               </CardContent>
             </Card>
           </div>
-        {/* </TabsContent>
-
-        <TabsContent value="comments" className="mt-0"></TabsContent> */}
+        </TabsContent>
       </Tabs>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
