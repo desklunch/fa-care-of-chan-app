@@ -15,7 +15,7 @@ export default function Logo({
     <div
       className={`rounded-md rounded-l-full flex items-center gap-2 ${className || ""}`}
     >
-      <div className="size-[48px] flex items-center justify-center rounded-full">
+      <div className="size-[48px] flex items-center justify-center rounded-full bg-white">
         <img
           src={chanseyGif}
           alt="Chansey logo"
