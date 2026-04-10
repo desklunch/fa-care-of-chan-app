@@ -224,14 +224,14 @@ export default function FormTemplateDetailPage() {
   return (
     <PageLayout
       breadcrumbs={detailBreadcrumbs}
+      primaryAction={{
+        label: "Edit Template",
+        href: isDealsContext
+          ? `/deals/forms/${id}/edit`
+          : `/forms/${id}/edit`,
+        icon: SquarePen,
+      }}
       additionalActions={[
-        {
-          label: "Edit",
-          href: isDealsContext
-            ? `/deals/forms/${id}/edit`
-            : `/forms/${id}/edit`,
-          icon: SquarePen,
-        },
         {
           label: "Duplicate",
           icon: Copy,
