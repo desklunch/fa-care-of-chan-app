@@ -568,7 +568,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: number | null }) => {
         if (params.value == null) return null;
         return (
-          <div className="bg-muted rounded-full p-2 size-8 flex items-center justify-center text-xs my-[10px] text-muted-foreground tracking-wide">
+          <div className="bg-foreground text-primary-foreground rounded-full p-2 size-8    flex items-center justify-center text-[11px] font-semibold my-[10px] ">
             {params.value}d
           </div>
         );

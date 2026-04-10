@@ -35,12 +35,12 @@ const statusSortOrder: Record<FeatureStatus, number> = {
 };
 
 const statusColors: Record<FeatureStatus, string> = {
-  proposed: "bg-blue-800 text-background dark:bg-blue-400 dark:text-background",
-  under_review: "bg-yellow-800 text-background dark:bg-yellow-400 dark:text-background",
-  planned: "bg-purple-800 text-background dark:bg-purple-400 dark:text-background",
-  in_progress: "bg-orange-800 text-background dark:bg-orange-400 dark:text-background",
-  completed: "bg-green-800 text-background dark:bg-green-400 dark:text-background",
-  archived: "bg-gray-800 text-background dark:bg-gray-400 dark:text-background",
+  proposed: "bg-blue-600/80 text-background dark:bg-blue-400 dark:text-background",
+  under_review: "bg-yellow-600/80 text-background dark:bg-yellow-400 dark:text-background",
+  planned: "bg-purple-600/80 text-background dark:bg-purple-400 dark:text-background",
+  in_progress: "bg-orange-600/80 text-background dark:bg-orange-400 dark:text-background",
+  completed: "bg-green-600/80 text-background dark:bg-green-400 dark:text-background",
+  archived: "bg-gray-600/80 text-background dark:bg-gray-400 dark:text-background",
 };
 
 function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
