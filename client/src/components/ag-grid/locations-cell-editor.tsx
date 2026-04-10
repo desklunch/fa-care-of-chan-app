@@ -68,7 +68,7 @@ export const LocationsCellEditor = forwardRef<LocationsCellEditorRef, LocationsC
     return (
       <div
         ref={containerRef}
-        className="ag-custom-component-popup bg-background border rounded-md shadow-lg p-3 min-w-[320px]"
+        className="ag-custom-component-popup bg-background border rounded-md shadow-lg p-3 min-w-[320px] max-w-lg"
         tabIndex={0}
         data-testid="locations-cell-editor"
       >
