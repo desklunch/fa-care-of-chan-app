@@ -14,6 +14,7 @@ export type EditableFieldType =
 export interface FieldOption {
   value: string;
   label: string;
+  renderLabel?: React.ReactNode;
 }
 
 export interface FieldValidation {

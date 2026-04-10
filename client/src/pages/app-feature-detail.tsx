@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,14 +19,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CommentList } from "@/components/ui/comments";
-import { FieldRow } from "@/components/inline-edit";
+import { EditableField, EditableTitle, FieldRow, useFieldMutation } from "@/components/inline-edit";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { ThumbsUp, Loader2, SquarePen, Trash2 } from "lucide-react";
 import { Link } from "wouter";
-import type { AppFeatureWithRelations, FeatureStatus, FeatureType } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureStatus, FeatureType, FeaturePriority, FeatureCategory, User } from "@shared/schema";
+import { featureStatuses, featureTypes, featurePriorities } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
+import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
+import { format } from "date-fns";
 
 const statusLabels: Record<FeatureStatus, string> = {
   proposed: "Proposed",
@@ -52,11 +54,6 @@ const featureTypeLabels: Record<FeatureType, string> = {
   requirement: "Requirement",
 };
 
-const featureTypeColors: Record<FeatureType, string> = {
-  idea: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
-  requirement: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
-};
-
 export default function AppFeatureDetail() {
   const [, params] = useRoute<{ id: string }>("/app/features/:id");
   const featureId = params?.id;
@@ -70,7 +67,33 @@ export default function AppFeatureDetail() {
     enabled: !!featureId,
   });
 
+  const { data: categories = [] } = useQuery<FeatureCategory[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
   usePageTitle(feature?.title || "Feature");
+
+  const { saveField, isFieldLoading, getFieldError } = useFieldMutation({
+    entityType: "features",
+    entityId: featureId || "",
+    queryKey: ["/api/features", featureId],
+    additionalQueryKeys: [["/api/features"]],
+    onSuccess: () => {
+      toast({ title: "Feature updated" });
+    },
+  });
+
+  const handleFieldSave = (field: string, value: unknown) => {
+    let processedValue = value;
+    if (value === "" && (field === "ownerId" || field === "priority")) {
+      processedValue = null;
+    }
+    saveField(field, processedValue);
+  };
 
   const voteMutation = useMutation({
     mutationFn: async () => {
@@ -104,24 +127,6 @@ export default function AppFeatureDetail() {
     },
   });
 
-  const statusMutation = useMutation({
-    mutationFn: async (status: FeatureStatus) => {
-      return apiRequest("PATCH", `/api/features/${featureId}`, { status });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/features", featureId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
-      toast({ title: "Status updated!" });
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to update status", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("DELETE", `/api/features/${featureId}`);
@@ -141,7 +146,10 @@ export default function AppFeatureDetail() {
   });
 
   const isAdmin = user?.role === "admin";
-  const canDelete = isAdmin || user?.id === feature?.createdById;
+  const isCreator = user?.id === feature?.createdById;
+  const canEdit = isAdmin || isCreator;
+  const canDelete = isAdmin || isCreator;
+  const canEditAllFields = isAdmin;
 
   if (featureLoading) {
     return (
@@ -166,10 +174,15 @@ export default function AppFeatureDetail() {
     );
   }
 
+  const ownerUser = feature.ownerId ? users.find((u) => u.id === feature.ownerId) : null;
+  const ownerName = ownerUser
+    ? [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ") || "Unknown"
+    : null;
+
   return (
     <PageLayout 
       breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: feature.title }]}
-      primaryAction={(isAdmin || user?.id === feature.createdById) ? {
+      primaryAction={canEdit ? {
         label: "Edit",
         href: `/app/features/${feature.id}/edit`,
         icon: SquarePen,
@@ -199,9 +212,15 @@ export default function AppFeatureDetail() {
                 >
                   {feature.category.name}
                 </Badge>
-                <h1 className="text-3xl font-bold" data-testid="text-feature-title">
-                  {feature.title}
-                </h1>
+                <EditableTitle
+                  value={feature.title}
+                  onSave={(value) => handleFieldSave("title", value)}
+                  testId="text-feature-title"
+                  disabled={!canEdit}
+                  isLoading={isFieldLoading("title")}
+                  error={getFieldError("title")}
+                  validation={{ required: true, minLength: 3, maxLength: 200 }}
+                />
               </div>
             </div>
           </div>
@@ -218,82 +237,210 @@ export default function AppFeatureDetail() {
 
         <TabsContent value="overview" className="mt-0">
           <div className="max-w-4xl space-y-6 p-4 md:p-6">
-            <Card className="">
-              <CardContent >
-                <FieldRow label="Status" testId="field-feature-status">
-                  {isAdmin ? (
-                    <Select 
-                      value={feature.status} 
-                      onValueChange={(value) => statusMutation.mutate(value as FeatureStatus)}
-                      disabled={statusMutation.isPending}
-                    >
-                      <SelectTrigger className="w-[180px] h-9" data-testid="select-feature-status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value} data-testid={`select-option-${value}`}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
+            <Card>
+              <CardContent>
+                <EditableField
+                  label="Status"
+                  value={feature.status}
+                  field="status"
+                  testId="field-feature-status"
+                  type="select"
+                  disabled={!canEditAllFields}
+                  options={featureStatuses.map((s) => ({
+                    value: s,
+                    label: statusLabels[s],
+                  }))}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("status")}
+                  error={getFieldError("status")}
+                  displayValue={
                     <Badge 
                       className={statusColors[feature.status as FeatureStatus]}
                       data-testid="badge-feature-status"
                     >
                       {statusLabels[feature.status as FeatureStatus]}
                     </Badge>
-                  )}
-                </FieldRow>
-                <FieldRow label="Description" testId="field-feature-description">
-                  <p className="text-sm whitespace-pre-wrap" data-testid="text-feature-description">
-                    {feature.description || <span className="text-muted-foreground">No description provided.</span>}
-                  </p>
-                </FieldRow>
-                {/* <FieldRow label="Type" testId="field-feature-type">
-                  {feature.featureType ? (
-                    <span  data-testid="badge-feature-type">
-                      {featureTypeLabels[feature.featureType as FeatureType]}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">Not set</span>
-                  )}
-                </FieldRow> */}
+                  }
+                  placeholder="Select status"
+                />
 
+                <EditableField
+                  label="Priority"
+                  value={feature.priority || ""}
+                  field="priority"
+                  testId="field-feature-priority"
+                  type="select"
+                  disabled={!canEditAllFields}
+                  options={[
+                    { value: "", label: "None" },
+                    ...featurePriorities.map((p) => ({
+                      value: p,
+                      label: priorityLabels[p],
+                      renderLabel: (
+                        <span className="flex items-center gap-2">
+                          <PriorityIcon priority={p} />
+                          {priorityLabels[p]}
+                        </span>
+                      ),
+                    })),
+                  ]}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("priority")}
+                  error={getFieldError("priority")}
+                  displayValue={
+                    feature.priority ? (
+                      <span className="flex items-center gap-2 text-sm">
+                        <PriorityIcon priority={feature.priority} />
+                        {priorityLabels[feature.priority]}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Not set</span>
+                    )
+                  }
+                  placeholder="Select priority"
+                />
 
+                <EditableField
+                  label="Type"
+                  value={feature.featureType || ""}
+                  field="featureType"
+                  testId="field-feature-type"
+                  type="select"
+                  disabled={!canEditAllFields}
+                  options={featureTypes.map((t) => ({
+                    value: t,
+                    label: featureTypeLabels[t],
+                  }))}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("featureType")}
+                  error={getFieldError("featureType")}
+                  displayValue={
+                    feature.featureType ? (
+                      <span className="text-sm">{featureTypeLabels[feature.featureType as FeatureType]}</span>
+                    ) : (
+                      <span className="text-muted-foreground">Not set</span>
+                    )
+                  }
+                  placeholder="Select type"
+                />
 
+                <EditableField
+                  label="Category"
+                  value={feature.categoryId}
+                  field="categoryId"
+                  testId="field-feature-category"
+                  type="select"
+                  disabled={!canEdit}
+                  options={categories.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  }))}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("categoryId")}
+                  error={getFieldError("categoryId")}
+                  displayValue={
+                    <span className="text-sm">{feature.category?.name || "Unknown"}</span>
+                  }
+                  placeholder="Select category"
+                />
 
+                <EditableField
+                  label="Description"
+                  value={feature.description || ""}
+                  field="description"
+                  testId="field-feature-description"
+                  type="textarea"
+                  disabled={!canEdit}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("description")}
+                  error={getFieldError("description")}
+                  displayValue={
+                    feature.description ? (
+                      <p className="text-sm whitespace-pre-wrap" data-testid="text-feature-description">
+                        {feature.description}
+                      </p>
+                    ) : (
+                      <span className="text-muted-foreground">No description provided.</span>
+                    )
+                  }
+                  placeholder="Add a description..."
+                />
 
+                <EditableField
+                  label="Estimated Delivery"
+                  value={feature.estimatedDelivery ? format(new Date(feature.estimatedDelivery), "yyyy-MM-dd") : ""}
+                  field="estimatedDelivery"
+                  testId="field-feature-estimated-delivery"
+                  type="date"
+                  disabled={!canEditAllFields}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("estimatedDelivery")}
+                  error={getFieldError("estimatedDelivery")}
+                  displayValue={
+                    feature.estimatedDelivery ? (
+                      <span className="text-sm">{format(new Date(feature.estimatedDelivery), "PPP")}</span>
+                    ) : (
+                      <span className="text-muted-foreground">Not set</span>
+                    )
+                  }
+                  placeholder="Select date"
+                />
 
-                <FieldRow label="Submitted" testId="field-feature-submitted-on" >
-                  <span data-testid="text-created-at ">
+                <EditableField
+                  label="Owner"
+                  value={feature.ownerId || ""}
+                  field="ownerId"
+                  testId="field-feature-owner"
+                  type="select"
+                  disabled={!canEditAllFields}
+                  options={[
+                    { value: "", label: "Unassigned" },
+                    ...users
+                      .filter((u) => u.isActive)
+                      .map((u) => ({
+                        value: u.id,
+                        label: [u.firstName, u.lastName].filter(Boolean).join(" ") || "Unknown",
+                      })),
+                  ]}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("ownerId")}
+                  error={getFieldError("ownerId")}
+                  displayValue={
+                    ownerName ? (
+                      <span className="text-sm font-medium">{ownerName}</span>
+                    ) : (
+                      <span className="text-muted-foreground">Unassigned</span>
+                    )
+                  }
+                  placeholder="Select owner"
+                />
+
+                <FieldRow label="Submitted" testId="field-feature-submitted-on">
+                  <span data-testid="text-created-at">
                     {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"} 
                   </span>
                   <span className="px-1.5 text-muted-foreground">
                     by
                   </span>
-                  <span data-testid="text-created-by" className="">
+                  <span data-testid="text-created-by">
                     {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName || ""}
-
                   </span>
                 </FieldRow>
-                <FieldRow label="Vote" testId="field-feature-status">
+
+                <FieldRow label="Vote" testId="field-feature-vote">
                   <Button
                     variant={feature.hasVoted ? "default" : "secondary"}
                     onClick={() => voteMutation.mutate()}
                     disabled={voteMutation.isPending}
-                    className="gap-3 h-9 w-auto px-3 "
+                    className="gap-3 h-9 w-auto px-3"
                     data-testid="button-vote"
                   >
                     <ThumbsUp className="h-4 w-4" />
                     <span data-testid="text-vote-count">{feature.voteCount}</span>
                   </Button>
                 </FieldRow>
-
               </CardContent>
-              
             </Card>
-         
           </div>
         </TabsContent>
 

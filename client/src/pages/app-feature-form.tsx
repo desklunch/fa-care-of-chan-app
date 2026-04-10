@@ -26,8 +26,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { AppFeatureWithRelations, FeatureCategory, FeatureType, FeatureStatus } from "@shared/schema";
-import { insertAppFeatureSchema, featureTypes, featureStatuses } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureCategory, FeatureType, FeatureStatus, FeaturePriority } from "@shared/schema";
+import { insertAppFeatureSchema, featureTypes, featureStatuses, featurePriorities } from "@shared/schema";
+import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
 import { z } from "zod";
 
 const featureTypeLabels: Record<FeatureType, string> = {
@@ -75,6 +76,7 @@ export default function AppFeatureForm() {
       categoryId: "",
       featureType: undefined,
       status: "proposed",
+      priority: null,
     },
   });
 
@@ -86,6 +88,7 @@ export default function AppFeatureForm() {
         categoryId: existingFeature.categoryId,
         featureType: existingFeature.featureType as FeatureType,
         status: existingFeature.status as FeatureStatus,
+        priority: (existingFeature.priority as FeaturePriority) || null,
       });
     }
   }, [isEditMode, existingFeature, form]);
@@ -285,6 +288,46 @@ export default function AppFeatureForm() {
                       </Select>
                       <FormDescription>
                         The current status of this feature request.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="w-full flex justify-between items-center gap-2">
+                        <FormLabel>Priority</FormLabel>
+                        <span className="text-xs font-medium text-muted-foreground">Optional</span>
+                      </div>
+                      <Select
+                        onValueChange={(val) => field.onChange(val === "__none__" ? null : val)}
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-feature-priority">
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__" data-testid="select-option-priority-none">
+                            None
+                          </SelectItem>
+                          {featurePriorities.map((p) => (
+                            <SelectItem key={p} value={p} data-testid={`select-option-priority-${p}`}>
+                              <span className="flex items-center gap-2">
+                                <PriorityIcon priority={p} />
+                                {priorityLabels[p]}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Set the priority level for this feature request.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

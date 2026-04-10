@@ -342,7 +342,7 @@ export function EditableField({
                     key={opt.value || "__none__"}
                     value={opt.value || "__none__"}
                   >
-                    {opt.label}
+                    {opt.renderLabel || opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>

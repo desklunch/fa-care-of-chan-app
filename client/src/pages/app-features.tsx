@@ -11,6 +11,7 @@ import type { FilterConfig } from "@/components/data-grid/types";
 import { CircleFadingPlus, Lightbulb, Diamond, Tag, Layers } from "lucide-react";
 import { Link } from "wouter";
 import type { AppFeatureWithRelations, FeatureCategory, FeatureStatus } from "@shared/schema";
+import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
 
 type GroupBy = "none" | "status" | "category";
 
@@ -63,10 +64,16 @@ function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
         
         
         <span 
-          className="font-medium min-w-0 flex-1 lg:flex-none lg:w-64 truncate text-sm"
+          className="min-w-0 flex-1 lg:flex-none lg:w-64 flex flex-col gap-1"
           data-testid={`text-feature-title-${feature.id}`}
         >
-          {feature.title}
+          <span className="font-medium truncate text-sm">{feature.title}</span>
+          {feature.priority && (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <PriorityIcon priority={feature.priority} />
+              {priorityLabels[feature.priority]}
+            </span>
+          )}
         </span>
         
         <span 
