@@ -496,7 +496,6 @@ export default function DealForm() {
                 <Separator className="my-2" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 ">
-             
                   <FormField
                     control={form.control}
                     name="startedOn"
@@ -623,7 +622,6 @@ export default function DealForm() {
               </CardHeader>
               <CardContent className="flex flex-col gap-6">
       
-
      
                 <FormField
                   control={form.control}

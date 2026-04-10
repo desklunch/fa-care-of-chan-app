@@ -410,6 +410,9 @@ export function buildDefaultValues(
         case "tags":
           defaults[field.id] = [];
           break;
+        case "richtext":
+          defaults[field.id] = field.defaultValue || "";
+          break;
         default:
           defaults[field.id] = "";
       }

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   DndContext,
   closestCenter,
@@ -436,7 +437,7 @@ function FieldEditorDialog({ field, open, onOpenChange, onSave }: FieldEditorDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Field</DialogTitle>
           <DialogDescription>Configure the field settings below.</DialogDescription>
@@ -519,6 +520,21 @@ function FieldEditorDialog({ field, open, onOpenChange, onSave }: FieldEditorDia
               data-testid="textarea-field-description"
             />
           </div>
+
+          {editedField.type === "richtext" && (
+            <div className="space-y-2">
+              <Label>Default Content</Label>
+              <p className="text-xs text-muted-foreground">
+                Pre-populate this rich text field with boilerplate or template content.
+              </p>
+              <RichTextEditor
+                value={editedField.defaultValue || ""}
+                onChange={(val) => updateField({ defaultValue: val })}
+                placeholder="Enter default content..."
+                data-testid="richtext-default-content"
+              />
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <Checkbox

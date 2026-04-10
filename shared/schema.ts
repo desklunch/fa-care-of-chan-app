@@ -1930,6 +1930,7 @@ export interface FormField {
   options?: string[];
   required?: boolean;
   entityMapping?: EntityMapping;
+  defaultValue?: string;
 }
 
 // Form section interface (for JSONB storage)
@@ -2141,6 +2142,7 @@ export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
         entityType: z.string(),
         propertyKey: z.string(),
       }).optional(),
+      defaultValue: z.string().optional(),
     })),
   })).default([]),
   responseData: z.record(z.unknown()).default({}),
@@ -2227,6 +2229,7 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
         entityType: z.string(),
         propertyKey: z.string(),
       }).optional(),
+      defaultValue: z.string().optional(),
     })),
   })).default([]),
 });
@@ -2263,6 +2266,7 @@ export const insertFormRequestSchema = createInsertSchema(formRequests).omit({
         entityType: z.string(),
         propertyKey: z.string(),
       }).optional(),
+      defaultValue: z.string().optional(),
     })),
   })).default([]),
   dueDate: z.string().optional().nullable(),
