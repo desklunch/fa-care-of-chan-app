@@ -14,13 +14,13 @@ export function PriorityIcon({ priority, className }: { priority: FeaturePriorit
   const barCount = 4;
 
   return (
-    <span className={`inline-flex flex-col gap-[1px] ${className || ""}`} data-testid={`icon-priority-${priority}`}>
+    <span className={`inline-flex flex-col items-center justify-center gap-[1px] align-middle ${className || ""}`} data-testid={`icon-priority-${priority}`}>
       {Array.from({ length: barCount }, (_, i) => {
         const barIndex = barCount - 1 - i;
         return (
           <span
             key={i}
-            className="h-[2px] w-[14px] rounded-[1px] bg-current"
+            className="h-[3px] w-[11px] rounded-[1px] bg-current"
             style={{ opacity: barIndex < level ? 1 : 0.5 }}
           />
         );
