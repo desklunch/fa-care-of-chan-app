@@ -19,13 +19,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CommentList } from "@/components/ui/comments";
-import { EditableField, EditableTitle, FieldRow, useFieldMutation } from "@/components/inline-edit";
+import {
+  EditableField,
+  EditableTitle,
+  FieldRow,
+  useFieldMutation,
+} from "@/components/inline-edit";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { ThumbsUp, Loader2, SquarePen, Trash2 } from "lucide-react";
 import { Link } from "wouter";
-import type { AppFeatureWithRelations, FeatureStatus, FeaturePriority, FeatureCategory, User } from "@shared/schema";
+import type {
+  AppFeatureWithRelations,
+  FeatureStatus,
+  FeaturePriority,
+  FeatureCategory,
+  User,
+} from "@shared/schema";
 import { featureStatuses, featurePriorities } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
 import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
@@ -42,10 +53,14 @@ const statusLabels: Record<FeatureStatus, string> = {
 
 const statusColors: Record<FeatureStatus, string> = {
   proposed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  under_review: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  planned: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  in_progress: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  under_review:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  planned:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  in_progress:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  completed:
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
 };
 
@@ -57,10 +72,11 @@ export default function AppFeatureDetail() {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const { data: feature, isLoading: featureLoading } = useQuery<AppFeatureWithRelations>({
-    queryKey: ["/api/features", featureId],
-    enabled: !!featureId,
-  });
+  const { data: feature, isLoading: featureLoading } =
+    useQuery<AppFeatureWithRelations>({
+      queryKey: ["/api/features", featureId],
+      enabled: !!featureId,
+    });
 
   const { data: categories = [] } = useQuery<FeatureCategory[]>({
     queryKey: ["/api/categories"],
@@ -95,25 +111,37 @@ export default function AppFeatureDetail() {
       return apiRequest("POST", `/api/features/${featureId}/vote`);
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["/api/features", featureId] });
-      const previousFeature = queryClient.getQueryData<AppFeatureWithRelations>(["/api/features", featureId]);
+      await queryClient.cancelQueries({
+        queryKey: ["/api/features", featureId],
+      });
+      const previousFeature = queryClient.getQueryData<AppFeatureWithRelations>(
+        ["/api/features", featureId],
+      );
       if (previousFeature) {
-        queryClient.setQueryData<AppFeatureWithRelations>(["/api/features", featureId], {
-          ...previousFeature,
-          voteCount: previousFeature.hasVoted ? previousFeature.voteCount - 1 : previousFeature.voteCount + 1,
-          hasVoted: !previousFeature.hasVoted,
-        });
+        queryClient.setQueryData<AppFeatureWithRelations>(
+          ["/api/features", featureId],
+          {
+            ...previousFeature,
+            voteCount: previousFeature.hasVoted
+              ? previousFeature.voteCount - 1
+              : previousFeature.voteCount + 1,
+            hasVoted: !previousFeature.hasVoted,
+          },
+        );
       }
       return { previousFeature };
     },
     onError: (error: Error, _, context) => {
       if (context?.previousFeature) {
-        queryClient.setQueryData(["/api/features", featureId], context.previousFeature);
+        queryClient.setQueryData(
+          ["/api/features", featureId],
+          context.previousFeature,
+        );
       }
-      toast({ 
-        title: "Failed to vote", 
+      toast({
+        title: "Failed to vote",
         description: error.message,
-        variant: "destructive" 
+        variant: "destructive",
       });
     },
     onSettled: () => {
@@ -132,10 +160,10 @@ export default function AppFeatureDetail() {
       setLocation("/app/features");
     },
     onError: (error: Error) => {
-      toast({ 
-        title: "Failed to delete feature", 
+      toast({
+        title: "Failed to delete feature",
         description: error.message,
-        variant: "destructive" 
+        variant: "destructive",
       });
     },
   });
@@ -148,7 +176,13 @@ export default function AppFeatureDetail() {
 
   if (featureLoading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: "Loading..." }]}>
+      <PageLayout
+        breadcrumbs={[
+          { label: "App" },
+          { label: "Features", href: "/app/features" },
+          { label: "Loading..." },
+        ]}
+      >
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -158,7 +192,13 @@ export default function AppFeatureDetail() {
 
   if (!feature) {
     return (
-      <PageLayout breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: "Not Found" }]}>
+      <PageLayout
+        breadcrumbs={[
+          { label: "App" },
+          { label: "Features", href: "/app/features" },
+          { label: "Not Found" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p className="text-muted-foreground">Feature not found</p>
           <Link href="/app/features">
@@ -169,39 +209,54 @@ export default function AppFeatureDetail() {
     );
   }
 
-  const ownerUser = feature.ownerId ? users.find((u) => u.id === feature.ownerId) : null;
+  const ownerUser = feature.ownerId
+    ? users.find((u) => u.id === feature.ownerId)
+    : null;
   const ownerName = ownerUser
-    ? [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ") || "Unknown"
+    ? [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ") ||
+      "Unknown"
     : null;
 
   return (
-    <PageLayout 
-      breadcrumbs={[{ label: "App"}, { label: "Features", href: "/app/features" }, { label: feature.title }]}
-      primaryAction={canEdit ? {
-        label: "Edit",
-        href: `/app/features/${feature.id}/edit`,
-        icon: SquarePen,
-        variant: "outline",
-      } : undefined}
-      additionalActions={canDelete ? [
-        {
-          label: "Delete Feature",
-          onClick: () => setShowDeleteDialog(true),
-          icon: Trash2,
-          variant: "destructive",
-        },
-      ] : []}
+    <PageLayout
+      breadcrumbs={[
+        { label: "App" },
+        { label: "Features", href: "/app/features" },
+        { label: feature.title },
+      ]}
+      primaryAction={
+        canEdit
+          ? {
+              label: "Edit",
+              href: `/app/features/${feature.id}/edit`,
+              icon: SquarePen,
+              variant: "outline",
+            }
+          : undefined
+      }
+      additionalActions={
+        canDelete
+          ? [
+              {
+                label: "Delete Feature",
+                onClick: () => setShowDeleteDialog(true),
+                icon: Trash2,
+                variant: "destructive",
+              },
+            ]
+          : []
+      }
     >
       <Tabs defaultValue="overview" className="w-full">
-        <div className="sticky top-0 bg-background z-[9999]">
+        <div className="sticky top-0 bg-background ">
           <div className="p-4 md:p-6 pb-2 md:pb-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
               <div className="space-y-2">
-                <Badge 
+                <Badge
                   variant="outline"
-                  style={{ 
+                  style={{
                     borderColor: feature.category.color || undefined,
-                    color: feature.category.color || undefined 
+                    color: feature.category.color || undefined,
                   }}
                   data-testid="badge-feature-category"
                 >
@@ -231,7 +286,7 @@ export default function AppFeatureDetail() {
         </div>
 
         <TabsContent value="overview" className="mt-0">
-          <div className="max-w-4xl space-y-6 p-4 md:p-6">
+          <div className="max-w-4xl space-y-4 p-4 ">
             <Card>
               <CardContent>
                 <EditableField
@@ -249,7 +304,7 @@ export default function AppFeatureDetail() {
                   isLoading={isFieldLoading("status")}
                   error={getFieldError("status")}
                   displayValue={
-                    <Badge 
+                    <Badge
                       className={statusColors[feature.status as FeatureStatus]}
                       data-testid="badge-feature-status"
                     >
@@ -310,7 +365,9 @@ export default function AppFeatureDetail() {
                   isLoading={isFieldLoading("categoryId")}
                   error={getFieldError("categoryId")}
                   displayValue={
-                    <span className="text-sm">{feature.category?.name || "Unknown"}</span>
+                    <span className="text-sm">
+                      {feature.category?.name || "Unknown"}
+                    </span>
                   }
                   placeholder="Select category"
                 />
@@ -327,11 +384,16 @@ export default function AppFeatureDetail() {
                   error={getFieldError("description")}
                   displayValue={
                     feature.description ? (
-                      <p className="text-sm whitespace-pre-wrap" data-testid="text-feature-description">
+                      <p
+                        className="text-sm whitespace-pre-wrap"
+                        data-testid="text-feature-description"
+                      >
                         {feature.description}
                       </p>
                     ) : (
-                      <span className="text-muted-foreground">No description provided.</span>
+                      <span className="text-muted-foreground">
+                        No description provided.
+                      </span>
                     )
                   }
                   placeholder="Add a description..."
@@ -339,7 +401,14 @@ export default function AppFeatureDetail() {
 
                 <EditableField
                   label="Estimated Delivery"
-                  value={feature.estimatedDelivery ? format(new Date(feature.estimatedDelivery), "yyyy-MM-dd") : ""}
+                  value={
+                    feature.estimatedDelivery
+                      ? format(
+                          new Date(feature.estimatedDelivery),
+                          "yyyy-MM-dd",
+                        )
+                      : ""
+                  }
                   field="estimatedDelivery"
                   testId="field-feature-estimated-delivery"
                   type="date"
@@ -349,7 +418,9 @@ export default function AppFeatureDetail() {
                   error={getFieldError("estimatedDelivery")}
                   displayValue={
                     feature.estimatedDelivery ? (
-                      <span className="text-sm">{format(new Date(feature.estimatedDelivery), "PPP")}</span>
+                      <span className="text-sm">
+                        {format(new Date(feature.estimatedDelivery), "PPP")}
+                      </span>
                     ) : (
                       <span className="text-muted-foreground">Not set</span>
                     )
@@ -370,7 +441,9 @@ export default function AppFeatureDetail() {
                       .filter((u) => u.isActive)
                       .map((u) => ({
                         value: u.id,
-                        label: [u.firstName, u.lastName].filter(Boolean).join(" ") || "Unknown",
+                        label:
+                          [u.firstName, u.lastName].filter(Boolean).join(" ") ||
+                          "Unknown",
                       })),
                   ]}
                   onSave={handleFieldSave}
@@ -388,13 +461,14 @@ export default function AppFeatureDetail() {
 
                 <FieldRow label="Submitted" testId="field-feature-submitted-on">
                   <span data-testid="text-created-at">
-                    {feature.createdAt ? formatTimeAgo(new Date(feature.createdAt)) : "Unknown"} 
+                    {feature.createdAt
+                      ? formatTimeAgo(new Date(feature.createdAt))
+                      : "Unknown"}
                   </span>
-                  <span className="px-1.5 text-muted-foreground">
-                    by
-                  </span>
+                  <span className="px-1.5 text-muted-foreground">by</span>
                   <span data-testid="text-created-by">
-                    {feature.createdBy?.firstName || ""} {feature.createdBy?.lastName || ""}
+                    {feature.createdBy?.firstName || ""}{" "}
+                    {feature.createdBy?.lastName || ""}
                   </span>
                 </FieldRow>
 
@@ -407,27 +481,26 @@ export default function AppFeatureDetail() {
                     data-testid="button-vote"
                   >
                     <ThumbsUp className="h-4 w-4" />
-                    <span data-testid="text-vote-count">{feature.voteCount}</span>
+                    <span data-testid="text-vote-count">
+                      {feature.voteCount}
+                    </span>
                   </Button>
                 </FieldRow>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="comments" className="mt-0">
-          <div className="max-w-4xl p-4 md:p-6">
             <Card>
               <CardContent className="pt-6">
-                <CommentList 
-                  entityType="app_feature" 
-                  entityId={featureId!} 
-                  currentUser={user || undefined} 
+                <CommentList
+                  entityType="app_feature"
+                  entityId={featureId!}
+                  currentUser={user || undefined}
                 />
               </CardContent>
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="comments" className="mt-0"></TabsContent>
       </Tabs>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -435,11 +508,14 @@ export default function AppFeatureDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Feature Request</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this feature request? This action cannot be undone.
+              Are you sure you want to delete this feature request? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteMutation.mutate()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
