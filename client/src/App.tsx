@@ -215,29 +215,18 @@ function useLayoutConfig() {
           },
         ],
       },
+
+
       {
-        heading: "Venues",
+        heading: "Directory",
         defaultCollapsed: false,
 
         items: [
           {
-            name: "Venues",
-            href: "/venues",
-            icon: Store,
+            name: "People",
+            href: "/contacts",
+            icon: Contact,
           },
-          {
-            name: "Collections",
-            href: "/venues/collections",
-            icon: FolderOpen,
-          },
-        ],
-      },
-
-      {
-        heading: "Contacts",
-        defaultCollapsed: false,
-
-        items: [
           {
             name: "Clients",
             href: "/clients",
@@ -248,10 +237,16 @@ function useLayoutConfig() {
             href: "/vendors",
             icon: Handshake,
           },
+
           {
-            name: "People",
-            href: "/contacts",
-            icon: Contact,
+            name: "Venues",
+            href: "/venues",
+            icon: Store,
+          },
+          {
+            name: "Collections",
+            href: "/venues/collections",
+            icon: FolderOpen,
           },
         ],
       },

@@ -6,7 +6,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -248,46 +248,44 @@ export default function AppFeatureDetail() {
       }
     >
       <Tabs defaultValue="overview" className="w-full">
-        <div className="sticky top-0 bg-background ">
-          <div className="p-4 md:p-6 pb-2 md:pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
-              <div className="space-y-2">
-                <Badge
-                  variant="outline"
-                  style={{
-                    borderColor: feature.category.color || undefined,
-                    color: feature.category.color || undefined,
-                  }}
-                  data-testid="badge-feature-category"
-                >
-                  {feature.category.name}
-                </Badge>
-                <EditableTitle
-                  value={feature.title}
-                  onSave={(value) => handleFieldSave("title", value)}
-                  testId="text-feature-title"
-                  disabled={!canEdit}
-                  isLoading={isFieldLoading("title")}
-                  error={getFieldError("title")}
-                  validation={{ required: true, minLength: 3, maxLength: 200 }}
-                />
-              </div>
-            </div>
+        <div className="p-4 md:p-6 pb-0">
+          <div className="flex items-center gap-4">
+            <Badge
+              variant="outline"
+              style={{
+                backgroundColor: feature.category.color || undefined,
+              }}
+              data-testid="badge-feature-category"
+            >
+              {feature.category.name}
+            </Badge>
+            <EditableTitle
+              value={feature.title}
+              onSave={(value) => handleFieldSave("title", value)}
+              testId="text-feature-title"
+              disabled={!canEdit}
+              isLoading={isFieldLoading("title")}
+              error={getFieldError("title")}
+              validation={{ required: true, minLength: 3, maxLength: 200 }}
+            />
           </div>
 
-          <TabsList data-testid="tabs-feature" className="px-4 md:px-6">
+          {/* <TabsList data-testid="tabs-feature" className="px-4 md:px-6">
             <TabsTrigger value="overview" data-testid="tab-overview">
               Overview
             </TabsTrigger>
             <TabsTrigger value="comments" data-testid="tab-comments">
               Comments
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
         </div>
 
         <TabsContent value="overview" className="mt-0">
-          <div className="max-w-4xl space-y-4 p-4 ">
+          <div className="max-w-4xl space-y-4 p-2 ">
             <Card>
+              <CardHeader>
+                <CardTitle>Overview</CardTitle>
+              </CardHeader>
               <CardContent>
                 <EditableField
                   label="Status"
@@ -489,7 +487,10 @@ export default function AppFeatureDetail() {
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
+              <CardHeader>
+                <CardTitle>Comments</CardTitle>
+              </CardHeader>
+              <CardContent className="">
                 <CommentList
                   entityType="app_feature"
                   entityId={featureId!}
@@ -498,9 +499,9 @@ export default function AppFeatureDetail() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        {/* </TabsContent>
 
-        <TabsContent value="comments" className="mt-0"></TabsContent>
+        <TabsContent value="comments" className="mt-0"></TabsContent> */}
       </Tabs>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
