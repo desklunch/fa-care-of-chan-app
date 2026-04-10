@@ -497,11 +497,12 @@ function FieldEditorDialog({ field, open, onOpenChange, onSave }: FieldEditorDia
 
           <div className="space-y-2">
             <Label htmlFor="field-placeholder">Placeholder</Label>
-            <Input
+            <Textarea
               id="field-placeholder"
               value={editedField.placeholder || ""}
               onChange={(e) => updateField({ placeholder: e.target.value })}
               placeholder="Placeholder text"
+              rows={3}
               data-testid="input-field-placeholder"
             />
           </div>
