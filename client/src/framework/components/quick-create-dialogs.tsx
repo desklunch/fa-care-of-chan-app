@@ -18,8 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, AlertCircle, AlertTriangle, Info } from "lucide-react";
-import type { IssueSeverity, FeatureCategory, FeatureType, CreateAppIssue, CreateAppFeature } from "@shared/schema";
-import { issueSeverities, featureTypes, insertAppIssueSchema, insertAppFeatureSchema } from "@shared/schema";
+import type { IssueSeverity, FeatureCategory, CreateAppIssue, CreateAppFeature } from "@shared/schema";
+import { issueSeverities, insertAppIssueSchema, insertAppFeatureSchema } from "@shared/schema";
 
 interface QuickCreateContextValue {
   openIssueDialog: () => void;
@@ -46,11 +46,6 @@ const severityIcons: Record<IssueSeverity, typeof AlertCircle> = {
   high: AlertCircle,
   medium: AlertTriangle,
   low: Info,
-};
-
-const featureTypeLabels: Record<FeatureType, string> = {
-  idea: "Idea",
-  requirement: "Requirement",
 };
 
 function ReportIssueDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -212,7 +207,6 @@ function RequestFeatureDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     resolver: zodResolver(insertAppFeatureSchema),
     defaultValues: {
       title: "",
-      featureType: undefined,
       categoryId: "",
       description: "",
       status: "proposed",
@@ -271,31 +265,6 @@ function RequestFeatureDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                       data-testid="input-quick-feature-title"
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="featureType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-quick-feature-type">
-                        <SelectValue placeholder="Idea or Requirement?" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {featureTypes.map((type) => (
-                        <SelectItem key={type} value={type} data-testid={`select-option-quick-type-${type}`}>
-                          {featureTypeLabels[type]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

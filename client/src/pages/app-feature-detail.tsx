@@ -25,8 +25,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { ThumbsUp, Loader2, SquarePen, Trash2 } from "lucide-react";
 import { Link } from "wouter";
-import type { AppFeatureWithRelations, FeatureStatus, FeatureType, FeaturePriority, FeatureCategory, User } from "@shared/schema";
-import { featureStatuses, featureTypes, featurePriorities } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureStatus, FeaturePriority, FeatureCategory, User } from "@shared/schema";
+import { featureStatuses, featurePriorities } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
 import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
 import { format } from "date-fns";
@@ -47,11 +47,6 @@ const statusColors: Record<FeatureStatus, string> = {
   in_progress: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-};
-
-const featureTypeLabels: Record<FeatureType, string> = {
-  idea: "Idea",
-  requirement: "Requirement",
 };
 
 export default function AppFeatureDetail() {
@@ -298,30 +293,6 @@ export default function AppFeatureDetail() {
                     )
                   }
                   placeholder="Select priority"
-                />
-
-                <EditableField
-                  label="Type"
-                  value={feature.featureType || ""}
-                  field="featureType"
-                  testId="field-feature-type"
-                  type="select"
-                  disabled={!canEditAllFields}
-                  options={featureTypes.map((t) => ({
-                    value: t,
-                    label: featureTypeLabels[t],
-                  }))}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("featureType")}
-                  error={getFieldError("featureType")}
-                  displayValue={
-                    feature.featureType ? (
-                      <span className="text-sm">{featureTypeLabels[feature.featureType as FeatureType]}</span>
-                    ) : (
-                      <span className="text-muted-foreground">Not set</span>
-                    )
-                  }
-                  placeholder="Select type"
                 />
 
                 <EditableField

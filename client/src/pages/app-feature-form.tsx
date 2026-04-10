@@ -26,15 +26,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { AppFeatureWithRelations, FeatureCategory, FeatureType, FeatureStatus, FeaturePriority } from "@shared/schema";
-import { insertAppFeatureSchema, featureTypes, featureStatuses, featurePriorities } from "@shared/schema";
+import type { AppFeatureWithRelations, FeatureCategory, FeatureStatus, FeaturePriority } from "@shared/schema";
+import { insertAppFeatureSchema, featureStatuses, featurePriorities } from "@shared/schema";
 import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
 import { z } from "zod";
-
-const featureTypeLabels: Record<FeatureType, string> = {
-  idea: "Idea",
-  requirement: "Requirement",
-};
 
 const featureStatusLabels: Record<FeatureStatus, string> = {
   proposed: "Proposed",
@@ -74,7 +69,6 @@ export default function AppFeatureForm() {
       title: "",
       description: "",
       categoryId: "",
-      featureType: undefined,
       status: "proposed",
       priority: null,
     },
@@ -86,7 +80,6 @@ export default function AppFeatureForm() {
         title: existingFeature.title,
         description: existingFeature.description,
         categoryId: existingFeature.categoryId,
-        featureType: existingFeature.featureType as FeatureType,
         status: existingFeature.status as FeatureStatus,
         priority: (existingFeature.priority as FeaturePriority) || null,
       });
@@ -232,34 +225,6 @@ export default function AppFeatureForm() {
                       </FormControl>
                       <FormDescription>
                         A short, descriptive title for your feature request.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="featureType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-feature-type">
-                            <SelectValue placeholder="Is this an Idea or a Requirement?" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {featureTypes.map((type) => (
-                            <SelectItem key={type} value={type} data-testid={`select-option-type-${type}`}>
-                              {featureTypeLabels[type]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Ideas are suggestions; requirements are essential features.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

@@ -582,7 +582,6 @@ export class DatabaseStorage implements IStorage {
         id: appFeatures.id,
         title: appFeatures.title,
         description: appFeatures.description,
-        featureType: appFeatures.featureType,
         categoryId: appFeatures.categoryId,
         status: appFeatures.status,
         priority: appFeatures.priority,
@@ -621,7 +620,6 @@ export class DatabaseStorage implements IStorage {
       id: f.id,
       title: f.title,
       description: f.description,
-      featureType: f.featureType,
       categoryId: f.categoryId,
       status: f.status,
       priority: f.priority,
@@ -662,7 +660,6 @@ export class DatabaseStorage implements IStorage {
         id: appFeatures.id,
         title: appFeatures.title,
         description: appFeatures.description,
-        featureType: appFeatures.featureType,
         categoryId: appFeatures.categoryId,
         status: appFeatures.status,
         priority: appFeatures.priority,
@@ -706,7 +703,6 @@ export class DatabaseStorage implements IStorage {
       id: f.id,
       title: f.title,
       description: f.description,
-      featureType: f.featureType,
       categoryId: f.categoryId,
       status: f.status,
       priority: f.priority,
@@ -1679,7 +1675,6 @@ export class DatabaseStorage implements IStorage {
         notes: appReleaseFeatures.notes,
         createdAt: appReleaseFeatures.createdAt,
         featureTitle: appFeatures.title,
-        featureType: appFeatures.featureType,
         featureStatus: appFeatures.status,
       })
       .from(appReleaseFeatures)
@@ -1735,7 +1730,6 @@ export class DatabaseStorage implements IStorage {
         feature: {
           id: f.featureId,
           title: f.featureTitle,
-          featureType: f.featureType,
           status: f.featureStatus,
         },
       })),
