@@ -15,6 +15,7 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
 **Frontend:**
 -   **Framework:** React 18+ with TypeScript.
 -   **Build Tool:** Vite.
+-   **PWA:** Progressive Web App with manifest.json, service worker (sw.js) for app shell caching, and update banner component. Icons at client/public/icon-192.png and icon-512.png. Service worker registered in production only.
 -   **State Management:** TanStack Query for server state, React Hook Form with Zod for form state, and session-based caching for authentication.
 -   **UI:** `shadcn/ui`, Tailwind CSS, AG Grid Community, Lucide React for iconography.
 

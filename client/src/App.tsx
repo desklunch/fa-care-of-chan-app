@@ -16,6 +16,8 @@ import { InputLogger } from "@/hooks/useInputLogger";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import "@/lib/debug-logger";
+import { PwaUpdateBanner } from "@/components/pwa-update-banner";
+import { OfflineOverlay } from "@/components/offline-overlay";
 
 const Landing = lazy(() => import("@/pages/landing"));
 const AuthError = lazy(() => import("@/pages/auth-error"));
@@ -564,6 +566,8 @@ function App() {
               <NavigationLogger />
               <InputLogger />
               <Toaster />
+              <PwaUpdateBanner />
+              <OfflineOverlay />
               <Router />
             </TooltipProvider>
           </TierOverrideProvider>
