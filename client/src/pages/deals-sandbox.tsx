@@ -945,62 +945,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "eventSchedule",
-    headerName: "Event Schedule",
-    field: "eventSchedule",
-    category: "Basic Info",
-    colDef: {
-      flex: 1.5,
-      minWidth: 220,
-      sortable: false,
-      wrapText: true,
-      autoHeight: true,
-      cellDataType: false,
-      editable: true,
-      cellEditor: EventScheduleCellEditor,
-      cellEditorPopup: true,
-      valueSetter: (params: { data: DealWithRelations; newValue: DealEvent[] }) => {
-        if (params.data) {
-          params.data.eventSchedule = params.newValue;
-        }
-        return true;
-      },
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const events = params.data?.eventSchedule as DealEvent[] | null;
-        if (!events || events.length === 0) return "";
-        return events
-          .map((e) => {
-            const s = getEventSummary(e);
-            return s ? s.text : null;
-          })
-          .filter(Boolean)
-          .join("; ");
-      },
-      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
-        const events = params.data?.eventSchedule as DealEvent[] | null;
-        if (!events || events.length === 0) return null;
-        const summaries = events.map((e) => getEventSummary(e)).filter(Boolean);
-        if (summaries.length === 0) return null;
-        return (
-          <div className="flex flex-col gap-1 py-2.5">
-            {summaries.map((summary, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 text-xs">
-                <Badge variant="secondary" className="text-xs gap-1">
-                  {summary!.text}
-                  {summary!.altCount > 0 && (
-                    <span className="text-muted-foreground ml-0.5">
-                      + {summary!.altCount} alt
-                    </span>
-                  )}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        );
-      },
-    },
-  },
+
   {
     id: "locations",
     headerName: "Locations",

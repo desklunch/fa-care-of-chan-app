@@ -430,7 +430,7 @@ export default function Sidebar({
                               aria-hidden="true"
                             />
                             {showExpanded && (
-                              <span className="text-[14px] leading-[10px] flex-1 font-normal ">
+                              <span className="text-[14px] leading-[10px] flex-1 font-medium ">
                                 {item.name}
                               </span>
                             )}

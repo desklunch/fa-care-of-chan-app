@@ -385,77 +385,253 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 ">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel> Deal Status</FormLabel>
+                        <Select onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-deal-status" >
+                              <SelectValue placeholder="Select status"  />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {dealStatusList.map((s) => (
+                              <SelectItem key={s.id} value={String(s.id)} >
+                                <div className="min-w-48 w-fit ">
+                                <DealStatusBadge status={s.name} />
+                                </div>
+
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ownerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Deal Owner</FormLabel>
+                        <Select 
+                          onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                          value={field.value || ""}
+
+                        >
+                          <FormControl>
+                            <SelectTrigger
+                              className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
+                              data-testid="select-deal-owner"
+                            >
+                              <SelectValue placeholder="Select owner..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="__none__">No owner</SelectItem>
+                            {users.filter(u => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.firstName} {user.lastName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Separator className="my-2" />
+
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="serviceIds"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-deal-status" >
-                            <SelectValue placeholder="Select status"  />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {dealStatusList.map((s) => (
-                            <SelectItem key={s.id} value={String(s.id)} >
-                              <div className="min-w-48 w-fit ">
-                              <DealStatusBadge status={s.name} />
+                    <FormItem className="space-y-0">
+                      <FormLabel>Services</FormLabel>
+                      <FormDescription>
+                        Select one or more services for this deal.
+                      </FormDescription>
+                      <FormControl className="pt-4">
+                        <div className="grid grid-cols-3 gap-3">
+                          {dealServices.filter(s => s.isActive).map((service) => {
+                            const isSelected = field.value.includes(service.id);
+                            return (
+                              <Badge
+                                key={service.id}
+                                variant={isSelected ? "default" : "outline"}
+
+                                className={cn(
+                                  "cursor-pointer select-none toggle-elevate",
+                                  isSelected && "toggle-elevated"
+                                )}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    field.onChange(field.value.filter((id: number) => id !== service.id));
+                                  } else {
+                                    field.onChange([...field.value, service.id]);
+                                  }
+                                }}
+                                data-testid={`badge-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
+                              >
+                                {service.name}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Separator className="my-2" />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 ">
+             
+                  <FormField
+                    control={form.control}
+                    name="startedOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Started On</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="bg-background border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
+                                data-testid="button-started-on"
+                              >
+                                <div className="flex ">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
+                                </div>
+                                {field.value && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-auto h-full px-2"
+                                    onClick={() => field.onChange(null)}
+                                  >
+                                    Clear
+                                  </Button>
+                                  )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
                               </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="lastContactOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Last Contact</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="bg-background border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
+                                data-testid="button-last-contact"
+                              >
+                                <div className="flex ">
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
 
-                <FormField
-                  control={form.control}
-                  name="ownerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deal Owner</FormLabel>
-                      <Select 
-                        onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
-                        value={field.value || ""}
+                                </div>
+                                {field.value && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-auto h-full px-2"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value ? parseISO(field.value) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                              initialFocus
+                            />
+                            {field.value && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => field.onChange(null)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                      >
-                        <FormControl>
-                          <SelectTrigger
-                            className={cn(!field.value || field.value === "__none__" ? "text-muted-foreground" : "")}
-                            data-testid="select-deal-owner"
-                          >
-                            <SelectValue placeholder="Select owner..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">No owner</SelectItem>
-                          {users.filter(u => u.isActive && (u.role === "Sales" || u.role === "Sales Admin")).map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.firstName} {user.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
+           
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Client</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+      
 
-
-                <Separator className="my-4" />
+     
                 <FormField
                   control={form.control}
                   name="clientId"
                   render={({ field }) => (
                     <FormItem>
                       <div className="w-full flex justify-between items-center">
-                        <FormLabel>Primary Client</FormLabel>
+                        <FormLabel>Company</FormLabel>
                         <span className="text-xs font-medium text-muted-foreground">Required</span>
                       </div>
                       <FormControl>
@@ -581,128 +757,11 @@ export default function DealForm() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                <Separator className="my-4" />
-                
 
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="startedOn"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Started On</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className="bg-background border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
-                                data-testid="button-started-on"
-                              >
-                                <div className="flex ">
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
-                                </div>
-                                {field.value && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="w-auto h-full px-2"
-                                    onClick={() => field.onChange(null)}
-                                  >
-                                    Clear
-                                  </Button>
-                                  )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value ? parseISO(field.value) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
-                              initialFocus
-                            />
-                            {field.value && (
-                              <div className="p-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => field.onChange(null)}
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lastContactOn"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Last Contact</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className="bg-background border-input w-full h-12 px-3 pr-2 font-normal items-center justify-between"
-                                data-testid="button-last-contact"
-                              >
-                                <div className="flex ">
-                                  <Calendar className="mr-2 h-4 w-4" />
-                                  {field.value ? format(parseISO(field.value), "MMM d, yyyy") : "Select date"}
-
-                                </div>
-                                {field.value && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-auto h-full px-2"
-                                  onClick={() => field.onChange(null)}
-                                >
-                                  Clear
-                                </Button>
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value ? parseISO(field.value) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
-                              initialFocus
-                            />
-                            {field.value && (
-                              <div className="p-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => field.onChange(null)}
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
               </CardContent>
             </Card>
+
             {/* Card 2: Project Details */}
             <Card>
               <CardHeader>
@@ -711,48 +770,7 @@ export default function DealForm() {
               <CardContent className="flex flex-col gap-6">
                 {/* Hidden - Locations field temporarily disabled */}
      
-                <FormField
-                  control={form.control}
-                  name="serviceIds"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0">
-                      <FormLabel>Services</FormLabel>
-                      <FormDescription>
-                        Select one or more services for this deal.
-                      </FormDescription>
-                      <FormControl className="pt-4">
-                        <div className="grid grid-cols-3 gap-3">
-                          {dealServices.filter(s => s.isActive).map((service) => {
-                            const isSelected = field.value.includes(service.id);
-                            return (
-                              <Badge
-                                key={service.id}
-                                variant={isSelected ? "default" : "outline"}
-                                
-                                className={cn(
-                                  "cursor-pointer select-none toggle-elevate",
-                                  isSelected && "toggle-elevated"
-                                )}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    field.onChange(field.value.filter((id: number) => id !== service.id));
-                                  } else {
-                                    field.onChange([...field.value, service.id]);
-                                  }
-                                }}
-                                data-testid={`badge-service-${service.name.toLowerCase().replace(/\s+/g, "-")}`}
-                              >
-                                {service.name}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      </FormControl>
-     
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
 
                 <FormField
                   control={form.control}
@@ -786,7 +804,7 @@ export default function DealForm() {
                   </div>
                 </FormItem>
 
-                <Separator className="my-4" />
+                <Separator className="my-2" />
 
                     <FormField
                       control={form.control}
@@ -824,8 +842,8 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                <Separator className="my-4" />
-                <FormField
+                <Separator className="my-2" />
+                {/* <FormField
                   control={form.control}
                   name="eventSchedule"
                   render={({ field }) => (
@@ -840,13 +858,13 @@ export default function DealForm() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
                 <FormField
                   control={form.control}
                   name="projectDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project Date Notes</FormLabel>
+                      <FormLabel>Project Date </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="e.g., Q2 2025, Summer 2025, TBD..."
@@ -862,7 +880,7 @@ export default function DealForm() {
                 />
          
 
-                <Separator className="my-4" />
+                <Separator className="my-2" />
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
@@ -930,7 +948,7 @@ export default function DealForm() {
                     </FormItem>
                   )}
                 />
-                        <Separator className="my-4" />
+                        <Separator className="my-2" />
 
 
                                 <FormField
