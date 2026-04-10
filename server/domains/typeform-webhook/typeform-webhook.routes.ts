@@ -67,14 +67,14 @@ function getAnswerValue(answer: TypeformAnswer): string {
 
 function getAnswerByTitle(answers: TypeformAnswer[], title: string): string {
   const answer = answers.find(
-    (a) => a.field.title.toLowerCase().trim() === title.toLowerCase().trim()
+    (a) => a.field?.title?.toLowerCase().trim() === title.toLowerCase().trim()
   );
   return answer ? getAnswerValue(answer) : "";
 }
 
 function getAllAnswersByTitle(answers: TypeformAnswer[], title: string): string[] {
   return answers
-    .filter((a) => a.field.title.toLowerCase().trim() === title.toLowerCase().trim())
+    .filter((a) => a.field?.title?.toLowerCase().trim() === title.toLowerCase().trim())
     .map(getAnswerValue)
     .filter(Boolean);
 }
