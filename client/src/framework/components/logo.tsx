@@ -1,4 +1,4 @@
-import chanseyGif from "@assets/chansey_1775839823271.gif";
+import chanseyGif from "@assets/chansey_1775846628800.gif";
 
 interface LogoProps {
   className?: string;
