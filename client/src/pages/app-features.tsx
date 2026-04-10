@@ -33,12 +33,12 @@ const statusSortOrder: Record<FeatureStatus, number> = {
 };
 
 const statusColors: Record<FeatureStatus, string> = {
-  proposed: "border-blue-800 text-blue-800 dark:border-blue-400 dark:text-blue-400",
-  under_review: "border-yellow-800 text-yellow-800 dark:border-yellow-400 dark:text-yellow-400",
-  planned: "border-purple-800 text-purple-800 dark:border-purple-400 dark:text-purple-400",
-  in_progress: "border-orange-800 text-orange-800 dark:border-orange-400 dark:text-orange-400",
-  completed: "border-green-800 text-green-800 dark:border-green-400 dark:text-green-400",
-  archived: "border-gray-800 text-gray-800 dark:border-gray-400 dark:text-gray-400",
+  proposed: "bg-blue-800 text-background dark:bg-blue-400 dark:text-background",
+  under_review: "bg-yellow-800 text-background dark:bg-yellow-400 dark:text-background",
+  planned: "bg-purple-800 text-background dark:bg-purple-400 dark:text-background",
+  in_progress: "bg-orange-800 text-background dark:bg-orange-400 dark:text-background",
+  completed: "bg-green-800 text-background dark:bg-green-400 dark:text-background",
+  archived: "bg-gray-800 text-background dark:bg-gray-400 dark:text-background",
 };
 
 function FeatureRow({ feature }: { feature: AppFeatureWithRelations }) {
@@ -219,7 +219,7 @@ export default function AppFeatures() {
         variant: "default",
       }}
     >
-      <div className="overflow-hidden flex flex-col h-full p-4 md:p-6 gap-4 md:gap-6 ">
+      <div className="overflow-hidden max-w-7xl flex flex-col h-full p-4 md:p-6 gap-4 md:gap-6 ">
         
         <div className="">
           <FilterBar

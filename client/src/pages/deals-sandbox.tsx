@@ -466,74 +466,6 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-
-  {
-    id: "projectDate",
-    headerName: "Project Date",
-    field: "projectDate",
-    category: "Dates",
-    colDef: {
-      flex: 1.5,
-      minWidth: 150,
-      editable: true,
-      cellEditor: "agLargeTextCellEditor",
-      cellEditorPopup: true,
-      cellEditorParams: {
-        maxLength: 500,
-        rows: 3,
-        cols: 30,
-      },
-      cellRenderer: (params: { value: string | null }) => {
-        if (!params.value) return null;
-        return (
-          <div
-            className=" text-xs text-muted-foreground text-wrap py-[16px]
-"
-          >
-            <span className="leading-[18px]">{params.value}</span>
-          </div>
-        );
-      },
-    },
-  },
-  {
-    id: "client",
-    headerName: "Client",
-    field: "client",
-    category: "Basic Info",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        return params.data?.client?.name || "";
-      },
-      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
-        const client = params.data?.client;
-        if (!client) return null;
-        return (
-          <div className="flex flex-col justify-center min-w-0 py-[16px]">
-            <Link
-              href={`/clients/${client.id}`}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="text-foreground hover:underline truncate p-0 h-auto leading-normal"
-              data-testid={`link-client-${client.id}`}
-            >
-              {client.name}
-            </Link>
-            {client.industryName && (
-              <span
-                className="text-xs text-muted-foreground truncate"
-                data-testid={`text-client-industry-${client.id}`}
-              >
-                {client.industryName}
-              </span>
-            )}
-          </div>
-        );
-      },
-    },
-  },
-
   {
     id: "startedOn",
     headerName: "Started On",
@@ -582,7 +514,81 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createDateComparator((data) => data?.startedOn),
     },
   },
+  {
+    id: "dealAge",
+    headerName: "Deal Age",
+    field: "dealAge",
+    category: "Dates",
+    colDef: {
+      width: 100,
+      editable: false,
+      valueGetter: (params: {
+        data: DealWithRelations | undefined;
+        context: DealsGridContext;
+      }) => {
+        const deal = params.data;
+        if (!deal || !deal.startedOn) return null;
 
+        const toStartOfDay = (dateStr: string) => {
+          const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const startDate = toStartOfDay(deal.startedOn);
+        let endDate: Date | null = null;
+
+        const statusRecord = params.context?.dealStatuses?.find(
+          (s) => s.name === deal.statusName,
+        );
+
+        if (statusRecord?.isActive) {
+          const now = new Date();
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (statusRecord?.name === "Closed Won") {
+          if (deal.wonOn) {
+            endDate = toStartOfDay(deal.wonOn);
+          } else if (deal.lastContactOn) {
+            endDate = toStartOfDay(deal.lastContactOn);
+          }
+        } else {
+          if (deal.lastContactOn) {
+            endDate = toStartOfDay(deal.lastContactOn);
+          }
+        }
+
+        if (!endDate) return null;
+
+        const diffMs = endDate.getTime() - startDate.getTime();
+        return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+      },
+      valueFormatter: (params: { value: number | null }) => {
+        if (params.value == null) return "";
+        return `${params.value}d`;
+      },
+      cellRenderer: (params: { value: number | null }) => {
+        if (params.value == null) return null;
+        return (
+          <div className="bg-muted rounded-full p-2 size-8 flex items-center justify-center text-xs my-[10px] text-muted-foreground tracking-wide">
+            {params.value}d
+          </div>
+        );
+      },
+      comparator: (
+        valueA: number | null,
+        valueB: number | null,
+        _nodeA: unknown,
+        _nodeB: unknown,
+        isDescending: boolean,
+      ): number => {
+        const aIsNull = valueA == null;
+        const bIsNull = valueB == null;
+        if (aIsNull && bIsNull) return 0;
+        if (aIsNull) return isDescending ? -1 : 1;
+        if (bIsNull) return isDescending ? 1 : -1;
+        return valueA - valueB;
+      },
+    },
+  },
   {
     id: "lastContactOn",
     headerName: "Last Contact",
@@ -671,6 +677,114 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createDateComparator((data) => data?.lastContactOn),
     },
   },
+  {
+    id: "projectDate",
+    headerName: "Project Date",
+    field: "projectDate",
+    category: "Dates",
+    colDef: {
+      flex: 1.5,
+      minWidth: 180,
+      editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 500,
+        rows: 3,
+        cols: 30,
+      },
+      cellRenderer: (params: { value: string | null }) => {
+        if (!params.value) return null;
+        return (
+          <div
+            className=" text-xs text-muted-foreground text-wrap py-[16px]
+"
+          >
+            <span className="leading-[18px]">{params.value}</span>
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "client",
+    headerName: "Client",
+    field: "client",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 180,
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        return params.data?.client?.name || "";
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
+        const client = params.data?.client;
+        if (!client) return null;
+        return (
+          <div className="flex flex-col justify-center min-w-0 py-[16px]">
+            <Link
+              href={`/clients/${client.id}`}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="text-foreground hover:underline truncate p-0 h-auto leading-normal"
+              data-testid={`link-client-${client.id}`}
+            >
+              {client.name}
+            </Link>
+            {client.industryName && (
+              <span
+                className="text-xs text-muted-foreground truncate"
+                data-testid={`text-client-industry-${client.id}`}
+              >
+                {client.industryName}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+  },
+  {
+    id: "primaryContact",
+    headerName: "Primary Contact",
+    field: "primaryContact",
+    category: "Basic Info",
+    colDef: {
+      flex: 1.5,
+      minWidth: 180,
+      autoHeight: true,
+
+      valueGetter: (params: { data: DealWithRelations | undefined }) => {
+        const contact = params.data?.primaryContact;
+        if (!contact) return "";
+        return [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+      },
+      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
+        const contact = params.data?.primaryContact;
+        if (!contact) return null;
+        const fullName = [contact.firstName, contact.lastName]
+          .filter(Boolean)
+          .join(" ");
+        return (
+          <span className="flex flex-col py-[16px] gap-0.5">
+            <Link
+              href={`/contacts/${contact.id}`}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="text-foreground hover:underline  text-sm"
+              data-testid={`link-contact-${contact.id}`}
+            >
+              {fullName}
+            </Link>
+            {contact.jobTitle && (
+              <span className="text-xs text-muted-foreground truncate">
+                {contact.jobTitle}
+              </span>
+            )}
+          </span>
+        );
+      },
+    },
+  },
+
   {
     id: "proposalSentOn",
     headerName: "Proposal Sent",
@@ -767,81 +881,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       comparator: createDateComparator((data) => data?.wonOn),
     },
   },
-  {
-    id: "dealAge",
-    headerName: "Deal Age",
-    field: "dealAge",
-    category: "Dates",
-    colDef: {
-      width: 100,
-      editable: false,
-      valueGetter: (params: {
-        data: DealWithRelations | undefined;
-        context: DealsGridContext;
-      }) => {
-        const deal = params.data;
-        if (!deal || !deal.startedOn) return null;
 
-        const toStartOfDay = (dateStr: string) => {
-          const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
-          return new Date(y, m - 1, d);
-        };
-
-        const startDate = toStartOfDay(deal.startedOn);
-        let endDate: Date | null = null;
-
-        const statusRecord = params.context?.dealStatuses?.find(
-          (s) => s.name === deal.statusName,
-        );
-
-        if (statusRecord?.isActive) {
-          const now = new Date();
-          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        } else if (statusRecord?.name === "Closed Won") {
-          if (deal.wonOn) {
-            endDate = toStartOfDay(deal.wonOn);
-          } else if (deal.lastContactOn) {
-            endDate = toStartOfDay(deal.lastContactOn);
-          }
-        } else {
-          if (deal.lastContactOn) {
-            endDate = toStartOfDay(deal.lastContactOn);
-          }
-        }
-
-        if (!endDate) return null;
-
-        const diffMs = endDate.getTime() - startDate.getTime();
-        return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
-      },
-      valueFormatter: (params: { value: number | null }) => {
-        if (params.value == null) return "";
-        return `${params.value}d`;
-      },
-      cellRenderer: (params: { value: number | null }) => {
-        if (params.value == null) return null;
-        return (
-          <span className="flex items-center gap-1.5 text-xs py-[16px] text-muted-foreground tracking-wide">
-            {params.value}d
-          </span>
-        );
-      },
-      comparator: (
-        valueA: number | null,
-        valueB: number | null,
-        _nodeA: unknown,
-        _nodeB: unknown,
-        isDescending: boolean,
-      ): number => {
-        const aIsNull = valueA == null;
-        const bIsNull = valueB == null;
-        if (aIsNull && bIsNull) return 0;
-        if (aIsNull) return isDescending ? -1 : 1;
-        if (bIsNull) return isDescending ? 1 : -1;
-        return valueA - valueB;
-      },
-    },
-  },
   {
     id: "concept",
     headerName: "Concept & Context",
@@ -869,47 +909,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       },
     },
   },
-  {
-    id: "primaryContact",
-    headerName: "Primary Contact",
-    field: "primaryContact",
-    category: "Basic Info",
-    colDef: {
-      flex: 1.5,
-      minWidth: 180,
-      autoHeight: true,
 
-      valueGetter: (params: { data: DealWithRelations | undefined }) => {
-        const contact = params.data?.primaryContact;
-        if (!contact) return "";
-        return [contact.firstName, contact.lastName].filter(Boolean).join(" ");
-      },
-      cellRenderer: (params: { data: DealWithRelations | undefined }) => {
-        const contact = params.data?.primaryContact;
-        if (!contact) return null;
-        const fullName = [contact.firstName, contact.lastName]
-          .filter(Boolean)
-          .join(" ");
-        return (
-          <span className="flex flex-col py-[16px] gap-0.5">
-            <Link
-              href={`/contacts/${contact.id}`}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="text-foreground hover:underline  text-sm"
-              data-testid={`link-contact-${contact.id}`}
-            >
-              {fullName}
-            </Link>
-            {contact.jobTitle && (
-              <span className="text-xs text-muted-foreground truncate">
-                {contact.jobTitle}
-              </span>
-            )}
-          </span>
-        );
-      },
-    },
-  },
   {
     id: "services",
     headerName: "Services",
