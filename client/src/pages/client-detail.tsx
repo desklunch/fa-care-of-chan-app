@@ -61,7 +61,6 @@ import {
   useFieldMutation,
 } from "@/components/inline-edit";
 import { CommentList } from "@/components/ui/comments";
-import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 
 export default function ClientDetail() {
   const params = useParams<{ id: string }>();
@@ -266,9 +265,6 @@ export default function ClientDetail() {
             </TabsTrigger>
             <TabsTrigger value="comments" data-testid="tab-comments">
               Comments
-            </TabsTrigger>
-            <TabsTrigger value="files" data-testid="tab-files">
-              Files
             </TabsTrigger>
           </TabsList>
         </div>
@@ -519,13 +515,6 @@ export default function ClientDetail() {
           </div>
         </TabsContent>
 
-        <TabsContent value="files" className="mt-0">
-          <div className="max-w-4xl">
-            {params.id && (
-              <GoogleDriveAttachments entityType="client" entityId={params.id} />
-            )}
-          </div>
-        </TabsContent>
       </Tabs>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

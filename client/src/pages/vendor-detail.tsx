@@ -27,7 +27,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CommentList } from "@/components/ui/comments";
-import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import {
   ArrowLeft,
   Building2,
@@ -451,9 +450,6 @@ export default function VendorDetail() {
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
                 Comments
-              </TabsTrigger>
-              <TabsTrigger value="files" data-testid="tab-files">
-                Files
               </TabsTrigger>
             </TabsList>
           </div>
@@ -891,13 +887,6 @@ export default function VendorDetail() {
             </div>
           </TabsContent>
 
-          <TabsContent value="files" className="mt-0">
-            <div className="max-w-4xl">
-              {id && (
-                <GoogleDriveAttachments entityType="vendor" entityId={id} />
-              )}
-            </div>
-          </TabsContent>
         </Tabs>
       </PageLayout>
 
