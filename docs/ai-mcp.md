@@ -1,8 +1,8 @@
 # AI/MCP Readiness Implementation Plan
 
 **Created:** January 6, 2026  
-**Last Updated:** January 7, 2026  
-**Status:** All Phases Complete - MCP Server Ready for Production
+**Last Updated:** April 11, 2026  
+**Status:** All Phases Complete - MCP Server Ready for Production (16 tools)
 
 ---
 
@@ -226,19 +226,26 @@ type DealEvents = {
 | Contact tools | search, get | Complete |
 | Workspace tool | workspace_summary | Complete |
 
-#### MCP Tools (Initial Set)
+#### MCP Tools
 
 | Tool | Description | Risk Level |
 |------|-------------|------------|
-| `deals.list` | Search/filter deals | Low (read-only) |
-| `deals.get` | Get deal by ID | Low (read-only) |
-| `deals.create` | Create new deal | Medium |
-| `deals.update` | Update deal fields | Medium |
-| `deals.move_stage` | Change deal stage | Medium |
-| `venues.search` | Search venues | Low (read-only) |
-| `venues.get` | Get venue details | Low (read-only) |
-| `contacts.search` | Search contacts | Low (read-only) |
-| `contacts.get` | Get contact details | Low (read-only) |
+| `deals_list` | Search/filter deals | Low (read-only) |
+| `deals_get` | Get deal by ID | Low (read-only) |
+| `deals_create` | Create new deal | Medium |
+| `deals_update` | Update deal fields | Medium |
+| `deals_move_stage` | Change deal stage | Medium |
+| `deals_assign_owner` | Assign/change deal owner | Medium |
+| `venues_search` | Search venues | Low (read-only) |
+| `venues_get` | Get venue details | Low (read-only) |
+| `contacts_search` | Search contacts | Low (read-only) |
+| `contacts_get` | Get contact details | Low (read-only) |
+| `workspace_summary` | Get workspace state summary | Low (read-only) |
+| `features_list` | List/filter feature requests by status and/or category | Low (read-only) |
+| `features_get` | Get feature details including comments, category, creator | Low (read-only) |
+| `features_update` | Update feature status, priority, title, description | Medium |
+| `features_add_comment` | Post a comment to a feature as Replit Agent | Medium |
+| `features_list_categories` | List available feature categories | Low (read-only) |
 
 #### Safety Guards
 - All MCP requests require authentication
@@ -249,6 +256,18 @@ type DealEvents = {
 ---
 
 ## Progress Log
+
+### April 11, 2026 — Feature Backlog MCP Tools, Auth & System User
+- **Feature MCP Tools**: Added 5 new tools to the MCP server for feature backlog access:
+  - `features_list` — List/filter features by status and/or category
+  - `features_get` — Get a single feature by ID with comments, category, and creator
+  - `features_update` — Update status, priority, title, description (auto-manages `completedAt`)
+  - `features_add_comment` — Post a comment as the Replit Agent system user
+  - `features_list_categories` — List available feature categories
+- **Bearer Token Auth on MCP Transport**: Added `Authorization: Bearer <AGENT_API_KEY>` validation to all MCP endpoints (SSE, message, tools, health). When `AGENT_API_KEY` env var is set, unauthenticated connections are rejected with 401/403. Auth is disabled when the env var is not set (for development).
+- **Replit Agent System User**: Created `ensureReplitAgentUser()` which upserts a well-known user record (`id: replit-agent`, role: admin) on first MCP connection. This fixes the existing silent audit log FK violations for deal MCP tools that used a non-existent `mcp-system` actor ID.
+- **Agent Skill**: Created `.agents/skills/feature-backlog/SKILL.md` documenting the feature lifecycle workflow, available tools, authentication, and Replit integration registration steps.
+- **Tools listing updated**: `/api/mcp/tools` now returns 16 tools (was 11) including all feature tools.
 
 ### January 7, 2026 (Phase 4)
 - **Phase 4 Complete**: MCP Server Implementation

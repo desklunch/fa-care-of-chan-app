@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { randomBytes } from "crypto";
@@ -7,6 +7,33 @@ import { mcpRateLimit, getRateLimitStats } from "./rate-limit";
 
 const router = Router();
 
+function mcpBearerAuth(req: Request, res: Response, next: NextFunction): void {
+  const agentApiKey = process.env.AGENT_API_KEY;
+  if (!agentApiKey) {
+    if (process.env.NODE_ENV === "production") {
+      res.status(503).json({ error: "MCP server not configured: AGENT_API_KEY is required in production" });
+      return;
+    }
+    next();
+    return;
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Missing or invalid Authorization header. Expected: Bearer <token>" });
+    return;
+  }
+
+  const token = authHeader.slice(7);
+  if (token !== agentApiKey) {
+    res.status(403).json({ error: "Invalid API key" });
+    return;
+  }
+
+  next();
+}
+
+router.use(mcpBearerAuth);
 router.use(mcpRateLimit);
 
 let mcpServerPromise: Promise<McpServer> | null = null;
@@ -92,6 +119,11 @@ router.get("/tools", async (_req: Request, res: Response) => {
       { name: "contacts_search", description: "Search for contacts by name or email", category: "contacts", riskLevel: "low" },
       { name: "contacts_get", description: "Get detailed information about a specific contact", category: "contacts", riskLevel: "low" },
       { name: "workspace_summary", description: "Get a summary of the current workspace state", category: "workspace", riskLevel: "low" },
+      { name: "features_list", description: "List and filter feature requests by status and/or category", category: "features", riskLevel: "low" },
+      { name: "features_get", description: "Get detailed information about a specific feature including comments", category: "features", riskLevel: "low" },
+      { name: "features_update", description: "Update a feature's status, priority, title, or description", category: "features", riskLevel: "medium" },
+      { name: "features_add_comment", description: "Post a comment to a feature using the Replit Agent user", category: "features", riskLevel: "medium" },
+      { name: "features_list_categories", description: "List available feature categories with IDs and names", category: "features", riskLevel: "low" },
     ];
     
     return res.json({

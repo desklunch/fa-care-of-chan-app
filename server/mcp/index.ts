@@ -3,11 +3,33 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { DealsService } from "../services/deals.service";
 import { ServiceError } from "../services/base.service";
-import { type DealStatus, type DealStatusRecord } from "@shared/schema";
+import { type DealStatus, type DealStatusRecord, type FeatureStatus, featureStatuses, featurePriorities } from "@shared/schema";
+import { issuesFeaturesStorage } from "../domains/issues-features/issues-features.storage";
 
 const dealsService = new DealsService(storage);
 
-const MCP_ACTOR_ID = "mcp-system";
+const REPLIT_AGENT_USER_ID = "replit-agent";
+
+export async function ensureReplitAgentUser(): Promise<void> {
+  try {
+    await storage.upsertUser({
+      id: REPLIT_AGENT_USER_ID,
+      email: "agent@replit.system",
+      firstName: "Replit",
+      lastName: "Agent",
+      role: "admin",
+    });
+    await storage.updateUser(REPLIT_AGENT_USER_ID, { role: "admin" });
+    console.log("[MCP] Replit Agent system user ensured");
+  } catch (error) {
+    console.error("[MCP] Failed to ensure Replit Agent user:", error);
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+  }
+}
+
+const MCP_ACTOR_ID = REPLIT_AGENT_USER_ID;
 
 function formatError(error: unknown): string {
   if (error instanceof ServiceError) {
@@ -470,6 +492,229 @@ export async function createMcpServer(): Promise<McpServer> {
       } catch (error) {
         return {
           content: [{ type: "text" as const, text: `Error fetching workspace summary: ${formatError(error)}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "features_list",
+    "List and filter feature requests by status and/or category. Returns feature summaries.",
+    {
+      status: z.array(z.enum(featureStatuses)).optional()
+        .describe(`Filter by feature status. Available: ${featureStatuses.join(", ")}`),
+      categoryId: z.string().optional()
+        .describe("Filter by category ID"),
+      limit: z.number().optional().default(20)
+        .describe("Maximum number of results (default: 20)"),
+    },
+    async ({ status, categoryId, limit }) => {
+      try {
+        const features = await issuesFeaturesStorage.getFeatures({
+          status: status as FeatureStatus[] | undefined,
+          categoryId,
+        });
+        const summary = features.slice(0, limit || 20).map((f) => ({
+          id: f.id,
+          title: f.title,
+          status: f.status,
+          priority: f.priority,
+          category: f.category?.name || null,
+          description: f.description ? f.description.substring(0, 200) : null,
+          voteCount: f.voteCount,
+          createdAt: f.createdAt,
+        }));
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ totalCount: features.length, features: summary }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error listing features: ${formatError(error)}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "features_get",
+    "Get detailed information about a specific feature by ID, including comments, category, and creator.",
+    {
+      id: z.string().describe("The feature ID (UUID format)"),
+    },
+    async ({ id }) => {
+      try {
+        const feature = await issuesFeaturesStorage.getFeatureById(id);
+        if (!feature) {
+          return {
+            content: [{ type: "text" as const, text: `Feature not found: ${id}` }],
+            isError: true,
+          };
+        }
+        const comments = await issuesFeaturesStorage.getComments(id);
+        const result = {
+          id: feature.id,
+          title: feature.title,
+          description: feature.description,
+          status: feature.status,
+          priority: feature.priority,
+          category: feature.category ? { id: feature.category.id, name: feature.category.name } : null,
+          createdBy: feature.createdBy
+            ? { id: feature.createdBy.id, name: `${feature.createdBy.firstName || ""} ${feature.createdBy.lastName || ""}`.trim() }
+            : null,
+          voteCount: feature.voteCount,
+          estimatedDelivery: feature.estimatedDelivery,
+          completedAt: feature.completedAt,
+          createdAt: feature.createdAt,
+          updatedAt: feature.updatedAt,
+          comments: comments.map((c) => ({
+            id: c.id,
+            body: c.body,
+            userName: c.userName,
+            createdAt: c.createdAt,
+          })),
+        };
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error fetching feature: ${formatError(error)}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "features_update",
+    "Update a feature's status, priority, title, and/or description. Handles completedAt timestamp automatically.",
+    {
+      id: z.string().describe("The feature ID to update"),
+      status: z.enum(featureStatuses).optional()
+        .describe(`New status. Available: ${featureStatuses.join(", ")}`),
+      priority: z.enum(featurePriorities).optional()
+        .describe(`New priority. Available: ${featurePriorities.join(", ")}`),
+      title: z.string().optional().describe("Updated title"),
+      description: z.string().optional().describe("Updated description"),
+    },
+    async ({ id, status, priority, title, description }) => {
+      try {
+        const existing = await issuesFeaturesStorage.getFeatureById(id);
+        if (!existing) {
+          return {
+            content: [{ type: "text" as const, text: `Feature not found: ${id}` }],
+            isError: true,
+          };
+        }
+
+        const updateData: Record<string, unknown> = {};
+        if (status !== undefined) updateData.status = status;
+        if (priority !== undefined) updateData.priority = priority;
+        if (title !== undefined) updateData.title = title;
+        if (description !== undefined) updateData.description = description;
+
+        if (status !== undefined) {
+          const wasCompleted = existing.status === "completed";
+          const isNowCompleted = status === "completed";
+          if (!wasCompleted && isNowCompleted) {
+            updateData.completedAt = new Date();
+          } else if (wasCompleted && !isNowCompleted) {
+            updateData.completedAt = null;
+          }
+        }
+
+        const updated = await issuesFeaturesStorage.updateFeature(id, updateData);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Feature updated successfully:\n${JSON.stringify(
+                { id: updated.id, title: updated.title, status: updated.status, priority: updated.priority },
+                null,
+                2
+              )}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error updating feature: ${formatError(error)}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "features_add_comment",
+    "Post a comment to a feature using the Replit Agent user.",
+    {
+      featureId: z.string().describe("The feature ID to comment on"),
+      body: z.string().min(1).max(2000).describe("The comment text"),
+    },
+    async ({ featureId, body }) => {
+      try {
+        const feature = await issuesFeaturesStorage.getFeatureById(featureId);
+        if (!feature) {
+          return {
+            content: [{ type: "text" as const, text: `Feature not found: ${featureId}` }],
+            isError: true,
+          };
+        }
+
+        const comment = await issuesFeaturesStorage.createComment(featureId, MCP_ACTOR_ID, body);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Comment added to feature "${feature.title}":\n${JSON.stringify(
+                { id: comment.id, featureId: comment.featureId, createdAt: comment.createdAt },
+                null,
+                2
+              )}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error adding comment: ${formatError(error)}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "features_list_categories",
+    "List available feature categories with their IDs and names.",
+    {},
+    async () => {
+      try {
+        const categories = await storage.getCategories(false);
+        const result = categories.map((c) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description,
+          color: c.color,
+        }));
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ categories: result }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error listing categories: ${formatError(error)}` }],
           isError: true,
         };
       }

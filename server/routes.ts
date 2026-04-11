@@ -71,6 +71,7 @@ import { registerAiChatRoutes } from "./domains/ai-chat";
 import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
 import { registerTypeformWebhookRoutes } from "./domains/typeform-webhook";
 import { initializeAuditBridge } from "./lib/audit-bridge";
+import { ensureReplitAgentUser } from "./mcp/index";
 import { setupCsrf } from "./middleware/csrf";
 
 export async function registerRoutes(
@@ -115,6 +116,7 @@ export async function registerRoutes(
   registerFormsRoutes(app);
   await seedDealStatuses();
   await seedRoles();
+  await ensureReplitAgentUser();
   registerDriveAttachmentsRoutes(app);
   registerAiChatRoutes(app);
 
