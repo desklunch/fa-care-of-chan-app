@@ -1,7 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
 import { createMcpServer } from "./index";
 import { mcpRateLimit, getRateLimitStats } from "./rate-limit";
 
@@ -54,13 +55,57 @@ async function getMcpServer() {
   return mcpServerPromise;
 }
 
-const sessions = new Map<string, StreamableHTTPServerTransport>();
+const sseTransports = new Map<string, SSEServerTransport>();
+const httpSessions = new Map<string, StreamableHTTPServerTransport>();
+
+function generateSecureSessionId(): string {
+  return randomBytes(32).toString("hex");
+}
+
+router.get("/sse", async (_req: Request, res: Response) => {
+  const mcpServer = await getMcpServer();
+  const sessionId = generateSecureSessionId();
+
+  console.log(`[MCP] New SSE connection: ${sessionId.substring(0, 8)}...`);
+
+  res.setHeader("X-Session-Id", sessionId);
+
+  const transport = new SSEServerTransport("/api/mcp/message", res);
+  sseTransports.set(sessionId, transport);
+
+  res.on("close", () => {
+    console.log(`[MCP] SSE connection closed: ${sessionId.substring(0, 8)}...`);
+    sseTransports.delete(sessionId);
+  });
+
+  await mcpServer.connect(transport);
+});
+
+router.post("/message", async (req: Request, res: Response) => {
+  const sessionId = req.query.sessionId as string;
+
+  if (!sessionId) {
+    return res.status(400).json({ error: "Missing sessionId parameter" });
+  }
+
+  const transport = sseTransports.get(sessionId);
+  if (!transport) {
+    return res.status(404).json({ error: "Session not found" });
+  }
+
+  try {
+    await transport.handlePostMessage(req, res);
+  } catch (error) {
+    console.error("[MCP] Error handling message:", error);
+    return res.status(500).json({ error: "Failed to process message" });
+  }
+});
 
 router.post("/", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
-  if (sessionId && sessions.has(sessionId)) {
-    const transport = sessions.get(sessionId)!;
+  if (sessionId && httpSessions.has(sessionId)) {
+    const transport = httpSessions.get(sessionId)!;
     try {
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
@@ -72,7 +117,7 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
-  if (sessionId && !sessions.has(sessionId)) {
+  if (sessionId && !httpSessions.has(sessionId)) {
     res.status(404).json({ error: "Session not found. Create a new session by sending an initialize request without a session ID." });
     return;
   }
@@ -96,12 +141,12 @@ router.post("/", async (req: Request, res: Response) => {
 
   const sid = transport.sessionId;
   if (sid) {
-    sessions.set(sid, transport);
+    httpSessions.set(sid, transport);
     console.log(`[MCP] New Streamable HTTP session: ${sid.substring(0, 8)}...`);
 
     transport.onclose = () => {
       console.log(`[MCP] Session closed: ${sid.substring(0, 8)}...`);
-      sessions.delete(sid);
+      httpSessions.delete(sid);
     };
   }
 });
@@ -109,12 +154,12 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
-  if (!sessionId || !sessions.has(sessionId)) {
+  if (!sessionId || !httpSessions.has(sessionId)) {
     res.status(400).json({ error: "Missing or invalid mcp-session-id header. Initialize a session first via POST." });
     return;
   }
 
-  const transport = sessions.get(sessionId)!;
+  const transport = httpSessions.get(sessionId)!;
   try {
     await transport.handleRequest(req, res);
   } catch (error) {
@@ -128,15 +173,15 @@ router.get("/", async (req: Request, res: Response) => {
 router.delete("/", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
-  if (!sessionId || !sessions.has(sessionId)) {
+  if (!sessionId || !httpSessions.has(sessionId)) {
     res.status(404).json({ error: "Session not found" });
     return;
   }
 
-  const transport = sessions.get(sessionId)!;
+  const transport = httpSessions.get(sessionId)!;
   try {
     await transport.close();
-    sessions.delete(sessionId);
+    httpSessions.delete(sessionId);
     res.status(200).json({ message: "Session terminated" });
   } catch (error) {
     console.error("[MCP] Error closing session:", error);
@@ -152,8 +197,11 @@ router.get("/health", (_req: Request, res: Response) => {
     status: "healthy",
     server: "coca-mcp-server",
     version: "1.0.0",
-    transport: "streamable-http",
-    activeSessions: sessions.size,
+    transports: ["sse", "streamable-http"],
+    activeSessions: {
+      sse: sseTransports.size,
+      streamableHttp: httpSessions.size,
+    },
     rateLimit: {
       activeClients: rateLimitStats.activeClients,
       totalRequests: rateLimitStats.totalRequests,
@@ -186,10 +234,11 @@ router.get("/tools", async (_req: Request, res: Response) => {
     return res.json({
       protocol: "MCP",
       version: "1.0.0",
-      transport: "streamable-http",
       tools: toolList,
       endpoints: {
-        mcp: "/api/mcp",
+        sse: "/api/mcp/sse",
+        message: "/api/mcp/message",
+        streamableHttp: "/api/mcp",
         health: "/api/mcp/health",
       },
     });
