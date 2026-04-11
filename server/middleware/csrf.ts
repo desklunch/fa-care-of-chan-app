@@ -14,6 +14,7 @@ const EXCLUDED_PATHS = [
   "/api/places/",
   "/api/ai/",  // AI chat uses SSE streaming with session auth
   "/api/webhooks/",
+  "/api/mcp/",  // MCP server uses bearer token auth, not session-based CSRF
 ];
 
 const {
