@@ -1641,6 +1641,18 @@ export default function DealsPage() {
             }> | null;
             return locations?.map((loc) => loc.displayName).join(" ") || "";
           },
+          (deal) => {
+            const contact = deal.primaryContact;
+            if (!contact) return "";
+            return [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+          },
+          (deal) => (deal.concept as string) || "",
+          (deal) => (deal.nextSteps as string) || "",
+          (deal) => {
+            const ids = deal.serviceIds as number[] | null;
+            if (!ids || ids.length === 0) return "";
+            return ids.map((id) => servicesMap.get(id)?.name || "").filter(Boolean).join(" ");
+          },
         ]}
         searchPlaceholder="Search deals..."
         filters={dealFilters}
