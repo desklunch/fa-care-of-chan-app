@@ -18,13 +18,22 @@ function mcpBearerAuth(req: Request, res: Response, next: NextFunction): void {
     return;
   }
 
+  let token: string | undefined;
+
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid Authorization header. Expected: Bearer <token>" });
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.slice(7);
+  }
+
+  if (!token && req.query.token) {
+    token = req.query.token as string;
+  }
+
+  if (!token) {
+    res.status(401).json({ error: "Missing authorization. Provide Bearer token header or ?token= query parameter" });
     return;
   }
 
-  const token = authHeader.slice(7);
   if (token !== agentApiKey) {
     res.status(403).json({ error: "Invalid API key" });
     return;
