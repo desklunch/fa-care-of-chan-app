@@ -1,3 +1,8 @@
+---
+name: feature-backlog
+description: Interact with the Care of Chan OS feature backlog via MCP tools. List, filter, update, and comment on app feature requests. Use when tasks involve feature planning, status updates, or backlog management.
+---
+
 # Feature Backlog MCP Skill
 
 This skill documents how a Replit agent interacts with the Care of Chan OS feature backlog via MCP tools.
