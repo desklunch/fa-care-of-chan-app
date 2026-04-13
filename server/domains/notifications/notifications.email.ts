@@ -2,11 +2,11 @@ import { getResendClient, FROM_EMAIL } from "../../email";
 import type { NotificationPayload } from "./notifications.channels";
 
 function getEntityUrl(entityType?: string, entityId?: string): string {
-  const baseUrl = process.env.REPL_SLUG
-    ? `https://${process.env.REPL_SLUG}.repl.co`
+  const baseUrl = process.env.APP_URL
+    ? process.env.APP_URL.replace(/\/+$/, "")
     : process.env.REPLIT_DEV_DOMAIN
       ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : "https://app.example.com";
+      : "https://app.careofchan.com";
 
   if (!entityType || !entityId) return baseUrl;
 

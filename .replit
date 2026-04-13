@@ -52,3 +52,6 @@ timeoutMs = 60000
 
 [userenv.shared]
 RESEND_FROM_EMAIL = "noreply@functionalartists.ai"
+
+[userenv.production]
+APP_URL = "https://app.careofchan.com"
