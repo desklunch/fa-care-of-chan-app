@@ -61,7 +61,7 @@ export class NotificationService {
     recipientId: string,
     payload: NotificationPayload,
   ): Promise<void> {
-    const prefs = await notificationsStorage.getOrCreatePreferences(recipientId);
+    const typePref = await notificationsStorage.getTypePref(recipientId, payload.type);
 
     let isAdmin = false;
     if (this.channels.some((c) => c.name === "email")) {
@@ -69,11 +69,26 @@ export class NotificationService {
       isAdmin = role === "admin";
     }
 
+    let inAppEnabled = false;
+    let emailEnabled = false;
+    let pushEnabled = false;
+
+    if (typePref) {
+      inAppEnabled = typePref.inAppEnabled;
+      emailEnabled = typePref.emailEnabled;
+      pushEnabled = typePref.pushEnabled;
+    } else {
+      const globalPrefs = await notificationsStorage.getOrCreatePreferences(recipientId);
+      inAppEnabled = globalPrefs.inAppEnabled;
+      emailEnabled = globalPrefs.emailEnabled;
+      pushEnabled = globalPrefs.pushEnabled;
+    }
+
     for (const channel of this.channels) {
       const isEnabled =
-        (channel.name === "in_app" && prefs.inAppEnabled) ||
-        (channel.name === "email" && prefs.emailEnabled && isAdmin) ||
-        (channel.name === "push" && prefs.pushEnabled);
+        (channel.name === "in_app" && inAppEnabled) ||
+        (channel.name === "email" && emailEnabled && isAdmin) ||
+        (channel.name === "push" && pushEnabled);
 
       if (!isEnabled) continue;
 

@@ -94,6 +94,7 @@ const EventSchedulePrototype = lazy(
 const AIContext = lazy(() => import("@/pages/ai-context"));
 const AdminRoles = lazy(() => import("@/pages/admin-roles"));
 const AdminDealSettings = lazy(() => import("@/pages/admin-deal-settings"));
+const NotificationPreferences = lazy(() => import("@/pages/notification-preferences"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
@@ -140,6 +141,7 @@ import {
   Loader,
   UserCheck,
   Sheet,
+  BellRing,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -259,6 +261,11 @@ function useLayoutConfig() {
         heading: "Manage",
         defaultCollapsed: true,
         items: [
+          {
+            name: "Notifications",
+            href: "/notifications/preferences",
+            icon: BellRing,
+          },
           {
             name: "Team",
             href: "/team",
@@ -467,6 +474,7 @@ function AuthenticatedRoutes() {
             <Route path="/industries" component={Industries} />
             <Route path="/manage/deal-statuses" component={ManageDealStatuses} />
             <Route path="/manage/tags" component={ManageTagsPage} />
+            <Route path="/notifications/preferences" component={NotificationPreferences} />
             <Route path="/profile" component={Profile} />
             <Route path="/profile/edit" component={ProfileEdit} />
             <Route path="/team" component={TeamPage} />

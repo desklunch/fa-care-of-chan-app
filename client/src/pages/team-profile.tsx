@@ -14,7 +14,9 @@ import {
   Building2,
   SquarePen,
   ArrowLeft,
+  BellRing,
 } from "lucide-react";
+import { Link } from "wouter";
 import type { User } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 
@@ -132,6 +134,16 @@ export default function TeamProfile() {
       </div>
 
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
+        {isOwnProfile && (
+          <Link
+            href="/notifications/preferences"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="link-notification-preferences"
+          >
+            <BellRing className="h-4 w-4" />
+            Notification Preferences
+          </Link>
+        )}
         <Card>
           <CardContent className="p-6">
             <div>

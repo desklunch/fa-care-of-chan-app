@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
 import { notificationsStorage } from "./notifications.storage";
+import { NOTIFICATION_TYPE_KEYS } from "@shared/schema";
 
 export function registerNotificationsRoutes(app: Express): void {
   app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
@@ -143,6 +144,47 @@ export function registerNotificationsRoutes(app: Express): void {
       return res.status(404).json({ message: "VAPID key not configured" });
     }
     res.json({ publicKey: key });
+  });
+
+  app.get("/api/notifications/preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const typePrefs = await notificationsStorage.getOrCreateTypePreferences(userId);
+      res.json(typePrefs);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "Failed to fetch notification preferences" });
+    }
+  });
+
+  app.patch("/api/notifications/preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { notificationType, inAppEnabled, emailEnabled, pushEnabled } = req.body;
+
+      if (!notificationType || typeof notificationType !== "string") {
+        return res.status(400).json({ message: "notificationType is required" });
+      }
+
+      if (!NOTIFICATION_TYPE_KEYS.some((k) => k === notificationType)) {
+        return res.status(400).json({ message: `Invalid notificationType: ${notificationType}` });
+      }
+
+      const updates: Record<string, boolean> = {};
+      if (typeof inAppEnabled === "boolean") updates.inAppEnabled = inAppEnabled;
+      if (typeof emailEnabled === "boolean") updates.emailEnabled = emailEnabled;
+      if (typeof pushEnabled === "boolean") updates.pushEnabled = pushEnabled;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update" });
+      }
+
+      const pref = await notificationsStorage.updateTypePref(userId, notificationType, updates);
+      res.json(pref);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
   });
 
   app.post("/api/notifications/test", isAuthenticated, async (req: any, res) => {

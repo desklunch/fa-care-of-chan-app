@@ -5,11 +5,14 @@ import {
   entityFollows,
   pushSubscriptions,
   notificationPreferences,
+  notificationTypePreferences,
+  NOTIFICATION_TYPE_KEYS,
   users,
   type Notification,
   type InsertNotification,
   type EntityFollow,
   type NotificationPreference,
+  type NotificationTypePref,
   type PushSubscription as PushSubscriptionType,
 } from "@shared/schema";
 
@@ -146,6 +149,67 @@ export const notificationsStorage = {
       return (await this.getUserPreferences(userId))!;
     }
     return created;
+  },
+
+  async updatePreferences(
+    userId: string,
+    updates: Partial<Pick<NotificationPreference, "emailEnabled" | "pushEnabled" | "inAppEnabled">>,
+  ): Promise<NotificationPreference> {
+    const prefs = await this.getOrCreatePreferences(userId);
+    const [updated] = await db
+      .update(notificationPreferences)
+      .set(updates)
+      .where(eq(notificationPreferences.id, prefs.id))
+      .returning();
+    return updated;
+  },
+
+  async getOrCreateTypePreferences(userId: string): Promise<NotificationTypePref[]> {
+    const existing = await db
+      .select()
+      .from(notificationTypePreferences)
+      .where(eq(notificationTypePreferences.userId, userId));
+
+    if (existing.length === NOTIFICATION_TYPE_KEYS.length) return existing;
+
+    const existingTypes = new Set(existing.map((p) => p.notificationType));
+    const missing = NOTIFICATION_TYPE_KEYS.filter((k) => !existingTypes.has(k));
+
+    if (missing.length > 0) {
+      await db
+        .insert(notificationTypePreferences)
+        .values(missing.map((notificationType) => ({ userId, notificationType })))
+        .onConflictDoNothing();
+    }
+
+    return db
+      .select()
+      .from(notificationTypePreferences)
+      .where(eq(notificationTypePreferences.userId, userId));
+  },
+
+  async updateTypePref(
+    userId: string,
+    notificationType: string,
+    updates: Partial<Pick<NotificationTypePref, "inAppEnabled" | "emailEnabled" | "pushEnabled">>,
+  ): Promise<NotificationTypePref> {
+    await this.getOrCreateTypePreferences(userId);
+    const [updated] = await db
+      .update(notificationTypePreferences)
+      .set(updates)
+      .where(
+        and(
+          eq(notificationTypePreferences.userId, userId),
+          eq(notificationTypePreferences.notificationType, notificationType),
+        ),
+      )
+      .returning();
+    return updated;
+  },
+
+  async getTypePref(userId: string, notificationType: string): Promise<NotificationTypePref | null> {
+    const prefs = await this.getOrCreateTypePreferences(userId);
+    return prefs.find((p) => p.notificationType === notificationType) || null;
   },
 
   async savePushSubscription(userId: string, subscription: WebPushSubscription): Promise<PushSubscriptionType> {

@@ -2749,9 +2749,9 @@ export const notificationPreferences = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: varchar("user_id").notNull().references(() => users.id).unique(),
-    emailEnabled: boolean("email_enabled").default(true).notNull(),
-    pushEnabled: boolean("push_enabled").default(true).notNull(),
-    inAppEnabled: boolean("in_app_enabled").default(true).notNull(),
+    emailEnabled: boolean("email_enabled").default(false).notNull(),
+    pushEnabled: boolean("push_enabled").default(false).notNull(),
+    inAppEnabled: boolean("in_app_enabled").default(false).notNull(),
   },
 );
 
@@ -2759,6 +2759,65 @@ export type NotificationPreference = typeof notificationPreferences.$inferSelect
 export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
 
 export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+});
+
+export const NOTIFICATION_TYPE_KEYS = [
+  "deal:owner_assigned",
+  "comment:created",
+  "comment:reply_created",
+  "feature_comment:created",
+  "form:submission_received",
+] as const;
+
+export type NotificationTypeKey = (typeof NOTIFICATION_TYPE_KEYS)[number];
+
+export const NOTIFICATION_TYPE_REGISTRY: Record<
+  NotificationTypeKey,
+  { label: string; description: string }
+> = {
+  "deal:owner_assigned": {
+    label: "Deal Assignment",
+    description: "When you are assigned as owner of a deal",
+  },
+  "comment:created": {
+    label: "New Comment",
+    description: "When someone comments on an entity you follow",
+  },
+  "comment:reply_created": {
+    label: "Comment Reply",
+    description: "When someone replies to your comment",
+  },
+  "feature_comment:created": {
+    label: "Feature Comment",
+    description: "When someone comments on a feature you created or follow",
+  },
+  "form:submission_received": {
+    label: "Form Submission",
+    description: "When a new response is submitted to a form request",
+  },
+};
+
+export const notificationTypePreferences = pgTable(
+  "notification_type_preferences",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    notificationType: varchar("notification_type", { length: 100 }).notNull(),
+    inAppEnabled: boolean("in_app_enabled").default(false).notNull(),
+    emailEnabled: boolean("email_enabled").default(false).notNull(),
+    pushEnabled: boolean("push_enabled").default(false).notNull(),
+  },
+  (table) => [
+    unique("uq_notification_type_prefs_user_type").on(table.userId, table.notificationType),
+    index("idx_notification_type_prefs_user").on(table.userId),
+  ],
+);
+
+export type NotificationTypePref = typeof notificationTypePreferences.$inferSelect;
+export type InsertNotificationTypePref = typeof notificationTypePreferences.$inferInsert;
+
+export const insertNotificationTypePrefSchema = createInsertSchema(notificationTypePreferences).omit({
   id: true,
 });
 
