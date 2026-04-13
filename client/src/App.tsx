@@ -227,6 +227,7 @@ function useLayoutConfig() {
       {
         heading: "Directory",
         defaultCollapsed: false,
+        requiredPermission: "deals.read",
 
         items: [
           {
@@ -261,11 +262,7 @@ function useLayoutConfig() {
         heading: "Manage",
         defaultCollapsed: true,
         items: [
-          {
-            name: "Notifications",
-            href: "/notifications/preferences",
-            icon: BellRing,
-          },
+
           {
             name: "Team",
             href: "/team",
@@ -278,12 +275,7 @@ function useLayoutConfig() {
             icon: Tags,
             requiredPermission: "venues.write",
           },
-          {
-            name: "Roles",
-            href: "/admin/roles",
-            icon: Shield,
-            requiredPermission: "admin.settings",
-          },
+
           {
             name: "Theme",
             href: "/admin/theme",
@@ -296,18 +288,14 @@ function useLayoutConfig() {
             icon: FileText,
             requiredPermission: "admin.settings",
           },
-          {
-            name: "Deal Settings",
-            href: "/admin/deal-settings",
-            icon: Sheet,
-            requiredPermission: "admin.settings",
-          },
+
         ],
       },
       {
         heading: "App",
         defaultCollapsed: true,
         items: [
+
           {
             name: "Guide",
             href: "/guide",
@@ -332,17 +320,46 @@ function useLayoutConfig() {
             requiredPermission: "app_features.read",
           },
 
-          {
-            name: "Releases",
-            href: "/admin/releases",
-            icon: Rocket,
-            requiredPermission: "releases.manage",
-          },
+
           {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
             requiredPermission: "app_features.read",
+          },
+
+        ],
+      },
+
+      {
+        heading: "Developer",
+        requiredPermission: "admin.settings",
+        defaultCollapsed: true,
+        items: [
+          {
+            name: "Roles",
+            href: "/admin/roles",
+            icon: Shield,
+            requiredPermission: "admin.settings",
+          },
+          {
+            name: "Notifications",
+            href: "/notifications/preferences",
+            icon: BellRing,
+            requiredPermission: "admin.settings",
+
+          },
+          {
+            name: "Deal Settings",
+            href: "/admin/deal-settings",
+            icon: Sheet,
+            requiredPermission: "admin.settings",
+          },
+          {
+            name: "Releases",
+            href: "/admin/releases",
+            icon: Rocket,
+            requiredPermission: "releases.manage",
           },
           {
             name: "Logs",
@@ -356,14 +373,6 @@ function useLayoutConfig() {
             icon: ScanEye,
             requiredPermission: "admin.analytics",
           },
-        ],
-      },
-
-      {
-        heading: "Developer",
-        requiredPermission: "admin.settings",
-        defaultCollapsed: true,
-        items: [
           {
             name: "Feature Categories",
             href: "/admin/app/features",
