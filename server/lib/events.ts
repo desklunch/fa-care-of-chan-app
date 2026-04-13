@@ -242,6 +242,73 @@ export interface VenueFileDeletedEvent {
   timestamp: Date;
 }
 
+export interface VenuePhotoUpdatedEvent {
+  type: "venue:photo_updated";
+  venueId: string;
+  photoId: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueFileUpdatedEvent {
+  type: "venue:file_updated";
+  venueId: string;
+  fileId: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueCollectionCreatedEvent {
+  type: "venue:collection_created";
+  collectionId: string;
+  collectionName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueCollectionUpdatedEvent {
+  type: "venue:collection_updated";
+  collectionId: string;
+  collectionName: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueCollectionDeletedEvent {
+  type: "venue:collection_deleted";
+  collectionId: string;
+  collectionName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueCollectionVenuesAddedEvent {
+  type: "venue:collection_venues_added";
+  collectionId: string;
+  venueIds: string[];
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueCollectionVenueRemovedEvent {
+  type: "venue:collection_venue_removed";
+  collectionId: string;
+  venueId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VenueCollectionReorderedEvent {
+  type: "venue:collection_reordered";
+  collectionId: string;
+  venueIds: string[];
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface CommentCreatedEvent {
   type: "comment:created";
   commentId: string;
@@ -542,8 +609,16 @@ export type DomainEvent =
   | VenueDeletedEvent
   | VenuePhotoUploadedEvent
   | VenuePhotoDeletedEvent
+  | VenuePhotoUpdatedEvent
   | VenueFileUploadedEvent
   | VenueFileDeletedEvent
+  | VenueFileUpdatedEvent
+  | VenueCollectionCreatedEvent
+  | VenueCollectionUpdatedEvent
+  | VenueCollectionDeletedEvent
+  | VenueCollectionVenuesAddedEvent
+  | VenueCollectionVenueRemovedEvent
+  | VenueCollectionReorderedEvent
   | ContactCreatedEvent
   | ContactUpdatedEvent
   | ContactDeletedEvent
@@ -606,6 +681,14 @@ type EventMap = {
   "venue:photo_deleted": VenuePhotoDeletedEvent;
   "venue:file_uploaded": VenueFileUploadedEvent;
   "venue:file_deleted": VenueFileDeletedEvent;
+  "venue:file_updated": VenueFileUpdatedEvent;
+  "venue:photo_updated": VenuePhotoUpdatedEvent;
+  "venue:collection_created": VenueCollectionCreatedEvent;
+  "venue:collection_updated": VenueCollectionUpdatedEvent;
+  "venue:collection_deleted": VenueCollectionDeletedEvent;
+  "venue:collection_venues_added": VenueCollectionVenuesAddedEvent;
+  "venue:collection_venue_removed": VenueCollectionVenueRemovedEvent;
+  "venue:collection_reordered": VenueCollectionReorderedEvent;
   "contact:created": ContactCreatedEvent;
   "contact:updated": ContactUpdatedEvent;
   "contact:deleted": ContactDeletedEvent;

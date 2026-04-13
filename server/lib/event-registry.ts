@@ -298,6 +298,76 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).fileId ?? null,
     },
   },
+  "venue:file_updated": {
+    type: "venue:file_updated",
+    audit: {
+      action: "update",
+      entityType: "venue_file",
+      extractEntityId: (e) => (e as any).fileId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "venue:photo_updated": {
+    type: "venue:photo_updated",
+    audit: {
+      action: "update",
+      entityType: "venue_photo",
+      extractEntityId: (e) => (e as any).photoId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "venue:collection_created": {
+    type: "venue:collection_created",
+    audit: {
+      action: "create",
+      entityType: "venue_collection",
+      extractEntityId: (e) => (e as any).collectionId ?? null,
+    },
+  },
+  "venue:collection_updated": {
+    type: "venue:collection_updated",
+    audit: {
+      action: "update",
+      entityType: "venue_collection",
+      extractEntityId: (e) => (e as any).collectionId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "venue:collection_deleted": {
+    type: "venue:collection_deleted",
+    audit: {
+      action: "delete",
+      entityType: "venue_collection",
+      extractEntityId: (e) => (e as any).collectionId ?? null,
+    },
+  },
+  "venue:collection_venues_added": {
+    type: "venue:collection_venues_added",
+    audit: {
+      action: "add_venues",
+      entityType: "venue_collection",
+      extractEntityId: (e) => (e as any).collectionId ?? null,
+      extractChanges: (e) => ({ venueIds: (e as any).venueIds }),
+    },
+  },
+  "venue:collection_venue_removed": {
+    type: "venue:collection_venue_removed",
+    audit: {
+      action: "remove_venue",
+      entityType: "venue_collection",
+      extractEntityId: (e) => (e as any).collectionId ?? null,
+      extractChanges: (e) => ({ venueId: (e as any).venueId }),
+    },
+  },
+  "venue:collection_reordered": {
+    type: "venue:collection_reordered",
+    audit: {
+      action: "reorder",
+      entityType: "venue_collection",
+      extractEntityId: (e) => (e as any).collectionId ?? null,
+      extractChanges: (e) => ({ venueIds: (e as any).venueIds }),
+    },
+  },
   "contact:created": {
     type: "contact:created",
     audit: {
