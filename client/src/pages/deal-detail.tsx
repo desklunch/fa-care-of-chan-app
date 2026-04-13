@@ -45,6 +45,7 @@ import {
   Copy,
   Bell,
   BellOff,
+  Sheet,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
@@ -375,9 +376,9 @@ export default function DealDetail() {
         ...(user?.role === "admin"
           ? [
               {
-                label: "Generate Doc",
+                label: "Generate Sheet",
                 onClick: () => setShowGenerateDoc(true),
-                icon: FileText,
+                icon: Sheet,
               },
             ]
           : []),

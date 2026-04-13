@@ -17,7 +17,7 @@ import {
   FolderOpen,
   ChevronRight,
   ArrowLeft,
-  FileText,
+  Sheet,
   ExternalLink,
   LogIn,
   Check,
@@ -170,28 +170,40 @@ function DealFieldPreview({ deal, servicesMap }: { deal: DealWithRelations; serv
       : null;
 
   const fields: { label: string; value: string }[] = [
+    { label: "Deal Name", value: deal.displayName },
     { label: "Client", value: deal.client?.name || "No client" },
     { label: "Status", value: deal.statusName || "Unknown" },
     { label: "Owner", value: ownerName },
   ];
-  if (deal.brand) fields.push({ label: "Brand", value: deal.brand.name });
   if (serviceNames.length > 0) fields.push({ label: "Services", value: serviceNames.join(", ") });
   if (budgetRange) fields.push({ label: "Budget", value: budgetRange });
+  if (deal.budgetNotes) fields.push({ label: "Budget Notes", value: "Included" });
   if (locations.length > 0) fields.push({ label: "Locations", value: locations.map((l) => l.displayName).join(", ") });
-  if (events.length > 0) fields.push({ label: "Events", value: `${events.length} event${events.length !== 1 ? "s" : ""}` });
+  if (events.length > 0) fields.push({ label: "Project Dates", value: `${events.length} event${events.length !== 1 ? "s" : ""}` });
   if (deal.concept) fields.push({ label: "Concept", value: deal.concept.slice(0, 100) + (deal.concept.length > 100 ? "..." : "") });
   if (deal.nextSteps) fields.push({ label: "Next Steps", value: deal.nextSteps.slice(0, 100) + (deal.nextSteps.length > 100 ? "..." : "") });
   if (deal.notes) fields.push({ label: "Notes", value: "Included" });
+  if (deal.primaryContact) {
+    const contactName = [deal.primaryContact.firstName, deal.primaryContact.lastName].filter(Boolean).join(" ");
+    fields.push({ label: "Primary Contact", value: contactName });
+  }
+  if (deal.startedOn) fields.push({ label: "Deal Start Date", value: deal.startedOn });
+  if (deal.lastContactOn) fields.push({ label: "Last Client Contact", value: deal.lastContactOn });
+  if (deal.wonOn) fields.push({ label: "Deal Won On", value: deal.wonOn });
+  if (deal.proposalSentOn) fields.push({ label: "Proposal Sent On", value: deal.proposalSentOn });
 
   return (
     <div className="rounded-md border p-3 space-y-1.5 bg-muted/30">
-      <p className="text-xs font-medium text-muted-foreground mb-2">Fields that will be included:</p>
+      <p className="text-xs font-medium text-muted-foreground mb-2">Fields available for template tokens:</p>
       {fields.map((f) => (
         <div key={f.label} className="flex gap-2 text-xs">
-          <span className="font-medium text-muted-foreground w-20 flex-shrink-0">{f.label}</span>
+          <span className="font-medium text-muted-foreground w-28 flex-shrink-0">{f.label}</span>
           <span className="truncate">{f.value}</span>
         </div>
       ))}
+      <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+        Intake form fields and tags are also included when available.
+      </p>
     </div>
   );
 }
@@ -226,17 +238,17 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
       setCreatedDoc(data.doc);
       queryClient.invalidateQueries({ queryKey: ["/api/drive-attachments", "deal", deal.id] });
       toast({
-        title: "Document created",
+        title: "Sheet created",
         description: (
           <span>
-            Deal summary saved to Google Drive.{" "}
+            Deal summary sheet saved to Google Drive.{" "}
             <a
               href={data.doc.webViewLink}
               target="_blank"
               rel="noopener noreferrer"
               className="underline font-medium"
             >
-              Open Doc
+              Open Sheet
             </a>
           </span>
         ),
@@ -248,7 +260,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
         return;
       }
       toast({
-        title: "Failed to generate document",
+        title: "Failed to generate sheet",
         description: error.message,
         variant: "destructive",
       });
@@ -276,13 +288,13 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
           <DialogHeader>
             <DialogTitle>Connect Google Drive</DialogTitle>
             <DialogDescription>
-              You need to connect your Google Drive to generate documents.
+              You need to connect your Google Drive to generate summary sheets.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <LogIn className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              Grant access so the app can create documents in your Drive.
+              Grant access so the app can create sheets in your Drive.
             </p>
             <Button
               variant="outline"
@@ -306,17 +318,17 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Document Created</DialogTitle>
+            <DialogTitle>Sheet Created</DialogTitle>
             <DialogDescription>
-              Your deal summary has been created in Google Drive and attached to this deal's files.
+              Your deal summary sheet has been created in Google Drive and attached to this deal's files.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
             <div className="flex items-center gap-3 p-3 rounded-md border w-full">
-              <FileText className="h-6 w-6 text-blue-500 flex-shrink-0" />
+              <Sheet className="h-6 w-6 text-green-600 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{createdDoc.name}</p>
-                <p className="text-xs text-muted-foreground">Google Doc</p>
+                <p className="text-xs text-muted-foreground">Google Sheet</p>
               </div>
             </div>
             <div className="flex gap-2 w-full">
@@ -335,7 +347,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
               >
                 <a href={createdDoc.webViewLink} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-4 w-4 mr-1" />
-                  Open Doc
+                  Open Sheet
                 </a>
               </Button>
             </div>
@@ -351,7 +363,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
         <DialogHeader>
           <DialogTitle>Generate Deal Summary</DialogTitle>
           <DialogDescription>
-            Create a Google Doc with a formatted summary of this deal's information.
+            Create a Google Sheet from the template with this deal's information filled in.
           </DialogDescription>
         </DialogHeader>
 
@@ -367,7 +379,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
             />
             {selectedFolder && (
               <p className="text-xs text-muted-foreground">
-                Document will be saved to: <span className="font-medium">{selectedFolder.name}</span>
+                Sheet will be saved to: <span className="font-medium">{selectedFolder.name}</span>
               </p>
             )}
           </div>
@@ -389,8 +401,8 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
               </>
             ) : (
               <>
-                <FileText className="h-4 w-4 mr-1" />
-                Generate Doc
+                <Sheet className="h-4 w-4 mr-1" />
+                Generate Sheet
               </>
             )}
           </Button>

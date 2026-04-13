@@ -9,7 +9,8 @@ import { DealsService } from "../../services/deals.service";
 import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, type DealWithRelations, type DealEvent, type DealLocation, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { formsStorage } from "../forms/forms.storage";
-import { createGoogleDoc } from "../../googleDrive";
+import { copyDriveFile, findTokenCells, writeTokenCells } from "../../googleDrive";
+import { settingsCommentsStorage } from "../settings-comments/settings-comments.storage";
 import { driveAttachmentsStorage } from "../drive-attachments/drive-attachments.storage";
 
 const dealsService = new DealsService(storage);
@@ -1351,20 +1352,37 @@ export function registerDealsRoutes(app: Express): void {
         });
       }
 
+      const templateSheetId = await settingsCommentsStorage.getAppSetting("deal_summary_template_sheet_id");
+      if (!templateSheetId) {
+        return res.status(400).json({
+          message: "No deal summary template configured. Please set a template Sheet ID in admin settings.",
+        });
+      }
+
       const deal = await storage.getDealById(dealId);
       if (!deal) {
         return res.status(404).json({ message: "Deal not found" });
       }
 
-      const allServices = await storage.getDealServices();
+      const [allServices, linkedClients, tagIds, allTags, intake] = await Promise.all([
+        storage.getDealServices(),
+        dealsStorage.getLinkedClientsByDealId(dealId),
+        dealsStorage.getDealTagIds(dealId),
+        storage.getTags("Deals"),
+        dealsStorage.getDealIntake(dealId),
+      ]);
+
       const servicesMap = new Map(allServices.map((s) => [s.id, s.name]));
+      const tagsMap = new Map(allTags.map((t: { id: string; name: string }) => [t.id, t.name]));
+      const tagNames = tagIds.map((id) => tagsMap.get(id)).filter(Boolean) as string[];
 
-      const htmlContent = buildDealDocHtml(deal, servicesMap);
-      const docTitle = `${deal.displayName} - Deal Summary`;
+      const tokenMap = buildTokenMap(deal, servicesMap, linkedClients, tagNames, intake);
 
-      let docResult;
+      const sheetTitle = `${deal.displayName} - Deal Summary`;
+
+      let sheetResult;
       try {
-        docResult = await createGoogleDoc(accessToken, docTitle, folderId, htmlContent);
+        sheetResult = await copyDriveFile(accessToken, templateSheetId, sheetTitle, folderId);
       } catch (driveError: any) {
         const msg = driveError?.message || "";
         if (msg.includes("403") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
@@ -1373,16 +1391,64 @@ export function registerDealsRoutes(app: Express): void {
             code: "drive_auth_required",
           });
         }
+        if (msg.includes("404")) {
+          return res.status(400).json({
+            message: "Template sheet not found. Please verify the template Sheet ID in admin settings.",
+          });
+        }
         throw driveError;
+      }
+
+      let tokenCells;
+      try {
+        tokenCells = await findTokenCells(accessToken, sheetResult.id);
+      } catch (sheetsError: any) {
+        const msg = sheetsError?.message || "";
+        if (msg.includes("403") || msg.includes("401") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
+          return res.status(403).json({
+            message: "Insufficient Google Sheets permissions. Please reconnect your Google Drive with updated permissions.",
+            code: "drive_auth_required",
+          });
+        }
+        throw sheetsError;
+      }
+
+      const tokenPattern = /\{\{([^}]+)\}\}/g;
+      const cellUpdates: { sheetTitle: string; row: number; col: number; value: string }[] = [];
+
+      for (const cell of tokenCells) {
+        const replaced = cell.originalValue.replace(tokenPattern, (_match, tokenName: string) => {
+          const trimmed = tokenName.trim();
+          return tokenMap.get(trimmed) ?? "";
+        });
+        cellUpdates.push({
+          sheetTitle: cell.sheetTitle,
+          row: cell.row,
+          col: cell.col,
+          value: replaced,
+        });
+      }
+
+      try {
+        await writeTokenCells(accessToken, sheetResult.id, cellUpdates);
+      } catch (sheetsError: any) {
+        const msg = sheetsError?.message || "";
+        if (msg.includes("403") || msg.includes("401") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
+          return res.status(403).json({
+            message: "Insufficient Google Sheets permissions. Please reconnect your Google Drive with updated permissions.",
+            code: "drive_auth_required",
+          });
+        }
+        throw sheetsError;
       }
 
       const attachment = await driveAttachmentsStorage.createAttachment({
         entityType: "deal",
         entityId: dealId,
-        driveFileId: docResult.id,
-        name: docResult.name,
-        mimeType: docResult.mimeType,
-        webViewLink: docResult.webViewLink,
+        driveFileId: sheetResult.id,
+        name: sheetResult.name,
+        mimeType: sheetResult.mimeType,
+        webViewLink: sheetResult.webViewLink,
         attachedById: userId,
       });
 
@@ -1393,115 +1459,110 @@ export function registerDealsRoutes(app: Express): void {
         entityType: "drive_attachment",
         entityId: attachment.id,
         status: "success",
-        metadata: { source: "generate_doc", dealId, docId: docResult.id },
+        metadata: { source: "generate_sheet", dealId, sheetId: sheetResult.id },
       });
 
       res.json({
-        doc: docResult,
+        doc: sheetResult,
         attachment: attachmentWithUser,
       });
     } catch (error) {
-      console.error("Error generating deal doc:", error);
-      res.status(500).json({ message: "Failed to generate document" });
+      console.error("Error generating deal summary sheet:", error);
+      res.status(500).json({ message: "Failed to generate summary sheet" });
     }
   });
 }
 
-function buildDealDocHtml(deal: DealWithRelations, servicesMap: Map<number, string>): string {
-  const escape = (str: string | null | undefined) =>
-    (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function buildTokenMap(
+  deal: DealWithRelations,
+  servicesMap: Map<number, string>,
+  linkedClients: { clientName: string; label: string | null }[],
+  tagNames: string[],
+  intake: { formSchema: FormSection[]; responseData: Record<string, unknown> } | null,
+): Map<string, string> {
+  const map = new Map<string, string>();
 
-  const ownerName = deal.owner
-    ? [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ")
-    : "Unassigned";
+  map.set("deal_name", deal.displayName || "");
+  map.set("owner", deal.owner ? [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ") : "");
+  map.set("status", deal.statusName || "");
+  map.set("client_name", deal.client?.name || "");
 
-  const clientName = deal.client?.name || "No client";
+  const partnerNames = linkedClients.map((lc) => {
+    const parts = [lc.clientName];
+    if (lc.label) parts.push(`(${lc.label})`);
+    return parts.join(" ");
+  });
+  map.set("client_partners", partnerNames.join(", "));
+
+  if (deal.primaryContact) {
+    const contactName = [deal.primaryContact.firstName, deal.primaryContact.lastName].filter(Boolean).join(" ");
+    const parts = [contactName];
+    if (deal.primaryContact.jobTitle) parts.push(`- ${deal.primaryContact.jobTitle}`);
+    map.set("primary_contact", parts.join(" "));
+  } else {
+    map.set("primary_contact", "");
+  }
 
   const serviceIds = (deal.serviceIds as number[]) || [];
-  const serviceNames = serviceIds
-    .map((id) => servicesMap.get(id))
-    .filter(Boolean)
-    .join(", ");
+  map.set("services", serviceIds.map((id) => servicesMap.get(id)).filter(Boolean).join(", "));
+
+  map.set("concept", deal.concept || "");
+  map.set("next_steps", deal.nextSteps || "");
+  map.set("notes", deal.notes || "");
 
   const locations = (deal.locations as DealLocation[]) || [];
-  const locationNames = locations.map((l) => l.displayName).join(", ");
+  map.set("locations", locations.map((l) => l.displayName).join(", "));
+  map.set("location_notes", deal.locationsText || "");
 
   const events = (deal.eventSchedule as DealEvent[]) || [];
-  const eventLines = events.map((ev) => {
+  const eventSummaries = events.map((ev) => {
     const scheduleInfo = ev.schedules
       .map((s) => {
         if (s.startDate) return s.startDate;
         if (s.rangeStartMonth && s.rangeStartYear) {
-          const startLabel = `${s.rangeStartMonth}/${s.rangeStartYear}`;
-          if (s.rangeEndMonth && s.rangeEndYear) {
-            return `${startLabel} - ${s.rangeEndMonth}/${s.rangeEndYear}`;
-          }
-          return startLabel;
+          const start = `${s.rangeStartMonth}/${s.rangeStartYear}`;
+          if (s.rangeEndMonth && s.rangeEndYear) return `${start} - ${s.rangeEndMonth}/${s.rangeEndYear}`;
+          return start;
         }
         return "TBD";
       })
       .join(", ");
-    return `<li><strong>${escape(ev.label)}</strong> (${ev.durationDays} day${ev.durationDays !== 1 ? "s" : ""}) &mdash; ${scheduleInfo}</li>`;
+    return `${ev.label} (${ev.durationDays} day${ev.durationDays !== 1 ? "s" : ""}) - ${scheduleInfo}`;
   });
+  map.set("project_dates", eventSummaries.join("; "));
+  map.set("project_date_notes", deal.projectDate || "");
 
-  const budgetRange =
-    deal.budgetLow || deal.budgetHigh
-      ? `$${(deal.budgetLow || 0).toLocaleString()} - $${(deal.budgetHigh || 0).toLocaleString()}`
-      : "Not specified";
+  map.set("budget_low", deal.budgetLow != null ? `$${deal.budgetLow.toLocaleString()}` : "");
+  map.set("budget_high", deal.budgetHigh != null ? `$${deal.budgetHigh.toLocaleString()}` : "");
+  map.set("budget_notes", deal.budgetNotes || "");
 
-  const sections: string[] = [];
+  map.set("tags", tagNames.join(", "));
+  map.set("deal_start_date", deal.startedOn || "");
+  map.set("last_client_contact", deal.lastContactOn || "");
+  map.set("deal_won_on", deal.wonOn || "");
+  map.set("proposal_sent_on", deal.proposalSentOn || "");
 
-  sections.push(`<h1>${escape(deal.displayName)}</h1>`);
-  sections.push(`<p style="color:#666;font-size:12px;">Generated on ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>`);
-  sections.push(`<hr/>`);
-
-  sections.push(`<h2>Deal Overview</h2>`);
-  sections.push(`<table style="border-collapse:collapse;width:100%;">`);
-  sections.push(tableRow("Client", escape(clientName)));
-  sections.push(tableRow("Status", escape(deal.statusName || "Unknown")));
-  sections.push(tableRow("Owner", escape(ownerName)));
-  if (deal.brand) sections.push(tableRow("Brand", escape(deal.brand.name)));
-  if (serviceNames) sections.push(tableRow("Services", escape(serviceNames)));
-  sections.push(tableRow("Budget Range", escape(budgetRange)));
-  if (deal.budgetNotes) sections.push(tableRow("Budget Notes", escape(deal.budgetNotes)));
-  sections.push(`</table>`);
-
-  if (locationNames) {
-    sections.push(`<h2>Locations</h2>`);
-    sections.push(`<p>${escape(locationNames)}</p>`);
+  if (intake && intake.formSchema && intake.responseData) {
+    const responseData = intake.responseData;
+    for (const section of intake.formSchema) {
+      for (const field of section.fields) {
+        const value = responseData[field.id];
+        let stringValue = "";
+        if (value != null) {
+          if (typeof value === "string") {
+            stringValue = value;
+          } else if (Array.isArray(value)) {
+            stringValue = value.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
+          } else if (typeof value === "object") {
+            stringValue = JSON.stringify(value);
+          } else {
+            stringValue = String(value);
+          }
+        }
+        map.set(`intake:${field.id}`, stringValue);
+      }
+    }
   }
 
-  if (events.length > 0) {
-    sections.push(`<h2>Event Schedule</h2>`);
-    sections.push(`<ul>${eventLines.join("")}</ul>`);
-  }
-
-  if (deal.concept) {
-    sections.push(`<h2>Concept</h2>`);
-    sections.push(`<p>${escape(deal.concept)}</p>`);
-  }
-
-  if (deal.nextSteps) {
-    sections.push(`<h2>Next Steps</h2>`);
-    sections.push(`<p>${escape(deal.nextSteps)}</p>`);
-  }
-
-  if (deal.notes) {
-    sections.push(`<h2>Notes</h2>`);
-    sections.push(`<p>${escape(deal.notes)}</p>`);
-  }
-
-  if (deal.primaryContact) {
-    sections.push(`<h2>Primary Contact</h2>`);
-    const contactName = [deal.primaryContact.firstName, deal.primaryContact.lastName].filter(Boolean).join(" ");
-    sections.push(`<p>${escape(contactName)}`);
-    if (deal.primaryContact.jobTitle) sections.push(` &mdash; ${escape(deal.primaryContact.jobTitle)}`);
-    sections.push(`</p>`);
-  }
-
-  return `<html><body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:20px;">${sections.join("\n")}</body></html>`;
-}
-
-function tableRow(label: string, value: string): string {
-  return `<tr><td style="padding:6px 12px 6px 0;font-weight:bold;vertical-align:top;white-space:nowrap;">${label}</td><td style="padding:6px 0;">${value}</td></tr>`;
+  return map;
 }

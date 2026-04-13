@@ -56,6 +56,42 @@ export function registerSettingsCommentsRoutes(app: Express): void {
     }
   });
 
+  // ===== DEAL SUMMARY TEMPLATE SETTING =====
+
+  app.get("/api/settings/deal-summary-template", isAuthenticated, requirePermission("admin.settings"), async (_req, res) => {
+    try {
+      const value = await settingsCommentsStorage.getAppSetting("deal_summary_template_sheet_id");
+      res.json({ templateSheetId: value || "" });
+    } catch (error) {
+      console.error("Error fetching deal summary template setting:", error);
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+
+  app.patch("/api/settings/deal-summary-template", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const { templateSheetId } = req.body;
+      if (typeof templateSheetId !== "string") {
+        return res.status(400).json({ message: "templateSheetId must be a string" });
+      }
+      const userId = req.user.claims.sub;
+      await settingsCommentsStorage.setAppSetting("deal_summary_template_sheet_id", templateSheetId, userId);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_setting",
+        entityId: "deal_summary_template_sheet_id",
+        status: "success",
+        metadata: { key: "deal_summary_template_sheet_id" },
+      });
+
+      res.json({ templateSheetId });
+    } catch (error) {
+      console.error("Error updating deal summary template setting:", error);
+      res.status(500).json({ message: "Failed to update setting" });
+    }
+  });
+
   // ===== ENTITY COMMENTS ROUTES =====
 
   app.get("/api/comments", isAuthenticated, async (req, res) => {

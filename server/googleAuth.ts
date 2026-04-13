@@ -72,6 +72,7 @@ async function exchangeCodeForTokens(code: string): Promise<{
   refresh_token?: string;
   expiry_date: number;
   id_token?: string;
+  scope?: string;
 }> {
   const oauth2Client = new OAuth2Client(
     GOOGLE_CLIENT_ID,
@@ -87,6 +88,7 @@ async function exchangeCodeForTokens(code: string): Promise<{
     refresh_token: tokens.refresh_token || undefined,
     expiry_date: tokens.expiry_date || Date.now() + 3600 * 1000,
     id_token: tokens.id_token || undefined,
+    scope: tokens.scope || undefined,
   };
 }
 
@@ -232,6 +234,9 @@ export async function setupAuth(app: Express) {
       sess.driveAccessToken = tokens.access_token;
       sess.driveRefreshToken = tokens.refresh_token || sess.driveRefreshToken;
       sess.driveTokenExpiry = tokens.expiry_date;
+      if (tokens.scope) {
+        sess.driveGrantedScopes = tokens.scope;
+      }
 
       res.json({ success: true, driveConnected: true });
     } catch (error: any) {
@@ -249,10 +254,13 @@ export async function setupAuth(app: Express) {
     const hasToken = !!sess.driveAccessToken;
     const hasRefreshToken = !!sess.driveRefreshToken;
     const isExpired = sess.driveTokenExpiry ? Date.now() > sess.driveTokenExpiry : true;
+    const grantedScopes = (sess.driveGrantedScopes as string) || "";
+    const hasSheetsScope = grantedScopes.includes("spreadsheets");
+    const needsScopeUpgrade = hasToken && !hasSheetsScope;
 
     res.json({
       connected: hasToken && (hasRefreshToken || !isExpired),
-      needsReauth: !hasToken || (isExpired && !hasRefreshToken),
+      needsReauth: !hasToken || (isExpired && !hasRefreshToken) || needsScopeUpgrade,
     });
   });
 

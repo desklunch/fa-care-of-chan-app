@@ -93,6 +93,7 @@ const EventSchedulePrototype = lazy(
 );
 const AIContext = lazy(() => import("@/pages/ai-context"));
 const AdminRoles = lazy(() => import("@/pages/admin-roles"));
+const AdminDealSettings = lazy(() => import("@/pages/admin-deal-settings"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
@@ -138,6 +139,7 @@ import {
   Shield,
   Loader,
   UserCheck,
+  Sheet,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -287,6 +289,12 @@ function useLayoutConfig() {
             icon: FileText,
             requiredPermission: "admin.settings",
           },
+          {
+            name: "Deal Settings",
+            href: "/admin/deal-settings",
+            icon: Sheet,
+            requiredPermission: "admin.settings",
+          },
         ],
       },
       {
@@ -410,6 +418,7 @@ function AuthenticatedRoutes() {
             <Route path="/admin/theme" component={AdminThemeEditor} />
             <Route path="/admin/roles" component={AdminRoles} />
             <Route path="/admin/vendors/tokens" component={AdminVendorTokens} />
+            <Route path="/admin/deal-settings" component={AdminDealSettings} />
             <Route path="/ai/context" component={AIContext} />
             <Route path="/amenities" component={Amenities} />
             <Route path="/app/analytics" component={AdminAnalytics} />

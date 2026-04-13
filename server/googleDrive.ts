@@ -131,6 +131,120 @@ export async function createGoogleDoc(
   return response.json();
 }
 
+export async function copyDriveFile(
+  accessToken: string,
+  fileId: string,
+  name: string,
+  folderId: string,
+): Promise<{ id: string; name: string; webViewLink: string; mimeType: string }> {
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}/copy?fields=id,name,webViewLink,mimeType`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, parents: [folderId] }),
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to copy Drive file: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
+
+function quoteSheetTitle(title: string): string {
+  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(title)) return title;
+  return `'${title.replace(/'/g, "''")}'`;
+}
+
+function columnToLetter(col: number): string {
+  let result = "";
+  let c = col;
+  while (c >= 0) {
+    result = String.fromCharCode(65 + (c % 26)) + result;
+    c = Math.floor(c / 26) - 1;
+  }
+  return result;
+}
+
+export interface TokenCell {
+  sheetTitle: string;
+  row: number;
+  col: number;
+  originalValue: string;
+}
+
+export async function findTokenCells(
+  accessToken: string,
+  spreadsheetId: string,
+): Promise<TokenCell[]> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(properties.title,data.rowData.values.formattedValue)`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to read spreadsheet data: ${res.status} ${text}`);
+  }
+  const body = await res.json();
+  const cells: TokenCell[] = [];
+
+  for (const sheet of body.sheets || []) {
+    const title = sheet.properties?.title || "Sheet1";
+    for (const grid of sheet.data || []) {
+      for (let rowIdx = 0; rowIdx < (grid.rowData || []).length; rowIdx++) {
+        const row = grid.rowData[rowIdx];
+        for (let colIdx = 0; colIdx < (row.values || []).length; colIdx++) {
+          const cell = row.values[colIdx];
+          const val = cell?.formattedValue;
+          if (typeof val === "string" && val.includes("{{")) {
+            cells.push({ sheetTitle: title, row: rowIdx, col: colIdx, originalValue: val });
+          }
+        }
+      }
+    }
+  }
+
+  return cells;
+}
+
+export async function writeTokenCells(
+  accessToken: string,
+  spreadsheetId: string,
+  updates: { sheetTitle: string; row: number; col: number; value: string }[],
+): Promise<void> {
+  if (updates.length === 0) return;
+
+  const data = updates.map((u) => ({
+    range: `${quoteSheetTitle(u.sheetTitle)}!${columnToLetter(u.col)}${u.row + 1}`,
+    values: [[u.value]],
+  }));
+
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        valueInputOption: "RAW",
+        data,
+      }),
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to write sheet values: ${res.status} ${text}`);
+  }
+}
+
 export function extractDriveFileId(url: string): string | null {
   const patterns = [
     /\/d\/([a-zA-Z0-9_-]+)/,

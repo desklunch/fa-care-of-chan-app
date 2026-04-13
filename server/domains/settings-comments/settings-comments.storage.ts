@@ -19,6 +19,36 @@ export interface CommentWithAuthor extends Comment {
 }
 
 export const settingsCommentsStorage = {
+  async getAppSetting(key: string): Promise<string | null> {
+    const [setting] = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, key))
+      .limit(1);
+    if (!setting) return null;
+    return setting.value as string;
+  },
+
+  async setAppSetting(key: string, value: string | number | boolean | Record<string, unknown>, userId: string): Promise<void> {
+    const jsonValue: unknown = value;
+    const existing = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, key))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(appSettings)
+        .set({ value: jsonValue, updatedBy: userId, updatedAt: new Date() })
+        .where(eq(appSettings.key, key));
+    } else {
+      await db
+        .insert(appSettings)
+        .values({ key, value: jsonValue, updatedBy: userId });
+    }
+  },
+
   async getTheme(): Promise<{
     light: Record<string, string>;
     dark: Record<string, string>;
