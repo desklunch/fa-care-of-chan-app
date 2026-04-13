@@ -469,7 +469,7 @@ export default function DealDetail() {
                       .filter(
                         (u) =>
                           u.isActive &&
-                          (u.role === "Sales" || u.role === "Sales Admin"),
+                          (u.role === "Sales" || u.role === "Sales Admin" || u.role === "Admin"),
                       )
                       .map((u) => ({
                         value: u.id,

@@ -371,7 +371,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
 
       cellEditorParams: (params: { context: DealsGridContext }) => {
         const users = (params.context?.users || []).filter(
-          (u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"),
+          (u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin" || u.role === "Admin"),
         );
         return {
           values: [
@@ -411,9 +411,9 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
           params.data.owner = null;
           return true;
         }
-        // Find user by matching initials (only from Sales/Sales Admin roles)
+        // Find user by matching initials (only from Sales/Sales Admin/Admin roles)
         const users = (params.context?.users || []).filter(
-          (u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin"),
+          (u) => u.isActive && (u.role === "Sales" || u.role === "Sales Admin" || u.role === "Admin"),
         );
         const user = users.find(
           (u) => getInitials(getUserFullName(u)) === params.newValue,
