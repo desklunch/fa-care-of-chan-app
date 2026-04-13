@@ -95,7 +95,9 @@ const EventSchedulePrototype = lazy(
 const AIContext = lazy(() => import("@/pages/ai-context"));
 const AdminRoles = lazy(() => import("@/pages/admin-roles"));
 const AdminDealSettings = lazy(() => import("@/pages/admin-deal-settings"));
-const NotificationPreferences = lazy(() => import("@/pages/notification-preferences"));
+const NotificationPreferences = lazy(
+  () => import("@/pages/notification-preferences"),
+);
 const NotFound = lazy(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
@@ -165,17 +167,6 @@ function useLayoutConfig() {
       : null,
     navigation: [
       {
-        heading: "",
-        defaultCollapsed: false,
-        items: [
-          {
-            name: "Dashboard",
-            href: "/dashboard",
-            icon: LayoutDashboard,
-          },
-        ],
-      },
-      {
         heading: "Sales",
         defaultCollapsed: false,
 
@@ -197,13 +188,13 @@ function useLayoutConfig() {
             name: "Pipeline",
             href: "/deals/pipeline",
             icon: Activity,
-          requiredPermission: "deals.read",
+            requiredPermission: "deals.read",
           },
           {
             name: "Forecast",
             href: "/deals/forecast",
             icon: TrendingUp,
-          requiredPermission: "deals.read",
+            requiredPermission: "deals.read",
           },
           {
             name: "Views",
@@ -211,7 +202,6 @@ function useLayoutConfig() {
             icon: ScanEye,
             requiredPermission: "deals.read",
           },
-
         ],
       },
       {
@@ -220,7 +210,6 @@ function useLayoutConfig() {
 
         requiredPermission: "sales.manage",
         items: [
-
           {
             name: "Intakes",
             href: "/deals/forms",
@@ -235,7 +224,6 @@ function useLayoutConfig() {
           },
         ],
       },
-
 
       {
         heading: "Directory",
@@ -275,7 +263,6 @@ function useLayoutConfig() {
         heading: "Manage",
         defaultCollapsed: true,
         items: [
-
           {
             name: "Team",
             href: "/team",
@@ -301,14 +288,12 @@ function useLayoutConfig() {
             icon: FileText,
             requiredPermission: "admin.settings",
           },
-
         ],
       },
       {
         heading: "App",
         defaultCollapsed: true,
         items: [
-
           {
             name: "Guide",
             href: "/guide",
@@ -333,14 +318,12 @@ function useLayoutConfig() {
             requiredPermission: "app_features.read",
           },
 
-
           {
             name: "Issues",
             href: "/app/issues",
             icon: Bug,
             requiredPermission: "app_features.read",
           },
-
         ],
       },
 
@@ -349,6 +332,11 @@ function useLayoutConfig() {
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
+          {
+            name: "Dashboard",
+            href: "/dashboard",
+            icon: LayoutDashboard,
+          },
           {
             name: "Roles",
             href: "/admin/roles",
@@ -360,7 +348,6 @@ function useLayoutConfig() {
             href: "/notifications/preferences",
             icon: BellRing,
             requiredPermission: "admin.settings",
-
           },
           {
             name: "Deal Settings",
@@ -440,7 +427,7 @@ function AuthenticatedRoutes() {
         {showAiChat && <AiChatFab />}
         <Suspense fallback={<PageLoader />}>
           <Switch>
-            <Route path="/" component={Dashboard} />
+            <Route path="/" component={Venues} />
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/admin/features" component={AdminAppFeatures} />
             <Route path="/admin/releases" component={AdminReleases} />
@@ -488,16 +475,25 @@ function AuthenticatedRoutes() {
             <Route path="/forms/requests" component={FormRequests} />
             <Route path="/forms/requests/new" component={FormRequestForm} />
             <Route path="/forms/requests/:id" component={FormRequestDetail} />
-            <Route path="/forms/requests/:id/edit" component={FormRequestForm} />
+            <Route
+              path="/forms/requests/:id/edit"
+              component={FormRequestForm}
+            />
             <Route path="/forms/new" component={FormTemplateForm} />
             <Route path="/forms/:id/edit" component={FormTemplateForm} />
             <Route path="/forms/:id" component={FormTemplateDetail} />
             <Route path="/forms" component={FormTemplates} />
             <Route path="/guide" component={Guide} />
             <Route path="/industries" component={Industries} />
-            <Route path="/manage/deal-statuses" component={ManageDealStatuses} />
+            <Route
+              path="/manage/deal-statuses"
+              component={ManageDealStatuses}
+            />
             <Route path="/manage/tags" component={ManageTagsPage} />
-            <Route path="/notifications/preferences" component={NotificationPreferences} />
+            <Route
+              path="/notifications/preferences"
+              component={NotificationPreferences}
+            />
             <Route path="/profile" component={Profile} />
             <Route path="/profile/edit" component={ProfileEdit} />
             <Route path="/team" component={TeamPage} />
@@ -510,9 +506,18 @@ function AuthenticatedRoutes() {
             <Route path="/vendors/:id/edit" component={VendorForm} />
             <Route path="/venues" component={Venues} />
             <Route path="/venues/collections" component={VenueCollections} />
-            <Route path="/venues/collections/new" component={VenueCollectionForm} />
-            <Route path="/venues/collections/:id" component={VenueCollectionDetail} />
-            <Route path="/venues/collections/:id/edit" component={VenueCollectionForm} />
+            <Route
+              path="/venues/collections/new"
+              component={VenueCollectionForm}
+            />
+            <Route
+              path="/venues/collections/:id"
+              component={VenueCollectionDetail}
+            />
+            <Route
+              path="/venues/collections/:id/edit"
+              component={VenueCollectionForm}
+            />
             <Route path="/venues/new" component={VenueForm} />
             <Route path="/venues/:id" component={VenueDetail} />
             <Route path="/venues/:id/edit" component={VenueForm} />
