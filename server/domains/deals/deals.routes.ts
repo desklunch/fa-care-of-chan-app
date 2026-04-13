@@ -2,10 +2,11 @@ import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
 import { getDriveAccessToken } from "../../googleAuth";
 import { requirePermission, loadPermissions, checkPermission } from "../../middleware/permissions";
-import { logAuditEvent, getChangedFields } from "../../audit";
+import { getChangedFields } from "../../audit";
 import { handleServiceError } from "../../lib/route-helpers";
+import { domainEvents } from "../../lib/events";
 import { storage } from "../../storage";
-import { DealsService } from "../../services/deals.service";
+import { DealsService } from "./deals.service";
 import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, type DealWithRelations, type DealEvent, type DealLocation, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { formsStorage } from "../forms/forms.storage";
@@ -40,24 +41,18 @@ export function registerDealsRoutes(app: Express): void {
         return res.status(404).json({ message: "Deal status not found" });
       }
 
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal_status",
-        entityId: req.params.id,
-        status: "success",
-        changes: getChangedFields(original, status),
+      const actorId = req.user?.claims?.sub || "unknown";
+      domainEvents.emit({
+        type: "deal_status:updated",
+        statusId: req.params.id,
+        changes: original ? getChangedFields(original as unknown as Record<string, unknown>, status as unknown as Record<string, unknown>) : {},
+        actorId,
+        timestamp: new Date(),
       });
 
       res.json(status);
     } catch (error) {
       console.error("Error updating deal status:", error);
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal_status",
-        entityId: req.params.id,
-        status: "failure",
-        metadata: { error: (error as Error).message },
-      });
       res.status(500).json({ message: "Failed to update deal status" });
     }
   });
@@ -697,13 +692,6 @@ export function registerDealsRoutes(app: Express): void {
         await dealsStorage.setDealTags(newDeal.id, tagIds);
       }
 
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal",
-        entityId: newDeal.id,
-        metadata: { displayName: newDeal.displayName, duplicatedFrom: sourceId },
-      });
-
       res.status(201).json(newDeal);
     } catch (error) {
       handleServiceError(res, error, "Failed to duplicate deal");
@@ -715,13 +703,6 @@ export function registerDealsRoutes(app: Express): void {
       const actorId = req.user.claims.sub;
       const deal = await dealsService.create(req.body, actorId);
       
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal",
-        entityId: deal.id,
-        metadata: { displayName: deal.displayName, status: deal.status },
-      });
-      
       res.status(201).json(deal);
     } catch (error) {
       handleServiceError(res, error, "Failed to create deal");
@@ -732,13 +713,6 @@ export function registerDealsRoutes(app: Express): void {
     try {
       const actorId = req.user.claims.sub;
       const deal = await dealsService.update(req.params.id, req.body, actorId);
-      
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal",
-        entityId: req.params.id,
-        changes: req.body,
-      });
       
       res.json(deal);
     } catch (error) {
@@ -752,12 +726,12 @@ export function registerDealsRoutes(app: Express): void {
       const actorId = req.user.claims.sub;
       
       await dealsService.reorder(dealIds, actorId);
-      
-      await logAuditEvent(req, {
-        action: "reorder",
-        entityType: "deals",
-        entityId: "bulk",
-        metadata: { count: dealIds?.length || 0 },
+
+      domainEvents.emit({
+        type: "deal:reordered",
+        dealIds: dealIds || [],
+        actorId,
+        timestamp: new Date(),
       });
       
       res.json({ success: true, reorderedCount: dealIds?.length || 0 });
@@ -769,16 +743,8 @@ export function registerDealsRoutes(app: Express): void {
   app.delete("/api/deals/:id", isAuthenticated, requirePermission("deals.delete"), async (req: any, res) => {
     try {
       const actorId = req.user.claims.sub;
-      const deal = await dealsService.getById(req.params.id);
       
       await dealsService.delete(req.params.id, actorId);
-      
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "deal",
-        entityId: req.params.id,
-        metadata: { displayName: deal.displayName },
-      });
       
       res.status(204).send();
     } catch (error) {
@@ -803,23 +769,8 @@ export function registerDealsRoutes(app: Express): void {
         actorId
       );
       
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal_task",
-        entityId: task.id,
-        status: "success",
-        metadata: { dealId: req.params.dealId, title: task.title },
-      });
-      
       res.status(201).json(task);
     } catch (error) {
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal_task",
-        entityId: null,
-        status: "failure",
-        metadata: { dealId: req.params.dealId, error: (error as Error).message },
-      });
       handleServiceError(res, error, "Failed to create deal task");
     }
   });
@@ -834,23 +785,8 @@ export function registerDealsRoutes(app: Express): void {
         actorId
       );
       
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal_task",
-        entityId: req.params.taskId,
-        status: "success",
-        metadata: { dealId: req.params.dealId },
-      });
-      
       res.json(task);
     } catch (error) {
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal_task",
-        entityId: req.params.taskId,
-        status: "failure",
-        metadata: { dealId: req.params.dealId, error: (error as Error).message },
-      });
       handleServiceError(res, error, "Failed to update deal task");
     }
   });
@@ -872,11 +808,14 @@ export function registerDealsRoutes(app: Express): void {
       }
       await dealsStorage.linkDealClient(req.params.id, clientId, label);
 
-      await logAuditEvent(req, {
-        action: "link_client",
-        entityType: "deal",
-        entityId: req.params.id,
-        metadata: { clientId, label },
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:client_linked",
+        dealId: req.params.id,
+        clientId,
+        label,
+        actorId,
+        timestamp: new Date(),
       });
 
       const linkedClients = await dealsStorage.getLinkedClientsByDealId(req.params.id);
@@ -890,11 +829,13 @@ export function registerDealsRoutes(app: Express): void {
     try {
       await dealsStorage.unlinkDealClient(req.params.id, req.params.clientId);
 
-      await logAuditEvent(req, {
-        action: "unlink_client",
-        entityType: "deal",
-        entityId: req.params.id,
-        metadata: { clientId: req.params.clientId },
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:client_unlinked",
+        dealId: req.params.id,
+        clientId: req.params.clientId,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.status(204).send();
@@ -920,11 +861,13 @@ export function registerDealsRoutes(app: Express): void {
       }
       await dealsStorage.setDealTags(req.params.id, tagIds);
 
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal",
-        entityId: req.params.id,
-        metadata: { field: "tags", tagIds },
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:tags_updated",
+        dealId: req.params.id,
+        tagIds,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.json({ success: true });
@@ -938,23 +881,8 @@ export function registerDealsRoutes(app: Express): void {
       const actorId = req.user.claims.sub;
       await dealsService.deleteTask(req.params.dealId, req.params.taskId, actorId);
       
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "deal_task",
-        entityId: req.params.taskId,
-        status: "success",
-        metadata: { dealId: req.params.dealId },
-      });
-      
       res.status(204).send();
     } catch (error) {
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "deal_task",
-        entityId: req.params.taskId,
-        status: "failure",
-        metadata: { dealId: req.params.dealId, error: (error as Error).message },
-      });
       handleServiceError(res, error, "Failed to delete deal task");
     }
   });
@@ -1016,23 +944,17 @@ export function registerDealsRoutes(app: Express): void {
         createdById: actorId,
       });
 
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal_link",
-        entityId: link.id,
-        status: "success",
-        metadata: { dealId: req.params.dealId, url: parsedUrl.href },
+      domainEvents.emit({
+        type: "deal:link_created",
+        linkId: link.id,
+        dealId: req.params.dealId,
+        url: parsedUrl.href,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.status(201).json(link);
     } catch (error) {
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal_link",
-        entityId: null,
-        status: "failure",
-        metadata: { dealId: req.params.dealId, error: (error as Error).message },
-      });
       handleServiceError(res, error, "Failed to create deal link");
     }
   });
@@ -1061,23 +983,16 @@ export function registerDealsRoutes(app: Express): void {
 
       await dealsStorage.deleteDealLink(req.params.linkId);
 
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "deal_link",
-        entityId: req.params.linkId,
-        status: "success",
-        metadata: { dealId: req.params.dealId },
+      domainEvents.emit({
+        type: "deal:link_deleted",
+        linkId: req.params.linkId,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.status(204).send();
     } catch (error) {
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "deal_link",
-        entityId: req.params.linkId,
-        status: "failure",
-        metadata: { dealId: req.params.dealId, error: (error as Error).message },
-      });
       handleServiceError(res, error, "Failed to delete deal link");
     }
   });
@@ -1129,12 +1044,14 @@ export function registerDealsRoutes(app: Express): void {
 
       const intake = await dealsStorage.createDealIntake(result.data, actorId);
 
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "deal_intake",
-        entityId: intake.id,
-        status: "success",
-        metadata: { dealId: req.params.dealId, templateId, templateName: template.name },
+      domainEvents.emit({
+        type: "deal:intake_created",
+        intakeId: intake.id,
+        dealId: req.params.dealId,
+        templateId,
+        templateName: template.name,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.status(201).json(intake);
@@ -1158,12 +1075,13 @@ export function registerDealsRoutes(app: Express): void {
       const { status: _status, ...safeData } = result.data;
       const intake = await dealsStorage.updateDealIntake(req.params.dealId, safeData);
 
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal_intake",
-        entityId: existing.id,
-        status: "success",
-        metadata: { dealId: req.params.dealId },
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:intake_updated",
+        intakeId: existing.id,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.json(intake);
@@ -1181,12 +1099,13 @@ export function registerDealsRoutes(app: Express): void {
 
       await dealsStorage.deleteDealIntake(req.params.dealId);
 
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "deal_intake",
-        entityId: existing.id,
-        status: "success",
-        metadata: { dealId: req.params.dealId },
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:intake_deleted",
+        intakeId: existing.id,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
       });
 
       res.status(204).send();
@@ -1316,12 +1235,12 @@ export function registerDealsRoutes(app: Express): void {
         await dealsStorage.setDealTags(dealId, tagIds);
       }
 
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "deal",
-        entityId: dealId,
-        status: "success",
-        metadata: { source: "intake_sync", changedProperties: changes.map(c => c.propertyKey) },
+      domainEvents.emit({
+        type: "deal:intake_synced",
+        dealId,
+        changedProperties: changes.map(c => c.propertyKey),
+        actorId,
+        timestamp: new Date(),
       });
 
       res.json({ changes, applied: true });
@@ -1454,12 +1373,13 @@ export function registerDealsRoutes(app: Express): void {
 
       const attachmentWithUser = await driveAttachmentsStorage.getAttachmentById(attachment.id);
 
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "drive_attachment",
-        entityId: attachment.id,
-        status: "success",
-        metadata: { source: "generate_sheet", dealId, sheetId: sheetResult.id },
+      domainEvents.emit({
+        type: "deal:doc_generated",
+        attachmentId: attachment.id,
+        dealId,
+        sheetId: sheetResult.id,
+        actorId: userId,
+        timestamp: new Date(),
       });
 
       res.json({

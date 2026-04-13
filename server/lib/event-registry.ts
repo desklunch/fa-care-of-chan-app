@@ -88,6 +88,142 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).taskId ?? null,
     },
   },
+  "deal:reordered": {
+    type: "deal:reordered",
+    audit: {
+      action: "reorder",
+      entityType: "deals",
+      extractEntityId: () => "bulk",
+      extractChanges: (e) => ({ dealIds: (e as any).dealIds }),
+    },
+  },
+  "deal_status:updated": {
+    type: "deal_status:updated",
+    audit: {
+      action: "update",
+      entityType: "deal" as AuditEntityType,
+      extractEntityId: (e) => (e as any).statusId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "deal:client_linked": {
+    type: "deal:client_linked",
+    audit: {
+      action: "link",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        clientId: (e as any).clientId,
+        label: (e as any).label,
+      }),
+    },
+  },
+  "deal:client_unlinked": {
+    type: "deal:client_unlinked",
+    audit: {
+      action: "unlink",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        clientId: (e as any).clientId,
+      }),
+    },
+  },
+  "deal:tags_updated": {
+    type: "deal:tags_updated",
+    audit: {
+      action: "update",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        field: "tags",
+        tagIds: (e as any).tagIds,
+      }),
+    },
+  },
+  "deal:link_created": {
+    type: "deal:link_created",
+    audit: {
+      action: "create",
+      entityType: "deal_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractChanges: (e) => ({
+        dealId: (e as any).dealId,
+        url: (e as any).url,
+      }),
+    },
+  },
+  "deal:link_deleted": {
+    type: "deal:link_deleted",
+    audit: {
+      action: "delete",
+      entityType: "deal_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractChanges: (e) => ({
+        dealId: (e as any).dealId,
+      }),
+    },
+  },
+  "deal:intake_created": {
+    type: "deal:intake_created",
+    audit: {
+      action: "create",
+      entityType: "deal" as AuditEntityType,
+      extractEntityId: (e) => (e as any).intakeId ?? null,
+      extractChanges: (e) => ({
+        dealId: (e as any).dealId,
+        templateId: (e as any).templateId,
+        templateName: (e as any).templateName,
+      }),
+    },
+  },
+  "deal:intake_updated": {
+    type: "deal:intake_updated",
+    audit: {
+      action: "update",
+      entityType: "deal" as AuditEntityType,
+      extractEntityId: (e) => (e as any).intakeId ?? null,
+      extractChanges: (e) => ({
+        dealId: (e as any).dealId,
+      }),
+    },
+  },
+  "deal:intake_deleted": {
+    type: "deal:intake_deleted",
+    audit: {
+      action: "delete",
+      entityType: "deal" as AuditEntityType,
+      extractEntityId: (e) => (e as any).intakeId ?? null,
+      extractChanges: (e) => ({
+        dealId: (e as any).dealId,
+      }),
+    },
+  },
+  "deal:intake_synced": {
+    type: "deal:intake_synced",
+    audit: {
+      action: "update",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        source: "intake_sync",
+        changedProperties: (e as any).changedProperties,
+      }),
+    },
+  },
+  "deal:doc_generated": {
+    type: "deal:doc_generated",
+    audit: {
+      action: "create",
+      entityType: "drive_attachment",
+      extractEntityId: (e) => (e as any).attachmentId ?? null,
+      extractChanges: (e) => ({
+        source: "generate_sheet",
+        dealId: (e as any).dealId,
+        sheetId: (e as any).sheetId,
+      }),
+    },
+  },
   "user:logged_in": {
     type: "user:logged_in",
     audit: {
@@ -103,22 +239,6 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       action: "logout",
       entityType: "user",
       extractEntityId: (e) => (e as any).userId ?? null,
-    },
-  },
-  "session:created": {
-    type: "session:created",
-    audit: {
-      action: "create",
-      entityType: "session",
-      extractEntityId: (e) => (e as any).sessionId ?? null,
-    },
-  },
-  "session:destroyed": {
-    type: "session:destroyed",
-    audit: {
-      action: "delete",
-      entityType: "session",
-      extractEntityId: (e) => (e as any).sessionId ?? null,
     },
   },
   "venue:created": {
@@ -201,6 +321,117 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       action: "delete",
       entityType: "contact",
       extractEntityId: (e) => (e as any).contactId ?? null,
+    },
+  },
+  "client:created": {
+    type: "client:created",
+    audit: {
+      action: "create",
+      entityType: "client",
+      extractEntityId: (e) => (e as any).clientId ?? null,
+    },
+  },
+  "client:updated": {
+    type: "client:updated",
+    audit: {
+      action: "update",
+      entityType: "client",
+      extractEntityId: (e) => (e as any).clientId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "client:deleted": {
+    type: "client:deleted",
+    audit: {
+      action: "delete",
+      entityType: "client",
+      extractEntityId: (e) => (e as any).clientId ?? null,
+    },
+  },
+  "vendor:created": {
+    type: "vendor:created",
+    audit: {
+      action: "create",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+    },
+  },
+  "vendor:updated": {
+    type: "vendor:updated",
+    audit: {
+      action: "update",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "vendor:deleted": {
+    type: "vendor:deleted",
+    audit: {
+      action: "delete",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+    },
+  },
+  "form_template:created": {
+    type: "form_template:created",
+    audit: {
+      action: "create",
+      entityType: "form_template",
+      extractEntityId: (e) => (e as any).templateId ?? null,
+    },
+  },
+  "form_template:updated": {
+    type: "form_template:updated",
+    audit: {
+      action: "update",
+      entityType: "form_template",
+      extractEntityId: (e) => (e as any).templateId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "form_template:deleted": {
+    type: "form_template:deleted",
+    audit: {
+      action: "delete",
+      entityType: "form_template",
+      extractEntityId: (e) => (e as any).templateId ?? null,
+    },
+  },
+  "form_request:created": {
+    type: "form_request:created",
+    audit: {
+      action: "create",
+      entityType: "form_request",
+      extractEntityId: (e) => (e as any).requestId ?? null,
+    },
+  },
+  "form_request:updated": {
+    type: "form_request:updated",
+    audit: {
+      action: "update",
+      entityType: "form_request",
+      extractEntityId: (e) => (e as any).requestId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "form_request:deleted": {
+    type: "form_request:deleted",
+    audit: {
+      action: "delete",
+      entityType: "form_request",
+      extractEntityId: (e) => (e as any).requestId ?? null,
+    },
+  },
+  "form_request:sent": {
+    type: "form_request:sent",
+    audit: {
+      action: "email_sent",
+      entityType: "form_request",
+      extractEntityId: (e) => (e as any).requestId ?? null,
+      extractChanges: (e) => ({
+        recipientEmail: (e as any).recipientEmail,
+      }),
     },
   },
   "comment:created": {

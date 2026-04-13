@@ -1,8 +1,8 @@
 import type { IStorage } from "../storage";
-import { DealsService } from "./deals.service";
+import { DealsService } from "../domains/deals/deals.service";
 
 export { BaseService, ServiceError } from "./base.service";
-export { DealsService } from "./deals.service";
+export { DealsService } from "../domains/deals/deals.service";
 
 export interface Services {
   deals: DealsService;

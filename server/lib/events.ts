@@ -67,6 +67,106 @@ export interface DealTaskDeletedEvent {
   timestamp: Date;
 }
 
+export interface DealReorderedEvent {
+  type: "deal:reordered";
+  dealIds: string[];
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealStatusUpdatedEvent {
+  type: "deal_status:updated";
+  statusId: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealClientLinkedEvent {
+  type: "deal:client_linked";
+  dealId: string;
+  clientId: string;
+  label?: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealClientUnlinkedEvent {
+  type: "deal:client_unlinked";
+  dealId: string;
+  clientId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealTagsUpdatedEvent {
+  type: "deal:tags_updated";
+  dealId: string;
+  tagIds: string[];
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealLinkCreatedEvent {
+  type: "deal:link_created";
+  linkId: string;
+  dealId: string;
+  url: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealLinkDeletedEvent {
+  type: "deal:link_deleted";
+  linkId: string;
+  dealId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealIntakeCreatedEvent {
+  type: "deal:intake_created";
+  intakeId: string;
+  dealId: string;
+  templateId: string;
+  templateName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealIntakeUpdatedEvent {
+  type: "deal:intake_updated";
+  intakeId: string;
+  dealId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealIntakeDeletedEvent {
+  type: "deal:intake_deleted";
+  intakeId: string;
+  dealId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealIntakeSyncedEvent {
+  type: "deal:intake_synced";
+  dealId: string;
+  changedProperties: string[];
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealDocGeneratedEvent {
+  type: "deal:doc_generated";
+  attachmentId: string;
+  dealId: string;
+  sheetId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface UserLoggedInEvent {
   type: "user:logged_in";
   userId: string;
@@ -80,22 +180,6 @@ export interface UserLoggedInEvent {
 
 export interface UserLoggedOutEvent {
   type: "user:logged_out";
-  userId: string;
-  actorId: string;
-  timestamp: Date;
-}
-
-export interface SessionCreatedEvent {
-  type: "session:created";
-  sessionId: string;
-  userId: string;
-  actorId: string;
-  timestamp: Date;
-}
-
-export interface SessionDestroyedEvent {
-  type: "session:destroyed";
-  sessionId: string;
   userId: string;
   actorId: string;
   timestamp: Date;
@@ -228,6 +312,115 @@ export interface ContactDeletedEvent {
   timestamp: Date;
 }
 
+export interface ClientCreatedEvent {
+  type: "client:created";
+  clientId: string;
+  clientName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ClientUpdatedEvent {
+  type: "client:updated";
+  clientId: string;
+  clientName: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ClientDeletedEvent {
+  type: "client:deleted";
+  clientId: string;
+  clientName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VendorCreatedEvent {
+  type: "vendor:created";
+  vendorId: string;
+  vendorName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VendorUpdatedEvent {
+  type: "vendor:updated";
+  vendorId: string;
+  vendorName: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VendorDeletedEvent {
+  type: "vendor:deleted";
+  vendorId: string;
+  vendorName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormTemplateCreatedEvent {
+  type: "form_template:created";
+  templateId: string;
+  templateName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormTemplateUpdatedEvent {
+  type: "form_template:updated";
+  templateId: string;
+  templateName: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormTemplateDeletedEvent {
+  type: "form_template:deleted";
+  templateId: string;
+  templateName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormRequestCreatedEvent {
+  type: "form_request:created";
+  requestId: string;
+  requestTitle: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormRequestUpdatedEvent {
+  type: "form_request:updated";
+  requestId: string;
+  requestTitle: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormRequestDeletedEvent {
+  type: "form_request:deleted";
+  requestId: string;
+  requestTitle: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormRequestSentEvent {
+  type: "form_request:sent";
+  requestId: string;
+  requestTitle: string;
+  recipientEmail: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export type DomainEvent =
   | DealCreatedEvent
   | DealUpdatedEvent
@@ -237,10 +430,20 @@ export type DomainEvent =
   | DealTaskCreatedEvent
   | DealTaskUpdatedEvent
   | DealTaskDeletedEvent
+  | DealReorderedEvent
+  | DealStatusUpdatedEvent
+  | DealClientLinkedEvent
+  | DealClientUnlinkedEvent
+  | DealTagsUpdatedEvent
+  | DealLinkCreatedEvent
+  | DealLinkDeletedEvent
+  | DealIntakeCreatedEvent
+  | DealIntakeUpdatedEvent
+  | DealIntakeDeletedEvent
+  | DealIntakeSyncedEvent
+  | DealDocGeneratedEvent
   | UserLoggedInEvent
   | UserLoggedOutEvent
-  | SessionCreatedEvent
-  | SessionDestroyedEvent
   | VenueCreatedEvent
   | VenueUpdatedEvent
   | VenueDeletedEvent
@@ -251,6 +454,19 @@ export type DomainEvent =
   | ContactCreatedEvent
   | ContactUpdatedEvent
   | ContactDeletedEvent
+  | ClientCreatedEvent
+  | ClientUpdatedEvent
+  | ClientDeletedEvent
+  | VendorCreatedEvent
+  | VendorUpdatedEvent
+  | VendorDeletedEvent
+  | FormTemplateCreatedEvent
+  | FormTemplateUpdatedEvent
+  | FormTemplateDeletedEvent
+  | FormRequestCreatedEvent
+  | FormRequestUpdatedEvent
+  | FormRequestDeletedEvent
+  | FormRequestSentEvent
   | CommentCreatedEvent
   | CommentReplyCreatedEvent
   | FormSubmissionReceivedEvent
@@ -265,10 +481,20 @@ type EventMap = {
   "deal:task_created": DealTaskCreatedEvent;
   "deal:task_updated": DealTaskUpdatedEvent;
   "deal:task_deleted": DealTaskDeletedEvent;
+  "deal:reordered": DealReorderedEvent;
+  "deal_status:updated": DealStatusUpdatedEvent;
+  "deal:client_linked": DealClientLinkedEvent;
+  "deal:client_unlinked": DealClientUnlinkedEvent;
+  "deal:tags_updated": DealTagsUpdatedEvent;
+  "deal:link_created": DealLinkCreatedEvent;
+  "deal:link_deleted": DealLinkDeletedEvent;
+  "deal:intake_created": DealIntakeCreatedEvent;
+  "deal:intake_updated": DealIntakeUpdatedEvent;
+  "deal:intake_deleted": DealIntakeDeletedEvent;
+  "deal:intake_synced": DealIntakeSyncedEvent;
+  "deal:doc_generated": DealDocGeneratedEvent;
   "user:logged_in": UserLoggedInEvent;
   "user:logged_out": UserLoggedOutEvent;
-  "session:created": SessionCreatedEvent;
-  "session:destroyed": SessionDestroyedEvent;
   "venue:created": VenueCreatedEvent;
   "venue:updated": VenueUpdatedEvent;
   "venue:deleted": VenueDeletedEvent;
@@ -279,6 +505,19 @@ type EventMap = {
   "contact:created": ContactCreatedEvent;
   "contact:updated": ContactUpdatedEvent;
   "contact:deleted": ContactDeletedEvent;
+  "client:created": ClientCreatedEvent;
+  "client:updated": ClientUpdatedEvent;
+  "client:deleted": ClientDeletedEvent;
+  "vendor:created": VendorCreatedEvent;
+  "vendor:updated": VendorUpdatedEvent;
+  "vendor:deleted": VendorDeletedEvent;
+  "form_template:created": FormTemplateCreatedEvent;
+  "form_template:updated": FormTemplateUpdatedEvent;
+  "form_template:deleted": FormTemplateDeletedEvent;
+  "form_request:created": FormRequestCreatedEvent;
+  "form_request:updated": FormRequestUpdatedEvent;
+  "form_request:deleted": FormRequestDeletedEvent;
+  "form_request:sent": FormRequestSentEvent;
   "comment:created": CommentCreatedEvent;
   "comment:reply_created": CommentReplyCreatedEvent;
   "form:submission_received": FormSubmissionReceivedEvent;

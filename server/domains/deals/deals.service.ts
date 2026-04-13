@@ -1,7 +1,7 @@
-import { BaseService, ServiceError } from "./base.service";
-import { domainEvents } from "../lib/events";
-import type { IStorage } from "../storage";
-import { notificationsStorage } from "../domains/notifications/notifications.storage";
+import { BaseService, ServiceError } from "../../services/base.service";
+import { domainEvents } from "../../lib/events";
+import type { IStorage } from "../../storage";
+import { notificationsStorage } from "../notifications/notifications.storage";
 import type {
   Deal,
   DealWithRelations,

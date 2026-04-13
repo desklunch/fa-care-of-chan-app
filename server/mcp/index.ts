@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { storage } from "../storage";
-import { DealsService } from "../services/deals.service";
+import { DealsService } from "../domains/deals/deals.service";
 import { ServiceError } from "../services/base.service";
 import { type DealStatus, type DealStatusRecord, type FeatureStatus, featureStatuses, featurePriorities } from "@shared/schema";
 import { issuesFeaturesStorage } from "../domains/issues-features/issues-features.storage";
