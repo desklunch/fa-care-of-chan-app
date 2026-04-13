@@ -259,6 +259,14 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
         setShowDriveAuth(true);
         return;
       }
+      if (error.message?.includes("sheets_api_disabled")) {
+        toast({
+          title: "Google Sheets API not enabled",
+          description: "Please enable the Google Sheets API in your Google Cloud Console project, then try again.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Failed to generate sheet",
         description: error.message,

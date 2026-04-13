@@ -1288,7 +1288,15 @@ export function registerDealsRoutes(app: Express): void {
       try {
         tokenCells = await findTokenCells(accessToken, sheetResult.id);
       } catch (sheetsError: any) {
+        console.error("Sheets API error (findTokenCells):", sheetsError?.message);
         const msg = sheetsError?.message || "";
+        const isSheetsApiDisabled = msg.includes("Google Sheets API has not been used") || msg.includes("it is disabled");
+        if (isSheetsApiDisabled) {
+          return res.status(403).json({
+            message: "The Google Sheets API is not enabled in your Google Cloud project. Please enable it at console.cloud.google.com, then try again.",
+            code: "sheets_api_disabled",
+          });
+        }
         if (msg.includes("403") || msg.includes("401") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
           return res.status(403).json({
             message: "Insufficient Google Sheets permissions. Please reconnect your Google Drive with updated permissions.",
@@ -1317,7 +1325,15 @@ export function registerDealsRoutes(app: Express): void {
       try {
         await writeTokenCells(accessToken, sheetResult.id, cellUpdates);
       } catch (sheetsError: any) {
+        console.error("Sheets API error (writeTokenCells):", sheetsError?.message);
         const msg = sheetsError?.message || "";
+        const isSheetsApiDisabled = msg.includes("Google Sheets API has not been used") || msg.includes("it is disabled");
+        if (isSheetsApiDisabled) {
+          return res.status(403).json({
+            message: "The Google Sheets API is not enabled in your Google Cloud project. Please enable it at console.cloud.google.com, then try again.",
+            code: "sheets_api_disabled",
+          });
+        }
         if (msg.includes("403") || msg.includes("401") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
           return res.status(403).json({
             message: "Insufficient Google Sheets permissions. Please reconnect your Google Drive with updated permissions.",

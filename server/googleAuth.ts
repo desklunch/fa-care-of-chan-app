@@ -236,6 +236,7 @@ export async function setupAuth(app: Express) {
       sess.driveTokenExpiry = tokens.expiry_date;
       if (tokens.scope) {
         sess.driveGrantedScopes = tokens.scope;
+        console.log("[GoogleAuth] Granted scopes:", tokens.scope);
       }
 
       res.json({ success: true, driveConnected: true });
