@@ -39,7 +39,7 @@ export class NotificationService {
 
     try {
       const { recipientIds } = await rule.resolveRecipients(event);
-      const payload = rule.buildPayload(event);
+      const payload = await rule.buildPayload(event);
 
       const uniqueRecipients = [...new Set(recipientIds)];
       const filteredRecipients = uniqueRecipients.filter((id) => id !== event.actorId);

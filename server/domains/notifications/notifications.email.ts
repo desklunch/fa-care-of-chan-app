@@ -16,7 +16,7 @@ function getEntityUrl(entityType?: string, entityId?: string): string {
     vendor: `/vendors/${entityId}`,
     contact: `/contacts/${entityId}`,
     client: `/clients/${entityId}`,
-    app_feature: `/features/${entityId}`,
+    app_feature: `/app/features/${entityId}`,
     app_issue: `/issues/${entityId}`,
     feedback: `/feedback`,
   };
