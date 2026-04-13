@@ -240,7 +240,7 @@ export default function ClientDetail() {
           <div className="p-4 md:p-6 pb-2 md:pb-2">
               <div className="space-y-1">
                 <div className="flex items-center justify-end">
-                  <FollowButton entityType="client" entityId={id!} />
+                  <FollowButton entityType="client" entityId={params.id!} />
                 </div>
     
             <PermissionGate permission="clients.write" behavior="fallback" fallback={
