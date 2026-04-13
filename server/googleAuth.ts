@@ -257,7 +257,8 @@ export async function setupAuth(app: Express) {
     const isExpired = sess.driveTokenExpiry ? Date.now() > sess.driveTokenExpiry : true;
     const grantedScopes = (sess.driveGrantedScopes as string) || "";
     const hasSheetsScope = grantedScopes.includes("spreadsheets");
-    const needsScopeUpgrade = hasToken && !hasSheetsScope;
+    const hasDriveReadScope = grantedScopes.includes("drive.readonly") || grantedScopes.includes("auth/drive ");
+    const needsScopeUpgrade = hasToken && (!hasSheetsScope || !hasDriveReadScope);
 
     res.json({
       connected: hasToken && (hasRefreshToken || !isExpired),

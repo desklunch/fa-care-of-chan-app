@@ -31,7 +31,7 @@ export function useDriveAuth() {
 function DriveAuthProvider({ children }: { children: ReactNode }) {
   const authorize = useGoogleLoginOAuth({
     flow: "auth-code",
-    scope: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets openid email profile",
+    scope: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/spreadsheets openid email profile",
     prompt: "consent",
     access_type: "offline",
     onSuccess: async (codeResponse) => {
