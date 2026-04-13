@@ -45,6 +45,7 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
     - `forms/` - Form templates, requests, and public form submission (15 routes)
     - `drive-attachments/` - Google Drive file attachments for deals, venues, clients, vendors, contacts (3 routes)
+    - `notifications/` - User notification system with in-app, email (Resend), and browser push channels (12 routes)
     
     **Refactor Status (January 2026):**
     - `routes.ts` reduced from 6,714 to 506 lines (92% reduction)
@@ -101,6 +102,7 @@ The system includes modules for:
 -   **Photo Management:** Stores venue-related photos in Replit App Storage, generates thumbnails, handles uploads from various sources (direct, URL, Google Places), and supports drag-and-drop reordering with a hero image flag.
 -   **File Management:** Manages venue floorplans and general attachments, supporting various file types, secure storage, and detailed metadata.
 -   **Google Drive Attachments:** Allows users to attach Google Drive files (Docs, Sheets, Slides, PDFs, etc.) to deals, venues, clients, vendors, and contacts by pasting Drive sharing links. Uses the Google Drive connector for metadata resolution. Attached files display name, type icon, who attached them, and when. Files open in Google Drive in a new tab.
+-   **Notification System:** Multi-channel notification system (in-app, email via Resend, browser push via web-push/VAPID). Users can follow entities (deals, venues, vendors, clients, features, issues) to receive updates. Declarative routing rules map domain events to notification channels. Auto-follows on deal assignment, feature/issue creation. NotificationBell in header with unread count, mark-as-read. FollowButton on all entity detail pages. Push subscription management in service worker. Notification preferences per user per channel.
 
 ### System Design Choices
 -   **Database Schema:** Comprehensive schemas for users, invites, sessions, audit logs, app features, releases, contacts, venue photos, and venue files, including relationships and specific data types for each entity.

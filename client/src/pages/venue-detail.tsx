@@ -3,6 +3,7 @@ import { useParams } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
+import { FollowButton } from "@/components/follow-button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -299,12 +300,15 @@ export default function VenueDetailPage() {
                   )}
                 </div>
               )}
-              <h1
-                className="text-2xl font-bold"
-                data-testid="text-venue-name"
-              >
-                {venue.name}
-              </h1>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h1
+                  className="text-2xl font-bold"
+                  data-testid="text-venue-name"
+                >
+                  {venue.name}
+                </h1>
+                <FollowButton entityType="venue" entityId={id!} />
+              </div>
               {venue.shortDescription && (
                 <p
                   className="text-muted-foreground mt-2"

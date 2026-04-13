@@ -1131,7 +1131,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
@@ -2667,6 +2667,100 @@ export const updateBrandSchema = insertBrandSchema.partial();
 
 export type CreateBrand = z.infer<typeof insertBrandSchema>;
 export type UpdateBrand = z.infer<typeof updateBrandSchema>;
+
+// ===== NOTIFICATION SYSTEM TABLES =====
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    recipientId: varchar("recipient_id").notNull().references(() => users.id),
+    type: varchar("type", { length: 100 }).notNull(),
+    title: varchar("title", { length: 500 }).notNull(),
+    body: text("body"),
+    entityType: varchar("entity_type", { length: 50 }),
+    entityId: varchar("entity_id"),
+    read: boolean("read").default(false).notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_notifications_recipient").on(table.recipientId),
+    index("idx_notifications_recipient_read").on(table.recipientId, table.read),
+    index("idx_notifications_created_at").on(table.createdAt),
+  ],
+);
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const entityFollows = pgTable(
+  "entity_follows",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("uq_entity_follows_user_entity").on(table.userId, table.entityType, table.entityId),
+    index("idx_entity_follows_entity").on(table.entityType, table.entityId),
+    index("idx_entity_follows_user").on(table.userId),
+  ],
+);
+
+export type EntityFollow = typeof entityFollows.$inferSelect;
+export type InsertEntityFollow = typeof entityFollows.$inferInsert;
+
+export const insertEntityFollowSchema = createInsertSchema(entityFollows).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    subscription: jsonb("subscription").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_push_subscriptions_user").on(table.userId),
+  ],
+);
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id).unique(),
+    emailEnabled: boolean("email_enabled").default(true).notNull(),
+    pushEnabled: boolean("push_enabled").default(true).notNull(),
+    inAppEnabled: boolean("in_app_enabled").default(true).notNull(),
+  },
+);
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+});
 
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),

@@ -28,6 +28,7 @@ import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { TagAssignment } from "@/components/ui/tag-assignment";
+import { FollowButton } from "@/components/follow-button";
 import {
   Loader2,
   Trash2,
@@ -380,9 +381,12 @@ export default function DealDetail() {
           <div className="sticky top-0 bg-background z-10">
             <div className="max-w-4xl p-4 md:px-6 pb-2 md:pb-2">
               <div className="flex flex-col gap-2 ">
-                <span className="text-sm font-semibold">
-                  {deal.client?.name}
-                </span>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-sm font-semibold">
+                    {deal.client?.name}
+                  </span>
+                  <FollowButton entityType="deal" entityId={id!} />
+                </div>
 
                 <EditableTitle
                   value={deal.displayName}

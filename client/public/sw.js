@@ -53,3 +53,65 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let data;
+  try {
+    data = event.data.json();
+  } catch {
+    data = { title: "New Notification", body: event.data.text() };
+  }
+
+  const options = {
+    body: data.body || "",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    data: {
+      entityType: data.entityType,
+      entityId: data.entityId,
+      type: data.type,
+    },
+    tag: data.type + "-" + (data.entityId || Date.now()),
+    renotify: true,
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const data = event.notification.data || {};
+  let url = "/";
+
+  if (data.entityType && data.entityId) {
+    const routeMap = {
+      deal: "/deals/",
+      venue: "/venues/",
+      vendor: "/vendors/",
+      contact: "/contacts/",
+      client: "/clients/",
+      app_feature: "/features/",
+      app_issue: "/issues/",
+      form_request: "/form-requests/",
+    };
+    const prefix = routeMap[data.entityType];
+    if (prefix) {
+      url = prefix + data.entityId;
+    }
+  }
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.postMessage({ type: "NOTIFICATION_CLICK", url });
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});

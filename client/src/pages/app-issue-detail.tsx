@@ -28,6 +28,7 @@ import { SquarePen, Trash2, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import type { AppIssueWithRelations, IssueSeverity, IssueStatus } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
+import { FollowButton } from "@/components/follow-button";
 
 const statusLabels: Record<IssueStatus, string> = {
   reported: "Reported",
@@ -167,6 +168,7 @@ export default function AppIssueDetail() {
                   {issue.title}
                 </h1>
               </div>
+              <FollowButton entityType="app_issue" entityId={issue.id} />
             </div>
           </div>
 

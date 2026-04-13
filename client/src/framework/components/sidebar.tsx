@@ -34,6 +34,7 @@ import { useTheme } from "@/lib/theme-provider";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTierOverride } from "@/contexts/tier-override-context";
 import Logo from "./logo";
+import { NotificationBell } from "@/components/notification-bell";
 import type { NavItem, NavSection } from "../types/layout";
 import type { Role } from "@shared/permissions";
 
@@ -323,7 +324,7 @@ export default function Sidebar({
         </div>
 
         {onSearch && (
-          <div className="px-4 pt-3 pb-2 bg-sidebar fle">
+          <div className="px-4 pt-3 pb-0 bg-sidebar fle">
             {showExpanded ? (
               <Button
                 variant="ghost"
@@ -354,6 +355,25 @@ export default function Sidebar({
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>
                   Search (⌘K)
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
+
+        {role === "admin" && (
+          <div className="px-4 pt-2 pb-2 bg-sidebar">
+            {showExpanded ? (
+              <NotificationBell variant="sidebar" />
+            ) : (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <div>
+                    <NotificationBell variant="sidebar-collapsed" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  Notifications
                 </TooltipContent>
               </Tooltip>
             )}

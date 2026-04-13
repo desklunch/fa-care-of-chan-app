@@ -1,6 +1,7 @@
 import { BaseService, ServiceError } from "./base.service";
 import { domainEvents } from "../lib/events";
 import type { IStorage } from "../storage";
+import { notificationsStorage } from "../domains/notifications/notifications.storage";
 import type {
   Deal,
   DealWithRelations,
@@ -56,6 +57,14 @@ export class DealsService extends BaseService {
     }
 
     const deal = await this.storage.createDeal(parsed.data, actorId);
+
+    if (deal.ownerId) {
+      notificationsStorage
+        .createFollow(deal.ownerId, "deal", deal.id)
+        .catch((err) =>
+          console.error("[DealsService] Auto-follow on create failed:", err),
+        );
+    }
 
     domainEvents.emit({
       type: "deal:created",
@@ -120,6 +129,11 @@ export class DealsService extends BaseService {
         actorId,
         timestamp: new Date(),
       });
+
+      if (existingDeal.ownerId) {
+        void notificationsStorage.removeFollow(existingDeal.ownerId, "deal", id).catch(() => {});
+      }
+      void notificationsStorage.createFollow(updatedDeal.ownerId, "deal", id).catch(() => {});
     }
 
     return updatedDeal;
@@ -200,6 +214,11 @@ export class DealsService extends BaseService {
       actorId,
       timestamp: new Date(),
     });
+
+    if (existingDeal.ownerId) {
+      void notificationsStorage.removeFollow(existingDeal.ownerId, "deal", id).catch(() => {});
+    }
+    void notificationsStorage.createFollow(ownerId, "deal", id).catch(() => {});
 
     return updatedDeal;
   }

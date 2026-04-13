@@ -9,6 +9,7 @@ import {
   updateCommentSchema,
   commentEntityTypes,
 } from "@shared/schema";
+import { domainEvents } from "../../lib/events";
 
 export function registerSettingsCommentsRoutes(app: Express): void {
   // ===== THEME SETTINGS ROUTES =====
@@ -119,6 +120,35 @@ export function registerSettingsCommentsRoutes(app: Express): void {
         status: "success",
         metadata: { targetEntityType: result.data.entityType, targetEntityId: result.data.entityId },
       });
+
+      if (result.data.parentId) {
+        const parentComment = await settingsCommentsStorage.getEntityCommentById(result.data.parentId);
+        if (parentComment) {
+          domainEvents.emit({
+            type: "comment:reply_created",
+            commentId: comment.id,
+            body: result.data.body,
+            entityType: result.data.entityType,
+            entityId: result.data.entityId,
+            parentCommentId: result.data.parentId,
+            parentCommentAuthorId: parentComment.createdById,
+            authorId: userId,
+            actorId: userId,
+            timestamp: new Date(),
+          });
+        }
+      } else {
+        domainEvents.emit({
+          type: "comment:created",
+          commentId: comment.id,
+          body: result.data.body,
+          entityType: result.data.entityType,
+          entityId: result.data.entityId,
+          authorId: userId,
+          actorId: userId,
+          timestamp: new Date(),
+        });
+      }
 
       res.status(201).json(commentWithAuthor);
     } catch (error) {

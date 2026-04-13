@@ -4,6 +4,7 @@ import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { FollowButton } from "@/components/follow-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -238,6 +239,9 @@ export default function ClientDetail() {
         <div className="sticky top-0 bg-background z-10">
           <div className="p-4 md:p-6 pb-2 md:pb-2">
               <div className="space-y-1">
+                <div className="flex items-center justify-end">
+                  <FollowButton entityType="client" entityId={id!} />
+                </div>
     
             <PermissionGate permission="clients.write" behavior="fallback" fallback={
               <h1 className="text-3xl font-bold" data-testid="text-vendor-name">

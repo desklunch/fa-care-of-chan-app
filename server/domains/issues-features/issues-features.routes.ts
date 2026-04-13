@@ -14,6 +14,8 @@ import {
   type FeatureStatus,
 } from "@shared/schema";
 import { storage } from "../../storage";
+import { domainEvents } from "../../lib/events";
+import { notificationsStorage } from "../notifications/notifications.storage";
 
 export function registerIssuesFeaturesRoutes(app: Express): void {
   // ===== FEATURES ROUTES =====
@@ -76,6 +78,8 @@ export function registerIssuesFeaturesRoutes(app: Express): void {
         entityId: feature.id,
         changes: { after: result.data as Record<string, unknown> },
       });
+
+      void notificationsStorage.createFollow(userId, "app_feature", feature.id).catch(() => {});
 
       res.status(201).json(feature);
     } catch (error) {
@@ -279,6 +283,18 @@ export function registerIssuesFeaturesRoutes(app: Express): void {
         metadata: { featureId: req.params.id },
       });
 
+      domainEvents.emit({
+        type: "feature_comment:created",
+        commentId: comment.id,
+        body: result.data.body,
+        featureId: req.params.id,
+        featureTitle: feature.title,
+        featureCreatedById: feature.createdById,
+        authorId: userId,
+        actorId: userId,
+        timestamp: new Date(),
+      });
+
       res.status(201).json(comment);
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -382,6 +398,8 @@ export function registerIssuesFeaturesRoutes(app: Express): void {
         entityId: issue.id,
         changes: { after: result.data as Record<string, unknown> },
       });
+
+      void notificationsStorage.createFollow(userId, "app_issue", issue.id).catch(() => {});
 
       res.status(201).json(issue);
     } catch (error) {

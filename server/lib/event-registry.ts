@@ -203,6 +203,50 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).contactId ?? null,
     },
   },
+  "comment:created": {
+    type: "comment:created",
+    audit: {
+      action: "create",
+      entityType: "comment" as any,
+      extractEntityId: (e) => (e as any).commentId ?? null,
+      extractChanges: (e) => ({
+        entityType: (e as any).entityType,
+        entityId: (e as any).entityId,
+      }),
+    },
+  },
+  "comment:reply_created": {
+    type: "comment:reply_created",
+    audit: {
+      action: "create",
+      entityType: "comment" as any,
+      extractEntityId: (e) => (e as any).commentId ?? null,
+      extractChanges: (e) => ({
+        entityType: (e as any).entityType,
+        entityId: (e as any).entityId,
+        parentCommentId: (e as any).parentCommentId,
+      }),
+    },
+  },
+  "form:submission_received": {
+    type: "form:submission_received",
+    audit: {
+      action: "create",
+      entityType: "form_response",
+      extractEntityId: (e) => (e as any).formRequestId ?? null,
+    },
+  },
+  "feature_comment:created": {
+    type: "feature_comment:created",
+    audit: {
+      action: "create",
+      entityType: "feature_comment",
+      extractEntityId: (e) => (e as any).commentId ?? null,
+      extractChanges: (e) => ({
+        featureId: (e as any).featureId,
+      }),
+    },
+  },
 };
 
 export type RegisteredEventType = keyof typeof EVENT_REGISTRY;

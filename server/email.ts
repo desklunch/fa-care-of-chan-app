@@ -1,8 +1,8 @@
 import { Resend } from 'resend';
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@functionalartists.ai';
+export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@functionalartists.ai';
 
-function getResendClient(): Resend {
+export function getResendClient(): Resend {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     throw new Error('RESEND_API_KEY environment variable is not set');

@@ -39,6 +39,7 @@ import type {
 } from "@shared/schema";
 import { featureStatuses, featurePriorities } from "@shared/schema";
 import { formatTimeAgo } from "@/lib/format-time";
+import { FollowButton } from "@/components/follow-button";
 import { PriorityIcon, priorityLabels } from "@/components/priority-icon";
 import { format } from "date-fns";
 
@@ -249,7 +250,7 @@ export default function AppFeatureDetail() {
     >
       <Tabs defaultValue="overview" className="w-full">
         <div className="p-4 md:p-6 pb-0">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <Badge
               variant="outline"
               style={{
@@ -259,6 +260,10 @@ export default function AppFeatureDetail() {
             >
               {feature.category.name}
             </Badge>
+            <div className="flex-1" />
+            <FollowButton entityType="app_feature" entityId={feature.id} />
+          </div>
+          <div className="flex items-center gap-4">
             <EditableTitle
               value={feature.title}
               onSave={(value) => handleFieldSave("title", value)}

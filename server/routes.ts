@@ -72,6 +72,8 @@ import { registerTypeformWebhookRoutes } from "./domains/typeform-webhook";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { ensureReplitAgentUser } from "./mcp/index";
 import { setupCsrf } from "./middleware/csrf";
+import { registerNotificationsRoutes } from "./domains/notifications";
+import { initializeNotificationService } from "./domains/notifications/notifications.service";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -97,6 +99,9 @@ export async function registerRoutes(
   // Initialize audit bridge - domain events will be persisted to audit_logs
   initializeAuditBridge();
 
+  // Initialize notification service - domain events will trigger notifications
+  initializeNotificationService();
+
   // Register webhook routes (no auth required, before domain routes)
   registerTypeformWebhookRoutes(app);
 
@@ -116,6 +121,7 @@ export async function registerRoutes(
   await seedDealStatuses();
   await seedRoles();
   await ensureReplitAgentUser();
+  registerNotificationsRoutes(app);
   registerDriveAttachmentsRoutes(app);
   registerAiChatRoutes(app);
 

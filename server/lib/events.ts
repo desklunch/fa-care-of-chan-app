@@ -158,6 +158,51 @@ export interface VenueFileDeletedEvent {
   timestamp: Date;
 }
 
+export interface CommentCreatedEvent {
+  type: "comment:created";
+  commentId: string;
+  body: string;
+  entityType: string;
+  entityId: string;
+  authorId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface CommentReplyCreatedEvent {
+  type: "comment:reply_created";
+  commentId: string;
+  body: string;
+  entityType: string;
+  entityId: string;
+  parentCommentId: string;
+  parentCommentAuthorId: string;
+  authorId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FormSubmissionReceivedEvent {
+  type: "form:submission_received";
+  formRequestId: string;
+  formRequestTitle: string;
+  respondentName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface FeatureCommentCreatedEvent {
+  type: "feature_comment:created";
+  commentId: string;
+  body: string;
+  featureId: string;
+  featureTitle: string;
+  featureCreatedById: string;
+  authorId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface ContactCreatedEvent {
   type: "contact:created";
   contactId: string;
@@ -205,7 +250,11 @@ export type DomainEvent =
   | VenueFileDeletedEvent
   | ContactCreatedEvent
   | ContactUpdatedEvent
-  | ContactDeletedEvent;
+  | ContactDeletedEvent
+  | CommentCreatedEvent
+  | CommentReplyCreatedEvent
+  | FormSubmissionReceivedEvent
+  | FeatureCommentCreatedEvent;
 
 type EventMap = {
   "deal:created": DealCreatedEvent;
@@ -230,6 +279,10 @@ type EventMap = {
   "contact:created": ContactCreatedEvent;
   "contact:updated": ContactUpdatedEvent;
   "contact:deleted": ContactDeletedEvent;
+  "comment:created": CommentCreatedEvent;
+  "comment:reply_created": CommentReplyCreatedEvent;
+  "form:submission_received": FormSubmissionReceivedEvent;
+  "feature_comment:created": FeatureCommentCreatedEvent;
   "*": DomainEvent;
 };
 

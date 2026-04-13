@@ -4,6 +4,7 @@ import { formsStorage } from "./forms.storage";
 import { logAuditEvent } from "../../audit";
 import { insertFormTemplateSchema, updateFormTemplateSchema, insertFormRequestSchema, updateFormRequestSchema, insertFormResponseSchema, RecipientType } from "@shared/schema";
 import { sendFormRequestEmail } from "../../email";
+import { domainEvents } from "../../lib/events";
 
 export function registerFormsRoutes(app: Express): void {
   // ==========================================
@@ -440,6 +441,24 @@ export function registerFormsRoutes(app: Express): void {
 
       const response = await formsStorage.createOrUpdateFormResponse(tokenRecord.id, result.data);
       await formsStorage.markOutreachTokenResponded(req.params.token);
+
+      const formRequest = await formsStorage.getFormRequestById(tokenRecord.requestId);
+      let respondentName = "Unknown";
+      if (tokenRecord.recipientType === "vendor") {
+        respondentName = tokenRecord.vendor?.businessName || "Vendor";
+      } else if (tokenRecord.recipientType === "contact") {
+        const c = tokenRecord.contact;
+        respondentName = c ? `${c.firstName || ""} ${c.lastName || ""}`.trim() : "Contact";
+      }
+
+      domainEvents.emit({
+        type: "form:submission_received",
+        formRequestId: tokenRecord.requestId,
+        formRequestTitle: formRequest?.title || "Form",
+        respondentName,
+        actorId: "system",
+        timestamp: new Date(),
+      });
 
       res.json({ message: "Response submitted successfully", response });
     } catch (error) {
