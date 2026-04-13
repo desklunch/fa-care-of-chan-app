@@ -13,6 +13,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { NavigationWatchdog } from "@/hooks/useNavigationWatchdog";
 import { NavigationLogger } from "@/hooks/useNavigationLogger";
 import { InputLogger } from "@/hooks/useInputLogger";
+import { PointerEventsFix } from "@/hooks/usePointerEventsFix";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import "@/lib/debug-logger";
@@ -565,6 +566,7 @@ function App() {
               <NavigationWatchdog />
               <NavigationLogger />
               <InputLogger />
+              <PointerEventsFix />
               <Toaster />
               <PwaUpdateBanner />
               <OfflineOverlay />

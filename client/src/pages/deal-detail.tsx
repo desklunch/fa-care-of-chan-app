@@ -254,7 +254,6 @@ export default function DealDetail() {
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       toast({ title: "Deal deleted successfully" });
       setShowDeleteDialog(false);
-      setTimeout(() => document.body.style.removeProperty("pointer-events"), 300);
       setLocation("/deals");
     },
     onError: (error: Error) => {

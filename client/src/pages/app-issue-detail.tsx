@@ -102,7 +102,6 @@ export default function AppIssueDetail() {
       queryClient.invalidateQueries({ queryKey: ["/api/app-issues"] });
       toast({ title: "Issue deleted successfully!" });
       setShowDeleteDialog(false);
-      setTimeout(() => document.body.style.removeProperty("pointer-events"), 300);
       setLocation("/app/issues");
     },
     onError: (error: Error) => {
