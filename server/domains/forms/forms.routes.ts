@@ -330,7 +330,7 @@ export function registerFormsRoutes(app: Express): void {
 
         try {
           const formUrl = `${baseUrl}/form/${tokenRecord.token}`;
-          await sendFormRequestEmail(
+          const emailResult = await sendFormRequestEmail(
             recipientEmail,
             recipientName,
             request.title,
@@ -338,6 +338,12 @@ export function registerFormsRoutes(app: Express): void {
             formUrl,
             request.dueDate
           );
+
+          if (!emailResult.success) {
+            console.error(`Failed to send email to ${recipientEmail}:`, emailResult.error);
+            errors.push(`Failed to send to ${recipientEmail}`);
+            continue;
+          }
 
           await formsStorage.markOutreachTokenSent(tokenRecord.token);
           sentCount++;

@@ -47,3 +47,8 @@ defaultBucketID = "replit-objstore-b1946b63-bf7e-401f-94ac-91f8b189950f"
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 60000
+
+[userenv]
+
+[userenv.shared]
+RESEND_FROM_EMAIL = "noreply@functionalartists.ai"

@@ -1,46 +1,13 @@
-// SendGrid Email Service Integration
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 
-let connectionSettings: any;
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@functionalartists.ai';
 
-async function getCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? 'repl ' + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-      ? 'depl ' + process.env.WEB_REPL_RENEWAL
-      : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+function getResendClient(): Resend {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is not set');
   }
-
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=sendgrid',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || (!connectionSettings.settings.api_key || !connectionSettings.settings.from_email)) {
-    throw new Error('SendGrid not connected');
-  }
-  return { apiKey: connectionSettings.settings.api_key, email: connectionSettings.settings.from_email };
-}
-
-// WARNING: Never cache this client.
-// Access tokens expire, so a new client must be created each time.
-// Always call this function again to get a fresh client.
-async function getUncachableSendGridClient() {
-  const { apiKey, email } = await getCredentials();
-  sgMail.setApiKey(apiKey);
-  return {
-    client: sgMail,
-    fromEmail: email
-  };
+  return new Resend(apiKey);
 }
 
 interface VendorUpdateEmailResult {
@@ -54,7 +21,7 @@ export async function sendVendorUpdateEmail(
   updateLink: string
 ): Promise<VendorUpdateEmailResult> {
   try {
-    const { client, fromEmail } = await getUncachableSendGridClient();
+    const resend = getResendClient();
     
     const htmlContent = `
 <!DOCTYPE html>
@@ -129,16 +96,20 @@ This link is unique to your business and will expire in 30 days.
 If you didn't expect this email or have questions, please contact us.
     `.trim();
 
-    const msg = {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
       to: recipientEmail,
-      from: fromEmail,
       subject: `Update your vendor profile - ${vendorName}`,
       text: textContent,
       html: htmlContent,
-    };
+    });
 
-    await client.send(msg);
-    console.log(`Vendor update email sent successfully to ${recipientEmail}`);
+    if (error) {
+      console.error('Failed to send vendor update email:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`Vendor update email sent successfully to ${recipientEmail} (id: ${data?.id})`);
     return { success: true };
   } catch (error) {
     console.error('Failed to send vendor update email:', error);
@@ -160,7 +131,7 @@ export async function sendFormRequestEmail(
   dueDate: Date | null
 ): Promise<FormRequestEmailResult> {
   try {
-    const { client, fromEmail } = await getUncachableSendGridClient();
+    const resend = getResendClient();
     
     const dueDateText = dueDate 
       ? `Please complete this form by <strong>${new Date(dueDate).toLocaleDateString('en-US', { 
@@ -241,16 +212,20 @@ What to expect:
 This link is unique to you. Please do not share it.
     `.trim();
 
-    const msg = {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
       to: recipientEmail,
-      from: fromEmail,
       subject: `Action Required: ${requestTitle}`,
       text: textContent,
       html: htmlContent,
-    };
+    });
 
-    await client.send(msg);
-    console.log(`Form request email sent successfully to ${recipientEmail}`);
+    if (error) {
+      console.error('Failed to send form request email:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`Form request email sent successfully to ${recipientEmail} (id: ${data?.id})`);
     return { success: true };
   } catch (error) {
     console.error('Failed to send form request email:', error);

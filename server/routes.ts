@@ -49,7 +49,6 @@ import {
   insertClientSchema,
   updateClientSchema,
 } from "@shared/schema";
-import { sendVendorUpdateEmail, sendFormRequestEmail } from "./email";
 import { logAuditEvent, getChangedFields } from "./audit";
 import aiRoutes from "./routes/ai.routes";
 import mcpRoutes from "./mcp/transport";

@@ -66,6 +66,12 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `typeform-webhook.storage.ts` - Typeform webhook find-or-create logic for deals/contacts/clients
     - `typeform-webhook.routes.ts` - POST /api/webhooks/typeform endpoint with signature verification
     
+    **Email Service:**
+    - Provider: Resend (via `resend` npm package) — replaced SendGrid
+    - Configuration: `RESEND_API_KEY` secret, `RESEND_FROM_EMAIL` env var (defaults to noreply@functionalartists.ai)
+    - Functions: `sendVendorUpdateEmail`, `sendFormRequestEmail` in `server/email.ts`
+    - Used by: `server/domains/vendors/vendors.routes.ts`, `server/domains/forms/forms.routes.ts`
+    
     **Hybrid Service Layer:**
     - DealsService uses main storage interface for business logic with domain events
     - Other domains use direct storage access from domain storage files
