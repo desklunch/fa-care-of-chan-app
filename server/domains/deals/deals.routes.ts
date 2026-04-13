@@ -804,22 +804,8 @@ export function registerDealsRoutes(app: Express): void {
   app.post("/api/deals/:id/linked-clients", isAuthenticated, async (req: any, res) => {
     try {
       const { clientId, label } = req.body;
-      if (!clientId) {
-        return res.status(400).json({ message: "clientId is required" });
-      }
-      await dealsStorage.linkDealClient(req.params.id, clientId, label);
-
       const actorId = req.user.claims.sub;
-      domainEvents.emit({
-        type: "deal:client_linked",
-        dealId: req.params.id,
-        clientId,
-        label,
-        actorId,
-        timestamp: new Date(),
-      });
-
-      const linkedClients = await dealsStorage.getLinkedClientsByDealId(req.params.id);
+      const linkedClients = await dealsService.linkClient(req.params.id, clientId, actorId, label);
       res.status(201).json(linkedClients);
     } catch (error) {
       handleServiceError(res, error, "Failed to link client to deal");
@@ -828,17 +814,8 @@ export function registerDealsRoutes(app: Express): void {
 
   app.delete("/api/deals/:id/linked-clients/:clientId", isAuthenticated, async (req: any, res) => {
     try {
-      await dealsStorage.unlinkDealClient(req.params.id, req.params.clientId);
-
       const actorId = req.user.claims.sub;
-      domainEvents.emit({
-        type: "deal:client_unlinked",
-        dealId: req.params.id,
-        clientId: req.params.clientId,
-        actorId,
-        timestamp: new Date(),
-      });
-
+      await dealsService.unlinkClient(req.params.id, req.params.clientId, actorId);
       res.status(204).send();
     } catch (error) {
       handleServiceError(res, error, "Failed to unlink client from deal");
@@ -847,7 +824,7 @@ export function registerDealsRoutes(app: Express): void {
 
   app.get("/api/deals/:id/tags", isAuthenticated, async (req, res) => {
     try {
-      const tagIds = await dealsStorage.getDealTagIds(req.params.id);
+      const tagIds = await dealsService.getDealTagIds(req.params.id);
       res.json(tagIds);
     } catch (error) {
       handleServiceError(res, error, "Failed to fetch deal tags");
@@ -857,20 +834,8 @@ export function registerDealsRoutes(app: Express): void {
   app.put("/api/deals/:id/tags", isAuthenticated, async (req: any, res) => {
     try {
       const { tagIds } = req.body;
-      if (!Array.isArray(tagIds)) {
-        return res.status(400).json({ message: "tagIds must be an array" });
-      }
-      await dealsStorage.setDealTags(req.params.id, tagIds);
-
       const actorId = req.user.claims.sub;
-      domainEvents.emit({
-        type: "deal:tags_updated",
-        dealId: req.params.id,
-        tagIds,
-        actorId,
-        timestamp: new Date(),
-      });
-
+      await dealsService.setDealTags(req.params.id, tagIds, actorId);
       res.json({ success: true });
     } catch (error) {
       handleServiceError(res, error, "Failed to update deal tags");

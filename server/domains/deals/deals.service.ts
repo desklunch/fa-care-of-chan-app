@@ -1,7 +1,7 @@
 import { BaseService, ServiceError } from "../../services/base.service";
 import { domainEvents } from "../../lib/events";
 import { notificationsStorage } from "../notifications/notifications.storage";
-import { dealsStorage } from "./deals.storage";
+import { dealsStorage, type DealLinkedClient } from "./deals.storage";
 import type {
   Deal,
   DealWithRelations,
@@ -362,6 +362,89 @@ export class DealsService extends BaseService {
     });
 
     return newDeal;
+  }
+
+  async linkClient(dealId: string, clientId: string, actorId: string, label?: string | null): Promise<DealLinkedClient[]> {
+    this.ensureExists(
+      await this.storage.getDealById(dealId),
+      "Deal",
+      dealId
+    );
+
+    if (!clientId) {
+      throw ServiceError.validation("clientId is required");
+    }
+
+    await dealsStorage.linkDealClient(dealId, clientId, label);
+
+    domainEvents.emit({
+      type: "deal:client_linked",
+      dealId,
+      clientId,
+      label,
+      actorId,
+      timestamp: new Date(),
+    });
+
+    return dealsStorage.getLinkedClientsByDealId(dealId);
+  }
+
+  async unlinkClient(dealId: string, clientId: string, actorId: string): Promise<void> {
+    this.ensureExists(
+      await this.storage.getDealById(dealId),
+      "Deal",
+      dealId
+    );
+
+    await dealsStorage.unlinkDealClient(dealId, clientId);
+
+    domainEvents.emit({
+      type: "deal:client_unlinked",
+      dealId,
+      clientId,
+      actorId,
+      timestamp: new Date(),
+    });
+  }
+
+  async getLinkedClients(dealId: string): Promise<DealLinkedClient[]> {
+    this.ensureExists(
+      await this.storage.getDealById(dealId),
+      "Deal",
+      dealId
+    );
+
+    return dealsStorage.getLinkedClientsByDealId(dealId);
+  }
+
+  async getDealTagIds(dealId: string): Promise<string[]> {
+    return dealsStorage.getDealTagIds(dealId);
+  }
+
+  async setDealTags(dealId: string, tagIds: string[], actorId: string): Promise<void> {
+    if (!Array.isArray(tagIds)) {
+      throw ServiceError.validation("tagIds must be an array");
+    }
+
+    this.ensureExists(
+      await this.storage.getDealById(dealId),
+      "Deal",
+      dealId
+    );
+
+    await dealsStorage.setDealTags(dealId, tagIds);
+
+    domainEvents.emit({
+      type: "deal:tags_updated",
+      dealId,
+      tagIds,
+      actorId,
+      timestamp: new Date(),
+    });
+  }
+
+  async getAllDealTags(): Promise<{ dealId: string; tagId: string; tagName: string }[]> {
+    return dealsStorage.getAllDealTags();
   }
 
   private computeChanges(before: DealWithRelations, after: Deal): Partial<Deal> {

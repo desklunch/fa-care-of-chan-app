@@ -8,7 +8,8 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.12.3",
@@ -141,7 +142,8 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
-    "vite": "^5.4.20"
+    "vite": "^5.4.20",
+    "vitest": "^4.1.4"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
