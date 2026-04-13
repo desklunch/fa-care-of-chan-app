@@ -228,7 +228,7 @@ function useLayoutConfig() {
       {
         heading: "Directory",
         defaultCollapsed: false,
-        requiredPermission: "deals.read",
+        requiredPermission: "venues.read",
 
         items: [
           {
