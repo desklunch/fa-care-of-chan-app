@@ -1,7 +1,9 @@
 # Monolithic Backend Refactoring Plan
 
+> **⚠️ SUPERSEDED:** This document (v1) has been superseded by `docs/refactor-monolithic-files-plan-v2.md`, which is the canonical reference for the backend refactoring plan. This file is retained for historical context only. Do not use this document for current architecture decisions.
+
 **Created:** January 15, 2026  
-**Status:** Draft - Pending Approval  
+**Status:** SUPERSEDED by v2 (see `docs/refactor-monolithic-files-plan-v2.md`)  
 **Purpose:** Split routes.ts and storage.ts into domain-based modules with hybrid service layer strategy
 
 ---

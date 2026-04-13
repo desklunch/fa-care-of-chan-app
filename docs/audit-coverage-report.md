@@ -1,20 +1,40 @@
 # Audit Coverage Report
 
 **Generated:** January 8, 2026  
+**Last Updated:** April 2026  
 **Status:** Implementation Complete ✅
 
 ---
 
 ## Executive Summary
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Total API Routes | 204 | 204 |
-| Mutating Routes (POST/PATCH/PUT/DELETE) | 120 | 120 |
-| Routes with Audit Logging | 62 (52%) | 110 (92%) |
-| Routes Missing Audit Logging | 58 (48%) | 10 (8%) |
+| Metric | Before (Jan 2026) | After (Jan 2026) | Current (April 2026) |
+|--------|--------|-------|-------|
+| Total API Routes | 204 | 204 | 258 |
+| Mutating Routes (POST/PATCH/PUT/DELETE) | 120 | 120 | 150 |
+| Routes with Audit Logging | 62 (52%) | 110 (92%) | ~140 (93%) |
+| Routes Missing Audit Logging | 58 (48%) | 10 (8%) | ~10 (intentionally excluded) |
 
 **Note:** Remaining 10 routes are intentionally excluded (analytics, search operations).
+
+### Audit Approach by Domain (April 2026)
+
+| Domain | Audit Approach | Service Layer | Event Types |
+|--------|---------------|---------------|-------------|
+| Deals | Event-based | ✅ DealsService | 20 events |
+| Venues | Event-based | ✅ VenuesService | 15 events |
+| Contacts | Event-based | ✅ ContactsService | 7 events |
+| Clients | Event-based | ✅ ClientsService | 5 events |
+| Vendors | Event-based | ✅ VendorsService | 8 events |
+| Forms | Mixed: manual `logAuditEvent()` + event emit for `form:submission_received` | No | 8 event types registered |
+| Admin | Manual `logAuditEvent()` | No | - |
+| Reference Data | Manual `logAuditEvent()` | No | - |
+| Releases | Manual `logAuditEvent()` | No | - |
+| Issues-Features | Mixed: manual `logAuditEvent()` + event emit for `feature_comment:created` | No | - |
+| Settings-Comments | Mixed: manual `logAuditEvent()` + event emit for `comment:created`, `comment:reply_created` | No | - |
+| Auth | Event-based (direct emit in replitAuth.ts) | N/A | 2 events (user:logged_in, user:logged_out) |
+
+**Total registered event types:** 68 (in `server/lib/event-registry.ts`)
 
 ---
 
@@ -203,5 +223,16 @@ Release management uses descriptive action types:
 | Error/failure logging | ✅ Implemented |
 | Change tracking (before/after) | ✅ Implemented |
 | Exclusions documented | ✅ Documented |
+| Event-based audit (CRM domains) | ✅ 5 domains: Deals, Venues, Contacts, Clients, Vendors |
+| Event registry coverage | ✅ 68 event types registered with audit mappings |
 
-**Total Routes Audited:** 48 new routes + 62 existing = 110 routes (92% of mutating routes)
+**Route Audit Coverage (April 2026, verified via grep):** 258 total routes, 150 mutating routes. Of mutating routes, 140 have audit logging (93%). 10 intentionally excluded (5 analytics tracking + 5 search/read-via-POST).
+
+**Canonical Service Pattern (April 2026):**
+```
+Route → Service → Storage + Domain Events → Audit Bridge → audit_logs
+```
+Applied to: Deals, Venues, Contacts, Clients, Vendors.
+Mixed approach (manual + selective events): Forms, Issues-Features, Settings-Comments.
+Manual only: Admin, Reference Data, Releases.
+Event-based (direct emit): Auth (login/logout).

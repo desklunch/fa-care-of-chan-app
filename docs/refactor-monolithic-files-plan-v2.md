@@ -1,10 +1,10 @@
 # Monolithic Backend Refactoring Plan v2
 
 **Created:** January 15, 2026  
-**Last Updated:** January 16, 2026  
-**Version:** 2.4 (Refactor Complete)  
-**Status:** ✅ COMPLETE - Phases 0-12 Done (201 routes extracted, 92% reduction in routes.ts)  
-**Purpose:** Split routes.ts and storage.ts into domain-based modules with hybrid service layer strategy
+**Last Updated:** April 13, 2026  
+**Version:** 2.5 (Service Layer Standardization Complete)  
+**Status:** ✅ COMPLETE - Phases 0-12 Done + Service layers added for 5 CRM domains  
+**Purpose:** Split routes.ts and storage.ts into domain-based modules with service layer strategy
 
 ---
 
@@ -42,19 +42,26 @@ This plan addresses the "Monolithic Backend Files" issue identified in audit-202
 
 | Component | Location | Purpose | Status |
 |-----------|----------|---------|--------|
-| Domain Events | `server/lib/events.ts` | 22 event types defined | Active |
-| Event Registry | `server/lib/event-registry.ts` | Maps events → audit format | Active |
+| Domain Events | `server/lib/events.ts` | 68 event types defined across 11 domains | Active |
+| Event Registry | `server/lib/event-registry.ts` | 68 registered event-to-audit mappings | Active |
 | Audit Bridge | `server/lib/audit-bridge.ts` | Auto-persists events to audit_logs | Active |
 | Request Context | `server/lib/request-context.ts` | AsyncLocalStorage for request metadata | Active |
 | Base Service | `server/services/base.service.ts` | Service error handling, utilities | Active |
-| Deals Service | `server/services/deals.service.ts` | Only existing domain service (312 lines) | Active |
+| Deals Service | `server/domains/deals/deals.service.ts` | Deal pipeline business logic | Active |
+| Venues Service | `server/domains/venues/venues.service.ts` | Venue CRUD with domain events | Active |
+| Contacts Service | `server/domains/contacts/contacts.service.ts` | Contact management with domain events | Active |
+| Clients Service | `server/domains/clients/clients.service.ts` | Client management with domain events | Active |
+| Vendors Service | `server/domains/vendors/vendors.service.ts` | Vendor management with domain events | Active |
+| Notifications Service | `server/domains/notifications/notifications.service.ts` | Multi-channel notification routing | Active |
 
-### 1.2 Two Audit Patterns in Use
+### 1.2 Audit Patterns in Use
 
-| Pattern | Usage | Count |
-|---------|-------|-------|
-| Event-based | DealsService emits `domainEvents.emit()` → audit-bridge persists automatically | 11 routes |
-| Manual | Route calls `logAuditEvent(req, {...})` directly | 190 calls |
+| Pattern | Usage | Domains |
+|---------|-------|---------|
+| Event-based | Service emits `domainEvents.emit()` → audit-bridge persists automatically | Deals, Venues, Contacts, Clients, Vendors (5 CRM domains) |
+| Mixed | Manual `logAuditEvent()` + selective event emission | Forms, Issues-Features, Settings-Comments |
+| Manual only | Route calls `logAuditEvent(req, {...})` directly | Admin, Reference Data, Releases |
+| None | Read-only or external API routes, no audit logging | Places, AI Chat |
 
 ### 1.3 Middleware Initialization Order (Critical)
 
@@ -1078,15 +1085,17 @@ Add service layer for domains where:
 3. Multiple events should be emitted per operation
 4. Audit trail via events is preferred over manual logging
 
-### 7.2 Service Layer Roadmap
+### 7.2 Service Layer Status
 
-| Domain | Service | Timing | Reason |
+| Domain | Service | Status | Reason |
 |--------|---------|--------|--------|
-| Deals | EXISTS | Phase 9 | Relocate existing |
-| Venues | NEW | Phase 10 | AI can create/update venues |
-| Forms | NEW | Phase 11 | AI can send form requests |
-| Clients | FUTURE | Post-refactor | AI relationship management |
-| Vendors | FUTURE | Post-refactor | AI vendor outreach |
+| Deals | `server/domains/deals/deals.service.ts` | ✅ COMPLETE | Complex workflows, AI pipeline management |
+| Venues | `server/domains/venues/venues.service.ts` | ✅ COMPLETE | AI can create/update venues, manage photos/files |
+| Contacts | `server/domains/contacts/contacts.service.ts` | ✅ COMPLETE | Event-based audit, AI contact management |
+| Clients | `server/domains/clients/clients.service.ts` | ✅ COMPLETE | Event-based audit, AI relationship management |
+| Vendors | `server/domains/vendors/vendors.service.ts` | ✅ COMPLETE | Event-based audit, AI vendor outreach |
+| Notifications | `server/domains/notifications/notifications.service.ts` | ✅ COMPLETE | Multi-channel notification routing |
+| Forms | Direct storage | Routes → Storage + manual audit | Service layer not yet added |
 
 ### 7.3 Service Layer Pattern (Reference)
 
@@ -1235,24 +1244,35 @@ Complete system verification:
 
 ## Part 10: Integration with AI/MCP Roadmap
 
-### 10.1 Current State (from ai-mcp.md)
+### 10.1 Current State (April 2026)
 
-- Domain events: 22 types defined
-- Audit bridge: Functional
-- Service layer: Deals only
-- MCP readiness: Partial
+- Domain events: 68 types defined across 11 domains
+- Event registry: 68 registered event types with audit mappings
+- Audit bridge: Functional, persists all registered events
+- Service layers: Deals, Venues, Contacts, Clients, Vendors, Notifications (6 domains)
+- MCP readiness: Services callable directly by AI/MCP agents
+- Code organization: Domain-based modules under `server/domains/`
 
-### 10.2 Post-Refactor State
+### 10.2 Canonical Service Pattern
 
-- Service layer: Deals, Venues, Forms
-- New events: Venue CRUD (already defined), Form actions (new)
-- MCP actions: Can use services directly
-- Code organization: Domain-based, testable
+All service-layer domains follow this pattern:
 
-### 10.3 Future MCP Actions Enabled
+```
+Route → Service → Storage + Domain Events → Audit Bridge → audit_logs
+```
+
+- **Route**: Thin HTTP controller, parses request, delegates to service
+- **Service**: Business logic, input validation, emits domain events
+- **Storage**: Data persistence layer (Drizzle ORM)
+- **Domain Events**: Typed events emitted by services (68 types)
+- **Audit Bridge**: Subscribes to events, auto-persists to audit_logs table
+
+### 10.3 MCP Actions Enabled
+
+Services with event-based audit can be called directly by MCP/AI agents:
 
 ```typescript
-// Example MCP action using VenuesService
+// MCP action using VenuesService
 {
   name: "create_venue",
   handler: async (params, context) => {
@@ -1261,15 +1281,17 @@ Complete system verification:
   }
 }
 
-// Example MCP action using FormsService
+// MCP action using DealsService
 {
-  name: "send_form_request",
+  name: "update_deal_stage",
   handler: async (params, context) => {
-    const request = await formsService.sendRequest(params, context.actorId);
-    return { success: true, requestId: request.id };
+    const deal = await dealsService.updateStage(params.dealId, params.stage, context.actorId);
+    return { success: true, dealId: deal.id };
   }
 }
 ```
+
+Available service layers for MCP: DealsService, VenuesService, ContactsService, ClientsService, VendorsService.
 
 ---
 
@@ -1349,6 +1371,11 @@ Complete system verification:
 | 2026-01-16 | Phase 12 | **Complete** | Extracted Places domain (Google Places API). 10 routes. routes.ts: 2,334 → 1,644 (-690 lines). |
 | 2026-01-16 | Final Consolidation | **Complete** | Added venue photos, venue files, tag suggestions to Venues. Added categories to Issues-Features. routes.ts: 1,644 → 506 lines. |
 | 2026-01-16 | **REFACTOR COMPLETE** | ✅ | **Final: routes.ts 506 lines (92% reduction from 6,714). 12 domain modules, 201 routes extracted.** |
+| 2026-04 | Service Layer Standardization | ✅ | Added service layers for Venues, Contacts, Clients, Vendors (joining existing Deals). All 5 CRM domains now use event-based audit via domain events. |
+| 2026-04 | Event System Expansion | ✅ | Domain events expanded from 22 to 68 types. Event registry updated with full audit mappings for all 68 event types. |
+| 2026-04 | Notifications Domain | ✅ | Added `server/domains/notifications/` with service layer, multi-channel routing (in-app, email, browser push). |
+| 2026-04 | Additional Domains | ✅ | Added `drive-attachments/`, `ai-chat/`, `typeform-webhook/` domain modules. |
+| 2026-04 | Documentation Update | ✅ | Updated all docs to reflect current architecture: 6 service layers, 68 event types, canonical service pattern. |
 
 ---
 
@@ -1378,19 +1405,22 @@ Complete system verification:
 
 ## Final Domain Summary
 
-| Domain | Routes | File |
-|--------|--------|------|
-| reference-data | 31 | `server/domains/reference-data/` |
-| admin | 21 | `server/domains/admin/` |
-| settings-comments | 7 | `server/domains/settings-comments/` |
-| issues-features | 19 | `server/domains/issues-features/` |
-| releases | 14 | `server/domains/releases/` |
-| contacts | 12 | `server/domains/contacts/` |
-| clients | 10 | `server/domains/clients/` |
-| vendors | 14 | `server/domains/vendors/` |
-| deals | 11 | `server/domains/deals/` |
-| venues | 37 | `server/domains/venues/` |
-| forms | 15 | `server/domains/forms/` |
-| places | 10 | `server/domains/places/` |
-| **Core (routes.ts)** | **8** | Auth, object storage |
-| **TOTAL** | **209** | |
+| Domain | Routes | Service Layer | Audit Pattern | Directory |
+|--------|--------|---------------|---------------|-----------|
+| reference-data | 31 | No | Manual | `server/domains/reference-data/` |
+| admin | 23 | No | Manual | `server/domains/admin/` |
+| settings-comments | 9 | No | Mixed (manual + event emit for comment:created/reply_created) | `server/domains/settings-comments/` |
+| issues-features | 19 | No | Mixed (manual + event emit for feature_comment:created) | `server/domains/issues-features/` |
+| releases | 14 | No | Manual | `server/domains/releases/` |
+| contacts | 15 | ✅ Yes | Event-based | `server/domains/contacts/` |
+| clients | 10 | ✅ Yes | Event-based | `server/domains/clients/` |
+| vendors | 13 | ✅ Yes | Event-based | `server/domains/vendors/` |
+| deals | 31 | ✅ Yes | Event-based | `server/domains/deals/` |
+| venues | 39 | ✅ Yes | Event-based | `server/domains/venues/` |
+| forms | 15 | No | Mixed (manual + event emit for form:submission_received) | `server/domains/forms/` |
+| places | 11 | No | N/A (read-only/external API) | `server/domains/places/` |
+| notifications | 13 | ✅ Yes | N/A (delivery service, consumes domain events) | `server/domains/notifications/` |
+| drive-attachments | 5 | No | Manual | `server/domains/drive-attachments/` |
+| ai-chat | 1 | No | N/A | `server/domains/ai-chat/` |
+| typeform-webhook | 1 | No | Manual | `server/domains/typeform-webhook/` |
+| **Core (routes.ts)** | **8** | - | - | Auth, object storage |

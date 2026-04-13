@@ -16,24 +16,25 @@
 | Phase 3: Event-to-Audit Bridge | ✅ Complete | Created server/lib/audit-bridge.ts, initialized at startup |
 | Phase 3A: Scalability Safeguards | ✅ Complete | Created server/lib/event-registry.ts with 22 registered event types |
 | Phase 4: Authentication Events | ✅ Complete | Added user:logged_in, user:logged_out events in replitAuth.ts |
-| Phase 5/6: Venue/Contact/Photo Events | ✅ Complete | Event types defined; routes use existing logAuditEvent (hybrid approach) |
+| Phase 5/6: Venue/Contact/Photo Events | ✅ Complete (Jan 2026) | Event types defined; routes used manual logAuditEvent at time of completion (later migrated to event-based via service layers in April 2026) |
+| Service Layer Standardization | ✅ Complete (April 2026) | Added service layers for Venues, Contacts, Clients, Vendors. All 5 CRM domains now use event-based audit. Event registry expanded to 68 types. |
 
 ### Implementation Divergences
 
-1. **Hybrid Audit Approach**: Rather than refactoring all routes to use service layers, existing routes retain their manual `logAuditEvent` calls. The event-to-audit bridge handles new service-based flows (DealsService) and auth events. This avoids duplicate audit entries while maintaining comprehensive coverage.
+1. **Hybrid Audit Approach (Updated April 2026)**: Five CRM domains (Deals, Venues, Contacts, Clients, Vendors) now use event-based audit via service layers that emit domain events. The audit bridge auto-persists these to the audit_logs table. Some domains use a mixed approach with both manual `logAuditEvent` calls and selective event emission (Forms emits `form:submission_received`, Issues-Features emits `feature_comment:created`, Settings-Comments emits `comment:created`/`comment:reply_created`). Remaining domains (Admin, Reference Data, Releases) use manual `logAuditEvent` only. This hybrid approach avoids duplicate audit entries while maintaining comprehensive coverage.
 
-2. **Event Registry Scope**: The EVENT_REGISTRY includes 22 event types covering deals, auth, venues, contacts, photos, and files. Unknown events trigger console errors (no audit rows) to surface coverage gaps during development.
+2. **Event Registry Scope (Updated April 2026)**: The EVENT_REGISTRY includes 68 event types covering deals (20), venues (15), contacts (7), clients (5), vendors (8), forms (8), auth (2), comments (2), and feature comments (1). Unregistered events trigger `console.error` via `handleUnknownEvent()` in the audit bridge to surface coverage gaps during development.
 
-3. **No VenuesService/ContactsService Refactor**: Creating new service layers would require significant refactoring. Existing routes already have audit coverage via `logAuditEvent`. Domain event types are defined for future service migration.
+3. **Service Layer Status (Updated April 2026)**: VenuesService, ContactsService, ClientsService, and VendorsService have been created and deployed. These services emit domain events for all CRUD operations, and the audit bridge persists them automatically. Manual `logAuditEvent()` calls have been removed from these domains' routes to prevent duplicate entries.
 
-4. **Duplicate Prevention**: Venue/contact/photo event types are registered but NOT emitted from current routes. Routes use manual `logAuditEvent()`. When migrating to service layers, remove `logAuditEvent()` calls before emitting events to prevent duplicates.
+4. **Duplicate Prevention (Updated April 2026)**: For domains with service layers, routes delegate to services which emit events. Manual `logAuditEvent()` calls have been removed from these routes. For domains without service layers, routes continue using manual `logAuditEvent()` directly.
 
 ### Key Implementation Files
 
 - `server/lib/request-context.ts` - AsyncLocalStorage for request context
 - `server/lib/event-registry.ts` - Single source of truth for event-to-audit mappings
 - `server/lib/audit-bridge.ts` - Subscribes to domain events, persists to audit_logs
-- `server/lib/events.ts` - Domain event type definitions (22 event types)
+- `server/lib/events.ts` - Domain event type definitions (68 event types)
 - `server/audit.ts` - Enhanced with request context integration
 
 ---
@@ -44,19 +45,15 @@
 
 This plan improves how the application tracks and records important actions. Think of it like a detailed activity log or security camera footage for the software—recording who did what, when, and from where.
 
-**Currently:**
-- Some actions are recorded (like creating deals)
-- Login/logout is NOT recorded
-- Photo and file uploads are NOT recorded
-- When something goes wrong, we often don't have enough information to investigate
-
-**After this plan:**
-- All logins and logouts will be recorded with location and device info
-- Every photo upload and file change will be tracked
-- Errors and failed attempts will be logged for security
-- We can trace any action back to a specific user session
-- The system will automatically record actions without developers needing to add manual tracking code
-- **Scalability safeguards** ensure new features are automatically covered (automated tests catch gaps)
+**Current State (April 2026 — all phases complete):**
+- All logins and logouts are recorded with location and device info
+- Photo uploads and file changes are tracked via event-based audit
+- Errors and failed attempts are logged for security
+- Every action can be traced back to a specific user session via requestId
+- Five CRM domains (Deals, Venues, Contacts, Clients, Vendors) use automatic event-based audit via service layers
+- Other domains use manual `logAuditEvent()` calls, with some also emitting selective domain events
+- 68 domain event types are registered with audit mappings in the event registry
+- Scalability safeguards ensure new features are covered (event registry catches unregistered events)
 
 ### What This Enables
 
@@ -87,50 +84,7 @@ Each phase is independent. If something goes wrong, we can:
 
 ## Technical Implementation Plan
 
-### Current Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        HTTP Request                              │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Express Routes                               │
-│  • ~98 manual logAuditEvent() calls                             │
-│  • Requires 'req' object for context                            │
-│  • Inconsistent coverage                                        │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-            ┌───────────────┴───────────────┐
-            ▼                               ▼
-┌───────────────────────┐       ┌───────────────────────┐
-│    DealsService       │       │   Direct Storage      │
-│  • Emits events       │       │  (venues, contacts)   │
-│  • Has actorId        │       │  • No events          │
-│  • Business logic     │       │  • No service layer   │
-└───────────┬───────────┘       └───────────┬───────────┘
-            │                               │
-            ▼                               │
-┌───────────────────────┐                   │
-│   Domain Events       │                   │
-│  (memory only)        │                   │
-│  • Last 100 events    │                   │
-│  • For AI context     │                   │
-│  • NOT persisted      │◄──── GAP ────────┘
-└───────────────────────┘
-            │
-            ✗ Not connected to audit_logs table
-            
-┌───────────────────────┐
-│   audit_logs Table    │
-│  • PostgreSQL         │
-│  • Manual writes only │
-│  • Missing fields     │
-└───────────────────────┘
-```
-
-### Target Architecture
+### Current Architecture (Updated April 2026)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -148,42 +102,40 @@ Each phase is independent. If something goes wrong, we can:
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Express Routes                               │
-│  • Auth routes → Direct audit logging                           │
-│  • Domain routes → Delegate to services                         │
+│  • Auth routes → Emit domain events (user:logged_in/out)       │
+│  • CRM domains → Delegate to service layers                    │
+│  • Other domains → Direct storage + manual logAuditEvent()     │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Domain Services                                │
-│  • DealsService (existing)                                      │
-│  • VenuesService (new)                                          │
-│  • ContactsService (new)                                        │
-│  • PhotosService (new)                                          │
-│  All emit typed domain events                                   │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Domain Events                                  │
-│  deal:created, deal:updated, venue:photo_uploaded, etc.         │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                Event-to-Audit Bridge                             │
-│  • Subscribes to '*' events                                     │
-│  • Reads request context from AsyncLocalStorage                 │
-│  • Fire-and-forget persistence (non-blocking)                   │
-│  • Maps events to audit actions                                 │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   audit_logs Table                               │
-│  + sessionId, requestId, durationMs, source                     │
-│  • Complete forensic trail                                      │
-│  • Automatic persistence via events                             │
-└─────────────────────────────────────────────────────────────────┘
+            ┌───────────────┴───────────────┐
+            ▼                               ▼
+┌───────────────────────┐       ┌───────────────────────┐
+│   Domain Services     │       │   Direct Storage      │
+│  (5 CRM domains)     │       │  (Forms, Admin, etc.) │
+│  • DealsService       │       │  • Manual audit       │
+│  • VenuesService      │       │  • logAuditEvent()    │
+│  • ContactsService    │       │                       │
+│  • ClientsService     │       │                       │
+│  • VendorsService     │       │                       │
+│  All emit typed events│       │                       │
+└───────────┬───────────┘       └───────────┬───────────┘
+            │                               │
+            ▼                               ▼
+┌───────────────────────┐       ┌───────────────────────┐
+│   Domain Events       │       │   audit_logs Table    │
+│  68 event types       │       │  (direct writes)      │
+│  • Last 100 buffered  │       │                       │
+│  • For AI context     │       │                       │
+└───────────┬───────────┘       └───────────────────────┘
+            │                               ▲
+            ▼                               │
+┌───────────────────────────────────────────┘
+│  Event-to-Audit Bridge
+│  • Subscribes to '*' events
+│  • 68 registered event-to-audit mappings
+│  • Fire-and-forget persistence (non-blocking)
+│  • Reads request context from AsyncLocalStorage
+└───────────────────────────────────────────┘
 ```
 
 ---
@@ -789,18 +741,19 @@ Ensure email is logged (not sensitive for internal use) but other PII is protect
 
 ---
 
-## Phase 5: Expand Service Layer
+## Phase 5: Expand Service Layer ✅ COMPLETE (April 2026)
 
+**Status:** ✅ Complete — VenuesService, ContactsService, ClientsService, and VendorsService created.  
 **Effort:** 2-3 days  
 **Risk:** Medium  
 **Dependencies:** Phase 3
 
 ### Objective
-Create VenuesService and ContactsService to emit domain events, gaining automatic audit logging via the bridge.
+Create service layers for CRM domains to emit domain events, gaining automatic audit logging via the bridge.
 
-### 5A: VenuesService
+### 5A: VenuesService ✅ COMPLETE
 
-**Estimated effort:** 1 day
+**Location:** `server/domains/venues/venues.service.ts`
 
 ```typescript
 // server/services/venues.service.ts
@@ -839,15 +792,27 @@ export class VenuesService extends BaseService {
 3. Verify existing tests/behavior unchanged
 4. Remove duplicate storage calls from routes
 
-### 5B: ContactsService
+### 5B: ContactsService ✅ COMPLETE
 
-**Estimated effort:** 1 day
+**Location:** `server/domains/contacts/contacts.service.ts`
 
 Same pattern as VenuesService.
 
-### 5C: Event Type Extensions
+### 5C: ClientsService ✅ COMPLETE
 
-Extend `server/lib/events.ts`:
+**Location:** `server/domains/clients/clients.service.ts`
+
+Same pattern as VenuesService. Emits client:created, client:updated, client:deleted, client:linked_contact, client:unlinked_contact events.
+
+### 5D: VendorsService ✅ COMPLETE
+
+**Location:** `server/domains/vendors/vendors.service.ts`
+
+Same pattern as VenuesService. Emits vendor:created, vendor:updated, vendor:deleted, vendor:linked_contact, vendor:unlinked_contact, vendor:token_generated, vendor:token_consumed, vendor:bulk_email_sent events.
+
+### 5E: Event Type Extensions ✅ COMPLETE
+
+Events expanded from 22 to 68 types in `server/lib/events.ts`:
 
 ```typescript
 // Add venue event types
