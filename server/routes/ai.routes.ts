@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { storage } from "../storage";
 import { domainEvents } from "../lib/events";
+import { dealsStorage } from "../domains/deals/deals.storage";
 import { type DealWithRelations, type DealStatus, type DealStatusRecord } from "@shared/schema";
 
 const router = Router();
@@ -103,7 +103,7 @@ function generateDealSummary(
 let cachedStatuses: DealStatusRecord[] | null = null;
 async function getCachedStatuses(): Promise<DealStatusRecord[]> {
   if (!cachedStatuses) {
-    cachedStatuses = await storage.getDealStatuses();
+    cachedStatuses = await dealsStorage.getDealStatuses();
     setTimeout(() => { cachedStatuses = null; }, 60000);
   }
   return cachedStatuses;
@@ -172,7 +172,7 @@ async function getSuggestedActions(
 router.get("/context/deal/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const deal = await storage.getDealById(id);
+    const deal = await dealsStorage.getDealById(id);
 
     if (!deal) {
       return res.status(404).json({ error: "Deal not found" });
@@ -205,7 +205,7 @@ router.get("/context/workspace", async (req: Request, res: Response) => {
   try {
     const user = req.user as { id: string; firstName?: string; lastName?: string; role?: string } | undefined;
 
-    const allDeals = await storage.getDeals();
+    const allDeals = await dealsStorage.getDeals();
     const statuses = await getCachedStatuses();
     const byStatus: Record<string, number> = {};
 

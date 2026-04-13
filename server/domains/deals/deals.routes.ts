@@ -9,6 +9,7 @@ import { storage } from "../../storage";
 import { DealsService } from "./deals.service";
 import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, type DealWithRelations, type DealEvent, type DealLocation, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
+import { referenceDataStorage } from "../reference-data/reference-data.storage";
 import { formsStorage } from "../forms/forms.storage";
 import { copyDriveFile, findTokenCells, writeTokenCells } from "../../googleDrive";
 import { settingsCommentsStorage } from "../settings-comments/settings-comments.storage";
@@ -19,7 +20,7 @@ const dealsService = new DealsService(storage);
 export function registerDealsRoutes(app: Express): void {
   app.get("/api/deal-statuses", isAuthenticated, async (_req, res) => {
     try {
-      const statuses = await storage.getDealStatuses();
+      const statuses = await dealsStorage.getDealStatuses();
       res.json(statuses);
     } catch (error) {
       handleServiceError(res, error, "Failed to fetch deal statuses");
@@ -35,8 +36,8 @@ export function registerDealsRoutes(app: Express): void {
           errors: validatedData.error.errors,
         });
       }
-      const original = await storage.getDealStatusById(parseInt(req.params.id));
-      const status = await storage.updateDealStatus(parseInt(req.params.id), validatedData.data);
+      const original = await dealsStorage.getDealStatusById(parseInt(req.params.id));
+      const status = await dealsStorage.updateDealStatus(parseInt(req.params.id), validatedData.data);
       if (!status) {
         return res.status(404).json({ message: "Deal status not found" });
       }
@@ -88,7 +89,7 @@ export function registerDealsRoutes(app: Express): void {
       cutoff.setMonth(cutoff.getMonth() + horizon);
       const endDate = cutoff.toISOString().substring(0, 10);
 
-      const allStatuses = await storage.getDealStatuses();
+      const allStatuses = await dealsStorage.getDealStatuses();
       const stageProbabilities: Record<string, number> = {};
       for (const s of allStatuses) {
         stageProbabilities[s.name] = s.winProbability / 100;
@@ -317,7 +318,7 @@ export function registerDealsRoutes(app: Express): void {
         ? new Date(asOfParam + "T00:00:00")
         : new Date();
 
-      const allPipelineStatuses = await storage.getDealStatuses();
+      const allPipelineStatuses = await dealsStorage.getDealStatuses();
       const ACTIVE_STAGES = allPipelineStatuses.filter(s => s.isActive).map(s => s.name);
 
       const [allDeals, transitions] = await Promise.all([
@@ -1278,16 +1279,16 @@ export function registerDealsRoutes(app: Express): void {
         });
       }
 
-      const deal = await storage.getDealById(dealId);
+      const deal = await dealsStorage.getDealById(dealId);
       if (!deal) {
         return res.status(404).json({ message: "Deal not found" });
       }
 
       const [allServices, linkedClients, tagIds, allTags, intake] = await Promise.all([
-        storage.getDealServices(),
+        referenceDataStorage.getDealServices(),
         dealsStorage.getLinkedClientsByDealId(dealId),
         dealsStorage.getDealTagIds(dealId),
-        storage.getTags("Deals"),
+        referenceDataStorage.getTags("Deals"),
         dealsStorage.getDealIntake(dealId),
       ]);
 

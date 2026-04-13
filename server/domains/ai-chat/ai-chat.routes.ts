@@ -5,6 +5,7 @@ import { venuesStorage } from "../venues/venues.storage";
 import { clientsStorage } from "../clients/clients.storage";
 import { vendorsStorage } from "../vendors/vendors.storage";
 import { referenceDataStorage } from "../reference-data/reference-data.storage";
+import { dealsStorage } from "../deals/deals.storage";
 import { storage } from "../../storage";
 import { logAuditEvent } from "../../audit";
 import type { PermissionContext } from "../../../shared/permissions";
@@ -532,7 +533,7 @@ async function executeToolCall(
         const query = args.query as string | undefined;
         const statusFilter = args.status as string | undefined;
         
-        let deals = await storage.getDeals(
+        let deals = await dealsStorage.getDeals(
           statusFilter ? { status: [statusFilter as any] } : undefined
         );
         
@@ -558,7 +559,7 @@ async function executeToolCall(
         if (!checkPermissionDirect(permissionContext, "deals.read")) {
           return JSON.stringify({ error: "You don't have permission to view deals" });
         }
-        const deal = await storage.getDealById(args.deal_id as string);
+        const deal = await dealsStorage.getDealById(args.deal_id as string);
         if (!deal) {
           return JSON.stringify({ error: "Deal not found" });
         }

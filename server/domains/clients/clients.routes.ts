@@ -3,7 +3,7 @@ import { isAuthenticated, isManagerOrAdmin } from "../../googleAuth";
 import { clientsStorage } from "./clients.storage";
 import { ClientsService } from "./clients.service";
 import { ServiceError } from "../../services/base.service";
-import { storage } from "../../storage";
+import { dealsStorage } from "../deals/deals.storage";
 import type { IStorage } from "../../storage";
 
 export function registerClientsRoutes(app: Express, storageOverride?: IStorage): void {
@@ -51,7 +51,7 @@ export function registerClientsRoutes(app: Express, storageOverride?: IStorage):
       if (!client) {
         return res.status(404).json({ message: "Client not found" });
       }
-      const deals = await storage.getDealsByClientId(req.params.id);
+      const deals = await dealsStorage.getDealsByClientId(req.params.id);
       res.json(deals);
     } catch (error) {
       console.error("Error fetching client deals:", error);

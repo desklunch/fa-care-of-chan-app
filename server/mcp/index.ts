@@ -1,10 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { storage } from "../storage";
+import { dealsStorage } from "../domains/deals/deals.storage";
 import { DealsService } from "../domains/deals/deals.service";
 import { ServiceError } from "../services/base.service";
 import { type DealStatus, type DealStatusRecord, type FeatureStatus, featureStatuses, featurePriorities } from "@shared/schema";
 import { issuesFeaturesStorage } from "../domains/issues-features/issues-features.storage";
+import { venuesStorage } from "../domains/venues/venues.storage";
+import { contactsStorage } from "../domains/contacts/contacts.storage";
 
 const dealsService = new DealsService(storage);
 
@@ -51,7 +54,7 @@ export async function createMcpServer(): Promise<McpServer> {
     version: "1.0.0",
   });
 
-  const allStatuses = await storage.getDealStatuses();
+  const allStatuses = await dealsStorage.getDealStatuses();
   const statusNameList = allStatuses.map((s) => s.name).join(", ");
 
   server.tool(
@@ -151,7 +154,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ displayName, clientId, status, budgetLow, budgetHigh }) => {
       try {
-        const allStatuses = await storage.getDealStatuses();
+        const allStatuses = await dealsStorage.getDealStatuses();
         let statusId: number;
         if (status) {
           const found = allStatuses.find(s => s.name === status);
@@ -303,7 +306,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ query, limit }) => {
       try {
-        let venues = await storage.getVenuesWithRelations();
+        let venues = await venuesStorage.getVenuesWithRelations();
         
         if (query) {
           const lowerQuery = query.toLowerCase();
@@ -344,7 +347,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ id }) => {
       try {
-        const venue = await storage.getVenueByIdWithRelations(id);
+        const venue = await venuesStorage.getVenueByIdWithRelations(id);
         if (!venue) {
           return {
             content: [{ type: "text" as const, text: `Venue not found: ${id}` }],
@@ -385,7 +388,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ query, limit }) => {
       try {
-        let contacts = await storage.getContactsWithRelations();
+        let contacts = await contactsStorage.getContactsWithRelations();
         
         if (query) {
           const lowerQuery = query.toLowerCase();
@@ -429,7 +432,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ id }) => {
       try {
-        const contact = await storage.getContactById(id);
+        const contact = await contactsStorage.getContactById(id);
         if (!contact) {
           return {
             content: [{ type: "text" as const, text: `Contact not found: ${id}` }],
@@ -465,8 +468,8 @@ export async function createMcpServer(): Promise<McpServer> {
     async () => {
       try {
         const [deals, allStatuses] = await Promise.all([
-          storage.getDeals(),
-          storage.getDealStatuses(),
+          dealsStorage.getDeals(),
+          dealsStorage.getDealStatuses(),
         ]);
         const byStatus: Record<string, number> = {};
         for (const s of allStatuses) {

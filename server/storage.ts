@@ -5,33 +5,17 @@ import {
   appFeatures,
   appFeatureVotes,
   appFeatureComments,
-  contacts,
-  vendors,
-  venues,
-  amenities,
-  venueAmenities,
-  industries,
-  tags,
-  venueTags,
-  venueFiles,
-  venuePhotos,
-  venueCollections,
-  venueCollectionVenues,
-  vendorServices,
-  vendorServicesVendors,
-  vendorsContacts,
-  vendorUpdateTokens,
   appSettings,
   appIssues,
-  formTemplates,
-  formRequests,
-  outreachTokens,
-  formResponses,
   comments,
-  deals,
-  dealServices,
-  type DealService,
-  type InsertDealService,
+  commentEntityTypes,
+  analyticsSessions,
+  analyticsPageViews,
+  analyticsEvents,
+  appReleases,
+  appReleaseFeatures,
+  appReleaseIssues,
+  appReleaseChanges,
   type User,
   type UpsertUser,
   type AuditLog,
@@ -47,44 +31,6 @@ import {
   type ProductFeatureWithRelations,
   type FeatureCommentWithUser,
   type FeatureStatus,
-  type Contact,
-  type CreateContact,
-  type UpdateContact,
-  type Vendor,
-  type VendorService,
-  type VendorWithServices,
-  type VendorWithRelations,
-  type ContactWithRelations,
-  type Venue,
-  type CreateVenue,
-  type UpdateVenue,
-  type VenueWithRelations,
-  type VenueGridRow,
-  type AmenitySummary,
-  type TagSummary,
-  type VenueSpace,
-  type VenueFile,
-  type VenueFileWithUploader,
-  type CreateVenueFile,
-  type UpdateVenueFile,
-  type VenuePhoto,
-  type CreateVenuePhoto,
-  type UpdateVenuePhoto,
-  type Amenity,
-  type CreateAmenity,
-  type UpdateAmenity,
-  type Industry,
-  type CreateIndustry,
-  type UpdateIndustry,
-  type Tag,
-  type CreateTag,
-  type UpdateTag,
-  type CreateVendorService,
-  type UpdateVendorService,
-  type CreateVendor,
-  type UpdateVendor,
-  type VendorUpdateToken,
-  type VendorUpdateTokenWithRelations,
   type AppSetting,
   type ThemeConfig,
   type AppIssue,
@@ -93,49 +39,17 @@ import {
   type UpdateAppIssue,
   type AppIssueWithRelations,
   type IssueStatus,
-  type FormTemplate,
-  type InsertFormTemplate,
-  type CreateFormTemplate,
-  type UpdateFormTemplate,
-  type FormTemplateWithRelations,
-  type FormRequest,
-  type InsertFormRequest,
-  type CreateFormRequest,
-  type UpdateFormRequest,
-  type FormRequestWithRelations,
-  type OutreachToken,
-  type InsertOutreachToken,
-  type OutreachTokenWithRecipient,
-  type FormResponse,
-  type InsertFormResponse,
-  type CreateFormResponse,
-  type RecipientType,
-  type PublicFormData,
-  type FormSection,
-  type VenueCollection,
-  type CreateVenueCollection,
-  type UpdateVenueCollection,
-  type VenueCollectionWithCreator,
-  type VenueCollectionWithVenues,
   type Comment,
   type InsertComment,
   type CommentWithAuthor,
   type CreateComment,
   type UpdateComment,
-  commentEntityTypes,
-  analyticsSessions,
-  analyticsPageViews,
-  analyticsEvents,
   type AnalyticsSession,
   type InsertAnalyticsSession,
   type AnalyticsPageView,
   type InsertAnalyticsPageView,
   type AnalyticsEvent,
   type InsertAnalyticsEvent,
-  appReleases,
-  appReleaseFeatures,
-  appReleaseIssues,
-  appReleaseChanges,
   type AppRelease,
   type AppReleaseFeature,
   type AppReleaseIssue,
@@ -145,33 +59,9 @@ import {
   type UpdateAppRelease,
   type CreateAppReleaseChange,
   type ReleaseStatus,
-  type Deal,
-  type DealWithRelations,
-  type CreateDeal,
-  type UpdateDeal,
-  type DealStatus,
-  type DealEvent,
-  type DealStatusRecord,
-  type InsertDealStatus,
-  dealStatuses,
-  dealTasks,
-  computeEarliestEventDate,
-  type DealTask,
-  type DealTaskWithRelations,
-  type CreateDealTask,
-  clients,
-  clientContacts,
-  type Client,
-  type CreateClient,
-  type UpdateClient,
-  brands,
-  type Brand,
-  type CreateBrand,
-  type UpdateBrand,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
 import { randomBytes } from "crypto";
 
 export type AuditLogWithName = AuditLog & { performerName?: string };
@@ -228,33 +118,7 @@ export interface IStorage {
   // See: server/domains/vendors/vendors.storage.ts  
   // See: server/domains/venues/venues.storage.ts
   
-  // Amenity operations
-  getAmenities(): Promise<Amenity[]>;
-  getAmenityById(id: string): Promise<Amenity | undefined>;
-  createAmenity(data: CreateAmenity): Promise<Amenity>;
-  updateAmenity(id: string, data: UpdateAmenity): Promise<Amenity | undefined>;
-  deleteAmenity(id: string): Promise<void>;
-  
-  // Industry operations
-  getIndustries(): Promise<Industry[]>;
-  getIndustryById(id: string): Promise<Industry | undefined>;
-  createIndustry(data: CreateIndustry): Promise<Industry>;
-  updateIndustry(id: string, data: UpdateIndustry): Promise<Industry | undefined>;
-  deleteIndustry(id: string): Promise<void>;
-  
-  // Deal service operations
-  getDealServices(): Promise<DealService[]>;
-  getDealServiceById(id: number): Promise<DealService | undefined>;
-  createDealService(data: InsertDealService): Promise<DealService>;
-  updateDealService(id: number, data: Partial<InsertDealService>): Promise<DealService | undefined>;
-  deleteDealService(id: number): Promise<void>;
-  
-  // Tag operations
-  getTags(category?: string): Promise<Tag[]>;
-  getTagById(id: string): Promise<Tag | undefined>;
-  createTag(data: CreateTag): Promise<Tag>;
-  updateTag(id: string, data: UpdateTag): Promise<Tag | undefined>;
-  deleteTag(id: string): Promise<void>;
+  // NOTE: Amenity, Industry, Deal Service, Tag, and Brand operations moved to server/domains/reference-data/reference-data.storage.ts
   
   // App settings operations
   getSetting(key: string): Promise<AppSetting | undefined>;
@@ -330,50 +194,13 @@ export interface IStorage {
   getFixedIssuesNotInRelease(sinceDate?: Date): Promise<{ id: string; title: string; fixedAt: Date | null }[]>;
   getLatestReleasedVersion(): Promise<AppRelease | undefined>;
   
-  // Deal status operations
-  getDealStatuses(): Promise<DealStatusRecord[]>;
-  getDealStatusByName(name: string): Promise<DealStatusRecord | undefined>;
-  getDealStatusById(id: number): Promise<DealStatusRecord | undefined>;
-  updateDealStatus(id: number, data: Partial<InsertDealStatus>): Promise<DealStatusRecord | undefined>;
+  // NOTE: Deal status, Deal CRUD, Deal task, Client, Client-Contact link operations moved to domain storage files
+  // See: server/domains/deals/deals.storage.ts
+  // See: server/domains/clients/clients.storage.ts
+  // See: server/domains/contacts/contacts.storage.ts
   
-  // Deal operations
-  getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]>;
-  getDealById(id: string): Promise<DealWithRelations | undefined>;
-  getDealsByClientId(clientId: string): Promise<DealWithRelations[]>;
-  getDealsByPrimaryContactId(contactId: string): Promise<DealWithRelations[]>;
-  createDeal(data: CreateDeal, createdById: string): Promise<Deal>;
-  updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined>;
-  deleteDeal(id: string): Promise<void>;
-  reorderDeals(orderedDealIds: string[]): Promise<void>;
-  
-  // Deal task operations
-  getDealTasks(dealId: string): Promise<DealTaskWithRelations[]>;
-  getDealTaskById(id: string): Promise<DealTask | undefined>;
-  createDealTask(data: CreateDealTask, createdById: string): Promise<DealTask>;
-  updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null; title?: string }): Promise<DealTask | undefined>;
-  deleteDealTask(id: string): Promise<void>;
-  
-  // Client operations
-  getClients(): Promise<Client[]>;
-  getClientById(id: string): Promise<Client | undefined>;
-  createClient(data: CreateClient): Promise<Client>;
-  updateClient(id: string, data: UpdateClient): Promise<Client | undefined>;
-  deleteClient(id: string): Promise<void>;
-  
-  // Client-Contact link operations
-  getContactsForClient(clientId: string): Promise<Contact[]>;
-  getClientsForContact(contactId: string): Promise<Client[]>;
-  linkClientContact(clientId: string, contactId: string): Promise<void>;
-  unlinkClientContact(clientId: string, contactId: string): Promise<void>;
-  
+  // NOTE: Brand operations moved to server/domains/reference-data/reference-data.storage.ts
   // NOTE: Vendor-Contact link operations moved to server/domains/vendors/vendors.storage.ts
-  
-  // Brand operations
-  getBrands(): Promise<Brand[]>;
-  getBrandById(id: string): Promise<Brand | undefined>;
-  createBrand(data: CreateBrand): Promise<Brand>;
-  updateBrand(id: string, data: UpdateBrand): Promise<Brand | undefined>;
-  deleteBrand(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -898,160 +725,7 @@ export class DatabaseStorage implements IStorage {
   // NOTE: Contact operations moved to server/domains/contacts/contacts.storage.ts
   // NOTE: Vendor operations moved to server/domains/vendors/vendors.storage.ts
   // NOTE: Venue operations moved to server/domains/venues/venues.storage.ts
-
-  // Amenity operations
-  async getAmenities(): Promise<Amenity[]> {
-    return db.select().from(amenities).orderBy(amenities.name);
-  }
-  
-  async getAmenityById(id: string): Promise<Amenity | undefined> {
-    const [amenity] = await db.select().from(amenities).where(eq(amenities.id, id));
-    return amenity;
-  }
-  
-  async createAmenity(data: CreateAmenity): Promise<Amenity> {
-    const [amenity] = await db
-      .insert(amenities)
-      .values({
-        name: data.name,
-        description: data.description,
-        icon: data.icon,
-      })
-      .returning();
-    return amenity;
-  }
-  
-  async updateAmenity(id: string, data: UpdateAmenity): Promise<Amenity | undefined> {
-    const [amenity] = await db
-      .update(amenities)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(amenities.id, id))
-      .returning();
-    return amenity;
-  }
-  
-  async deleteAmenity(id: string): Promise<void> {
-    await db.delete(amenities).where(eq(amenities.id, id));
-  }
-  
-  // Industry operations
-  async getIndustries(): Promise<Industry[]> {
-    return db.select().from(industries).orderBy(industries.name);
-  }
-  
-  async getIndustryById(id: string): Promise<Industry | undefined> {
-    const [industry] = await db.select().from(industries).where(eq(industries.id, id));
-    return industry;
-  }
-  
-  async createIndustry(data: CreateIndustry): Promise<Industry> {
-    const [industry] = await db
-      .insert(industries)
-      .values({
-        name: data.name,
-        description: data.description,
-      })
-      .returning();
-    return industry;
-  }
-  
-  async updateIndustry(id: string, data: UpdateIndustry): Promise<Industry | undefined> {
-    const [industry] = await db
-      .update(industries)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(industries.id, id))
-      .returning();
-    return industry;
-  }
-  
-  async deleteIndustry(id: string): Promise<void> {
-    await db.delete(industries).where(eq(industries.id, id));
-  }
-  
-  // Deal service operations
-  async getDealServices(): Promise<DealService[]> {
-    return db.select().from(dealServices).orderBy(dealServices.sortOrder, dealServices.name);
-  }
-  
-  async getDealServiceById(id: number): Promise<DealService | undefined> {
-    const [service] = await db.select().from(dealServices).where(eq(dealServices.id, id));
-    return service;
-  }
-  
-  async createDealService(data: InsertDealService): Promise<DealService> {
-    const [service] = await db
-      .insert(dealServices)
-      .values({
-        name: data.name,
-        description: data.description,
-        isActive: data.isActive ?? true,
-        sortOrder: data.sortOrder ?? 0,
-      })
-      .returning();
-    return service;
-  }
-  
-  async updateDealService(id: number, data: Partial<InsertDealService>): Promise<DealService | undefined> {
-    const [service] = await db
-      .update(dealServices)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(dealServices.id, id))
-      .returning();
-    return service;
-  }
-  
-  async deleteDealService(id: number): Promise<void> {
-    await db.delete(dealServices).where(eq(dealServices.id, id));
-  }
-  
-  // Tag operations
-  async getTags(category?: string): Promise<Tag[]> {
-    if (category) {
-      return db.select().from(tags).where(eq(tags.category, category)).orderBy(tags.name);
-    }
-    return db.select().from(tags).orderBy(tags.category, tags.name);
-  }
-  
-  async getTagById(id: string): Promise<Tag | undefined> {
-    const [tag] = await db.select().from(tags).where(eq(tags.id, id));
-    return tag;
-  }
-  
-  async createTag(data: CreateTag): Promise<Tag> {
-    const [tag] = await db
-      .insert(tags)
-      .values({
-        name: data.name,
-        category: data.category,
-      })
-      .returning();
-    return tag;
-  }
-  
-  async updateTag(id: string, data: UpdateTag): Promise<Tag | undefined> {
-    const [tag] = await db
-      .update(tags)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(tags.id, id))
-      .returning();
-    return tag;
-  }
-  
-  async deleteTag(id: string): Promise<void> {
-    await db.delete(tags).where(eq(tags.id, id));
-  }
+  // NOTE: Amenity, Industry, Deal Service, Tag operations moved to server/domains/reference-data/reference-data.storage.ts
   
   // App settings operations
   async getSetting(key: string): Promise<AppSetting | undefined> {
@@ -1914,589 +1588,21 @@ export class DatabaseStorage implements IStorage {
     return release;
   }
 
-  // Deal status operations
-  async getDealStatuses(): Promise<DealStatusRecord[]> {
-    return db.select().from(dealStatuses).orderBy(asc(dealStatuses.sortOrder));
-  }
+  // NOTE: Deal status, Deal CRUD, Deal task, Client, Client-Contact link, and Brand operations
+  // have been moved to their respective domain storage files.
+  // See: server/domains/deals/deals.storage.ts
+  // See: server/domains/clients/clients.storage.ts
+  // See: server/domains/contacts/contacts.storage.ts
+  // See: server/domains/reference-data/reference-data.storage.ts
 
-  async getDealStatusByName(name: string): Promise<DealStatusRecord | undefined> {
-    const [result] = await db.select().from(dealStatuses).where(eq(dealStatuses.name, name));
-    return result;
-  }
-
-  async getDealStatusById(id: number): Promise<DealStatusRecord | undefined> {
-    const [result] = await db.select().from(dealStatuses).where(eq(dealStatuses.id, id));
-    return result;
-  }
-
-  async updateDealStatus(id: number, data: Partial<InsertDealStatus>): Promise<DealStatusRecord | undefined> {
-    const [result] = await db
-      .update(dealStatuses)
-      .set(data)
-      .where(eq(dealStatuses.id, id))
-      .returning();
-    return result;
-  }
-  
-  // Deal operations
-  // Note: eventSchedule is included for list view display of event summaries
-  async getDeals(options?: { status?: DealStatus[] }): Promise<DealWithRelations[]> {
-    const ownerUsers = alias(users, "owner_users");
-    let query = db
-      .select({
-        id: deals.id,
-        dealNumber: deals.dealNumber,
-        displayName: deals.displayName,
-        status: deals.status,
-        statusName: dealStatuses.name,
-        clientId: deals.clientId,
-        budgetHigh: deals.budgetHigh,
-        budgetLow: deals.budgetLow,
-        budgetNotes: deals.budgetNotes,
-        startedOn: deals.startedOn,
-        wonOn: deals.wonOn,
-        lastContactOn: deals.lastContactOn,
-        proposalSentOn: deals.proposalSentOn,
-        projectDate: deals.projectDate,
-        locations: deals.locations,
-        eventSchedule: deals.eventSchedule,
-        serviceIds: deals.serviceIds,
-        locationsText: deals.locationsText,
-        concept: deals.concept,
-        notes: deals.notes,
-        nextSteps: deals.nextSteps,
-        ownerId: deals.ownerId,
-        createdById: deals.createdById,
-        createdAt: deals.createdAt,
-        updatedAt: deals.updatedAt,
-        earliestEventDate: deals.earliestEventDate,
-        sortOrder: deals.sortOrder,
-        primaryContactId: deals.primaryContactId,
-        createdBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-        },
-        client: {
-          id: clients.id,
-          name: clients.name,
-          industryId: clients.industryId,
-          industryName: industries.name,
-        },
-        owner: {
-          id: ownerUsers.id,
-          firstName: ownerUsers.firstName,
-          lastName: ownerUsers.lastName,
-          profileImageUrl: ownerUsers.profileImageUrl,
-        },
-        primaryContact: {
-          id: contacts.id,
-          firstName: contacts.firstName,
-          lastName: contacts.lastName,
-          emailAddresses: contacts.emailAddresses,
-          phoneNumbers: contacts.phoneNumbers,
-          jobTitle: contacts.jobTitle,
-        },
-      })
-      .from(deals)
-      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
-      .leftJoin(users, eq(deals.createdById, users.id))
-      .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(industries, eq(clients.industryId, industries.id))
-      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
-      .leftJoin(contacts, eq(deals.primaryContactId, contacts.id));
-
-    if (options?.status && options.status.length > 0) {
-      query = query.where(inArray(dealStatuses.name, options.status)) as any;
-    }
-
-    const results = await query.orderBy(desc(deals.sortOrder), desc(deals.dealNumber));
-    return results as DealWithRelations[];
-  }
-
-  async getDealById(id: string): Promise<DealWithRelations | undefined> {
-    const ownerUsers = alias(users, "owner_users");
-    const [result] = await db
-      .select({
-        id: deals.id,
-        dealNumber: deals.dealNumber,
-        displayName: deals.displayName,
-        status: deals.status,
-        statusName: dealStatuses.name,
-        clientId: deals.clientId,
-        primaryContactId: deals.primaryContactId,
-        budgetHigh: deals.budgetHigh,
-        budgetLow: deals.budgetLow,
-        budgetNotes: deals.budgetNotes,
-        startedOn: deals.startedOn,
-        wonOn: deals.wonOn,
-        lastContactOn: deals.lastContactOn,
-        proposalSentOn: deals.proposalSentOn,
-        projectDate: deals.projectDate,
-        earliestEventDate: deals.earliestEventDate,
-        locations: deals.locations,
-        eventSchedule: deals.eventSchedule,
-        serviceIds: deals.serviceIds,
-        locationsText: deals.locationsText,
-        concept: deals.concept,
-        notes: deals.notes,
-        nextSteps: deals.nextSteps,
-        ownerId: deals.ownerId,
-        createdById: deals.createdById,
-        createdAt: deals.createdAt,
-        updatedAt: deals.updatedAt,
-        sortOrder: deals.sortOrder,
-        createdBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-        },
-        client: {
-          id: clients.id,
-          name: clients.name,
-        },
-        owner: {
-          id: ownerUsers.id,
-          firstName: ownerUsers.firstName,
-          lastName: ownerUsers.lastName,
-          profileImageUrl: ownerUsers.profileImageUrl,
-        },
-        primaryContact: {
-          id: contacts.id,
-          firstName: contacts.firstName,
-          lastName: contacts.lastName,
-          emailAddresses: contacts.emailAddresses,
-          phoneNumbers: contacts.phoneNumbers,
-          jobTitle: contacts.jobTitle,
-        },
-      })
-      .from(deals)
-      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
-      .leftJoin(users, eq(deals.createdById, users.id))
-      .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
-      .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
-      .where(eq(deals.id, id));
-    return result as DealWithRelations | undefined;
-  }
-
-  async getDealsByClientId(clientId: string): Promise<DealWithRelations[]> {
-    const ownerUsers = alias(users, "owner_users");
-    const results = await db
-      .select({
-        id: deals.id,
-        dealNumber: deals.dealNumber,
-        displayName: deals.displayName,
-        status: deals.status,
-        statusName: dealStatuses.name,
-        clientId: deals.clientId,
-        primaryContactId: deals.primaryContactId,
-        budgetHigh: deals.budgetHigh,
-        budgetLow: deals.budgetLow,
-        budgetNotes: deals.budgetNotes,
-        startedOn: deals.startedOn,
-        wonOn: deals.wonOn,
-        lastContactOn: deals.lastContactOn,
-        proposalSentOn: deals.proposalSentOn,
-        projectDate: deals.projectDate,
-        earliestEventDate: deals.earliestEventDate,
-        locations: deals.locations,
-        eventSchedule: deals.eventSchedule,
-        serviceIds: deals.serviceIds,
-        locationsText: deals.locationsText,
-        concept: deals.concept,
-        notes: deals.notes,
-        nextSteps: deals.nextSteps,
-        ownerId: deals.ownerId,
-        createdById: deals.createdById,
-        createdAt: deals.createdAt,
-        updatedAt: deals.updatedAt,
-        sortOrder: deals.sortOrder,
-        createdBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-        },
-        client: {
-          id: clients.id,
-          name: clients.name,
-        },
-        owner: {
-          id: ownerUsers.id,
-          firstName: ownerUsers.firstName,
-          lastName: ownerUsers.lastName,
-          profileImageUrl: ownerUsers.profileImageUrl,
-        },
-      })
-      .from(deals)
-      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
-      .leftJoin(users, eq(deals.createdById, users.id))
-      .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
-      .where(eq(deals.clientId, clientId))
-      .orderBy(desc(deals.createdAt));
-    return results as DealWithRelations[];
-  }
-
-  async getDealsByPrimaryContactId(contactId: string): Promise<DealWithRelations[]> {
-    const ownerUsers = alias(users, "owner_users");
-    const results = await db
-      .select({
-        id: deals.id,
-        dealNumber: deals.dealNumber,
-        displayName: deals.displayName,
-        status: deals.status,
-        statusName: dealStatuses.name,
-        clientId: deals.clientId,
-        primaryContactId: deals.primaryContactId,
-        budgetHigh: deals.budgetHigh,
-        budgetLow: deals.budgetLow,
-        budgetNotes: deals.budgetNotes,
-        startedOn: deals.startedOn,
-        wonOn: deals.wonOn,
-        lastContactOn: deals.lastContactOn,
-        proposalSentOn: deals.proposalSentOn,
-        projectDate: deals.projectDate,
-        earliestEventDate: deals.earliestEventDate,
-        locations: deals.locations,
-        eventSchedule: deals.eventSchedule,
-        serviceIds: deals.serviceIds,
-        locationsText: deals.locationsText,
-        concept: deals.concept,
-        notes: deals.notes,
-        nextSteps: deals.nextSteps,
-        ownerId: deals.ownerId,
-        createdById: deals.createdById,
-        createdAt: deals.createdAt,
-        updatedAt: deals.updatedAt,
-        sortOrder: deals.sortOrder,
-        createdBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-        },
-        client: {
-          id: clients.id,
-          name: clients.name,
-        },
-        owner: {
-          id: ownerUsers.id,
-          firstName: ownerUsers.firstName,
-          lastName: ownerUsers.lastName,
-          profileImageUrl: ownerUsers.profileImageUrl,
-        },
-      })
-      .from(deals)
-      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
-      .leftJoin(users, eq(deals.createdById, users.id))
-      .leftJoin(clients, eq(deals.clientId, clients.id))
-      .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
-      .where(eq(deals.primaryContactId, contactId))
-      .orderBy(desc(deals.createdAt));
-    return results as DealWithRelations[];
-  }
-
-  async createDeal(data: CreateDeal, createdById: string): Promise<Deal> {
-    const earliestEventDate = computeEarliestEventDate(data.eventSchedule as DealEvent[] | undefined);
-    
-    // Get max sortOrder to place new deal at the top
-    const [maxResult] = await db
-      .select({ maxSortOrder: sql<number>`COALESCE(MAX(${deals.sortOrder}), 0)` })
-      .from(deals);
-    const nextSortOrder = (maxResult?.maxSortOrder ?? 0) + 1;
-    
-    const [deal] = await db
-      .insert(deals)
-      .values({
-        ...data,
-        earliestEventDate,
-        sortOrder: nextSortOrder,
-        createdById,
-      })
-      .returning();
-    return deal;
-  }
-
-  async updateDeal(id: string, data: UpdateDeal): Promise<Deal | undefined> {
-    // Compute earliest event date if eventSchedule is being updated
-    const updateData: Record<string, unknown> = {
-      ...data,
-      updatedAt: new Date(),
-    };
-    
-    if (data.eventSchedule !== undefined) {
-      updateData.earliestEventDate = computeEarliestEventDate(data.eventSchedule as DealEvent[] | undefined);
-    }
-    
-    const [deal] = await db
-      .update(deals)
-      .set(updateData)
-      .where(eq(deals.id, id))
-      .returning();
-    return deal;
-  }
-
-  async deleteDeal(id: string): Promise<void> {
-    await db.delete(deals).where(eq(deals.id, id));
-  }
-
-  async reorderDeals(orderedDealIds: string[]): Promise<void> {
-    // Update sortOrder for each deal based on its position in the array
-    // First item gets the highest sortOrder (newest), last item gets 1 (oldest)
-    // Uses a single batched CASE/WHEN UPDATE for performance (vs individual updates)
-    
-    if (orderedDealIds.length === 0) return;
-    
-    const totalDeals = orderedDealIds.length;
-    const now = new Date();
-    
-    // Build CASE/WHEN clause for sortOrder
-    // Each deal gets: totalDeals - index (first item = highest number)
-    const caseStatements = orderedDealIds.map((dealId, index) => {
-      const newSortOrder = totalDeals - index;
-      return sql`WHEN ${dealId} THEN ${newSortOrder}::integer`;
-    });
-    
-    // Combine all CASE statements
-    const caseClause = sql.join(caseStatements, sql` `);
-    
-    // Execute single UPDATE with CASE/WHEN
-    await db.execute(sql`
-      UPDATE deals 
-      SET 
-        sort_order = CASE id ${caseClause} END,
-        updated_at = ${now}
-      WHERE id IN ${orderedDealIds}
-    `);
-  }
-
-  // Deal task operations
-  async getDealTaskById(id: string): Promise<DealTask | undefined> {
-    const [task] = await db
-      .select()
-      .from(dealTasks)
-      .where(eq(dealTasks.id, id));
-    return task;
-  }
-
-  async getDealTasks(dealId: string): Promise<DealTaskWithRelations[]> {
-    const createdByUsers = alias(users, "created_by_users");
-    const assignedUsers = alias(users, "assigned_users");
-    
-    const results = await db
-      .select({
-        id: dealTasks.id,
-        dealId: dealTasks.dealId,
-        title: dealTasks.title,
-        createdById: dealTasks.createdById,
-        dueDate: dealTasks.dueDate,
-        assignedUserId: dealTasks.assignedUserId,
-        completed: dealTasks.completed,
-        completedAt: dealTasks.completedAt,
-        createdAt: dealTasks.createdAt,
-        updatedAt: dealTasks.updatedAt,
-        createdBy: {
-          id: createdByUsers.id,
-          firstName: createdByUsers.firstName,
-          lastName: createdByUsers.lastName,
-          profileImageUrl: createdByUsers.profileImageUrl,
-        },
-        assignedUser: {
-          id: assignedUsers.id,
-          firstName: assignedUsers.firstName,
-          lastName: assignedUsers.lastName,
-          profileImageUrl: assignedUsers.profileImageUrl,
-        },
-      })
-      .from(dealTasks)
-      .leftJoin(createdByUsers, eq(dealTasks.createdById, createdByUsers.id))
-      .leftJoin(assignedUsers, eq(dealTasks.assignedUserId, assignedUsers.id))
-      .where(eq(dealTasks.dealId, dealId))
-      .orderBy(asc(dealTasks.completed), asc(dealTasks.dueDate), desc(dealTasks.createdAt));
-
-    return results.map(r => ({
-      id: r.id,
-      dealId: r.dealId,
-      title: r.title,
-      createdById: r.createdById,
-      dueDate: r.dueDate,
-      assignedUserId: r.assignedUserId,
-      completed: r.completed,
-      completedAt: r.completedAt,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-      createdBy: r.createdBy?.id ? r.createdBy : null,
-      assignedUser: r.assignedUser?.id ? r.assignedUser : null,
-    }));
-  }
-
-  async createDealTask(data: CreateDealTask, createdById: string): Promise<DealTask> {
-    const [task] = await db
-      .insert(dealTasks)
-      .values({
-        dealId: data.dealId,
-        title: data.title,
-        dueDate: data.dueDate || null,
-        assignedUserId: data.assignedUserId || null,
-        createdById,
-      })
-      .returning();
-    return task;
-  }
-
-  async updateDealTask(id: string, data: { completed?: boolean; assignedUserId?: string | null; dueDate?: string | null; title?: string }): Promise<DealTask | undefined> {
-    const updateData: Partial<{ completed: boolean; completedAt: Date | null; assignedUserId: string | null; dueDate: string | null; title: string; updatedAt: Date }> = {
-      updatedAt: new Date(),
-    };
-    
-    if (data.completed !== undefined) {
-      updateData.completed = data.completed;
-      updateData.completedAt = data.completed ? new Date() : null;
-    }
-    if (data.assignedUserId !== undefined) {
-      updateData.assignedUserId = data.assignedUserId;
-    }
-    if (data.dueDate !== undefined) {
-      updateData.dueDate = data.dueDate;
-    }
-    if (data.title !== undefined) {
-      updateData.title = data.title;
-    }
-
-    const [task] = await db
-      .update(dealTasks)
-      .set(updateData)
-      .where(eq(dealTasks.id, id))
-      .returning();
-    return task;
-  }
-
-  async deleteDealTask(id: string): Promise<void> {
-    await db.delete(dealTasks).where(eq(dealTasks.id, id));
-  }
-
-  // Client operations
-  async getClients(): Promise<Client[]> {
-    return await db
-      .select()
-      .from(clients)
-      .orderBy(asc(clients.name));
-  }
-
-  async getClientById(id: string): Promise<Client | undefined> {
-    const [client] = await db
-      .select()
-      .from(clients)
-      .where(eq(clients.id, id));
-    return client;
-  }
-
-  async createClient(data: CreateClient): Promise<Client> {
-    const [client] = await db
-      .insert(clients)
-      .values(data)
-      .returning();
-    return client;
-  }
-
-  async updateClient(id: string, data: UpdateClient): Promise<Client | undefined> {
-    const [client] = await db
-      .update(clients)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(clients.id, id))
-      .returning();
-    return client;
-  }
-
-  async deleteClient(id: string): Promise<void> {
-    await db.delete(clients).where(eq(clients.id, id));
-  }
-  
-  // Client-Contact link operations
-  async getContactsForClient(clientId: string): Promise<Contact[]> {
-    const result = await db
-      .select({ contact: contacts })
-      .from(clientContacts)
-      .innerJoin(contacts, eq(clientContacts.contactId, contacts.id))
-      .where(eq(clientContacts.clientId, clientId))
-      .orderBy(asc(contacts.lastName), asc(contacts.firstName));
-    return result.map(r => r.contact);
-  }
-
-  async getClientsForContact(contactId: string): Promise<Client[]> {
-    const result = await db
-      .select({ client: clients })
-      .from(clientContacts)
-      .innerJoin(clients, eq(clientContacts.clientId, clients.id))
-      .where(eq(clientContacts.contactId, contactId))
-      .orderBy(asc(clients.name));
-    return result.map(r => r.client);
-  }
-
-  async linkClientContact(clientId: string, contactId: string): Promise<void> {
-    await db
-      .insert(clientContacts)
-      .values({ clientId, contactId })
-      .onConflictDoNothing();
-  }
-
-  async unlinkClientContact(clientId: string, contactId: string): Promise<void> {
-    await db
-      .delete(clientContacts)
-      .where(
-        and(
-          eq(clientContacts.clientId, clientId),
-          eq(clientContacts.contactId, contactId)
-        )
-      );
-  }
-
-  // Brand operations
-  async getBrands(): Promise<Brand[]> {
-    return await db
-      .select()
-      .from(brands)
-      .orderBy(desc(brands.createdAt));
-  }
-
-  async getBrandById(id: string): Promise<Brand | undefined> {
-    const [brand] = await db
-      .select()
-      .from(brands)
-      .where(eq(brands.id, id));
-    return brand;
-  }
-
-  async createBrand(data: CreateBrand): Promise<Brand> {
-    const [brand] = await db
-      .insert(brands)
-      .values(data)
-      .returning();
-    return brand;
-  }
-
-  async updateBrand(id: string, data: UpdateBrand): Promise<Brand | undefined> {
-    const [brand] = await db
-      .update(brands)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(brands.id, id))
-      .returning();
-    return brand;
-  }
-
-  async deleteBrand(id: string): Promise<void> {
-    await db.delete(brands).where(eq(brands.id, id));
-  }
+  // ---- REMOVED METHODS (kept as reference comments) ----
+  // getDealStatuses, getDealStatusByName, getDealStatusById, updateDealStatus → dealsStorage
+  // getDeals, getDealById, getDealsByClientId, getDealsByPrimaryContactId → dealsStorage
+  // createDeal, updateDeal, deleteDeal, reorderDeals → dealsStorage
+  // getDealTaskById, getDealTasks, createDealTask, updateDealTask, deleteDealTask → dealsStorage
+  // getClients, getClientById, createClient, updateClient, deleteClient → clientsStorage
+  // getContactsForClient, getClientsForContact, linkClientContact, unlinkClientContact → contactsStorage
+  // getBrands, getBrandById, createBrand, updateBrand, deleteBrand → referenceDataStorage
 }
 
 export const storage = new DatabaseStorage();

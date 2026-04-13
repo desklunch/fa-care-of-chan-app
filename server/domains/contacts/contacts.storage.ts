@@ -24,7 +24,7 @@ export interface ContactWithFullRelations extends Contact {
   deals: DealWithRelations[];
 }
 
-export const contactsStorage = {
+export class ContactsStorage {
   async getContactsWithRelations(): Promise<ContactWithRelations[]> {
     const result = await db.execute(sql`
       SELECT 
@@ -64,7 +64,7 @@ export const contactsStorage = {
       vendors: row.vendors || [],
       clients: row.clients || [],
     }));
-  },
+  }
 
   async getClientLinkedContacts(): Promise<ContactWithRelations[]> {
     const linkedContactIds = await db
@@ -74,7 +74,7 @@ export const contactsStorage = {
     const linkedIds = new Set(linkedContactIds.map(r => r.contactId));
     const allContactsWithRelations = await this.getContactsWithRelations();
     return allContactsWithRelations.filter(contact => linkedIds.has(contact.id));
-  },
+  }
 
   async getVendorLinkedContacts(): Promise<ContactWithRelations[]> {
     const linkedContactIds = await db
@@ -84,7 +84,7 @@ export const contactsStorage = {
     const linkedIds = new Set(linkedContactIds.map(r => r.contactId));
     const allContactsWithRelations = await this.getContactsWithRelations();
     return allContactsWithRelations.filter(contact => linkedIds.has(contact.id));
-  },
+  }
 
   async getContactById(id: string): Promise<Contact | undefined> {
     const [contact] = await db
@@ -92,7 +92,7 @@ export const contactsStorage = {
       .from(contacts)
       .where(eq(contacts.id, id));
     return contact;
-  },
+  }
 
   async createContact(data: CreateContact): Promise<Contact> {
     const [contact] = await db
@@ -100,7 +100,7 @@ export const contactsStorage = {
       .values(data)
       .returning();
     return contact;
-  },
+  }
 
   async updateContact(id: string, data: UpdateContact): Promise<Contact | undefined> {
     const [contact] = await db
@@ -112,14 +112,14 @@ export const contactsStorage = {
       .where(eq(contacts.id, id))
       .returning();
     return contact;
-  },
+  }
 
   async deleteContact(id: string): Promise<void> {
     await db.update(deals).set({ primaryContactId: null }).where(eq(deals.primaryContactId, id));
     await db.delete(vendorsContacts).where(eq(vendorsContacts.contactId, id));
     await db.delete(clientContacts).where(eq(clientContacts.contactId, id));
     await db.delete(contacts).where(eq(contacts.id, id));
-  },
+  }
 
   async getClientsForContact(contactId: string): Promise<Client[]> {
     const result = await db
@@ -129,7 +129,7 @@ export const contactsStorage = {
       .where(eq(clientContacts.contactId, contactId))
       .orderBy(asc(clients.name));
     return result.map(r => r.client);
-  },
+  }
 
   async getVendorsForContact(contactId: string): Promise<Vendor[]> {
     const result = await db
@@ -139,14 +139,14 @@ export const contactsStorage = {
       .where(eq(vendorsContacts.contactId, contactId))
       .orderBy(asc(vendors.businessName));
     return result.map(r => r.vendor);
-  },
+  }
 
   async linkClientContact(clientId: string, contactId: string): Promise<void> {
     await db
       .insert(clientContacts)
       .values({ clientId, contactId })
       .onConflictDoNothing();
-  },
+  }
 
   async unlinkClientContact(clientId: string, contactId: string): Promise<void> {
     await db
@@ -157,14 +157,14 @@ export const contactsStorage = {
           eq(clientContacts.contactId, contactId)
         )
       );
-  },
+  }
 
   async linkVendorContact(vendorId: string, contactId: string): Promise<void> {
     await db
       .insert(vendorsContacts)
       .values({ vendorId, contactId })
       .onConflictDoNothing();
-  },
+  }
 
   async unlinkVendorContact(vendorId: string, contactId: string): Promise<void> {
     await db
@@ -175,7 +175,7 @@ export const contactsStorage = {
           eq(vendorsContacts.contactId, contactId)
         )
       );
-  },
+  }
 
   async getClientById(id: string): Promise<Client | undefined> {
     const [client] = await db
@@ -183,7 +183,7 @@ export const contactsStorage = {
       .from(clients)
       .where(eq(clients.id, id));
     return client;
-  },
+  }
 
   async getVendorById(id: string): Promise<Vendor | undefined> {
     const [vendor] = await db
@@ -191,7 +191,7 @@ export const contactsStorage = {
       .from(vendors)
       .where(eq(vendors.id, id));
     return vendor;
-  },
+  }
 
   async getDealsByPrimaryContactId(contactId: string): Promise<DealWithRelations[]> {
     const ownerUsers = alias(users, "owner_users");
@@ -258,7 +258,7 @@ export const contactsStorage = {
       .orderBy(desc(deals.createdAt));
 
     return contactDeals as DealWithRelations[];
-  },
+  }
 
   async getContactByIdWithRelations(id: string): Promise<ContactWithFullRelations | undefined> {
     const [contact] = await db
@@ -351,5 +351,7 @@ export const contactsStorage = {
       linkedVendors: linkedVendorsResult.map(r => r.vendor),
       deals: contactDeals as DealWithRelations[],
     };
-  },
-};
+  }
+}
+
+export const contactsStorage = new ContactsStorage();

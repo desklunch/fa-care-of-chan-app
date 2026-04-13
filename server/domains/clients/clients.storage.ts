@@ -25,13 +25,13 @@ export interface ClientWithFullRelations extends Client {
   linkedDeals: LinkedDealForClient[];
 }
 
-export const clientsStorage = {
+export class ClientsStorage {
   async getClients(): Promise<Client[]> {
     return await db
       .select()
       .from(clients)
       .orderBy(desc(clients.createdAt));
-  },
+  }
 
   async getClientById(id: string): Promise<Client | undefined> {
     const [client] = await db
@@ -39,7 +39,7 @@ export const clientsStorage = {
       .from(clients)
       .where(eq(clients.id, id));
     return client;
-  },
+  }
 
   async createClient(data: CreateClient): Promise<Client> {
     const [client] = await db
@@ -47,7 +47,7 @@ export const clientsStorage = {
       .values(data)
       .returning();
     return client;
-  },
+  }
 
   async updateClient(id: string, data: UpdateClient): Promise<Client | undefined> {
     const [client] = await db
@@ -59,11 +59,11 @@ export const clientsStorage = {
       .where(eq(clients.id, id))
       .returning();
     return client;
-  },
+  }
 
   async deleteClient(id: string): Promise<void> {
     await db.delete(clients).where(eq(clients.id, id));
-  },
+  }
 
   async getContactsForClient(clientId: string): Promise<Contact[]> {
     const result = await db
@@ -73,7 +73,7 @@ export const clientsStorage = {
       .where(eq(clientContacts.clientId, clientId))
       .orderBy(asc(contacts.lastName), asc(contacts.firstName));
     return result.map(r => r.contact);
-  },
+  }
 
   async getContactById(id: string): Promise<Contact | undefined> {
     const [contact] = await db
@@ -81,20 +81,20 @@ export const clientsStorage = {
       .from(contacts)
       .where(eq(contacts.id, id));
     return contact;
-  },
+  }
 
   async linkClientContact(clientId: string, contactId: string): Promise<void> {
     await db
       .insert(clientContacts)
       .values({ clientId, contactId })
       .onConflictDoNothing();
-  },
+  }
 
   async unlinkClientContact(clientId: string, contactId: string): Promise<void> {
     await db.delete(clientContacts).where(
       sql`${clientContacts.clientId} = ${clientId} AND ${clientContacts.contactId} = ${contactId}`
     );
-  },
+  }
 
   async getClientByIdWithRelations(id: string): Promise<ClientWithFullRelations | undefined> {
     const [client] = await db
@@ -246,5 +246,7 @@ export const clientsStorage = {
       deals: clientDeals as DealWithRelations[],
       linkedDeals: linkedDealResults as LinkedDealForClient[],
     };
-  },
-};
+  }
+}
+
+export const clientsStorage = new ClientsStorage();

@@ -1,7 +1,7 @@
 import { BaseService, ServiceError } from "../../services/base.service";
 import { domainEvents } from "../../lib/events";
-import type { IStorage } from "../../storage";
 import { notificationsStorage } from "../notifications/notifications.storage";
+import { dealsStorage } from "./deals.storage";
 import type {
   Deal,
   DealWithRelations,
@@ -19,30 +19,26 @@ export interface ListDealsOptions {
 }
 
 export class DealsService extends BaseService {
-  constructor(storage: IStorage) {
-    super(storage);
-  }
-
   async list(options?: ListDealsOptions): Promise<DealWithRelations[]> {
-    return this.storage.getDeals(options);
+    return dealsStorage.getDeals(options);
   }
 
   async getById(id: string): Promise<DealWithRelations> {
-    const deal = await this.storage.getDealById(id);
+    const deal = await dealsStorage.getDealById(id);
     return this.ensureExists(deal, "Deal", id);
   }
 
   async getByClientId(clientId: string): Promise<DealWithRelations[]> {
-    return this.storage.getDealsByClientId(clientId);
+    return dealsStorage.getDealsByClientId(clientId);
   }
 
   async getByPrimaryContactId(contactId: string): Promise<DealWithRelations[]> {
-    return this.storage.getDealsByPrimaryContactId(contactId);
+    return dealsStorage.getDealsByPrimaryContactId(contactId);
   }
 
   async create(data: CreateDeal, actorId: string): Promise<Deal> {
     if (!data.status) {
-      const allStatuses = await this.storage.getDealStatuses();
+      const allStatuses = await dealsStorage.getDealStatuses();
       const defaultStatus = allStatuses.find(s => s.isDefault);
       if (defaultStatus) {
         data = { ...data, status: defaultStatus.id };
@@ -56,7 +52,7 @@ export class DealsService extends BaseService {
       });
     }
 
-    const deal = await this.storage.createDeal(parsed.data, actorId);
+    const deal = await dealsStorage.createDeal(parsed.data, actorId);
 
     if (deal.ownerId) {
       notificationsStorage
@@ -78,7 +74,7 @@ export class DealsService extends BaseService {
 
   async update(id: string, data: UpdateDeal, actorId: string): Promise<Deal> {
     const existingDeal = this.ensureExists(
-      await this.storage.getDealById(id),
+      await dealsStorage.getDealById(id),
       "Deal",
       id
     );
@@ -90,7 +86,7 @@ export class DealsService extends BaseService {
       });
     }
 
-    const updatedDeal = await this.storage.updateDeal(id, parsed.data);
+    const updatedDeal = await dealsStorage.updateDeal(id, parsed.data);
     if (!updatedDeal) {
       throw ServiceError.notFound("Deal", id);
     }
@@ -107,7 +103,7 @@ export class DealsService extends BaseService {
 
     if (existingDeal.status !== updatedDeal.status) {
       const fromName = (existingDeal as DealWithRelations).statusName || String(existingDeal.status);
-      const allStatuses = await this.storage.getDealStatuses();
+      const allStatuses = await dealsStorage.getDealStatuses();
       const toStatusRecord = allStatuses.find(s => s.id === updatedDeal.status);
       const toName = toStatusRecord?.name || String(updatedDeal.status);
       domainEvents.emit({
@@ -141,12 +137,12 @@ export class DealsService extends BaseService {
 
   async delete(id: string, actorId: string): Promise<void> {
     const deal = this.ensureExists(
-      await this.storage.getDealById(id),
+      await dealsStorage.getDealById(id),
       "Deal",
       id
     );
 
-    await this.storage.deleteDeal(id);
+    await dealsStorage.deleteDeal(id);
 
     domainEvents.emit({
       type: "deal:deleted",
@@ -159,12 +155,12 @@ export class DealsService extends BaseService {
 
   async moveToStage(id: string, newStage: DealStatus, actorId: string): Promise<Deal> {
     const existingDeal = this.ensureExists(
-      await this.storage.getDealById(id),
+      await dealsStorage.getDealById(id),
       "Deal",
       id
     );
 
-    const targetStatus = await this.storage.getDealStatusByName(newStage);
+    const targetStatus = await dealsStorage.getDealStatusByName(newStage);
     if (!targetStatus) {
       throw ServiceError.validation(`Invalid status: ${newStage}`);
     }
@@ -173,7 +169,7 @@ export class DealsService extends BaseService {
       return existingDeal;
     }
 
-    const updatedDeal = await this.storage.updateDeal(id, { status: targetStatus.id });
+    const updatedDeal = await dealsStorage.updateDeal(id, { status: targetStatus.id });
     if (!updatedDeal) {
       throw ServiceError.notFound("Deal", id);
     }
@@ -192,7 +188,7 @@ export class DealsService extends BaseService {
 
   async assignOwner(id: string, ownerId: string, actorId: string): Promise<Deal> {
     const existingDeal = this.ensureExists(
-      await this.storage.getDealById(id),
+      await dealsStorage.getDealById(id),
       "Deal",
       id
     );
@@ -201,7 +197,7 @@ export class DealsService extends BaseService {
       return existingDeal;
     }
 
-    const updatedDeal = await this.storage.updateDeal(id, { ownerId });
+    const updatedDeal = await dealsStorage.updateDeal(id, { ownerId });
     if (!updatedDeal) {
       throw ServiceError.notFound("Deal", id);
     }
@@ -228,22 +224,22 @@ export class DealsService extends BaseService {
       throw ServiceError.validation("dealIds must be a non-empty array");
     }
 
-    await this.storage.reorderDeals(dealIds);
+    await dealsStorage.reorderDeals(dealIds);
   }
 
   async getTasks(dealId: string): Promise<DealTaskWithRelations[]> {
     this.ensureExists(
-      await this.storage.getDealById(dealId),
+      await dealsStorage.getDealById(dealId),
       "Deal",
       dealId
     );
 
-    return this.storage.getDealTasks(dealId);
+    return dealsStorage.getDealTasks(dealId);
   }
 
   async createTask(data: CreateDealTask, actorId: string): Promise<DealTask> {
     this.ensureExists(
-      await this.storage.getDealById(data.dealId),
+      await dealsStorage.getDealById(data.dealId),
       "Deal",
       data.dealId
     );
@@ -255,7 +251,7 @@ export class DealsService extends BaseService {
       });
     }
 
-    const task = await this.storage.createDealTask(parsed.data, actorId);
+    const task = await dealsStorage.createDealTask(parsed.data, actorId);
 
     domainEvents.emit({
       type: "deal:task_created",
@@ -282,7 +278,7 @@ export class DealsService extends BaseService {
     }
 
     const existingTask = this.ensureExists(
-      await this.storage.getDealTaskById(taskId),
+      await dealsStorage.getDealTaskById(taskId),
       "Task",
       taskId
     );
@@ -291,7 +287,7 @@ export class DealsService extends BaseService {
       throw ServiceError.validation("Task does not belong to the specified deal");
     }
 
-    const updatedTask = await this.storage.updateDealTask(taskId, parsed.data);
+    const updatedTask = await dealsStorage.updateDealTask(taskId, parsed.data);
     if (!updatedTask) {
       throw ServiceError.notFound("Task", taskId);
     }
@@ -310,7 +306,7 @@ export class DealsService extends BaseService {
 
   async deleteTask(dealId: string, taskId: string, actorId: string): Promise<void> {
     const existingTask = this.ensureExists(
-      await this.storage.getDealTaskById(taskId),
+      await dealsStorage.getDealTaskById(taskId),
       "Task",
       taskId
     );
@@ -319,7 +315,7 @@ export class DealsService extends BaseService {
       throw ServiceError.validation("Task does not belong to the specified deal");
     }
 
-    await this.storage.deleteDealTask(taskId);
+    await dealsStorage.deleteDealTask(taskId);
 
     domainEvents.emit({
       type: "deal:task_deleted",
@@ -332,7 +328,7 @@ export class DealsService extends BaseService {
 
   async duplicate(id: string, actorId: string): Promise<Deal> {
     const existingDeal = this.ensureExists(
-      await this.storage.getDealById(id),
+      await dealsStorage.getDealById(id),
       "Deal",
       id
     );
@@ -356,7 +352,7 @@ export class DealsService extends BaseService {
       projectDate: existingDeal.projectDate,
     };
 
-    const newDeal = await this.storage.createDeal(createData, actorId);
+    const newDeal = await dealsStorage.createDeal(createData, actorId);
 
     domainEvents.emit({
       type: "deal:created",
