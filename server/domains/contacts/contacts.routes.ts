@@ -1,10 +1,13 @@
 import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
-import { logAuditEvent, getChangedFields } from "../../audit";
 import { contactsStorage } from "./contacts.storage";
-import { insertContactSchema, updateContactSchema } from "@shared/schema";
+import { ContactsService } from "./contacts.service";
+import { ServiceError } from "../../services/base.service";
+import type { IStorage } from "../../storage";
 
-export function registerContactsRoutes(app: Express): void {
+export function registerContactsRoutes(app: Express, storage?: IStorage): void {
+  const contactsService = new ContactsService(storage ?? ({} as IStorage));
+
   app.get("/api/contacts", isAuthenticated, async (req, res) => {
     try {
       const contacts = await contactsStorage.getContactsWithRelations();
@@ -63,105 +66,42 @@ export function registerContactsRoutes(app: Express): void {
 
   app.post("/api/contacts", isAuthenticated, async (req: any, res) => {
     try {
-      const result = insertContactSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Invalid data",
-          errors: result.error.flatten(),
-        });
-      }
-
-      const contact = await contactsStorage.createContact(result.data);
-
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "contact",
-        entityId: contact.id,
-        status: "success",
-        metadata: { contact: `${result.data.firstName} ${result.data.lastName}` },
-      });
-
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      const contact = await contactsService.create(req.body, actorId);
       res.status(201).json(contact);
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message, ...(error.details || {}) });
+      }
       console.error("Error creating contact:", error);
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "contact",
-        status: "failure",
-        metadata: { error: String(error) },
-      });
       res.status(500).json({ message: "Failed to create contact" });
     }
   });
 
   app.patch("/api/contacts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const result = updateContactSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Invalid data",
-          errors: result.error.flatten(),
-        });
-      }
-
-      const existingContact = await contactsStorage.getContactById(req.params.id);
-      if (!existingContact) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-
-      const contact = await contactsStorage.updateContact(req.params.id, result.data);
-
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "contact",
-        entityId: req.params.id,
-        status: "success",
-        changes: getChangedFields(existingContact, result.data),
-      });
-
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      const contact = await contactsService.update(req.params.id, req.body, actorId);
       res.json(contact);
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message, ...(error.details || {}) });
+      }
       console.error("Error updating contact:", error);
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "contact",
-        entityId: req.params.id,
-        status: "failure",
-        metadata: { error: String(error) },
-      });
       res.status(500).json({ message: "Failed to update contact" });
     }
   });
 
   app.delete("/api/contacts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const existingContact = await contactsStorage.getContactById(req.params.id);
-      if (!existingContact) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-
-      await contactsStorage.deleteContact(req.params.id);
-
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "contact",
-        entityId: req.params.id,
-        status: "success",
-        metadata: { 
-          deletedContact: `${existingContact.firstName} ${existingContact.lastName}` 
-        },
-      });
-
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await contactsService.delete(req.params.id, actorId);
       res.status(204).send();
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error deleting contact:", error);
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "contact",
-        entityId: req.params.id,
-        status: "failure",
-        metadata: { error: String(error) },
-      });
       res.status(500).json({ message: "Failed to delete contact" });
     }
   });
@@ -196,26 +136,13 @@ export function registerContactsRoutes(app: Express): void {
 
   app.post("/api/contacts/:id/clients/:clientId", isAuthenticated, async (req: any, res) => {
     try {
-      const contact = await contactsStorage.getContactById(req.params.id);
-      if (!contact) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-      const client = await contactsStorage.getClientById(req.params.clientId);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      
-      await contactsStorage.linkClientContact(req.params.clientId, req.params.id);
-      
-      await logAuditEvent(req, {
-        action: "link",
-        entityType: "client_contact",
-        entityId: req.params.id,
-        metadata: { contactId: req.params.id, clientId: req.params.clientId, clientName: client.name },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await contactsService.linkClient(req.params.id, req.params.clientId, actorId);
       res.status(201).json({ message: "Client linked to contact" });
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error linking client to contact:", error);
       res.status(500).json({ message: "Failed to link client to contact" });
     }
@@ -223,17 +150,13 @@ export function registerContactsRoutes(app: Express): void {
 
   app.delete("/api/contacts/:id/clients/:clientId", isAuthenticated, async (req: any, res) => {
     try {
-      await contactsStorage.unlinkClientContact(req.params.clientId, req.params.id);
-      
-      await logAuditEvent(req, {
-        action: "unlink",
-        entityType: "client_contact",
-        entityId: req.params.id,
-        metadata: { contactId: req.params.id, clientId: req.params.clientId },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await contactsService.unlinkClient(req.params.id, req.params.clientId, actorId);
       res.status(204).send();
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error unlinking client from contact:", error);
       res.status(500).json({ message: "Failed to unlink client from contact" });
     }
@@ -255,26 +178,13 @@ export function registerContactsRoutes(app: Express): void {
 
   app.post("/api/contacts/:id/vendors/:vendorId", isAuthenticated, async (req: any, res) => {
     try {
-      const contact = await contactsStorage.getContactById(req.params.id);
-      if (!contact) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-      const vendor = await contactsStorage.getVendorById(req.params.vendorId);
-      if (!vendor) {
-        return res.status(404).json({ message: "Vendor not found" });
-      }
-      
-      await contactsStorage.linkVendorContact(req.params.vendorId, req.params.id);
-      
-      await logAuditEvent(req, {
-        action: "link",
-        entityType: "vendor_contact",
-        entityId: req.params.id,
-        metadata: { contactId: req.params.id, vendorId: req.params.vendorId, vendorName: vendor.businessName },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await contactsService.linkVendor(req.params.id, req.params.vendorId, actorId);
       res.status(201).json({ message: "Vendor linked to contact" });
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error linking vendor to contact:", error);
       res.status(500).json({ message: "Failed to link vendor to contact" });
     }
@@ -282,17 +192,13 @@ export function registerContactsRoutes(app: Express): void {
 
   app.delete("/api/contacts/:id/vendors/:vendorId", isAuthenticated, async (req: any, res) => {
     try {
-      await contactsStorage.unlinkVendorContact(req.params.vendorId, req.params.id);
-      
-      await logAuditEvent(req, {
-        action: "unlink",
-        entityType: "vendor_contact",
-        entityId: req.params.id,
-        metadata: { contactId: req.params.id, vendorId: req.params.vendorId },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await contactsService.unlinkVendor(req.params.id, req.params.vendorId, actorId);
       res.status(204).send();
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error unlinking vendor from contact:", error);
       res.status(500).json({ message: "Failed to unlink vendor from contact" });
     }

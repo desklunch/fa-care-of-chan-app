@@ -323,6 +323,42 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).contactId ?? null,
     },
   },
+  "contact:linked_client": {
+    type: "contact:linked_client",
+    audit: {
+      action: "link",
+      entityType: "client_contact",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+      extractChanges: (e) => ({ clientId: (e as any).clientId, clientName: (e as any).clientName }),
+    },
+  },
+  "contact:unlinked_client": {
+    type: "contact:unlinked_client",
+    audit: {
+      action: "unlink",
+      entityType: "client_contact",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+      extractChanges: (e) => ({ clientId: (e as any).clientId }),
+    },
+  },
+  "contact:linked_vendor": {
+    type: "contact:linked_vendor",
+    audit: {
+      action: "link",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+      extractChanges: (e) => ({ vendorId: (e as any).vendorId, vendorName: (e as any).vendorName }),
+    },
+  },
+  "contact:unlinked_vendor": {
+    type: "contact:unlinked_vendor",
+    audit: {
+      action: "unlink",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).contactId ?? null,
+      extractChanges: (e) => ({ vendorId: (e as any).vendorId }),
+    },
+  },
   "client:created": {
     type: "client:created",
     audit: {
@@ -346,6 +382,24 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       action: "delete",
       entityType: "client",
       extractEntityId: (e) => (e as any).clientId ?? null,
+    },
+  },
+  "client:linked_contact": {
+    type: "client:linked_contact",
+    audit: {
+      action: "link",
+      entityType: "client_contact",
+      extractEntityId: (e) => (e as any).clientId ?? null,
+      extractChanges: (e) => ({ contactId: (e as any).contactId, contactName: (e as any).contactName }),
+    },
+  },
+  "client:unlinked_contact": {
+    type: "client:unlinked_contact",
+    audit: {
+      action: "unlink",
+      entityType: "client_contact",
+      extractEntityId: (e) => (e as any).clientId ?? null,
+      extractChanges: (e) => ({ contactId: (e as any).contactId }),
     },
   },
   "vendor:created": {
@@ -431,6 +485,54 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractEntityId: (e) => (e as any).requestId ?? null,
       extractChanges: (e) => ({
         recipientEmail: (e as any).recipientEmail,
+      }),
+    },
+  },
+  "vendor:linked_contact": {
+    type: "vendor:linked_contact",
+    audit: {
+      action: "link",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+      extractChanges: (e) => ({ contactId: (e as any).contactId, contactName: (e as any).contactName }),
+    },
+  },
+  "vendor:unlinked_contact": {
+    type: "vendor:unlinked_contact",
+    audit: {
+      action: "unlink",
+      entityType: "vendor",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+      extractChanges: (e) => ({ contactId: (e as any).contactId }),
+    },
+  },
+  "vendor:token_generated": {
+    type: "vendor:token_generated",
+    audit: {
+      action: "create",
+      entityType: "vendor_update_token",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+      extractChanges: (e) => ({ expiresAt: (e as any).expiresAt }),
+    },
+  },
+  "vendor:token_consumed": {
+    type: "vendor:token_consumed",
+    audit: {
+      action: "update",
+      entityType: "vendor_update_token",
+      extractEntityId: (e) => (e as any).vendorId ?? null,
+    },
+  },
+  "vendor:bulk_email_sent": {
+    type: "vendor:bulk_email_sent",
+    audit: {
+      action: "email_sent",
+      entityType: "vendor_update_token",
+      extractEntityId: () => "batch",
+      extractChanges: (e) => ({
+        totalVendors: (e as any).totalVendors,
+        successful: (e as any).successful,
+        failed: (e as any).failed,
       }),
     },
   },

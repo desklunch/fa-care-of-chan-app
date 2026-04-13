@@ -312,6 +312,39 @@ export interface ContactDeletedEvent {
   timestamp: Date;
 }
 
+export interface ContactLinkedClientEvent {
+  type: "contact:linked_client";
+  contactId: string;
+  clientId: string;
+  clientName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ContactUnlinkedClientEvent {
+  type: "contact:unlinked_client";
+  contactId: string;
+  clientId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ContactLinkedVendorEvent {
+  type: "contact:linked_vendor";
+  contactId: string;
+  vendorId: string;
+  vendorName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ContactUnlinkedVendorEvent {
+  type: "contact:unlinked_vendor";
+  contactId: string;
+  vendorId: string;
+  actorId: string;
+  timestamp: Date;
+}
 export interface ClientCreatedEvent {
   type: "client:created";
   clientId: string;
@@ -337,6 +370,22 @@ export interface ClientDeletedEvent {
   timestamp: Date;
 }
 
+export interface ClientLinkedContactEvent {
+  type: "client:linked_contact";
+  clientId: string;
+  contactId: string;
+  contactName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ClientUnlinkedContactEvent {
+  type: "client:unlinked_contact";
+  clientId: string;
+  contactId: string;
+  actorId: string;
+  timestamp: Date;
+}
 export interface VendorCreatedEvent {
   type: "vendor:created";
   vendorId: string;
@@ -370,11 +419,28 @@ export interface FormTemplateCreatedEvent {
   timestamp: Date;
 }
 
+export interface VendorLinkedContactEvent {
+  type: "vendor:linked_contact";
+  vendorId: string;
+  contactId: string;
+  contactName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface FormTemplateUpdatedEvent {
   type: "form_template:updated";
   templateId: string;
   templateName: string;
   changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VendorUnlinkedContactEvent {
+  type: "vendor:unlinked_contact";
+  vendorId: string;
+  contactId: string;
   actorId: string;
   timestamp: Date;
 }
@@ -387,10 +453,28 @@ export interface FormTemplateDeletedEvent {
   timestamp: Date;
 }
 
+export interface VendorTokenGeneratedEvent {
+  type: "vendor:token_generated";
+  vendorId: string;
+  vendorName: string;
+  expiresAt: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface FormRequestCreatedEvent {
   type: "form_request:created";
   requestId: string;
   requestTitle: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VendorTokenConsumedEvent {
+  type: "vendor:token_consumed";
+  vendorId: string;
+  vendorName: string;
+  token: string;
   actorId: string;
   timestamp: Date;
 }
@@ -417,6 +501,15 @@ export interface FormRequestSentEvent {
   requestId: string;
   requestTitle: string;
   recipientEmail: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface VendorBulkEmailSentEvent {
+  type: "vendor:bulk_email_sent";
+  totalVendors: number;
+  successful: number;
+  failed: number;
   actorId: string;
   timestamp: Date;
 }
@@ -454,12 +547,23 @@ export type DomainEvent =
   | ContactCreatedEvent
   | ContactUpdatedEvent
   | ContactDeletedEvent
+  | ContactLinkedClientEvent
+  | ContactUnlinkedClientEvent
+  | ContactLinkedVendorEvent
+  | ContactUnlinkedVendorEvent
   | ClientCreatedEvent
   | ClientUpdatedEvent
   | ClientDeletedEvent
+  | ClientLinkedContactEvent
+  | ClientUnlinkedContactEvent
   | VendorCreatedEvent
   | VendorUpdatedEvent
   | VendorDeletedEvent
+  | VendorLinkedContactEvent
+  | VendorUnlinkedContactEvent
+  | VendorTokenGeneratedEvent
+  | VendorTokenConsumedEvent
+  | VendorBulkEmailSentEvent
   | FormTemplateCreatedEvent
   | FormTemplateUpdatedEvent
   | FormTemplateDeletedEvent
@@ -505,12 +609,23 @@ type EventMap = {
   "contact:created": ContactCreatedEvent;
   "contact:updated": ContactUpdatedEvent;
   "contact:deleted": ContactDeletedEvent;
+  "contact:linked_client": ContactLinkedClientEvent;
+  "contact:unlinked_client": ContactUnlinkedClientEvent;
+  "contact:linked_vendor": ContactLinkedVendorEvent;
+  "contact:unlinked_vendor": ContactUnlinkedVendorEvent;
   "client:created": ClientCreatedEvent;
   "client:updated": ClientUpdatedEvent;
   "client:deleted": ClientDeletedEvent;
+  "client:linked_contact": ClientLinkedContactEvent;
+  "client:unlinked_contact": ClientUnlinkedContactEvent;
   "vendor:created": VendorCreatedEvent;
   "vendor:updated": VendorUpdatedEvent;
   "vendor:deleted": VendorDeletedEvent;
+  "vendor:linked_contact": VendorLinkedContactEvent;
+  "vendor:unlinked_contact": VendorUnlinkedContactEvent;
+  "vendor:token_generated": VendorTokenGeneratedEvent;
+  "vendor:token_consumed": VendorTokenConsumedEvent;
+  "vendor:bulk_email_sent": VendorBulkEmailSentEvent;
   "form_template:created": FormTemplateCreatedEvent;
   "form_template:updated": FormTemplateUpdatedEvent;
   "form_template:deleted": FormTemplateDeletedEvent;

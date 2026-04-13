@@ -1,11 +1,14 @@
 import { Express } from "express";
 import { isAuthenticated, isManagerOrAdmin } from "../../googleAuth";
-import { logAuditEvent, getChangedFields } from "../../audit";
 import { clientsStorage } from "./clients.storage";
+import { ClientsService } from "./clients.service";
+import { ServiceError } from "../../services/base.service";
 import { storage } from "../../storage";
-import { insertClientSchema, updateClientSchema } from "@shared/schema";
+import type { IStorage } from "../../storage";
 
-export function registerClientsRoutes(app: Express): void {
+export function registerClientsRoutes(app: Express, storageOverride?: IStorage): void {
+  const clientsService = new ClientsService(storageOverride ?? ({} as IStorage));
+
   app.get("/api/clients", isAuthenticated, async (req, res) => {
     try {
       const clients = await clientsStorage.getClients();
@@ -58,20 +61,12 @@ export function registerClientsRoutes(app: Express): void {
 
   app.post("/api/clients", isAuthenticated, async (req: any, res) => {
     try {
-      const validatedData = insertClientSchema.parse(req.body);
-      const client = await clientsStorage.createClient(validatedData);
-      
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "client",
-        entityId: client.id,
-        metadata: { name: client.name },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      const client = await clientsService.create(req.body, actorId);
       res.status(201).json(client);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+    } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message, ...(error.details || {}) });
       }
       console.error("Error creating client:", error);
       res.status(500).json({ message: "Failed to create client" });
@@ -80,29 +75,12 @@ export function registerClientsRoutes(app: Express): void {
 
   app.patch("/api/clients/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const existingClient = await clientsStorage.getClientById(req.params.id);
-      if (!existingClient) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      
-      const validatedData = updateClientSchema.parse(req.body);
-      const client = await clientsStorage.updateClient(req.params.id, validatedData);
-      if (!client) {
-        return res.status(500).json({ message: "Failed to update client" });
-      }
-      
-      const changes = getChangedFields(existingClient, client);
-      await logAuditEvent(req, {
-        action: "update",
-        entityType: "client",
-        entityId: req.params.id,
-        changes,
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      const client = await clientsService.update(req.params.id, req.body, actorId);
       res.json(client);
-    } catch (error: any) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+    } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message, ...(error.details || {}) });
       }
       console.error("Error updating client:", error);
       res.status(500).json({ message: "Failed to update client" });
@@ -111,22 +89,13 @@ export function registerClientsRoutes(app: Express): void {
 
   app.delete("/api/clients/:id", isAuthenticated, isManagerOrAdmin, async (req: any, res) => {
     try {
-      const client = await clientsStorage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      
-      await clientsStorage.deleteClient(req.params.id);
-      
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "client",
-        entityId: req.params.id,
-        metadata: { name: client.name },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await clientsService.delete(req.params.id, actorId);
       res.status(204).send();
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error deleting client:", error);
       res.status(500).json({ message: "Failed to delete client" });
     }
@@ -148,26 +117,13 @@ export function registerClientsRoutes(app: Express): void {
 
   app.post("/api/clients/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
     try {
-      const client = await clientsStorage.getClientById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ message: "Client not found" });
-      }
-      const contact = await clientsStorage.getContactById(req.params.contactId);
-      if (!contact) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-      
-      await clientsStorage.linkClientContact(req.params.id, req.params.contactId);
-      
-      await logAuditEvent(req, {
-        action: "link",
-        entityType: "client_contact",
-        entityId: req.params.id,
-        metadata: { clientId: req.params.id, contactId: req.params.contactId, contactName: `${contact.firstName} ${contact.lastName}` },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await clientsService.linkContact(req.params.id, req.params.contactId, actorId);
       res.status(201).json({ message: "Contact linked to client" });
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error linking contact to client:", error);
       res.status(500).json({ message: "Failed to link contact to client" });
     }
@@ -175,17 +131,13 @@ export function registerClientsRoutes(app: Express): void {
 
   app.delete("/api/clients/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
     try {
-      await clientsStorage.unlinkClientContact(req.params.id, req.params.contactId);
-      
-      await logAuditEvent(req, {
-        action: "unlink",
-        entityType: "client_contact",
-        entityId: req.params.id,
-        metadata: { clientId: req.params.id, contactId: req.params.contactId },
-      });
-      
+      const actorId = req.user?.id || req.user?.claims?.sub || "unknown";
+      await clientsService.unlinkContact(req.params.id, req.params.contactId, actorId);
       res.status(204).send();
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
       console.error("Error unlinking contact from client:", error);
       res.status(500).json({ message: "Failed to unlink contact from client" });
     }
