@@ -28,7 +28,7 @@ import { NoPermissionMessage } from "@/components/no-permission-message";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { TagAssignment } from "@/components/ui/tag-assignment";
-import { FollowButton } from "@/components/follow-button";
+import { useFollowStatus } from "@/hooks/useFollowStatus";
 import {
   Loader2,
   Trash2,
@@ -43,6 +43,8 @@ import {
   Pencil,
   FileText,
   Copy,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
@@ -96,6 +98,7 @@ export default function DealDetail() {
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [showGenerateDoc, setShowGenerateDoc] = useState(false);
   const { statuses: dealStatusList, statusById } = useDealStatuses();
+  const { isFollowing, toggle: toggleFollow, isPending: isFollowPending } = useFollowStatus("deal", id!);
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -340,7 +343,11 @@ export default function DealDetail() {
         { label: deal.displayName },
       ]}
       additionalActions={[
-
+        {
+          label: isFollowing ? "Unfollow Deal" : "Follow Deal",
+          onClick: toggleFollow,
+          icon: isFollowing ? BellOff : Bell,
+        },
         ...(canWrite
           ? [
               {
@@ -385,7 +392,6 @@ export default function DealDetail() {
                   <span className="text-sm font-semibold">
                     {deal.client?.name}
                   </span>
-                  <FollowButton entityType="deal" entityId={id!} />
                 </div>
 
                 <EditableTitle

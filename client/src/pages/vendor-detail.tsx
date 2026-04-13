@@ -3,7 +3,7 @@ import { useParams, Link } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
-import { FollowButton } from "@/components/follow-button";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -428,7 +428,6 @@ export default function VendorDetail() {
                   </Badge>
                 )}
                 <div className="flex-1" />
-                <FollowButton entityType="vendor" entityId={id!} />
               </div>
               <PermissionGate permission="vendors.write" behavior="fallback" fallback={
                 <h1 className="text-3xl font-bold" data-testid="text-vendor-name">
