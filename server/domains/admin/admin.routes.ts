@@ -194,6 +194,19 @@ export function registerAdminRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/audit-logs/mine", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parsed = parseInt(req.query.limit as string);
+      const limit = Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 100) : 25;
+      const logs = await adminStorage.getAuditLogsByUser(userId, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching user audit logs:", error);
+      res.status(500).json({ message: "Failed to fetch user audit logs" });
+    }
+  });
+
   app.get("/api/admin/logs", isAuthenticated, requirePermission("audit.read"), async (req, res) => {
     try {
       const logs = await adminStorage.getRecentAuditLogs(250);

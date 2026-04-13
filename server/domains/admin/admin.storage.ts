@@ -17,9 +17,17 @@ import {
   analyticsSessions,
   analyticsPageViews,
   analyticsEvents,
-  roles
+  roles,
+  deals,
+  venues,
+  vendors,
+  contacts,
+  clients,
+  appFeatures,
+  appIssues,
+  comments,
 } from "@shared/schema";
-import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, count, inArray } from "drizzle-orm";
 import type { 
   User, 
   InsertAnalyticsSession,
@@ -92,6 +100,132 @@ export const adminStorage = {
       activeEmployees: activeCount?.count || 0,
       recentActivity: activityCount?.count || 0,
     };
+  },
+
+  async getAuditLogsByUser(userId: string, limit: number = 25) {
+    const logs = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        entityType: auditLogs.entityType,
+        entityId: auditLogs.entityId,
+        performedBy: auditLogs.performedBy,
+        changes: auditLogs.changes,
+        metadata: auditLogs.metadata,
+        status: auditLogs.status,
+        performedAt: auditLogs.performedAt,
+        performerName: sql<string | null>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`.as('performerName'),
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.performedBy, users.id))
+      .where(eq(auditLogs.performedBy, userId))
+      .orderBy(desc(auditLogs.performedAt))
+      .limit(limit);
+
+    const idsByType: Record<string, Set<string>> = {};
+    for (const log of logs) {
+      if (log.entityId) {
+        const type = log.entityType;
+        if (type === "comment") {
+          const ch = log.changes as any;
+          if (ch?.entityType && ch?.entityId) {
+            if (!idsByType[ch.entityType]) idsByType[ch.entityType] = new Set();
+            idsByType[ch.entityType].add(ch.entityId);
+          }
+        } else {
+          if (!idsByType[type]) idsByType[type] = new Set();
+          idsByType[type].add(log.entityId);
+        }
+      }
+    }
+
+    const nameMap: Record<string, string> = {};
+
+    const resolvers: Array<() => Promise<void>> = [];
+    if (idsByType["deal"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["deal"]];
+        const rows = await db.select({ id: deals.id, displayName: deals.displayName }).from(deals).where(inArray(deals.id, ids));
+        for (const r of rows) nameMap[`deal:${r.id}`] = r.displayName;
+      });
+    }
+    if (idsByType["venue"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["venue"]];
+        const rows = await db.select({ id: venues.id, name: venues.name }).from(venues).where(inArray(venues.id, ids));
+        for (const r of rows) nameMap[`venue:${r.id}`] = r.name;
+      });
+    }
+    if (idsByType["vendor"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["vendor"]];
+        const rows = await db.select({ id: vendors.id, businessName: vendors.businessName }).from(vendors).where(inArray(vendors.id, ids));
+        for (const r of rows) nameMap[`vendor:${r.id}`] = r.businessName;
+      });
+    }
+    if (idsByType["contact"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["contact"]];
+        const rows = await db.select({ id: contacts.id, firstName: contacts.firstName, lastName: contacts.lastName }).from(contacts).where(inArray(contacts.id, ids));
+        for (const r of rows) nameMap[`contact:${r.id}`] = [r.firstName, r.lastName].filter(Boolean).join(" ");
+      });
+    }
+    if (idsByType["client"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["client"]];
+        const rows = await db.select({ id: clients.id, name: clients.name }).from(clients).where(inArray(clients.id, ids));
+        for (const r of rows) nameMap[`client:${r.id}`] = r.name;
+      });
+    }
+    if (idsByType["app_feature"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["app_feature"]];
+        const rows = await db.select({ id: appFeatures.id, title: appFeatures.title }).from(appFeatures).where(inArray(appFeatures.id, ids));
+        for (const r of rows) nameMap[`app_feature:${r.id}`] = r.title;
+      });
+    }
+    if (idsByType["app_issue"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["app_issue"]];
+        const rows = await db.select({ id: appIssues.id, title: appIssues.title }).from(appIssues).where(inArray(appIssues.id, ids));
+        for (const r of rows) nameMap[`app_issue:${r.id}`] = r.title;
+      });
+    }
+    if (idsByType["user"]?.size) {
+      resolvers.push(async () => {
+        const ids = [...idsByType["user"]];
+        const rows = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName, email: users.email }).from(users).where(inArray(users.id, ids));
+        for (const r of rows) nameMap[`user:${r.id}`] = [r.firstName, r.lastName].filter(Boolean).join(" ") || r.email || r.id;
+      });
+    }
+
+    await Promise.all(resolvers.map(r => r()));
+
+    return logs.map((log) => {
+      let entityName: string | null = null;
+      let resolvedEntityType: string | null = null;
+      let resolvedEntityId: string | null = null;
+
+      if (log.entityType === "comment") {
+        const ch = log.changes as any;
+        if (ch?.entityType && ch?.entityId) {
+          resolvedEntityType = ch.entityType;
+          resolvedEntityId = ch.entityId;
+          entityName = nameMap[`${ch.entityType}:${ch.entityId}`] || null;
+        }
+      } else if (log.entityId) {
+        resolvedEntityType = log.entityType;
+        resolvedEntityId = log.entityId;
+        entityName = nameMap[`${log.entityType}:${log.entityId}`] || null;
+      }
+
+      return {
+        ...log,
+        entityName,
+        resolvedEntityType,
+        resolvedEntityId,
+      };
+    });
   },
 
   async getRecentAuditLogs(limit: number = 250): Promise<AuditLogWithName[]> {

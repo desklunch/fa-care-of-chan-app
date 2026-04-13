@@ -27,6 +27,7 @@ const TeamProfile = lazy(() => import("@/pages/team-profile"));
 const TeamEdit = lazy(() => import("@/pages/team-edit"));
 const Profile = lazy(() => import("@/pages/profile"));
 const ProfileEdit = lazy(() => import("@/pages/profile-edit"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
 const AdminLogs = lazy(() => import("@/pages/admin-logs"));
 const AdminAppFeatures = lazy(() => import("@/pages/admin-app-features"));
 const AppFeatures = lazy(() => import("@/pages/app-features"));
@@ -142,6 +143,7 @@ import {
   UserCheck,
   Sheet,
   BellRing,
+  LayoutDashboard,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -162,6 +164,17 @@ function useLayoutConfig() {
         }
       : null,
     navigation: [
+      {
+        heading: "",
+        defaultCollapsed: false,
+        items: [
+          {
+            name: "Dashboard",
+            href: "/dashboard",
+            icon: LayoutDashboard,
+          },
+        ],
+      },
       {
         heading: "Sales",
         defaultCollapsed: false,
@@ -427,7 +440,8 @@ function AuthenticatedRoutes() {
         {showAiChat && <AiChatFab />}
         <Suspense fallback={<PageLoader />}>
           <Switch>
-            <Route path="/" component={Venues} />
+            <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
             <Route path="/admin/features" component={AdminAppFeatures} />
             <Route path="/admin/releases" component={AdminReleases} />
             <Route path="/admin/releases/:id" component={AdminReleaseDetail} />
