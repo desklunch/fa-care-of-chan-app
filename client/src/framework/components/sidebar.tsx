@@ -266,9 +266,9 @@ export default function Sidebar({
       )}
       <aside
         className={cn(
-          "bg-sidebar border-r border-sidebar-border z-50 transition-all duration-[2000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
+          "bg-sidebar border-r border-sidebar-border z-1000 transition-all duration-[2000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
           "flex flex-col h-full ",
-          "lg:relative lg:z-auto",
+          "lg:relative lg:z-1000",
           isCollapsed && !isMediumScreen && "lg:w-[72px]",
           !isCollapsed && !isMediumScreen && "lg:w-[280px]",
           "md:relative md:z-50",
