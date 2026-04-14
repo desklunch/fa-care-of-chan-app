@@ -4,6 +4,8 @@ import { normalizeToMarkdown } from "@/lib/markdown-utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,6 +39,7 @@ import {
   ArrowRightLeft,
   Check,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -75,40 +78,75 @@ function formatReadOnlyValue(field: FormField, value: unknown): string {
   return String(value);
 }
 
-function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]; responseData: Record<string, unknown> }) {
+function ReadOnlySectionCard({ section, responseData, defaultExpanded = true }: { section: FormSection; responseData: Record<string, unknown>; defaultExpanded?: boolean }) {
+  const [isOpen, setIsOpen] = useState(defaultExpanded);
+
   return (
-    <div className="space-y-6" data-testid="intake-readonly">
-      {schema.map((section) => (
-        <Card key={section.id} className="p-6" data-testid={`readonly-section-${section.id}`}>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold">{section.title}</h3>
-            {section.description && (
-              <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
-            )}
-          </div>
-          <div className="space-y-4">
+    <Card className="p-6" data-testid={`readonly-section-${section.id}`}>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-2 w-full text-left cursor-pointer"
+            data-testid={`readonly-section-toggle-${section.id}`}
+          >
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
+                isOpen && "rotate-0"
+              )}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-lg font-semibold">{section.title}</h3>
+                <span className="text-sm text-muted-foreground shrink-0" data-testid={`readonly-section-field-count-${section.id}`}>
+                  {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}
+                </span>
+              </div>
+              {section.description && (
+                <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+              )}
+            </div>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="space-y-4 pt-6">
             {section.fields.map((field) => {
               const value = responseData[field.id];
               const displayValue = formatReadOnlyValue(field, value);
 
               return (
-                <div key={field.id} className="space-y-1" data-testid={`readonly-field-${field.id}`}>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {field.name}
-                    {field.required && <span className="text-destructive ml-0.5">*</span>}
-                  </p>
-                  {field.type === "richtext" && typeof value === "string" && value !== "" ? (
-                    <MarkdownDisplay className="text-sm prose dark:prose-invert max-w-none [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                      {normalizeToMarkdown(value as string)}
-                    </MarkdownDisplay>
-                  ) : (
-                    <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
-                  )}
+                <div key={field.id} className="grid grid-cols-3 gap-4 items-start" data-testid={`readonly-field-${field.id}`}>
+                  <div className="col-span-1 pt-0.5">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {field.name}
+                      {field.required && <span className="text-destructive ml-0.5">*</span>}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    {field.type === "richtext" && typeof value === "string" && value !== "" ? (
+                      <MarkdownDisplay className="text-sm prose dark:prose-invert max-w-none [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        {normalizeToMarkdown(value as string)}
+                      </MarkdownDisplay>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
-        </Card>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
+
+function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]; responseData: Record<string, unknown> }) {
+  return (
+    <div className="space-y-4" data-testid="intake-readonly">
+      {schema.map((section, index) => (
+        <ReadOnlySectionCard key={section.id} section={section} responseData={responseData} defaultExpanded={index === 0} />
       ))}
     </div>
   );

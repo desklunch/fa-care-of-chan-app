@@ -23,11 +23,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import type { FormSection, FormField as FormFieldType, DealLocation, DealEvent, DealService } from "@shared/schema";
 
 interface FormFieldRendererProps {
@@ -295,29 +298,32 @@ function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
       name={field.id}
       render={({ field: formField }) => (
         <FormItem
-          className=""
+          className="grid grid-cols-3 gap-4 items-start"
           data-testid={`form-item-${field.id}`}
         >
-          <FormLabel
-            className={
-              field.required
-                ? " after:content-['*'] after:ml-0.5 after:text-destructive"
-                : ""
-            }
-          >
-            {field.name}
-          </FormLabel>
-          {field.description && (
-            <FormDescription className="whitespace-pre-wrap">
-              {field.description}
-            </FormDescription>
-          )}
-          <FormControl className="">
-            {renderFieldInput(field, formField)}
-          </FormControl>
-  
-
-          <FormMessage />
+          <div className="col-span-1 pt-2">
+            <FormLabel
+              className={cn(
+                "text-sm font-medium",
+                field.required
+                  ? " after:content-['*'] after:ml-0.5 after:text-destructive"
+                  : ""
+              )}
+            >
+              {field.name}
+            </FormLabel>
+            {field.description && (
+              <FormDescription className="whitespace-pre-wrap mt-1">
+                {field.description}
+              </FormDescription>
+            )}
+          </div>
+          <div className="col-span-2">
+            <FormControl>
+              {renderFieldInput(field, formField)}
+            </FormControl>
+            <FormMessage />
+          </div>
         </FormItem>
       )}
     />
@@ -327,24 +333,50 @@ function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
 interface SectionRendererProps {
   section: FormSection;
   form: UseFormReturn<Record<string, unknown>>;
+  defaultExpanded?: boolean;
 }
 
-function SectionRenderer({ section, form }: SectionRendererProps) {
+function SectionRenderer({ section, form, defaultExpanded = true }: SectionRendererProps) {
+  const [isOpen, setIsOpen] = useState(defaultExpanded);
+
   return (
     <Card className="p-6" data-testid={`section-${section.id}`}>
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold">{section.title}</h3>
-        {section.description && (
-          <p className="text-sm text-muted-foreground mt-1">
-            {section.description}
-          </p>
-        )}
-      </div>
-      <div className="space-y-6 ">
-        {section.fields.map((field) => (
-          <SingleFieldRenderer key={field.id} field={field} form={form} />
-        ))}
-      </div>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-2 w-full text-left cursor-pointer"
+            data-testid={`section-toggle-${section.id}`}
+          >
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
+                isOpen && "rotate-0"
+              )}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-lg font-semibold">{section.title}</h3>
+                <span className="text-sm text-muted-foreground shrink-0" data-testid={`section-field-count-${section.id}`}>
+                  {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}
+                </span>
+              </div>
+              {section.description && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {section.description}
+                </p>
+              )}
+            </div>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="space-y-6 pt-6">
+            {section.fields.map((field) => (
+              <SingleFieldRenderer key={field.id} field={field} form={form} />
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
@@ -359,9 +391,9 @@ export function FormFieldRenderer({ schema, form }: FormFieldRendererProps) {
   }
 
   return (
-    <div className="space-y-6" data-testid="form-renderer">
-      {schema.map((section) => (
-        <SectionRenderer key={section.id} section={section} form={form} />
+    <div className="space-y-4" data-testid="form-renderer">
+      {schema.map((section, index) => (
+        <SectionRenderer key={section.id} section={section} form={form} defaultExpanded={index === 0} />
       ))}
     </div>
   );
