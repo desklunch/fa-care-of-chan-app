@@ -540,7 +540,7 @@ export default function Sidebar({
                           window.location.pathname === item.href;
 
                         const navItemClasses = cn(
-                          "flex justify-start items-center gap-3 px-3 py-1.5 font-medium  rounded-lg transition-colors duration-150 relative outline-none ring-ring focus:ring-2   ",
+                          "flex justify-start items-center gap-3 px-3 py-2 font-medium  rounded-lg transition-colors duration-150 relative outline-none ring-ring focus:ring-2   ",
                           isEnabled && "hover:bg-accent hover:text-primary",
                           isActive &&
                             "bg-primary text-primary-foreground font-semibold hover:bg-accent hover:text-foreground",

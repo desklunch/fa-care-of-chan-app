@@ -131,11 +131,11 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     <Button
       variant="ghost"
       onClick={() => setIsOpen(!isOpen)}
-      className="px-2 w-full bg-secondary justify-between gap-2 text-muted-foreground font-normal relative"
+      className="px-2 w-full justify-between gap-2 font-normal relative focus:bg-background focus:text-foreground"
       data-testid="button-notification-bell"
       aria-label="Notifications"
     >
-      <span className="text-xs flex gap-2 font-medium opacity-60 hover:opacity-100">
+      <span className="text-sm flex items-center gap-3 font-medium ">
         <Bell className="h-4 w-4" />
         Notifications
       </span>
