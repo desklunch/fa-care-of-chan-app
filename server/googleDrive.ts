@@ -1,3 +1,5 @@
+import { type RichTextSegment, parseCssColor } from "./richTextParser";
+
 export async function getDriveFileMetadata(fileId: string, accessToken: string) {
   const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,mimeType,iconLink,webViewLink`;
   const response = await fetch(url, {
@@ -174,6 +176,7 @@ function columnToLetter(col: number): string {
 
 export interface TokenCell {
   sheetTitle: string;
+  sheetId: number;
   row: number;
   col: number;
   originalValue: string;
@@ -183,7 +186,7 @@ export async function findTokenCells(
   accessToken: string,
   spreadsheetId: string,
 ): Promise<TokenCell[]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(properties.title,data.rowData.values.formattedValue)`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(properties(title,sheetId),data.rowData.values.formattedValue)`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -196,6 +199,7 @@ export async function findTokenCells(
 
   for (const sheet of body.sheets || []) {
     const title = sheet.properties?.title || "Sheet1";
+    const numericSheetId = sheet.properties?.sheetId ?? 0;
     for (const grid of sheet.data || []) {
       for (let rowIdx = 0; rowIdx < (grid.rowData || []).length; rowIdx++) {
         const row = grid.rowData[rowIdx];
@@ -203,7 +207,7 @@ export async function findTokenCells(
           const cell = row.values[colIdx];
           const val = cell?.formattedValue;
           if (typeof val === "string" && val.includes("{{")) {
-            cells.push({ sheetTitle: title, row: rowIdx, col: colIdx, originalValue: val });
+            cells.push({ sheetTitle: title, sheetId: numericSheetId, row: rowIdx, col: colIdx, originalValue: val });
           }
         }
       }
@@ -242,6 +246,104 @@ export async function writeTokenCells(
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to write sheet values: ${res.status} ${text}`);
+  }
+}
+
+export interface RichCellUpdate {
+  sheetId: number;
+  row: number;
+  col: number;
+  segments: RichTextSegment[];
+}
+
+interface SheetsRgbColor {
+  red: number;
+  green: number;
+  blue: number;
+}
+
+interface SheetsTextFormat {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  foregroundColorStyle?: { rgbColor: SheetsRgbColor };
+  link?: { uri: string };
+}
+
+interface SheetsTextFormatRun {
+  startIndex: number;
+  format: SheetsTextFormat;
+}
+
+export async function writeRichTextCells(
+  accessToken: string,
+  spreadsheetId: string,
+  updates: RichCellUpdate[],
+): Promise<void> {
+  if (updates.length === 0) return;
+
+  const requests = updates.map((u) => {
+    const plainText = u.segments.map((s) => s.text).join("");
+    const textFormatRuns: SheetsTextFormatRun[] = [];
+    let offset = 0;
+
+    for (const seg of u.segments) {
+      const format: SheetsTextFormat = {};
+      if (seg.bold) format.bold = true;
+      if (seg.italic) format.italic = true;
+      if (seg.underline) format.underline = true;
+      if (seg.color) {
+        const parsed = parseCssColor(seg.color);
+        if (parsed) {
+          format.foregroundColorStyle = { rgbColor: parsed };
+        }
+      }
+      if (seg.link && /^(?:https?:|mailto:)/i.test(seg.link)) {
+        format.link = { uri: seg.link };
+      }
+      const hasFormat = Object.keys(format).length > 0;
+      if (hasFormat) {
+        textFormatRuns.push({ startIndex: offset, format });
+      }
+      offset += seg.text.length;
+    }
+
+    return {
+      updateCells: {
+        rows: [
+          {
+            values: [
+              {
+                userEnteredValue: { stringValue: plainText },
+                textFormatRuns: textFormatRuns.length > 0 ? textFormatRuns : undefined,
+              },
+            ],
+          },
+        ],
+        fields: "userEnteredValue,textFormatRuns",
+        start: {
+          sheetId: u.sheetId,
+          rowIndex: u.row,
+          columnIndex: u.col,
+        },
+      },
+    };
+  });
+
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ requests }),
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to write rich text cells: ${res.status} ${text}`);
   }
 }
 

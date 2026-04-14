@@ -11,7 +11,8 @@ import { type DealStatus, type DealStatusRecord, type FormSection, type FormFiel
 import { dealsStorage } from "./deals.storage";
 import { referenceDataStorage } from "../reference-data/reference-data.storage";
 import { formsStorage } from "../forms/forms.storage";
-import { copyDriveFile, findTokenCells, writeTokenCells } from "../../googleDrive";
+import { copyDriveFile, findTokenCells, writeTokenCells, writeRichTextCells, type RichCellUpdate } from "../../googleDrive";
+import { parseRichText, type RichTextSegment } from "../../richTextParser";
 import { settingsCommentsStorage } from "../settings-comments/settings-comments.storage";
 import { driveAttachmentsStorage } from "../drive-attachments/drive-attachments.storage";
 
@@ -1261,7 +1262,7 @@ export function registerDealsRoutes(app: Express): void {
       const tagsMap = new Map(allTags.map((t: { id: string; name: string }) => [t.id, t.name]));
       const tagNames = tagIds.map((id) => tagsMap.get(id)).filter(Boolean) as string[];
 
-      const tokenMap = buildTokenMap(deal, servicesMap, linkedClients, tagNames, intake);
+      const { map: tokenMap, richTextKeys } = buildTokenMap(deal, servicesMap, linkedClients, tagNames, intake);
 
       const sheetTitle = `${deal.displayName} - Deal Summary`;
 
@@ -1307,23 +1308,78 @@ export function registerDealsRoutes(app: Express): void {
       }
 
       const tokenPattern = /\{\{([^}]+)\}\}/g;
-      const cellUpdates: { sheetTitle: string; row: number; col: number; value: string }[] = [];
+      const plainCellUpdates: { sheetTitle: string; row: number; col: number; value: string }[] = [];
+      const richCellUpdates: RichCellUpdate[] = [];
 
       for (const cell of tokenCells) {
-        const replaced = cell.originalValue.replace(tokenPattern, (_match, tokenName: string) => {
-          const trimmed = tokenName.trim();
-          return tokenMap.get(trimmed) ?? "";
+        const tokensInCell: string[] = [];
+        cell.originalValue.replace(tokenPattern, (_match, tokenName: string) => {
+          tokensInCell.push(tokenName.trim());
+          return "";
         });
-        cellUpdates.push({
-          sheetTitle: cell.sheetTitle,
-          row: cell.row,
-          col: cell.col,
-          value: replaced,
-        });
+
+        const containsRichToken = tokensInCell.some((t) => richTextKeys.has(t));
+
+        if (containsRichToken) {
+          const parts: RichTextSegment[] = [];
+          let lastIndex = 0;
+          const pattern = /\{\{([^}]+)\}\}/g;
+          let m: RegExpExecArray | null;
+          while ((m = pattern.exec(cell.originalValue)) !== null) {
+            if (m.index > lastIndex) {
+              parts.push({ text: cell.originalValue.slice(lastIndex, m.index) });
+            }
+            const trimmed = m[1].trim();
+            const value = tokenMap.get(trimmed) ?? "";
+            if (richTextKeys.has(trimmed) && value) {
+              const parsed = parseRichText(value);
+              parts.push(...parsed);
+            } else {
+              parts.push({ text: value });
+            }
+            lastIndex = m.index + m[0].length;
+          }
+          if (lastIndex < cell.originalValue.length) {
+            parts.push({ text: cell.originalValue.slice(lastIndex) });
+          }
+
+          const hasFormatting = parts.some(
+            (s) => s.bold || s.italic || s.underline || s.color || s.link,
+          );
+          if (hasFormatting) {
+            richCellUpdates.push({
+              sheetId: cell.sheetId,
+              row: cell.row,
+              col: cell.col,
+              segments: parts,
+            });
+          } else {
+            plainCellUpdates.push({
+              sheetTitle: cell.sheetTitle,
+              row: cell.row,
+              col: cell.col,
+              value: parts.map((s) => s.text).join(""),
+            });
+          }
+        } else {
+          const replaced = cell.originalValue.replace(tokenPattern, (_match, tokenName: string) => {
+            const trimmed = tokenName.trim();
+            return tokenMap.get(trimmed) ?? "";
+          });
+          plainCellUpdates.push({
+            sheetTitle: cell.sheetTitle,
+            row: cell.row,
+            col: cell.col,
+            value: replaced,
+          });
+        }
       }
 
       try {
-        await writeTokenCells(accessToken, sheetResult.id, cellUpdates);
+        await Promise.all([
+          writeTokenCells(accessToken, sheetResult.id, plainCellUpdates),
+          writeRichTextCells(accessToken, sheetResult.id, richCellUpdates),
+        ]);
       } catch (sheetsError: any) {
         console.error("Sheets API error (writeTokenCells):", sheetsError?.message);
         const msg = sheetsError?.message || "";
@@ -1381,8 +1437,9 @@ function buildTokenMap(
   linkedClients: { clientName: string; label: string | null }[],
   tagNames: string[],
   intake: { formSchema: FormSection[]; responseData: Record<string, unknown> } | null,
-): Map<string, string> {
+): { map: Map<string, string>; richTextKeys: Set<string> } {
   const map = new Map<string, string>();
+  const richTextKeys = new Set<string>();
 
   map.set("deal_name", deal.displayName || "");
   map.set("owner", deal.owner ? [deal.owner.firstName, deal.owner.lastName].filter(Boolean).join(" ") : "");
@@ -1409,8 +1466,11 @@ function buildTokenMap(
   map.set("services", serviceIds.map((id) => servicesMap.get(id)).filter(Boolean).join(", "));
 
   map.set("concept", deal.concept || "");
+  richTextKeys.add("concept");
   map.set("next_steps", deal.nextSteps || "");
+  richTextKeys.add("next_steps");
   map.set("notes", deal.notes || "");
+  richTextKeys.add("notes");
 
   const locations = (deal.locations as DealLocation[]) || [];
   map.set("locations", locations.map((l) => l.displayName).join(", "));
@@ -1461,10 +1521,14 @@ function buildTokenMap(
             stringValue = String(value);
           }
         }
-        map.set(`intake:${field.id}`, stringValue);
+        const tokenKey = `intake:${field.id}`;
+        map.set(tokenKey, stringValue);
+        if (field.type === "richtext") {
+          richTextKeys.add(tokenKey);
+        }
       }
     }
   }
 
-  return map;
+  return { map, richTextKeys };
 }
