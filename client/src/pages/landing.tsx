@@ -71,9 +71,7 @@ export default function Landing() {
   return (
     <div className="mx-auto h-screen flex flex-col items-center justify-center text-center gap-6 text-primary p-6 bg-card ">
       <div className="w-full bg-background max-w-md rounded-[24px] shadow-lg border border-input p-6 flex flex-col items-center gap-2 ">
-        <div className="flex justify-center mb-6 [&_*]:fill-primary mt-4">
-          <img src={logoImage} alt="Care of Chan OS" className="rounded-xl" />
-        </div>
+     
 
         <div className="rounded-md bg-primary text-background w-fit p-2 py-1 text-sm tracking-wide">
           CoCOS 1.8.0
@@ -117,10 +115,7 @@ export default function Landing() {
             </p>
           )}
 
-          <p className="text-xs max-w-64 text-muted-foreground leading-[1.5em]">
-            This app is not yet fully optimized for mobile devices. Please use a
-            desktop computer.
-          </p>
+   
         </div>
 
         {isDevelopment && (
@@ -152,10 +147,11 @@ export default function Landing() {
         {/* Mobile: Show not optimized message */}
         <div className="flex items-center" data-testid="mobile-notice"></div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2" data-testid="legal-links">
+        <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground mt-2" data-testid="legal-links">
+          <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-privacy">Privacy Notice</Link>
           <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-terms">Terms of Use</Link>
           <span>·</span>
-          <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-privacy">Employee Privacy Notice</Link>
+
         </div>
       </div>
     </div>
