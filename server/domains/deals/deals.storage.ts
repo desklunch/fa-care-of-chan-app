@@ -283,6 +283,7 @@ export const dealsStorage = {
       completedAt: null,
     };
     if (data.responseData !== undefined) updateData.responseData = data.responseData;
+    if (data.formSchema !== undefined) updateData.formSchema = data.formSchema;
 
     const [intake] = await db
       .update(dealIntakes)

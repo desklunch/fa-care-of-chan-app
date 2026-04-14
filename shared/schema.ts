@@ -2207,6 +2207,25 @@ export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
 
 export const updateDealIntakeSchema = z.object({
   responseData: z.record(z.unknown()).optional(),
+  formSchema: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    fields: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(formFieldTypes),
+      placeholder: z.string().optional(),
+      description: z.string().optional(),
+      options: z.array(z.string()).optional(),
+      required: z.boolean().optional(),
+      entityMapping: z.object({
+        entityType: z.string(),
+        propertyKey: z.string(),
+      }).optional(),
+      defaultValue: z.string().optional(),
+    })),
+  })).optional(),
   status: z.enum(dealIntakeStatuses).optional(),
 });
 

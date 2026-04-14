@@ -315,11 +315,14 @@ function IntakeDraftForm({
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
 
-  const formSchema = intake.formSchema as FormSection[];
+  const [localFormSchema, setLocalFormSchema] = useState<FormSection[]>(
+    intake.formSchema as FormSection[]
+  );
+
   const existingData = intake.responseData as Record<string, unknown>;
 
   const defaultValues = {
-    ...buildDefaultValues(formSchema),
+    ...buildDefaultValues(localFormSchema),
     ...existingData,
   };
 
@@ -328,8 +331,10 @@ function IntakeDraftForm({
   });
 
   useEffect(() => {
+    const schema = intake.formSchema as FormSection[];
+    setLocalFormSchema(schema);
     const merged = {
-      ...buildDefaultValues(formSchema),
+      ...buildDefaultValues(schema),
       ...existingData,
     };
     form.reset(merged);
@@ -338,10 +343,8 @@ function IntakeDraftForm({
   }, [intake.id]);
 
   const autosaveMutation = useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      const res = await apiRequest("PATCH", `/api/deals/${dealId}/intake`, {
-        responseData: data,
-      });
+    mutationFn: async (payload: { responseData?: Record<string, unknown>; formSchema?: FormSection[] }) => {
+      const res = await apiRequest("PATCH", `/api/deals/${dealId}/intake`, payload);
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         throw new Error("Server returned an unexpected response. Please try again.");
@@ -365,7 +368,7 @@ function IntakeDraftForm({
       }
       debounceTimer.current = setTimeout(() => {
         setSaveStatus("saving");
-        autosaveMutation.mutate(data);
+        autosaveMutation.mutate({ responseData: data });
       }, 2000);
     },
     [dealId],
@@ -404,6 +407,59 @@ function IntakeDraftForm({
     },
   });
 
+  const handleDeleteField = useCallback(
+    (sectionId: string, fieldId: string) => {
+      const updatedSchema = localFormSchema.map((section) => {
+        if (section.id === sectionId) {
+          return { ...section, fields: section.fields.filter((f) => f.id !== fieldId) };
+        }
+        return section;
+      });
+
+      setLocalFormSchema(updatedSchema);
+      form.unregister(fieldId);
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      const { [fieldId]: _removed, ...cleanedValues } = currentValues;
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: cleanedValues,
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
+  const handleAddField = useCallback(
+    (sectionId: string, fieldTitle: string) => {
+      const newFieldId = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const newField: FormField = {
+        id: newFieldId,
+        name: fieldTitle,
+        type: "richtext",
+        placeholder: "",
+      };
+
+      const updatedSchema = localFormSchema.map((section) => {
+        if (section.id === sectionId) {
+          return { ...section, fields: [...section.fields, newField] };
+        }
+        return section;
+      });
+
+      setLocalFormSchema(updatedSchema);
+      form.setValue(newFieldId, "");
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: { ...currentValues, [newFieldId]: "" },
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
   return (
     <div className="space-y-4 " data-testid="intake-draft-form">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -436,7 +492,12 @@ function IntakeDraftForm({
 
       <Form {...form}>
         <div className="space-y-6">
-          <FormFieldRenderer schema={formSchema} form={form as never} />
+          <FormFieldRenderer
+            schema={localFormSchema}
+            form={form as never}
+            onAddField={canWrite && intake.status === "draft" ? handleAddField : undefined}
+            onDeleteField={canWrite && intake.status === "draft" ? handleDeleteField : undefined}
+          />
         </div>
       </Form>
 

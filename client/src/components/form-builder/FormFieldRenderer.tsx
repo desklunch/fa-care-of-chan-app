@@ -28,19 +28,41 @@ import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
 import { TagAssignment } from "@/components/ui/tag-assignment";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { FormSection, FormField as FormFieldType, DealLocation, DealEvent, DealService } from "@shared/schema";
 
 interface FormFieldRendererProps {
   schema: FormSection[];
   form: UseFormReturn<Record<string, unknown>>;
+  onAddField?: (sectionId: string, fieldTitle: string) => void;
+  onDeleteField?: (sectionId: string, fieldId: string) => void;
 }
 
 interface SingleFieldRendererProps {
   field: FormFieldType;
   form: UseFormReturn<Record<string, unknown>>;
+  onDeleteField?: (fieldId: string) => void;
 }
 
 function renderFieldInput(
@@ -291,42 +313,84 @@ function ServicesFieldRenderer({
   );
 }
 
-function SingleFieldRenderer({ field, form }: SingleFieldRendererProps) {
+function SingleFieldRenderer({ field, form, onDeleteField }: SingleFieldRendererProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   return (
-    <FormField
-      control={form.control}
-      name={field.id}
-      render={({ field: formField }) => (
-        <FormItem
-          className="grid grid-cols-3 gap-4 items-start"
-          data-testid={`form-item-${field.id}`}
-        >
-          <div className="col-span-1 pt-2">
-            <FormLabel
-              className={cn(
-                "text-sm font-medium",
-                field.required
-                  ? " after:content-['*'] after:ml-0.5 after:text-destructive"
-                  : ""
+    <>
+      <FormField
+        control={form.control}
+        name={field.id}
+        render={({ field: formField }) => (
+          <FormItem
+            className="group/field grid grid-cols-3 gap-4 items-start"
+            data-testid={`form-item-${field.id}`}
+          >
+            <div className="col-span-1 pt-2">
+              <div className="flex items-center gap-1">
+                <FormLabel
+                  className={cn(
+                    "text-sm font-medium",
+                    field.required
+                      ? " after:content-['*'] after:ml-0.5 after:text-destructive"
+                      : ""
+                  )}
+                >
+                  {field.name}
+                </FormLabel>
+                {onDeleteField && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 shrink-0 text-destructive invisible group-hover/field:visible"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    data-testid={`button-delete-field-${field.id}`}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              {field.description && (
+                <FormDescription className="whitespace-pre-wrap mt-1">
+                  {field.description}
+                </FormDescription>
               )}
+            </div>
+            <div className="col-span-2">
+              <FormControl>
+                {renderFieldInput(field, formField)}
+              </FormControl>
+              <FormMessage />
+            </div>
+          </FormItem>
+        )}
+      />
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Field</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{field.name}"? Any data entered in this field will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid={`button-cancel-delete-field-${field.id}`}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDeleteField?.(field.id);
+                setShowDeleteConfirm(false);
+              }}
+              className="bg-destructive text-destructive-foreground"
+              data-testid={`button-confirm-delete-field-${field.id}`}
             >
-              {field.name}
-            </FormLabel>
-            {field.description && (
-              <FormDescription className="whitespace-pre-wrap mt-1">
-                {field.description}
-              </FormDescription>
-            )}
-          </div>
-          <div className="col-span-2">
-            <FormControl>
-              {renderFieldInput(field, formField)}
-            </FormControl>
-            <FormMessage />
-          </div>
-        </FormItem>
-      )}
-    />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -334,10 +398,22 @@ interface SectionRendererProps {
   section: FormSection;
   form: UseFormReturn<Record<string, unknown>>;
   defaultExpanded?: boolean;
+  onAddField?: (sectionId: string, fieldTitle: string) => void;
+  onDeleteField?: (sectionId: string, fieldId: string) => void;
 }
 
-function SectionRenderer({ section, form, defaultExpanded = true }: SectionRendererProps) {
+function SectionRenderer({ section, form, defaultExpanded = true, onAddField, onDeleteField }: SectionRendererProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newFieldTitle, setNewFieldTitle] = useState("");
+
+  const handleAddField = () => {
+    const trimmed = newFieldTitle.trim();
+    if (!trimmed || !onAddField) return;
+    onAddField(section.id, trimmed);
+    setNewFieldTitle("");
+    setShowAddDialog(false);
+  };
 
   return (
     <Card className="p-6" data-testid={`section-${section.id}`}>
@@ -372,16 +448,84 @@ function SectionRenderer({ section, form, defaultExpanded = true }: SectionRende
         <CollapsibleContent>
           <div className="space-y-6 pt-6">
             {section.fields.map((field) => (
-              <SingleFieldRenderer key={field.id} field={field} form={form} />
+              <SingleFieldRenderer
+                key={field.id}
+                field={field}
+                form={form}
+                onDeleteField={onDeleteField ? (fieldId) => onDeleteField(section.id, fieldId) : undefined}
+              />
             ))}
+            {onAddField && (
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAddDialog(true)}
+                  data-testid={`button-add-field-${section.id}`}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add field
+                </Button>
+              </div>
+            )}
           </div>
         </CollapsibleContent>
       </Collapsible>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Rich Text Field</DialogTitle>
+            <DialogDescription>Enter a title for the new field.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium" htmlFor={`add-field-title-${section.id}`}>
+              Field Title
+            </label>
+            <Input
+              id={`add-field-title-${section.id}`}
+              value={newFieldTitle}
+              onChange={(e) => setNewFieldTitle(e.target.value)}
+              placeholder="Enter field title"
+              className="mt-2"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddField();
+                }
+              }}
+              data-testid={`input-add-field-title-${section.id}`}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setNewFieldTitle("");
+                setShowAddDialog(false);
+              }}
+              data-testid={`button-cancel-add-field-${section.id}`}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddField}
+              disabled={!newFieldTitle.trim()}
+              data-testid={`button-confirm-add-field-${section.id}`}
+            >
+              Add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
 
-export function FormFieldRenderer({ schema, form }: FormFieldRendererProps) {
+export function FormFieldRenderer({ schema, form, onAddField, onDeleteField }: FormFieldRendererProps) {
   if (!schema || schema.length === 0) {
     return (
       <Card className="p-8 text-center">
@@ -393,7 +537,14 @@ export function FormFieldRenderer({ schema, form }: FormFieldRendererProps) {
   return (
     <div className="space-y-4" data-testid="form-renderer">
       {schema.map((section, index) => (
-        <SectionRenderer key={section.id} section={section} form={form} defaultExpanded={index === 0} />
+        <SectionRenderer
+          key={section.id}
+          section={section}
+          form={form}
+          defaultExpanded={index === 0}
+          onAddField={onAddField}
+          onDeleteField={onDeleteField}
+        />
       ))}
     </div>
   );
