@@ -19,4 +19,7 @@ export const gridTheme = themeQuartz.withPart(iconSetAlpine).withParams({
   pinnedColumnBorder: true,
   wrapperBorder: true,
   headerHeight: 48,
+  rowHoverColor: "hsl(var(--secondary))",
+
+
 });

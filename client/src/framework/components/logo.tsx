@@ -13,7 +13,7 @@ export default function Logo({
 }: LogoProps) {
   return (
     <div
-      className={`rounded-md rounded-l-full flex items-center gap-2 ${className || ""}`}
+      className={`rounded-md rounded-l-full flex items-center gap-4 ${className || ""}`}
     >
       <div className=" flex items-center justify-center rounded-full">
         <img
@@ -25,8 +25,8 @@ export default function Logo({
       </div>
 
       {!collapsed && (
-        <span className="font-medium text-pink-800 dark:text-pink-200 text-base  mr-3 ">
-          Care of Chansey
+        <span className="font-semibold text-ptimary dark:text-pink-200 text-lg  mr-3 ">
+          Chansey
         </span>
       )}
     </div>
