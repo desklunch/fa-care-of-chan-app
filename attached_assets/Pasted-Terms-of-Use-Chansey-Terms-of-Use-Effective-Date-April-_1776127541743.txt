@@ -1,0 +1,158 @@
+Terms of Use
+
+Chansey Terms of Use
+Effective Date: April 1, 2026
+
+These Terms of Use (“Terms”) govern access to and use of the Chansey application, website, and related services (collectively, the “App”) by authorized personnel of Care of Chan (“Customer”).
+
+By accessing or using the App, you acknowledge that you have read and understand these Terms and agree to use the App in accordance with them.
+
+1. Purpose of the App
+
+Chansey is provided solely for Care of Chan’s internal business operations. You may use the App only if you are an authorized employee, contractor, or other workforce member of Care of Chan and have been granted permission to access it.
+
+2. Eligibility and Account Requirements
+
+To access the App, you must:
+
+be authorized by Care of Chan to use the App for business purposes; and
+maintain an active Care of Chan email address administered through Care of Chan’s Google Workspace environment.
+
+Access may be denied, suspended, or terminated if you no longer satisfy these requirements.
+
+3. Authorized Business Use Only
+
+You may use the App only:
+
+for legitimate business purposes of Care of Chan;
+within the scope of your role and assigned permissions; and
+in compliance with Care of Chan policies and applicable law.
+
+You may not use the App for personal, recreational, competitive, or other non-business purposes unless expressly authorized in writing by Care of Chan.
+
+4. Accounts and Credentials
+
+You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account.
+
+You must:
+
+keep your password and authentication credentials confidential;
+not share your account with any other person;
+use any required authentication controls, including single sign-on or multi-factor authentication, if enabled;
+promptly notify Care of Chan or Functional Artists at support@functionalartists.ai
+ of any suspected unauthorized access, credential compromise, or security issue.
+5. Acceptable Use Restrictions
+
+You may not, and may not attempt to:
+
+access data, accounts, systems, or features you are not authorized to access;
+use the App in a way that violates Care of Chan policy, confidentiality obligations, or applicable law;
+interfere with or disrupt the App or related systems;
+upload malware, malicious code, or harmful content;
+reverse engineer, decompile, disassemble, copy, or attempt to discover source code or underlying structure of the App, except to the extent such restriction is prohibited by law;
+scrape, harvest, or bulk extract data from the App except as expressly authorized;
+circumvent security measures, access controls, audit controls, or usage restrictions;
+use the App to store or transmit materials that are unlawful, infringing, defamatory, harassing, discriminatory, or otherwise inappropriate for a workplace system.
+6. User Content and Business Records
+
+The App may allow you to create, send, receive, upload, store, or manage business content, including:
+
+messages,
+comments,
+files,
+images,
+photos,
+videos,
+workflow records,
+notes,
+and other materials submitted in the course of work.
+
+Information submitted to or generated within the App in connection with Care of Chan’s business may constitute Care of Chan business records. Your use of the App does not give you any personal ownership right in business data maintained within the App.
+
+You should not assume that information in the App is private from Care of Chan’s authorized administrators, managers, compliance personnel, human resources personnel, or information security personnel, to the extent access is permitted by Care of Chan policy and applicable law.
+
+7. Monitoring, Logging, Analytics, and Administrative Access
+
+The App may log and retain information regarding use of the App, including account activity, authentication events, pages or records accessed, changes made, actions taken, messages, comments, uploads, exports, administrative actions, browser/device metadata, IP address information, and other system activity.
+
+The App also uses basic web analytics to understand App usage, performance, reliability, and feature engagement.
+
+Care of Chan administrators may have the ability to review and export user-level activity and related business records from the App.
+
+Information described in this section may be used by Care of Chan and authorized service providers for purposes including:
+
+system administration;
+security and fraud prevention;
+troubleshooting and support;
+audit, compliance, and investigations;
+business continuity;
+product maintenance and service improvement.
+
+By using the App, you acknowledge that Chansey is a business system provided for Care of Chan’s internal use and that your activities within the App may be visible to authorized Care of Chan administrators and authorized Functional Artists personnel supporting the service.
+
+8. No Sensitive Personal Information
+
+Chansey is not intended to collect, store, or process sensitive personal information unless expressly authorized in writing by Care of Chan and Functional Artists.
+
+Unless your role specifically requires it and the App has been expressly approved for that purpose, you should not use the App to submit or store:
+
+Social Security numbers,
+driver’s license or passport numbers,
+financial account numbers,
+payment card data,
+health or medical information,
+insurance information,
+biometric information,
+precise geolocation,
+or other sensitive personal information.
+9. Customer Policies
+
+Your use of the App is also subject to Care of Chan’s applicable workplace policies, including as relevant:
+
+acceptable use policies;
+information security policies;
+confidentiality policies;
+employee handbook rules;
+records retention policies;
+communications and device policies.
+10. Software Ownership and Limited License
+
+As between you and Functional Artists, the App, including its software, design, functionality, and related intellectual property, is and remains the property of Functional Artists and its licensors.
+
+Subject to these Terms and the agreement between Functional Artists and Care of Chan, you are granted a limited, revocable, non-exclusive, non-transferable right to access and use the App solely for Care of Chan’s internal business purposes.
+
+11. Suspension and Termination of Access
+
+Access to the App may be suspended, restricted, or terminated at any time:
+
+by Care of Chan;
+by Functional Artists acting on Care of Chan’s instructions;
+for security reasons;
+for suspected misuse;
+upon role change or end of employment or engagement;
+if your Care of Chan email account is disabled or removed;
+to comply with law, court order, or contractual obligations;
+for maintenance, system integrity, or operational reasons.
+12. No Reliance for Personal Decisions
+
+Unless expressly stated otherwise, the App is a business tool intended to assist authorized personnel in performing business processes. You remain responsible for exercising appropriate judgment and following Care of Chan’s policies when taking action based on information generated, stored, or displayed by the App.
+
+13. No Personal Use Storage
+
+The App is not intended to be used as a personal file repository, personal messaging system, or personal recordkeeping platform. Do not store personal materials in the App except as necessary for legitimate business use.
+
+14. Support and Reporting
+
+Questions about access, permissions, or acceptable use should be directed to Care of Chan’s designated administrator or to Functional Artists at support@functionalartists.ai
+.
+
+Suspected security issues must be reported promptly through Care of Chan’s approved internal reporting channel or to support@functionalartists.ai
+.
+
+15. Changes
+
+These Terms may be updated from time to time. Continued access to or use of the App after updated Terms are made available constitutes acceptance of the updated Terms, to the extent permitted by law and Care of Chan policy.
+
+16. Contact
+
+For questions regarding these Terms, contact: support@functionalartists.ai

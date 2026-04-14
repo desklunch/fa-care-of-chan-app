@@ -1,0 +1,213 @@
+Employee Privacy Notice
+
+Employee Privacy Notice for Chansey
+Effective Date: April 1, 2026
+
+This Employee Privacy Notice explains how personal information is collected, used, disclosed, retained, and otherwise processed in connection with authorized use of the Chansey application, website, and related services (the “App”) by workforce members of Care of Chan (“Customer”).
+
+This Notice applies only to personal information processed through the App in connection with Care of Chan’s internal business operations.
+
+1. Who This Notice Applies To
+
+This Notice applies to authorized users of the App, including:
+
+employees,
+contractors,
+temporary staff,
+managers,
+administrators,
+and other workforce members of Care of Chan who are granted access to the App.
+2. Roles of Care of Chan and Functional Artists
+
+Care of Chan generally determines the business purposes for which the App is used and what workforce data is entered into or managed through the App.
+
+Functional Artists provides and supports the App on behalf of Care of Chan and may process App-related information in order to host, secure, maintain, support, analyze, and improve the service as permitted by contract and applicable law.
+
+For certain limited categories of information, such as support communications, operational service records, and certain security and system logs, Functional Artists may process information for its own operational purposes related to providing and protecting the service.
+
+3. Categories of Personal Information Collected
+
+Depending on how Care of Chan configures and uses the App, the App may collect, receive, generate, or store the following categories of personal information:
+
+Identity and employment-related information
+
+name
+Care of Chan work email address
+username
+employee or workforce identifier
+department
+title or role
+manager or reporting relationship
+business contact information
+
+Authentication and access information
+
+single sign-on identifiers
+login records
+account status
+permission and role settings
+password reset or access recovery records, where applicable
+multi-factor authentication status, where applicable
+
+Device, network, and technical information
+
+IP address
+browser type and version
+device identifiers
+operating system
+session timestamps
+log files
+network and security event data
+
+Usage and activity information
+
+pages, screens, or records accessed
+time and date of actions
+clicks, submissions, edits, approvals, comments, messages, exports, uploads, and downloads
+audit trail records
+administrator actions taken on an account or record
+user-level activity reports and exports
+
+Content and business records
+
+information entered into forms and workflows
+messages and comments
+files and attachments
+photo uploads
+video uploads
+notes and other records created in the course of business use
+reports and dashboards associated with a user or team
+
+Analytics information
+
+basic web analytics relating to App usage, navigation patterns, performance, reliability, and feature engagement
+
+Support and communications information
+
+support requests
+troubleshooting data
+communications regarding incidents, bugs, access issues, or feature requests
+4. Sensitive Personal Information
+
+Chansey is not intended to collect or process sensitive personal information. Users should not submit sensitive personal information through the App unless expressly instructed and authorized by Care of Chan and Functional Artists.
+
+5. Sources of Personal Information
+
+Personal information processed through the App may be obtained from:
+
+the individual user directly;
+Care of Chan administrators or managers;
+Care of Chan systems integrated with the App;
+Google Workspace and related identity or single sign-on services used by Care of Chan;
+automated logging, analytics, and monitoring technologies associated with the App.
+6. Purposes of Processing
+
+Personal information may be processed for the following purposes:
+
+providing access to the App;
+verifying eligibility to use the App through a Care of Chan-managed email account;
+authenticating users and managing permissions;
+operating Care of Chan workflows and internal business processes;
+enabling messages, comments, and collaboration features;
+storing and managing business records and uploaded content;
+maintaining audit trails and administrative records;
+securing the App and detecting unauthorized activity;
+troubleshooting, support, and maintenance;
+auditing usage, changes, and administrative activity;
+enforcing policies, investigating misuse, or responding to incidents;
+analyzing service usage through basic web analytics;
+improving reliability, performance, and functionality of the App;
+complying with contractual, legal, regulatory, and recordkeeping requirements.
+7. Monitoring, Logging, Analytics, and Administrative Oversight
+
+Because the App is an employer-provided business system, use of the App may be monitored, logged, reviewed, retained, and exported by Care of Chan and authorized service providers for legitimate business purposes.
+
+This may include:
+
+login and logout events;
+account access history;
+records viewed or modified;
+workflow actions taken;
+messages and comments;
+uploads, downloads, and exports;
+photo and video upload activity;
+device, browser, and connection metadata;
+administrator actions;
+security alerts and investigation records;
+basic web analytics associated with App use.
+
+Care of Chan administrators may have the ability to export user-level activity and related business records from the App.
+
+Your use of the App indicates your acknowledgment that Chansey is a business system subject to monitoring, logging, analytics, export, and administrative oversight consistent with applicable law and company policy.
+
+8. Disclosures of Personal Information
+
+Personal information processed through the App may be disclosed to:
+
+Care of Chan personnel, including authorized administrators, managers, HR, compliance, legal, IT, and information security personnel;
+service providers and vendors that support hosting, infrastructure, authentication, security, analytics, maintenance, storage, communications, and support for the App;
+professional advisors such as auditors, insurers, and legal counsel, where appropriate;
+governmental, regulatory, or law enforcement authorities where required by law, legal process, or valid governmental request;
+successors or transaction parties in connection with a merger, acquisition, financing, or sale of assets, where permitted by law and contract.
+9. Sale or Advertising Use
+
+Functional Artists does not sell personal information collected through the App.
+
+Functional Artists does not use personal information collected through the App for cross-context behavioral advertising.
+
+10. Retention
+
+Personal information processed through the App is retained for the duration of the service relationship and for 3 years after termination of service, unless a longer period is required by law, legal process, dispute resolution needs, security needs, or contractual obligations.
+
+This retention approach applies generally to:
+
+account profile data;
+usage logs;
+audit logs;
+analytics records;
+support records;
+messages, comments, uploads, files, photos, videos, and other business records stored in the App.
+
+After the applicable retention period, information may be deleted, de-identified, or otherwise disposed of in accordance with Functional Artists’ and Care of Chan’s retention and deletion practices.
+
+11. Security
+
+Reasonable administrative, technical, and organizational safeguards are used to protect personal information processed through the App. These measures may include:
+
+role-based access controls;
+authentication controls;
+single sign-on integration;
+multi-factor authentication support, where enabled;
+encryption in transit and, where applicable, at rest;
+logging and audit trails;
+backup and recovery processes;
+incident response procedures;
+vendor oversight and confidentiality obligations.
+
+No system can be guaranteed to be completely secure, and users should follow Care of Chan’s security practices when using the App.
+
+12. California Notice
+
+If you are a California resident, California law may provide you with certain rights regarding personal information, subject to exceptions and limitations.
+
+This Notice is intended to provide information regarding:
+
+the categories of personal information collected;
+the purposes for which those categories are used;
+the fact that Chansey is not intended to collect sensitive personal information;
+the retention period for personal information, which is generally the duration of service plus 3 years after termination of service.
+
+Requests relating to workforce privacy rights should generally be directed first to Care of Chan using Care of Chan’s designated privacy, HR, or management contact, unless Care of Chan instructs otherwise.
+
+13. Contact
+
+Questions about this Notice or the handling of personal information in connection with the App may be directed to:
+
+Functional Artists
+support@functionalartists.ai
+
+Care of Chan may also provide separate internal contacts or policies for privacy, HR, IT, or compliance questions.
+
+14. Changes to This Notice
+
+This Notice may be updated from time to time to reflect changes in the App, legal requirements, operational practices, or Care of Chan’s implementation. The current version will be made available through the App or another appropriate internal channel.

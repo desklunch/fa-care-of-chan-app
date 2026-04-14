@@ -75,6 +75,8 @@ const PublicVenueDetail = lazy(() => import("@/pages/public-venue-detail"));
 const PublicVenueCollection = lazy(
   () => import("@/pages/public-venue-collection"),
 );
+const Terms = lazy(() => import("@/pages/terms"));
+const Privacy = lazy(() => import("@/pages/privacy"));
 const Deals = lazy(() => import("@/pages/deals-sandbox"));
 const MyDeals = lazy(() => import("@/pages/my-deals"));
 const DealIntakeForms = lazy(() => import("@/pages/deal-intake-forms"));
@@ -555,6 +557,8 @@ function RouterContent() {
         <Route path="/vendor-update/:token" component={VendorUpdateForm} />
         <Route path="/form/:token" component={PublicForm} />
         <Route path="/form/preview/:requestId" component={FormPreview} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/privacy" component={Privacy} />
         <Route path="/public/venues/:id" component={PublicVenueDetail} />
         <Route
           path="/public/venues/collections/:id"

@@ -1,4 +1,5 @@
 import logoImage from "@assets/coc-icon-1_1769700566602.png";
+import { Link } from "wouter";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -150,6 +151,12 @@ export default function Landing() {
 
         {/* Mobile: Show not optimized message */}
         <div className="flex items-center" data-testid="mobile-notice"></div>
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2" data-testid="legal-links">
+          <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-terms">Terms of Use</Link>
+          <span>·</span>
+          <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-privacy">Employee Privacy Notice</Link>
+        </div>
       </div>
     </div>
   );
