@@ -361,9 +361,9 @@ export default function Sidebar({
           "flex flex-col h-full ",
           "lg:relative lg:z-1000",
           isCollapsed && !isMediumScreen && "lg:w-[72px]",
-          !isCollapsed && !isMediumScreen && "lg:w-[280px]",
+          !isCollapsed && !isMediumScreen && "lg:w-[256px]",
           "md:relative md:z-50",
-          isMediumScreen && isHovered && "md:w-[280px] md:shadow-xl",
+          isMediumScreen && isHovered && "md:w-[256px] md:shadow-xl",
           isMediumScreen && !isHovered && "md:!w-[72px]",
           "md:flex",
           isMobileOpen
