@@ -3,8 +3,18 @@ import { MarkdownDisplay } from "@/components/markdown-display";
 import { normalizeToMarkdown } from "@/lib/markdown-utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +39,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { FormFieldRenderer, buildDefaultValues } from "@/components/form-builder";
+import {
+  FormFieldRenderer,
+  buildDefaultValues,
+} from "@/components/form-builder";
 import {
   FileText,
   Loader2,
@@ -60,7 +73,9 @@ function formatReadOnlyValue(field: FormField, value: unknown): string {
 
   if (field.type === "location" && Array.isArray(value)) {
     if (value.length === 0) return "—";
-    return value.map((v: { displayName?: string }) => v.displayName || "Unknown").join(", ");
+    return value
+      .map((v: { displayName?: string }) => v.displayName || "Unknown")
+      .join(", ");
   }
   if (field.type === "eventSchedule" && Array.isArray(value)) {
     if (value.length === 0) return "—";
@@ -78,7 +93,15 @@ function formatReadOnlyValue(field: FormField, value: unknown): string {
   return String(value);
 }
 
-function ReadOnlySectionCard({ section, responseData, defaultExpanded = true }: { section: FormSection; responseData: Record<string, unknown>; defaultExpanded?: boolean }) {
+function ReadOnlySectionCard({
+  section,
+  responseData,
+  defaultExpanded = true,
+}: {
+  section: FormSection;
+  responseData: Record<string, unknown>;
+  defaultExpanded?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
 
   return (
@@ -87,24 +110,30 @@ function ReadOnlySectionCard({ section, responseData, defaultExpanded = true }: 
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2 w-full text-left cursor-pointer"
+            className="flex items-center gap-2 w-full text-left cursor-pointer "
             data-testid={`readonly-section-toggle-${section.id}`}
           >
             <ChevronDown
               className={cn(
                 "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
-                isOpen && "rotate-0"
+                isOpen && "rotate-0",
               )}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-lg font-semibold">{section.title}</h3>
-                <span className="text-sm text-muted-foreground shrink-0" data-testid={`readonly-section-field-count-${section.id}`}>
-                  {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}
+                <span
+                  className="text-sm text-muted-foreground shrink-0"
+                  data-testid={`readonly-section-field-count-${section.id}`}
+                >
+                  {section.fields.length}{" "}
+                  {section.fields.length === 1 ? "field" : "fields"}
                 </span>
               </div>
               {section.description && (
-                <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {section.description}
+                </p>
               )}
             </div>
           </button>
@@ -116,20 +145,30 @@ function ReadOnlySectionCard({ section, responseData, defaultExpanded = true }: 
               const displayValue = formatReadOnlyValue(field, value);
 
               return (
-                <div key={field.id} className="grid grid-cols-3 gap-4 items-start" data-testid={`readonly-field-${field.id}`}>
+                <div
+                  key={field.id}
+                  className="grid grid-cols-3 gap-4 items-start"
+                  data-testid={`readonly-field-${field.id}`}
+                >
                   <div className="col-span-1 pt-0.5">
                     <p className="text-sm font-medium text-muted-foreground">
                       {field.name}
-                      {field.required && <span className="text-destructive ml-0.5">*</span>}
+                      {field.required && (
+                        <span className="text-destructive ml-0.5">*</span>
+                      )}
                     </p>
                   </div>
                   <div className="col-span-2">
-                    {field.type === "richtext" && typeof value === "string" && value !== "" ? (
+                    {field.type === "richtext" &&
+                    typeof value === "string" &&
+                    value !== "" ? (
                       <MarkdownDisplay className="text-sm prose dark:prose-invert max-w-none [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                         {normalizeToMarkdown(value as string)}
                       </MarkdownDisplay>
                     ) : (
-                      <p className="text-sm whitespace-pre-wrap">{displayValue}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {displayValue}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -142,11 +181,22 @@ function ReadOnlySectionCard({ section, responseData, defaultExpanded = true }: 
   );
 }
 
-function ReadOnlyFieldRenderer({ schema, responseData }: { schema: FormSection[]; responseData: Record<string, unknown> }) {
+function ReadOnlyFieldRenderer({
+  schema,
+  responseData,
+}: {
+  schema: FormSection[];
+  responseData: Record<string, unknown>;
+}) {
   return (
     <div className="space-y-4" data-testid="intake-readonly">
       {schema.map((section, index) => (
-        <ReadOnlySectionCard key={section.id} section={section} responseData={responseData} defaultExpanded={index === 0} />
+        <ReadOnlySectionCard
+          key={section.id}
+          section={section}
+          responseData={responseData}
+          defaultExpanded={index === 0}
+        />
       ))}
     </div>
   );
@@ -157,41 +207,74 @@ function isIntakeCategory(category: string | null | undefined): boolean {
   return lower.includes("intake") || lower.includes("questionnaire");
 }
 
-function IntakeEmptyState({ dealId, canWrite }: { dealId: string; canWrite: boolean }) {
+function IntakeEmptyState({
+  dealId,
+  canWrite,
+}: {
+  dealId: string;
+  canWrite: boolean;
+}) {
   const { toast } = useToast();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [showAllTemplates, setShowAllTemplates] = useState(false);
 
-  const { data: allTemplates = [], isLoading: isLoadingTemplates } = useQuery<FormTemplate[]>({
+  const { data: allTemplates = [], isLoading: isLoadingTemplates } = useQuery<
+    FormTemplate[]
+  >({
     queryKey: ["/api/form-templates"],
   });
 
-  const intakeTemplates = allTemplates.filter((t) => isIntakeCategory(t.category));
-  const otherTemplates = allTemplates.filter((t) => !isIntakeCategory(t.category));
-  const displayTemplates = showAllTemplates ? allTemplates : (intakeTemplates.length > 0 ? intakeTemplates : allTemplates);
+  const intakeTemplates = allTemplates.filter((t) =>
+    isIntakeCategory(t.category),
+  );
+  const otherTemplates = allTemplates.filter(
+    (t) => !isIntakeCategory(t.category),
+  );
+  const displayTemplates = showAllTemplates
+    ? allTemplates
+    : intakeTemplates.length > 0
+      ? intakeTemplates
+      : allTemplates;
 
   const createMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      const res = await apiRequest("POST", `/api/deals/${dealId}/intake`, { templateId });
+      const res = await apiRequest("POST", `/api/deals/${dealId}/intake`, {
+        templateId,
+      });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("Server returned an unexpected response. Please try again.");
+        throw new Error(
+          "Server returned an unexpected response. Please try again.",
+        );
       }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "intake"] });
-      toast({ title: "Intake started", description: "Questionnaire has been created from the selected template." });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", dealId, "intake"],
+      });
+      toast({
+        title: "Intake started",
+        description:
+          "Questionnaire has been created from the selected template.",
+      });
       setSelectedTemplateId("");
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Failed to start intake", description: error.message });
+      toast({
+        variant: "destructive",
+        title: "Failed to start intake",
+        description: error.message,
+      });
     },
   });
 
   if (!canWrite) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="intake-empty-readonly">
+      <div
+        className="flex flex-col items-center justify-center py-12 text-center"
+        data-testid="intake-empty-readonly"
+      >
         <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">No Intake Questionnaire</h3>
         <p className="text-muted-foreground max-w-sm">
@@ -202,34 +285,55 @@ function IntakeEmptyState({ dealId, canWrite }: { dealId: string; canWrite: bool
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="intake-empty">
+    <div
+      className="flex flex-col items-center justify-center py-12 text-center"
+      data-testid="intake-empty"
+    >
       <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
       <h3 className="text-lg font-semibold mb-2">No Intake Questionnaire</h3>
       <p className="text-muted-foreground max-w-sm mb-6">
-        Start an intake questionnaire by selecting a template. The form will be snapshotted so later template changes won't affect this intake.
+        Start an intake questionnaire by selecting a template. The form will be
+        snapshotted so later template changes won't affect this intake.
       </p>
 
       {isLoadingTemplates ? (
         <Skeleton className="h-10 w-64" />
       ) : allTemplates.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No form templates available. Create one first under Forms &gt; Templates.</p>
+        <p className="text-sm text-muted-foreground">
+          No form templates available. Create one first under Forms &gt;
+          Templates.
+        </p>
       ) : (
         <div className="flex flex-col items-center gap-3 w-full max-w-md">
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-              <SelectTrigger className="flex-1" data-testid="select-intake-template">
+            <Select
+              value={selectedTemplateId}
+              onValueChange={setSelectedTemplateId}
+            >
+              <SelectTrigger
+                className="flex-1"
+                data-testid="select-intake-template"
+              >
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
               <SelectContent>
                 {displayTemplates.map((t) => (
-                  <SelectItem key={t.id} value={t.id} data-testid={`option-template-${t.id}`}>
+                  <SelectItem
+                    key={t.id}
+                    value={t.id}
+                    data-testid={`option-template-${t.id}`}
+                  >
                     <span className="flex items-center gap-2">
                       {t.name}
                       {t.category && (
-                        <span className="text-xs text-muted-foreground">({t.category})</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({t.category})
+                        </span>
                       )}
                       {!t.category && (
-                        <span className="text-xs text-muted-foreground">(Uncategorized)</span>
+                        <span className="text-xs text-muted-foreground">
+                          (Uncategorized)
+                        </span>
                       )}
                     </span>
                   </SelectItem>
@@ -237,7 +341,9 @@ function IntakeEmptyState({ dealId, canWrite }: { dealId: string; canWrite: bool
               </SelectContent>
             </Select>
             <Button
-              onClick={() => selectedTemplateId && createMutation.mutate(selectedTemplateId)}
+              onClick={() =>
+                selectedTemplateId && createMutation.mutate(selectedTemplateId)
+              }
               disabled={!selectedTemplateId || createMutation.isPending}
               data-testid="button-start-intake"
             >
@@ -316,7 +422,7 @@ function IntakeDraftForm({
   const isInitialMount = useRef(true);
 
   const [localFormSchema, setLocalFormSchema] = useState<FormSection[]>(
-    intake.formSchema as FormSection[]
+    intake.formSchema as FormSection[],
   );
 
   const existingData = intake.responseData as Record<string, unknown>;
@@ -343,21 +449,36 @@ function IntakeDraftForm({
   }, [intake.id]);
 
   const autosaveMutation = useMutation({
-    mutationFn: async (payload: { responseData?: Record<string, unknown>; formSchema?: FormSection[] }) => {
-      const res = await apiRequest("PATCH", `/api/deals/${dealId}/intake`, payload);
+    mutationFn: async (payload: {
+      responseData?: Record<string, unknown>;
+      formSchema?: FormSection[];
+    }) => {
+      const res = await apiRequest(
+        "PATCH",
+        `/api/deals/${dealId}/intake`,
+        payload,
+      );
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("Server returned an unexpected response. Please try again.");
+        throw new Error(
+          "Server returned an unexpected response. Please try again.",
+        );
       }
       return res.json();
     },
     onSuccess: () => {
       setSaveStatus("saved");
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "intake"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", dealId, "intake"],
+      });
     },
     onError: (error: Error) => {
       setSaveStatus("error");
-      toast({ variant: "destructive", title: "Autosave failed", description: error.message });
+      toast({
+        variant: "destructive",
+        title: "Autosave failed",
+        description: error.message,
+      });
     },
   });
 
@@ -398,12 +519,21 @@ function IntakeDraftForm({
       await apiRequest("DELETE", `/api/deals/${dealId}/intake`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "intake"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", dealId, "intake"],
+      });
       setShowDeleteDialog(false);
-      toast({ title: "Intake removed", description: "The intake questionnaire has been removed." });
+      toast({
+        title: "Intake removed",
+        description: "The intake questionnaire has been removed.",
+      });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Failed to remove", description: error.message });
+      toast({
+        variant: "destructive",
+        title: "Failed to remove",
+        description: error.message,
+      });
     },
   });
 
@@ -411,7 +541,10 @@ function IntakeDraftForm({
     (sectionId: string, fieldId: string) => {
       const updatedSchema = localFormSchema.map((section) => {
         if (section.id === sectionId) {
-          return { ...section, fields: section.fields.filter((f) => f.id !== fieldId) };
+          return {
+            ...section,
+            fields: section.fields.filter((f) => f.id !== fieldId),
+          };
         }
         return section;
       });
@@ -464,39 +597,54 @@ function IntakeDraftForm({
     <div className="space-y-4 " data-testid="intake-draft-form">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5 text-muted-foreground" />
           <div>
             <h3 className="font-semibold">{intake.templateName}</h3>
             <p className="text-sm text-muted-foreground">
-              Started {intake.createdAt ? format(new Date(intake.createdAt), "MMM d, yyyy") : "recently"}
-              {intake.createdBy && ` by ${intake.createdBy.firstName} ${intake.createdBy.lastName}`}
+              Started{" "}
+              {intake.createdAt
+                ? format(new Date(intake.createdAt), "MMM d, yyyy")
+                : "recently"}
+              {intake.createdBy &&
+                ` by ${intake.createdBy.firstName} ${intake.createdBy.lastName}`}
             </p>
           </div>
-          <SaveStatusIndicator status={saveStatus} />
         </div>
-        {canWrite && (
-          <div className="flex items-center gap-2">
-            <SyncToDealButton dealId={dealId} intake={intake} canWrite={canWrite} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-              data-testid="button-delete-intake"
-            >
-              <Trash2 className="h-4 w-4" />
-              Remove
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <SaveStatusIndicator status={saveStatus} />
+          {canWrite && (
+            <div className="flex items-center gap-2">
+              <SyncToDealButton
+                dealId={dealId}
+                intake={intake}
+                canWrite={canWrite}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                data-testid="button-delete-intake"
+              >
+                <Trash2 className="h-4 w-4" />
+                Remove
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <Form {...form}>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <FormFieldRenderer
             schema={localFormSchema}
             form={form as never}
-            onAddField={canWrite && intake.status === "draft" ? handleAddField : undefined}
-            onDeleteField={canWrite && intake.status === "draft" ? handleDeleteField : undefined}
+            onAddField={
+              canWrite && intake.status === "draft" ? handleAddField : undefined
+            }
+            onDeleteField={
+              canWrite && intake.status === "draft"
+                ? handleDeleteField
+                : undefined
+            }
           />
         </div>
       </Form>
@@ -506,18 +654,23 @@ function IntakeDraftForm({
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Intake Questionnaire</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove this intake questionnaire? All responses will be lost. This action cannot be undone.
+              Are you sure you want to remove this intake questionnaire? All
+              responses will be lost. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-intake">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-intake">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteMutation.mutate()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteMutation.isPending}
               data-testid="button-confirm-delete-intake"
             >
-              {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {deleteMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -527,14 +680,25 @@ function IntakeDraftForm({
   );
 }
 
-function hasMappedFieldsWithData(formSchema: FormSection[], responseData: Record<string, unknown>): boolean {
+function hasMappedFieldsWithData(
+  formSchema: FormSection[],
+  responseData: Record<string, unknown>,
+): boolean {
   for (const section of formSchema) {
     for (const field of section.fields) {
-      if (field.entityMapping?.entityType === "deal" && field.entityMapping?.propertyKey) {
+      if (
+        field.entityMapping?.entityType === "deal" &&
+        field.entityMapping?.propertyKey
+      ) {
         const value = responseData[field.id];
         if (value !== undefined && value !== null && value !== "") {
           if (Array.isArray(value) && value.length === 0) continue;
-          if (typeof value === "object" && !Array.isArray(value) && Object.keys(value as object).length === 0) continue;
+          if (
+            typeof value === "object" &&
+            !Array.isArray(value) &&
+            Object.keys(value as object).length === 0
+          )
+            continue;
           return true;
         }
       }
@@ -548,7 +712,9 @@ function formatSyncValue(value: unknown): string {
   if (Array.isArray(value)) {
     if (value.length === 0) return "—";
     if (typeof value[0] === "object" && "displayName" in value[0]) {
-      return value.map((v: { displayName: string }) => v.displayName).join(", ");
+      return value
+        .map((v: { displayName: string }) => v.displayName)
+        .join(", ");
     }
     return `${value.length} item(s)`;
   }
@@ -571,7 +737,15 @@ interface SyncChange {
   fieldId: string;
 }
 
-function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake: DealIntakeWithRelations; canWrite: boolean }) {
+function SyncToDealButton({
+  dealId,
+  intake,
+  canWrite,
+}: {
+  dealId: string;
+  intake: DealIntakeWithRelations;
+  canWrite: boolean;
+}) {
   const { toast } = useToast();
   const [showSyncDialog, setShowSyncDialog] = useState(false);
   const [syncChanges, setSyncChanges] = useState<SyncChange[]>([]);
@@ -584,12 +758,18 @@ function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake
   const handlePreview = async () => {
     setIsPreviewLoading(true);
     try {
-      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, { dryRun: true });
+      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, {
+        dryRun: true,
+      });
       const data = await res.json();
       setSyncChanges(data.changes || []);
       setShowSyncDialog(true);
     } catch (error: unknown) {
-      toast({ variant: "destructive", title: "Failed to preview sync", description: error instanceof Error ? error.message : "Unknown error" });
+      toast({
+        variant: "destructive",
+        title: "Failed to preview sync",
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
       setIsPreviewLoading(false);
     }
@@ -597,17 +777,28 @@ function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, { dryRun: false });
+      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, {
+        dryRun: false,
+      });
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/deals", dealId, "tags"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", dealId, "tags"],
+      });
       setShowSyncDialog(false);
-      toast({ title: "Deal synced", description: "Deal properties have been updated from intake data." });
+      toast({
+        title: "Deal synced",
+        description: "Deal properties have been updated from intake data.",
+      });
     },
     onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Failed to sync", description: error.message });
+      toast({
+        variant: "destructive",
+        title: "Failed to sync",
+        description: error.message,
+      });
     },
   });
 
@@ -635,25 +826,36 @@ function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake
           <AlertDialogHeader>
             <AlertDialogTitle>Sync Intake to Deal</AlertDialogTitle>
             <AlertDialogDescription>
-              The following deal properties will be updated from the intake responses. Existing values will be overwritten.
+              The following deal properties will be updated from the intake
+              responses. Existing values will be overwritten.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           {syncChanges.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No data to sync. Fields are either empty or have no mapped values.</p>
+            <p className="text-sm text-muted-foreground py-4">
+              No data to sync. Fields are either empty or have no mapped values.
+            </p>
           ) : (
             <div className="max-h-[300px] overflow-auto space-y-3 py-2">
               {syncChanges.map((change) => (
-                <div key={change.propertyKey} className="border rounded-md p-3 space-y-1" data-testid={`sync-change-${change.propertyKey}`}>
+                <div
+                  key={change.propertyKey}
+                  className="border rounded-md p-3 space-y-1"
+                  data-testid={`sync-change-${change.propertyKey}`}
+                >
                   <p className="text-sm font-medium">{change.label}</p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-muted-foreground">Current:</span>
-                      <p className="truncate">{formatSyncValue(change.currentValue)}</p>
+                      <p className="truncate">
+                        {formatSyncValue(change.currentValue)}
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">New:</span>
-                      <p className="truncate">{formatSyncValue(change.newValue)}</p>
+                      <p className="truncate">
+                        {formatSyncValue(change.newValue)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -662,13 +864,17 @@ function SyncToDealButton({ dealId, intake, canWrite }: { dealId: string; intake
           )}
 
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-sync">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-sync">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => syncMutation.mutate()}
               disabled={syncMutation.isPending || syncChanges.length === 0}
               data-testid="button-confirm-sync"
             >
-              {syncMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {syncMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
               Apply Changes
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -697,5 +903,7 @@ export function DealIntakeTab({ dealId, canWrite }: DealIntakeTabProps) {
     return <IntakeEmptyState dealId={dealId} canWrite={canWrite} />;
   }
 
-  return <IntakeDraftForm dealId={dealId} intake={intake} canWrite={canWrite} />;
+  return (
+    <IntakeDraftForm dealId={dealId} intake={intake} canWrite={canWrite} />
+  );
 }

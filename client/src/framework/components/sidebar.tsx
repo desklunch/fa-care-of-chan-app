@@ -494,7 +494,7 @@ export default function Sidebar({
 
         <nav
           className={cn(
-            "flex-1 overflow-y-auto p-2 py-3 space-y-2",
+            "flex-1 overflow-y-auto p-2 py-3 space-y-3",
             !showExpanded && "cursor-pointer",
           )}
           data-testid="nav-sidebar"
@@ -515,7 +515,7 @@ export default function Sidebar({
                     <button
                       onClick={() => toggleGroup(section.heading!)}
                       className={cn(
-                        "w-full outline-none ring-ring focus:ring-2   h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent transition-colors",
+                        "w-full outline-none ring-ring    h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider  pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent transition-colors",
                         sectionIndex === 0 ? "mt-0" : "mt-2",
                       )}
                       data-testid={`button-toggle-section-${section.heading.toLowerCase().replace(/\s+/g, "-")}`}
@@ -531,7 +531,7 @@ export default function Sidebar({
                   )}
 
                   {!isGroupCollapsed && (
-                    <ul className="space-y-0">
+                    <ul className="space-y-1 ">
                       {section.items.map((item) => {
                         const Icon = item.icon;
                         const isEnabled = item.active !== false;

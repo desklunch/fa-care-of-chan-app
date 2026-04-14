@@ -416,7 +416,7 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
   };
 
   return (
-    <Card className="p-6" data-testid={`section-${section.id}`}>
+    <Card className="p-4" data-testid={`section-${section.id}`}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <button
@@ -424,15 +424,18 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
             className="flex items-center gap-2 w-full text-left cursor-pointer"
             data-testid={`section-toggle-${section.id}`}
           >
-            <ChevronDown
-              className={cn(
-                "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
-                isOpen && "rotate-0"
-              )}
-            />
+  
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-lg font-semibold">{section.title}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">{section.title}</h3>
+                  <ChevronDown
+                    className={cn(
+                      "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
+                      isOpen && "rotate-0"
+                    )}
+                  />
+                </div>
                 <span className="text-sm text-muted-foreground shrink-0" data-testid={`section-field-count-${section.id}`}>
                   {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}
                 </span>
@@ -446,7 +449,7 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="space-y-6 pt-6">
+          <div className="space-y-4 pt-6">
             {section.fields.map((field) => (
               <SingleFieldRenderer
                 key={field.id}
@@ -456,10 +459,10 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
               />
             ))}
             {onAddField && (
-              <div className="pt-2">
+              <div className="text-right align-right pt-4">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowAddDialog(true)}
                   data-testid={`button-add-field-${section.id}`}
