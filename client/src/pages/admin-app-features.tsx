@@ -83,7 +83,7 @@ function SortableCategoryItem({
             </button>
             <div 
               className="w-4 h-4 rounded-full shrink-0" 
-              style={{ backgroundColor: category.color || '#6B7280' }}
+              style={{ backgroundColor: category.color || 'hsl(var(--category-fallback))' }}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">

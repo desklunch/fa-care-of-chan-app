@@ -34,7 +34,7 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
 -   **Domain-Based Modules:** Backend organized into domain modules under `server/domains/`:
     - `reference-data/` - Tags, amenities, industries, deal services, brands, vendor services (31 routes)
     - `admin/` - Team, invites, admin settings, activity tracking (21 routes)
-    - `settings-comments/` - Theme settings and entity comments (7 routes)
+    - `settings-comments/` - Theme settings, named themes CRUD, and entity comments (13 routes)
     - `issues-features/` - App issues, feature requests, and categories (19 routes)
     - `releases/` - App release and version management (14 routes)
     - `contacts/` - Contact CRUD with email/social management (12 routes)
@@ -62,7 +62,8 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `vendors.storage.ts` (309 lines) - vendor CRUD, services, update tokens
     - `releases.storage.ts` (289 lines) - app releases, version management
     - `contacts.storage.ts` (224 lines) - contact CRUD, relations, linking
-    - `settings-comments.storage.ts` (217 lines) - theme settings, entity comments
+    - `settings-comments.storage.ts` (315 lines) - theme settings, named themes CRUD, entity comments
+    - `themes.seed.ts` - Built-in theme seeding (Default, Ocean, Warm, Monochrome)
     - `clients.storage.ts` (83 lines) - client CRUD, contact linking
     - `typeform-webhook.storage.ts` - Typeform webhook find-or-create logic for deals/contacts/clients
     - `typeform-webhook.routes.ts` - POST /api/webhooks/typeform endpoint with signature verification
@@ -104,6 +105,21 @@ The system includes modules for:
 -   **Google Drive Attachments:** Allows users to attach Google Drive files (Docs, Sheets, Slides, PDFs, etc.) to deals, venues, clients, vendors, and contacts by pasting Drive sharing links. Uses the Google Drive connector for metadata resolution. Attached files display name, type icon, who attached them, and when. Files open in Google Drive in a new tab.
 -   **Deal Summary Sheet Generation:** Generates Google Sheets from a configurable template. The template uses `{{token}}` placeholders (e.g. `{{client_name}}`, `{{budget_low}}`, `{{intake:field-event-name}}`) that get replaced with deal data. Template Sheet ID is configured in admin settings at `/admin/deal-settings`. OAuth scopes include `drive.file` and `spreadsheets`. The generated sheet is saved as a drive attachment on the deal.
 -   **Notification System:** Multi-channel notification system (in-app, email via Resend, browser push via web-push/VAPID). Users can follow entities (deals, venues, vendors, clients, features, issues) to receive updates. Declarative routing rules map domain events to notification channels. Auto-follows on deal assignment, feature/issue creation. NotificationBell in header with unread count, mark-as-read. FollowButton on all entity detail pages. Push subscription management in service worker. Notification preferences per user per channel.
+
+### Theme System
+The app uses a multi-theme system where admins can create unlimited named themes:
+- **Data Model:** `themes` table stores named themes with light/dark color variables, font selections, and built-in flag
+- **Built-in Themes:** Default, Ocean, Warm, Monochrome - cannot be deleted but can be duplicated
+- **Font System:** Each theme defines heading and body fonts loaded dynamically from Google Fonts CSS API
+- **Status Indicator Colors:** Presence colors (online/away/busy/offline) and deal-status pipeline colors are part of the theme via CSS variables
+- **Deal Status Colors:** Deal pipeline stage colors (prospecting, warm-lead, proposal, etc.) consolidated into theme CSS variables in index.css, replacing hardcoded hex values
+- **User Selection:** Users pick themes via a popover in the sidebar; selection persisted in `users.selectedThemeId` column (server-side) with localStorage fallback for anonymous users
+- **Light/Dark/System Toggle:** Remains as a separate sub-control within each theme
+- **Admin Editor:** Full theme editor at `/admin/theme` with theme list panel, font picker, organized color groups (presence indicators, deal status colors), and live preview
+- **API Endpoints:** `GET/POST /api/themes`, `GET/PATCH/DELETE /api/themes/:id`, `POST /api/themes/:id/duplicate`, `GET/PUT /api/themes/user-preference`
+- **Legacy API Bridge:** `GET/PATCH /api/settings/theme` bridges to the new themes model for backward compatibility
+- **Migration:** Existing `app_settings` theme entry migrated to `themes` table on first run; SQL migration at `migrations/0007_create_themes_table.sql`
+- **Key Files:** `client/src/lib/theme-provider.tsx`, `client/src/pages/admin-theme-editor.tsx`, `server/domains/settings-comments/themes.seed.ts`
 
 ### System Design Choices
 -   **Database Schema:** Comprehensive schemas for users, invites, sessions, audit logs, app features, releases, contacts, venue photos, and venue files, including relationships and specific data types for each entity.

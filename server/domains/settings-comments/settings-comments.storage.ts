@@ -4,8 +4,12 @@ import {
   appSettings,
   comments,
   users,
+  themes,
   type AppSetting,
   type Comment,
+  type Theme,
+  type ThemeVariables,
+  type ThemeFonts,
 } from "@shared/schema";
 
 export interface CommentWithAuthor extends Comment {
@@ -243,5 +247,101 @@ export const settingsCommentsStorage = {
   async getUser(userId: string) {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     return user || null;
+  },
+
+  async getAllThemes(): Promise<Theme[]> {
+    return db.select().from(themes).orderBy(themes.name);
+  },
+
+  async getThemeById(id: string): Promise<Theme | null> {
+    const [theme] = await db.select().from(themes).where(eq(themes.id, id));
+    return theme || null;
+  },
+
+  async createTheme(data: {
+    name: string;
+    light: ThemeVariables;
+    dark: ThemeVariables;
+    fonts?: ThemeFonts;
+    isBuiltIn?: boolean;
+    createdBy?: string;
+  }): Promise<Theme> {
+    const [theme] = await db
+      .insert(themes)
+      .values({
+        name: data.name,
+        light: data.light,
+        dark: data.dark,
+        fonts: data.fonts || { headingFont: "Inter", bodyFont: "Inter" },
+        isBuiltIn: data.isBuiltIn || false,
+        createdBy: data.createdBy || null,
+      })
+      .returning();
+    return theme;
+  },
+
+  async updateTheme(
+    id: string,
+    data: Partial<{
+      name: string;
+      light: ThemeVariables;
+      dark: ThemeVariables;
+      fonts: ThemeFonts;
+    }>
+  ): Promise<Theme> {
+    const [updated] = await db
+      .update(themes)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(themes.id, id))
+      .returning();
+    return updated;
+  },
+
+  async duplicateTheme(id: string, newName: string, userId?: string): Promise<Theme> {
+    const original = await this.getThemeById(id);
+    if (!original) throw new Error("Theme not found");
+    return this.createTheme({
+      name: newName,
+      light: original.light as ThemeVariables,
+      dark: original.dark as ThemeVariables,
+      fonts: original.fonts as ThemeFonts,
+      isBuiltIn: false,
+      createdBy: userId,
+    });
+  },
+
+  async deleteTheme(id: string): Promise<void> {
+    const theme = await this.getThemeById(id);
+    if (!theme) throw new Error("Theme not found");
+    if (theme.isBuiltIn) throw new Error("Cannot delete built-in themes");
+    await db.update(users).set({ selectedThemeId: null }).where(eq(users.selectedThemeId, id));
+    await db.delete(themes).where(eq(themes.id, id));
+  },
+
+  async migrateExistingThemeToThemesTable(): Promise<void> {
+    const existing = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.name, "Custom (Migrated)"))
+      .limit(1);
+    if (existing.length > 0) return;
+
+    const setting = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, "theme"))
+      .limit(1);
+
+    if (setting.length > 0 && setting[0].value) {
+      const themeData = setting[0].value as { light: ThemeVariables; dark: ThemeVariables };
+      if (themeData.light && themeData.dark) {
+        await this.createTheme({
+          name: "Custom (Migrated)",
+          light: themeData.light,
+          dark: themeData.dark,
+          isBuiltIn: false,
+        });
+      }
+    }
   },
 };

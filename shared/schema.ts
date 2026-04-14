@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   location: varchar("location"),
   bio: text("bio"),
   isActive: boolean("is_active").default(true).notNull(),
+  selectedThemeId: varchar("selected_theme_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1547,7 +1548,6 @@ export type InsertAppSetting = typeof appSettings.$inferInsert;
 
 // Theme variable schema
 export const themeVariableSchema = z.object({
-  // Core colors (HSL format: "H S% L%")
   background: z.string(),
   foreground: z.string(),
   border: z.string(),
@@ -1582,15 +1582,71 @@ export const themeVariableSchema = z.object({
   chart3: z.string(),
   chart4: z.string(),
   chart5: z.string(),
+  statusOnline: z.string().optional(),
+  statusAway: z.string().optional(),
+  statusBusy: z.string().optional(),
+  statusOffline: z.string().optional(),
+  statusProspecting: z.string().optional(),
+  statusWarmLead: z.string().optional(),
+  statusProposal: z.string().optional(),
+  statusFeedback: z.string().optional(),
+  statusContracting: z.string().optional(),
+  statusInProgress: z.string().optional(),
+  statusInvoicing: z.string().optional(),
+  statusComplete: z.string().optional(),
+  statusNoGo: z.string().optional(),
+  statusCanceled: z.string().optional(),
+  categoryFallback: z.string().optional(),
+});
+
+export const themeFontsSchema = z.object({
+  headingFont: z.string().default("Inter"),
+  bodyFont: z.string().default("Inter"),
 });
 
 export const themeConfigSchema = z.object({
   light: themeVariableSchema,
   dark: themeVariableSchema,
+  fonts: themeFontsSchema.optional(),
 });
 
 export type ThemeVariables = z.infer<typeof themeVariableSchema>;
+export type ThemeFonts = z.infer<typeof themeFontsSchema>;
 export type ThemeConfig = z.infer<typeof themeConfigSchema>;
+
+// Named themes table
+export const themes = pgTable("themes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull(),
+  isBuiltIn: boolean("is_built_in").default(false).notNull(),
+  light: jsonb("light").notNull(),
+  dark: jsonb("dark").notNull(),
+  fonts: jsonb("fonts").notNull().default({ headingFont: "Inter", bodyFont: "Inter" }),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type Theme = typeof themes.$inferSelect;
+export type InsertTheme = typeof themes.$inferInsert;
+
+export const insertThemeSchema = createInsertSchema(themes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1).max(100),
+  light: themeVariableSchema,
+  dark: themeVariableSchema,
+  fonts: themeFontsSchema.optional(),
+});
+
+export const updateThemeSchema = insertThemeSchema.partial().extend({
+  name: z.string().min(1).max(100).optional(),
+});
+
+export type CreateTheme = z.infer<typeof insertThemeSchema>;
+export type UpdateTheme = z.infer<typeof updateThemeSchema>;
 
 // App issue severity enum values
 export const issueSeverities = ["high", "medium", "low"] as const;

@@ -78,12 +78,49 @@ function SnapshotViewSusana() {
   }, [deals, activeStatusNames]);
 
   const columns: KanbanColumn<DealWithRelations>[] = useMemo(() => {
-    return activeStatusNames.map((status) => ({
-      id: status.toLowerCase().replace(/\s+/g, "-"),
-      title: status,
-      color: statusMap.get(status)?.colorLight || "#888888",
-      items: filteredDeals.filter((deal) => deal.statusName === status),
-    }));
+    const statusToCssVar: Record<string, string> = {
+      "Prospecting": "--status-prospecting",
+      "Initial Contact": "--status-prospecting",
+      "Qualified Lead": "--status-warm-lead",
+      "Warm Lead": "--status-warm-lead",
+      "Proposal": "--status-proposal",
+      "Proposal Sent": "--status-proposal",
+      "Feedback": "--status-feedback",
+      "Negotiation": "--status-contracting",
+      "Contracting": "--status-contracting",
+      "In Progress": "--status-in-progress",
+      "Final Invoicing": "--status-invoicing",
+      "Closed Won": "--status-complete",
+      "Complete": "--status-complete",
+      "Closed Lost": "--status-no-go",
+      "No-Go": "--status-no-go",
+      "Declined by Us": "--status-canceled",
+      "Canceled": "--status-canceled",
+      "Legacy": "--status-canceled",
+    };
+    const defaultSeedColors = new Set([
+      "#6366f1", "#818cf8", "#0ea5e9", "#38bdf8", "#8b5cf6", "#a78bfa",
+      "#d946ef", "#e879f9", "#f59e0b", "#fbbf24", "#10b981", "#34d399",
+      "#ef4444", "#f87171", "#64748b", "#94a3b8", "#9ca3af", "#d1d5db",
+      "#888888",
+    ]);
+    return activeStatusNames.map((status) => {
+      const record = statusMap.get(status);
+      const hasCustomColor = record && !defaultSeedColors.has(record.colorLight?.toLowerCase() || "");
+      let color: string;
+      if (hasCustomColor) {
+        color = record.colorLight;
+      } else {
+        const cssVar = statusToCssVar[status];
+        color = cssVar ? `hsl(var(${cssVar}))` : "hsl(var(--muted-foreground))";
+      }
+      return {
+        id: status.toLowerCase().replace(/\s+/g, "-"),
+        title: status,
+        color,
+        items: filteredDeals.filter((deal) => deal.statusName === status),
+      };
+    });
   }, [filteredDeals, activeStatusNames, statusMap]);
 
   if (isLoading) {

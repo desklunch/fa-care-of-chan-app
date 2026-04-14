@@ -55,7 +55,7 @@ import mcpRoutes from "./mcp/transport";
 import { requestContextMiddleware, updateRequestContext } from "./lib/request-context";
 import { registerReferenceDataRoutes } from "./domains/reference-data";
 import { registerAdminRoutes, seedRoles } from "./domains/admin";
-import { registerSettingsCommentsRoutes } from "./domains/settings-comments";
+import { registerSettingsCommentsRoutes, seedBuiltInThemes, settingsCommentsStorage } from "./domains/settings-comments";
 import { registerIssuesFeaturesRoutes } from "./domains/issues-features";
 import { registerReleasesRoutes } from "./domains/releases";
 import { registerContactsRoutes } from "./domains/contacts";
@@ -120,6 +120,8 @@ export async function registerRoutes(
   registerFormsRoutes(app);
   await seedDealStatuses();
   await seedRoles();
+  await settingsCommentsStorage.migrateExistingThemeToThemesTable();
+  await seedBuiltInThemes();
   await ensureReplitAgentUser();
   registerNotificationsRoutes(app);
   registerDriveAttachmentsRoutes(app);

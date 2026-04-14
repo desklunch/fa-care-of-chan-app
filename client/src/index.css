@@ -10,41 +10,41 @@
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0, 0, 0, .03);
   --elevate-2: rgba(0, 0, 0, .08);
-  --background: #efe4d7;
-  --foreground: #0c140b;
-  --border: 0 0% 90%;
-  --card: rgb(246, 240, 233);
-  --card-foreground: 0 0% 9%;
-  --card-border: 0 0% 94%;
-  --sidebar: 0 0% 96%;
+  --background: 33 43% 91%;
+  --foreground: 113 29% 6%;
+  --border: 41 32% 85%;
+  --card: 33 44% 95%;
+  --card-foreground: 113 29% 6%;
+  --card-border: 34 23% 88%;
+  --sidebar: 33 43% 89%;
   --sidebar-foreground: 0 0% 9%;
-  --sidebar-border: 0 0% 92%;
-  --sidebar-primary: 217 91% 60%;
+  --sidebar-border: 30 20% 81%;
+  --sidebar-primary: 67 100% 50%;
   --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 0 0% 92%;
-  --sidebar-accent-foreground: 0 0% 9%;
-  --sidebar-ring: 217 91% 60%;
-  --popover: 0 0% 94%;
-  --popover-foreground: 0 0% 9%;
-  --popover-border: 0 0% 90%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 90%;
+  --sidebar-accent: 67 100% 50%;
+  --sidebar-accent-foreground: 113 29% 6%;
+  --sidebar-ring: 67 100% 50%;
+  --popover: 33 43% 89%;
+  --popover-foreground: 113 29% 6%;
+  --popover-border: 32 20% 81%;
+  --primary: 113 29% 6%;
+  --primary-foreground: 67 100% 50%;
+  --secondary: 33 44% 86%;
   --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 88%;
+  --muted: 33 44% 86%;
   --muted-foreground: 0 0% 45%;
   --accent: 217 15% 88%;
   --accent-foreground: 0 0% 9%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
   --input: 0 0% 80%;
-  --ring: 217 91% 60%;
+  --ring: 67 100% 50%;
   --chart-1: 217 91% 35%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;
   --chart-4: 43 74% 49%;
   --chart-5: 27 87% 67%;
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Manrope', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
   --radius: .5rem;
@@ -59,14 +59,18 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
-  /* Status colors for kanban */
-  --status-warm-lead: #5E1DB2;
-  --status-prospecting: #0088B2;
-  --status-proposal: #DE72BA;
-  --status-feedback: #BE8B51;
-  --status-contracting: #DB7052;
-  --status-in-progress: #64A334;
-  --status-invoicing: #608CD4;
+  /* Deal status colors for kanban (defaults - overridden by theme CSS vars) */
+  --status-prospecting: 194 100% 35%;
+  --status-warm-lead: 266 72% 41%;
+  --status-proposal: 320 62% 66%;
+  --status-feedback: 32 46% 53%;
+  --status-contracting: 13 66% 59%;
+  --status-in-progress: 94 52% 42%;
+  --status-invoicing: 217 57% 60%;
+  --status-complete: 67 100% 50%;
+  --status-no-go: 357 67% 58%;
+  --status-canceled: 0 0% 10%;
+  --category-fallback: 67 50% 35%;
 
   /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -113,17 +117,17 @@
   --card-border: 0 0% 14%;
   --sidebar: 0 0% 13%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 0 0% 16%;
-  --sidebar-primary: 217 91% 60%;
+  --sidebar-border: 0 0% 20%;
+  --sidebar-primary: 67 100% 50%;
   --sidebar-primary-foreground: 0 0% 98%;
   --sidebar-accent: 0 0% 16%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 217 91% 60%;
-  --popover: 0 0% 15%;
+  --sidebar-ring: 67 100% 50%;
+  --popover: 0 0% 18%;
   --popover-foreground: 0 0% 98%;
-  --popover-border: 0 0% 18%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 98%;
+  --popover-border: 0 0% 16%;
+  --primary: 67 100% 50%;
+  --primary-foreground: 113 29% 6%;
   --secondary: 0 0% 18%;
   --secondary-foreground: 0 0% 98%;
   --muted: 0 0% 17%;
@@ -133,7 +137,7 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
   --input: 0 0% 24%;
-  --ring: 217 91% 60%;
+  --ring: 67 100% 50%;
   --chart-1: 217 91% 70%;
   --chart-2: 173 58% 65%;
   --chart-3: 197 37% 60%;
@@ -148,14 +152,18 @@
   --shadow-xl: 0px 2px 0px 0px rgba(0, 0, 0, 1.0), 0px 8px 10px -1px rgba(0, 0, 0, 1.0);
   --shadow-2xl: 0px 2px 0px 0px rgba(0, 0, 0, 1.0);
 
-  /* Status colors for kanban (dark mode) */
-  --status-warm-lead: #C293FF;
-  --status-prospecting: #83E2FF;
-  --status-proposal: #FF93DB;
-  --status-feedback: #FFC583;
-  --status-contracting: #FF9173;
-  --status-in-progress: #85CF36;
-  --status-invoicing: #5893F2;
+  /* Deal status colors for kanban (dark mode defaults - overridden by theme CSS vars) */
+  --status-prospecting: 194 100% 42%;
+  --status-warm-lead: 266 72% 55%;
+  --status-proposal: 320 62% 66%;
+  --status-feedback: 32 80% 65%;
+  --status-contracting: 13 66% 59%;
+  --status-in-progress: 89 61% 51%;
+  --status-invoicing: 217 86% 65%;
+  --status-complete: 67 100% 50%;
+  --status-no-go: 358 48% 58%;
+  --status-canceled: 0 0% 63%;
+  --category-fallback: 67 50% 45%;
 
   /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -309,126 +317,68 @@
 
   /* Deal Status Badges - Pattern 1: Transparent bg with border (text matches border) */
   .deal-status-prospecting {
-    background: #0088B21A;
-    border: 1px solid #0088B288;
-    color: #0088B2;
-  }
-
-  .dark .deal-status-prospecting {
-    background: rgba(131, 226, 255, 0.2);
-    border-color: #83E2FF;
-    color: #83E2FF;
+    background: hsl(var(--status-prospecting) / 0.1);
+    border: 1px solid hsl(var(--status-prospecting) / 0.53);
+    color: hsl(var(--status-prospecting));
   }
 
   .deal-status-warm-lead {
-    background: rgba(94, 29, 178, 0.2);
-    border: 1px solid #5E1DB288;
-    color: #5E1DB2;
+    background: hsl(var(--status-warm-lead) / 0.2);
+    border: 1px solid hsl(var(--status-warm-lead) / 0.53);
+    color: hsl(var(--status-warm-lead));
   }
 
-  .dark .deal-status-warm-lead {
-    background: rgba(194, 147, 255, 0.2);
-    border-color: #C293FF;
-    color: #C293FF;
-  }
-
-  /* Deal Status Badges - Pattern 2: Solid bg with matching border (dark text) */
+  /* Deal Status Badges - Pattern 2: Solid bg with matching border */
   .deal-status-proposal {
-    background: #DE72BA;
-    border: 1px solid #DE72BA88;
-    color: #efe4d7;
-  }
-
-  .dark .deal-status-proposal {
-    background: #FF93DB;
-    border-color: #FF93DB;
-    color: #171717;
+    background: hsl(var(--status-proposal));
+    border: 1px solid hsl(var(--status-proposal) / 0.53);
+    color: hsl(var(--foreground));
   }
 
   .deal-status-waiting {
-    background: #BE8B51;
-    border: 1px solid #BE8B5188;
-    color: #efe4d7;
-
-  }
-
-  .dark .deal-status-waiting {
-    background: #FFC583;
-    border-color: #FFC583;
-    color: #171717;
+    background: hsl(var(--status-feedback));
+    border: 1px solid hsl(var(--status-feedback) / 0.53);
+    color: hsl(var(--foreground));
   }
 
   .deal-status-contracting {
-    background: #DB7052;
-    border: 1px solid #DB705288;
-    color: #efe4d7;
-
-  }
-
-  .dark .deal-status-contracting {
-    background: #FF9173;
-    border-color: #FF9173;
-    color: #171717;
+    background: hsl(var(--status-contracting));
+    border: 1px solid hsl(var(--status-contracting) / 0.53);
+    color: hsl(var(--foreground));
   }
 
   .deal-status-in-progress {
-    background: #64A334;
-    border: 1px solid #64A33488;
-    color: #efe4d7;
-
-  }
-
-  .dark .deal-status-in-progress {
-    background: #85CF36;
-    border-color: #85CF36;
-    color: #171717;
+    background: hsl(var(--status-in-progress));
+    border: 1px solid hsl(var(--status-in-progress) / 0.53);
+    color: hsl(var(--foreground));
   }
 
   .deal-status-invoicing {
-    background: #608CD4;
-    border: 1px solid #608CD488;
-    color: #efe4d7;
-
-  }
-
-  .dark .deal-status-invoicing {
-    background: #5893F2;
-    border-color: #5893F2;
-    color: #171717;
+    background: hsl(var(--status-invoicing));
+    border: 1px solid hsl(var(--status-invoicing) / 0.53);
+    color: hsl(var(--foreground));
   }
 
   /* Deal Status Badges - Pattern 3: Solid bg, no border */
   .deal-status-complete {
-    background: #E2FF00;
+    background: hsl(var(--status-complete));
     color: #171717;
   }
 
-  /* Complete is same in dark mode */
-
   .deal-status-no-go {
-    background: #E6D5C1;
-    color: #DC4D54;
-  }
-
-  .dark .deal-status-no-go {
-    background: #292929;
-    color: #C76165;
+    background: hsl(var(--muted));
+    color: hsl(var(--status-no-go));
   }
 
   .deal-status-canceled {
-    background: #E6D5C1;
-    color: #1a1a1a;
-  }
-
-  .dark .deal-status-canceled {
-    background: #292929;
-    color: #a0a0a0;
+    background: hsl(var(--muted));
+    color: hsl(var(--status-canceled));
   }
 
   .deal-status-fallback {
     background: hsl(var(--muted));
     color: hsl(var(--muted-foreground));
-    border: 1px solid hsl(88var(--border));
+    border: 1px solid hsl(var(--border));
   }
 
   /* Safe area padding for iOS Safari floating toolbar */

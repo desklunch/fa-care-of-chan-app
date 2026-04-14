@@ -10,9 +10,12 @@ import {
   LogOut,
   Sun,
   Moon,
+  Monitor,
   Trash2,
   Search,
   Shield,
+  Palette,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,8 +32,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useLayout } from "../hooks/layout-context";
 import { useTheme } from "@/lib/theme-provider";
+import type { ThemeVariables } from "@shared/schema";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTierOverride } from "@/contexts/tier-override-context";
 import Logo from "./logo";
@@ -88,6 +97,88 @@ function DevRoleSelector({
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+function ThemePickerPopover({ showExpanded }: { showExpanded: boolean }) {
+  const { theme, setTheme, resolvedTheme, allThemes, selectedThemeId, setSelectedThemeId } = useTheme();
+
+  const modeOptions: { value: "light" | "dark" | "system"; icon: typeof Sun; label: string }[] = [
+    { value: "light", icon: Sun, label: "Light" },
+    { value: "dark", icon: Moon, label: "Dark" },
+    { value: "system", icon: Monitor, label: "Auto" },
+  ];
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-12"
+          data-testid="button-theme-picker"
+          aria-label="Theme picker"
+        >
+          <Palette className="h-5 w-5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" className="w-64 p-2">
+        <div className="space-y-3">
+          <div>
+            <div className="flex gap-1">
+              {modeOptions.map((opt) => (
+                <Button
+                  key={opt.value}
+                  variant={theme === opt.value ? "default" : "ghost"}
+                  size="sm"
+                  className="flex-1 gap-1 px-2"
+                  onClick={() => setTheme(opt.value)}
+                  data-testid={`button-mode-${opt.value}`}
+                >
+                  <opt.icon className="h-3.5 w-3.5" />
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {allThemes.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Colors</p>
+              <div className="space-y-1 max-h-48 overflow-y-auto border bg-background/20 p-1 rounded-md">
+                {allThemes.map((t) => {
+                  const lightVars = t.light as ThemeVariables;
+                  const isSelected = t.id === selectedThemeId;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setSelectedThemeId(t.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left transition-colors",
+                        isSelected ? "bg-primary/10 text-primary" : "hover-elevate"
+                      )}
+                      data-testid={`button-select-theme-${t.id}`}
+                    >
+                      <div className="flex gap-0.5 flex-shrink-0">
+                        {[lightVars.primary, lightVars.accent, lightVars.sidebar].map((color, i) => (
+                          <div
+                            key={i}
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: `hsl(${color})` }}
+                          />
+                        ))}
+                      </div>
+                      <span className="flex-1 truncate">{t.name}</span>
+                      {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -517,26 +608,7 @@ export default function Sidebar({
               !showExpanded && "justify-center",
             )}
           >
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="h-9 w-12"
-              data-testid="button-theme-toggle"
-              aria-label={
-                resolvedTheme === "dark"
-                  ? "Switch to light mode"
-                  : "Switch to dark mode"
-              }
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
+            <ThemePickerPopover showExpanded={showExpanded} />
             {import.meta.env.DEV && showExpanded && (
               <Button
                 variant="ghost"
