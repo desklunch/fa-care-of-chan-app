@@ -3,14 +3,14 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { markdownToHtml, htmlToMarkdown } from "@/lib/markdown-utils";
 
-function getPrimaryHslColor(): string {
+function getHighlightHslColor(): string {
   const style = getComputedStyle(document.documentElement);
-  const raw = style.getPropertyValue("--primary").trim();
+  const raw = style.getPropertyValue("--destructive").trim();
   const match = raw.match(/^([\d.]+)\s+([\d.]+)%?\s+([\d.]+)%?$/);
   if (match) {
     return `hsl(${match[1]}, ${match[2]}%, ${match[3]}%)`;
   }
-  return "hsl(217, 91%, 60%)";
+  return "hsl(0, 84%, 60%)";
 }
 
 const lucideAttrs = 'width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
@@ -21,7 +21,7 @@ const lucideIcons: Record<string, string> = {
   underline: `<svg ${lucideAttrs}><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>`,
   link: `<svg ${lucideAttrs}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
   "list-bullet": `<svg ${lucideAttrs}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
-  highlight: `<svg ${lucideAttrs}><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><rect x="2" y="20" width="20" height="2" rx="0.5" fill="${getPrimaryHslColor()}" stroke="none"/></svg>`,
+  highlight: `<svg ${lucideAttrs}><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><rect x="2" y="20" width="20" height="2" rx="0.5" fill="${getHighlightHslColor()}" stroke="none"/></svg>`,
 };
 
 const toolbarButtonMap: Record<string, string> = {
@@ -50,8 +50,24 @@ const modules = {
         if (format.color) {
           quill.format("color", false);
         } else {
-          quill.format("color", getPrimaryHslColor());
+          quill.format("color", getHighlightHslColor());
         }
+      },
+    },
+  },
+  keyboard: {
+    bindings: {
+      hyphenToBullet: {
+        key: " ",
+        prefix: /^-$/,
+        handler: function (this: { quill: import("quill").default }, range: { index: number; length: number }) {
+          const quill = this.quill;
+          const [line, offset] = quill.getLine(range.index);
+          if (!line || offset !== 1) return true;
+          quill.deleteText(range.index - 1, 1, "user");
+          quill.formatLine(range.index - 1, 1, "list", "bullet", "user");
+          return false;
+        },
       },
     },
   },
