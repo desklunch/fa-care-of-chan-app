@@ -80,6 +80,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   onBlur?: () => void;
   placeholder?: string;
+  alwaysShowToolbar?: boolean;
   "data-testid"?: string;
 }
 
@@ -88,6 +89,7 @@ export function RichTextEditor({
   onChange,
   onBlur,
   placeholder,
+  alwaysShowToolbar = false,
   "data-testid": testId,
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -148,7 +150,7 @@ export function RichTextEditor({
   return (
     <div
       ref={containerRef}
-      className="rich-text-editor-wrapper"
+      className={`rich-text-editor-wrapper${alwaysShowToolbar ? " toolbar-always-visible" : ""}`}
       data-testid={testId}
     >
       <ReactQuill

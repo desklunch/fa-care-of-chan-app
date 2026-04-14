@@ -417,6 +417,15 @@
 .rich-text-editor-wrapper .ql-container {
   border-bottom-left-radius: calc(var(--radius) - 3px);
   border-bottom-right-radius: calc(var(--radius) - 3px);
+  border-top-left-radius: calc(var(--radius) - 3px);
+  border-top-right-radius: calc(var(--radius) - 3px);
+  transition: border-radius 180ms ease;
+}
+
+.rich-text-editor-wrapper:focus-within .ql-container,
+.rich-text-editor-wrapper.toolbar-always-visible .ql-container {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .rich-text-editor-wrapper:focus-within {
@@ -428,6 +437,18 @@
   border: none !important;
   border-bottom: 1px solid hsl(var(--input)) !important;
   background: hsl(var(--card));
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  border-bottom-width: 0 !important;
+  transition: max-height 180ms ease, opacity 180ms ease, border-bottom-width 180ms ease;
+}
+
+.rich-text-editor-wrapper:focus-within .ql-toolbar,
+.rich-text-editor-wrapper.toolbar-always-visible .ql-toolbar {
+  max-height: 60px;
+  opacity: 1;
+  border-bottom-width: 1px !important;
 }
 
 .rich-text-editor-wrapper .ql-container {

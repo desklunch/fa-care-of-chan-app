@@ -88,6 +88,7 @@ const RichTextCellEditor = forwardRef<RichTextCellEditorRef, RichTextCellEditorP
               valueRef.current = val;
             }}
             placeholder="Enter content..."
+            alwaysShowToolbar
             data-testid="richtext-cell-editor-input"
           />
           <div className="flex gap-2 justify-end mt-2">
