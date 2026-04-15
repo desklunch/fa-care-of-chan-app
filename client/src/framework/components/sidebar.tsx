@@ -385,19 +385,19 @@ export default function Sidebar({
         </div>
 
         {onSearch && (
-          <div className="px-2 pt-3 pb-0  fle">
+          <div className="px-3 pt-3 pb-0  fle">
             {showExpanded ? (
               <Button
                 variant="ghost"
                 onClick={onSearch}
-                className=" px-2 w-full bg-secondary justify-between gap-2 font-normal rounded-md"
+                className=" px-2 w-full bg-muted justify-between gap-2 font-normal rounded-md"
                 data-testid="button-search-trigger"
               >
                 <span className="text-sm flex gap-2.5 font-medium">
                   <Search className="h-4 w-4" />
                   Search
                 </span>
-                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[12px] font-medium  sm:flex">
+                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-secondary px-1.5 font-mono text-[12px] font-medium  sm:flex">
                   <span className="text-xs">⌘</span>K
                 </kbd>
               </Button>
@@ -420,7 +420,6 @@ export default function Sidebar({
             )}
           </div>
         )}
-
 
         <nav
           className={cn(
@@ -445,7 +444,7 @@ export default function Sidebar({
                     <button
                       onClick={() => toggleGroup(section.heading!)}
                       className={cn(
-                        "w-full outline-none ring-ring    h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider  pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+                        "w-full outline-none ring-ring    h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider  pl-3 pr-1 py-1 mb-1 hover:bg-accent hover:text-accent-foreground transition-colors",
                         sectionIndex === 0 ? "mt-0" : "mt-2",
                       )}
                       data-testid={`button-toggle-section-${section.heading.toLowerCase().replace(/\s+/g, "-")}`}
@@ -471,7 +470,8 @@ export default function Sidebar({
 
                         const navItemClasses = cn(
                           "flex justify-start items-center gap-3 px-3 py-2 font-medium  rounded-lg transition-colors duration-150 relative outline-none ring-ring focus:ring-2   ",
-                          isEnabled && "hover:bg-accent hover:text-accent-foreground",
+                          isEnabled &&
+                            "hover:bg-accent hover:text-accent-foreground",
                           isActive &&
                             "bg-primary text-primary-foreground font-semibold hover:bg-accent hover:text-foreground",
                           !showExpanded && "",
@@ -552,7 +552,7 @@ export default function Sidebar({
             })}
         </nav>
 
-        <div className="border-t border-sidebar-border p-2">
+        <div className="p-2 pb-0">
           <div
             className={cn(
               "flex gap-3 items-center",
@@ -581,10 +581,7 @@ export default function Sidebar({
 
         {user && (
           <div
-            className={cn(
-              "border-t border-sidebar-border p-3 space-y-4 pt-4",
-              !showExpanded && "border-none",
-            )}
+            className={cn("p-3 space-y-4 pt-4", !showExpanded && "border-none")}
           >
             {import.meta.env.DEV && isActualAdmin && showExpanded && (
               <DevRoleSelector

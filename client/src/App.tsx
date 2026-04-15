@@ -220,19 +220,6 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Creative",
-        defaultCollapsed: false,
-        requiredPermission: "proposals.read",
-        items: [
-          {
-            name: "Proposals",
-            href: "/proposals",
-            icon: FileText,
-            requiredPermission: "proposals.read",
-          },
-        ],
-      },
-      {
         heading: "Sales Admin",
         defaultCollapsed: false,
 
@@ -252,6 +239,32 @@ function useLayoutConfig() {
           },
         ],
       },
+      {
+        heading: "Programming",
+        defaultCollapsed: false,
+        requiredPermission: "proposals.read",
+        items: [
+          {
+            name: "Proposals",
+            href: "/proposals",
+            icon: FileText,
+            requiredPermission: "proposals.read",
+          },
+          {
+            name: "Assets",
+            href: "/proposals",
+            icon: FileText,
+            requiredPermission: "proposals.read",
+          },
+          {
+            name: "Catalog",
+            href: "/proposals",
+            icon: FileText,
+            requiredPermission: "proposals.read",
+          },
+        ],
+      },
+   
 
       {
         heading: "Directory",

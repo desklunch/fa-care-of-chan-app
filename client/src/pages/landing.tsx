@@ -155,10 +155,10 @@ export default function Landing() {
         {/* Mobile: Show not optimized message */}
         <div className="flex items-center" data-testid="mobile-notice"></div>
 
-        <div className="flex  items-center gap-4 text-xs text-muted-foreground mt-2" data-testid="legal-links">
-          <span>© 2026 Care of Chan</span>
-          <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-privacy">Privacy Notice</Link>
-          <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-terms">Terms of Use</Link>
+        <div className="flex  items-center gap-4 text-xs text-muted-foreground mt-2 font-medium" data-testid="legal-links">
+          <span className="">© 2026 Care of Chan</span>
+          <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-privacy">Privacy Notice</Link>
+          <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-terms">Terms of Use</Link>
           <span>·</span>
 
         </div>
