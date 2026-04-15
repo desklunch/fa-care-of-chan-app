@@ -445,6 +445,25 @@ export interface ProposalTaskLinkDeletedEvent {
   timestamp: Date;
 }
 
+export interface EntityLinkCreatedEvent {
+  type: "entity_link:created";
+  linkId: string;
+  entityType: string;
+  entityId: string;
+  url: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface EntityLinkDeletedEvent {
+  type: "entity_link:deleted";
+  linkId: string;
+  entityType: string;
+  entityId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface ProposalStakeholderAddedEvent {
   type: "proposal:stakeholder_added";
   proposalId: string;
@@ -820,7 +839,9 @@ export type DomainEvent =
   | ProposalTeamMemberUpdatedEvent
   | ProposalTeamMemberRemovedEvent
   | ProposalCollaboratorAddedEvent
-  | ProposalCollaboratorRemovedEvent;
+  | ProposalCollaboratorRemovedEvent
+  | EntityLinkCreatedEvent
+  | EntityLinkDeletedEvent;
 
 type EventMap = {
   "deal:created": DealCreatedEvent;
@@ -908,6 +929,8 @@ type EventMap = {
   "proposal:team_member_removed": ProposalTeamMemberRemovedEvent;
   "proposal:collaborator_added": ProposalCollaboratorAddedEvent;
   "proposal:collaborator_removed": ProposalCollaboratorRemovedEvent;
+  "entity_link:created": EntityLinkCreatedEvent;
+  "entity_link:deleted": EntityLinkDeletedEvent;
   "*": DomainEvent;
 };
 

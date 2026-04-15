@@ -62,6 +62,7 @@ import {
   ArrowLeft,
   History,
 } from "lucide-react";
+import { EntityLinksPanel } from "@/components/entity-links-panel";
 import type {
   ProposalWithRelations,
   ProposalStatusRecord,
@@ -69,7 +70,6 @@ import type {
   ProposalTaskWithRelations,
   ProposalStakeholder,
   EntityTeamMemberWithUser,
-  ProposalTaskLink,
   User,
 } from "@shared/schema";
 
@@ -1074,18 +1074,11 @@ function TaskDetailSheet({
   onDeleteTask: (taskId: string) => void;
   onCreateSubTask: (parentTaskId: string, name: string) => void;
 }) {
-  const [newLinkUrl, setNewLinkUrl] = useState("");
-  const [newLinkLabel, setNewLinkLabel] = useState("");
   const [newCollaboratorId, setNewCollaboratorId] = useState("");
   const [newSubTaskName, setNewSubTaskName] = useState("");
 
   const { data: collaborators = [] } = useQuery<CollaboratorUser[]>({
     queryKey: ["/api/proposals/tasks", task?.id, "collaborators"],
-    enabled: !!task?.id,
-  });
-
-  const { data: links = [] } = useQuery<ProposalTaskLink[]>({
-    queryKey: ["/api/proposals/tasks", task?.id, "links"],
     enabled: !!task?.id,
   });
 
@@ -1107,27 +1100,6 @@ function TaskDetailSheet({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/proposals/tasks", task?.id, "collaborators"] });
       queryClient.invalidateQueries({ queryKey: ["/api/proposals", proposalId, "tasks"] });
-    },
-  });
-
-  const addLink = useMutation({
-    mutationFn: async (data: { url: string; label?: string }) => {
-      const res = await apiRequest("POST", `/api/proposals/tasks/${task!.id}/links`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals/tasks", task?.id, "links"] });
-      setNewLinkUrl("");
-      setNewLinkLabel("");
-    },
-  });
-
-  const removeLink = useMutation({
-    mutationFn: async (linkId: string) => {
-      await apiRequest("DELETE", `/api/proposals/tasks/${task!.id}/links/${linkId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals/tasks", task?.id, "links"] });
     },
   });
 
@@ -1328,83 +1300,8 @@ function TaskDetailSheet({
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <h4 className="text-sm font-medium">Links</h4>
-                </div>
-                <div className="space-y-2">
-                  {links.map((link: ProposalTaskLink) => (
-                    <div key={link.id} className="flex items-start justify-between gap-2 p-2 border rounded-md">
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-start gap-2 min-w-0 flex-1"
-                        data-testid={`link-task-${link.id}`}
-                      >
-                        {link.previewImage ? (
-                          <img src={link.previewImage} alt="" className="h-8 w-8 rounded-md object-cover flex-shrink-0" />
-                        ) : (
-                          <LinkIcon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                        )}
-                        <div className="min-w-0">
-                          <span className="text-sm font-medium truncate block">
-                            {link.label || link.previewTitle || link.url}
-                          </span>
-                          {link.previewDescription && (
-                            <span className="text-xs text-muted-foreground line-clamp-1">{link.previewDescription}</span>
-                          )}
-                          <span className="text-xs text-muted-foreground truncate block">{link.url}</span>
-                        </div>
-                        <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-muted-foreground" />
-                      </a>
-                      {canWrite && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="flex-shrink-0"
-                          onClick={() => removeLink.mutate(link.id)}
-                          data-testid={`button-remove-link-${link.id}`}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {canWrite && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <Input
-                        placeholder="URL"
-                        value={newLinkUrl}
-                        onChange={(e) => setNewLinkUrl(e.target.value)}
-                        data-testid="input-link-url"
-                      />
-                      <div className="flex items-center gap-2">
-                        <Input
-                          placeholder="Label (optional)"
-                          value={newLinkLabel}
-                          onChange={(e) => setNewLinkLabel(e.target.value)}
-                          className="flex-1"
-                          data-testid="input-link-label"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={!newLinkUrl.trim() || addLink.isPending}
-                          onClick={() =>
-                            addLink.mutate({
-                              url: newLinkUrl,
-                              label: newLinkLabel || undefined,
-                            })
-                          }
-                          data-testid="button-add-link"
-                        >
-                          {addLink.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <h4 className="text-sm font-medium mb-2">Links</h4>
+                <EntityLinksPanel entityType="proposal_task" entityId={task.id} canWrite={canWrite} compact />
               </div>
 
               <div>

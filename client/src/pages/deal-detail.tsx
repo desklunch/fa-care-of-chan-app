@@ -75,7 +75,7 @@ import {
   useFieldMutation,
 } from "@/components/inline-edit";
 import { DealTasksTab } from "@/components/deal-tasks-tab";
-import { DealLinksTab } from "@/components/deal-links-tab";
+import { EntityLinksPanel } from "@/components/entity-links-panel";
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -1307,7 +1307,7 @@ export default function DealDetail() {
           </TabsContent>
 
           <TabsContent value="links" className="p-4 md:p-6 pt-4 max-w-4xl">
-            <DealLinksTab dealId={id!} canWrite={canWrite} />
+            <EntityLinksPanel entityType="deal" entityId={id!} canWrite={canWrite} />
           </TabsContent>
 
           <TabsContent value="tasks" className="p-4 md:p-6 pt-4 max-w-4xl">

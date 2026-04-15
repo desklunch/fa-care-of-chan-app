@@ -70,6 +70,7 @@ import { registerAiChatRoutes } from "./domains/ai-chat";
 import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
 import { registerProposalsRoutes } from "./domains/proposals";
 import { proposalsStorage } from "./domains/proposals/proposals.storage";
+import { registerEntityLinksRoutes } from "./domains/entity-links";
 import { registerTypeformWebhookRoutes } from "./domains/typeform-webhook";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { ensureReplitAgentUser } from "./mcp/index";
@@ -128,6 +129,7 @@ export async function registerRoutes(
   registerNotificationsRoutes(app);
   registerDriveAttachmentsRoutes(app);
   registerProposalsRoutes(app);
+  registerEntityLinksRoutes(app);
   await proposalsStorage.seedProposalStatuses();
   registerAiChatRoutes(app);
 

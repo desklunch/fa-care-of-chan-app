@@ -133,7 +133,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
       onClick={() => setIsOpen(!isOpen)}
       className="px-2 w-full justify-between gap-2 font-normal relative focus:bg-background focus:text-foreground"
       data-testid="button-notification-bell"
-      aria-label="ghost"
+      aria-label="Notifications"
     >
       <span className="text-sm flex items-center gap-2.5 font-medium ">
         <Bell className="h-4 w-4" />
@@ -168,7 +168,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
       variant="ghost"
       size="icon"
       onClick={() => setIsOpen(!isOpen)}
-      className="relative g"
+      className="relative"
       data-testid="button-notification-bell"
       aria-label="Notifications"
     >

@@ -816,6 +816,35 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
     },
   },
+  "entity_link:created": {
+    type: "entity_link:created",
+    audit: {
+      action: "create",
+      entityType: "entity_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractChanges: (e) => ({
+        entityType: (e as any).entityType,
+        entityId: (e as any).entityId,
+        url: (e as any).url,
+      }),
+      extractMetadata: (e) => ({
+        entityType: (e as any).entityType,
+        entityId: (e as any).entityId,
+      }),
+    },
+  },
+  "entity_link:deleted": {
+    type: "entity_link:deleted",
+    audit: {
+      action: "delete",
+      entityType: "entity_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractMetadata: (e) => ({
+        entityType: (e as any).entityType,
+        entityId: (e as any).entityId,
+      }),
+    },
+  },
 };
 
 export type RegisteredEventType = keyof typeof EVENT_REGISTRY;

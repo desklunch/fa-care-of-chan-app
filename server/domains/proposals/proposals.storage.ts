@@ -6,7 +6,6 @@ import {
   proposalStatusRecords,
   proposalTasks,
   proposalTaskCollaborators,
-  proposalTaskLinks,
   proposalTaskTemplates,
   proposalStakeholders,
   entityTeamMembers,
@@ -24,8 +23,6 @@ import {
   type ProposalTaskWithRelations,
   type InsertProposalTask,
   type UpdateProposalTask,
-  type ProposalTaskLink,
-  type ProposalTaskLinkWithUser,
   type ProposalTaskTemplate,
   type InsertProposalTaskTemplate,
   type ProposalStakeholder,
@@ -312,46 +309,6 @@ export const proposalsStorage = {
           eq(proposalTaskCollaborators.userId, userId),
         ),
       );
-  },
-
-  // Task links
-  async getTaskLinks(taskId: string): Promise<ProposalTaskLinkWithUser[]> {
-    const rows = await db
-      .select({
-        link: proposalTaskLinks,
-        createdBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-        },
-      })
-      .from(proposalTaskLinks)
-      .leftJoin(users, eq(proposalTaskLinks.createdById, users.id))
-      .where(eq(proposalTaskLinks.taskId, taskId))
-      .orderBy(desc(proposalTaskLinks.createdAt));
-
-    return rows.map((r) => ({
-      ...r.link,
-      createdBy: r.createdBy?.id ? r.createdBy : null,
-    }));
-  },
-
-  async createTaskLink(data: {
-    taskId: string;
-    url: string;
-    label?: string;
-    previewTitle?: string;
-    previewDescription?: string;
-    previewImage?: string;
-    createdById: string;
-  }): Promise<ProposalTaskLink> {
-    const [link] = await db.insert(proposalTaskLinks).values(data).returning();
-    return link;
-  },
-
-  async deleteTaskLink(linkId: string): Promise<void> {
-    await db.delete(proposalTaskLinks).where(eq(proposalTaskLinks.id, linkId));
   },
 
   // Task templates

@@ -1158,6 +1158,50 @@ export const dealClients = pgTable(
 export type DealClient = typeof dealClients.$inferSelect;
 export type InsertDealClient = typeof dealClients.$inferInsert;
 
+// Entity types that can have web links
+export const entityLinkEntityTypes = [
+  "deal",
+  "proposal_task",
+] as const;
+export type EntityLinkEntityType = (typeof entityLinkEntityTypes)[number];
+
+// Universal entity links table (polymorphic URL attachments with unfurl metadata)
+export const entityLinks = pgTable(
+  "entity_links",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    url: varchar("url", { length: 2000 }).notNull(),
+    label: varchar("label", { length: 500 }),
+    previewTitle: varchar("preview_title", { length: 500 }),
+    previewDescription: varchar("preview_description", { length: 2000 }),
+    previewImage: varchar("preview_image", { length: 2000 }),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_entity_links_entity").on(table.entityType, table.entityId),
+    index("idx_entity_links_created_by").on(table.createdById),
+  ],
+);
+
+export type EntityLink = typeof entityLinks.$inferSelect;
+export type InsertEntityLink = typeof entityLinks.$inferInsert;
+
+export const insertEntityLinkSchema = createInsertSchema(entityLinks).omit({
+  id: true,
+  createdAt: true,
+  previewTitle: true,
+  previewDescription: true,
+  previewImage: true,
+  createdById: true,
+});
+
+export type EntityLinkWithUser = EntityLink & {
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+};
+
 // Entity types that can have comments
 export const commentEntityTypes = [
   "venue",
@@ -1443,7 +1487,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'deal_service' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow' | 'amenity' | 'industry' | 'tag' | 'role' | 'photo' | 'release' | 'app_feature' | 'vendor_service' | 'proposal' | 'proposal_task' | 'proposal_task_link' | 'proposal_stakeholder' | 'entity_team_member';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'deal_service' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow' | 'amenity' | 'industry' | 'tag' | 'role' | 'photo' | 'release' | 'app_feature' | 'vendor_service' | 'proposal' | 'proposal_task' | 'proposal_task_link' | 'proposal_stakeholder' | 'entity_team_member' | 'entity_link';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas

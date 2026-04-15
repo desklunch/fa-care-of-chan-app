@@ -292,59 +292,7 @@ export function registerProposalsRoutes(app: Express): void {
     },
   );
 
-  app.get(
-    "/api/proposals/tasks/:taskId/links",
-    isAuthenticated,
-    requirePermission("proposals.read"),
-    async (req, res) => {
-      try {
-        const links = await proposalsService.getTaskLinks(req.params.taskId);
-        res.json(links);
-      } catch (error) {
-        handleServiceError(res, error, "Failed to fetch task links");
-      }
-    },
-  );
-
-  app.post(
-    "/api/proposals/tasks/:taskId/links",
-    isAuthenticated,
-    requirePermission("proposals.write"),
-    async (req: any, res) => {
-      try {
-        const actorId = req.user?.claims?.sub;
-        const link = await proposalsService.createTaskLink(
-          req.params.taskId,
-          req.body,
-          actorId,
-        );
-        res.status(201).json(link);
-      } catch (error) {
-        handleServiceError(res, error, "Failed to create task link");
-      }
-    },
-  );
-
-  app.delete(
-    "/api/proposals/tasks/:taskId/links/:linkId",
-    isAuthenticated,
-    requirePermission("proposals.write"),
-    async (req: any, res) => {
-      try {
-        const actorId = req.user?.claims?.sub;
-        const task = await proposalsService.getTaskById(req.params.taskId);
-        await proposalsService.deleteTaskLink(
-          req.params.linkId,
-          req.params.taskId,
-          task.proposalId,
-          actorId,
-        );
-        res.json({ success: true });
-      } catch (error) {
-        handleServiceError(res, error, "Failed to delete task link");
-      }
-    },
-  );
+  // Task links routes removed — now served by universal entity-links domain
 
   app.get(
     "/api/proposals/tasks/:taskId/activity",
