@@ -223,25 +223,7 @@ function useLayoutConfig() {
           },
         ],
       },
-      {
-        heading: "Sales Admin",
-        defaultCollapsed: true,
-        requiredPermission: "sales.manage",
-        items: [
-          {
-            name: "Intakes",
-            href: "/deals/forms",
-            icon: FileText,
-            requiredPermission: "sales.manage",
-          },
-          {
-            name: "Statuses",
-            href: "/manage/deal-statuses",
-            icon: Loader,
-            requiredPermission: "sales.manage",
-          },
-        ],
-      },
+   
       {
         heading: "Programming",
         defaultCollapsed: false,
@@ -328,33 +310,42 @@ function useLayoutConfig() {
         ],
       },
       {
-        heading: "Manage",
+        heading: "Admin",
         defaultCollapsed: true,
+        requiredPermission: "sales.manage",
+
         items: [
           {
-            name: "Team",
+            name: "Users",
             href: "/team",
             icon: Users,
-            requiredPermission: "team.read",
+            
           },
+          {
+            name: "Deal Intakes",
+            href: "/deals/forms",
+            icon: FileText,
+            
+          },
+          {
+            name: "Deal Statuses",
+            href: "/manage/deal-statuses",
+            icon: Loader,
+            
+          },
+
           {
             name: "Tags",
             href: "/manage/tags",
             icon: Tags,
-            requiredPermission: "venues.write",
+            
           },
 
-          {
-            name: "Theme",
-            href: "/admin/theme",
-            icon: Palette,
-            requiredPermission: "theme.manage",
-          },
           {
             name: "Forms",
             href: "/forms",
             icon: FileText,
-            requiredPermission: "admin.settings",
+            
           },
         ],
       },
@@ -400,6 +391,13 @@ function useLayoutConfig() {
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
+
+          {
+            name: "Theme",
+            href: "/admin/theme",
+            icon: Palette,
+            requiredPermission: "theme.manage",
+          },
           {
             name: "Roles",
             href: "/admin/roles",
