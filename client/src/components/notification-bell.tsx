@@ -150,7 +150,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
       variant="secondary"
       size="icon"
       onClick={() => setIsOpen(!isOpen)}
-      className="w-full justify-start p-2.5 relative"
+      className="size-10 justify-start p-2.5 relative"
       data-testid="button-notification-bell"
       aria-label="Notifications"
     >
