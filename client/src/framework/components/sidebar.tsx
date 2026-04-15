@@ -339,8 +339,8 @@ export default function Sidebar({
           !isCollapsed && "lg:w-[256px]",
           "lg:flex",
           isMobileOpen
-            ? "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] translate-x-0 rounded-r-lg"
-            : "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] -translate-x-full pointer-events-none rounded-r-lg lg:pointer-events-auto lg:relative lg:translate-x-0 lg:w-auto lg:rounded-none",
+            ? "fixed inset-y-0 left-0 w-[72vw] max-w-[72vw] translate-x-0 rounded-r-lg"
+            : "fixed inset-y-0 left-0 w-[72vw] max-w-[72vw] -translate-x-full pointer-events-none rounded-r-lg lg:pointer-events-auto lg:relative lg:translate-x-0 lg:w-auto lg:rounded-none",
         )}
         data-testid="sidebar-main"
       >
