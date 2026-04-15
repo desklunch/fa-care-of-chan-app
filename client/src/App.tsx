@@ -172,6 +172,16 @@ function useLayoutConfig() {
       : null,
     navigation: [
       {
+        requiredPermission: "admin.settings",
+        items: [
+          {
+            name: "Dashboard",
+            href: "/dashboard",
+            icon: LayoutDashboard,
+          },
+        ],
+      },
+      {
         heading: "Sales",
         defaultCollapsed: false,
 
@@ -350,11 +360,7 @@ function useLayoutConfig() {
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
-          {
-            name: "Dashboard",
-            href: "/dashboard",
-            icon: LayoutDashboard,
-          },
+
           {
             name: "Roles",
             href: "/admin/roles",

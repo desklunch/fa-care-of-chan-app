@@ -133,9 +133,9 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
       onClick={() => setIsOpen(!isOpen)}
       className="px-2 w-full justify-between gap-2 font-normal relative focus:bg-background focus:text-foreground"
       data-testid="button-notification-bell"
-      aria-label="Notifications"
+      aria-label="ghost"
     >
-      <span className="text-sm flex items-center gap-3 font-medium ">
+      <span className="text-sm flex items-center gap-2.5 font-medium ">
         <Bell className="h-4 w-4" />
         Notifications
       </span>
@@ -147,10 +147,9 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     </Button>
   ) : variant === "sidebar-collapsed" ? (
     <Button
-      variant="secondary"
-      size="icon"
+      variant="ghost"
       onClick={() => setIsOpen(!isOpen)}
-      className="size-10 justify-start p-2.5 relative"
+      className="px-2 pl-4 w-full justify-between gap-2 font-normal relative focus:bg-background focus:text-foreground"
       data-testid="button-notification-bell"
       aria-label="Notifications"
     >
@@ -169,7 +168,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
       variant="ghost"
       size="icon"
       onClick={() => setIsOpen(!isOpen)}
-      className="relative"
+      className="relative g"
       data-testid="button-notification-bell"
       aria-label="Notifications"
     >

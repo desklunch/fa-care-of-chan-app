@@ -332,15 +332,15 @@ export default function Sidebar({
       )}
       <aside
         className={cn(
-          "bg-sidebar border-r border-sidebar-border z-[999] transition-all duration-[2000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
+          "bg-sidebar border-r border-sidebar-border z-[50] transition-all duration-[2000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
           "flex flex-col h-full ",
           "lg:relative lg:z-1000",
           isCollapsed && "lg:w-[72px]",
           !isCollapsed && "lg:w-[256px]",
           "lg:flex",
           isMobileOpen
-            ? "fixed inset-y-0 left-0 w-[72vw] max-w-[72vw] translate-x-0 rounded-r-lg"
-            : "fixed inset-y-0 left-0 w-[72vw] max-w-[72vw] -translate-x-full pointer-events-none rounded-r-lg lg:pointer-events-auto lg:relative lg:translate-x-0 lg:w-auto lg:rounded-none",
+            ? "fixed inset-y-0 left-0 w-[64vw] max-w-[64vw] translate-x-0 rounded-r-lg"
+            : "fixed inset-y-0 left-0 w-[64vw] max-w-[64vw] -translate-x-full pointer-events-none rounded-r-lg lg:pointer-events-auto lg:relative lg:translate-x-0 lg:w-auto lg:rounded-none",
         )}
         data-testid="sidebar-main"
       >
@@ -390,7 +390,7 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 onClick={onSearch}
-                className=" px-3 w-full bg-secondary justify-between gap-2 font-normal rounded-full"
+                className=" px-2 w-full bg-secondary justify-between gap-2 font-normal rounded-md"
                 data-testid="button-search-trigger"
               >
                 <span className="text-sm flex gap-2.5 font-medium">
@@ -405,10 +405,9 @@ export default function Sidebar({
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="secondary"
-                    size="icon"
+                    variant="ghost"
                     onClick={onSearch}
-                    className="w-full justify-start p-3"
+                    className="w-full justify-start px-4"
                     data-testid="button-search-trigger-collapsed"
                   >
                     <Search className="h-4 w-4" />
@@ -490,7 +489,7 @@ export default function Sidebar({
 
                         const navItemClasses = cn(
                           "flex justify-start items-center gap-3 px-3 py-2 font-medium  rounded-lg transition-colors duration-150 relative outline-none ring-ring focus:ring-2   ",
-                          isEnabled && "hover:bg-accent hover:text-primary",
+                          isEnabled && "hover:bg-accent hover:text-accent-foreground",
                           isActive &&
                             "bg-primary text-primary-foreground font-semibold hover:bg-accent hover:text-foreground",
                           !showExpanded && "",

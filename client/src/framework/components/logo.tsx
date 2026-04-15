@@ -13,7 +13,7 @@ export default function Logo({
 }: LogoProps) {
   return (
     <div
-      className={`rounded-md rounded-l-full flex items-center gap-4 ${className || ""}`}
+      className={`rounded-md rounded-l-full flex items-center gap-3 ${className || ""}`}
     >
       <div className=" flex items-center justify-center rounded-full">
         <img
@@ -25,8 +25,12 @@ export default function Logo({
       </div>
 
       {!collapsed && (
-        <span className="font-semibold text-ptimary dark:text-pink-200 text-lg  mr-3 ">
+        <span className="flex items-center gap-3 font-medium text-foreground  text-base  mr-3 ">
           Chansey
+          <span className="rounded-md bg-accent text-accent-foreground w-fit p-1 py-0.5 text-[10px]/[13px] tracking-wide rounded-sm">
+          1.9
+
+          </span>
         </span>
       )}
     </div>
