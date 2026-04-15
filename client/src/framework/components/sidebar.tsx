@@ -77,7 +77,7 @@ function DevRoleSelector({
         }}
       >
         <SelectTrigger
-          className="h-9 text-xs"
+          className="h-8 text-xs border-sidebar-border font-medium"
           data-testid="select-tier-override"
         >
           <SelectValue placeholder="Select role" />
@@ -125,19 +125,20 @@ function ThemePickerPopover({ showExpanded }: { showExpanded: boolean }) {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-12"
+          variant="outline"
+          size="sm"
+          className="w-full justify-start border-sidebar-border"
           data-testid="button-theme-picker"
           aria-label="Theme picker"
         >
-          <Palette className="h-5 w-5" />
+          <Palette className="h-4 w-4" />
+          Theme
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-64 p-2">
+      <PopoverContent side="top" align="start" className="w-56 border-none p-2 bg-secondary">
         <div className="space-y-3">
           <div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 bg-background rounded-md">
               {modeOptions.map((opt) => (
                 <Button
                   key={opt.value}
@@ -552,28 +553,28 @@ export default function Sidebar({
             })}
         </nav>
 
-        <div className="p-2 pb-0">
+        <div className="border-t bordder-sidebar-border p-2 pb-0">
           <div
             className={cn(
-              "flex gap-3 items-center",
+              "flex gap-2 items-center ",
               !showExpanded && "justify-center",
             )}
           >
             <ThemePickerPopover showExpanded={showExpanded} />
             {import.meta.env.DEV && showExpanded && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={() => {
                   localStorage.clear();
                   window.location.reload();
                 }}
-                className="h-9 w-12"
+                className="h-8 w-12 border-sidebar-border"
                 data-testid="button-clear-storage"
                 aria-label="Clear local storage (dev only)"
                 title="Clear local storage"
               >
-                <Trash2 className="h-5 w-5" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
@@ -581,15 +582,19 @@ export default function Sidebar({
 
         {user && (
           <div
-            className={cn("p-3 space-y-4 pt-4", !showExpanded && "border-none")}
+            className={cn("p-2 space-y-4 pt-2", !showExpanded && "border-none")}
           >
-            {import.meta.env.DEV && isActualAdmin && showExpanded && (
-              <DevRoleSelector
-                overrideRole={overrideRole}
-                setOverrideRole={setOverrideRole}
-                clearOverride={clearOverride}
-              />
-            )}
+            <div className="flex ">
+              {import.meta.env.DEV && isActualAdmin && showExpanded && (
+                <DevRoleSelector
+                  overrideRole={overrideRole}
+                  setOverrideRole={setOverrideRole}
+                  clearOverride={clearOverride}
+                />
+              )}
+ 
+            </div>
+
             <div
               className={cn(
                 "flex items-center gap-3",

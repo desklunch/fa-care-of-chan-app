@@ -151,6 +151,11 @@ import {
   Sheet,
   BellRing,
   LayoutDashboard,
+  Image,
+  Shapes,
+  Scroll,
+  BookMarked,
+  Network,
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -184,7 +189,6 @@ function useLayoutConfig() {
       {
         heading: "Sales",
         defaultCollapsed: false,
-
         requiredPermission: "deals.read",
         items: [
           {
@@ -221,8 +225,7 @@ function useLayoutConfig() {
       },
       {
         heading: "Sales Admin",
-        defaultCollapsed: false,
-
+        defaultCollapsed: true,
         requiredPermission: "sales.manage",
         items: [
           {
@@ -247,25 +250,49 @@ function useLayoutConfig() {
           {
             name: "Proposals",
             href: "/proposals",
-            icon: FileText,
+            icon: Scroll,
             requiredPermission: "proposals.read",
           },
           {
             name: "Assets",
             href: "/proposals",
-            icon: FileText,
+            icon: Image,
             requiredPermission: "proposals.read",
           },
           {
             name: "Catalog",
             href: "/proposals",
-            icon: FileText,
+            icon: Shapes,
             requiredPermission: "proposals.read",
           },
         ],
       },
-   
+      {
+        heading: "Production",
+        defaultCollapsed: false,
+        requiredPermission: "proposals.read",
+        items: [
+          {
+            name: "Planning",
+            href: "/proposals",
+            icon: Image,
+            requiredPermission: "proposals.read",
+          },
+          {
+            name: "Projects",
+            href: "/proposals",
+            icon: Scroll,
+            requiredPermission: "proposals.read",
+          },
 
+          {
+            name: "Knowledge",
+            href: "/proposals",
+            icon: Shapes,
+            requiredPermission: "proposals.read",
+          },
+        ],
+      },
       {
         heading: "Directory",
         defaultCollapsed: false,
@@ -373,7 +400,6 @@ function useLayoutConfig() {
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
-
           {
             name: "Roles",
             href: "/admin/roles",
