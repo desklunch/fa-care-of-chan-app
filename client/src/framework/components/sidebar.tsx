@@ -44,7 +44,7 @@ import type { ThemeVariables } from "@shared/schema";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTierOverride } from "@/contexts/tier-override-context";
 import Logo from "./logo";
-import { NotificationBell } from "@/components/notification-bell";
+
 import type { NavItem, NavSection } from "../types/layout";
 import type { Role } from "@shared/permissions";
 
@@ -421,24 +421,6 @@ export default function Sidebar({
           </div>
         )}
 
-        {role === "admin" && (
-          <div className="px-2 pt-2 pb-2">
-            {showExpanded ? (
-              <NotificationBell variant="sidebar" />
-            ) : (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <div>
-                    <NotificationBell variant="sidebar-collapsed" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>
-                  Notifications
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        )}
 
         <nav
           className={cn(

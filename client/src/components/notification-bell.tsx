@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Bell, Check, CheckCheck, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -40,14 +39,13 @@ function timeAgo(date: Date | string): string {
 }
 
 interface NotificationBellProps {
-  variant?: "default" | "sidebar" | "sidebar-collapsed";
+  variant?: "default";
 }
 
 export function NotificationBell({ variant = "default" }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
-  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const [, setLocation] = useLocation();
 
   const { data: unreadData } = useQuery<{ count: number }>({
@@ -84,8 +82,6 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     },
   });
 
-  const isSidebar = variant === "sidebar" || variant === "sidebar-collapsed";
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -101,18 +97,6 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen && isSidebar && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPanelStyle({
-        position: "fixed" as const,
-        left: `${rect.right + 8}px`,
-        top: `${rect.top}px`,
-        zIndex: 9999,
-      });
-    }
-  }, [isOpen, isSidebar]);
-
   const unreadCount = unreadData?.count || 0;
   const notifications = notificationsData || [];
 
@@ -127,43 +111,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     }
   }
 
-  const triggerButton = variant === "sidebar" ? (
-    <Button
-      variant="ghost"
-      onClick={() => setIsOpen(!isOpen)}
-      className="px-2 w-full justify-between gap-2 font-normal relative focus:bg-background focus:text-foreground"
-      data-testid="button-notification-bell"
-      aria-label="Notifications"
-    >
-      <span className="text-sm flex items-center gap-2.5 font-medium ">
-        <Bell className="h-4 w-4" />
-        Notifications
-      </span>
-      {unreadCount > 0 && (
-        <Badge variant="destructive" className="h-5 min-w-[20px] px-1.5 text-[10px]" data-testid="badge-notification-count">
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </Badge>
-      )}
-    </Button>
-  ) : variant === "sidebar-collapsed" ? (
-    <Button
-      variant="ghost"
-      onClick={() => setIsOpen(!isOpen)}
-      className="px-2 pl-4 w-full justify-between gap-2 font-normal relative focus:bg-background focus:text-foreground"
-      data-testid="button-notification-bell"
-      aria-label="Notifications"
-    >
-      <Bell className="h-4 w-4" />
-      {unreadCount > 0 && (
-        <span
-          className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium flex items-center justify-center"
-          data-testid="badge-notification-count"
-        >
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </span>
-      )}
-    </Button>
-  ) : (
+  const triggerButton = (
     <Button
       variant="ghost"
       size="icon"
@@ -191,8 +139,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
       {isOpen && (
         <div
           ref={panelRef}
-          className={`w-80 md:w-96 bg-popover border border-border rounded-md shadow-lg z-[9999] ${isSidebar ? "fixed" : "absolute right-0 top-full mt-2"}`}
-          style={isSidebar ? panelStyle : undefined}
+          className="w-80 md:w-96 bg-popover border border-border rounded-md shadow-lg z-[9999] absolute right-0 top-full mt-2"
           data-testid="panel-notifications"
         >
           <div className="flex items-center justify-between gap-2 p-3">
