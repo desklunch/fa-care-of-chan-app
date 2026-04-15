@@ -122,6 +122,35 @@ export default function DealDetail() {
     queryKey: ["/api/deal-services"],
   });
 
+  const { data: dealProposal } = useQuery<{ id: string } | null>({
+    queryKey: ["/api/deals", id, "proposal"],
+    enabled: Boolean(id) && can("proposals.read"),
+  });
+
+  const createProposalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/proposals", {
+        dealId: id,
+        title: deal?.displayName ? `Proposal - ${deal.displayName}` : "New Proposal",
+      });
+      return res.json();
+    },
+    onSuccess: (data: { id: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id, "proposal"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/proposals"] });
+      setLocation(`/proposals/${data.id}`);
+      toast({ title: "Proposal created" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Cannot create proposal", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const dealStatusRecord = deal ? statusById.get(deal.status) : undefined;
+  const qualifiedLeadStatus = dealStatusList.find((s) => s.name === "Qualified Lead");
+  const qualifiedSortOrder = qualifiedLeadStatus?.sortOrder ?? 3;
+  const isDealQualified = dealStatusRecord ? dealStatusRecord.sortOrder >= qualifiedSortOrder : false;
+
   const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
 
   interface DealLinkedClient {
@@ -373,6 +402,23 @@ export default function DealDetail() {
               },
             ]
           : []),
+        ...(can("proposals.read") && dealProposal?.id
+          ? [
+              {
+                label: "View Proposal",
+                onClick: () => setLocation(`/proposals/${dealProposal.id}`),
+                icon: FileText,
+              },
+            ]
+          : can("proposals.write") && isDealQualified && !dealProposal
+            ? [
+                {
+                  label: createProposalMutation.isPending ? "Creating..." : "Create Proposal",
+                  onClick: () => { if (!createProposalMutation.isPending) createProposalMutation.mutate(); },
+                  icon: FileText,
+                },
+              ]
+            : []),
         ...(user?.role === "admin"
           ? [
               {

@@ -100,6 +100,9 @@ const AdminDealSettings = lazy(() => import("@/pages/admin-deal-settings"));
 const NotificationPreferences = lazy(
   () => import("@/pages/notification-preferences"),
 );
+const Proposals = lazy(() => import("@/pages/proposals"));
+const ProposalDetail = lazy(() => import("@/pages/proposal-detail"));
+const ProposalForm = lazy(() => import("@/pages/proposal-form"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
@@ -203,6 +206,19 @@ function useLayoutConfig() {
             href: "/deals/reports",
             icon: ScanEye,
             requiredPermission: "deals.read",
+          },
+        ],
+      },
+      {
+        heading: "Creative",
+        defaultCollapsed: false,
+        requiredPermission: "proposals.read",
+        items: [
+          {
+            name: "Proposals",
+            href: "/proposals",
+            icon: FileText,
+            requiredPermission: "proposals.read",
           },
         ],
       },
@@ -474,6 +490,9 @@ function AuthenticatedRoutes() {
             <Route path="/deals/reports" component={DealReports} />
             <Route path="/deals/:id" component={DealDetail} />
             <Route path="/deals/:id/edit" component={DealForm} />
+            <Route path="/proposals" component={Proposals} />
+            <Route path="/proposals/new" component={ProposalForm} />
+            <Route path="/proposals/:id" component={ProposalDetail} />
             <Route path="/forms/requests" component={FormRequests} />
             <Route path="/forms/requests/new" component={FormRequestForm} />
             <Route path="/forms/requests/:id" component={FormRequestDetail} />

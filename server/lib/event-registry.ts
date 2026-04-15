@@ -6,6 +6,7 @@ export interface EventAuditMapping {
   entityType: AuditEntityType;
   extractEntityId: (event: DomainEvent) => string | null;
   extractChanges?: (event: DomainEvent) => Record<string, unknown> | null;
+  extractMetadata?: (event: DomainEvent) => Record<string, unknown> | null;
 }
 
 export interface EventDefinition {
@@ -648,6 +649,171 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractChanges: (e) => ({
         featureId: (e as any).featureId,
       }),
+    },
+  },
+  "proposal:created": {
+    type: "proposal:created",
+    audit: {
+      action: "create",
+      entityType: "proposal",
+      extractEntityId: (e) => (e as any).proposalId ?? null,
+    },
+  },
+  "proposal:updated": {
+    type: "proposal:updated",
+    audit: {
+      action: "update",
+      entityType: "proposal",
+      extractEntityId: (e) => (e as any).proposalId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+    },
+  },
+  "proposal:deleted": {
+    type: "proposal:deleted",
+    audit: {
+      action: "delete",
+      entityType: "proposal",
+      extractEntityId: (e) => (e as any).proposalId ?? null,
+    },
+  },
+  "proposal:status_changed": {
+    type: "proposal:status_changed",
+    audit: {
+      action: "update",
+      entityType: "proposal",
+      extractEntityId: (e) => (e as any).proposalId ?? null,
+      extractChanges: (e) => ({
+        before: { status: (e as any).fromStatus },
+        after: { status: (e as any).toStatus },
+      }),
+    },
+  },
+  "proposal:task_created": {
+    type: "proposal:task_created",
+    audit: {
+      action: "create",
+      entityType: "proposal_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => ({ taskName: (e as any).taskName }),
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:task_updated": {
+    type: "proposal:task_updated",
+    audit: {
+      action: "update",
+      entityType: "proposal_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:task_deleted": {
+    type: "proposal:task_deleted",
+    audit: {
+      action: "delete",
+      entityType: "proposal_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => ({ taskName: (e as any).taskName }),
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:task_completed": {
+    type: "proposal:task_completed",
+    audit: {
+      action: "update",
+      entityType: "proposal_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: () => ({ status: "done" }),
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:task_link_created": {
+    type: "proposal:task_link_created",
+    audit: {
+      action: "create",
+      entityType: "proposal_task_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractChanges: (e) => ({ taskId: (e as any).taskId, url: (e as any).url }),
+      extractMetadata: (e) => ({ taskId: (e as any).taskId, proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:task_link_deleted": {
+    type: "proposal:task_link_deleted",
+    audit: {
+      action: "delete",
+      entityType: "proposal_task_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractMetadata: (e) => ({ taskId: (e as any).taskId, proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:stakeholder_added": {
+    type: "proposal:stakeholder_added",
+    audit: {
+      action: "create",
+      entityType: "proposal_stakeholder",
+      extractEntityId: (e) => (e as any).stakeholderId ?? null,
+      extractChanges: (e) => ({
+        proposalId: (e as any).proposalId,
+        userId: (e as any).userId,
+        contactId: (e as any).contactId,
+      }),
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:stakeholder_removed": {
+    type: "proposal:stakeholder_removed",
+    audit: {
+      action: "delete",
+      entityType: "proposal_stakeholder",
+      extractEntityId: (e) => (e as any).stakeholderId ?? null,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:team_member_added": {
+    type: "proposal:team_member_added",
+    audit: {
+      action: "create",
+      entityType: "entity_team_member",
+      extractEntityId: (e) => (e as any).memberId ?? null,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:team_member_updated": {
+    type: "proposal:team_member_updated",
+    audit: {
+      action: "update",
+      entityType: "entity_team_member",
+      extractEntityId: (e) => (e as any).memberId ?? null,
+      extractChanges: (e) => (e as any).changes,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:team_member_removed": {
+    type: "proposal:team_member_removed",
+    audit: {
+      action: "delete",
+      entityType: "entity_team_member",
+      extractEntityId: (e) => (e as any).memberId ?? null,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:collaborator_added": {
+    type: "proposal:collaborator_added",
+    audit: {
+      action: "create",
+      entityType: "proposal_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
+    },
+  },
+  "proposal:collaborator_removed": {
+    type: "proposal:collaborator_removed",
+    audit: {
+      action: "delete",
+      entityType: "proposal_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
     },
   },
 };

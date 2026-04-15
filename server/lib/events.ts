@@ -354,6 +354,160 @@ export interface FeatureCommentCreatedEvent {
   timestamp: Date;
 }
 
+export interface ProposalCreatedEvent {
+  type: "proposal:created";
+  proposalId: string;
+  proposalTitle: string;
+  dealId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalUpdatedEvent {
+  type: "proposal:updated";
+  proposalId: string;
+  proposalTitle: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalDeletedEvent {
+  type: "proposal:deleted";
+  proposalId: string;
+  proposalTitle: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalStatusChangedEvent {
+  type: "proposal:status_changed";
+  proposalId: string;
+  proposalTitle: string;
+  fromStatus: string;
+  toStatus: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTaskCreatedEvent {
+  type: "proposal:task_created";
+  taskId: string;
+  taskName: string;
+  proposalId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTaskUpdatedEvent {
+  type: "proposal:task_updated";
+  taskId: string;
+  taskName: string;
+  proposalId: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTaskDeletedEvent {
+  type: "proposal:task_deleted";
+  taskId: string;
+  proposalId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTaskCompletedEvent {
+  type: "proposal:task_completed";
+  taskId: string;
+  taskName: string;
+  proposalId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTaskLinkCreatedEvent {
+  type: "proposal:task_link_created";
+  linkId: string;
+  taskId: string;
+  proposalId: string;
+  url: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTaskLinkDeletedEvent {
+  type: "proposal:task_link_deleted";
+  linkId: string;
+  taskId: string;
+  proposalId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalStakeholderAddedEvent {
+  type: "proposal:stakeholder_added";
+  proposalId: string;
+  stakeholderId: string;
+  userId?: string;
+  contactId?: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalStakeholderRemovedEvent {
+  type: "proposal:stakeholder_removed";
+  proposalId: string;
+  stakeholderId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTeamMemberAddedEvent {
+  type: "proposal:team_member_added";
+  proposalId: string;
+  memberId: string;
+  userId: string;
+  role?: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTeamMemberUpdatedEvent {
+  type: "proposal:team_member_updated";
+  proposalId: string;
+  memberId: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalTeamMemberRemovedEvent {
+  type: "proposal:team_member_removed";
+  proposalId: string;
+  memberId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalCollaboratorAddedEvent {
+  type: "proposal:collaborator_added";
+  taskId: string;
+  proposalId: string;
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface ProposalCollaboratorRemovedEvent {
+  type: "proposal:collaborator_removed";
+  taskId: string;
+  proposalId: string;
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface ContactCreatedEvent {
   type: "contact:created";
   contactId: string;
@@ -649,7 +803,24 @@ export type DomainEvent =
   | CommentCreatedEvent
   | CommentReplyCreatedEvent
   | FormSubmissionReceivedEvent
-  | FeatureCommentCreatedEvent;
+  | FeatureCommentCreatedEvent
+  | ProposalCreatedEvent
+  | ProposalUpdatedEvent
+  | ProposalDeletedEvent
+  | ProposalStatusChangedEvent
+  | ProposalTaskCreatedEvent
+  | ProposalTaskUpdatedEvent
+  | ProposalTaskDeletedEvent
+  | ProposalTaskCompletedEvent
+  | ProposalTaskLinkCreatedEvent
+  | ProposalTaskLinkDeletedEvent
+  | ProposalStakeholderAddedEvent
+  | ProposalStakeholderRemovedEvent
+  | ProposalTeamMemberAddedEvent
+  | ProposalTeamMemberUpdatedEvent
+  | ProposalTeamMemberRemovedEvent
+  | ProposalCollaboratorAddedEvent
+  | ProposalCollaboratorRemovedEvent;
 
 type EventMap = {
   "deal:created": DealCreatedEvent;
@@ -720,6 +891,23 @@ type EventMap = {
   "comment:reply_created": CommentReplyCreatedEvent;
   "form:submission_received": FormSubmissionReceivedEvent;
   "feature_comment:created": FeatureCommentCreatedEvent;
+  "proposal:created": ProposalCreatedEvent;
+  "proposal:updated": ProposalUpdatedEvent;
+  "proposal:deleted": ProposalDeletedEvent;
+  "proposal:status_changed": ProposalStatusChangedEvent;
+  "proposal:task_created": ProposalTaskCreatedEvent;
+  "proposal:task_updated": ProposalTaskUpdatedEvent;
+  "proposal:task_deleted": ProposalTaskDeletedEvent;
+  "proposal:task_completed": ProposalTaskCompletedEvent;
+  "proposal:task_link_created": ProposalTaskLinkCreatedEvent;
+  "proposal:task_link_deleted": ProposalTaskLinkDeletedEvent;
+  "proposal:stakeholder_added": ProposalStakeholderAddedEvent;
+  "proposal:stakeholder_removed": ProposalStakeholderRemovedEvent;
+  "proposal:team_member_added": ProposalTeamMemberAddedEvent;
+  "proposal:team_member_updated": ProposalTeamMemberUpdatedEvent;
+  "proposal:team_member_removed": ProposalTeamMemberRemovedEvent;
+  "proposal:collaborator_added": ProposalCollaboratorAddedEvent;
+  "proposal:collaborator_removed": ProposalCollaboratorRemovedEvent;
   "*": DomainEvent;
 };
 

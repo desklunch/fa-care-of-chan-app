@@ -91,6 +91,11 @@ export const PERMISSIONS = {
   "releases.read": "releases.read",
   "releases.manage": "releases.manage",
 
+  // Proposals - employees and above
+  "proposals.read": "proposals.read",
+  "proposals.write": "proposals.write",
+  "proposals.delete": "proposals.delete",
+
   // Admin settings - admins only
   "admin.settings": "admin.settings",
   "admin.analytics": "admin.analytics",
@@ -138,8 +143,9 @@ export const TIER_1_PERMISSIONS: Permission[] = [
   "contacts.delete",
   "vendors.write",
   "vendors.delete",
-
-
+  "proposals.read",
+  "proposals.write",
+  "proposals.delete",
 ];
 
 // Tier 2 (manager) permissions - inherits tier 1 + deals and sales access
@@ -361,6 +367,7 @@ export const NAV_PERMISSIONS: Record<string, Permission> = {
   "/app/releases": "releases.read",
   "/admin/theme": "theme.manage",
   "/admin/roles": "admin.settings",
+  "/proposals": "proposals.read",
 };
 
 /**

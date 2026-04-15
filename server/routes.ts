@@ -68,6 +68,8 @@ import { registerFormsRoutes } from "./domains/forms";
 import { seedDealStatuses } from "./domains/deals/deals.seed";
 import { registerAiChatRoutes } from "./domains/ai-chat";
 import { registerDriveAttachmentsRoutes } from "./domains/drive-attachments";
+import { registerProposalsRoutes } from "./domains/proposals";
+import { proposalsStorage } from "./domains/proposals/proposals.storage";
 import { registerTypeformWebhookRoutes } from "./domains/typeform-webhook";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { ensureReplitAgentUser } from "./mcp/index";
@@ -125,6 +127,8 @@ export async function registerRoutes(
   await ensureReplitAgentUser();
   registerNotificationsRoutes(app);
   registerDriveAttachmentsRoutes(app);
+  registerProposalsRoutes(app);
+  await proposalsStorage.seedProposalStatuses();
   registerAiChatRoutes(app);
 
   // NOTE: Contacts routes moved to server/domains/contacts/

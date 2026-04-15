@@ -2,10 +2,10 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { ManagePage, type ManageSectionConfig } from "@/components/manage-page";
 import { usePermissions } from "@/hooks/usePermissions";
 import { NoPermissionMessage } from "@/components/no-permission-message";
-import type { Amenity, Tag, Industry, DealService, VendorService } from "@shared/schema";
+import type { Amenity, Tag, Industry, DealService, VendorService, ProposalTaskTemplate } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { z } from "zod";
-import { Sparkles, UtensilsCrossed, Lightbulb, Building2, Briefcase, Wrench } from "lucide-react";
+import { Sparkles, UtensilsCrossed, Lightbulb, Building2, Briefcase, Wrench, ClipboardList } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
 function DynamicIcon({ name, className }: { name: string; className?: string }) {
@@ -527,6 +527,99 @@ const vendorServicesSection: ManageSectionConfig<VendorService> = {
   entityName: "Vendor Service",
 };
 
+const proposalTemplateColumns: ColumnConfig<ProposalTaskTemplate>[] = [
+  {
+    field: "name",
+    headerName: "Name",
+    flex: 2,
+    cellRenderer: ({ data }: { data: ProposalTaskTemplate }) => {
+      if (!data) return null;
+      return (
+        <div className="flex items-center gap-2 h-full">
+          <span className="font-medium truncate" data-testid={`text-template-name-${data.id}`}>
+            {data.name}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    field: "description",
+    headerName: "Description",
+    flex: 3,
+    cellRenderer: ({ data }: { data: ProposalTaskTemplate }) => {
+      if (!data?.description) return null;
+      return (
+        <span className="truncate text-muted-foreground text-sm">
+          {data.description}
+        </span>
+      );
+    },
+  },
+  {
+    field: "sortOrder",
+    headerName: "Order",
+    width: 80,
+  },
+];
+
+const proposalTemplateFormSchema = z.object({
+  name: z.string().min(1, "Name is required").max(500),
+  description: z.string().optional(),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+});
+
+const proposalTemplatesSection: ManageSectionConfig<ProposalTaskTemplate> = {
+  id: "proposal-task-templates",
+  label: "Proposal Task Templates",
+  icon: ClipboardList,
+  description: "Manage reusable task templates for proposals.",
+  queryKey: "/api/admin/proposal-task-templates",
+  columns: proposalTemplateColumns,
+  defaultVisibleColumns: ["name", "description", "sortOrder"],
+  searchFields: ["name", "description"],
+  searchPlaceholder: "Search task templates...",
+  emptyMessage: "No task templates yet",
+  emptyDescription: "Create your first proposal task template.",
+  getRowId: (t) => t.id,
+  formSchema: proposalTemplateFormSchema,
+  formFields: [
+    {
+      name: "name",
+      label: "Name",
+      type: "text",
+      placeholder: "e.g., Venue Walkthrough, Menu Tasting",
+      required: true,
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Optional description of the template task",
+    },
+    {
+      name: "sortOrder",
+      label: "Sort Order",
+      type: "number",
+      placeholder: "0",
+    },
+  ],
+  createDialogTitle: "New Task Template",
+  createDialogDescription: "Add a new reusable task template for proposals.",
+  editDialogTitle: "Edit Task Template",
+  editDialogDescription: "Update the task template details below.",
+  createEndpoint: "/api/admin/proposal-task-templates",
+  updateEndpoint: (id) => `/api/admin/proposal-task-templates/${id}`,
+  deleteEndpoint: (id) => `/api/admin/proposal-task-templates/${id}`,
+  invalidateKeys: ["/api/admin/proposal-task-templates"],
+  getDefaultValues: (item) => ({
+    name: item?.name || "",
+    description: item?.description || "",
+    sortOrder: item?.sortOrder ?? 0,
+  }),
+  entityName: "Task Template",
+};
+
 export default function ManageTagsPage() {
   usePageTitle("Manage Tags");
   const { can } = usePermissions();
@@ -534,8 +627,9 @@ export default function ManageTagsPage() {
   const canManageVenues = can("venues.write");
   const canManageSales = can("sales.manage");
   const canManageVendors = can("vendors.write");
+  const canManageAdmin = can("admin.settings");
   
-  const hasAnyPermission = canManageVenues || canManageSales || canManageVendors;
+  const hasAnyPermission = canManageVenues || canManageSales || canManageVendors || canManageAdmin;
   
   const sections: ManageSectionConfig<any>[] = [];
   
@@ -549,6 +643,10 @@ export default function ManageTagsPage() {
   
   if (canManageVendors) {
     sections.push(vendorServicesSection);
+  }
+
+  if (canManageAdmin) {
+    sections.push(proposalTemplatesSection);
   }
 
   if (!hasAnyPermission) {

@@ -793,6 +793,315 @@ export type DealLinkWithUser = DealLink & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
 };
 
+// ==========================================
+// PROPOSALS DOMAIN
+// ==========================================
+
+// Proposal statuses (configurable, like deal_statuses)
+export const proposalStatuses = [
+  "draft",
+  "in_review",
+  "revised",
+  "approved",
+  "rejected",
+] as const;
+export type ProposalStatusValue = (typeof proposalStatuses)[number];
+
+export const proposalStatusRecords = pgTable(
+  "proposal_status_records",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 100 }).notNull().unique(),
+    label: varchar("label", { length: 100 }).notNull(),
+    color: varchar("color", { length: 7 }),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    isDefault: boolean("is_default").default(false).notNull(),
+  },
+);
+
+export type ProposalStatusRecord = typeof proposalStatusRecords.$inferSelect;
+export type InsertProposalStatusRecord = typeof proposalStatusRecords.$inferInsert;
+
+// Proposals - first-class entity linked 1:1 to a Deal
+export const proposals = pgTable(
+  "proposals",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    dealId: varchar("deal_id").notNull().references(() => deals.id).unique(),
+    title: varchar("title", { length: 500 }).notNull(),
+    status: integer("status").notNull().references(() => proposalStatusRecords.id),
+    clientId: varchar("client_id").references(() => clients.id),
+    ownerId: varchar("owner_id").references(() => users.id),
+    description: text("description"),
+    budgetLow: integer("budget_low"),
+    budgetHigh: integer("budget_high"),
+    budgetNotes: text("budget_notes"),
+    locations: jsonb("locations").$type<DealLocation[]>().default([]),
+    eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
+    serviceIds: integer("service_ids").array().default([]),
+    createdById: varchar("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_proposals_deal_id").on(table.dealId),
+    index("idx_proposals_status").on(table.status),
+    index("idx_proposals_client_id").on(table.clientId),
+    index("idx_proposals_owner_id").on(table.ownerId),
+    index("idx_proposals_created_at").on(table.createdAt),
+  ],
+);
+
+export type Proposal = typeof proposals.$inferSelect;
+export type InsertProposal = typeof proposals.$inferInsert;
+
+export type ProposalWithRelations = Proposal & {
+  statusName?: string;
+  statusColor?: string | null;
+  deal?: Pick<Deal, "id" | "displayName" | "dealNumber"> | null;
+  client?: Pick<Client, "id" | "name"> | null;
+  owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+};
+
+export const insertProposalSchema = createInsertSchema(proposals).omit({
+  id: true,
+  createdById: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "Title is required").max(500),
+  dealId: z.string().min(1, "Deal is required"),
+  status: z.number().int().optional(),
+  clientId: z.string().nullable().optional(),
+  ownerId: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  budgetLow: z.number().int().nullable().optional(),
+  budgetHigh: z.number().int().nullable().optional(),
+  budgetNotes: z.string().nullable().optional(),
+});
+
+export const updateProposalSchema = createInsertSchema(proposals).pick({
+  title: true,
+  status: true,
+  clientId: true,
+  ownerId: true,
+  description: true,
+  budgetLow: true,
+  budgetHigh: true,
+  budgetNotes: true,
+  locations: true,
+  eventSchedule: true,
+  serviceIds: true,
+}).partial();
+
+export type CreateProposal = z.infer<typeof insertProposalSchema>;
+export type UpdateProposal = z.infer<typeof updateProposalSchema>;
+
+// Proposal task status values
+export const proposalTaskStatuses = ["todo", "in_progress", "done"] as const;
+export type ProposalTaskStatus = (typeof proposalTaskStatuses)[number];
+
+// Proposal tasks - Asana-style task backlog
+export const proposalTasks = pgTable(
+  "proposal_tasks",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    proposalId: varchar("proposal_id").notNull().references(() => proposals.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 500 }).notNull(),
+    description: text("description"),
+    status: varchar("status", { length: 20 }).default("todo").notNull(),
+    ownerId: varchar("owner_id").notNull().references(() => users.id),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    parentTaskId: varchar("parent_task_id"),
+    startDate: date("start_date"),
+    dueDate: date("due_date"),
+    completedAt: timestamp("completed_at"),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_proposal_tasks_proposal").on(table.proposalId),
+    index("idx_proposal_tasks_owner").on(table.ownerId),
+    index("idx_proposal_tasks_status").on(table.status),
+    index("idx_proposal_tasks_parent").on(table.parentTaskId),
+    index("idx_proposal_tasks_sort_order").on(table.sortOrder),
+    index("idx_proposal_tasks_due_date").on(table.dueDate),
+  ],
+);
+
+export type ProposalTask = typeof proposalTasks.$inferSelect;
+export type InsertProposalTask = typeof proposalTasks.$inferInsert;
+
+export type ProposalTaskWithRelations = ProposalTask & {
+  owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  collaborators?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">[];
+  subTasks?: ProposalTaskWithRelations[];
+  commentCount?: number;
+};
+
+export const insertProposalTaskSchema = z.object({
+  proposalId: z.string().min(1, "Proposal is required"),
+  name: z.string().min(1, "Name is required").max(500),
+  description: z.string().nullable().optional(),
+  status: z.enum(proposalTaskStatuses).default("todo"),
+  ownerId: z.string().optional(),
+  sortOrder: z.number().int().default(0),
+  parentTaskId: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+});
+
+export const updateProposalTaskSchema = z.object({
+  name: z.string().min(1).max(500).optional(),
+  description: z.string().nullable().optional(),
+  status: z.enum(proposalTaskStatuses).optional(),
+  ownerId: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+  parentTaskId: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+});
+
+export type CreateProposalTask = z.infer<typeof insertProposalTaskSchema>;
+export type UpdateProposalTask = z.infer<typeof updateProposalTaskSchema>;
+
+// Proposal task collaborators - additional users on a task
+export const proposalTaskCollaborators = pgTable(
+  "proposal_task_collaborators",
+  {
+    taskId: varchar("task_id").notNull().references(() => proposalTasks.id, { onDelete: "cascade" }),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.userId] }),
+    index("idx_proposal_task_collab_task").on(table.taskId),
+    index("idx_proposal_task_collab_user").on(table.userId),
+  ],
+);
+
+export type ProposalTaskCollaborator = typeof proposalTaskCollaborators.$inferSelect;
+
+// Proposal task links - URL attachments with unfurl metadata
+export const proposalTaskLinks = pgTable(
+  "proposal_task_links",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    taskId: varchar("task_id").notNull().references(() => proposalTasks.id, { onDelete: "cascade" }),
+    url: varchar("url", { length: 2000 }).notNull(),
+    label: varchar("label", { length: 500 }),
+    previewTitle: varchar("preview_title", { length: 500 }),
+    previewDescription: varchar("preview_description", { length: 2000 }),
+    previewImage: varchar("preview_image", { length: 2000 }),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_proposal_task_links_task").on(table.taskId),
+    index("idx_proposal_task_links_created_by").on(table.createdById),
+  ],
+);
+
+export type ProposalTaskLink = typeof proposalTaskLinks.$inferSelect;
+export type InsertProposalTaskLink = typeof proposalTaskLinks.$inferInsert;
+
+export const insertProposalTaskLinkSchema = createInsertSchema(proposalTaskLinks).omit({
+  id: true,
+  createdAt: true,
+  previewTitle: true,
+  previewDescription: true,
+  previewImage: true,
+  createdById: true,
+});
+
+export type ProposalTaskLinkWithUser = ProposalTaskLink & {
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+};
+
+// Proposal task templates - admin-configurable default backlog
+export const proposalTaskTemplates = pgTable(
+  "proposal_task_templates",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 500 }).notNull(),
+    description: text("description"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_proposal_task_templates_sort_order").on(table.sortOrder),
+  ],
+);
+
+export type ProposalTaskTemplate = typeof proposalTaskTemplates.$inferSelect;
+export type InsertProposalTaskTemplate = typeof proposalTaskTemplates.$inferInsert;
+
+export const insertProposalTaskTemplateSchema = createInsertSchema(proposalTaskTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required").max(500),
+  description: z.string().nullable().optional(),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateProposalTaskTemplateSchema = insertProposalTaskTemplateSchema.partial();
+
+export type CreateProposalTaskTemplate = z.infer<typeof insertProposalTaskTemplateSchema>;
+export type UpdateProposalTaskTemplate = z.infer<typeof updateProposalTaskTemplateSchema>;
+
+// Proposal stakeholders - internal users and external contacts
+export const proposalStakeholders = pgTable(
+  "proposal_stakeholders",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    proposalId: varchar("proposal_id").notNull().references(() => proposals.id, { onDelete: "cascade" }),
+    userId: varchar("user_id").references(() => users.id),
+    contactId: varchar("contact_id").references(() => contacts.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_proposal_stakeholders_proposal").on(table.proposalId),
+    index("idx_proposal_stakeholders_user").on(table.userId),
+    index("idx_proposal_stakeholders_contact").on(table.contactId),
+  ],
+);
+
+export type ProposalStakeholder = typeof proposalStakeholders.$inferSelect;
+export type InsertProposalStakeholder = typeof proposalStakeholders.$inferInsert;
+
+// Shared entity team members - polymorphic team assignments
+export const entityTeamMembers = pgTable(
+  "entity_team_members",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    role: varchar("role", { length: 100 }),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_entity_team_members_entity").on(table.entityType, table.entityId),
+    index("idx_entity_team_members_user").on(table.userId),
+    unique("uq_entity_team_member").on(table.entityType, table.entityId, table.userId),
+  ],
+);
+
+export type EntityTeamMember = typeof entityTeamMembers.$inferSelect;
+export type InsertEntityTeamMember = typeof entityTeamMembers.$inferInsert;
+
+export type EntityTeamMemberWithUser = EntityTeamMember & {
+  user: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">;
+};
+
 // Clients table for client company directory
 export const clients = pgTable(
   "clients",
@@ -859,6 +1168,8 @@ export const commentEntityTypes = [
   "feedback",
   "deal",
   "client",
+  "proposal",
+  "proposal_task",
 ] as const;
 export type CommentEntityType = (typeof commentEntityTypes)[number];
 
@@ -1132,7 +1443,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'deal_service' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow' | 'amenity' | 'industry' | 'tag' | 'role' | 'photo' | 'release' | 'app_feature' | 'vendor_service' | 'proposal' | 'proposal_task' | 'proposal_task_link' | 'proposal_stakeholder' | 'entity_team_member';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas
