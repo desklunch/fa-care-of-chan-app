@@ -463,7 +463,7 @@ export default function Sidebar({
                     <button
                       onClick={() => toggleGroup(section.heading!)}
                       className={cn(
-                        "w-full outline-none ring-ring    h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider  pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent transition-colors",
+                        "w-full outline-none ring-ring    h-8 rounded-md flex items-center justify-between text-xs font-semibold uppercase tracking-wider  pl-3 pr-1 py-1 mb-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
                         sectionIndex === 0 ? "mt-0" : "mt-2",
                       )}
                       data-testid={`button-toggle-section-${section.heading.toLowerCase().replace(/\s+/g, "-")}`}

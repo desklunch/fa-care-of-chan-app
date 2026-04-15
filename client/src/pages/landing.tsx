@@ -70,7 +70,7 @@ export default function Landing() {
 
   return (
     <div className="mx-auto h-screen flex flex-col items-center justify-center text-center gap-6 text-primary p-6 bg-card ">
-      <div className="w-full bg-background max-w-md rounded-[24px] shadow-lg border border-input p-6 flex flex-col items-center gap-2  ">
+      <div className="w-full bg-background max-w-md rounded-[24px] shadow-lg  p-6 flex flex-col items-center gap-2  ">
      
         <div className=" [&_svg]:fill-primary size-[96px] flex items-center justify-center rounded-full mb-4 ">
           <svg
@@ -91,12 +91,10 @@ export default function Landing() {
 
         {/* Desktop: Show sign-in */}
         <div
-          className="flex flex-col items-center gap-6 my-6"
+          className="flex flex-col items-center gap-6 my-4"
           data-testid="button-get-started"
         >
-          <p className="text-base mt-4">
-            Sign in with your Care of Chan account.
-          </p>
+
           {loginMutation.isPending ? (
             <Button size="lg" className="h-12 px-8 " disabled>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -122,9 +120,7 @@ export default function Landing() {
               shape="pill"
             />
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Google sign-in is not configured
-            </p>
+            <></>
           )}
 
    
@@ -159,7 +155,8 @@ export default function Landing() {
         {/* Mobile: Show not optimized message */}
         <div className="flex items-center" data-testid="mobile-notice"></div>
 
-        <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground mt-2" data-testid="legal-links">
+        <div className="flex  items-center gap-4 text-xs text-muted-foreground mt-2" data-testid="legal-links">
+          <span>© 2026 Care of Chan</span>
           <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-privacy">Privacy Notice</Link>
           <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5" data-testid="link-terms">Terms of Use</Link>
           <span>·</span>
