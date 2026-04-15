@@ -388,9 +388,9 @@ export default function Sidebar({
           <div className="px-3 pt-3 pb-0  fle">
             {showExpanded ? (
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={onSearch}
-                className=" px-2 w-full bg-muted justify-between gap-2 font-normal rounded-md"
+                className=" px-2 w-full border-border text-muted-foreground justify-between gap-2 font-normal rounded-md"
                 data-testid="button-search-trigger"
               >
                 <span className="text-sm flex gap-2.5 font-medium">
