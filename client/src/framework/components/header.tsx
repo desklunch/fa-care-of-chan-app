@@ -98,14 +98,14 @@ export default function Header({
 
   return (
     <header
-      className="sticky top-0 shrink-0 h-[56px] md:h-[72px] bg-background border-b border-border px-2 md:px-4 flex items-center justify-between gap-2 z-40"
+      className="sticky top-0 shrink-0 h-[56px] lg:h-[72px] bg-background border-b border-border px-2 lg:px-4 flex items-center justify-between gap-2 z-40"
       data-testid="header-main"
     >
       <Button
         variant="ghost"
         size="sm"
         onClick={onToggle}
-        className="h-10 w-10 p-0 relative z-[101] md:hidden flex-shrink-0"
+        className="h-10 w-10 p-0 relative z-[101] lg:hidden flex-shrink-0"
         data-testid="button-mobile-menu"
         aria-label="Toggle navigation menu"
       >
@@ -148,7 +148,7 @@ export default function Header({
 
       <div className="flex items-center gap-2 flex-shrink-0">
         {primaryAction && (
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {renderPrimaryActionButton(primaryAction, "button-primary-action")}
           </div>
         )}

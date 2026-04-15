@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -219,8 +220,6 @@ export default function Sidebar({
   const { can, isActualAdmin, role, isOverridden } = usePermissions();
   const { overrideRole, setOverrideRole, clearOverride } = useTierOverride();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isMediumScreen, setIsMediumScreen] = useState(false);
   const prevLocationRef = useRef("");
 
   const [groupCollapsedState, setGroupCollapsedState] = useState<
@@ -295,37 +294,8 @@ export default function Sidebar({
 
   const visibleNavigation = filterSections(navigation);
 
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      const wasMediumScreen = isMediumScreen;
-      const nowMediumScreen = width >= 768 && width < 1024;
-      const isSmallScreen = width < 768;
-      const isLargeScreen = width >= 1024;
-
-      setIsMediumScreen(nowMediumScreen);
-
-      if (isSmallScreen) {
-        setIsCollapsed(false);
-      } else if (nowMediumScreen && !wasMediumScreen) {
-        setIsCollapsed(true);
-      } else if (isLargeScreen && wasMediumScreen) {
-        setIsCollapsed(false);
-      }
-    };
-
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, [isMediumScreen]);
-
-  const isSmallScreen =
-    typeof window !== "undefined" && window.innerWidth < 768;
-  const showExpanded = isSmallScreen
-    ? true
-    : isMediumScreen
-      ? isHovered
-      : !isCollapsed;
+  const isMobile = useIsMobile();
+  const showExpanded = isMobile ? true : !isCollapsed;
 
   useEffect(() => {
     const currentPath =
@@ -335,28 +305,12 @@ export default function Sidebar({
       prevLocationRef.current !== ""
     ) {
       onMobileClose();
-      if (isMediumScreen) {
-        setIsHovered(false);
-      }
     }
     prevLocationRef.current = currentPath;
   }, [
     typeof window !== "undefined" ? window.location.pathname : "",
-    isMediumScreen,
     onMobileClose,
   ]);
-
-  const handleMouseEnter = () => {
-    if (isMediumScreen) {
-      setIsHovered(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isMediumScreen) {
-      setIsHovered(false);
-    }
-  };
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -372,7 +326,7 @@ export default function Sidebar({
     <>
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onMobileClose}
         />
       )}
@@ -381,18 +335,13 @@ export default function Sidebar({
           "bg-sidebar border-r border-sidebar-border z-[999] transition-all duration-[2000ms] [transition-timing-function:cubic-bezier(0.33,1,0.68,1)]",
           "flex flex-col h-full ",
           "lg:relative lg:z-1000",
-          isCollapsed && !isMediumScreen && "lg:w-[72px]",
-          !isCollapsed && !isMediumScreen && "lg:w-[256px]",
-          "md:relative md:z-50",
-          isMediumScreen && isHovered && "md:w-[256px] md:shadow-xl",
-          isMediumScreen && !isHovered && "md:!w-[72px]",
-          "md:flex",
+          isCollapsed && "lg:w-[72px]",
+          !isCollapsed && "lg:w-[256px]",
+          "lg:flex",
           isMobileOpen
             ? "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] translate-x-0 rounded-r-lg"
-            : "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] -translate-x-full pointer-events-none rounded-r-lg md:pointer-events-auto md:relative md:translate-x-0 md:w-auto md:rounded-none",
+            : "fixed inset-y-0 left-0 w-[85vw] max-w-[85vw] -translate-x-full pointer-events-none rounded-r-lg lg:pointer-events-auto lg:relative lg:translate-x-0 lg:w-auto lg:rounded-none",
         )}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         data-testid="sidebar-main"
       >
         <div className="h-[72px] border-b border-sidebar-border flex items-center justify-start gap-6 p-3  ">
@@ -410,14 +359,14 @@ export default function Sidebar({
             variant="ghost"
             size="sm"
             onClick={onMobileClose}
-            className="h-8 w-8 p-0 md:hidden flex-0 "
+            className="h-8 w-8 p-0 lg:hidden flex-0 "
             data-testid="button-close-sidebar"
             aria-label="Close menu"
           >
             <PanelRightOpen className="h-5 w-5" />
           </Button>
 
-          {showExpanded && !isMediumScreen && (
+          {showExpanded && (
             <Button
               variant="ghost"
               size="sm"
