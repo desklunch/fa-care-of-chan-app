@@ -125,7 +125,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         const proposal = await proposalsService.create(req.body, actorId);
         res.status(201).json(proposal);
       } catch (error) {
@@ -140,7 +140,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         const proposal = await proposalsService.update(
           req.params.id,
           req.body,
@@ -159,7 +159,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.delete"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         await proposalsService.delete(req.params.id, actorId);
         res.json({ success: true });
       } catch (error) {
@@ -279,7 +279,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         const stakeholder = await proposalsService.addStakeholder(
           req.params.proposalId,
           req.body,
@@ -298,7 +298,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         await proposalsService.removeStakeholder(
           req.params.proposalId,
           req.params.stakeholderId,
@@ -333,7 +333,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         const member = await proposalsService.addTeamMember(
           req.params.proposalId,
           req.body,
@@ -352,7 +352,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         const member = await proposalsService.updateTeamMember(
           req.params.proposalId,
           req.params.memberId,
@@ -372,7 +372,7 @@ export function registerProposalsRoutes(app: Express): void {
     requirePermission("proposals.write"),
     async (req: any, res) => {
       try {
-        const actorId = req.user?.claims?.sub;
+        const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
         await proposalsService.removeTeamMember(
           req.params.proposalId,
           req.params.memberId,

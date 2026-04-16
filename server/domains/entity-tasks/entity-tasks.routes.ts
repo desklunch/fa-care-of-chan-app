@@ -54,7 +54,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.get("/api/entity-tasks/mine", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || (req.session as any)?.userId;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -84,7 +84,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.post("/api/entity-tasks", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
-      const actorId = req.user?.claims?.sub;
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
       const { entityType } = req.body;
       if (!entityType) {
         return res.status(400).json({ message: "entityType is required" });
@@ -99,7 +99,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.patch("/api/entity-tasks/:taskId", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
-      const actorId = req.user?.claims?.sub;
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
       const taskEntityType = await lookupTaskEntityType(req.params.taskId);
       if (!taskEntityType) {
         return res.status(404).json({ message: "Task not found" });
@@ -124,7 +124,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.delete("/api/entity-tasks/:taskId", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
-      const actorId = req.user?.claims?.sub;
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
       const taskEntityType = await lookupTaskEntityType(req.params.taskId);
       if (!taskEntityType) {
         return res.status(404).json({ message: "Task not found" });
@@ -148,7 +148,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.post("/api/entity-tasks/reorder", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
-      const actorId = req.user?.claims?.sub;
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
       const { entityType, entityId, taskIds } = req.body;
       if (!entityType || !entityId || !Array.isArray(taskIds)) {
         return res.status(400).json({ message: "entityType, entityId, and taskIds[] are required" });
@@ -185,7 +185,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.post("/api/entity-tasks/:taskId/collaborators", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
-      const actorId = req.user?.claims?.sub;
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
       const taskEntityType = await lookupTaskEntityType(req.params.taskId);
       if (!taskEntityType) {
         return res.status(404).json({ message: "Task not found" });
@@ -204,7 +204,7 @@ export function registerEntityTasksRoutes(app: Express): void {
 
   app.delete("/api/entity-tasks/:taskId/collaborators/:userId", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
-      const actorId = req.user?.claims?.sub;
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
       const taskEntityType = await lookupTaskEntityType(req.params.taskId);
       if (!taskEntityType) {
         return res.status(404).json({ message: "Task not found" });

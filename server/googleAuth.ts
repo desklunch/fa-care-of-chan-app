@@ -349,7 +349,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   (req as any).user = {
-    claims: session.claims
+    claims: {
+      sub: session.userId,
+      ...session.claims,
+    }
   };
   
   next();
