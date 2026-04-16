@@ -41,6 +41,17 @@ export function useDataFilterBarState(basePath: string) {
   const [searchText, setSearchText] = useState(
     () => getSearchFromParams(initialParams)
   );
+  const [debouncedSearchText, setDebouncedSearchText] = useState(searchText);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+    }, 300);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [searchText]);
 
   const hasActiveFilters = useMemo(
     () =>
@@ -71,13 +82,13 @@ export function useDataFilterBarState(basePath: string) {
       }
     });
 
-    if (searchText.trim()) {
-      params.set("q", searchText.trim());
+    if (debouncedSearchText.trim()) {
+      params.set("q", debouncedSearchText.trim());
     }
 
     const qs = params.toString();
     navigate(qs ? `${basePath}?${qs}` : basePath, { replace: true });
-  }, [filterState, searchText, basePath, navigate]);
+  }, [filterState, debouncedSearchText, basePath, navigate]);
 
   return { filterState, searchText, setFilterState, setSearchText, hasActiveFilters };
 }

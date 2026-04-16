@@ -363,6 +363,18 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
   const [searchText, setSearchText] = useState(() => getSearchFromUrl());
+  const [debouncedSearchText, setDebouncedSearchText] = useState(searchText);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchText]);
+
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [isFilterInitialized, setIsFilterInitialized] = useState(false);
   const [isGridInitialized, setIsGridInitialized] = useState(false);
@@ -460,15 +472,15 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
     
     if (!isFilterInitialized) {
       setIsFilterInitialized(true);
-      if (Object.keys(filterState).length > 0 || searchText) {
-        setFiltersToUrl(filterState, searchText);
+      if (Object.keys(filterState).length > 0 || debouncedSearchText) {
+        setFiltersToUrl(filterState, debouncedSearchText);
       }
       return;
     }
     
-    setFiltersToUrl(filterState, searchText);
+    setFiltersToUrl(filterState, debouncedSearchText);
     saveFiltersToSession(window.location.pathname, filterState);
-  }, [filterState, searchText, isFilterInitialized]);
+  }, [filterState, debouncedSearchText, isFilterInitialized]);
 
   // Sync sort state to URL and session storage
   useEffect(() => {
