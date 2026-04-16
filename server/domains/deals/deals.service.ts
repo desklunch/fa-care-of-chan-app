@@ -366,7 +366,7 @@ export class DealsService extends BaseService {
 
   async linkClient(dealId: string, clientId: string, actorId: string, label?: string | null): Promise<DealLinkedClient[]> {
     this.ensureExists(
-      await this.storage.getDealById(dealId),
+      await dealsStorage.getDealById(dealId),
       "Deal",
       dealId
     );
@@ -391,7 +391,7 @@ export class DealsService extends BaseService {
 
   async unlinkClient(dealId: string, clientId: string, actorId: string): Promise<void> {
     this.ensureExists(
-      await this.storage.getDealById(dealId),
+      await dealsStorage.getDealById(dealId),
       "Deal",
       dealId
     );
@@ -409,7 +409,7 @@ export class DealsService extends BaseService {
 
   async getLinkedClients(dealId: string): Promise<DealLinkedClient[]> {
     this.ensureExists(
-      await this.storage.getDealById(dealId),
+      await dealsStorage.getDealById(dealId),
       "Deal",
       dealId
     );
@@ -427,7 +427,7 @@ export class DealsService extends BaseService {
     }
 
     this.ensureExists(
-      await this.storage.getDealById(dealId),
+      await dealsStorage.getDealById(dealId),
       "Deal",
       dealId
     );
