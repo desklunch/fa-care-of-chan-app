@@ -318,30 +318,4 @@ export const settingsCommentsStorage = {
     await db.delete(themes).where(eq(themes.id, id));
   },
 
-  async migrateExistingThemeToThemesTable(): Promise<void> {
-    const existing = await db
-      .select()
-      .from(themes)
-      .where(eq(themes.name, "Custom (Migrated)"))
-      .limit(1);
-    if (existing.length > 0) return;
-
-    const setting = await db
-      .select()
-      .from(appSettings)
-      .where(eq(appSettings.key, "theme"))
-      .limit(1);
-
-    if (setting.length > 0 && setting[0].value) {
-      const themeData = setting[0].value as { light: ThemeVariables; dark: ThemeVariables };
-      if (themeData.light && themeData.dark) {
-        await this.createTheme({
-          name: "Custom (Migrated)",
-          light: themeData.light,
-          dark: themeData.dark,
-          isBuiltIn: false,
-        });
-      }
-    }
-  },
 };

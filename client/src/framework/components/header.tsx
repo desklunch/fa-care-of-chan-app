@@ -26,11 +26,7 @@ function renderPrimaryActionButton(action: ActionButton, testId: string) {
   if (action.href) {
     return (
       <Link href={action.href}>
-        <Button
-          variant="default"
-          size="sm"
-          data-testid={testId}
-        >
+        <Button variant="default" size="sm" data-testid={testId}>
           {action.icon && <action.icon className="h-4 w-4" />}
           {action.label}
         </Button>
@@ -52,12 +48,14 @@ function renderPrimaryActionButton(action: ActionButton, testId: string) {
 
 function renderDropdownItem(action: ActionButton, index: number) {
   const isDestructive = action.variant === "destructive";
-  
+
   if (action.href) {
     return (
       <Link href={action.href} key={index}>
-        <DropdownMenuItem 
-          className={isDestructive ? "text-destructive focus:text-destructive" : ""}
+        <DropdownMenuItem
+          className={
+            isDestructive ? "text-destructive focus:text-destructive" : ""
+          }
           data-testid={`menu-item-action-${index}`}
         >
           {action.icon && <action.icon className="h-4 w-4 mr-2" />}
@@ -80,7 +78,10 @@ function renderDropdownItem(action: ActionButton, index: number) {
 }
 
 function isMacOS() {
-  return typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
+  return (
+    typeof navigator !== "undefined" &&
+    /Mac|iPhone|iPad/.test(navigator.userAgent)
+  );
 }
 
 export default function Header({
@@ -92,7 +93,8 @@ export default function Header({
 }: HeaderProps) {
   const { openIssueDialog, openFeatureDialog } = useQuickCreate();
   const { role } = usePermissions();
-  const hasPageActions = primaryAction || (additionalActions && additionalActions.length > 0);
+  const hasPageActions =
+    primaryAction || (additionalActions && additionalActions.length > 0);
   const allDropdownActions = [
     ...(primaryAction ? [primaryAction] : []),
     ...(additionalActions || []),
@@ -101,7 +103,7 @@ export default function Header({
 
   return (
     <header
-      className="sticky top-0 shrink-0 h-[56px] lg:h-[72px] bg-background border-b border-border px-2 lg:px-4 flex items-center justify-between gap-2 z-40"
+      className="sticky top-0 shrink-0 h-[56px] lg:h-[72px] bg-background border-b border-sidebar-border px-2 lg:px-4 flex items-center justify-between gap-2 z-40"
       data-testid="header-main"
     >
       <Button
@@ -171,7 +173,9 @@ export default function Header({
           <DropdownMenuContent align="end" data-testid="dropdown-actions-menu">
             {hasPageActions && (
               <>
-                {allDropdownActions.map((action, index) => renderDropdownItem(action, index))}
+                {allDropdownActions.map((action, index) =>
+                  renderDropdownItem(action, index),
+                )}
                 <DropdownMenuSeparator />
               </>
             )}
@@ -189,14 +193,14 @@ export default function Header({
             >
               <Lightbulb className="h-4 w-4 mr-2" />
               Request Feature
-              <DropdownMenuShortcut>{isMacOS() ? "\u2318O" : "Ctrl+O"}</DropdownMenuShortcut>
+              <DropdownMenuShortcut>
+                {isMacOS() ? "\u2318O" : "Ctrl+O"}
+              </DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {role === "admin" && (
-          <NotificationBell variant="default" />
-        )}
+        {role === "admin" && <NotificationBell variant="default" />}
       </div>
     </header>
   );

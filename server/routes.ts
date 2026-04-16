@@ -125,7 +125,6 @@ export async function registerRoutes(
   registerFormsRoutes(app);
   await seedDealStatuses();
   await seedRoles();
-  await settingsCommentsStorage.migrateExistingThemeToThemesTable();
   await seedBuiltInThemes();
   await ensureReplitAgentUser();
   registerNotificationsRoutes(app);

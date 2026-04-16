@@ -1,7 +1,9 @@
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
-import { themes } from "@shared/schema";
+import { eq, inArray } from "drizzle-orm";
+import { themes, users } from "@shared/schema";
 import type { ThemeVariables, ThemeFonts } from "@shared/schema";
+
+const DEPRECATED_THEME_NAMES = ["Default", "Custom (Migrated)"];
 
 interface BuiltInTheme {
   name: string;
@@ -115,112 +117,6 @@ const BUILT_IN_THEMES: BuiltInTheme[] = [
       statusNoGo: "358 48% 58%",
       statusCanceled: "0 0% 63%",
       categoryFallback: "67 50% 45%",
-    },
-  },
-  {
-    name: "Default",
-    fonts: { headingFont: "Inter", bodyFont: "Inter" },
-    light: {
-      background: "0 0% 100%",
-      foreground: "0 0% 9%",
-      border: "0 0% 90%",
-      card: "0 0% 98%",
-      cardForeground: "0 0% 9%",
-      cardBorder: "0 0% 94%",
-      sidebar: "0 0% 96%",
-      sidebarForeground: "0 0% 9%",
-      sidebarBorder: "0 0% 92%",
-      sidebarPrimary: "217 91% 60%",
-      sidebarPrimaryForeground: "0 0% 98%",
-      sidebarAccent: "0 0% 92%",
-      sidebarAccentForeground: "0 0% 9%",
-      sidebarRing: "217 91% 60%",
-      popover: "0 0% 94%",
-      popoverForeground: "0 0% 9%",
-      popoverBorder: "0 0% 90%",
-      primary: "217 91% 60%",
-      primaryForeground: "0 0% 98%",
-      secondary: "0 0% 90%",
-      secondaryForeground: "0 0% 9%",
-      muted: "0 0% 88%",
-      mutedForeground: "0 0% 45%",
-      accent: "217 15% 88%",
-      accentForeground: "0 0% 9%",
-      destructive: "0 84% 60%",
-      destructiveForeground: "0 0% 98%",
-      input: "0 0% 80%",
-      ring: "217 91% 60%",
-      chart1: "217 91% 35%",
-      chart2: "173 58% 39%",
-      chart3: "197 37% 24%",
-      chart4: "43 74% 49%",
-      chart5: "27 87% 67%",
-      statusOnline: "142 71% 45%",
-      statusAway: "38 92% 50%",
-      statusBusy: "0 84% 60%",
-      statusOffline: "220 9% 46%",
-      statusProspecting: "194 100% 35%",
-      statusWarmLead: "266 72% 41%",
-      statusProposal: "320 62% 66%",
-      statusFeedback: "32 46% 53%",
-      statusContracting: "13 66% 59%",
-      statusInProgress: "94 52% 42%",
-      statusInvoicing: "217 57% 60%",
-      statusComplete: "67 100% 50%",
-      statusNoGo: "357 67% 58%",
-      statusCanceled: "0 0% 10%",
-      categoryFallback: "217 14% 50%",
-    },
-    dark: {
-      background: "0 0% 9%",
-      foreground: "0 0% 98%",
-      border: "0 0% 16%",
-      card: "0 0% 11%",
-      cardForeground: "0 0% 98%",
-      cardBorder: "0 0% 14%",
-      sidebar: "0 0% 13%",
-      sidebarForeground: "0 0% 98%",
-      sidebarBorder: "0 0% 16%",
-      sidebarPrimary: "217 91% 60%",
-      sidebarPrimaryForeground: "0 0% 98%",
-      sidebarAccent: "0 0% 16%",
-      sidebarAccentForeground: "0 0% 98%",
-      sidebarRing: "217 91% 60%",
-      popover: "0 0% 15%",
-      popoverForeground: "0 0% 98%",
-      popoverBorder: "0 0% 18%",
-      primary: "217 91% 60%",
-      primaryForeground: "0 0% 98%",
-      secondary: "0 0% 18%",
-      secondaryForeground: "0 0% 98%",
-      muted: "0 0% 17%",
-      mutedForeground: "0 0% 63%",
-      accent: "217 15% 17%",
-      accentForeground: "0 0% 98%",
-      destructive: "0 84% 60%",
-      destructiveForeground: "0 0% 98%",
-      input: "0 0% 24%",
-      ring: "217 91% 60%",
-      chart1: "217 91% 70%",
-      chart2: "173 58% 65%",
-      chart3: "197 37% 60%",
-      chart4: "43 74% 70%",
-      chart5: "27 87% 75%",
-      statusOnline: "142 71% 45%",
-      statusAway: "38 92% 50%",
-      statusBusy: "0 84% 60%",
-      statusOffline: "220 9% 46%",
-      statusProspecting: "194 100% 76%",
-      statusWarmLead: "266 100% 79%",
-      statusProposal: "320 100% 79%",
-      statusFeedback: "32 100% 76%",
-      statusContracting: "13 100% 73%",
-      statusInProgress: "89 61% 51%",
-      statusInvoicing: "217 86% 65%",
-      statusComplete: "67 100% 50%",
-      statusNoGo: "358 48% 58%",
-      statusCanceled: "0 0% 63%",
-      categoryFallback: "217 14% 55%",
     },
   },
   {
@@ -544,6 +440,20 @@ const BUILT_IN_THEMES: BuiltInTheme[] = [
 ];
 
 export async function seedBuiltInThemes(): Promise<void> {
+  const deprecated = await db
+    .select({ id: themes.id })
+    .from(themes)
+    .where(inArray(themes.name, DEPRECATED_THEME_NAMES));
+  if (deprecated.length > 0) {
+    const deprecatedIds = deprecated.map(t => t.id);
+    await db
+      .update(users)
+      .set({ selectedThemeId: null })
+      .where(inArray(users.selectedThemeId, deprecatedIds));
+    await db.delete(themes).where(inArray(themes.id, deprecatedIds));
+    console.log(`[seed] Removed ${deprecated.length} deprecated theme(s): ${DEPRECATED_THEME_NAMES.join(", ")}`);
+  }
+
   const allExisting = await db.select({ id: themes.id, name: themes.name, isBuiltIn: themes.isBuiltIn }).from(themes);
   const existingByName = new Map(allExisting.map(t => [t.name, t]));
 

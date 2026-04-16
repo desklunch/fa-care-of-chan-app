@@ -157,7 +157,7 @@ import {
   Image,
   Shapes,
   Scroll,
-  BookMarked,
+  Blocks,
   Network,
 } from "lucide-react";
 
@@ -245,14 +245,14 @@ function useLayoutConfig() {
           },
           {
             name: "Assets",
-            href: "/proposals",
-            icon: Image,
+            href: "/programming/assets",
+            icon: Shapes,
             requiredPermission: "proposals.read",
           },
           {
             name: "Catalog",
-            href: "/proposals",
-            icon: Shapes,
+            href: "/programming/catalog",
+            icon: Blocks,
             requiredPermission: "proposals.read",
           },
         ],
@@ -264,13 +264,13 @@ function useLayoutConfig() {
         items: [
           {
             name: "Planning",
-            href: "/proposals",
+            href: "/production/planning",
             icon: Image,
             requiredPermission: "proposals.read",
           },
           {
             name: "Projects",
-            href: "/proposals",
+            href: "/production/projects",
             icon: Scroll,
             requiredPermission: "proposals.read",
           },
