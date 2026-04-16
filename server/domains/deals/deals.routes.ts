@@ -754,45 +754,6 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/deals/:dealId/tasks", isAuthenticated, async (req, res) => {
-    try {
-      const tasks = await dealsService.getTasks(req.params.dealId);
-      res.json(tasks);
-    } catch (error) {
-      handleServiceError(res, error, "Failed to fetch deal tasks");
-    }
-  });
-
-  app.post("/api/deals/:dealId/tasks", isAuthenticated, async (req: any, res) => {
-    try {
-      const actorId = req.user.claims.sub;
-      const task = await dealsService.createTask(
-        { ...req.body, dealId: req.params.dealId },
-        actorId
-      );
-      
-      res.status(201).json(task);
-    } catch (error) {
-      handleServiceError(res, error, "Failed to create deal task");
-    }
-  });
-
-  app.patch("/api/deals/:dealId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
-    try {
-      const actorId = req.user.claims.sub;
-      const task = await dealsService.updateTask(
-        req.params.dealId,
-        req.params.taskId,
-        req.body,
-        actorId
-      );
-      
-      res.json(task);
-    } catch (error) {
-      handleServiceError(res, error, "Failed to update deal task");
-    }
-  });
-
   app.get("/api/deals/:id/linked-clients", isAuthenticated, async (req, res) => {
     try {
       const linkedClients = await dealsStorage.getLinkedClientsByDealId(req.params.id);
@@ -840,17 +801,6 @@ export function registerDealsRoutes(app: Express): void {
       res.json({ success: true });
     } catch (error) {
       handleServiceError(res, error, "Failed to update deal tags");
-    }
-  });
-
-  app.delete("/api/deals/:dealId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
-    try {
-      const actorId = req.user.claims.sub;
-      await dealsService.deleteTask(req.params.dealId, req.params.taskId, actorId);
-      
-      res.status(204).send();
-    } catch (error) {
-      handleServiceError(res, error, "Failed to delete deal task");
     }
   });
 

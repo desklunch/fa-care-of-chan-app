@@ -527,6 +527,71 @@ export interface ProposalCollaboratorRemovedEvent {
   timestamp: Date;
 }
 
+// ==========================================
+// ENTITY TASK EVENTS
+// ==========================================
+
+export interface EntityTaskCreatedEvent {
+  type: "entity_task:created";
+  taskId: string;
+  taskName: string;
+  entityType: string;
+  entityId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface EntityTaskUpdatedEvent {
+  type: "entity_task:updated";
+  taskId: string;
+  taskName: string;
+  entityType: string;
+  entityId: string;
+  changes: Record<string, unknown>;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface EntityTaskDeletedEvent {
+  type: "entity_task:deleted";
+  taskId: string;
+  taskName: string;
+  entityType: string;
+  entityId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface EntityTaskCompletedEvent {
+  type: "entity_task:completed";
+  taskId: string;
+  taskName: string;
+  entityType: string;
+  entityId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface EntityTaskCollaboratorAddedEvent {
+  type: "entity_task:collaborator_added";
+  taskId: string;
+  entityType: string;
+  entityId: string;
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface EntityTaskCollaboratorRemovedEvent {
+  type: "entity_task:collaborator_removed";
+  taskId: string;
+  entityType: string;
+  entityId: string;
+  userId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface ContactCreatedEvent {
   type: "contact:created";
   contactId: string;
@@ -841,7 +906,13 @@ export type DomainEvent =
   | ProposalCollaboratorAddedEvent
   | ProposalCollaboratorRemovedEvent
   | EntityLinkCreatedEvent
-  | EntityLinkDeletedEvent;
+  | EntityLinkDeletedEvent
+  | EntityTaskCreatedEvent
+  | EntityTaskUpdatedEvent
+  | EntityTaskDeletedEvent
+  | EntityTaskCompletedEvent
+  | EntityTaskCollaboratorAddedEvent
+  | EntityTaskCollaboratorRemovedEvent;
 
 type EventMap = {
   "deal:created": DealCreatedEvent;
@@ -931,6 +1002,12 @@ type EventMap = {
   "proposal:collaborator_removed": ProposalCollaboratorRemovedEvent;
   "entity_link:created": EntityLinkCreatedEvent;
   "entity_link:deleted": EntityLinkDeletedEvent;
+  "entity_task:created": EntityTaskCreatedEvent;
+  "entity_task:updated": EntityTaskUpdatedEvent;
+  "entity_task:deleted": EntityTaskDeletedEvent;
+  "entity_task:completed": EntityTaskCompletedEvent;
+  "entity_task:collaborator_added": EntityTaskCollaboratorAddedEvent;
+  "entity_task:collaborator_removed": EntityTaskCollaboratorRemovedEvent;
   "*": DomainEvent;
 };
 

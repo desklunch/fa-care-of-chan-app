@@ -903,6 +903,132 @@ export type UpdateProposal = z.infer<typeof updateProposalSchema>;
 export const proposalTaskStatuses = ["todo", "in_progress", "done"] as const;
 export type ProposalTaskStatus = (typeof proposalTaskStatuses)[number];
 
+// ==========================================
+// UNIVERSAL ENTITY TASKS
+// ==========================================
+
+export const entityTaskEntityTypes = ["deal", "proposal"] as const;
+export type EntityTaskEntityType = (typeof entityTaskEntityTypes)[number];
+
+export const entityTaskStatuses = ["todo", "in_progress", "done"] as const;
+export type EntityTaskStatus = (typeof entityTaskStatuses)[number];
+
+export const entityTasks = pgTable(
+  "entity_tasks",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    name: varchar("name", { length: 500 }).notNull(),
+    description: text("description"),
+    status: varchar("status", { length: 20 }).default("todo").notNull(),
+    ownerId: varchar("owner_id").notNull().references(() => users.id),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    parentTaskId: varchar("parent_task_id"),
+    startDate: date("start_date"),
+    dueDate: date("due_date"),
+    completedAt: timestamp("completed_at"),
+    createdById: varchar("created_by_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_entity_tasks_entity").on(table.entityType, table.entityId),
+    index("idx_entity_tasks_owner").on(table.ownerId),
+    index("idx_entity_tasks_status").on(table.status),
+    index("idx_entity_tasks_parent").on(table.parentTaskId),
+    index("idx_entity_tasks_sort_order").on(table.sortOrder),
+    index("idx_entity_tasks_due_date").on(table.dueDate),
+  ],
+);
+
+export type EntityTask = typeof entityTasks.$inferSelect;
+export type InsertEntityTask = typeof entityTasks.$inferInsert;
+
+export type EntityTaskWithRelations = EntityTask & {
+  owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
+  collaborators?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">[];
+  subTasks?: EntityTaskWithRelations[];
+  commentCount?: number;
+  entityName?: string | null;
+};
+
+export const insertEntityTaskSchema = z.object({
+  entityType: z.enum(entityTaskEntityTypes),
+  entityId: z.string().min(1, "Entity ID is required"),
+  name: z.string().min(1, "Name is required").max(500),
+  description: z.string().nullable().optional(),
+  status: z.enum(entityTaskStatuses).default("todo"),
+  ownerId: z.string().optional(),
+  sortOrder: z.number().int().default(0),
+  parentTaskId: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+});
+
+export const updateEntityTaskSchema = z.object({
+  name: z.string().min(1).max(500).optional(),
+  description: z.string().nullable().optional(),
+  status: z.enum(entityTaskStatuses).optional(),
+  ownerId: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+  parentTaskId: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+});
+
+export type CreateEntityTask = z.infer<typeof insertEntityTaskSchema>;
+export type UpdateEntityTask = z.infer<typeof updateEntityTaskSchema>;
+
+export const entityTaskCollaborators = pgTable(
+  "entity_task_collaborators",
+  {
+    taskId: varchar("task_id").notNull().references(() => entityTasks.id, { onDelete: "cascade" }),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.userId] }),
+    index("idx_entity_task_collab_task").on(table.taskId),
+    index("idx_entity_task_collab_user").on(table.userId),
+  ],
+);
+
+export type EntityTaskCollaborator = typeof entityTaskCollaborators.$inferSelect;
+
+export const entityTaskTemplates = pgTable(
+  "entity_task_templates",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    entityType: varchar("entity_type", { length: 50 }).notNull().default("proposal"),
+    name: varchar("name", { length: 500 }).notNull(),
+    description: text("description"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_entity_task_templates_sort_order").on(table.sortOrder),
+    index("idx_entity_task_templates_entity_type").on(table.entityType),
+  ],
+);
+
+export type EntityTaskTemplate = typeof entityTaskTemplates.$inferSelect;
+export type InsertEntityTaskTemplate = typeof entityTaskTemplates.$inferInsert;
+
+export const insertEntityTaskTemplateSchema = z.object({
+  entityType: z.string().min(1).default("proposal"),
+  name: z.string().min(1, "Name is required").max(500),
+  description: z.string().nullable().optional(),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateEntityTaskTemplateSchema = insertEntityTaskTemplateSchema.partial();
+
+export type CreateEntityTaskTemplate = z.infer<typeof insertEntityTaskTemplateSchema>;
+export type UpdateEntityTaskTemplate = z.infer<typeof updateEntityTaskTemplateSchema>;
+
 // Proposal tasks - Asana-style task backlog
 export const proposalTasks = pgTable(
   "proposal_tasks",
@@ -1162,6 +1288,7 @@ export type InsertDealClient = typeof dealClients.$inferInsert;
 export const entityLinkEntityTypes = [
   "deal",
   "proposal_task",
+  "entity_task",
 ] as const;
 export type EntityLinkEntityType = (typeof entityLinkEntityTypes)[number];
 
@@ -1214,6 +1341,7 @@ export const commentEntityTypes = [
   "client",
   "proposal",
   "proposal_task",
+  "entity_task",
 ] as const;
 export type CommentEntityType = (typeof commentEntityTypes)[number];
 
@@ -1487,7 +1615,7 @@ export type InsertProductFeature = InsertAppFeature;
 
 // Audit log action types
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_sent' | 'invite_used' | 'upload' | 'unknown' | 'reorder' | 'link' | 'unlink' | 'add_venues' | 'remove_venue';
-export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'deal_service' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow' | 'amenity' | 'industry' | 'tag' | 'role' | 'photo' | 'release' | 'app_feature' | 'vendor_service' | 'proposal' | 'proposal_task' | 'proposal_task_link' | 'proposal_stakeholder' | 'entity_team_member' | 'entity_link';
+export type AuditEntityType = 'user' | 'invite' | 'session' | 'feature' | 'feature_category' | 'feature_comment' | 'contact' | 'vendor' | 'venue' | 'venue_photo' | 'venue_file' | 'vendor_update_token' | 'app_setting' | 'app_issue' | 'form_template' | 'form_request' | 'outreach_token' | 'form_response' | 'app_release' | 'deal' | 'deal_task' | 'deal_link' | 'deal_service' | 'system' | 'deals' | 'client' | 'client_contact' | 'brand' | 'venue_collection' | 'floorplan' | 'drive_attachment' | 'comment' | 'notification' | 'entity_follow' | 'amenity' | 'industry' | 'tag' | 'role' | 'photo' | 'release' | 'app_feature' | 'vendor_service' | 'proposal' | 'proposal_task' | 'proposal_task_link' | 'proposal_stakeholder' | 'entity_team_member' | 'entity_link' | 'entity_task' | 'entity_task_template';
 export type AuditStatus = 'success' | 'failure';
 
 // Zod schemas

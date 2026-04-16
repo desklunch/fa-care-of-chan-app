@@ -43,7 +43,8 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - `places/` - Google Places API integration (10 routes)
     - `venues/` - Venues, collections, floorplans, photos, files, tag suggestions (37 routes)
     - `forms/` - Form templates, requests, and public form submission (15 routes)
-    - `proposals/` - Proposal management with Asana-style task backlog, team, stakeholders, and comments (30+ routes)
+    - `entity-tasks/` - Universal entity task system supporting proposals and deals with drag-and-drop, sub-tasks, collaborators, and comments (10 routes). Admin `/tasks` page shows all tasks across all entity types (requires `admin.settings`).
+    - `proposals/` - Proposal management with team, stakeholders, and comments (tasks now via entity-tasks)
     - `drive-attachments/` - Google Drive file attachments for deals, venues, clients, vendors, contacts (3 routes)
     - `notifications/` - User notification system with in-app, email (Resend), and browser push channels (12 routes)
 

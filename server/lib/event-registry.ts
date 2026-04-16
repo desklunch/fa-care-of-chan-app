@@ -845,6 +845,66 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       }),
     },
   },
+  "entity_task:created": {
+    type: "entity_task:created",
+    audit: {
+      action: "create",
+      entityType: "entity_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => ({ taskName: (e as any).taskName }),
+      extractMetadata: (e) => ({ entityType: (e as any).entityType, entityId: (e as any).entityId }),
+    },
+  },
+  "entity_task:updated": {
+    type: "entity_task:updated",
+    audit: {
+      action: "update",
+      entityType: "entity_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => (e as any).changes ?? null,
+      extractMetadata: (e) => ({ entityType: (e as any).entityType, entityId: (e as any).entityId }),
+    },
+  },
+  "entity_task:deleted": {
+    type: "entity_task:deleted",
+    audit: {
+      action: "delete",
+      entityType: "entity_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => ({ taskName: (e as any).taskName }),
+      extractMetadata: (e) => ({ entityType: (e as any).entityType, entityId: (e as any).entityId }),
+    },
+  },
+  "entity_task:completed": {
+    type: "entity_task:completed",
+    audit: {
+      action: "update",
+      entityType: "entity_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: () => ({ status: "done" }),
+      extractMetadata: (e) => ({ entityType: (e as any).entityType, entityId: (e as any).entityId }),
+    },
+  },
+  "entity_task:collaborator_added": {
+    type: "entity_task:collaborator_added",
+    audit: {
+      action: "create",
+      entityType: "entity_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => ({ userId: (e as any).userId }),
+      extractMetadata: (e) => ({ entityType: (e as any).entityType, entityId: (e as any).entityId }),
+    },
+  },
+  "entity_task:collaborator_removed": {
+    type: "entity_task:collaborator_removed",
+    audit: {
+      action: "delete",
+      entityType: "entity_task",
+      extractEntityId: (e) => (e as any).taskId ?? null,
+      extractChanges: (e) => ({ userId: (e as any).userId }),
+      extractMetadata: (e) => ({ entityType: (e as any).entityType, entityId: (e as any).entityId }),
+    },
+  },
 };
 
 export type RegisteredEventType = keyof typeof EVENT_REGISTRY;

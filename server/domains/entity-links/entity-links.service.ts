@@ -2,7 +2,7 @@ import { entityLinksStorage } from "./entity-links.storage";
 import { domainEvents } from "../../lib/events";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
-import { entityLinkEntityTypes, deals, proposalTasks, type EntityLinkEntityType, type EntityLink, type EntityLinkWithUser } from "@shared/schema";
+import { entityLinkEntityTypes, deals, proposalTasks, entityTasks, type EntityLinkEntityType, type EntityLink, type EntityLinkWithUser } from "@shared/schema";
 
 function isValidEntityType(value: string): value is EntityLinkEntityType {
   return (entityLinkEntityTypes as readonly string[]).includes(value);
@@ -14,17 +14,31 @@ function getPermissionPrefix(entityType: string): string {
       return "deals";
     case "proposal_task":
       return "proposals";
+    case "entity_task":
+      return "deals";
     default:
       return entityType;
   }
 }
 
+async function getEntityTaskPermissionPrefix(entityId: string): Promise<string> {
+  const [task] = await db.select({ entityType: entityTasks.entityType }).from(entityTasks).where(eq(entityTasks.id, entityId));
+  if (!task) return "deals";
+  return task.entityType === "proposal" ? "proposals" : "deals";
+}
+
 export const entityLinksService = {
   isValidEntityType,
   getPermissionPrefix,
+  getEntityTaskPermissionPrefix,
 
   async getLinks(entityType: string, entityId: string): Promise<EntityLinkWithUser[]> {
-    return entityLinksStorage.getLinks(entityType, entityId);
+    const links = await entityLinksStorage.getLinks(entityType, entityId);
+    if (entityType === "entity_task") {
+      const legacyLinks = await entityLinksStorage.getLinks("proposal_task", entityId);
+      return [...links, ...legacyLinks];
+    }
+    return links;
   },
 
   async verifyEntityExists(entityType: string, entityId: string): Promise<void> {
@@ -34,6 +48,9 @@ export const entityLinksService = {
     } else if (entityType === "proposal_task") {
       const [task] = await db.select({ id: proposalTasks.id }).from(proposalTasks).where(eq(proposalTasks.id, entityId));
       if (!task) throw new NotFoundError("Task not found");
+    } else if (entityType === "entity_task") {
+      const [task] = await db.select({ id: entityTasks.id }).from(entityTasks).where(eq(entityTasks.id, entityId));
+      if (!task) throw new NotFoundError("Entity task not found");
     }
   },
 

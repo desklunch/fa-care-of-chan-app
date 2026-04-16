@@ -103,6 +103,7 @@ const NotificationPreferences = lazy(
 const Proposals = lazy(() => import("@/pages/proposals"));
 const ProposalDetail = lazy(() => import("@/pages/proposal-detail"));
 const ProposalForm = lazy(() => import("@/pages/proposal-form"));
+const Tasks = lazy(() => import("@/pages/tasks"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
@@ -151,6 +152,7 @@ import {
   Sheet,
   BellRing,
   LayoutDashboard,
+  ListChecks,
   Image,
   Shapes,
   Scroll,
@@ -183,6 +185,11 @@ function useLayoutConfig() {
             name: "Dashboard",
             href: "/dashboard",
             icon: LayoutDashboard,
+          },
+          {
+            name: "Tasks",
+            href: "/tasks",
+            icon: ListChecks,
           },
         ],
       },
@@ -490,6 +497,7 @@ function AuthenticatedRoutes() {
           <Switch>
             <Route path="/" component={Venues} />
             <Route path="/dashboard" component={Dashboard} />
+            <Route path="/tasks" component={Tasks} />
             <Route path="/admin/features" component={AdminAppFeatures} />
             <Route path="/admin/releases" component={AdminReleases} />
             <Route path="/admin/releases/:id" component={AdminReleaseDetail} />

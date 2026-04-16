@@ -30,7 +30,9 @@ export function registerEntityLinksRoutes(app: Express): void {
           return res.status(400).json({ message: "Invalid entity type" });
         }
 
-        const prefix = entityLinksService.getPermissionPrefix(entityType);
+        const prefix = entityType === "entity_task"
+          ? await entityLinksService.getEntityTaskPermissionPrefix(entityId)
+          : entityLinksService.getPermissionPrefix(entityType);
         if (!checkPermission(req, `${prefix}.read`)) {
           return res.status(403).json({ message: "Forbidden" });
         }
@@ -56,7 +58,9 @@ export function registerEntityLinksRoutes(app: Express): void {
           return res.status(400).json({ message: "Invalid entity type" });
         }
 
-        const prefix = entityLinksService.getPermissionPrefix(entityType);
+        const prefix = entityType === "entity_task"
+          ? await entityLinksService.getEntityTaskPermissionPrefix(entityId)
+          : entityLinksService.getPermissionPrefix(entityType);
         if (!checkPermission(req, `${prefix}.write`)) {
           return res.status(403).json({ message: "Forbidden" });
         }
@@ -88,7 +92,9 @@ export function registerEntityLinksRoutes(app: Express): void {
           return res.status(400).json({ message: "Invalid entity type" });
         }
 
-        const prefix = entityLinksService.getPermissionPrefix(entityType);
+        const prefix = entityType === "entity_task"
+          ? await entityLinksService.getEntityTaskPermissionPrefix(entityId)
+          : entityLinksService.getPermissionPrefix(entityType);
         if (!checkPermission(req, `${prefix}.write`)) {
           return res.status(403).json({ message: "Forbidden" });
         }

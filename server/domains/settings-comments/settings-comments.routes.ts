@@ -292,8 +292,12 @@ export function registerSettingsCommentsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid entity type" });
       }
 
-      const comments = await settingsCommentsStorage.getCommentsByEntity(entityType, entityId);
-      res.json(comments);
+      let allComments = await settingsCommentsStorage.getCommentsByEntity(entityType, entityId);
+      if (entityType === "entity_task") {
+        const legacyComments = await settingsCommentsStorage.getCommentsByEntity("proposal_task", entityId);
+        allComments = [...allComments, ...legacyComments];
+      }
+      res.json(allComments);
     } catch (error) {
       console.error("Error fetching comments:", error);
       res.status(500).json({ message: "Failed to fetch comments" });

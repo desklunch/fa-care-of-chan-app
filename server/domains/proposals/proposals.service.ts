@@ -1,6 +1,7 @@
 import { BaseService, ServiceError } from "../../services/base.service";
 import { proposalsStorage } from "./proposals.storage";
 import { dealsStorage } from "../deals/deals.storage";
+import { entityTasksStorage } from "../entity-tasks/entity-tasks.storage";
 import { domainEvents } from "../../lib/events";
 import { getChangedFields } from "../../audit";
 import {
@@ -91,10 +92,11 @@ class ProposalsService extends BaseService {
 
     const proposal = await proposalsStorage.createProposal(insertData);
 
-    const templates = await proposalsStorage.getTaskTemplates();
+    const templates = await entityTasksStorage.getTaskTemplates("proposal");
     for (const template of templates) {
-      await proposalsStorage.createTask({
-        proposalId: proposal.id,
+      await entityTasksStorage.createTask({
+        entityType: "proposal",
+        entityId: proposal.id,
         name: template.name,
         description: template.description,
         sortOrder: template.sortOrder,

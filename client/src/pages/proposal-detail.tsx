@@ -35,17 +35,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/usePermissions";
 import { CommentList } from "@/components/ui/comments";
-import { ProposalTaskGrid } from "@/components/proposal-task-grid";
+import { EntityTaskGrid } from "@/components/entity-task-grid";
 import { format } from "date-fns";
 import {
   Loader2,
@@ -54,7 +48,6 @@ import {
   X,
   CheckCircle2,
   Circle,
-  Clock,
   Link as LinkIcon,
   Users,
   ExternalLink,
@@ -66,8 +59,6 @@ import { EntityLinksPanel } from "@/components/entity-links-panel";
 import type {
   ProposalWithRelations,
   ProposalStatusRecord,
-  ProposalTask,
-  ProposalTaskWithRelations,
   ProposalStakeholder,
   EntityTeamMemberWithUser,
   User,
@@ -82,19 +73,6 @@ interface StakeholderWithRelations extends ProposalStakeholder {
     emailAddresses: string[] | null;
     jobTitle: string | null;
   } | null;
-}
-
-interface CollaboratorUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  profileImageUrl: string | null;
-}
-
-function TaskStatusIcon({ status }: { status: string }) {
-  if (status === "done") return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-  if (status === "in_progress") return <Clock className="h-4 w-4 text-amber-500" />;
-  return <Circle className="h-4 w-4 text-muted-foreground" />;
 }
 
 function formatCurrency(value: number | null | undefined) {
@@ -113,7 +91,6 @@ export default function ProposalDetail() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddStakeholderDialog, setShowAddStakeholderDialog] = useState(false);
   const [showAddTeamDialog, setShowAddTeamDialog] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [stakeholderType, setStakeholderType] = useState<"user" | "contact">("user");
   const [stakeholderSearchId, setStakeholderSearchId] = useState("");
   const [teamMemberUserId, setTeamMemberUserId] = useState("");
@@ -125,11 +102,6 @@ export default function ProposalDetail() {
 
   const { data: statuses = [] } = useQuery<ProposalStatusRecord[]>({
     queryKey: ["/api/proposals/statuses"],
-  });
-
-  const { data: tasks = [] } = useQuery<ProposalTaskWithRelations[]>({
-    queryKey: ["/api/proposals", params.id, "tasks"],
-    enabled: !!params.id,
   });
 
   const { data: stakeholders = [] } = useQuery<StakeholderWithRelations[]>({
@@ -145,6 +117,24 @@ export default function ProposalDetail() {
   const { data: allUsers = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
+
+  const { data: entityTasks = [] } = useQuery<{ id: string; status: string; subTasks?: { id: string; status: string }[] }[]>({
+    queryKey: ["/api/entity-tasks", "proposal", params.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/entity-tasks?entityType=proposal&entityId=${params.id}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      return res.json();
+    },
+    enabled: !!params.id,
+  });
+
+  const tasksDone = entityTasks.reduce((sum, t) => {
+    const subDone = t.subTasks?.filter((s) => s.status === "done").length ?? 0;
+    return sum + (t.status === "done" ? 1 : 0) + subDone;
+  }, 0);
+  const tasksTotal = entityTasks.reduce((sum, t) => sum + 1 + (t.subTasks?.length ?? 0), 0);
 
   usePageTitle(proposal?.title || "Proposal");
 
@@ -169,46 +159,6 @@ export default function ProposalDetail() {
       toast({ title: "Proposal deleted" });
     },
   });
-
-  const createTask = useMutation({
-    mutationFn: async (data: { name: string; description?: string; parentTaskId?: string }) => {
-      const res = await apiRequest("POST", `/api/proposals/${params.id}/tasks`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals", params.id, "tasks"] });
-    },
-  });
-
-  const updateTask = useMutation({
-    mutationFn: async ({ taskId, data }: { taskId: string; data: Record<string, unknown> }) => {
-      const res = await apiRequest("PATCH", `/api/proposals/${params.id}/tasks/${taskId}`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals", params.id, "tasks"] });
-    },
-  });
-
-  const deleteTask = useMutation({
-    mutationFn: async (taskId: string) => {
-      await apiRequest("DELETE", `/api/proposals/${params.id}/tasks/${taskId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals", params.id, "tasks"] });
-      if (selectedTaskId) setSelectedTaskId(null);
-    },
-  });
-
-  const reorderTasks = useMutation({
-    mutationFn: async (taskIds: string[]) => {
-      await apiRequest("POST", `/api/proposals/${params.id}/tasks/reorder`, { taskIds });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals", params.id, "tasks"] });
-    },
-  });
-
 
   const addStakeholder = useMutation({
     mutationFn: async (data: { userId?: string; contactId?: string }) => {
@@ -278,14 +228,6 @@ export default function ProposalDetail() {
   }
 
   const currentStatus = statuses.find((s) => s.id === proposal.status);
-  const selectedTask = tasks.find((t) => t.id === selectedTaskId) ??
-    tasks.flatMap((t) => t.subTasks ?? []).find((s) => s.id === selectedTaskId) ?? null;
-
-  const tasksDone = tasks.reduce((sum, t) => {
-    const subDone = t.subTasks?.filter((s) => s.status === "done").length ?? 0;
-    return sum + (t.status === "done" ? 1 : 0) + subDone;
-  }, 0);
-  const tasksTotal = tasks.reduce((sum, t) => sum + 1 + (t.subTasks?.length ?? 0), 0);
 
   const locations = (proposal.locations ?? []) as Array<{ displayName?: string; city?: string; state?: string; country?: string }>;
   const eventSchedule = (proposal.eventSchedule ?? []) as Array<{ name?: string; date?: string; startTime?: string; endTime?: string }>;
@@ -520,15 +462,11 @@ export default function ProposalDetail() {
           </TabsContent>
 
           <TabsContent value="tasks" className="p-4 md:p-6 pt-4">
-            <ProposalTaskGrid
-              tasks={tasks}
-              allUsers={allUsers}
+            <EntityTaskGrid
+              entityType="proposal"
+              entityId={params.id!}
               canWrite={canWrite}
-              onUpdateTask={(taskId, data) => updateTask.mutate({ taskId, data })}
-              onCreateTask={(data) => createTask.mutate(data)}
-              onReorderTasks={(taskIds) => reorderTasks.mutate(taskIds)}
-              onSelectTask={(taskId) => setSelectedTaskId(taskId)}
-              selectedTaskId={selectedTaskId}
+              allUsers={allUsers}
             />
           </TabsContent>
 
@@ -679,19 +617,6 @@ export default function ProposalDetail() {
         </Tabs>
       </div>
 
-      <TaskDetailSheet
-        task={selectedTask}
-        proposalId={params.id!}
-        canWrite={canWrite}
-        allUsers={allUsers}
-        onClose={() => setSelectedTaskId(null)}
-        onUpdateTask={(taskId, data) => updateTask.mutate({ taskId, data })}
-        onDeleteTask={(taskId) => deleteTask.mutate(taskId)}
-        onCreateSubTask={(parentTaskId, name) =>
-          createTask.mutate({ name, parentTaskId })
-        }
-      />
-
       <Dialog open={showAddStakeholderDialog} onOpenChange={setShowAddStakeholderDialog}>
         <DialogContent>
           <DialogHeader>
@@ -833,67 +758,6 @@ export default function ProposalDetail() {
 }
 
 
-interface TaskActivityEntry {
-  id: number;
-  action: string;
-  entityType: string;
-  entityId: string;
-  performedBy: string | null;
-  changes: Record<string, unknown> | null;
-  metadata: Record<string, unknown> | null;
-  performedAt: string;
-  performerFirstName: string | null;
-  performerLastName: string | null;
-}
-
-function TaskActivitySection({ taskId }: { taskId: string }) {
-  const { data: activity = [], isLoading } = useQuery<TaskActivityEntry[]>({
-    queryKey: ["/api/proposals/tasks", taskId, "activity"],
-    enabled: !!taskId,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (activity.length === 0) return null;
-
-  function formatAction(action: string): string {
-    return action
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-
-  return (
-    <div>
-      <h4 className="text-sm font-medium mb-2">Activity</h4>
-      <div className="space-y-2 max-h-48 overflow-y-auto">
-        {activity.map((entry) => (
-          <div key={entry.id} className="flex items-start gap-2 text-xs text-muted-foreground" data-testid={`activity-entry-${entry.id}`}>
-            <History className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-            <div className="min-w-0">
-              <span className="font-medium text-foreground">
-                {entry.performerFirstName
-                  ? `${entry.performerFirstName} ${entry.performerLastName || ""}`
-                  : "System"}
-              </span>{" "}
-              <span>{formatAction(entry.action)}</span>
-              {entry.performedAt && (
-                <span className="ml-1">
-                  {format(new Date(entry.performedAt), "MMM d, h:mm a")}
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 interface ActivityEntry {
   id: number;
@@ -1055,282 +919,3 @@ function ProposalActivityTimeline({ proposalId }: { proposalId: string }) {
   );
 }
 
-function TaskDetailSheet({
-  task,
-  proposalId,
-  canWrite,
-  allUsers,
-  onClose,
-  onUpdateTask,
-  onDeleteTask,
-  onCreateSubTask,
-}: {
-  task: ProposalTask | ProposalTaskWithRelations | null;
-  proposalId: string;
-  canWrite: boolean;
-  allUsers: User[];
-  onClose: () => void;
-  onUpdateTask: (taskId: string, data: Record<string, unknown>) => void;
-  onDeleteTask: (taskId: string) => void;
-  onCreateSubTask: (parentTaskId: string, name: string) => void;
-}) {
-  const [newCollaboratorId, setNewCollaboratorId] = useState("");
-  const [newSubTaskName, setNewSubTaskName] = useState("");
-
-  const { data: collaborators = [] } = useQuery<CollaboratorUser[]>({
-    queryKey: ["/api/proposals/tasks", task?.id, "collaborators"],
-    enabled: !!task?.id,
-  });
-
-  const addCollaborator = useMutation({
-    mutationFn: async (userId: string) => {
-      await apiRequest("POST", `/api/proposals/tasks/${task!.id}/collaborators`, { userId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals/tasks", task?.id, "collaborators"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals", proposalId, "tasks"] });
-      setNewCollaboratorId("");
-    },
-  });
-
-  const removeCollaborator = useMutation({
-    mutationFn: async (userId: string) => {
-      await apiRequest("DELETE", `/api/proposals/tasks/${task!.id}/collaborators/${userId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals/tasks", task?.id, "collaborators"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/proposals", proposalId, "tasks"] });
-    },
-  });
-
-  return (
-    <Sheet open={!!task} onOpenChange={() => onClose()}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" data-testid="sheet-task-detail">
-        {task && (
-          <>
-            <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <TaskStatusIcon status={task.status} />
-                <span className="truncate">{task.name}</span>
-              </SheetTitle>
-            </SheetHeader>
-
-            <div className="space-y-6 mt-6">
-              {task.description && (
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Description</h4>
-                  <p className="text-sm text-muted-foreground" data-testid="text-task-description">{task.description}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Status</h4>
-                  {canWrite ? (
-                    <Select
-                      value={task.status}
-                      onValueChange={(val) => onUpdateTask(task.id, { status: val })}
-                    >
-                      <SelectTrigger data-testid="select-task-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todo">To Do</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="done">Done</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge variant="secondary">{task.status}</Badge>
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Owner</h4>
-                  {canWrite ? (
-                    <Select
-                      value={task.ownerId ?? ""}
-                      onValueChange={(val) => { if (val) onUpdateTask(task.id, { ownerId: val }); }}
-                    >
-                      <SelectTrigger data-testid="select-task-owner">
-                        <SelectValue placeholder="Select owner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.firstName} {u.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">
-                      {(task as ProposalTaskWithRelations).owner
-                        ? `${(task as ProposalTaskWithRelations).owner!.firstName} ${(task as ProposalTaskWithRelations).owner!.lastName}`
-                        : "No owner"}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {canWrite && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Due Date</h4>
-                    <Input
-                      type="date"
-                      value={task.dueDate ?? ""}
-                      onChange={(e) => onUpdateTask(task.id, { dueDate: e.target.value || null })}
-                      data-testid="input-task-due-date"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Start Date</h4>
-                    <Input
-                      type="date"
-                      value={task.startDate ?? ""}
-                      onChange={(e) => onUpdateTask(task.id, { startDate: e.target.value || null })}
-                      data-testid="input-task-start-date"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {!task.parentTaskId && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Sub-tasks</h4>
-                  <div className="space-y-1">
-                    {((task as ProposalTaskWithRelations).subTasks ?? []).map((sub) => (
-                      <div key={sub.id} className="flex items-center gap-2 px-2 py-1 rounded-md bg-muted/50" data-testid={`subtask-row-${sub.id}`}>
-                        <TaskStatusIcon status={sub.status} />
-                        <span className={`text-sm flex-1 ${sub.status === "done" ? "line-through text-muted-foreground" : ""}`}>
-                          {sub.name}
-                        </span>
-                      </div>
-                    ))}
-                    {canWrite && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input
-                          placeholder="Add sub-task..."
-                          value={newSubTaskName}
-                          onChange={(e) => setNewSubTaskName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && newSubTaskName.trim()) {
-                              onCreateSubTask(task.id, newSubTaskName.trim());
-                              setNewSubTaskName("");
-                            }
-                          }}
-                          data-testid="input-subtask-name"
-                        />
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          disabled={!newSubTaskName.trim()}
-                          onClick={() => {
-                            if (newSubTaskName.trim()) {
-                              onCreateSubTask(task.id, newSubTaskName.trim());
-                              setNewSubTaskName("");
-                            }
-                          }}
-                          data-testid="button-add-subtask"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <h4 className="text-sm font-medium">Collaborators</h4>
-                </div>
-                <div className="space-y-2">
-                  {collaborators.map((c: CollaboratorUser) => (
-                    <div key={c.id} className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={c.profileImageUrl || undefined} />
-                          <AvatarFallback className="text-[10px]">
-                            {(c.firstName?.[0] || "") + (c.lastName?.[0] || "")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{c.firstName} {c.lastName}</span>
-                      </div>
-                      {canWrite && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => removeCollaborator.mutate(c.id)}
-                          data-testid={`button-remove-collaborator-${c.id}`}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {canWrite && (
-                    <div className="flex items-center gap-2">
-                      <Select value={newCollaboratorId} onValueChange={setNewCollaboratorId}>
-                        <SelectTrigger className="flex-1" data-testid="select-add-collaborator">
-                          <SelectValue placeholder="Add collaborator" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {allUsers
-                            .filter((u) => !collaborators.some((c) => c.id === u.id))
-                            .map((u) => (
-                              <SelectItem key={u.id} value={u.id}>
-                                {u.firstName} {u.lastName}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        disabled={!newCollaboratorId || addCollaborator.isPending}
-                        onClick={() => addCollaborator.mutate(newCollaboratorId)}
-                        data-testid="button-add-collaborator"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2">Links</h4>
-                <EntityLinksPanel entityType="proposal_task" entityId={task.id} canWrite={canWrite} compact />
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2">Task Comments</h4>
-                <CommentList entityType="proposal_task" entityId={task.id} />
-              </div>
-
-              <TaskActivitySection taskId={task.id} />
-
-              {canWrite && (
-                <div className="pt-4 border-t">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      onDeleteTask(task.id);
-                      onClose();
-                    }}
-                    data-testid="button-delete-task-detail"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete Task
-                  </Button>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </SheetContent>
-    </Sheet>
-  );
-}

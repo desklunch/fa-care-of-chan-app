@@ -74,7 +74,7 @@ import {
   FieldRow,
   useFieldMutation,
 } from "@/components/inline-edit";
-import { DealTasksTab } from "@/components/deal-tasks-tab";
+import { EntityTaskGrid } from "@/components/entity-task-grid";
 import { EntityLinksPanel } from "@/components/entity-links-panel";
 
 export default function DealDetail() {
@@ -1310,8 +1310,8 @@ export default function DealDetail() {
             <EntityLinksPanel entityType="deal" entityId={id!} canWrite={canWrite} />
           </TabsContent>
 
-          <TabsContent value="tasks" className="p-4 md:p-6 pt-4 max-w-4xl">
-            <DealTasksTab dealId={id!} canWrite={canWrite} users={users} />
+          <TabsContent value="tasks" className="p-4 md:p-6 pt-4">
+            <EntityTaskGrid entityType="deal" entityId={id!} canWrite={canWrite} allUsers={users} />
           </TabsContent>
         </Tabs>
       </div>
