@@ -159,7 +159,7 @@ export default function Landing() {
           <span className="">© 2026 Care of Chan</span>
           <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-privacy">Privacy</Link>
           <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-terms">Terms</Link>
-          <Link href="/overview" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-overview">Overview</Link>
+          <Link href="/overview" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-overview">Disclosure</Link>
           <span>·</span>
 
         </div>
