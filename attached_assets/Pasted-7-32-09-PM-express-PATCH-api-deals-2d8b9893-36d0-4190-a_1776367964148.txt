@@ -1,0 +1,45 @@
+7:32:09 PM [express] PATCH /api/deals/2d8b9893-36d0-4190-af63-3f2e751438e3 200 in 272ms :: {28 keys: id, externalId, dealNumber, displayName...}
+Failed to update deal tags TypeError: this.storage.getDealById is not a function
+    at DealsService.setDealTags (/home/runner/workspace/server/domains/deals/deals.service.ts:430:26)
+    at <anonymous> (/home/runner/workspace/server/domains/deals/deals.routes.ts:800:26)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at isAuthenticated (/home/runner/workspace/server/googleAuth.ts:358:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+    at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:101:5)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at requestContextMiddleware (/home/runner/workspace/server/lib/request-context.ts:40:18)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at doubleCsrfProtection (file:///home/runner/workspace/node_modules/csrf-csrf/dist/index.js:114:7)
+    at csrfProtectionMiddleware (/home/runner/workspace/server/middleware/csrf.ts:73:10)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at cookieParser (/home/runner/workspace/node_modules/cookie-parser/index.js:71:5)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at /home/runner/workspace/node_modules/express-session/index.js:514:7
+    at /home/runner/workspace/node_modules/connect-pg-simple/index.js:370:18
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)

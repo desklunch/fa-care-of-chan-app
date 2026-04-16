@@ -373,11 +373,7 @@ export default function DealDetail() {
         { label: deal.displayName },
       ]}
       additionalActions={[
-        {
-          label: isFollowing ? "Unfollow Deal" : "Follow Deal",
-          onClick: toggleFollow,
-          icon: isFollowing ? BellOff : Bell,
-        },
+ 
         ...(canWrite
           ? [
               {
