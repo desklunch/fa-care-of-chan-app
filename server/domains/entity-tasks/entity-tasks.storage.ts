@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { eq, and, asc, sql, inArray, isNull } from "drizzle-orm";
+import { eq, and, asc, desc, sql, inArray, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   entityTasks,
@@ -227,6 +227,55 @@ export const entityTasksStorage = {
         entityName: entityNameMap.get(`${sub.entityType}:${sub.entityId}`) ?? null,
       })),
       commentCount: commentCountMap.get(r.task.id) || 0,
+      entityName: entityNameMap.get(`${r.task.entityType}:${r.task.entityId}`) ?? null,
+    }));
+  },
+
+  async getMyTasks(userId: string): Promise<EntityTaskWithRelations[]> {
+    const ownerUsers = alias(users, "owner_users");
+
+    const collabTaskIds = await db
+      .select({ taskId: entityTaskCollaborators.taskId })
+      .from(entityTaskCollaborators)
+      .where(eq(entityTaskCollaborators.userId, userId));
+
+    const collabIds = collabTaskIds.map((c) => c.taskId);
+
+    const rows = await db
+      .select({
+        task: entityTasks,
+        owner: {
+          id: ownerUsers.id,
+          firstName: ownerUsers.firstName,
+          lastName: ownerUsers.lastName,
+          profileImageUrl: ownerUsers.profileImageUrl,
+        },
+      })
+      .from(entityTasks)
+      .leftJoin(ownerUsers, eq(entityTasks.ownerId, ownerUsers.id))
+      .where(
+        and(
+          isNull(entityTasks.parentTaskId),
+          collabIds.length > 0
+            ? sql`(${entityTasks.ownerId} = ${userId} OR ${entityTasks.id} IN (${sql.join(collabIds.map(id => sql`${id}`), sql`, `)}))`
+            : eq(entityTasks.ownerId, userId),
+        ),
+      )
+      .orderBy(
+        sql`${entityTasks.dueDate} ASC NULLS LAST`,
+        desc(entityTasks.createdAt),
+      );
+
+    if (rows.length === 0) return [];
+
+    const entityNameMap = await resolveEntityNames(rows.map((r) => r.task));
+
+    return rows.map((r) => ({
+      ...r.task,
+      owner: r.owner?.id ? r.owner : null,
+      collaborators: [],
+      subTasks: [],
+      commentCount: 0,
       entityName: entityNameMap.get(`${r.task.entityType}:${r.task.entityId}`) ?? null,
     }));
   },

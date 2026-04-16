@@ -52,6 +52,19 @@ export function registerEntityTasksRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/entity-tasks/mine", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const tasks = await entityTasksService.getMyTasks(userId);
+      res.json(tasks);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch my tasks");
+    }
+  });
+
   app.get("/api/entity-tasks", isAuthenticated, loadPermissions, async (req, res) => {
     try {
       const { entityType, entityId } = req.query;

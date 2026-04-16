@@ -37,6 +37,10 @@ class EntityTasksService {
     return entityTasksStorage.getAllTasks();
   }
 
+  async getMyTasks(userId: string): Promise<EntityTaskWithRelations[]> {
+    return entityTasksStorage.getMyTasks(userId);
+  }
+
   async getTaskById(taskId: string): Promise<EntityTask> {
     const task = await entityTasksStorage.getTaskById(taskId);
     return this.ensureExists(task, "EntityTask", taskId);

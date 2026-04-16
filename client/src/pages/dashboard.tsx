@@ -14,9 +14,11 @@ import {
   LogIn,
   LogOut,
   Inbox,
+  CheckSquare,
+  Calendar,
 } from "lucide-react";
 import { useLocation } from "wouter";
-import type { Notification } from "@shared/schema";
+import type { Notification, EntityTaskWithRelations } from "@shared/schema";
 
 type AuditLogEntry = {
   id: string;
@@ -89,6 +91,7 @@ function getEntityRoute(entityType?: string | null, entityId?: string | null): s
     app_feature: `/features/${entityId}`,
     app_issue: `/issues/${entityId}`,
     form_request: `/form-requests/${entityId}`,
+    proposal: `/proposals/${entityId}`,
   };
   return routeMap[entityType] || null;
 }
@@ -288,12 +291,120 @@ function ActivityPanel() {
   );
 }
 
+const taskStatusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+  todo: { label: "To Do", variant: "secondary" },
+  in_progress: { label: "In Progress", variant: "default" },
+  done: { label: "Done", variant: "outline" },
+};
+
+function formatDueDate(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr + "T00:00:00");
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function isDueSoon(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const due = new Date(dateStr + "T00:00:00");
+  const diffDays = Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays < 0 || diffDays <= 2;
+}
+
+function MyTasksPanel() {
+  const [, setLocation] = useLocation();
+  const { data: tasks, isLoading } = useQuery<EntityTaskWithRelations[]>({
+    queryKey: ["/api/entity-tasks/mine"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 p-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-4 w-20 ml-auto" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground" data-testid="empty-my-tasks">
+        <CheckSquare className="h-10 w-10 mb-3 opacity-40" />
+        <p className="text-sm">No tasks assigned to you</p>
+      </div>
+    );
+  }
+
+  return (
+    <ScrollArea className="h-[500px]">
+      <div className="divide-y divide-border">
+        {tasks.map((task) => {
+          const route = getEntityRoute(task.entityType, task.entityId);
+          const statusCfg = taskStatusConfig[task.status] || taskStatusConfig.todo;
+          const dueFormatted = formatDueDate(task.dueDate);
+          const dueSoon = isDueSoon(task.dueDate);
+
+          return (
+            <div
+              key={task.id}
+              className={`p-3 ${route ? "cursor-pointer hover-elevate" : ""}`}
+              onClick={() => {
+                if (route) setLocation(route);
+              }}
+              data-testid={`my-task-item-${task.id}`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" data-testid={`text-task-name-${task.id}`}>
+                    {task.name}
+                  </p>
+                  {task.entityName && (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate" data-testid={`text-entity-name-${task.id}`}>
+                      {task.entityName}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={statusCfg.variant} className="text-[10px]" data-testid={`badge-status-${task.id}`}>
+                    {statusCfg.label}
+                  </Badge>
+                  {dueFormatted && (
+                    <span className={`flex items-center gap-1 text-xs ${dueSoon ? "text-destructive" : "text-muted-foreground"}`} data-testid={`text-due-date-${task.id}`}>
+                      <Calendar className="h-3 w-3" />
+                      {dueFormatted}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </ScrollArea>
+  );
+}
+
 export default function Dashboard() {
   usePageTitle("Dashboard");
 
   return (
     <PageLayout breadcrumbs={[{ label: "Dashboard" }]}>
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4">
+        <Card data-testid="panel-my-tasks">
+          <div className="flex items-center gap-2 p-4 border-b border-border">
+            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">My Tasks</h2>
+          </div>
+          <MyTasksPanel />
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card data-testid="panel-notifications">
             <div className="flex items-center gap-2 p-4 border-b border-border">
