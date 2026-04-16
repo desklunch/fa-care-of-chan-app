@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/sheet";
 import { CommentList } from "@/components/ui/comments";
 import { EntityLinksPanel } from "@/components/entity-links-panel";
+import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import type { EntityTaskWithRelations, User } from "@shared/schema";
@@ -74,6 +75,12 @@ const entityTypeLabels: Record<string, string> = {
   proposal: "Proposal",
   deal: "Deal",
 };
+
+function entityDetailPath(entityType: string, entityId: string): string | null {
+  if (entityType === "deal") return `/deals/${entityId}`;
+  if (entityType === "proposal") return `/proposals/${entityId}`;
+  return null;
+}
 
 const statusColors: Record<string, string> = {
   todo: "bg-muted text-muted-foreground",
@@ -393,6 +400,18 @@ function TaskRowContent({
             </button>
           </td>
         )}
+        {showEntityType && (
+          <td className="px-4 py-3 border-r border-border">
+            <div className="flex items-center gap-1.5 truncate">
+              <Badge variant="outline" className="no-default-active-elevate text-xs capitalize flex-shrink-0">
+                {entityTypeLabels[task.entityType] || task.entityType}
+              </Badge>
+              {task.entityName && (
+                <span className="text-sm text-muted-foreground truncate">{task.entityName}</span>
+              )}
+            </div>
+          </td>
+        )}
         <td className="px-4 py-3 border-r border-border">
           <span className="text-[15px] font-normal truncate block">{task.name}</span>
         </td>
@@ -428,13 +447,6 @@ function TaskRowContent({
             {fmtDateDisplay(task.startDate, task.dueDate)}
           </span>
         </td>
-        {showEntityType && (
-          <td className="px-4 py-3 border-r border-border">
-            <Badge variant="outline" className="no-default-active-elevate text-xs capitalize">
-              {entityTypeLabels[task.entityType] || task.entityType}
-            </Badge>
-          </td>
-        )}
         <td className="px-4 py-3" />
       </>
     );
@@ -462,6 +474,36 @@ function TaskRowContent({
             </button>
           ) : (
             <div className="w-6 h-6" />
+          )}
+        </td>
+      )}
+      {showEntityType && (
+        <td className="px-4 py-3 border-r border-border">
+          {!isSubTask ? (
+            <div className="flex items-center gap-1.5 truncate">
+              <Badge variant="outline" className="no-default-active-elevate text-xs capitalize flex-shrink-0" data-testid={`badge-entity-type-${task.id}`}>
+                {entityTypeLabels[task.entityType] || task.entityType}
+              </Badge>
+              {task.entityName && (() => {
+                const href = entityDetailPath(task.entityType, task.entityId);
+                return href ? (
+                  <Link
+                    href={href}
+                    className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                    onClick={(e) => e.stopPropagation()}
+                    data-testid={`link-entity-name-${task.id}`}
+                  >
+                    {task.entityName}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted-foreground truncate" data-testid={`text-entity-name-${task.id}`}>
+                    {task.entityName}
+                  </span>
+                );
+              })()}
+            </div>
+          ) : (
+            <span className="text-sm text-muted-foreground/50">-</span>
           )}
         </td>
       )}
@@ -694,17 +736,6 @@ function TaskRowContent({
           </span>
         )}
       </td>
-      {showEntityType && (
-        <td className="px-4 py-3 border-r border-border">
-          {!isSubTask ? (
-            <Badge variant="outline" className="no-default-active-elevate text-xs capitalize" data-testid={`badge-entity-type-${task.id}`}>
-              {entityTypeLabels[task.entityType] || task.entityType}
-            </Badge>
-          ) : (
-            <span className="text-sm text-muted-foreground/50">-</span>
-          )}
-        </td>
-      )}
     </>
   );
 }
@@ -793,11 +824,22 @@ function EntityTaskDetailSheet({
                   <Badge variant="secondary" className="text-xs capitalize no-default-active-elevate" data-testid="badge-entity-type">
                     {entityTypeLabels[task.entityType] || task.entityType}
                   </Badge>
-                  {task.entityName && (
-                    <span className="text-sm text-muted-foreground truncate" data-testid="text-entity-name">
-                      {task.entityName}
-                    </span>
-                  )}
+                  {task.entityName && (() => {
+                    const href = entityDetailPath(task.entityType, task.entityId);
+                    return href ? (
+                      <Link
+                        href={href}
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                        data-testid="link-entity-name"
+                      >
+                        {task.entityName}
+                      </Link>
+                    ) : (
+                      <span className="text-sm text-muted-foreground truncate" data-testid="text-entity-name">
+                        {task.entityName}
+                      </span>
+                    );
+                  })()}
                 </div>
               )}
             </SheetHeader>
@@ -1391,6 +1433,11 @@ export function EntityTaskGrid({
                   {!hideDragHandles && (
                     <th className="px-2 py-3 text-left w-[40px]" />
                   )}
+                  {showEntityType && (
+                    <th className="px-4 py-3 text-left text-[13px] font-medium text-muted-foreground w-[200px]">
+                      Entity
+                    </th>
+                  )}
                   <th className="px-4 py-3 text-left text-[13px] w-full font-medium text-muted-foreground">
                     Task Name
                   </th>
@@ -1406,11 +1453,6 @@ export function EntityTaskGrid({
                   <th className="px-4 py-3 text-left text-[13px] font-medium text-muted-foreground w-[170px]">
                     Due Date
                   </th>
-                  {showEntityType && (
-                    <th className="px-4 py-3 text-left text-[13px] font-medium text-muted-foreground w-[120px]">
-                      Entity Type
-                    </th>
-                  )}
                 </tr>
               </thead>
               <tbody>
