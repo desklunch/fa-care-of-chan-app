@@ -77,6 +77,7 @@ const PublicVenueCollection = lazy(
 );
 const Terms = lazy(() => import("@/pages/terms"));
 const Privacy = lazy(() => import("@/pages/privacy"));
+const Overview = lazy(() => import("@/pages/overview"));
 const Deals = lazy(() => import("@/pages/deals-sandbox"));
 const MyDeals = lazy(() => import("@/pages/my-deals"));
 const DealIntakeForms = lazy(() => import("@/pages/deal-intake-forms"));
@@ -629,6 +630,7 @@ function RouterContent() {
         <Route path="/form/preview/:requestId" component={FormPreview} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />
+        <Route path="/overview" component={Overview} />
         <Route path="/public/venues/:id" component={PublicVenueDetail} />
         <Route
           path="/public/venues/collections/:id"
