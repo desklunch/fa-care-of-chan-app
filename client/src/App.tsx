@@ -282,7 +282,7 @@ function useLayoutConfig() {
 
         items: [
           {
-            name: "People",
+            name: "Contacts",
             href: "/contacts",
             icon: Contact,
           },
