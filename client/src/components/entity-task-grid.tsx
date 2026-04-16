@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -63,12 +63,21 @@ import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import type { EntityTaskWithRelations, User } from "@shared/schema";
 
+import type { FilterConfig } from "@/components/data-grid/types";
+
+interface EntityTaskGridFilterState {
+  filterState: Record<string, string[]>;
+  searchText: string;
+}
+
 interface EntityTaskGridProps {
   entityType?: string;
   entityId?: string;
   canWrite?: boolean;
   allUsers?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl">[];
   showEntityType?: boolean;
+  filters?: EntityTaskGridFilterState;
+  filterConfigs?: FilterConfig<EntityTaskWithRelations>[];
 }
 
 const entityTypeLabels: Record<string, string> = {
@@ -1068,6 +1077,8 @@ export function EntityTaskGrid({
   canWrite = false,
   allUsers: allUsersProp,
   showEntityType = false,
+  filters,
+  filterConfigs,
 }: EntityTaskGridProps) {
   const { toast } = useToast();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -1174,7 +1185,39 @@ export function EntityTaskGrid({
     },
   });
 
-  const parentTasks = isAllMode ? tasks : tasks.filter((t) => !t.parentTaskId);
+  const filteredTasks = useMemo(() => {
+    if (!filters) return tasks;
+
+    const { filterState, searchText = "" } = filters;
+    const hasActiveSearch = searchText.trim().length > 0;
+    const hasActiveFilterState = Object.values(filterState).some((v) => v.length > 0);
+
+    if (!hasActiveSearch && !hasActiveFilterState) return tasks;
+
+    const matchesTask = (t: EntityTaskWithRelations) => {
+      if (hasActiveFilterState && filterConfigs) {
+        const passes = filterConfigs.every((fc) => {
+          const selectedValues = filterState[fc.id] || [];
+          if (selectedValues.length === 0) return true;
+          return fc.matchFn(t, selectedValues);
+        });
+        if (!passes) return false;
+      }
+      if (hasActiveSearch) {
+        const q = searchText.toLowerCase();
+        if (!t.name.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    };
+
+    return tasks.filter((task) => {
+      const parentMatch = matchesTask(task);
+      const subMatch = task.subTasks?.some((s) => matchesTask(s as EntityTaskWithRelations)) ?? false;
+      return parentMatch || subMatch;
+    });
+  }, [tasks, filters, filterConfigs]);
+
+  const parentTasks = isAllMode ? filteredTasks : filteredTasks.filter((t) => !t.parentTaskId);
   const hideDragHandles = isAllMode;
   const colCount = (hideDragHandles ? 6 : 7) + (showEntityType ? 1 : 0);
 
@@ -1263,11 +1306,16 @@ export function EntityTaskGrid({
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) ??
     tasks.flatMap((t) => t.subTasks ?? []).find((s) => s.id === selectedTaskId) ?? null;
 
-  const tasksDone = tasks.reduce((sum, t) => {
+  const tasksDone = filteredTasks.reduce((sum, t) => {
     const subDone = t.subTasks?.filter((s) => s.status === "done").length ?? 0;
     return sum + (t.status === "done" ? 1 : 0) + subDone;
   }, 0);
-  const tasksTotal = tasks.reduce((sum, t) => sum + 1 + (t.subTasks?.length ?? 0), 0);
+  const tasksTotal = filteredTasks.reduce((sum, t) => sum + 1 + (t.subTasks?.length ?? 0), 0);
+
+  const hasActiveFilters = filters && (
+    Object.values(filters.filterState).some((v) => v.length > 0) ||
+    (filters.searchText || "").trim().length > 0
+  );
 
   if (isLoading) {
     return (
@@ -1277,16 +1325,20 @@ export function EntityTaskGrid({
     );
   }
 
-  if (tasks.length === 0 && !pendingNewTask) {
+  if (filteredTasks.length === 0 && !pendingNewTask) {
     return (
       <>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="rounded-full bg-muted p-4 mb-4">
             <GripVertical className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2" data-testid="text-no-tasks">No tasks yet</h3>
+          <h3 className="text-lg font-semibold mb-2" data-testid="text-no-tasks">
+            {hasActiveFilters ? "No matching tasks" : "No tasks yet"}
+          </h3>
           <p className="text-sm text-muted-foreground max-w-sm mb-4">
-            {isAllMode ? "No tasks found across any entities" : "Add tasks to track progress"}
+            {hasActiveFilters
+              ? "Try adjusting your filters to find what you're looking for"
+              : isAllMode ? "No tasks found across any entities" : "Add tasks to track progress"}
           </p>
           {canWrite && !isAllMode && (
             <Button
