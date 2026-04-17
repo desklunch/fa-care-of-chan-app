@@ -18,7 +18,7 @@ interface TypeformAnswer {
     id: string;
     ref: string;
     type: string;
-    title: string;
+    title?: string;
   };
   text?: string;
   email?: string;
@@ -30,6 +30,13 @@ interface TypeformAnswer {
   date?: string;
 }
 
+interface TypeformDefinitionField {
+  id: string;
+  ref: string;
+  type: string;
+  title: string;
+}
+
 interface TypeformPayload {
   event_id: string;
   event_type: string;
@@ -37,8 +44,49 @@ interface TypeformPayload {
     form_id: string;
     token: string;
     submitted_at: string;
+    definition?: {
+      fields?: TypeformDefinitionField[];
+    };
     answers: TypeformAnswer[];
   };
+}
+
+function normalizeTitle(t: string): string {
+  return t.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function normalizeEventDate(raw: string): string {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 10);
+  const mdy = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (mdy) {
+    const [, m, d, y] = mdy;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return trimmed;
+}
+
+function buildAnswerTitleMap(
+  answers: TypeformAnswer[],
+  definitionFields: TypeformDefinitionField[] | undefined
+): Map<TypeformAnswer, string> {
+  const idToTitle = new Map<string, string>();
+  const refToTitle = new Map<string, string>();
+  for (const f of definitionFields || []) {
+    if (f.id && f.title) idToTitle.set(f.id, f.title);
+    if (f.ref && f.title) refToTitle.set(f.ref, f.title);
+  }
+  const map = new Map<TypeformAnswer, string>();
+  for (const a of answers) {
+    const title =
+      a.field?.title ||
+      (a.field?.id ? idToTitle.get(a.field.id) : undefined) ||
+      (a.field?.ref ? refToTitle.get(a.field.ref) : undefined) ||
+      "";
+    map.set(a, title);
+  }
+  return map;
 }
 
 function getAnswerValue(answer: TypeformAnswer): string {
@@ -65,16 +113,26 @@ function getAnswerValue(answer: TypeformAnswer): string {
   }
 }
 
-function getAnswerByTitle(answers: TypeformAnswer[], title: string): string {
+function getAnswerByTitle(
+  answers: TypeformAnswer[],
+  title: string,
+  titleMap: Map<TypeformAnswer, string>
+): string {
+  const target = normalizeTitle(title);
   const answer = answers.find(
-    (a) => a.field?.title?.toLowerCase().trim() === title.toLowerCase().trim()
+    (a) => normalizeTitle(titleMap.get(a) || "") === target
   );
   return answer ? getAnswerValue(answer) : "";
 }
 
-function getAllAnswersByTitle(answers: TypeformAnswer[], title: string): string[] {
+function getAllAnswersByTitle(
+  answers: TypeformAnswer[],
+  title: string,
+  titleMap: Map<TypeformAnswer, string>
+): string[] {
+  const target = normalizeTitle(title);
   return answers
-    .filter((a) => a.field?.title?.toLowerCase().trim() === title.toLowerCase().trim())
+    .filter((a) => normalizeTitle(titleMap.get(a) || "") === target)
     .map(getAnswerValue)
     .filter(Boolean);
 }
@@ -114,52 +172,52 @@ export function registerTypeformWebhookRoutes(app: Express) {
         return res.status(400).json({ message: "Invalid payload: missing form_response" });
       }
 
-      const { token, submitted_at, answers } = payload.form_response;
+      const { token, submitted_at, answers, definition } = payload.form_response;
 
       const existingDeal = await typeformWebhookStorage.findDealByExternalId(token);
       if (existingDeal) {
         return res.status(200).json({ message: "Duplicate submission", dealId: existingDeal.id });
       }
 
-      const firstName = getAnswerByTitle(answers, "First name");
-      const lastName = getAnswerByTitle(answers, "Last name");
-      const email = getAnswerByTitle(answers, "Email");
-      const phone = getAnswerByTitle(answers, "Phone number");
-      const jobTitle = getAllAnswersByTitle(answers, "What is your job title?").find(Boolean) || "";
-      const companyName = getAnswerByTitle(answers, "Company");
+      const titleMap = buildAnswerTitleMap(answers, definition?.fields);
+      const get = (title: string) => getAnswerByTitle(answers, title, titleMap);
+      const getAll = (title: string) => getAllAnswersByTitle(answers, title, titleMap);
 
-      const eventFunction = getAnswerByTitle(answers, "What is the function of your event?");
-      const budgetRange = getAnswerByTitle(answers, "What is your all-in event budget range?");
-      const budgetExact = getAnswerByTitle(answers, "What is your all-in event budget?");
-      const budgetConfirm = getAnswerByTitle(
-        answers,
+      const firstName = get("First name");
+      const lastName = get("Last name");
+      const email = get("Email");
+      const phone = get("Phone number");
+      const jobTitle = getAll("What is your job title?").find(Boolean) || "";
+      const companyName = get("Company");
+
+      const eventFunction = get("What is the function of your event?");
+      const budgetRange = get("What is your all-in event budget range?");
+      const budgetExact = get("What is your all-in event budget?");
+      const budgetConfirm = get(
         "Please note that our event budget minimum is $75K (inclusive of agency fees). With that, can you confirm your all-in budget cap and share if your budget is flexible?"
       );
-      const eventDate = getAnswerByTitle(answers, "What is the date of your event?");
-      const eventLocation = getAnswerByTitle(answers, "What is the location of your event?") ||
-        getAllAnswersByTitle(answers, "What is the location of your event?").join("; ");
-      const guestCount = getAnswerByTitle(answers, "What is your target guest count?") ||
-        getAllAnswersByTitle(answers, "What is your target guest count?").join("; ");
-      const eventFormat = getAnswerByTitle(answers, "What is the format of your event?") ||
-        getAllAnswersByTitle(answers, "What is the format of your event?").join("; ");
-      const dateFlexible = getAnswerByTitle(answers, "Is your event date flexible at all?");
-      const backupDates = getAnswerByTitle(answers, "What are your back up dates?");
-      const eventHost = getAnswerByTitle(answers, "Who is the event host or guest of honor?");
-      const primaryService = getAnswerByTitle(
-        answers,
+      const eventDateRaw = get("What is the date of your event?");
+      const eventDate = normalizeEventDate(eventDateRaw);
+      const eventLocation = get("What is the location of your event?") ||
+        getAll("What is the location of your event?").join("; ");
+      const guestCount = get("What is your target guest count?") ||
+        getAll("What is your target guest count?").join("; ");
+      const eventFormat = get("What is the format of your event?") ||
+        getAll("What is the format of your event?").join("; ");
+      const dateFlexible = get("Is your event date flexible at all?");
+      const backupDates = get("What are your back up dates?");
+      const eventHost = get("Who is the event host or guest of honor?");
+      const primaryService = get(
         "What primary service are you looking for in an agency partner?"
       );
 
       const conceptParts = [
-        ...getAllAnswersByTitle(answers, "Please tell us more about your brand."),
-        ...getAllAnswersByTitle(answers, "Please tell us more about your brand. "),
-        ...getAllAnswersByTitle(answers, "Please tell us more about your company."),
-        ...getAllAnswersByTitle(answers, "Please tell us more about your company. "),
-        ...getAllAnswersByTitle(answers, "Please tell us more about your event concept."),
-        ...getAllAnswersByTitle(answers, "Please tell us more about your event concept. "),
-        ...getAllAnswersByTitle(answers, "Please tell us more about what you're brand has got going on and how we can support."),
-        ...getAllAnswersByTitle(answers, "Please tell us more about what you're brand has got going on and how we can support. "),
-        getAnswerByTitle(answers, "Please comment with any additional information that you'd like us to know about your event."),
+        ...getAll("Please tell us more about your brand."),
+        ...getAll("Please tell us more about your company."),
+        ...getAll("Please tell us more about your event concept."),
+        ...getAll("Please tell us more about what you're brand has got going on and how we can support."),
+        get("Please comment with any additional information that you'd like us to know about your event."),
+        get("Please comment with any additional information that you'd like us to know."),
       ].filter(Boolean);
       const concept = conceptParts.join("\n\n");
 
@@ -236,6 +294,16 @@ export function registerTypeformWebhookRoutes(app: Express) {
         : companyName || `${firstName} ${lastName}`.trim() || "Typeform Inquiry";
 
       const startedOn = submitted_at ? submitted_at.split("T")[0] : null;
+
+      const missingRequired: string[] = [];
+      if (!companyName) missingRequired.push("company");
+      if (!email) missingRequired.push("email");
+      if (!eventDate) missingRequired.push("event_date");
+      if (missingRequired.length > 0) {
+        console.warn(
+          `Typeform webhook: token=${token} form_id=${payload.form_response.form_id} missing fields after mapping: ${missingRequired.join(", ")}`
+        );
+      }
 
       const deal = await typeformWebhookStorage.createDeal({
         externalId: token,
