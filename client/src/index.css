@@ -475,6 +475,18 @@
   text-decoration: underline;
 }
 
+mark.md-highlight {
+  background-color: transparent;
+  color: hsl(var(--destructive));
+}
+
+mark.md-highlight a,
+mark.md-highlight strong,
+mark.md-highlight em,
+mark.md-highlight u {
+  color: inherit !important;
+}
+
 .rich-text-editor-wrapper .ql-editor.ql-blank::before {
   color: hsl(var(--muted-foreground));
   font-style: normal;
