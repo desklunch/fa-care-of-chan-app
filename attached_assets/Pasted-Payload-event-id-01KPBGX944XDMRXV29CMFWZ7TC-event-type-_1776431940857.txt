@@ -1,0 +1,374 @@
+Payload
+{
+  "event_id": "01KPBGX944XDMRXV29CMFWZ7TC",
+  "event_type": "form_response",
+  "form_response": {
+    "form_id": "uglf8Wfs",
+    "token": "mcgipq3hxd8qxncix8lqwotmcgipqbit",
+    "response_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit#responses",
+    "landed_at": "2026-04-16T16:06:06Z",
+    "submitted_at": "2026-04-16T16:10:12Z",
+    "hidden": {
+      "hubspot_page_name": "",
+      "hubspot_page_url": "",
+      "hubspot_utk": ""
+    },
+    "definition": {
+      "id": "uglf8Wfs",
+      "title": "Care of Chan: New Business Inquiry (Current)",
+      "fields": [
+        {
+          "id": "V0oNkgW8hpaR",
+          "ref": "939e309f-7101-4821-843a-f438f2bcafec",
+          "type": "short_text",
+          "title": "First name",
+          "properties": {}
+        },
+        {
+          "id": "duo20yoJXBeO",
+          "ref": "ded6eae3-4abe-4921-bd96-54be59ca6073",
+          "type": "short_text",
+          "title": "Last name",
+          "properties": {}
+        },
+        {
+          "id": "PYbzkqyAdhUH",
+          "ref": "f5ef320d-5df8-470c-b51d-8af3c15e8397",
+          "type": "phone_number",
+          "title": "Phone number",
+          "properties": {}
+        },
+        {
+          "id": "Quts4qk0tUaz",
+          "ref": "5143faa9-7597-4d69-a435-b3c863d28cf0",
+          "type": "email",
+          "title": "Email",
+          "properties": {}
+        },
+        {
+          "id": "4o8CBmxGmp37",
+          "ref": "7768b7aa-1b9e-48b3-8511-45e4933eec7b",
+          "type": "short_text",
+          "title": "Company",
+          "properties": {}
+        },
+        {
+          "id": "4mAR8oolywPf",
+          "ref": "3c55d801-07ff-4415-9a8f-6887f9a03422",
+          "type": "short_text",
+          "title": "What is your job title?",
+          "properties": {}
+        },
+        {
+          "id": "l1QD5D6TnQiD",
+          "ref": "08759d07-c02e-49da-86bc-0d3d56cce5e4",
+          "type": "dropdown",
+          "title": "What primary service are you looking for in an agency partner?",
+          "properties": {}
+        },
+        {
+          "id": "Pg1fkMaDryf6",
+          "ref": "66565b4b-b46d-4399-aec6-f07141b3cb53",
+          "type": "dropdown",
+          "title": "What is the function of your event?",
+          "properties": {}
+        },
+        {
+          "id": "qacqIuDSaemS",
+          "ref": "efb60b64-0c25-4881-a32d-1bbdd171bfcd",
+          "type": "short_text",
+          "title": "Please tell us more about your event concept.",
+          "properties": {}
+        },
+        {
+          "id": "UE3TMD84d5qH",
+          "ref": "06b8b516-b7eb-4f19-a902-4b9b2b64fa23",
+          "type": "short_text",
+          "title": "Who is the event host or guest of honor?",
+          "properties": {}
+        },
+        {
+          "id": "2EbRoAZcJssR",
+          "ref": "30243ae3-0c10-42b4-bf30-2cb03d244d39",
+          "type": "multiple_choice",
+          "title": "What is your all-in event budget range?",
+          "properties": {},
+          "choices": [
+            {
+              "id": "w6qir5CT3wxp",
+              "ref": "88d51956-b657-43a0-b32f-d76710ed94ad",
+              "label": "$25K-$50K"
+            },
+            {
+              "id": "ts11QVngvxJR",
+              "ref": "300bc32c-1983-43ba-812a-ffc8b29cc299",
+              "label": "$50K-$75K"
+            },
+            {
+              "id": "WtOqQko5horQ",
+              "ref": "f04d0207-a1b3-4fc1-9a12-399dae4a0936",
+              "label": "$75K-$100K"
+            },
+            {
+              "id": "ICC78Wf3jBxZ",
+              "ref": "b1f16d89-f41d-4d7d-b031-892f5617d984",
+              "label": "$100K or higher"
+            }
+          ]
+        },
+        {
+          "id": "0kEYqE0FRKMO",
+          "ref": "e6100301-f52d-4c73-9b8d-0d8481eb07e0",
+          "type": "dropdown",
+          "title": "What is the format of your event?",
+          "properties": {}
+        },
+        {
+          "id": "ABUc0QwRIqxo",
+          "ref": "839aa150-37e7-4357-b7d9-6aeac87affdc",
+          "type": "short_text",
+          "title": "What is the date of your event?",
+          "properties": {}
+        },
+        {
+          "id": "y6rrGhCz3Up5",
+          "ref": "0bf675b0-afda-4a68-b342-46a77655e94e",
+          "type": "yes_no",
+          "title": "Is your event date flexible at all?",
+          "properties": {}
+        },
+        {
+          "id": "Rtm9CyiX3BHL",
+          "ref": "99148489-0f25-4cb4-97c0-0d8176a84d18",
+          "type": "short_text",
+          "title": "What is your target guest count?",
+          "properties": {}
+        },
+        {
+          "id": "u7IFYjzLCu8Y",
+          "ref": "af191d46-4e7c-464f-90c6-13f046b52bf7",
+          "type": "long_text",
+          "title": "What is the location of your event?",
+          "properties": {}
+        },
+        {
+          "id": "5eJbHDR3i12c",
+          "ref": "2a79cf91-a54c-45fe-a318-ecc4306e8a0a",
+          "type": "long_text",
+          "title": "Please comment with any additional information that you'd like us to know.",
+          "properties": {}
+        }
+      ],
+      "endings": [
+        {
+          "id": "g4Y43OutmEGj",
+          "ref": "486ea162-01bd-4c4c-a9c0-5d829aa2ddda",
+          "title": "Thank you for thinking of Care of Chan! ",
+          "type": "thankyou_screen",
+          "properties": {
+            "description": "A member of our team will follow up with you soon. In the meantime, please follow us on Instagram at @careofchan for inspiration for your next gathering.",
+            "button_text": "Create a typeform",
+            "show_button": true,
+            "share_icons": false,
+            "button_mode": "default_redirect"
+          }
+        }
+      ],
+      "settings": {
+        "partial_responses_to_all_integrations": false
+      }
+    },
+    "answers": [
+      {
+        "type": "text",
+        "text": "Grisha",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=V0oNkgW8hpaR#responses",
+        "field": {
+          "id": "V0oNkgW8hpaR",
+          "type": "short_text",
+          "ref": "939e309f-7101-4821-843a-f438f2bcafec"
+        }
+      },
+      {
+        "type": "text",
+        "text": "Guliaev",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=duo20yoJXBeO#responses",
+        "field": {
+          "id": "duo20yoJXBeO",
+          "type": "short_text",
+          "ref": "ded6eae3-4abe-4921-bd96-54be59ca6073"
+        }
+      },
+      {
+        "type": "phone_number",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=PYbzkqyAdhUH#responses",
+        "phone_number": "+15164301174",
+        "field": {
+          "id": "PYbzkqyAdhUH",
+          "type": "phone_number",
+          "ref": "f5ef320d-5df8-470c-b51d-8af3c15e8397"
+        }
+      },
+      {
+        "type": "email",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=Quts4qk0tUaz#responses",
+        "email": "g.guliaev@naeunhospitality.com",
+        "field": {
+          "id": "Quts4qk0tUaz",
+          "type": "email",
+          "ref": "5143faa9-7597-4d69-a435-b3c863d28cf0"
+        }
+      },
+      {
+        "type": "text",
+        "text": "NA:EUN Hospitality",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=4o8CBmxGmp37#responses",
+        "field": {
+          "id": "4o8CBmxGmp37",
+          "type": "short_text",
+          "ref": "7768b7aa-1b9e-48b3-8511-45e4933eec7b"
+        }
+      },
+      {
+        "type": "text",
+        "text": "Director of Operations",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=4mAR8oolywPf#responses",
+        "field": {
+          "id": "4mAR8oolywPf",
+          "type": "short_text",
+          "ref": "3c55d801-07ff-4415-9a8f-6887f9a03422"
+        }
+      },
+      {
+        "type": "choice",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=l1QD5D6TnQiD#responses",
+        "choice": {
+          "id": "J2SNUxWFk2AR",
+          "label": "Production - Please select if you are looking for a partner to produce your event.",
+          "ref": "589f607d-ba94-4ec2-bb34-1904422fff2d"
+        },
+        "field": {
+          "id": "l1QD5D6TnQiD",
+          "type": "dropdown",
+          "ref": "08759d07-c02e-49da-86bc-0d3d56cce5e4"
+        }
+      },
+      {
+        "type": "choice",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=Pg1fkMaDryf6#responses",
+        "choice": {
+          "id": "wzwAtwDJzZpZ",
+          "label": "Social Occasion - for personal purposes (i.e. birthday, anniversary, etc.)",
+          "ref": "1ef97eb7-a3ec-44ed-a2c4-ad198267d87c"
+        },
+        "field": {
+          "id": "Pg1fkMaDryf6",
+          "type": "dropdown",
+          "ref": "66565b4b-b46d-4399-aec6-f07141b3cb53"
+        }
+      },
+      {
+        "type": "text",
+        "text": "Atoboy - 10 year anniversary celebration.",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=qacqIuDSaemS#responses",
+        "field": {
+          "id": "qacqIuDSaemS",
+          "type": "short_text",
+          "ref": "efb60b64-0c25-4881-a32d-1bbdd171bfcd"
+        }
+      },
+      {
+        "type": "text",
+        "text": "Ellia Park & Chef JP Park and the entire NA:EUN Hospitality team",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=UE3TMD84d5qH#responses",
+        "field": {
+          "id": "UE3TMD84d5qH",
+          "type": "short_text",
+          "ref": "06b8b516-b7eb-4f19-a902-4b9b2b64fa23"
+        }
+      },
+      {
+        "type": "choice",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=2EbRoAZcJssR#responses",
+        "choice": {
+          "id": "ICC78Wf3jBxZ",
+          "label": "$100K or higher",
+          "ref": "b1f16d89-f41d-4d7d-b031-892f5617d984"
+        },
+        "field": {
+          "id": "2EbRoAZcJssR",
+          "type": "multiple_choice",
+          "ref": "30243ae3-0c10-42b4-bf30-2cb03d244d39"
+        }
+      },
+      {
+        "type": "choice",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=0kEYqE0FRKMO#responses",
+        "choice": {
+          "id": "kjDeLxy18ct1",
+          "label": "Cocktail Party",
+          "ref": "f5adc80e-71ef-4793-8ee1-e9359e6390ce"
+        },
+        "field": {
+          "id": "0kEYqE0FRKMO",
+          "type": "dropdown",
+          "ref": "e6100301-f52d-4c73-9b8d-0d8481eb07e0"
+        }
+      },
+      {
+        "type": "text",
+        "text": "07/28/2026",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=ABUc0QwRIqxo#responses",
+        "field": {
+          "id": "ABUc0QwRIqxo",
+          "type": "short_text",
+          "ref": "839aa150-37e7-4357-b7d9-6aeac87affdc"
+        }
+      },
+      {
+        "type": "boolean",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=y6rrGhCz3Up5#responses",
+        "boolean": false,
+        "field": {
+          "id": "y6rrGhCz3Up5",
+          "type": "yes_no",
+          "ref": "0bf675b0-afda-4a68-b342-46a77655e94e"
+        }
+      },
+      {
+        "type": "text",
+        "text": "300",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=Rtm9CyiX3BHL#responses",
+        "field": {
+          "id": "Rtm9CyiX3BHL",
+          "type": "short_text",
+          "ref": "99148489-0f25-4cb4-97c0-0d8176a84d18"
+        }
+      },
+      {
+        "type": "text",
+        "text": "Radio Park @ Rockefeller Center",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=u7IFYjzLCu8Y#responses",
+        "field": {
+          "id": "u7IFYjzLCu8Y",
+          "type": "long_text",
+          "ref": "af191d46-4e7c-464f-90c6-13f046b52bf7"
+        }
+      },
+      {
+        "type": "text",
+        "text": "Food: Provided by NA:EUN Team (Atoboy Food + Guest Chefs from NYC + Korea. Looking to prepare 8-9 food stations + passed food\nBeverage: Specialty drinks, cocktails from each of our restaurants + sool. Looking to prepare 2 bars \nEntertainment: TBD. Looking to build a stage for speeches ant other + digital Screen for videos.",
+        "answer_url": "https://admin.typeform.com/form/uglf8Wfs/results?responseId=mcgipq3hxd8qxncix8lqwotmcgipqbit&fieldId=5eJbHDR3i12c#responses",
+        "field": {
+          "id": "5eJbHDR3i12c",
+          "type": "long_text",
+          "ref": "2a79cf91-a54c-45fe-a318-ecc4306e8a0a"
+        }
+      }
+    ],
+    "ending": {
+      "id": "g4Y43OutmEGj",
+      "ref": "486ea162-01bd-4c4c-a9c0-5d829aa2ddda"
+    }
+  }
+}
