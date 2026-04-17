@@ -74,6 +74,7 @@ import {
   FieldRow,
   useFieldMutation,
 } from "@/components/inline-edit";
+import { PrimaryContactPicker } from "@/components/primary-contact-picker";
 import { EntityTaskGrid } from "@/components/entity-task-grid";
 import { EntityLinksPanel } from "@/components/entity-links-panel";
 
@@ -97,6 +98,8 @@ export default function DealDetail() {
   const [isEditingLocations, setIsEditingLocations] = useState(false);
   const [editingLocations, setEditingLocations] = useState<DealLocation[]>([]);
   const [isEditingTags, setIsEditingTags] = useState(false);
+  const [isEditingPrimaryContact, setIsEditingPrimaryContact] = useState(false);
+  const [editingPrimaryContactId, setEditingPrimaryContactId] = useState<string>("");
   const [showGenerateDoc, setShowGenerateDoc] = useState(false);
   const { statuses: dealStatusList, statusById } = useDealStatuses();
   const { isFollowing, toggle: toggleFollow, isPending: isFollowPending } = useFollowStatus("deal", id!);
@@ -734,26 +737,123 @@ export default function DealDetail() {
                   </div>
                 </FieldRow>
 
-                <FieldRow
-                  label="Primary Contact"
-                  testId="field-primary-contact"
-                >
-                  {deal.primaryContact ? (
-                    <Link href={`/contacts/${deal.primaryContact.id}`}>
-                      <p
-                        className="text-primary hover:underline cursor-pointer"
-                        data-testid="link-deal-primary-contact"
-                      >
-                        {deal.primaryContact.firstName}{" "}
-                        {deal.primaryContact.lastName}
-                      </p>
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      No primary contact
-                    </span>
-                  )}
-                </FieldRow>
+                {(() => {
+                  const primaryContactLoading =
+                    isFieldLoading("primaryContactId");
+                  const primaryContactError =
+                    getFieldError("primaryContactId");
+                  const hasClient = Boolean(deal.clientId);
+                  const canEditPrimaryContact = canWrite && hasClient;
+
+                  const savePrimaryContact = (contactId: string) => {
+                    handleFieldSave("primaryContactId", contactId || "");
+                    setIsEditingPrimaryContact(false);
+                    setEditingPrimaryContactId("");
+                  };
+
+                  const startEditing = () => {
+                    if (!canEditPrimaryContact || primaryContactLoading) return;
+                    setEditingPrimaryContactId(deal.primaryContactId || "");
+                    setIsEditingPrimaryContact(true);
+                  };
+
+                  return (
+                    <div
+                      className="group flex py-4 border-b border-border/50 last:border-b-0"
+                      data-testid="field-primary-contact"
+                      onDoubleClick={startEditing}
+                    >
+                      <div className="w-2/5 text-sm font-semibold shrink-0">
+                        Primary Contact
+                      </div>
+                      <div className="w-3/5 flex-1 text-sm min-w-0">
+                        {isEditingPrimaryContact ? (
+                          <div className="flex flex-col gap-2 w-full">
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1 min-w-0">
+                                <PrimaryContactPicker
+                                  clientId={deal.clientId}
+                                  value={editingPrimaryContactId}
+                                  onChange={(val) => savePrimaryContact(val)}
+                                  onContactCreated={(contactId) =>
+                                    savePrimaryContact(contactId)
+                                  }
+                                  autoFocus
+                                />
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="shrink-0"
+                                onClick={() => {
+                                  setIsEditingPrimaryContact(false);
+                                  setEditingPrimaryContactId("");
+                                }}
+                                disabled={primaryContactLoading}
+                                data-testid="button-cancel-primaryContactId"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {primaryContactError && (
+                              <p
+                                className="text-sm text-destructive"
+                                data-testid="error-primaryContactId"
+                              >
+                                {primaryContactError}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2 group">
+                            <div className="flex-1 min-w-0">
+                              {primaryContactLoading ? (
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                  <span className="text-muted-foreground">
+                                    Saving...
+                                  </span>
+                                </div>
+                              ) : deal.primaryContact ? (
+                                <Link
+                                  href={`/contacts/${deal.primaryContact.id}`}
+                                >
+                                  <p
+                                    className="text-primary hover:underline cursor-pointer"
+                                    data-testid="link-deal-primary-contact"
+                                  >
+                                    {deal.primaryContact.firstName}{" "}
+                                    {deal.primaryContact.lastName}
+                                  </p>
+                                </Link>
+                              ) : !hasClient ? (
+                                <span className="text-muted-foreground">
+                                  Select a client first
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  No primary contact
+                                </span>
+                              )}
+                            </div>
+                            {canEditPrimaryContact &&
+                              !primaryContactLoading && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                  onClick={startEditing}
+                                  data-testid="button-edit-primaryContactId"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <EditableField
                   label="Services"
