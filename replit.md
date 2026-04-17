@@ -30,6 +30,7 @@ The system uses a React frontend with TypeScript, employing `shadcn/ui` (based o
     - Admin UI for role management at `/admin/roles` (requires `admin.settings` permission)
 - **Database ORM:** Drizzle ORM with Neon serverless PostgreSQL driver for type-safe queries.
 - **API:** RESTful endpoints under `/api`, consistent JSON request/response, and error handling.
+- **Universal Utilities:** Entity-agnostic features (Entity Tasks, Entity Links, Drive Attachments) follow a shared pattern documented in `docs/universal-utilities.md`. **Required reading** before adding a new entity-agnostic feature or wiring an existing universal utility into a new entity.
 - **Domain-Based Modules:** Backend organized into domain modules under `server/domains/`:
     - `reference-data/` - Tags, amenities, industries, deal services, brands, vendor services (31 routes)
     - `admin/` - Team, invites, admin settings, activity tracking (21 routes)
