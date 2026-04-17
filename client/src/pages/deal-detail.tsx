@@ -923,6 +923,19 @@ export default function DealDetail() {
                   placeholder="Enter next steps"
                   valueClassName="text-base prose dark:prose-invert"
                 />
+                <EditableField
+                  label="Notes"
+                  value={deal.notes || ""}
+                  field="notes"
+                  testId="field-notes"
+                  type="textarea"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("notes")}
+                  error={getFieldError("notes")}
+                  placeholder="Add notes about this deal"
+                  valueClassName="text-base whitespace-pre-wrap"
+                />
               </CardContent>
             </Card>
 
