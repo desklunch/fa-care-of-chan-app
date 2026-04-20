@@ -816,6 +816,41 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       extractMetadata: (e) => ({ proposalId: (e as any).proposalId }),
     },
   },
+  "drive_attachment:created": {
+    type: "drive_attachment:created",
+    audit: {
+      action: "create",
+      entityType: "drive_attachment",
+      extractEntityId: (e) => (e as any).attachmentId ?? null,
+      extractChanges: (e) => ({
+        targetEntityType: (e as any).entityType,
+        targetEntityId: (e as any).entityId,
+        fileName: (e as any).fileName,
+      }),
+      extractMetadata: (e) => ({
+        targetEntityType: (e as any).entityType,
+        targetEntityId: (e as any).entityId,
+      }),
+    },
+  },
+  "drive_attachment:deleted": {
+    type: "drive_attachment:deleted",
+    audit: {
+      action: "delete",
+      entityType: "drive_attachment",
+      extractEntityId: (e) => (e as any).attachmentId ?? null,
+      extractChanges: (e) => ({
+        targetEntityType: (e as any).entityType,
+        targetEntityId: (e as any).entityId,
+        fileName: (e as any).fileName,
+        deletedByOther: (e as any).deletedByOther,
+      }),
+      extractMetadata: (e) => ({
+        targetEntityType: (e as any).entityType,
+        targetEntityId: (e as any).entityId,
+      }),
+    },
+  },
   "entity_link:created": {
     type: "entity_link:created",
     audit: {

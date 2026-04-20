@@ -1405,6 +1405,22 @@ export const insertGoogleDriveAttachmentSchema = createInsertSchema(googleDriveA
   attachedAt: true,
 });
 
+export const createDriveAttachmentSchema = z.object({
+  entityType: z.enum(driveAttachmentEntityTypes),
+  entityId: z.string().min(1),
+  driveFileId: z.string().optional(),
+  driveUrl: z.string().url().optional(),
+  name: z.string().optional(),
+  mimeType: z.string().optional(),
+  iconUrl: z.string().optional(),
+  webViewLink: z.string().optional(),
+}).refine(
+  (data) => data.driveFileId || data.driveUrl,
+  { message: "Either driveFileId or driveUrl must be provided" },
+);
+
+export type CreateDriveAttachmentInput = z.infer<typeof createDriveAttachmentSchema>;
+
 export interface DriveAttachmentWithUser extends GoogleDriveAttachment {
   attachedBy?: {
     id: string;

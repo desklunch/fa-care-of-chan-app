@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { eq, and, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
   googleDriveAttachments,
   users,
@@ -100,10 +100,5 @@ export const driveAttachmentsStorage = {
     await db
       .delete(googleDriveAttachments)
       .where(eq(googleDriveAttachments.id, id));
-  },
-
-  async getUser(userId: string) {
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    return user || null;
   },
 };

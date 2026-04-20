@@ -1,13 +1,20 @@
 import type { Express } from "express";
-import { isAuthenticated } from "../../googleAuth";
-import { getDriveAccessToken } from "../../googleAuth";
+import { isAuthenticated, getDriveAccessToken } from "../../googleAuth";
 import { loadPermissions, checkPermission, checkAnyPermission } from "../../middleware/permissions";
-import { logAuditEvent } from "../../audit";
+import {
+  driveAttachmentsService,
+  ValidationError,
+  NotFoundError,
+  ForbiddenError,
+} from "./drive-attachments.service";
 import { driveAttachmentsStorage } from "./drive-attachments.storage";
-import { driveAttachmentEntityTypes, type DriveAttachmentEntityType } from "@shared/schema";
-import { getDriveFileMetadata, extractDriveFileId, searchDriveFiles, listDriveFolders } from "../../googleDrive";
+import {
+  driveAttachmentEntityTypes,
+  createDriveAttachmentSchema,
+  type DriveAttachmentEntityType,
+} from "@shared/schema";
+import { searchDriveFiles, listDriveFolders } from "../../googleDrive";
 import type { Permission } from "../../../shared/permissions";
-import { z } from "zod";
 
 const ATTACHMENT_READ_PERMISSIONS: Record<DriveAttachmentEntityType, Permission> = {
   deal: "deals.read",
@@ -25,6 +32,14 @@ const ATTACHMENT_WRITE_PERMISSIONS: Record<DriveAttachmentEntityType, Permission
   contact: "contacts.write",
 };
 
+const ATTACHMENT_DELETE_PERMISSIONS: Record<DriveAttachmentEntityType, Permission> = {
+  deal: "deals.delete",
+  venue: "venues.delete",
+  client: "clients.delete",
+  vendor: "vendors.delete",
+  contact: "contacts.delete",
+};
+
 const MINIMUM_DRIVE_ACCESS_PERMISSIONS: Permission[] = [
   "venues.write",
   "clients.write",
@@ -33,35 +48,25 @@ const MINIMUM_DRIVE_ACCESS_PERMISSIONS: Permission[] = [
   "deals.read",
 ];
 
-const createAttachmentSchema = z.object({
-  entityType: z.enum(driveAttachmentEntityTypes),
-  entityId: z.string().min(1),
-  driveFileId: z.string().optional(),
-  driveUrl: z.string().url().optional(),
-  name: z.string().optional(),
-  mimeType: z.string().optional(),
-  iconUrl: z.string().optional(),
-  webViewLink: z.string().optional(),
-}).refine(
-  (data) => data.driveFileId || data.driveUrl,
-  { message: "Either driveFileId or driveUrl must be provided" }
-);
+function isValidEntityType(value: string): value is DriveAttachmentEntityType {
+  return (driveAttachmentEntityTypes as readonly string[]).includes(value);
+}
 
 export function registerDriveAttachmentsRoutes(app: Express): void {
   app.get("/api/drive-attachments/:entityType/:entityId", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
       const { entityType, entityId } = req.params;
 
-      if (!driveAttachmentEntityTypes.includes(entityType as DriveAttachmentEntityType)) {
+      if (!isValidEntityType(entityType)) {
         return res.status(400).json({ message: "Invalid entity type" });
       }
 
-      const readPerm = ATTACHMENT_READ_PERMISSIONS[entityType as DriveAttachmentEntityType];
+      const readPerm = ATTACHMENT_READ_PERMISSIONS[entityType];
       if (!checkPermission(req, readPerm)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const attachments = await driveAttachmentsStorage.getAttachmentsByEntity(entityType, entityId);
+      const attachments = await driveAttachmentsService.getAttachments(entityType, entityId);
       res.json(attachments);
     } catch (error) {
       console.error("Error fetching drive attachments:", error);
@@ -72,30 +77,15 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
   app.post("/api/drive-attachments", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const result = createAttachmentSchema.safeParse(req.body);
+      const result = createDriveAttachmentSchema.safeParse(req.body);
 
       if (!result.success) {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const { entityType, entityId, driveUrl } = result.data;
-      let { driveFileId, name, mimeType, iconUrl, webViewLink } = result.data;
-
-      const writePerm = ATTACHMENT_WRITE_PERMISSIONS[entityType];
+      const writePerm = ATTACHMENT_WRITE_PERMISSIONS[result.data.entityType];
       if (!checkPermission(req, writePerm)) {
         return res.status(403).json({ message: "Forbidden" });
-      }
-
-      if (driveUrl && !driveFileId) {
-        const extractedId = extractDriveFileId(driveUrl);
-        if (!extractedId) {
-          return res.status(400).json({ message: "Could not extract file ID from the provided Google Drive URL" });
-        }
-        driveFileId = extractedId;
-      }
-
-      if (!driveFileId) {
-        return res.status(400).json({ message: "Drive file ID is required" });
       }
 
       const accessToken = await getDriveAccessToken(req.session);
@@ -106,54 +96,21 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         });
       }
 
-      try {
-        const metadata = await getDriveFileMetadata(driveFileId, accessToken);
-        name = metadata.name || name;
-        mimeType = metadata.mimeType || mimeType;
-        iconUrl = metadata.iconLink || iconUrl;
-        webViewLink = metadata.webViewLink || webViewLink;
-      } catch (err) {
-        console.error("Failed to fetch Drive file metadata:", err);
-        return res.status(422).json({
-          message: "Could not verify this Google Drive file. Please check the file exists and is accessible.",
-        });
-      }
+      const attachment = await driveAttachmentsService.createAttachment(
+        result.data,
+        userId,
+        accessToken,
+      );
 
-      if (!name) {
-        return res.status(422).json({ message: "Could not resolve file metadata from Google Drive" });
-      }
-
-      const attachment = await driveAttachmentsStorage.createAttachment({
-        entityType,
-        entityId,
-        driveFileId,
-        name: name!,
-        mimeType: mimeType || null,
-        iconUrl: iconUrl || null,
-        webViewLink: webViewLink || null,
-        attachedById: userId,
-      });
-
-      const attachmentWithUser = await driveAttachmentsStorage.getAttachmentById(attachment.id);
-
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "drive_attachment",
-        entityId: attachment.id,
-        status: "success",
-        metadata: { targetEntityType: entityType, targetEntityId: entityId, fileName: name },
-      });
-
-      res.status(201).json(attachmentWithUser);
+      res.status(201).json(attachment);
     } catch (error) {
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ message: error.message });
+      }
+      if (error instanceof ValidationError) {
+        return res.status(422).json({ message: error.message });
+      }
       console.error("Error creating drive attachment:", error);
-      await logAuditEvent(req, {
-        action: "create",
-        entityType: "drive_attachment",
-        entityId: null,
-        status: "failure",
-        metadata: { error: (error as Error).message },
-      });
       res.status(500).json({ message: "Failed to create attachment" });
     }
   });
@@ -168,43 +125,29 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(404).json({ message: "Attachment not found" });
       }
 
-      const writePerm = ATTACHMENT_WRITE_PERMISSIONS[existing.entityType as DriveAttachmentEntityType];
+      if (!isValidEntityType(existing.entityType)) {
+        return res.status(400).json({ message: "Invalid entity type" });
+      }
+
+      const writePerm = ATTACHMENT_WRITE_PERMISSIONS[existing.entityType];
       if (!checkPermission(req, writePerm)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      if (existing.attachedById !== userId) {
-        const user = await driveAttachmentsStorage.getUser(userId);
-        if (!user || user.role !== "admin") {
-          return res.status(403).json({ message: "You can only remove attachments you added" });
-        }
-      }
+      const deletePerm = ATTACHMENT_DELETE_PERMISSIONS[existing.entityType];
+      const hasDeleteAny = checkPermission(req, deletePerm);
 
-      await driveAttachmentsStorage.deleteAttachment(attachmentId);
-
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "drive_attachment",
-        entityId: attachmentId,
-        status: "success",
-        metadata: {
-          targetEntityType: existing.entityType,
-          targetEntityId: existing.entityId,
-          fileName: existing.name,
-          deletedByAdmin: existing.attachedById !== userId,
-        },
-      });
+      await driveAttachmentsService.deleteAttachment(attachmentId, userId, hasDeleteAny);
 
       res.json({ message: "Attachment deleted successfully" });
     } catch (error) {
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ message: error.message });
+      }
+      if (error instanceof ForbiddenError) {
+        return res.status(403).json({ message: error.message });
+      }
       console.error("Error deleting drive attachment:", error);
-      await logAuditEvent(req, {
-        action: "delete",
-        entityType: "drive_attachment",
-        entityId: req.params.id,
-        status: "failure",
-        metadata: { error: (error as Error).message },
-      });
       res.status(500).json({ message: "Failed to delete attachment" });
     }
   });

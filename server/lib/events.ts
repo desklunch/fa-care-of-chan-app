@@ -445,6 +445,28 @@ export interface ProposalTaskLinkDeletedEvent {
   timestamp: Date;
 }
 
+export interface DriveAttachmentCreatedEvent {
+  type: "drive_attachment:created";
+  attachmentId: string;
+  entityType: string;
+  entityId: string;
+  driveFileId: string;
+  fileName: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DriveAttachmentDeletedEvent {
+  type: "drive_attachment:deleted";
+  attachmentId: string;
+  entityType: string;
+  entityId: string;
+  fileName: string;
+  deletedByOther: boolean;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface EntityLinkCreatedEvent {
   type: "entity_link:created";
   linkId: string;
@@ -905,6 +927,8 @@ export type DomainEvent =
   | ProposalTeamMemberRemovedEvent
   | ProposalCollaboratorAddedEvent
   | ProposalCollaboratorRemovedEvent
+  | DriveAttachmentCreatedEvent
+  | DriveAttachmentDeletedEvent
   | EntityLinkCreatedEvent
   | EntityLinkDeletedEvent
   | EntityTaskCreatedEvent
@@ -1000,6 +1024,8 @@ type EventMap = {
   "proposal:team_member_removed": ProposalTeamMemberRemovedEvent;
   "proposal:collaborator_added": ProposalCollaboratorAddedEvent;
   "proposal:collaborator_removed": ProposalCollaboratorRemovedEvent;
+  "drive_attachment:created": DriveAttachmentCreatedEvent;
+  "drive_attachment:deleted": DriveAttachmentDeletedEvent;
   "entity_link:created": EntityLinkCreatedEvent;
   "entity_link:deleted": EntityLinkDeletedEvent;
   "entity_task:created": EntityTaskCreatedEvent;
