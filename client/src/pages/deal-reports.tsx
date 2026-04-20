@@ -21,7 +21,7 @@ import { usePageHeader } from "@/framework/hooks/page-header-context";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const REPORT_TABS = [
-  { id: "snapshot-30", label: "14 Day New Biz" },
+  { id: "snapshot-30", label: " dis" },
   { id: "susanas-deals", label: "Susana's Deals" },
 ] as const;
 
