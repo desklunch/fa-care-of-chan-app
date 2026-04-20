@@ -11,6 +11,7 @@ import { driveAttachmentsStorage } from "./drive-attachments.storage";
 import {
   driveAttachmentEntityTypes,
   createDriveAttachmentSchema,
+  getEntityPermissionPrefix,
   type DriveAttachmentEntityType,
 } from "@shared/schema";
 import { searchDriveFiles, listDriveFolders } from "../../googleDrive";
@@ -22,22 +23,6 @@ const ATTACHMENT_READ_PERMISSIONS: Record<DriveAttachmentEntityType, Permission>
   client: "clients.write",
   vendor: "vendors.write",
   contact: "contacts.write",
-};
-
-const ATTACHMENT_WRITE_PERMISSIONS: Record<DriveAttachmentEntityType, Permission> = {
-  deal: "deals.write",
-  venue: "venues.write",
-  client: "clients.write",
-  vendor: "vendors.write",
-  contact: "contacts.write",
-};
-
-const ATTACHMENT_DELETE_PERMISSIONS: Record<DriveAttachmentEntityType, Permission> = {
-  deal: "deals.delete",
-  venue: "venues.delete",
-  client: "clients.delete",
-  vendor: "vendors.delete",
-  contact: "contacts.delete",
 };
 
 const MINIMUM_DRIVE_ACCESS_PERMISSIONS: Permission[] = [
@@ -83,7 +68,7 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
-      const writePerm = ATTACHMENT_WRITE_PERMISSIONS[result.data.entityType];
+      const writePerm = `${getEntityPermissionPrefix(result.data.entityType)}.write` as Permission;
       if (!checkPermission(req, writePerm)) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -134,12 +119,13 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(400).json({ message: "entityId in path does not match attachment" });
       }
 
-      const writePerm = ATTACHMENT_WRITE_PERMISSIONS[existing.entityType];
+      const prefix = getEntityPermissionPrefix(existing.entityType);
+      const writePerm = `${prefix}.write` as Permission;
       if (!checkPermission(req, writePerm)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const deletePerm = ATTACHMENT_DELETE_PERMISSIONS[existing.entityType];
+      const deletePerm = `${prefix}.delete` as Permission;
       const hasDeleteAny = checkPermission(req, deletePerm);
 
       await driveAttachmentsService.deleteAttachment(attachmentId, userId, hasDeleteAny);

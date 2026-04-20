@@ -15,6 +15,16 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { type EntityType } from "./entity-types";
+
+export {
+  ENTITY_TYPES,
+  ENTITY_METADATA,
+  entityTypeSchema,
+  getEntityPermissionPrefix,
+  type EntityMetadata,
+} from "./entity-types";
+export type { EntityType };
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -907,7 +917,7 @@ export type ProposalTaskStatus = (typeof proposalTaskStatuses)[number];
 // UNIVERSAL ENTITY TASKS
 // ==========================================
 
-export const entityTaskEntityTypes = ["deal", "proposal"] as const;
+export const entityTaskEntityTypes = ["deal", "proposal"] as const satisfies readonly EntityType[];
 export type EntityTaskEntityType = (typeof entityTaskEntityTypes)[number];
 
 export const entityTaskStatuses = ["todo", "in_progress", "done"] as const;
@@ -1285,11 +1295,18 @@ export type DealClient = typeof dealClients.$inferSelect;
 export type InsertDealClient = typeof dealClients.$inferInsert;
 
 // Entity types that can have web links
+// Entity links can attach to top-level entities from the shared registry as
+// well as a small set of internal sub-entities (task rows that themselves
+// belong to a deal/proposal). The sub-entities are intentionally not in
+// ENTITY_TYPES — see docs/universal-utilities.md §7.
+export type EntityLinkSubEntityType = "proposal_task" | "entity_task";
+export type EntityLinkParentType = EntityType | EntityLinkSubEntityType;
+
 export const entityLinkEntityTypes = [
   "deal",
   "proposal_task",
   "entity_task",
-] as const;
+] as const satisfies readonly EntityLinkParentType[];
 export type EntityLinkEntityType = (typeof entityLinkEntityTypes)[number];
 
 // Universal entity links table (polymorphic URL attachments with unfurl metadata)
@@ -1374,7 +1391,7 @@ export const driveAttachmentEntityTypes = [
   "client",
   "vendor",
   "contact",
-] as const;
+] as const satisfies readonly EntityType[];
 export type DriveAttachmentEntityType = (typeof driveAttachmentEntityTypes)[number];
 
 export const googleDriveAttachments = pgTable(

@@ -2,29 +2,28 @@ import { entityLinksStorage } from "./entity-links.storage";
 import { domainEvents } from "../../lib/events";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
-import { entityLinkEntityTypes, deals, proposalTasks, entityTasks, type EntityLinkEntityType, type EntityLink, type EntityLinkWithUser } from "@shared/schema";
+import { entityLinkEntityTypes, deals, proposalTasks, entityTasks, getEntityPermissionPrefix, type EntityLinkEntityType, type EntityLink, type EntityLinkWithUser } from "@shared/schema";
+
+// Sub-entity → permission prefix overrides. entity_task is a fallback used
+// when we don't have the row id handy; getEntityTaskPermissionPrefix below
+// resolves the actual grandparent (deal vs. proposal) when we do.
+const ENTITY_LINK_PREFIX_OVERRIDES: Readonly<Record<string, string>> = {
+  proposal_task: "proposals",
+  entity_task: "deals",
+};
 
 function isValidEntityType(value: string): value is EntityLinkEntityType {
   return (entityLinkEntityTypes as readonly string[]).includes(value);
 }
 
 function getPermissionPrefix(entityType: string): string {
-  switch (entityType) {
-    case "deal":
-      return "deals";
-    case "proposal_task":
-      return "proposals";
-    case "entity_task":
-      return "deals";
-    default:
-      return entityType;
-  }
+  return getEntityPermissionPrefix(entityType, ENTITY_LINK_PREFIX_OVERRIDES);
 }
 
 async function getEntityTaskPermissionPrefix(entityId: string): Promise<string> {
   const [task] = await db.select({ entityType: entityTasks.entityType }).from(entityTasks).where(eq(entityTasks.id, entityId));
   if (!task) return "deals";
-  return task.entityType === "proposal" ? "proposals" : "deals";
+  return getEntityPermissionPrefix(task.entityType);
 }
 
 export const entityLinksService = {

@@ -4,19 +4,9 @@ import { requirePermission, loadPermissions } from "../../middleware/permissions
 import { handleServiceError } from "../../lib/route-helpers";
 import { entityTasksService } from "./entity-tasks.service";
 import { db } from "../../db";
-import { auditLogs, users, entityTasks } from "@shared/schema";
+import { auditLogs, users, entityTasks, getEntityPermissionPrefix } from "@shared/schema";
+import type { Permission } from "@shared/permissions";
 import { eq, and, desc } from "drizzle-orm";
-
-function getPermissionPrefix(entityType: string): string {
-  switch (entityType) {
-    case "deal":
-      return "deals";
-    case "proposal":
-      return "proposals";
-    default:
-      return entityType;
-  }
-}
 
 function checkEntityPermission(
   req: Request,
@@ -24,8 +14,8 @@ function checkEntityPermission(
   entityType: string,
   level: "read" | "write" | "delete",
 ): boolean {
-  const prefix = getPermissionPrefix(entityType);
-  const permission = `${prefix}.${level}`;
+  const prefix = getEntityPermissionPrefix(entityType);
+  const permission = `${prefix}.${level}` as Permission;
   const ctx = req.permissionContext;
   if (!ctx || !ctx.permissions.includes(permission)) {
     res.status(403).json({ message: "Forbidden" });
