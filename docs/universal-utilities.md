@@ -160,8 +160,8 @@ Live examples:
   - `DELETE /api/entity-links/:entityType/:entityId/:linkId`
 - Drive Attachments — `drive-attachments.routes.ts`:
   - `GET    /api/drive-attachments/:entityType/:entityId`
-  - `POST   /api/drive-attachments` (entityType/entityId in body — see below)
-  - `DELETE /api/drive-attachments/:id`
+  - `POST   /api/drive-attachments/:entityType/:entityId`
+  - `DELETE /api/drive-attachments/:entityType/:entityId/:id`
 
 ### Inconsistencies (current state)
 
@@ -169,9 +169,6 @@ Live examples:
   on collection routes and `:taskId`-only on item routes
   (`entity-tasks.routes.ts`). Should be migrated to the path-param
   convention when convenient.
-- **Drive Attachments POST** still takes `entityType`/`entityId` in
-  the body and DELETE uses `:id` only (no parent in path). Should also
-  be migrated.
 
 New utilities **must** start with the path-param convention. Migrations
 of the old utilities can be done incrementally (add the new shape,
@@ -438,7 +435,7 @@ guide; they're called out so future refactors have a clear target.
 
 | # | Area               | Divergence                                                                                                            | Target                                                          |
 | - | ------------------ | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| 1 | Route param style  | Entity Tasks uses `?entityType&entityId` query params; Drive Attachments DELETE uses `:id` without parent in path.    | All utilities use `/api/<utility>/:entityType/:entityId[/:id]`. |
+| 1 | Route param style  | Entity Tasks uses `?entityType&entityId` query params on collection routes and `:taskId`-only on item routes.          | All utilities use `/api/<utility>/:entityType/:entityId[/:id]`. |
 | 2 | Permission helper  | Each utility defines its own `entityType → prefix` switch.                                                            | Single `getEntityPermissionPrefix()` in `shared/entity-types.ts`. |
 | 3 | Audit logging      | Drive Attachments calls `logAuditEvent()` directly in route handlers.                                                 | Emit `domainEvents`; let the audit bridge persist.              |
 | 4 | Service layer      | Drive Attachments has no `*.service.ts`; logic sits in routes.                                                        | Routes thin; domain logic in `*.service.ts`.                    |
