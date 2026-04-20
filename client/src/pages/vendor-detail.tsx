@@ -177,8 +177,6 @@ export default function VendorDetail() {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [localLinkedContacts, setLocalLinkedContacts] = useState<Contact[]>([]);
-
   const { data: vendor, isLoading, error } = useQuery<VendorWithRelations>({
     queryKey: ["/api/vendors", id],
     enabled: !!id,
@@ -188,22 +186,28 @@ export default function VendorDetail() {
     queryKey: ["/api/vendor-services"],
   });
 
-  const { data: linkedContacts = [], isLoading: isLoadingContacts } = useQuery<Contact[]>({
-    queryKey: ["/api/vendors", id, "contacts"],
+  const linkedContactsQueryKey = ["/api/vendors", id, "contacts"];
+
+  const { data: linkedContacts, isLoading: isLoadingContacts } = useQuery<Contact[]>({
+    queryKey: linkedContactsQueryKey,
     enabled: !!id,
   });
 
-  useEffect(() => {
-    setLocalLinkedContacts(linkedContacts);
-  }, [linkedContacts]);
+  const linkedContactsList = linkedContacts ?? [];
 
   const handleLinkContact = (contact: Contact) => {
-    setLocalLinkedContacts((prev) => [...prev, contact]);
+    queryClient.setQueryData<Contact[]>(linkedContactsQueryKey, (prev) => {
+      const current = prev ?? [];
+      if (current.some((c) => c.id === contact.id)) return current;
+      return [...current, contact];
+    });
     setShowContactSearch(false);
   };
 
   const handleUnlinkContact = (contactId: string) => {
-    setLocalLinkedContacts((prev) => prev.filter((c) => c.id !== contactId));
+    queryClient.setQueryData<Contact[]>(linkedContactsQueryKey, (prev) =>
+      (prev ?? []).filter((c) => c.id !== contactId),
+    );
     unlinkContactMutation.mutate(contactId);
   };
 
@@ -622,7 +626,7 @@ export default function VendorDetail() {
                 <CardTitle className="flex items-center gap-2 text-base font-bold pt-2">
                   Contacts{" "}
                   <span className="text-muted-foreground text-sm font-medium">
-                    {localLinkedContacts.length}
+                    {linkedContactsList.length}
                   </span>
                 </CardTitle>
               </div>
@@ -649,7 +653,7 @@ export default function VendorDetail() {
                   {showContactSearch && (
                     <VendorContactLinkSearch
                       vendorId={id!}
-                      linkedContacts={localLinkedContacts}
+                      linkedContacts={linkedContactsList}
                       onLink={handleLinkContact}
                       onUnlink={handleUnlinkContact}
                       showLinkedContacts={false}
@@ -658,7 +662,7 @@ export default function VendorDetail() {
                     />
                   )}
 
-                  {localLinkedContacts.length === 0 && !showContactSearch ? (
+                  {linkedContactsList.length === 0 && !showContactSearch ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p>No contacts linked yet</p>
@@ -668,7 +672,7 @@ export default function VendorDetail() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {localLinkedContacts.map((contact) => (
+                      {linkedContactsList.map((contact) => (
                         <div
                           key={contact.id}
                           className="flex items-center justify-between p-3 pl-4 rounded-lg bg-background/50 dark:bg-foreground/[4%]"
