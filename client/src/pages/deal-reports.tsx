@@ -21,7 +21,7 @@ import { usePageHeader } from "@/framework/hooks/page-header-context";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const REPORT_TABS = [
-  { id: "snapshot-30", label: " dis" },
+  { id: "snapshot-30", label: "14 Day Snapshot" },
   { id: "susanas-deals", label: "Susana's Deals" },
 ] as const;
 
@@ -212,7 +212,7 @@ function SnapshotView30() {
       headerName: "Status",
       field: "statusName" as const,
       flex: 1,
-      minWidth: 130,
+      minWidth: 150,
       maxWidth: 160,
       sortable: false,
       editable: false,
