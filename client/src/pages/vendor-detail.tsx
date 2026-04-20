@@ -47,6 +47,7 @@ import type { VendorWithRelations, VendorService, Contact } from "@shared/schema
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { VendorContactLinkSearch } from "@/components/vendor-contact-link-search";
+import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -450,6 +451,9 @@ export default function VendorDetail() {
             <TabsList data-testid="tabs-vendor" className="px-4 md:px-6">
               <TabsTrigger value="overview" data-testid="tab-overview">
                 Overview
+              </TabsTrigger>
+              <TabsTrigger value="files" data-testid="tab-files">
+                Files
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
                 Comments
@@ -878,6 +882,10 @@ export default function VendorDetail() {
             </div>
           </TabsContent>
           
+          <TabsContent value="files" className="p-4 md:p-6 pt-4 max-w-4xl">
+            <GoogleDriveAttachments entityType="vendor" entityId={id!} canWrite={canEdit} />
+          </TabsContent>
+
           <TabsContent value="comments" className="mt-0">
             <div className="max-w-4xl ">
               {user && id && (

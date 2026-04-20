@@ -256,9 +256,10 @@ function DriveFilePickerDialog({
 interface GoogleDriveAttachmentsProps {
   entityType: string;
   entityId: string;
+  canWrite?: boolean;
 }
 
-export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAttachmentsProps) {
+export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }: GoogleDriveAttachmentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { promptDriveAuth } = useDriveAuth();
@@ -350,52 +351,56 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="text-sm font-medium text-muted-foreground">Google Drive Files</h3>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPicker(true)}
-            data-testid="button-browse-drive"
-          >
-            <Search className="h-4 w-4 mr-1" />
-            Browse Drive
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPasteInput(!showPasteInput)}
-            data-testid="button-paste-link"
-          >
-            {showPasteInput ? (
-              <>
-                <X className="h-4 w-4 mr-1" />
-                Cancel
-              </>
-            ) : (
-              <>
-                <Link2 className="h-4 w-4 mr-1" />
-                Paste Link
-              </>
-            )}
-          </Button>
-        </div>
+        {canWrite && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPicker(true)}
+              data-testid="button-browse-drive"
+            >
+              <Search className="h-4 w-4 mr-1" />
+              Browse Drive
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPasteInput(!showPasteInput)}
+              data-testid="button-paste-link"
+            >
+              {showPasteInput ? (
+                <>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4 mr-1" />
+                  Paste Link
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {showDriveAuthPrompt && (
+      {canWrite && showDriveAuthPrompt && (
         <DriveAuthPrompt onAuthorize={handleConnectDrive} />
       )}
 
-      <DriveFilePickerDialog
-        open={showPicker}
-        onOpenChange={setShowPicker}
-        onSelect={handlePickerSelect}
-        isPending={createMutation.isPending}
-        onDriveAuthRequired={() => {
-          promptDriveAuth();
-        }}
-      />
+      {canWrite && (
+        <DriveFilePickerDialog
+          open={showPicker}
+          onOpenChange={setShowPicker}
+          onSelect={handlePickerSelect}
+          isPending={createMutation.isPending}
+          onDriveAuthRequired={() => {
+            promptDriveAuth();
+          }}
+        />
+      )}
 
-      {showPasteInput && (
+      {canWrite && showPasteInput && (
         <Card>
           <CardContent className="p-3 space-y-2">
             <p className="text-sm text-muted-foreground">
@@ -471,15 +476,17 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
                   {formatTimeAgo(attachment.attachedAt)}
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="flex-shrink-0 invisible group-hover:visible"
-                onClick={() => setDeleteId(attachment.id)}
-                data-testid={`button-remove-attachment-${attachment.id}`}
-              >
-                <Trash2 className="h-4 w-4 text-muted-foreground" />
-              </Button>
+              {canWrite && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="flex-shrink-0 invisible group-hover:visible"
+                  onClick={() => setDeleteId(attachment.id)}
+                  data-testid={`button-remove-attachment-${attachment.id}`}
+                >
+                  <Trash2 className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
