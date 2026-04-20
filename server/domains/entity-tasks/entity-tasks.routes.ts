@@ -65,12 +65,16 @@ export function registerEntityTasksRoutes(app: Express): void {
     }
   });
 
+  // Legacy collection GET (query params) — kept temporarily for backward compatibility.
   app.get("/api/entity-tasks", isAuthenticated, loadPermissions, async (req, res) => {
     try {
       const { entityType, entityId } = req.query;
       if (!entityType || !entityId) {
         return res.status(400).json({ message: "entityType and entityId are required" });
       }
+      console.warn(
+        `[deprecated] GET /api/entity-tasks?entityType=&entityId= — use GET /api/entity-tasks/:entityType/:entityId instead (entityType=${entityType}, entityId=${entityId})`,
+      );
       if (!checkEntityPermission(req, res, entityType as string, "read")) return;
       const tasks = await entityTasksService.getTasks(
         entityType as string,
@@ -82,6 +86,7 @@ export function registerEntityTasksRoutes(app: Express): void {
     }
   });
 
+  // Legacy create — entityType/entityId in body. Kept temporarily for backward compatibility.
   app.post("/api/entity-tasks", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
       const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
@@ -89,6 +94,9 @@ export function registerEntityTasksRoutes(app: Express): void {
       if (!entityType) {
         return res.status(400).json({ message: "entityType is required" });
       }
+      console.warn(
+        `[deprecated] POST /api/entity-tasks (entityType/entityId in body) — use POST /api/entity-tasks/:entityType/:entityId instead`,
+      );
       if (!checkEntityPermission(req, res, entityType, "write")) return;
       const task = await entityTasksService.createTask(req.body, actorId);
       res.status(201).json(task);
@@ -97,6 +105,34 @@ export function registerEntityTasksRoutes(app: Express): void {
     }
   });
 
+  // Legacy bulk reorder — entityType/entityId in body. Kept temporarily for backward compatibility.
+  app.post("/api/entity-tasks/reorder", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
+      const { entityType, entityId, taskIds } = req.body;
+      if (!entityType || !entityId || !Array.isArray(taskIds)) {
+        return res.status(400).json({ message: "entityType, entityId, and taskIds[] are required" });
+      }
+      console.warn(
+        `[deprecated] POST /api/entity-tasks/reorder — use POST /api/entity-tasks/:entityType/:entityId/reorder instead`,
+      );
+      if (!checkEntityPermission(req, res, entityType, "write")) return;
+      for (let i = 0; i < taskIds.length; i++) {
+        await entityTasksService.updateTask(
+          entityType,
+          entityId,
+          taskIds[i],
+          { sortOrder: i },
+          actorId,
+        );
+      }
+      res.json({ success: true });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to reorder entity tasks");
+    }
+  });
+
+  // Legacy item PATCH — :taskId only, entityType/entityId in body. Kept temporarily.
   app.patch("/api/entity-tasks/:taskId", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
       const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
@@ -104,6 +140,9 @@ export function registerEntityTasksRoutes(app: Express): void {
       if (!taskEntityType) {
         return res.status(404).json({ message: "Task not found" });
       }
+      console.warn(
+        `[deprecated] PATCH /api/entity-tasks/:taskId — use PATCH /api/entity-tasks/:entityType/:entityId/:taskId instead (taskId=${req.params.taskId})`,
+      );
       if (!checkEntityPermission(req, res, taskEntityType, "write")) return;
       const { entityType, entityId } = req.body;
       if (!entityType || !entityId) {
@@ -122,6 +161,7 @@ export function registerEntityTasksRoutes(app: Express): void {
     }
   });
 
+  // Legacy item DELETE — :taskId only, entityType/entityId in query. Kept temporarily.
   app.delete("/api/entity-tasks/:taskId", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
       const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
@@ -129,6 +169,9 @@ export function registerEntityTasksRoutes(app: Express): void {
       if (!taskEntityType) {
         return res.status(404).json({ message: "Task not found" });
       }
+      console.warn(
+        `[deprecated] DELETE /api/entity-tasks/:taskId?entityType=&entityId= — use DELETE /api/entity-tasks/:entityType/:entityId/:taskId instead (taskId=${req.params.taskId})`,
+      );
       if (!checkEntityPermission(req, res, taskEntityType, "delete")) return;
       const { entityType, entityId } = req.query;
       if (!entityType || !entityId) {
@@ -146,28 +189,9 @@ export function registerEntityTasksRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/entity-tasks/reorder", isAuthenticated, loadPermissions, async (req: any, res) => {
-    try {
-      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
-      const { entityType, entityId, taskIds } = req.body;
-      if (!entityType || !entityId || !Array.isArray(taskIds)) {
-        return res.status(400).json({ message: "entityType, entityId, and taskIds[] are required" });
-      }
-      if (!checkEntityPermission(req, res, entityType, "write")) return;
-      for (let i = 0; i < taskIds.length; i++) {
-        await entityTasksService.updateTask(
-          entityType,
-          entityId,
-          taskIds[i],
-          { sortOrder: i },
-          actorId,
-        );
-      }
-      res.json({ success: true });
-    } catch (error) {
-      handleServiceError(res, error, "Failed to reorder entity tasks");
-    }
-  });
+  // Subresource routes (collaborators, activity) — declared before generic
+  // standardized routes below so literal segments like "collaborators" /
+  // "activity" are not shadowed by `/:entityType/:entityId/:taskId`.
 
   app.get("/api/entity-tasks/:taskId/collaborators", isAuthenticated, loadPermissions, async (req, res) => {
     try {
@@ -254,6 +278,103 @@ export function registerEntityTasksRoutes(app: Express): void {
       res.json(logs);
     } catch (error) {
       handleServiceError(res, error, "Failed to fetch task activity");
+    }
+  });
+
+  // Standardized routes — path params for entityType/entityId per docs/universal-utilities.md §3.
+  // Declared after subresource routes (collaborators/activity) to avoid shadowing.
+
+  app.get("/api/entity-tasks/:entityType/:entityId", isAuthenticated, loadPermissions, async (req, res) => {
+    try {
+      const { entityType, entityId } = req.params;
+      if (!checkEntityPermission(req, res, entityType, "read")) return;
+      const tasks = await entityTasksService.getTasks(entityType, entityId);
+      res.json(tasks);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch entity tasks");
+    }
+  });
+
+  app.post("/api/entity-tasks/:entityType/:entityId", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
+      const { entityType, entityId } = req.params;
+      if (!checkEntityPermission(req, res, entityType, "write")) return;
+      const task = await entityTasksService.createTask(
+        { ...req.body, entityType, entityId },
+        actorId,
+      );
+      res.status(201).json(task);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to create entity task");
+    }
+  });
+
+  app.post("/api/entity-tasks/:entityType/:entityId/reorder", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
+      const { entityType, entityId } = req.params;
+      const { taskIds } = req.body;
+      if (!Array.isArray(taskIds)) {
+        return res.status(400).json({ message: "taskIds[] is required" });
+      }
+      if (!checkEntityPermission(req, res, entityType, "write")) return;
+      for (let i = 0; i < taskIds.length; i++) {
+        await entityTasksService.updateTask(
+          entityType,
+          entityId,
+          taskIds[i],
+          { sortOrder: i },
+          actorId,
+        );
+      }
+      res.json({ success: true });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to reorder entity tasks");
+    }
+  });
+
+  app.patch("/api/entity-tasks/:entityType/:entityId/:taskId", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
+      const { entityType, entityId, taskId } = req.params;
+      const taskEntityType = await lookupTaskEntityType(taskId);
+      if (!taskEntityType) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      if (taskEntityType !== entityType) {
+        return res.status(400).json({ message: "entityType in path does not match task" });
+      }
+      if (!checkEntityPermission(req, res, entityType, "write")) return;
+      const task = await entityTasksService.updateTask(
+        entityType,
+        entityId,
+        taskId,
+        req.body,
+        actorId,
+      );
+      res.json(task);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to update entity task");
+    }
+  });
+
+  app.delete("/api/entity-tasks/:entityType/:entityId/:taskId", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      const actorId = req.user?.claims?.sub || (req.session as any)?.userId;
+      const { entityType, entityId, taskId } = req.params;
+      const taskEntityType = await lookupTaskEntityType(taskId);
+      if (!taskEntityType) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      if (taskEntityType !== entityType) {
+        return res.status(400).json({ message: "entityType in path does not match task" });
+      }
+      if (!checkEntityPermission(req, res, entityType, "delete")) return;
+      await entityTasksService.deleteTask(entityType, entityId, taskId, actorId);
+      res.json({ success: true });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to delete entity task");
     }
   });
 

@@ -121,7 +121,7 @@ export default function ProposalDetail() {
   const { data: entityTasks = [] } = useQuery<{ id: string; status: string; subTasks?: { id: string; status: string }[] }[]>({
     queryKey: ["/api/entity-tasks", "proposal", params.id],
     queryFn: async () => {
-      const res = await fetch(`/api/entity-tasks?entityType=proposal&entityId=${params.id}`, {
+      const res = await fetch(`/api/entity-tasks/proposal/${params.id}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);

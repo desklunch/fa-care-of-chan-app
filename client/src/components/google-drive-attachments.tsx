@@ -289,11 +289,11 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
 
   const createMutation = useMutation({
     mutationFn: async (data: { driveUrl?: string; driveFileId?: string; name?: string; mimeType?: string; iconUrl?: string; webViewLink?: string }) => {
-      const res = await apiRequest("POST", "/api/drive-attachments", {
-        entityType,
-        entityId,
-        ...data,
-      });
+      const res = await apiRequest(
+        "POST",
+        `/api/drive-attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+        data,
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -314,7 +314,10 @@ export function GoogleDriveAttachments({ entityType, entityId }: GoogleDriveAtta
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/drive-attachments/${id}`);
+      await apiRequest(
+        "DELETE",
+        `/api/drive-attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}/${encodeURIComponent(id)}`,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/drive-attachments", entityType, entityId] });

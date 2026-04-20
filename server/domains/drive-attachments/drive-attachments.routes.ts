@@ -74,10 +74,10 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/drive-attachments", isAuthenticated, loadPermissions, async (req: any, res) => {
+  async function handleCreateAttachment(req: any, res: any, body: unknown) {
     try {
       const userId = req.user.claims.sub;
-      const result = createDriveAttachmentSchema.safeParse(req.body);
+      const result = createDriveAttachmentSchema.safeParse(body);
 
       if (!result.success) {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
@@ -113,12 +113,11 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
       console.error("Error creating drive attachment:", error);
       res.status(500).json({ message: "Failed to create attachment" });
     }
-  });
+  }
 
-  app.delete("/api/drive-attachments/:id", isAuthenticated, loadPermissions, async (req: any, res) => {
+  async function handleDeleteAttachment(req: any, res: any, attachmentId: string, expectedEntityType?: string, expectedEntityId?: string) {
     try {
       const userId = req.user.claims.sub;
-      const attachmentId = req.params.id;
 
       const existing = await driveAttachmentsStorage.getAttachmentById(attachmentId);
       if (!existing) {
@@ -127,6 +126,12 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
 
       if (!isValidEntityType(existing.entityType)) {
         return res.status(400).json({ message: "Invalid entity type" });
+      }
+      if (expectedEntityType && existing.entityType !== expectedEntityType) {
+        return res.status(400).json({ message: "entityType in path does not match attachment" });
+      }
+      if (expectedEntityId && existing.entityId !== expectedEntityId) {
+        return res.status(400).json({ message: "entityId in path does not match attachment" });
       }
 
       const writePerm = ATTACHMENT_WRITE_PERMISSIONS[existing.entityType];
@@ -150,6 +155,34 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
       console.error("Error deleting drive attachment:", error);
       res.status(500).json({ message: "Failed to delete attachment" });
     }
+  }
+
+  // Standardized create — entityType/entityId in path per docs/universal-utilities.md §3.
+  app.post("/api/drive-attachments/:entityType/:entityId", isAuthenticated, loadPermissions, async (req: any, res) => {
+    const { entityType, entityId } = req.params;
+    await handleCreateAttachment(req, res, { ...req.body, entityType, entityId });
+  });
+
+  // Legacy create — entityType/entityId in body. Kept temporarily for backward compatibility.
+  app.post("/api/drive-attachments", isAuthenticated, loadPermissions, async (req: any, res) => {
+    console.warn(
+      `[deprecated] POST /api/drive-attachments (entityType/entityId in body) — use POST /api/drive-attachments/:entityType/:entityId instead`,
+    );
+    await handleCreateAttachment(req, res, req.body);
+  });
+
+  // Standardized delete — entityType/entityId in path per docs/universal-utilities.md §3.
+  app.delete("/api/drive-attachments/:entityType/:entityId/:id", isAuthenticated, loadPermissions, async (req: any, res) => {
+    const { entityType, entityId, id } = req.params;
+    await handleDeleteAttachment(req, res, id, entityType, entityId);
+  });
+
+  // Legacy delete — :id only, no parent in path. Kept temporarily for backward compatibility.
+  app.delete("/api/drive-attachments/:id", isAuthenticated, loadPermissions, async (req: any, res) => {
+    console.warn(
+      `[deprecated] DELETE /api/drive-attachments/:id — use DELETE /api/drive-attachments/:entityType/:entityId/:id instead (id=${req.params.id})`,
+    );
+    await handleDeleteAttachment(req, res, req.params.id);
   });
 
   app.get("/api/drive/search", isAuthenticated, loadPermissions, async (req: any, res) => {

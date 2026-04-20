@@ -1099,7 +1099,7 @@ export function EntityTaskGrid({
     queryFn: async () => {
       const url = isAllMode
         ? "/api/entity-tasks/all"
-        : `/api/entity-tasks?entityType=${encodeURIComponent(entityType!)}&entityId=${encodeURIComponent(entityId!)}`;
+        : `/api/entity-tasks/${encodeURIComponent(entityType!)}/${encodeURIComponent(entityId!)}`;
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
       return res.json();
@@ -1121,11 +1121,11 @@ export function EntityTaskGrid({
 
   const createTask = useMutation({
     mutationFn: async (data: { name: string; parentTaskId?: string }) => {
-      const res = await apiRequest("POST", "/api/entity-tasks", {
-        ...data,
-        entityType,
-        entityId,
-      });
+      const res = await apiRequest(
+        "POST",
+        `/api/entity-tasks/${encodeURIComponent(entityType!)}/${encodeURIComponent(entityId!)}`,
+        data,
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -1140,11 +1140,13 @@ export function EntityTaskGrid({
     mutationFn: async ({ taskId, data }: { taskId: string; data: Record<string, unknown> }) => {
       const taskRecord = tasks.find((t) => t.id === taskId) ??
         tasks.flatMap((t) => t.subTasks ?? []).find((s) => s.id === taskId);
-      const res = await apiRequest("PATCH", `/api/entity-tasks/${taskId}`, {
-        ...data,
-        entityType: entityType ?? taskRecord?.entityType,
-        entityId: entityId ?? taskRecord?.entityId,
-      });
+      const eType = entityType ?? taskRecord?.entityType ?? "";
+      const eId = entityId ?? taskRecord?.entityId ?? "";
+      const res = await apiRequest(
+        "PATCH",
+        `/api/entity-tasks/${encodeURIComponent(eType)}/${encodeURIComponent(eId)}/${encodeURIComponent(taskId)}`,
+        data,
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -1161,7 +1163,10 @@ export function EntityTaskGrid({
         tasks.flatMap((t) => t.subTasks ?? []).find((s) => s.id === taskId);
       const eType = entityType ?? taskRecord?.entityType ?? "";
       const eId = entityId ?? taskRecord?.entityId ?? "";
-      await apiRequest("DELETE", `/api/entity-tasks/${taskId}?entityType=${encodeURIComponent(eType)}&entityId=${encodeURIComponent(eId)}`);
+      await apiRequest(
+        "DELETE",
+        `/api/entity-tasks/${encodeURIComponent(eType)}/${encodeURIComponent(eId)}/${encodeURIComponent(taskId)}`,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeyBase });
@@ -1174,11 +1179,11 @@ export function EntityTaskGrid({
 
   const reorderTasks = useMutation({
     mutationFn: async (taskIds: string[]) => {
-      await apiRequest("POST", "/api/entity-tasks/reorder", {
-        entityType,
-        entityId,
-        taskIds,
-      });
+      await apiRequest(
+        "POST",
+        `/api/entity-tasks/${encodeURIComponent(entityType!)}/${encodeURIComponent(entityId!)}/reorder`,
+        { taskIds },
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeyBase });
