@@ -197,8 +197,13 @@ function SnapshotView30() {
         if (!params.data) return null;
         return (
           <span className="flex items-start gap-3 w-full">
-            <span className="flex-1 truncate">{params.value}</span>
-
+            <Link
+              href={`/deals/${params.data.id}`}
+              className="flex-1 truncate text-primary hover:underline"
+              data-testid={`link-deal-name-${params.data.id}`}
+            >
+              {params.value}
+            </Link>
           </span>
         );
       },
