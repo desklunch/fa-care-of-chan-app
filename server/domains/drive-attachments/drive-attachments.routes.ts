@@ -17,14 +17,6 @@ import {
 import { searchDriveFiles, listDriveFolders } from "../../googleDrive";
 import type { Permission } from "../../../shared/permissions";
 
-const ATTACHMENT_READ_PERMISSIONS: Record<DriveAttachmentEntityType, Permission> = {
-  deal: "deals.read",
-  venue: "venues.write",
-  client: "clients.write",
-  vendor: "vendors.write",
-  contact: "contacts.write",
-};
-
 const MINIMUM_DRIVE_ACCESS_PERMISSIONS: Permission[] = [
   "venues.write",
   "clients.write",
@@ -46,7 +38,7 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid entity type" });
       }
 
-      const readPerm = ATTACHMENT_READ_PERMISSIONS[entityType];
+      const readPerm = `${getEntityPermissionPrefix(entityType)}.read` as Permission;
       if (!checkPermission(req, readPerm)) {
         return res.status(403).json({ message: "Forbidden" });
       }
