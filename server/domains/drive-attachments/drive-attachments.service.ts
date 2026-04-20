@@ -10,6 +10,7 @@ import {
   type DriveAttachmentEntityType,
   type DriveAttachmentWithUser,
   type GoogleDriveAttachment,
+  type UpdateDriveAttachmentInput,
 } from "@shared/schema";
 import { driveAttachmentsStorage } from "./drive-attachments.storage";
 import { domainEvents } from "../../lib/events";
@@ -93,6 +94,13 @@ export const driveAttachmentsService = {
   ): Promise<DriveAttachmentWithUser> {
     const { entityType, entityId, driveUrl } = input;
     let { driveFileId, name, mimeType, iconUrl, webViewLink } = input;
+    const trimToNull = (v: string | null | undefined) => {
+      if (v === null || v === undefined) return null;
+      const t = v.trim();
+      return t.length === 0 ? null : t;
+    };
+    const label = trimToNull(input.label);
+    const description = trimToNull(input.description);
 
     await verifyEntityExists(entityType, entityId);
 
@@ -137,6 +145,8 @@ export const driveAttachmentsService = {
       mimeType: mimeType || null,
       iconUrl: iconUrl || null,
       webViewLink: webViewLink || null,
+      label,
+      description,
       attachedById: actorId,
     });
 
@@ -158,6 +168,40 @@ export const driveAttachmentsService = {
     });
 
     return attachmentWithUser;
+  },
+
+  async updateAttachment(
+    attachmentId: string,
+    input: UpdateDriveAttachmentInput,
+    actorId: string,
+    hasDeletePermission: boolean,
+  ): Promise<DriveAttachmentWithUser> {
+    const existing = await driveAttachmentsStorage.getAttachmentById(attachmentId);
+    if (!existing) {
+      throw new NotFoundError("Attachment not found");
+    }
+
+    if (existing.attachedById !== actorId && !hasDeletePermission) {
+      throw new ForbiddenError("You can only edit attachments you added");
+    }
+
+    const trimToNull = (v: string | null | undefined) => {
+      if (v === null) return null;
+      if (v === undefined) return undefined;
+      const t = v.trim();
+      return t.length === 0 ? null : t;
+    };
+
+    const updates: { label?: string | null; description?: string | null } = {};
+    const label = trimToNull(input.label);
+    const description = trimToNull(input.description);
+    if (label !== undefined) updates.label = label;
+    if (description !== undefined) updates.description = description;
+
+    await driveAttachmentsStorage.updateAttachment(attachmentId, updates);
+
+    const updated = await driveAttachmentsStorage.getAttachmentById(attachmentId);
+    return updated ?? { ...existing };
   },
 
   async deleteAttachment(

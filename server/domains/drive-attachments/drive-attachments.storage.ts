@@ -6,30 +6,34 @@ import {
   type DriveAttachmentWithUser,
 } from "@shared/schema";
 
+const attachmentSelect = {
+  id: googleDriveAttachments.id,
+  entityType: googleDriveAttachments.entityType,
+  entityId: googleDriveAttachments.entityId,
+  driveFileId: googleDriveAttachments.driveFileId,
+  name: googleDriveAttachments.name,
+  mimeType: googleDriveAttachments.mimeType,
+  iconUrl: googleDriveAttachments.iconUrl,
+  webViewLink: googleDriveAttachments.webViewLink,
+  label: googleDriveAttachments.label,
+  description: googleDriveAttachments.description,
+  attachedById: googleDriveAttachments.attachedById,
+  attachedAt: googleDriveAttachments.attachedAt,
+  attachedBy: {
+    id: users.id,
+    firstName: users.firstName,
+    lastName: users.lastName,
+    email: users.email,
+  },
+};
+
 export const driveAttachmentsStorage = {
   async getAttachmentsByEntity(
     entityType: string,
     entityId: string
   ): Promise<DriveAttachmentWithUser[]> {
     const results = await db
-      .select({
-        id: googleDriveAttachments.id,
-        entityType: googleDriveAttachments.entityType,
-        entityId: googleDriveAttachments.entityId,
-        driveFileId: googleDriveAttachments.driveFileId,
-        name: googleDriveAttachments.name,
-        mimeType: googleDriveAttachments.mimeType,
-        iconUrl: googleDriveAttachments.iconUrl,
-        webViewLink: googleDriveAttachments.webViewLink,
-        attachedById: googleDriveAttachments.attachedById,
-        attachedAt: googleDriveAttachments.attachedAt,
-        attachedBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-        },
-      })
+      .select(attachmentSelect)
       .from(googleDriveAttachments)
       .leftJoin(users, eq(googleDriveAttachments.attachedById, users.id))
       .where(
@@ -45,24 +49,7 @@ export const driveAttachmentsStorage = {
 
   async getAttachmentById(id: string): Promise<DriveAttachmentWithUser | null> {
     const [result] = await db
-      .select({
-        id: googleDriveAttachments.id,
-        entityType: googleDriveAttachments.entityType,
-        entityId: googleDriveAttachments.entityId,
-        driveFileId: googleDriveAttachments.driveFileId,
-        name: googleDriveAttachments.name,
-        mimeType: googleDriveAttachments.mimeType,
-        iconUrl: googleDriveAttachments.iconUrl,
-        webViewLink: googleDriveAttachments.webViewLink,
-        attachedById: googleDriveAttachments.attachedById,
-        attachedAt: googleDriveAttachments.attachedAt,
-        attachedBy: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-        },
-      })
+      .select(attachmentSelect)
       .from(googleDriveAttachments)
       .leftJoin(users, eq(googleDriveAttachments.attachedById, users.id))
       .where(eq(googleDriveAttachments.id, id));
@@ -78,6 +65,8 @@ export const driveAttachmentsStorage = {
     mimeType?: string | null;
     iconUrl?: string | null;
     webViewLink?: string | null;
+    label?: string | null;
+    description?: string | null;
     attachedById: string;
   }) {
     const [attachment] = await db
@@ -90,10 +79,26 @@ export const driveAttachmentsStorage = {
         mimeType: data.mimeType || null,
         iconUrl: data.iconUrl || null,
         webViewLink: data.webViewLink || null,
+        label: data.label || null,
+        description: data.description || null,
         attachedById: data.attachedById,
       })
       .returning();
     return attachment;
+  },
+
+  async updateAttachment(
+    id: string,
+    data: { label?: string | null; description?: string | null },
+  ) {
+    const updates: { label?: string | null; description?: string | null } = {};
+    if (data.label !== undefined) updates.label = data.label;
+    if (data.description !== undefined) updates.description = data.description;
+    if (Object.keys(updates).length === 0) return;
+    await db
+      .update(googleDriveAttachments)
+      .set(updates)
+      .where(eq(googleDriveAttachments.id, id));
   },
 
   async deleteAttachment(id: string): Promise<void> {

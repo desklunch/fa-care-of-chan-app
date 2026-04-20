@@ -11,6 +11,7 @@ import { driveAttachmentsStorage } from "./drive-attachments.storage";
 import {
   driveAttachmentEntityTypes,
   createDriveAttachmentSchema,
+  updateDriveAttachmentSchema,
   getEntityPermissionPrefix,
   type DriveAttachmentEntityType,
 } from "@shared/schema";
@@ -147,6 +148,58 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
       `[deprecated] POST /api/drive-attachments (entityType/entityId in body) — use POST /api/drive-attachments/:entityType/:entityId instead`,
     );
     await handleCreateAttachment(req, res, req.body);
+  });
+
+  app.patch("/api/drive-attachments/:entityType/:entityId/:id", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { entityType, entityId, id } = req.params;
+
+      const existing = await driveAttachmentsStorage.getAttachmentById(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Attachment not found" });
+      }
+      if (!isValidEntityType(existing.entityType)) {
+        return res.status(400).json({ message: "Invalid entity type" });
+      }
+      if (existing.entityType !== entityType || existing.entityId !== entityId) {
+        return res.status(400).json({ message: "entityType/entityId in path does not match attachment" });
+      }
+
+      const prefix = getEntityPermissionPrefix(existing.entityType);
+      const writePerm = `${prefix}.write` as Permission;
+      if (!checkPermission(req, writePerm)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const parsed = updateDriveAttachmentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+      }
+
+      const deletePerm = `${prefix}.delete` as Permission;
+      const hasDeleteAny = checkPermission(req, deletePerm);
+
+      const updated = await driveAttachmentsService.updateAttachment(
+        id,
+        parsed.data,
+        userId,
+        hasDeleteAny,
+      );
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ message: error.message });
+      }
+      if (error instanceof ForbiddenError) {
+        return res.status(403).json({ message: error.message });
+      }
+      if (error instanceof ValidationError) {
+        return res.status(422).json({ message: error.message });
+      }
+      console.error("Error updating drive attachment:", error);
+      res.status(500).json({ message: "Failed to update attachment" });
+    }
   });
 
   // Standardized delete — entityType/entityId in path per docs/universal-utilities.md §3.

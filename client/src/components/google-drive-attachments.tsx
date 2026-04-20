@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   FileText,
@@ -36,6 +38,7 @@ import {
   Search,
   Check,
   LogIn,
+  Pencil,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -134,7 +137,7 @@ function DriveFilePickerDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (file: DriveFile) => void;
+  onSelect: (file: DriveFile, label: string, description: string) => void;
   isPending: boolean;
   onDriveAuthRequired: () => void;
 }) {
@@ -142,6 +145,17 @@ function DriveFilePickerDialog({
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [needsDriveAuth, setNeedsDriveAuth] = useState(false);
+  const [pickedFile, setPickedFile] = useState<DriveFile | null>(null);
+  const [pickerLabel, setPickerLabel] = useState("");
+  const [pickerDescription, setPickerDescription] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      setPickedFile(null);
+      setPickerLabel("");
+      setPickerDescription("");
+    }
+  }, [open]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -150,7 +164,7 @@ function DriveFilePickerDialog({
     setDebounceTimer(timer);
   };
 
-  const { data: searchResults, isLoading: isSearching, error: searchError } = useQuery<DriveSearchResult>({
+  const { data: searchResults, isLoading: isSearching } = useQuery<DriveSearchResult>({
     queryKey: ["/api/drive/search", debouncedQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -167,7 +181,7 @@ function DriveFilePickerDialog({
       setNeedsDriveAuth(false);
       return res.json();
     },
-    enabled: open,
+    enabled: open && !pickedFile,
     retry: false,
   });
 
@@ -184,6 +198,70 @@ function DriveFilePickerDialog({
           <DriveAuthPrompt onAuthorize={() => {
             onDriveAuthRequired();
           }} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (pickedFile) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Attachment</DialogTitle>
+            <DialogDescription>
+              Optionally add a label and description for this file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-2.5 rounded-md border">
+              <div className="flex-shrink-0">
+                {getMimeTypeIcon(pickedFile.mimeType)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" data-testid="text-picked-file-name">{pickedFile.name}</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground" htmlFor="picker-label">Label (optional)</label>
+              <Input
+                id="picker-label"
+                value={pickerLabel}
+                onChange={(e) => setPickerLabel(e.target.value)}
+                placeholder="A short, descriptive label"
+                data-testid="input-picker-label"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground" htmlFor="picker-description">Description (optional)</label>
+              <Textarea
+                id="picker-description"
+                value={pickerDescription}
+                onChange={(e) => setPickerDescription(e.target.value)}
+                placeholder="Why is this file attached?"
+                rows={3}
+                data-testid="input-picker-description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setPickedFile(null)}
+              disabled={isPending}
+              data-testid="button-picker-back"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={() => onSelect(pickedFile, pickerLabel, pickerDescription)}
+              disabled={isPending}
+              data-testid="button-picker-confirm"
+            >
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+              Attach File
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -219,7 +297,7 @@ function DriveFilePickerDialog({
               searchResults.files.map((file) => (
                 <button
                   key={file.id}
-                  onClick={() => onSelect(file)}
+                  onClick={() => setPickedFile(file)}
                   disabled={isPending}
                   className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
                   data-testid={`button-pick-file-${file.id}`}
@@ -236,9 +314,6 @@ function DriveFilePickerDialog({
                       )}
                     </p>
                   </div>
-                  {isPending && (
-                    <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
-                  )}
                 </button>
               ))
             ) : (
@@ -259,6 +334,195 @@ interface GoogleDriveAttachmentsProps {
   canWrite?: boolean;
 }
 
+function AttachmentRow({
+  attachment,
+  entityType,
+  entityId,
+  canWrite,
+  onDelete,
+}: {
+  attachment: DriveAttachmentWithUser;
+  entityType: string;
+  entityId: string;
+  canWrite: boolean;
+  onDelete: (id: string) => void;
+}) {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [labelDraft, setLabelDraft] = useState(attachment.label ?? "");
+  const [descDraft, setDescDraft] = useState(attachment.description ?? "");
+
+  useEffect(() => {
+    setLabelDraft(attachment.label ?? "");
+    setDescDraft(attachment.description ?? "");
+  }, [attachment.label, attachment.description]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: { label: string | null; description: string | null }) => {
+      const res = await apiRequest(
+        "PATCH",
+        `/api/drive-attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}/${encodeURIComponent(attachment.id)}`,
+        data,
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/drive-attachments", entityType, entityId] });
+      setIsEditing(false);
+      toast({ title: "Attachment updated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update attachment", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      label: labelDraft.trim() ? labelDraft.trim() : null,
+      description: descDraft.trim() ? descDraft.trim() : null,
+    });
+  };
+
+  const handleCancel = () => {
+    setLabelDraft(attachment.label ?? "");
+    setDescDraft(attachment.description ?? "");
+    setIsEditing(false);
+  };
+
+  const primary = attachment.label || attachment.name;
+  const secondary = attachment.label ? attachment.name : null;
+
+  return (
+    <div
+      className="flex items-start gap-3 p-2 rounded-md group hover-elevate"
+      data-testid={`drive-attachment-${attachment.id}`}
+    >
+      <div className="flex-shrink-0 mt-0.5">
+        {getMimeTypeIcon(attachment.mimeType)}
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
+        {isEditing ? (
+          <div className="space-y-2">
+            <Input
+              value={labelDraft}
+              onChange={(e) => setLabelDraft(e.target.value)}
+              placeholder="Label (optional)"
+              data-testid={`input-edit-label-${attachment.id}`}
+            />
+            <Textarea
+              value={descDraft}
+              onChange={(e) => setDescDraft(e.target.value)}
+              placeholder="Description (optional)"
+              rows={2}
+              data-testid={`input-edit-description-${attachment.id}`}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={updateMutation.isPending}
+                data-testid={`button-save-edit-${attachment.id}`}
+              >
+                {updateMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCancel}
+                disabled={updateMutation.isPending}
+                data-testid={`button-cancel-edit-${attachment.id}`}
+              >
+                Cancel
+              </Button>
+              {(attachment.label || attachment.description) && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => updateMutation.mutate({ label: null, description: null })}
+                  disabled={updateMutation.isPending}
+                  data-testid={`button-clear-edit-${attachment.id}`}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-1">
+              {attachment.webViewLink ? (
+                <a
+                  href={attachment.webViewLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium truncate hover:underline"
+                  data-testid={`link-drive-file-${attachment.id}`}
+                >
+                  {primary}
+                </a>
+              ) : (
+                <span
+                  className="text-sm font-medium truncate"
+                  data-testid={`text-drive-file-name-${attachment.id}`}
+                >
+                  {primary}
+                </span>
+              )}
+              {attachment.webViewLink && (
+                <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              )}
+            </div>
+            {secondary && (
+              <p
+                className="text-xs text-muted-foreground truncate"
+                data-testid={`text-drive-file-filename-${attachment.id}`}
+              >
+                {secondary}
+              </p>
+            )}
+            {attachment.description && (
+              <p
+                className="text-xs text-muted-foreground whitespace-pre-wrap"
+                data-testid={`text-drive-file-description-${attachment.id}`}
+              >
+                {attachment.description}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {attachment.attachedBy
+                ? `${attachment.attachedBy.firstName || ""} ${attachment.attachedBy.lastName || ""}`.trim() || attachment.attachedBy.email
+                : "Unknown"}
+              {" · "}
+              {formatTimeAgo(attachment.attachedAt)}
+            </p>
+          </>
+        )}
+      </div>
+      {canWrite && !isEditing && (
+        <div className="flex-shrink-0 flex items-center gap-1 invisible group-hover:visible">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing(true)}
+            data-testid={`button-edit-attachment-${attachment.id}`}
+          >
+            <Pencil className="h-4 w-4 text-muted-foreground" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(attachment.id)}
+            data-testid={`button-remove-attachment-${attachment.id}`}
+          >
+            <Trash2 className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }: GoogleDriveAttachmentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -266,6 +530,8 @@ export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }
   const [showPicker, setShowPicker] = useState(false);
   const [showPasteInput, setShowPasteInput] = useState(false);
   const [driveUrl, setDriveUrl] = useState("");
+  const [pasteLabel, setPasteLabel] = useState("");
+  const [pasteDescription, setPasteDescription] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDriveAuthPrompt, setShowDriveAuthPrompt] = useState(false);
 
@@ -289,7 +555,16 @@ export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }
   };
 
   const createMutation = useMutation({
-    mutationFn: async (data: { driveUrl?: string; driveFileId?: string; name?: string; mimeType?: string; iconUrl?: string; webViewLink?: string }) => {
+    mutationFn: async (data: {
+      driveUrl?: string;
+      driveFileId?: string;
+      name?: string;
+      mimeType?: string;
+      iconUrl?: string;
+      webViewLink?: string;
+      label?: string | null;
+      description?: string | null;
+    }) => {
       const res = await apiRequest(
         "POST",
         `/api/drive-attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
@@ -300,6 +575,8 @@ export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/drive-attachments", entityType, entityId] });
       setDriveUrl("");
+      setPasteLabel("");
+      setPasteDescription("");
       setShowPasteInput(false);
       setShowPicker(false);
       toast({ title: "File attached successfully" });
@@ -332,16 +609,22 @@ export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }
 
   const handlePasteSubmit = () => {
     if (!driveUrl.trim()) return;
-    createMutation.mutate({ driveUrl: driveUrl.trim() });
+    createMutation.mutate({
+      driveUrl: driveUrl.trim(),
+      label: pasteLabel.trim() ? pasteLabel.trim() : null,
+      description: pasteDescription.trim() ? pasteDescription.trim() : null,
+    });
   };
 
-  const handlePickerSelect = (file: DriveFile) => {
+  const handlePickerSelect = (file: DriveFile, label: string, description: string) => {
     createMutation.mutate({
       driveFileId: file.id,
       name: file.name,
       mimeType: file.mimeType,
       iconUrl: file.iconLink,
       webViewLink: file.webViewLink,
+      label: label.trim() ? label.trim() : null,
+      description: description.trim() ? description.trim() : null,
     });
   };
 
@@ -429,6 +712,19 @@ export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }
                 )}
               </Button>
             </div>
+            <Input
+              value={pasteLabel}
+              onChange={(e) => setPasteLabel(e.target.value)}
+              placeholder="Label (optional)"
+              data-testid="input-paste-label"
+            />
+            <Textarea
+              value={pasteDescription}
+              onChange={(e) => setPasteDescription(e.target.value)}
+              placeholder="Description (optional)"
+              rows={2}
+              data-testid="input-paste-description"
+            />
           </CardContent>
         </Card>
       )}
@@ -441,53 +737,14 @@ export function GoogleDriveAttachments({ entityType, entityId, canWrite = true }
       ) : attachments && attachments.length > 0 ? (
         <div className="space-y-1">
           {attachments.map((attachment) => (
-            <div
+            <AttachmentRow
               key={attachment.id}
-              className="flex items-center gap-3 p-2 rounded-md group hover-elevate"
-              data-testid={`drive-attachment-${attachment.id}`}
-            >
-              <div className="flex-shrink-0">
-                {getMimeTypeIcon(attachment.mimeType)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  {attachment.webViewLink ? (
-                    <a
-                      href={attachment.webViewLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium truncate hover:underline"
-                      data-testid={`link-drive-file-${attachment.id}`}
-                    >
-                      {attachment.name}
-                    </a>
-                  ) : (
-                    <span className="text-sm font-medium truncate">{attachment.name}</span>
-                  )}
-                  {attachment.webViewLink && (
-                    <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {attachment.attachedBy
-                    ? `${attachment.attachedBy.firstName || ""} ${attachment.attachedBy.lastName || ""}`.trim() || attachment.attachedBy.email
-                    : "Unknown"}
-                  {" · "}
-                  {formatTimeAgo(attachment.attachedAt)}
-                </p>
-              </div>
-              {canWrite && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="flex-shrink-0 invisible group-hover:visible"
-                  onClick={() => setDeleteId(attachment.id)}
-                  data-testid={`button-remove-attachment-${attachment.id}`}
-                >
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              )}
-            </div>
+              attachment={attachment}
+              entityType={entityType}
+              entityId={entityId}
+              canWrite={canWrite}
+              onDelete={(id) => setDeleteId(id)}
+            />
           ))}
         </div>
       ) : (

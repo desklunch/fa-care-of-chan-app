@@ -1405,6 +1405,8 @@ export const googleDriveAttachments = pgTable(
     mimeType: varchar("mime_type", { length: 255 }),
     iconUrl: varchar("icon_url", { length: 500 }),
     webViewLink: varchar("web_view_link", { length: 1000 }),
+    label: varchar("label", { length: 500 }),
+    description: text("description"),
     attachedById: varchar("attached_by_id").notNull().references(() => users.id),
     attachedAt: timestamp("attached_at").defaultNow().notNull(),
   },
@@ -1431,12 +1433,24 @@ export const createDriveAttachmentSchema = z.object({
   mimeType: z.string().optional(),
   iconUrl: z.string().optional(),
   webViewLink: z.string().optional(),
+  label: z.string().max(500).optional().nullable(),
+  description: z.string().optional().nullable(),
 }).refine(
   (data) => data.driveFileId || data.driveUrl,
   { message: "Either driveFileId or driveUrl must be provided" },
 );
 
 export type CreateDriveAttachmentInput = z.infer<typeof createDriveAttachmentSchema>;
+
+export const updateDriveAttachmentSchema = z.object({
+  label: z.string().max(500).optional().nullable(),
+  description: z.string().optional().nullable(),
+}).refine(
+  (data) => data.label !== undefined || data.description !== undefined,
+  { message: "At least one of label or description must be provided" },
+);
+
+export type UpdateDriveAttachmentInput = z.infer<typeof updateDriveAttachmentSchema>;
 
 export interface DriveAttachmentWithUser extends GoogleDriveAttachment {
   attachedBy?: {
