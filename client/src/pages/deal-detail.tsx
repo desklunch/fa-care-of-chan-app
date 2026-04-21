@@ -649,7 +649,7 @@ export default function DealDetail() {
                         data-testid="button-link-client"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        Link related companies or brands
+                        Link companies or brands
                       </Button>
                     )}
 
