@@ -89,7 +89,7 @@ export function RichTextEditor({
   onChange,
   onBlur,
   placeholder,
-  alwaysShowToolbar = false,
+  alwaysShowToolbar = true,
   "data-testid": testId,
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
