@@ -193,12 +193,12 @@ function DealFieldPreview({ deal, servicesMap }: { deal: DealWithRelations; serv
   if (deal.proposalSentOn) fields.push({ label: "Proposal Sent On", value: deal.proposalSentOn });
 
   return (
-    <div className="rounded-md border p-3 space-y-1.5 bg-muted/30">
+    <div className="rounded-md border p-3 space-y-1.5 bg-muted/30 min-w-0 overflow-hidden">
       <p className="text-xs font-medium text-muted-foreground mb-2">Fields available for template tokens:</p>
       {fields.map((f) => (
-        <div key={f.label} className="flex gap-2 text-xs">
+        <div key={f.label} className="flex gap-2 text-xs min-w-0">
           <span className="font-medium text-muted-foreground w-28 flex-shrink-0">{f.label}</span>
-          <span className="truncate">{f.value}</span>
+          <span className="truncate min-w-0 flex-1">{f.value}</span>
         </div>
       ))}
       <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
@@ -375,7 +375,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0 overflow-hidden">
           <DealFieldPreview deal={deal} servicesMap={servicesMap} />
 
           <div className="space-y-2">
