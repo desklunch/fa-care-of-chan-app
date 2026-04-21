@@ -157,8 +157,12 @@ import {
   Image,
   Shapes,
   Scroll,
-  Blocks,
+  Puzzle,
   Network,
+  WandSparkles,
+  Notebook,
+  Component,
+  NotebookPen
 } from "lucide-react";
 
 function useLayoutConfig() {
@@ -231,10 +235,10 @@ function useLayoutConfig() {
           },
         ],
       },
-   
+
       {
         heading: "Programming",
-        defaultCollapsed: false,
+        defaultCollapsed: true,
         requiredPermission: "proposals.read",
         items: [
           {
@@ -250,35 +254,35 @@ function useLayoutConfig() {
             requiredPermission: "proposals.read",
           },
           {
-            name: "Catalog",
+            name: "Components",
             href: "/programming/catalog",
-            icon: Blocks,
+            icon: Puzzle,
             requiredPermission: "proposals.read",
           },
         ],
       },
       {
         heading: "Production",
-        defaultCollapsed: false,
+        defaultCollapsed: true,
         requiredPermission: "proposals.read",
         items: [
           {
             name: "Planning",
             href: "/production/planning",
-            icon: Image,
+            icon: WandSparkles,
             requiredPermission: "proposals.read",
           },
           {
             name: "Projects",
             href: "/production/projects",
-            icon: Scroll,
+            icon: Component,
             requiredPermission: "proposals.read",
           },
 
           {
             name: "Knowledge",
             href: "/proposals",
-            icon: Shapes,
+            icon: NotebookPen,
             requiredPermission: "proposals.read",
           },
         ],
@@ -327,33 +331,28 @@ function useLayoutConfig() {
             name: "Users",
             href: "/team",
             icon: Users,
-            
           },
           {
             name: "Deal Intakes",
             href: "/deals/forms",
             icon: FileText,
-            
           },
           {
             name: "Deal Statuses",
             href: "/manage/deal-statuses",
             icon: Loader,
-            
           },
 
           {
             name: "Tags",
             href: "/manage/tags",
             icon: Tags,
-            
           },
 
           {
             name: "Forms",
             href: "/forms",
             icon: FileText,
-            
           },
         ],
       },
@@ -399,7 +398,6 @@ function useLayoutConfig() {
         requiredPermission: "admin.settings",
         defaultCollapsed: true,
         items: [
-
           {
             name: "Theme",
             href: "/admin/theme",

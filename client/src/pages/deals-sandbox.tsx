@@ -901,7 +901,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return null;
         return (
           <div className="collapsible-cell-content max-h-[105px] overflow-hidden">
-            <MarkdownDisplay className="prose dark:prose-invert text-sm/6  font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            <MarkdownDisplay className="prose dark:prose-invert text-sm/6 text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>
           </div>
@@ -1019,7 +1019,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
         if (!params.value) return null;
         return (
           <div className="collapsible-cell-content max-h-[120px] overflow-hidden">
-            <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            <div className="prose dark:prose-invert text-sm/6 text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               <ReactMarkdown
                 components={{
                   a: ({ href, children }) => (
