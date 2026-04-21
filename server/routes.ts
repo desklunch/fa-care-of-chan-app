@@ -78,6 +78,7 @@ import { initializeAuditBridge } from "./lib/audit-bridge";
 import { ensureReplitAgentUser } from "./mcp/index";
 import { setupCsrf } from "./middleware/csrf";
 import { registerNotificationsRoutes } from "./domains/notifications";
+import { registerApiKeysRoutes } from "./domains/api-keys";
 import { initializeNotificationService } from "./domains/notifications/notifications.service";
 
 export async function registerRoutes(
@@ -128,6 +129,7 @@ export async function registerRoutes(
   await seedBuiltInThemes();
   await ensureReplitAgentUser();
   registerNotificationsRoutes(app);
+  registerApiKeysRoutes(app);
   registerDriveAttachmentsRoutes(app);
   registerProposalsRoutes(app);
   registerEntityLinksRoutes(app);

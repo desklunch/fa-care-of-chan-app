@@ -1,47 +1,13 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { randomUUID, randomBytes } from "crypto";
 import { createMcpServer } from "./index";
 import { mcpRateLimit, getRateLimitStats } from "./rate-limit";
+import { mcpBearerAuth } from "./auth";
 
 const router = Router();
-
-function mcpBearerAuth(req: Request, res: Response, next: NextFunction): void {
-  const agentApiKey = process.env.AGENT_API_KEY;
-  if (!agentApiKey) {
-    if (process.env.NODE_ENV === "production") {
-      res.status(503).json({ error: "MCP server not configured: AGENT_API_KEY is required in production" });
-      return;
-    }
-    next();
-    return;
-  }
-
-  let token: string | undefined;
-
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    token = authHeader.slice(7);
-  }
-
-  if (!token && req.query.token) {
-    token = req.query.token as string;
-  }
-
-  if (!token) {
-    res.status(401).json({ error: "Missing authorization. Provide Bearer token header or ?token= query parameter" });
-    return;
-  }
-
-  if (token !== agentApiKey) {
-    res.status(403).json({ error: "Invalid API key" });
-    return;
-  }
-
-  next();
-}
 
 router.use(mcpBearerAuth);
 router.use(mcpRateLimit);
@@ -215,7 +181,7 @@ router.get("/tools", async (_req: Request, res: Response) => {
     const toolList = [
       { name: "deals_list", description: "Search and filter deals by status", category: "deals", riskLevel: "low" },
       { name: "deals_get", description: "Get detailed information about a specific deal", category: "deals", riskLevel: "low" },
-      { name: "deals_create", description: "Create a new deal in the pipeline", category: "deals", riskLevel: "medium" },
+      { name: "deals_create", description: "Create a new deal with client/contact lookup-or-create, optional venue, project date, budget range, location, concept, and notes. Owned by the actor whose API key was used.", category: "deals", riskLevel: "medium" },
       { name: "deals_update", description: "Update fields on an existing deal", category: "deals", riskLevel: "medium" },
       { name: "deals_move_stage", description: "Move a deal to a different pipeline stage", category: "deals", riskLevel: "medium" },
       { name: "deals_assign_owner", description: "Assign or change the owner of a deal", category: "deals", riskLevel: "medium" },
@@ -223,11 +189,11 @@ router.get("/tools", async (_req: Request, res: Response) => {
       { name: "venues_get", description: "Get detailed information about a specific venue", category: "venues", riskLevel: "low" },
       { name: "contacts_search", description: "Search for contacts by name or email", category: "contacts", riskLevel: "low" },
       { name: "contacts_get", description: "Get detailed information about a specific contact", category: "contacts", riskLevel: "low" },
-      { name: "workspace_summary", description: "Get a summary of the current workspace state", category: "workspace", riskLevel: "low" },
+      { name: "workspace_summary", description: "Discovery endpoint: lists all available MCP tools, their categories, and risk levels. Use this first to learn what you can do (deals, contacts, venues, features, etc.). For deals_create the required field is displayName, plus either clientId or clientName; everything else (primaryContact, projectDate, budget, location, venueName, concept, notes, status) is optional.", category: "workspace", riskLevel: "low" },
       { name: "features_list", description: "List and filter feature requests by status and/or category", category: "features", riskLevel: "low" },
       { name: "features_get", description: "Get detailed information about a specific feature including comments", category: "features", riskLevel: "low" },
       { name: "features_update", description: "Update a feature's status, priority, title, or description", category: "features", riskLevel: "medium" },
-      { name: "features_add_comment", description: "Post a comment to a feature using the Replit Agent user", category: "features", riskLevel: "medium" },
+      { name: "features_add_comment", description: "Post a comment to a feature on behalf of the calling API key holder", category: "features", riskLevel: "medium" },
       { name: "features_list_categories", description: "List available feature categories with IDs and names", category: "features", riskLevel: "low" },
     ];
     

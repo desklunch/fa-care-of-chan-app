@@ -26,7 +26,11 @@ async function persistAuditLog(
     source: hasContext ? "event" : "event_no_ctx",
     ipAddress: ctx?.ipAddress ?? null,
     userAgent: ctx?.userAgent ?? null,
-    metadata: { eventType: event.type, ...mapping.extractMetadata?.(event) },
+    metadata: {
+      eventType: event.type,
+      ...(ctx?.source ? { requestSource: ctx.source } : {}),
+      ...mapping.extractMetadata?.(event),
+    },
   });
 }
 

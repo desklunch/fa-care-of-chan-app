@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import type { McpActor } from "./auth";
 
 interface RateLimitEntry {
   count: number;
@@ -11,23 +12,24 @@ const WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS = 100;
 
 export function mcpRateLimit(req: Request, res: Response, next: NextFunction): void {
-  const clientId = (req.user as { id?: string })?.id || req.ip || "anonymous";
+  const actor = (req as any).mcpActor as McpActor | undefined;
+  const clientId = actor?.bucketKey || (req.user as { id?: string })?.id || req.ip || "anonymous";
   const now = Date.now();
-  
+
   let entry = rateLimitStore.get(clientId);
-  
+
   if (!entry || now > entry.resetAt) {
     entry = { count: 0, resetAt: now + WINDOW_MS };
     rateLimitStore.set(clientId, entry);
   }
-  
+
   entry.count++;
-  
+
   const remaining = Math.max(0, MAX_REQUESTS - entry.count);
   res.setHeader("X-RateLimit-Limit", MAX_REQUESTS);
   res.setHeader("X-RateLimit-Remaining", remaining);
   res.setHeader("X-RateLimit-Reset", Math.ceil(entry.resetAt / 1000));
-  
+
   if (entry.count > MAX_REQUESTS) {
     res.status(429).json({
       error: "Too many requests",
@@ -36,7 +38,7 @@ export function mcpRateLimit(req: Request, res: Response, next: NextFunction): v
     });
     return;
   }
-  
+
   next();
 }
 

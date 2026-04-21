@@ -1469,7 +1469,42 @@ export const usersRelations = relations(users, ({ many }) => ({
   featureVotes: many(appFeatureVotes),
   featureComments: many(appFeatureComments),
   createdVendorTokens: many(vendorUpdateTokens),
+  apiKeys: many(apiKeys),
 }));
+
+// Personal API keys for MCP / connector access
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    label: varchar("label", { length: 100 }).notNull(),
+    keyHash: varchar("key_hash", { length: 128 }).notNull().unique(),
+    keyPrefix: varchar("key_prefix", { length: 16 }).notNull(),
+    lastUsedAt: timestamp("last_used_at"),
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_api_keys_user").on(table.userId),
+    index("idx_api_keys_hash").on(table.keyHash),
+  ],
+);
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+export const createApiKeySchema = z.object({
+  label: z.string().min(1, "Label is required").max(100),
+});
+export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   performer: one(users, {

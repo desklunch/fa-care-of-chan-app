@@ -3,15 +3,48 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { dealsStorage } from "../domains/deals/deals.storage";
 import { DealsService } from "../domains/deals/deals.service";
+import { clientsStorage } from "../domains/clients/clients.storage";
+import { contactsStorage } from "../domains/contacts/contacts.storage";
+import { entityLinksStorage } from "../domains/entity-links/entity-links.storage";
 import { ServiceError } from "../services/base.service";
 import { type DealStatus, type DealStatusRecord, type FeatureStatus, featureStatuses, featurePriorities } from "@shared/schema";
 import { issuesFeaturesStorage } from "../domains/issues-features/issues-features.storage";
 import { venuesStorage } from "../domains/venues/venues.storage";
-import { contactsStorage } from "../domains/contacts/contacts.storage";
+import { getRequestContext } from "../lib/request-context";
 
 const dealsService = new DealsService(storage);
 
 const REPLIT_AGENT_USER_ID = "replit-agent";
+
+function getActorId(): string {
+  return getRequestContext()?.userId || REPLIT_AGENT_USER_ID;
+}
+
+function getDealUrl(dealId: string): string {
+  const base = process.env.APP_URL || process.env.PUBLIC_URL || "";
+  return base ? `${base.replace(/\/+$/, "")}/deals/${dealId}` : `/deals/${dealId}`;
+}
+
+function structuredError(code: string, message: string, details?: Record<string, unknown>) {
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify({ ok: false, error: { code, message, ...(details ? { details } : {}) } }, null, 2),
+      },
+    ],
+    isError: true,
+  };
+}
+
+function parseProjectDate(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
+}
 
 export async function ensureReplitAgentUser(): Promise<void> {
   try {
@@ -31,8 +64,6 @@ export async function ensureReplitAgentUser(): Promise<void> {
     }
   }
 }
-
-const MCP_ACTOR_ID = REPLIT_AGENT_USER_ID;
 
 function formatError(error: unknown): string {
   if (error instanceof ServiceError) {
@@ -143,53 +174,217 @@ export async function createMcpServer(): Promise<McpServer> {
 
   server.tool(
     "deals_create",
-    "Create a new deal in the pipeline. Requires a display name and client ID.",
+    "Create a new deal in the pipeline with rich intake fields. Looks up or creates the client by name (or accepts an existing clientId), and optionally looks up or creates a primary contact (by email match within the client, falling back to name match). Optionally attaches a venue by name. The deal is owned by the API key holder. Returns the new deal id, displayName, status, and a deep link.",
     {
-      displayName: z.string().min(1).describe("Name of the deal (e.g., 'Acme Corp Holiday Party')"),
-      clientId: z.string().describe("The client ID to associate with this deal"),
-      status: z.string().optional()
-        .describe("Initial status name (default: uses the default status from the deal_statuses table)"),
-      budgetLow: z.number().optional().describe("Minimum budget in dollars"),
-      budgetHigh: z.number().optional().describe("Maximum budget in dollars"),
+      displayName: z.string().min(1).describe("Name of the deal (e.g., 'Acme Corp Holiday Party'). Required."),
+      clientId: z.string().optional().describe("Existing client ID. Provide this OR clientName."),
+      clientName: z.string().optional().describe("Client/company name. If no exact match exists, a new client is created. Provide this OR clientId."),
+      primaryContact: z.object({
+        firstName: z.string().min(1).describe("Contact's first name"),
+        lastName: z.string().min(1).describe("Contact's last name"),
+        email: z.string().email().optional().describe("Contact's email (used for lookup; preferred match)"),
+        phone: z.string().optional().describe("Contact's phone number"),
+      }).optional().describe("Primary contact for the deal. Looked up by email within the client, then by name; created if missing and linked to the client."),
+      projectDate: z.string().optional().describe("Project / event date. ISO date (YYYY-MM-DD) preferred; common human formats parsed best-effort."),
+      budgetLow: z.number().int().optional().describe("Minimum budget in whole dollars (e.g., 40000)."),
+      budgetHigh: z.number().int().optional().describe("Maximum budget in whole dollars (e.g., 60000)."),
+      location: z.string().optional().describe("Free-text location description (e.g., 'Brooklyn warehouse')."),
+      venueName: z.string().optional().describe("Optional venue name. If found in the venue directory it is referenced in the deal notes."),
+      concept: z.string().optional().describe("Creative concept / theme."),
+      notes: z.string().optional().describe("Additional notes."),
+      status: z.string().optional().describe(`Initial status name (defaults to system default). Available: ${statusNameList}`),
     },
-    async ({ displayName, clientId, status, budgetLow, budgetHigh }) => {
+    async ({
+      displayName,
+      clientId,
+      clientName,
+      primaryContact,
+      projectDate,
+      budgetLow,
+      budgetHigh,
+      location,
+      venueName,
+      concept,
+      notes,
+      status,
+    }) => {
       try {
+        const actorId = getActorId();
+
+        // Resolve client
+        let resolvedClientId: string | null = clientId ?? null;
+        let resolvedClientName: string | null = null;
+        let createdClient = false;
+        if (!resolvedClientId) {
+          if (!clientName || !clientName.trim()) {
+            return structuredError("missing_client", "Either clientId or clientName is required.");
+          }
+          const allClients = await clientsStorage.getClients();
+          const target = clientName.trim().toLowerCase();
+          const exact = allClients.find((c) => c.name.toLowerCase() === target);
+          const partials = exact
+            ? []
+            : allClients.filter((c) => c.name.toLowerCase().includes(target));
+          if (exact) {
+            resolvedClientId = exact.id;
+            resolvedClientName = exact.name;
+          } else if (partials.length === 1) {
+            resolvedClientId = partials[0].id;
+            resolvedClientName = partials[0].name;
+          } else if (partials.length > 1) {
+            return structuredError(
+              "ambiguous_client",
+              `Multiple clients match "${clientName}". Re-call with a more specific clientName or pass clientId.`,
+              { matches: partials.map((c) => ({ id: c.id, name: c.name })) }
+            );
+          } else {
+            const created = await clientsStorage.createClient({ name: clientName.trim() });
+            resolvedClientId = created.id;
+            resolvedClientName = created.name;
+            createdClient = true;
+          }
+        } else {
+          const existing = await clientsStorage.getClientById(resolvedClientId);
+          if (!existing) {
+            return structuredError("client_not_found", `Client not found: ${resolvedClientId}`, {
+              clientId: resolvedClientId,
+            });
+          }
+          resolvedClientName = existing.name;
+        }
+
+        // Resolve / create primary contact
+        let primaryContactId: string | null = null;
+        let createdContact = false;
+        if (primaryContact) {
+          const linked = await clientsStorage.getContactsForClient(resolvedClientId!);
+          let match = primaryContact.email
+            ? linked.find((c) =>
+                (c.emailAddresses ?? []).some(
+                  (e) => e.toLowerCase() === primaryContact.email!.toLowerCase()
+                )
+              )
+            : undefined;
+          if (!match) {
+            match = linked.find(
+              (c) =>
+                c.firstName?.toLowerCase() === primaryContact.firstName.toLowerCase() &&
+                c.lastName?.toLowerCase() === primaryContact.lastName.toLowerCase()
+            );
+          }
+          if (match) {
+            primaryContactId = match.id;
+          } else {
+            const created = await contactsStorage.createContact({
+              firstName: primaryContact.firstName,
+              lastName: primaryContact.lastName,
+              emailAddresses: primaryContact.email ? [primaryContact.email] : null,
+              phoneNumbers: primaryContact.phone ? [primaryContact.phone] : null,
+            });
+            primaryContactId = created.id;
+            createdContact = true;
+            await clientsStorage.linkClientContact(resolvedClientId!, created.id);
+          }
+        }
+
+        // Resolve venue (optional, attached by reference into notes/concept)
+        let venueRef: { id: string; name: string } | null = null;
+        if (venueName && venueName.trim()) {
+          const venues = await venuesStorage.getVenuesWithRelations();
+          const target = venueName.trim().toLowerCase();
+          const exact = venues.find((v) => v.name?.toLowerCase() === target);
+          const partial = exact || venues.find((v) => v.name?.toLowerCase().includes(target));
+          if (partial) venueRef = { id: partial.id, name: partial.name ?? venueName };
+        }
+
+        // Resolve project date
+        let resolvedProjectDate: string | null = null;
+        if (projectDate) {
+          const parsed = parseProjectDate(projectDate);
+          if (!parsed) {
+            return structuredError(
+              "invalid_project_date",
+              `Could not parse projectDate "${projectDate}". Use ISO YYYY-MM-DD or a common date format.`,
+              { projectDate }
+            );
+          }
+          resolvedProjectDate = parsed;
+        }
+
+        // Resolve status
         const allStatuses = await dealsStorage.getDealStatuses();
         let statusId: number;
         if (status) {
-          const found = allStatuses.find(s => s.name === status);
-          statusId = found ? found.id : (allStatuses.find(s => s.isDefault)?.id ?? allStatuses[0].id);
+          const found = allStatuses.find((s) => s.name.toLowerCase() === status.toLowerCase());
+          statusId = found
+            ? found.id
+            : allStatuses.find((s) => s.isDefault)?.id ?? allStatuses[0].id;
         } else {
-          statusId = allStatuses.find(s => s.isDefault)?.id ?? allStatuses[0].id;
+          statusId = allStatuses.find((s) => s.isDefault)?.id ?? allStatuses[0].id;
         }
+
+        // Compose notes with provenance
+        const noteParts: string[] = [];
+        if (notes) noteParts.push(notes.trim());
+        noteParts.push("Created via Claude (MCP)");
+        const composedNotes = noteParts.join("\n\n");
+
         const deal = await dealsService.create(
           {
             displayName,
-            clientId,
+            clientId: resolvedClientId!,
             status: statusId,
+            primaryContactId: primaryContactId ?? null,
+            ownerId: actorId,
             budgetLow: budgetLow ?? null,
             budgetHigh: budgetHigh ?? null,
             locations: [],
+            locationsText: location ?? null,
+            concept: concept ?? null,
+            notes: composedNotes,
+            projectDate: resolvedProjectDate,
           },
-          MCP_ACTOR_ID
+          actorId
         );
+
+        if (venueRef) {
+          try {
+            await entityLinksStorage.createLink({
+              entityType: "deal",
+              entityId: deal.id,
+              url: `/venues/${venueRef.id}`,
+              label: `Venue: ${venueRef.name}`,
+              createdById: actorId,
+            });
+          } catch (err) {
+            console.error("[MCP] Failed to link venue to deal:", err);
+          }
+        }
+
+        const summary = {
+          id: deal.id,
+          displayName: deal.displayName,
+          status: deal.status,
+          url: getDealUrl(deal.id),
+          client: { id: resolvedClientId, name: resolvedClientName, created: createdClient },
+          primaryContact: primaryContactId
+            ? { id: primaryContactId, created: createdContact }
+            : null,
+          venue: venueRef,
+          projectDate: resolvedProjectDate,
+          source: "Created via Claude (MCP)",
+        };
+
         return {
           content: [
             {
               type: "text" as const,
-              text: `Deal created successfully:\n${JSON.stringify(
-                { id: deal.id, displayName: deal.displayName, status: deal.status },
-                null,
-                2
-              )}`,
+              text: `Deal created successfully:\n${JSON.stringify(summary, null, 2)}`,
             },
           ],
         };
       } catch (error) {
-        return {
-          content: [{ type: "text" as const, text: `Error creating deal: ${formatError(error)}` }],
-          isError: true,
-        };
+        return structuredError("create_failed", "Error creating deal", { detail: formatError(error) });
       }
     }
   );
@@ -212,7 +407,7 @@ export async function createMcpServer(): Promise<McpServer> {
         if (budgetHigh !== undefined) updates.budgetHigh = budgetHigh;
         if (projectDate !== undefined) updates.projectDate = projectDate;
 
-        const deal = await dealsService.update(id, updates, MCP_ACTOR_ID);
+        const deal = await dealsService.update(id, updates, getActorId());
         return {
           content: [
             {
@@ -244,7 +439,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ id, stage }) => {
       try {
-        const deal = await dealsService.moveToStage(id, stage as DealStatus, MCP_ACTOR_ID);
+        const deal = await dealsService.moveToStage(id, stage as DealStatus, getActorId());
         return {
           content: [
             {
@@ -275,7 +470,7 @@ export async function createMcpServer(): Promise<McpServer> {
     },
     async ({ id, ownerId }) => {
       try {
-        const deal = await dealsService.assignOwner(id, ownerId, MCP_ACTOR_ID);
+        const deal = await dealsService.assignOwner(id, ownerId, getActorId());
         return {
           content: [
             {
@@ -657,7 +852,7 @@ export async function createMcpServer(): Promise<McpServer> {
 
   server.tool(
     "features_add_comment",
-    "Post a comment to a feature using the Replit Agent user.",
+    "Post a comment to a feature on behalf of the calling API key holder.",
     {
       featureId: z.string().describe("The feature ID to comment on"),
       body: z.string().min(1).max(2000).describe("The comment text"),
@@ -672,7 +867,7 @@ export async function createMcpServer(): Promise<McpServer> {
           };
         }
 
-        const comment = await issuesFeaturesStorage.createComment(featureId, MCP_ACTOR_ID, body);
+        const comment = await issuesFeaturesStorage.createComment(featureId, getActorId(), body);
         return {
           content: [
             {

@@ -24,6 +24,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Loader2, Save } from "lucide-react";
 import { updateProfileSchema, type UpdateProfile } from "@shared/schema";
+import { ApiKeysCard } from "@/components/api-keys-card";
 
 export default function ProfileEdit() {
   const [, setLocation] = useProtectedLocation();
@@ -299,6 +300,10 @@ export default function ProfileEdit() {
             </Form>
           </CardContent>
         </Card>
+
+        <div className="mt-6">
+          <ApiKeysCard />
+        </div>
       </div>
     </PageLayout>
   );
