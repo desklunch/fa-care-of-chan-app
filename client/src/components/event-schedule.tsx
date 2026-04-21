@@ -454,7 +454,7 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
           data-testid="button-add-event-flexible"
         >
           <CalendarPlus className="h-4 w-4" />
-          Add General Window
+          Add a Timeframe
         </Button>
       </div>
     </div>
