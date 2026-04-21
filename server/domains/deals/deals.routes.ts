@@ -11,7 +11,7 @@ import { type DealStatus, type DealStatusRecord, type FormSection, type FormFiel
 import { dealsStorage } from "./deals.storage";
 import { referenceDataStorage } from "../reference-data/reference-data.storage";
 import { formsStorage } from "../forms/forms.storage";
-import { copyDriveFile, findTokenCells, writeTokenCells, writeRichTextCells, shareDriveFileWithDomain, type RichCellUpdate } from "../../googleDrive";
+import { copyDriveFile, findTokenCells, writeTokenCells, writeRichTextCells, shareDriveFileWithDomain, applySheetRequests, type RichCellUpdate } from "../../googleDrive";
 import { parseRichText, type RichTextSegment } from "../../richTextParser";
 import { settingsCommentsStorage } from "../settings-comments/settings-comments.storage";
 import { driveAttachmentsStorage } from "../drive-attachments/drive-attachments.storage";
@@ -1153,7 +1153,152 @@ export function registerDealsRoutes(app: Express): void {
       const plainCellUpdates: { sheetTitle: string; row: number; col: number; value: string }[] = [];
       const richCellUpdates: RichCellUpdate[] = [];
 
+      const BLOCK_TOKEN_NAME = "intake_fields";
+      const BLOCK_TOKEN_EXACT = /^\s*\{\{\s*intake_fields\s*\}\}\s*$/;
+      const BLOCK_TOKEN_ANY = /\{\{\s*intake_fields\s*\}\}/;
+
+      const blockCells: typeof tokenCells = [];
+      const regularTokenCells: typeof tokenCells = [];
       for (const cell of tokenCells) {
+        if (BLOCK_TOKEN_EXACT.test(cell.originalValue)) {
+          blockCells.push(cell);
+        } else if (BLOCK_TOKEN_ANY.test(cell.originalValue)) {
+          console.warn(
+            `Block token {{${BLOCK_TOKEN_NAME}}} found mixed with other content in cell ${cell.sheetTitle}!R${cell.row + 1}C${cell.col + 1}; leaving literal token in place.`,
+          );
+          // Skip entirely so the literal token is preserved.
+        } else {
+          regularTokenCells.push(cell);
+        }
+      }
+
+      const blockRows = buildIntakeBlockRows(intake);
+
+      const sheetRequests: unknown[] = [];
+      const blocksBySheet = new Map<number, typeof blockCells>();
+      for (const c of blockCells) {
+        const list = blocksBySheet.get(c.sheetId) || [];
+        list.push(c);
+        blocksBySheet.set(c.sheetId, list);
+      }
+
+      // Compute cumulative row shifts in one ascending pass per sheet, so both
+      // block expansion writes and any regular tokens further down the sheet
+      // land at the correct rows after row insertions.
+      const blockPlans: { cell: typeof blockCells[0]; effectiveRow: number }[] = [];
+      const N = blockRows.length;
+      const shiftPerBlock = N > 1 ? N - 1 : 0;
+      for (const [sheetId, list] of Array.from(blocksBySheet.entries())) {
+        list.sort((a, b) => a.row - b.row);
+        let accumulated = 0;
+        for (const blockCell of list) {
+          const effectiveRow = blockCell.row + accumulated;
+          blockPlans.push({ cell: blockCell, effectiveRow });
+          if (shiftPerBlock > 0) {
+            sheetRequests.push({
+              insertDimension: {
+                range: {
+                  sheetId,
+                  dimension: "ROWS",
+                  startIndex: effectiveRow + 1,
+                  endIndex: effectiveRow + N,
+                },
+                inheritFromBefore: false,
+              },
+            });
+          }
+          for (let r = 0; r < blockRows.length; r++) {
+            const row = blockRows[r];
+            if (row.kind === "section") {
+              const absRow = effectiveRow + r;
+              sheetRequests.push({
+                mergeCells: {
+                  range: {
+                    sheetId,
+                    startRowIndex: absRow,
+                    endRowIndex: absRow + 1,
+                    startColumnIndex: blockCell.col,
+                    endColumnIndex: blockCell.col + 2,
+                  },
+                  mergeType: "MERGE_ALL",
+                },
+              });
+            }
+          }
+          accumulated += shiftPerBlock;
+        }
+        // Shift any regular token cells in this sheet that sit below a block.
+        for (const c of regularTokenCells) {
+          if (c.sheetId !== sheetId) continue;
+          let shift = 0;
+          for (const blockCell of list) {
+            if (c.row > blockCell.row) shift += shiftPerBlock;
+          }
+          c.row += shift;
+        }
+      }
+
+      for (const { cell: blockCell, effectiveRow } of blockPlans) {
+        if (blockRows.length === 0) {
+          plainCellUpdates.push({
+            sheetTitle: blockCell.sheetTitle,
+            row: effectiveRow,
+            col: blockCell.col,
+            value: "",
+          });
+          continue;
+        }
+        for (let r = 0; r < blockRows.length; r++) {
+          const row = blockRows[r];
+          const absRow = effectiveRow + r;
+          if (row.kind === "section") {
+            plainCellUpdates.push({
+              sheetTitle: blockCell.sheetTitle,
+              row: absRow,
+              col: blockCell.col,
+              value: row.title,
+            });
+          } else {
+            plainCellUpdates.push({
+              sheetTitle: blockCell.sheetTitle,
+              row: absRow,
+              col: blockCell.col,
+              value: row.label,
+            });
+            const value = row.value;
+            if (row.isRichText && value) {
+              const parsed = parseRichText(value);
+              const hasFormatting = parsed.some(
+                (s) => s.bold || s.italic || s.underline || s.color || s.link,
+              );
+              if (hasFormatting) {
+                richCellUpdates.push({
+                  sheetId: blockCell.sheetId,
+                  row: absRow,
+                  col: blockCell.col + 1,
+                  segments: parsed,
+                });
+              } else {
+                plainCellUpdates.push({
+                  sheetTitle: blockCell.sheetTitle,
+                  row: absRow,
+                  col: blockCell.col + 1,
+                  value: parsed.map((s) => s.text).join(""),
+                });
+              }
+            } else {
+              plainCellUpdates.push({
+                sheetTitle: blockCell.sheetTitle,
+                row: absRow,
+                col: blockCell.col + 1,
+                value,
+              });
+            }
+          }
+        }
+      }
+
+      for (const cell of regularTokenCells) {
         const tokensInCell: string[] = [];
         cell.originalValue.replace(tokenPattern, (_match, tokenName: string) => {
           tokensInCell.push(tokenName.trim());
@@ -1218,6 +1363,7 @@ export function registerDealsRoutes(app: Express): void {
       }
 
       try {
+        await applySheetRequests(accessToken, sheetResult.id, sheetRequests);
         await Promise.all([
           writeTokenCells(accessToken, sheetResult.id, plainCellUpdates),
           writeRichTextCells(accessToken, sheetResult.id, richCellUpdates),
@@ -1396,4 +1542,45 @@ function buildTokenMap(
   }
 
   return { map, richTextKeys };
+}
+
+type IntakeBlockRow =
+  | { kind: "section"; title: string }
+  | { kind: "field"; label: string; value: string; isRichText: boolean };
+
+function buildIntakeBlockRows(
+  intake: { formSchema: FormSection[]; responseData: Record<string, unknown> } | null,
+): IntakeBlockRow[] {
+  if (!intake || !intake.formSchema) return [];
+  const responseData = intake.responseData || {};
+  const rows: IntakeBlockRow[] = [];
+  for (const section of intake.formSchema) {
+    if (!section.fields || section.fields.length === 0) continue;
+    rows.push({ kind: "section", title: section.title || "" });
+    for (const field of section.fields) {
+      const value = responseData[field.id];
+      let stringValue = "";
+      if (value != null) {
+        if (typeof value === "string") {
+          stringValue = value;
+        } else if (Array.isArray(value)) {
+          stringValue = value
+            .map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v)))
+            .join(", ");
+        } else if (typeof value === "object") {
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
+        }
+      }
+      const fieldAny = field as unknown as { label?: string; name?: string };
+      rows.push({
+        kind: "field",
+        label: fieldAny.label || fieldAny.name || "",
+        value: stringValue,
+        isRichText: field.type === "richtext",
+      });
+    }
+  }
+  return rows;
 }

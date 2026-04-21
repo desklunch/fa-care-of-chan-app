@@ -371,6 +371,29 @@ export async function writeRichTextCells(
   }
 }
 
+export async function applySheetRequests(
+  accessToken: string,
+  spreadsheetId: string,
+  requests: unknown[],
+): Promise<void> {
+  if (requests.length === 0) return;
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ requests }),
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to apply sheet requests: ${res.status} ${text}`);
+  }
+}
+
 export function extractDriveFileId(url: string): string | null {
   const patterns = [
     /\/d\/([a-zA-Z0-9_-]+)/,
