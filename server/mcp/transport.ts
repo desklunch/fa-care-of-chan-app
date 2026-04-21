@@ -203,6 +203,12 @@ router.get("/tools", async (_req: Request, res: Response) => {
       { name: "features_update", description: "Update a feature's status, priority, title, or description", category: "features", riskLevel: "medium" },
       { name: "features_add_comment", description: "Post a comment to a feature on behalf of the calling API key holder", category: "features", riskLevel: "medium" },
       { name: "features_list_categories", description: "List available feature categories with IDs and names", category: "features", riskLevel: "low" },
+      { name: "intake_templates_list", description: "List available form templates that can be used as deal intakes", category: "intake", riskLevel: "low" },
+      { name: "intake_templates_get", description: "Get a form template's full schema (sections and fields) by ID", category: "intake", riskLevel: "low" },
+      { name: "intake_start", description: "Start (or resume) an intake on a deal using a form template. Recommended call order: intake_templates_list -> intake_templates_get -> intake_start -> intake_set_responses -> intake_status -> intake_sync_to_deal.", category: "intake", riskLevel: "medium" },
+      { name: "intake_set_responses", description: "Conversationally set/merge response values on an in-progress intake. Validates each value against the field's type and entity-mapping schema. File/attachment fields are not supported.", category: "intake", riskLevel: "medium" },
+      { name: "intake_status", description: "Report intake completion progress, listing answered fields, missing required fields, and validation gaps", category: "intake", riskLevel: "low" },
+      { name: "intake_sync_to_deal", description: "Sync completed intake responses back to mapped deal fields. Supports dryRun for preview. Audit entries are attributed to the API key user via Claude (MCP).", category: "intake", riskLevel: "medium" },
     ];
     
     return res.json({

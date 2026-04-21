@@ -262,6 +262,52 @@ export const dealsStorage = {
     };
   },
 
+  async getDealIntakeById(intakeId: string): Promise<DealIntakeWithRelations | null> {
+    const results = await db
+      .select({
+        id: dealIntakes.id,
+        dealId: dealIntakes.dealId,
+        templateId: dealIntakes.templateId,
+        templateName: dealIntakes.templateName,
+        formSchema: dealIntakes.formSchema,
+        responseData: dealIntakes.responseData,
+        status: dealIntakes.status,
+        completedAt: dealIntakes.completedAt,
+        createdById: dealIntakes.createdById,
+        createdAt: dealIntakes.createdAt,
+        updatedAt: dealIntakes.updatedAt,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName,
+      })
+      .from(dealIntakes)
+      .leftJoin(users, eq(dealIntakes.createdById, users.id))
+      .where(eq(dealIntakes.id, intakeId));
+
+    if (results.length === 0) return null;
+
+    const r = results[0];
+    return {
+      id: r.id,
+      dealId: r.dealId,
+      templateId: r.templateId,
+      templateName: r.templateName,
+      formSchema: r.formSchema as FormSection[],
+      responseData: r.responseData as Record<string, unknown>,
+      status: r.status,
+      completedAt: r.completedAt,
+      createdById: r.createdById,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      createdBy: r.createdById
+        ? {
+            id: r.createdById,
+            firstName: r.createdByFirstName,
+            lastName: r.createdByLastName,
+          }
+        : null,
+    };
+  },
+
   async createDealIntake(data: CreateDealIntake, createdById: string): Promise<DealIntake> {
     const [intake] = await db
       .insert(dealIntakes)
