@@ -318,6 +318,7 @@ export function registerTypeformWebhookRoutes(app: Express) {
         concept: concept || null,
         notes: notes || null,
         startedOn,
+        lastContactOn: new Date().toISOString().split("T")[0],
         locations: [],
         eventSchedule: [],
         serviceIds: [],

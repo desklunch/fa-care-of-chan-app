@@ -29,6 +29,7 @@ export interface TypeformDealInput {
   concept: string | null;
   notes: string | null;
   startedOn: string | null;
+  lastContactOn: string | null;
   locations: DealLocation[];
   eventSchedule: DealEvent[];
   serviceIds: number[];
@@ -135,6 +136,7 @@ export const typeformWebhookStorage = {
         concept: data.concept,
         notes: data.notes,
         startedOn: data.startedOn,
+        lastContactOn: data.lastContactOn,
         locations: data.locations,
         eventSchedule: data.eventSchedule,
         serviceIds: data.serviceIds,
