@@ -76,6 +76,9 @@ export interface DataGridPageProps<T, C = unknown> {
 
   // Transform data before filtering/display (e.g. for client-side pre-filtering)
   transformData?: (data: T[]) => T[];
+
+  // Notified whenever the visible (filtered + searched) row set changes
+  onFilteredDataChange?: (filteredData: T[]) => void;
 }
 
 export interface ColumnSelectorProps {

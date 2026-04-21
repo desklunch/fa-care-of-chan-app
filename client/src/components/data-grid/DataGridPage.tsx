@@ -359,6 +359,7 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
   enableCellSelection = false,
   hideColumnSelector = false,
   transformData,
+  onFilteredDataChange,
 }: DataGridPageProps<T, C>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [gridApi, setGridApi] = useState<GridApi<T> | null>(null);
@@ -676,6 +677,12 @@ export function DataGridPage<T extends { id?: string | number }, C = unknown>({
 
     return result;
   }, [data, searchText, searchFields, filters, filterState, context, transformData]);
+
+  useEffect(() => {
+    if (onFilteredDataChange) {
+      onFilteredDataChange(filteredData);
+    }
+  }, [filteredData, onFilteredDataChange]);
 
   // Note: With rowDragManaged=true, AG Grid handles visual reordering internally.
   // We only sync rowData when drag is NOT in progress to avoid conflicts.

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { NewDealDialog } from "@/components/new-deal-dialog";
@@ -34,7 +34,9 @@ import {
   Calendar,
   Tag,
   Zap,
+  Download,
 } from "lucide-react";
+import { downloadDealsCsv } from "@/lib/deal-csv";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1247,6 +1249,15 @@ export default function DealsPage() {
   const canWrite = can("deals.write");
 
   const [newDealDialogOpen, setNewDealDialogOpen] = useState(false);
+  const [filteredDeals, setFilteredDeals] = useState<DealWithRelations[]>([]);
+  const filteredDealsRef = useRef<DealWithRelations[]>([]);
+  const handleFilteredDataChange = useCallback((rows: DealWithRelations[]) => {
+    filteredDealsRef.current = rows;
+    setFilteredDeals(rows);
+  }, []);
+  const servicesMapRef = useRef<Map<number, DealService>>(new Map());
+  const linkedClientsMapRef = useRef<Map<string, DealLinkedClientEntry[]>>(new Map());
+  const dealTagsMapRef = useRef<Map<string, DealTagEntry[]>>(new Map());
   const { statuses: dealStatusList } = useDealStatuses();
   const statusSortOrderByName = useMemo(() => {
     return new Map(dealStatusList.map((s) => [s.name, s.sortOrder]));
@@ -1266,6 +1277,7 @@ export default function DealsPage() {
 
   // Create a services lookup map
   const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
+  servicesMapRef.current = servicesMap;
 
   const { data: allLinkedClients = [] } = useQuery<DealLinkedClientEntry[]>({
     queryKey: ["/api/deals/all-linked-clients"],
@@ -1280,6 +1292,7 @@ export default function DealsPage() {
     }
     return map;
   }, [allLinkedClients]);
+  linkedClientsMapRef.current = linkedClientsMap;
 
   const { data: allDealTags = [] } = useQuery<DealTagEntry[]>({
     queryKey: ["/api/deals/all-deal-tags"],
@@ -1294,6 +1307,7 @@ export default function DealsPage() {
     }
     return map;
   }, [allDealTags]);
+  dealTagsMapRef.current = dealTagsMap;
 
   // Mobile column configuration: explicit ColDef overrides per column
   const mobileColumnConfig: Record<
@@ -1614,14 +1628,38 @@ export default function DealsPage() {
         icon: CircleFadingPlus,
         href: "/deals/new",
       } : undefined}
-      additionalActions={canWrite ? [
+      additionalActions={[
+        ...(canWrite
+          ? [
+              {
+                label: "Quick Create",
+                icon: Zap,
+                variant: "outline" as const,
+                onClick: () => setNewDealDialogOpen(true),
+              },
+            ]
+          : []),
         {
-          label: "Quick Create",
-          icon: Zap,
-          variant: "outline",
-          onClick: () => setNewDealDialogOpen(true),
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline" as const,
+          onClick: () => {
+            const rows = filteredDealsRef.current;
+            if (rows.length === 0) {
+              toast({
+                title: "Nothing to export",
+                description: "There are no deals matching the current filters.",
+              });
+              return;
+            }
+            downloadDealsCsv(rows, {
+              servicesMap: servicesMapRef.current,
+              linkedClientsMap: linkedClientsMapRef.current,
+              dealTagsMap: dealTagsMapRef.current,
+            });
+          },
         },
-      ] : undefined}
+      ]}
     >
       <NewDealDialog
         open={newDealDialogOpen}
@@ -1672,6 +1710,7 @@ export default function DealsPage() {
           isMobile ? (deal) => setLocation(`/deals/${deal.id}`) : undefined
         }
         headerContent={undefined}
+        onFilteredDataChange={handleFilteredDataChange}
       />
     </PageLayout>
   );
