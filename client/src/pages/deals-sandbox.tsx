@@ -900,7 +900,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="richtext-cell-content max-h-[105px] overflow-hidden">
+          <div className="collapsible-cell-content max-h-[105px] overflow-hidden">
             <MarkdownDisplay className="prose dark:prose-invert text-sm/6  font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>
@@ -1018,18 +1018,20 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-            <ReactMarkdown
-              components={{
-                a: ({ href, children }) => (
-                  <a href={href} target="_blank" rel="noopener noreferrer">
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {params.value}
-            </ReactMarkdown>
+          <div className="collapsible-cell-content max-h-[120px] overflow-hidden">
+            <div className="prose prose-sm dark:prose-invert max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+              <ReactMarkdown
+                components={{
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {params.value}
+              </ReactMarkdown>
+            </div>
           </div>
         );
       },
@@ -1054,7 +1056,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="richtext-cell-content max-h-[120px] overflow-hidden">
+          <div className="collapsible-cell-content max-h-[120px] overflow-hidden">
             <MarkdownDisplay className="prose dark:prose-invert text-sm/6 tracking-wide font-light text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>

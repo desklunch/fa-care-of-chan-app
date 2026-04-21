@@ -574,7 +574,7 @@ mark.md-highlight u {
   padding-left: 1.5rem;
 }
 
-.ag-cell-focus .richtext-cell-content {
+.ag-row-focus .collapsible-cell-content {
   max-height: none;
   overflow: visible;
 }
