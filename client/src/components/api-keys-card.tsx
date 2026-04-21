@@ -146,8 +146,15 @@ export function ApiKeysCard() {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Authorization</Label>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Header: <code className="font-mono">Authorization: Bearer YOUR_KEY</code>
+                <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                  <div>
+                    Header (Claude Desktop, IDE clients):{" "}
+                    <code className="font-mono">Authorization: Bearer YOUR_KEY</code>
+                  </div>
+                  <div>
+                    URL (Claude.ai web custom connector — no header field):{" "}
+                    <code className="font-mono break-all">{mcpUrl}?token=YOUR_KEY</code>
+                  </div>
                 </div>
               </div>
             </div>

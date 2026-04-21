@@ -28,7 +28,7 @@ function generateSecureSessionId(): string {
   return randomBytes(32).toString("hex");
 }
 
-router.get("/sse", async (_req: Request, res: Response) => {
+router.get("/sse", async (req: Request, res: Response) => {
   const mcpServer = await getMcpServer();
   const sessionId = generateSecureSessionId();
 
@@ -36,7 +36,15 @@ router.get("/sse", async (_req: Request, res: Response) => {
 
   res.setHeader("X-Session-Id", sessionId);
 
-  const transport = new SSEServerTransport("/api/mcp/message", res);
+  // If the client authenticated via ?token=... (e.g. Claude.ai web custom
+  // connector, which has no header field), preserve the token on the message
+  // endpoint URL we hand back so follow-up POSTs stay authenticated.
+  const tokenFromQuery = typeof req.query.token === "string" ? req.query.token : undefined;
+  const messageEndpoint = tokenFromQuery
+    ? `/api/mcp/message?token=${encodeURIComponent(tokenFromQuery)}`
+    : "/api/mcp/message";
+
+  const transport = new SSEServerTransport(messageEndpoint, res);
   sseTransports.set(sessionId, transport);
 
   res.on("close", () => {
