@@ -215,44 +215,13 @@ function EventRow({
         </Button>
       </div>
 
-      <div className="flex items-center gap-3 p-4">
-        <div className="flex gap-4 w-full">
-          <div className="space-y-1 w-full">
-            <Label className="text-xs">Description</Label>
-            <Input
-              value={event.label}
-              onChange={(e) => updateField("label", e.target.value)}
-              placeholder="Description (e.g., Main Conference)"
-              className=""
-              data-testid={`input-event-label-${event.id}`}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Duration</Label>
-            <div className="flex h-12 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
-              <NumericInput
-                value={event.durationDays}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  updateField("durationDays", Math.min(30, Math.max(1, parseInt(val) || 1)));
-                }}
-                className="w-auto border-0 shadow-none p-0 h-auto focus-visible:ring-0 bg-transparent"
-                data-testid={`input-duration-${event.id}`}
-              />
-              <span className="text-muted-foreground text-xs">
-                {event.durationDays === 1 ? "day" : "days"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {event.scheduleMode === "specific" && (
-        <div className="space-y-2 p-4 pt-0">
+        <div className="space-y-2 p-4 ">
           <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
             <div className="space-y-1">
               <Label className="text-xs">
-                {event.durationDays === 1 ? "Event Date" : "Start Date"}
+                {event.durationDays === 1 ? "Start Date" : "Start Date"}
               </Label>
               <DatePicker
                 date={primaryDate}
@@ -313,7 +282,7 @@ function EventRow({
       )}
 
       {event.scheduleMode === "flexible" && (
-        <div className="space-y-1 p-4 pt-0 ">
+        <div className="space-y-1 p-4  ">
           <Label className="text-xs">Date Window</Label>
           <div className="flex items-center gap-2">
             <Select
@@ -369,6 +338,40 @@ function EventRow({
           </div>
         </div>
       )}
+
+      <div className="flex items-center gap-3 p-4 pt-0">
+        <div className="flex gap-4 w-full">
+          <div className="space-y-1 w-24">
+            <Label className="text-xs">Event Duration</Label>
+            <div className="flex h-10 items-center rounded-md border px-3 text-sm shadow-sm focus-within:ring-1 focus-within:ring-ring bg-background border-input">
+              <NumericInput
+                value={event.durationDays}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateField("durationDays", Math.min(30, Math.max(1, parseInt(val) || 1)));
+                }}
+                className="h-10 w-auto border-0 shadow-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+                data-testid={`input-duration-${event.id}`}
+              />
+              <span className="text-muted-foreground text-xs">
+                {event.durationDays === 1 ? "day" : "days"}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1 w-full">
+            <Label className="text-xs">Description</Label>
+            <Input
+              value={event.label}
+              onChange={(e) => updateField("label", e.target.value)}
+              placeholder="Description (e.g., Main Conference)"
+              className="h-10"
+              data-testid={`input-event-label-${event.id}`}
+            />
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
@@ -440,7 +443,7 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
           data-testid="button-add-event-specific"
         >
           <CalendarPlus className="h-4 w-4" />
-          Add Specific Date
+          Add Specific Dates
         </Button>
         <Button
           type="button"
@@ -451,7 +454,7 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
           data-testid="button-add-event-flexible"
         >
           <CalendarPlus className="h-4 w-4" />
-          Add Flexible Date Window
+          Add General Window
         </Button>
       </div>
     </div>
