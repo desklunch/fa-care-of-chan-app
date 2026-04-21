@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -15,7 +14,7 @@ import {
 import { CalendarPlus, Trash2, X, Calendar, Plus } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { parseDateOnly } from "@/lib/date";
-import type { DealEvent, EventScheduleItem, ScheduleMode } from "@shared/schema";
+import type { DealEvent, EventScheduleItem } from "@shared/schema";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTHS_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -171,33 +170,6 @@ function EventRow({
   const getAlternativeSchedules = () => event.schedules.filter((s) => s.kind === "alternative");
   const getRangeSchedule = () => event.schedules.find((s) => s.kind === "range");
 
-  const toggleTBD = (isTBD: boolean) => {
-    if (isTBD) {
-      const startOptions = getNext12Months();
-      const firstStart = startOptions[0];
-      onUpdate({
-        ...event,
-        scheduleMode: "flexible",
-        schedules: [
-          {
-            id: generateId(),
-            kind: "range",
-            rangeStartMonth: firstStart.month,
-            rangeStartYear: firstStart.year,
-            rangeEndMonth: firstStart.month,
-            rangeEndYear: firstStart.year,
-          },
-        ],
-      });
-    } else {
-      onUpdate({
-        ...event,
-        scheduleMode: "specific",
-        schedules: [{ id: generateId(), kind: "primary", startDate: undefined }],
-      });
-    }
-  };
-
   const rangeSchedule = getRangeSchedule();
   const startMonthOptions = getNext12Months();
   const endMonthOptions =
@@ -270,17 +242,6 @@ function EventRow({
               <span className="text-muted-foreground text-xs">
                 {event.durationDays === 1 ? "day" : "days"}
               </span>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor={`tbd-${event.id}`} className="text-xs">Date TBD</Label>
-            <div className="h-12 w-16 flex items-center justify-center bg-background border border-input rounded-md">
-              <Switch
-                id={`tbd-${event.id}`}
-                checked={event.scheduleMode === "flexible"}
-                onCheckedChange={toggleTBD}
-                data-testid={`switch-tbd-${event.id}`}
-              />
             </div>
           </div>
         </div>
@@ -418,13 +379,35 @@ interface EventScheduleEditorProps {
 }
 
 export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProps) {
-  const addEvent = () => {
+  const addSpecificEvent = () => {
     const newEvent: DealEvent = {
       id: generateId(),
       label: "",
       durationDays: 1,
       scheduleMode: "specific",
       schedules: [{ id: generateId(), kind: "primary", startDate: undefined }],
+    };
+    onChange([...value, newEvent]);
+  };
+
+  const addFlexibleEvent = () => {
+    const startOptions = getNext12Months();
+    const firstStart = startOptions[0];
+    const newEvent: DealEvent = {
+      id: generateId(),
+      label: "",
+      durationDays: 1,
+      scheduleMode: "flexible",
+      schedules: [
+        {
+          id: generateId(),
+          kind: "range",
+          rangeStartMonth: firstStart.month,
+          rangeStartYear: firstStart.year,
+          rangeEndMonth: firstStart.month,
+          rangeEndYear: firstStart.year,
+        },
+      ],
     };
     onChange([...value, newEvent]);
   };
@@ -447,17 +430,30 @@ export function EventScheduleEditor({ value, onChange }: EventScheduleEditorProp
           onRemove={() => removeEvent(event.id)}
         />
       ))}
-      <Button
-        type="button"
-        variant="secondary"
-        size="md"
-        onClick={addEvent}
-        className="w-auto px-4 h-10"
-        data-testid="button-add-event"
-      >
-        <CalendarPlus className="h-4 w-4 " />
-        Add Event Block
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
+          onClick={addSpecificEvent}
+          className="w-auto px-4 h-10"
+          data-testid="button-add-event-specific"
+        >
+          <CalendarPlus className="h-4 w-4" />
+          Add Specific Date
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
+          onClick={addFlexibleEvent}
+          className="w-auto px-4 h-10"
+          data-testid="button-add-event-flexible"
+        >
+          <CalendarPlus className="h-4 w-4" />
+          Add Flexible Date Window
+        </Button>
+      </div>
     </div>
   );
 }
