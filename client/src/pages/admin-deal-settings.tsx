@@ -8,15 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Save, Loader2, Sheet } from "lucide-react";
+import { Save, Loader2, Sheet, Users } from "lucide-react";
 
 export default function AdminDealSettings() {
   usePageTitle("Deal Settings");
   const { toast } = useToast();
   const [templateSheetId, setTemplateSheetId] = useState("");
+  const [shareDomain, setShareDomain] = useState("");
 
   const { data, isLoading } = useQuery<{ templateSheetId: string }>({
     queryKey: ["/api/settings/deal-summary-template"],
+  });
+
+  const { data: shareDomainData, isLoading: isShareDomainLoading } = useQuery<{ shareDomain: string }>({
+    queryKey: ["/api/settings/deal-summary-share-domain"],
   });
 
   useEffect(() => {
@@ -24,6 +29,12 @@ export default function AdminDealSettings() {
       setTemplateSheetId(data.templateSheetId || "");
     }
   }, [data]);
+
+  useEffect(() => {
+    if (shareDomainData) {
+      setShareDomain(shareDomainData.shareDomain || "");
+    }
+  }, [shareDomainData]);
 
   const saveMutation = useMutation({
     mutationFn: async (value: string) => {
@@ -38,8 +49,25 @@ export default function AdminDealSettings() {
     },
   });
 
+  const saveShareDomainMutation = useMutation({
+    mutationFn: async (value: string) => {
+      await apiRequest("PATCH", "/api/settings/deal-summary-share-domain", { shareDomain: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/deal-summary-share-domain"] });
+      toast({ title: "Share domain saved" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleSave = () => {
     saveMutation.mutate(templateSheetId);
+  };
+
+  const handleSaveShareDomain = () => {
+    saveShareDomainMutation.mutate(shareDomain.trim());
   };
 
   return (
@@ -88,6 +116,57 @@ export default function AdminDealSettings() {
               data-testid="button-save-template-setting"
             >
               {saveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              Save
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-base" data-testid="heading-deal-summary-share-domain">
+                Workspace Sharing
+              </CardTitle>
+            </div>
+            <CardDescription>
+              When a deal summary sheet is generated, it will automatically be shared with everyone
+              in this Google Workspace domain (writer access). Leave blank to fall back to the
+              domain of the user generating the sheet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="share-domain">Workspace Domain</Label>
+              {isShareDomainLoading ? (
+                <div className="flex items-center gap-2 h-9">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Loading...</span>
+                </div>
+              ) : (
+                <Input
+                  id="share-domain"
+                  value={shareDomain}
+                  onChange={(e) => setShareDomain(e.target.value)}
+                  placeholder="e.g. careofchan.com"
+                  data-testid="input-share-domain"
+                />
+              )}
+              <p className="text-xs text-muted-foreground">
+                Just the domain, no @ symbol or https://.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleSaveShareDomain}
+              disabled={saveShareDomainMutation.isPending}
+              data-testid="button-save-share-domain"
+            >
+              {saveShareDomainMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               ) : (
                 <Save className="h-4 w-4 mr-1" />

@@ -115,6 +115,46 @@ export function registerSettingsCommentsRoutes(app: Express): void {
     }
   });
 
+  // ===== DEAL SUMMARY SHARE DOMAIN SETTING =====
+
+  app.get("/api/settings/deal-summary-share-domain", isAuthenticated, requirePermission("admin.settings"), async (_req, res) => {
+    try {
+      const value = await settingsCommentsStorage.getAppSetting("deal_summary_share_domain");
+      res.json({ shareDomain: value || "" });
+    } catch (error) {
+      console.error("Error fetching deal summary share domain setting:", error);
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+
+  app.patch("/api/settings/deal-summary-share-domain", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const { shareDomain } = req.body;
+      if (typeof shareDomain !== "string") {
+        return res.status(400).json({ message: "shareDomain must be a string" });
+      }
+      const trimmed = shareDomain.trim();
+      if (trimmed && !/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/.test(trimmed)) {
+        return res.status(400).json({ message: "shareDomain must be a valid domain (e.g. example.com)" });
+      }
+      const userId = req.user.claims.sub;
+      await settingsCommentsStorage.setAppSetting("deal_summary_share_domain", trimmed, userId);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_setting",
+        entityId: "deal_summary_share_domain",
+        status: "success",
+        metadata: { key: "deal_summary_share_domain" },
+      });
+
+      res.json({ shareDomain: trimmed });
+    } catch (error) {
+      console.error("Error updating deal summary share domain setting:", error);
+      res.status(500).json({ message: "Failed to update setting" });
+    }
+  });
+
   // ===== USER THEME PREFERENCE =====
 
   app.get("/api/themes/user-preference", isAuthenticated, async (req: any, res) => {

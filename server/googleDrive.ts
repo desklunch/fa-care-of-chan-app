@@ -159,6 +159,30 @@ export async function copyDriveFile(
   return response.json();
 }
 
+export async function shareDriveFileWithDomain(
+  accessToken: string,
+  fileId: string,
+  domain: string,
+  role: "reader" | "writer" = "writer",
+): Promise<void> {
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}/permissions?supportsAllDrives=true&sendNotificationEmail=false`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ type: "domain", role, domain }),
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to share Drive file with domain: ${response.status} ${text}`);
+  }
+}
+
 function quoteSheetTitle(title: string): string {
   if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(title)) return title;
   return `'${title.replace(/'/g, "''")}'`;

@@ -11,7 +11,7 @@ import { type DealStatus, type DealStatusRecord, type FormSection, type FormFiel
 import { dealsStorage } from "./deals.storage";
 import { referenceDataStorage } from "../reference-data/reference-data.storage";
 import { formsStorage } from "../forms/forms.storage";
-import { copyDriveFile, findTokenCells, writeTokenCells, writeRichTextCells, type RichCellUpdate } from "../../googleDrive";
+import { copyDriveFile, findTokenCells, writeTokenCells, writeRichTextCells, shareDriveFileWithDomain, type RichCellUpdate } from "../../googleDrive";
 import { parseRichText, type RichTextSegment } from "../../richTextParser";
 import { settingsCommentsStorage } from "../settings-comments/settings-comments.storage";
 import { driveAttachmentsStorage } from "../drive-attachments/drive-attachments.storage";
@@ -1239,6 +1239,29 @@ export function registerDealsRoutes(app: Express): void {
           });
         }
         throw sheetsError;
+      }
+
+      try {
+        const configuredDomain = await settingsCommentsStorage.getAppSetting("deal_summary_share_domain");
+        let shareDomain = (configuredDomain || "").trim();
+        if (!shareDomain) {
+          const userEmail: string | undefined = req.user?.claims?.email;
+          if (userEmail && userEmail.includes("@")) {
+            shareDomain = userEmail.split("@")[1] || "";
+          }
+        }
+        if (shareDomain) {
+          await shareDriveFileWithDomain(accessToken, sheetResult.id, shareDomain, "writer");
+        } else {
+          console.warn(
+            `Deal summary ${sheetResult.id} not shared: no workspace domain configured and unable to derive from user email.`,
+          );
+        }
+      } catch (shareError: any) {
+        console.warn(
+          `Failed to share deal summary ${sheetResult.id} with workspace domain:`,
+          shareError?.message || shareError,
+        );
       }
 
       const attachment = await driveAttachmentsStorage.createAttachment({
