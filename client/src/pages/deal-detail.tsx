@@ -217,7 +217,7 @@ export default function DealDetail() {
   });
 
   const { data: allDealsTags = [] } = useQuery<{ id: string; name: string }[]>({
-    queryKey: ["/api/tags/category/Deals"],
+    queryKey: ["/api/tags/category", "Deals"],
     enabled: Boolean(id),
   });
 
