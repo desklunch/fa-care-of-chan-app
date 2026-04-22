@@ -81,12 +81,6 @@ class ProposalsService extends BaseService {
       clientId: parsed.clientId ?? deal.clientId ?? null,
       ownerId: parsed.ownerId ?? deal.ownerId ?? null,
       description: parsed.description ?? null,
-      budgetLow: parsed.budgetLow ?? deal.budgetLow ?? null,
-      budgetHigh: parsed.budgetHigh ?? deal.budgetHigh ?? null,
-      budgetNotes: parsed.budgetNotes ?? deal.budgetNotes ?? null,
-      locations: deal.locations ?? [],
-      eventSchedule: deal.eventSchedule ?? [],
-      serviceIds: deal.serviceIds ?? [],
       createdById: actorId,
     };
 

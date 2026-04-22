@@ -844,12 +844,6 @@ export const proposals = pgTable(
     clientId: varchar("client_id").references(() => clients.id),
     ownerId: varchar("owner_id").references(() => users.id),
     description: text("description"),
-    budgetLow: integer("budget_low"),
-    budgetHigh: integer("budget_high"),
-    budgetNotes: text("budget_notes"),
-    locations: jsonb("locations").$type<DealLocation[]>().default([]),
-    eventSchedule: jsonb("event_schedule").$type<DealEvent[]>().default([]),
-    serviceIds: integer("service_ids").array().default([]),
     createdById: varchar("created_by_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -869,7 +863,18 @@ export type InsertProposal = typeof proposals.$inferInsert;
 export type ProposalWithRelations = Proposal & {
   statusName?: string;
   statusColor?: string | null;
-  deal?: Pick<Deal, "id" | "displayName" | "dealNumber"> | null;
+  deal?: Pick<
+    Deal,
+    | "id"
+    | "displayName"
+    | "dealNumber"
+    | "budgetLow"
+    | "budgetHigh"
+    | "budgetNotes"
+    | "locations"
+    | "eventSchedule"
+    | "serviceIds"
+  > | null;
   client?: Pick<Client, "id" | "name"> | null;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
@@ -887,9 +892,6 @@ export const insertProposalSchema = createInsertSchema(proposals).omit({
   clientId: z.string().nullable().optional(),
   ownerId: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  budgetLow: z.number().int().nullable().optional(),
-  budgetHigh: z.number().int().nullable().optional(),
-  budgetNotes: z.string().nullable().optional(),
 });
 
 export const updateProposalSchema = createInsertSchema(proposals).pick({
@@ -898,12 +900,6 @@ export const updateProposalSchema = createInsertSchema(proposals).pick({
   clientId: true,
   ownerId: true,
   description: true,
-  budgetLow: true,
-  budgetHigh: true,
-  budgetNotes: true,
-  locations: true,
-  eventSchedule: true,
-  serviceIds: true,
 }).partial();
 
 export type CreateProposal = z.infer<typeof insertProposalSchema>;

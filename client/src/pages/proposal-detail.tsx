@@ -229,8 +229,11 @@ export default function ProposalDetail() {
 
   const currentStatus = statuses.find((s) => s.id === proposal.status);
 
-  const locations = (proposal.locations ?? []) as Array<{ displayName?: string; city?: string; state?: string; country?: string }>;
-  const eventSchedule = (proposal.eventSchedule ?? []) as Array<{ name?: string; date?: string; startTime?: string; endTime?: string }>;
+  const locations = (proposal.deal?.locations ?? []) as Array<{ displayName?: string; city?: string; state?: string; country?: string }>;
+  const eventSchedule = (proposal.deal?.eventSchedule ?? []) as Array<{ name?: string; date?: string; startTime?: string; endTime?: string }>;
+  const dealBudgetLow = proposal.deal?.budgetLow ?? null;
+  const dealBudgetHigh = proposal.deal?.budgetHigh ?? null;
+  const dealBudgetNotes = proposal.deal?.budgetNotes ?? null;
 
   return (
     <PageLayout
@@ -441,15 +444,15 @@ export default function ProposalDetail() {
 
                 <FieldRow label="Budget" testId="field-budget">
                   <div data-testid="text-budget">
-                    {(proposal.budgetLow != null || proposal.budgetHigh != null) ? (
+                    {(dealBudgetLow != null || dealBudgetHigh != null) ? (
                       <div className="space-y-1">
                         <p className="text-sm">
-                          {formatCurrency(proposal.budgetLow)}
-                          {proposal.budgetLow != null && proposal.budgetHigh != null ? " - " : ""}
-                          {formatCurrency(proposal.budgetHigh)}
+                          {formatCurrency(dealBudgetLow)}
+                          {dealBudgetLow != null && dealBudgetHigh != null ? " - " : ""}
+                          {formatCurrency(dealBudgetHigh)}
                         </p>
-                        {proposal.budgetNotes && (
-                          <p className="text-xs text-muted-foreground">{proposal.budgetNotes}</p>
+                        {dealBudgetNotes && (
+                          <p className="text-xs text-muted-foreground">{dealBudgetNotes}</p>
                         )}
                       </div>
                     ) : (

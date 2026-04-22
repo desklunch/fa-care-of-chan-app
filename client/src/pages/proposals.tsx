@@ -199,21 +199,21 @@ const PROPOSAL_CSV_COLUMNS: CsvColumn<ProposalWithRelations>[] = [
       p.owner ? `${p.owner.firstName ?? ""} ${p.owner.lastName ?? ""}`.trim() : "",
   },
   { header: "Description", get: (p) => p.description ?? "" },
-  { header: "Budget Low", get: (p) => p.budgetLow ?? "" },
-  { header: "Budget High", get: (p) => p.budgetHigh ?? "" },
-  { header: "Budget Notes", get: (p) => p.budgetNotes ?? "" },
+  { header: "Budget Low", get: (p) => p.deal?.budgetLow ?? "" },
+  { header: "Budget High", get: (p) => p.deal?.budgetHigh ?? "" },
+  { header: "Budget Notes", get: (p) => p.deal?.budgetNotes ?? "" },
   {
     header: "Locations",
     get: (p) =>
-      (p.locations ?? []).map((loc) => loc.displayName ?? "").filter(Boolean).join("; "),
+      (p.deal?.locations ?? []).map((loc) => loc.displayName ?? "").filter(Boolean).join("; "),
   },
   {
     header: "Event Schedule",
-    get: (p) => (p.eventSchedule ? JSON.stringify(p.eventSchedule) : ""),
+    get: (p) => (p.deal?.eventSchedule ? JSON.stringify(p.deal.eventSchedule) : ""),
   },
   {
     header: "Service IDs",
-    get: (p) => (p.serviceIds ?? []).join("; "),
+    get: (p) => (p.deal?.serviceIds ?? []).join("; "),
   },
   { header: "Created By ID", get: (p) => p.createdById ?? "" },
   {
