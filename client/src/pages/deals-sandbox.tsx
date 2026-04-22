@@ -902,7 +902,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
       cellRenderer: (params: { value: string | null }) => {
         if (!params.value) return null;
         return (
-          <div className="collapsible-cell-content max-h-[105px] overflow-hidden">
+          <div className="collapsible-cell-content max-h-[120px] overflow-hidden">
             <MarkdownDisplay className="prose dark:prose-invert text-sm/6 text-foreground/80 max-w-none py-3 pt-[14px] [&>*]:my-[0.5em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
               {normalizeToMarkdown(params.value)}
             </MarkdownDisplay>
@@ -1114,7 +1114,7 @@ export const dealColumns: ColumnConfig<DealWithRelations>[] = [
     category: "Basic Info",
     colDef: {
       flex: 3,
-      minWidth: 200,
+      minWidth: 300,
       editable: true,
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
