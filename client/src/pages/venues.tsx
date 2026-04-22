@@ -35,9 +35,12 @@ import {
   NotepadText,
   DraftingCompass,
   AppWindow,
+  Download,
   type LucideIcon,
 } from "lucide-react";
 import { InfoBanner } from "@/components/ui/info-banner";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 
 const VENUES_WELCOME_KEY = "venues_welcome_seen";
 
@@ -344,6 +347,42 @@ const venueColumns: ColumnConfig<VenueGridRow>[] = [
   },
 ];
 
+const VENUE_CSV_COLUMNS: CsvColumn<VenueGridRow>[] = [
+  { header: "ID", get: (v) => v.id ?? "" },
+  { header: "Name", get: (v) => v.name ?? "" },
+  { header: "Venue Type", get: (v) => v.venueType ?? "" },
+  { header: "Short Description", get: (v) => v.shortDescription ?? "" },
+  { header: "City", get: (v) => v.city ?? "" },
+  { header: "State", get: (v) => v.state ?? "" },
+  {
+    header: "Cuisine Tags",
+    get: (v) => (v.cuisineTags ?? []).map((t) => t.name).join("; "),
+  },
+  {
+    header: "Style Tags",
+    get: (v) => (v.styleTags ?? []).map((t) => t.name).join("; "),
+  },
+  {
+    header: "Amenities",
+    get: (v) => (v.amenities ?? []).map((a) => a.name).join("; "),
+  },
+  {
+    header: "Max Capacity",
+    get: (v) => {
+      if (!v.venueSpaces || v.venueSpaces.length === 0) return "";
+      const capacities = v.venueSpaces.flatMap((s) => [
+        s.maxCapacitySeated || 0,
+        s.maxCapacityStanding || 0,
+      ]);
+      const max = Math.max(...capacities);
+      return max > 0 ? max : "";
+    },
+  },
+  { header: "Is Active", get: (v) => (v.isActive ? "Yes" : "No") },
+  { header: "Is Draft", get: (v) => (v.isDraft ? "Yes" : "No") },
+  { header: "Created At", get: (v) => formatCsvTimestamp(v.createdAt) },
+];
+
 const venueFilters: FilterConfig<VenueGridRow>[] = [
   {
     id: "venueType",
@@ -566,6 +605,12 @@ export default function VenuesPage() {
     return null;
   }
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<VenueGridRow>({
+    filenamePrefix: "venues",
+    columns: VENUE_CSV_COLUMNS,
+    emptyDescription: "There are no venues matching the current filters.",
+  });
+
   const dataGridProps = {
     queryKey: "/api/venues",
     columns: venueColumns,
@@ -587,6 +632,7 @@ export default function VenuesPage() {
     collapsibleFilters: true,
     enableRowSelection: canWrite,
     selectionToolbar: canWrite ? selectionToolbar : undefined,
+    onFilteredDataChange,
   };
 
   return (
@@ -598,6 +644,14 @@ export default function VenuesPage() {
           icon: CircleFadingPlus,
           onClick: handleCreate,
         } : undefined}
+        additionalActions={[
+          {
+            label: "Export CSV",
+            icon: Download,
+            variant: "outline",
+            onClick: handleExport,
+          },
+        ]}
       >
         <div className="flex flex-col  h-full">
           {/* InfoBanner disabled for now

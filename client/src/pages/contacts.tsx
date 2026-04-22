@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor, Client } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { Building2, Handshake, CircleFadingPlus } from "lucide-react";
+import { Building2, Handshake, CircleFadingPlus, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "company", "emailAddresses", "phoneNumbers"];
 
@@ -244,11 +246,44 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   },
 ];
 
+const CONTACT_CSV_COLUMNS: CsvColumn<ContactWithVendors>[] = [
+  { header: "ID", get: (c) => c.id ?? "" },
+  { header: "External ID", get: (c) => c.externalId ?? "" },
+  { header: "First Name", get: (c) => c.firstName ?? "" },
+  { header: "Last Name", get: (c) => c.lastName ?? "" },
+  { header: "Job Title", get: (c) => c.jobTitle ?? "" },
+  { header: "Email Addresses", get: (c) => (c.emailAddresses ?? []).join("; ") },
+  { header: "Phone Numbers", get: (c) => (c.phoneNumbers ?? []).join("; ") },
+  {
+    header: "Clients",
+    get: (c) => (c.clients ?? []).map((cl) => cl.name ?? "").filter(Boolean).join("; "),
+  },
+  {
+    header: "Vendors",
+    get: (c) => (c.vendors ?? []).map((v) => v.businessName ?? "").filter(Boolean).join("; "),
+  },
+  {
+    header: "Date of Birth",
+    get: (c) => formatCsvTimestamp(c.dateOfBirth),
+  },
+  { header: "Instagram", get: (c) => c.instagramUsername ?? "" },
+  { header: "LinkedIn", get: (c) => c.linkedinUsername ?? "" },
+  { header: "Home Address", get: (c) => c.homeAddress ?? "" },
+  { header: "Created At", get: (c) => formatCsvTimestamp(c.createdAt) },
+  { header: "Updated At", get: (c) => formatCsvTimestamp(c.updatedAt) },
+];
+
 export default function Contacts() {
   usePageTitle("Contacts");
   const [, setLocation] = useProtectedLocation();
   const { can } = usePermissions();
   const canCreate = can('contacts.write');
+
+  const { onFilteredDataChange, handleExport } = useCsvExport<ContactWithVendors>({
+    filenamePrefix: "contacts",
+    columns: CONTACT_CSV_COLUMNS,
+    emptyDescription: "There are no contacts matching the current filters.",
+  });
 
   return (
     <PageLayout
@@ -258,6 +293,14 @@ export default function Contacts() {
         href: "/contacts/new",
         icon: CircleFadingPlus,
       } : undefined}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage
         queryKey="/api/contacts"
@@ -276,6 +319,7 @@ export default function Contacts() {
         getRowId={(contact) => contact.id || ""}
         emptyMessage="No contacts found"
         emptyDescription="Your contacts directory is empty."
+        onFilteredDataChange={onFilteredDataChange}
       />
     </PageLayout>
   );

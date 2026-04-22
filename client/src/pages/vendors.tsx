@@ -28,7 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
-import { Star, ExternalLink, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText } from "lucide-react";
+import { Star, ExternalLink, MapPin, Briefcase, CircleFadingPlus, Mail, X, Loader2, CheckCircle, FileText, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 
 const DEFAULT_VISIBLE_COLUMNS = ["businessName", "services", "locations"];
 
@@ -300,6 +302,37 @@ const vendorFilters: FilterConfig<VendorWithRelations>[] = [
   },
 ];
 
+const VENDOR_CSV_COLUMNS: CsvColumn<VendorWithRelations>[] = [
+  { header: "ID", get: (v) => v.id ?? "" },
+  { header: "External ID", get: (v) => v.externalId ?? "" },
+  { header: "Business Name", get: (v) => v.businessName ?? "" },
+  { header: "Email", get: (v) => v.email ?? "" },
+  { header: "Phone", get: (v) => v.phone ?? "" },
+  { header: "Website", get: (v) => v.website ?? "" },
+  { header: "Address", get: (v) => v.address ?? "" },
+  {
+    header: "Locations",
+    get: (v) =>
+      (v.locations ?? [])
+        .map((loc) => loc.displayName || [loc.city, loc.region].filter(Boolean).join(", "))
+        .filter(Boolean)
+        .join("; "),
+  },
+  {
+    header: "Services",
+    get: (v) => (v.services ?? []).map((s) => s.name).join("; "),
+  },
+  { header: "Is Preferred", get: (v) => (v.isPreferred ? "Yes" : "No") },
+  { header: "Capabilities Deck", get: (v) => v.capabilitiesDeck ?? "" },
+  { header: "Employee Count", get: (v) => v.employeeCount ?? "" },
+  { header: "Diversity Info", get: (v) => v.diversityInfo ?? "" },
+  { header: "Charges Sales Tax", get: (v) => (v.chargesSalesTax ? "Yes" : "No") },
+  { header: "Sales Tax Notes", get: (v) => v.salesTaxNotes ?? "" },
+  { header: "Notes", get: (v) => v.notes ?? "" },
+  { header: "Created At", get: (v) => formatCsvTimestamp(v.createdAt) },
+  { header: "Updated At", get: (v) => formatCsvTimestamp(v.updatedAt) },
+];
+
 export default function Vendors() {
   usePageTitle("Vendors");
   const [, setLocation] = useProtectedLocation();
@@ -492,6 +525,12 @@ export default function Vendors() {
 
   const draftFormRequests = formRequests.filter(fr => fr.status === "draft");
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<VendorWithRelations>({
+    filenamePrefix: "vendors",
+    columns: VENDOR_CSV_COLUMNS,
+    emptyDescription: "There are no vendors matching the current filters.",
+  });
+
   return (
     <PageLayout 
       breadcrumbs={[{ label: "Vendors" }]}
@@ -501,6 +540,14 @@ export default function Vendors() {
         icon: CircleFadingPlus,
         variant: "default",
       } : undefined}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage
         queryKey="/api/vendors"
@@ -523,6 +570,7 @@ export default function Vendors() {
         toolbarActions={<></>}
         enableRowSelection={false}
         selectionToolbar={selectionToolbar}
+        onFilteredDataChange={onFilteredDataChange}
       />
 
       <Dialog open={assignFormDialogOpen} onOpenChange={setAssignFormDialogOpen}>

@@ -41,7 +41,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertBrandSchema, type Brand, type CreateBrand } from "@shared/schema";
-import { CircleFadingPlus, MoreHorizontal, Pencil, Trash2, Loader2, Factory } from "lucide-react";
+import { CircleFadingPlus, MoreHorizontal, Pencil, Trash2, Loader2, Factory, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
 import { z } from "zod";
@@ -394,6 +396,16 @@ function BrandFormDialog({
   );
 }
 
+const BRAND_CSV_COLUMNS: CsvColumn<Brand>[] = [
+  { header: "ID", get: (b) => b.id ?? "" },
+  { header: "External ID", get: (b) => b.externalId ?? "" },
+  { header: "Name", get: (b) => b.name ?? "" },
+  { header: "Industry", get: (b) => b.industry ?? "" },
+  { header: "Notes", get: (b) => b.notes ?? "" },
+  { header: "Created At", get: (b) => formatCsvTimestamp(b.createdAt) },
+  { header: "Updated At", get: (b) => formatCsvTimestamp(b.updatedAt) },
+];
+
 export default function Brands() {
   usePageTitle("Brands");
   const { toast } = useToast();
@@ -446,6 +458,12 @@ export default function Brands() {
     onDelete: handleDelete,
   };
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<Brand>({
+    filenamePrefix: "brands",
+    columns: BRAND_CSV_COLUMNS,
+    emptyDescription: "There are no brands matching the current filters.",
+  });
+
   return (
     <PageLayout
       breadcrumbs={[{ label: "Brands" }]}
@@ -457,6 +475,14 @@ export default function Brands() {
         },
         icon: CircleFadingPlus,
       }}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage
         queryKey="/api/brands"
@@ -469,6 +495,7 @@ export default function Brands() {
         emptyMessage="No brands found"
         emptyDescription="Start building your brand directory by adding a brand."
         context={gridContext}
+        onFilteredDataChange={onFilteredDataChange}
       />
 
       <BrandFormDialog

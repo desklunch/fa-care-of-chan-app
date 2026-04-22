@@ -9,7 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ProposalWithRelations, ProposalStatusRecord } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { CircleFadingPlus, FileText, User } from "lucide-react";
+import { CircleFadingPlus, FileText, User, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 
 const DEFAULT_VISIBLE_COLUMNS = ["title", "deal", "status", "owner", "createdAt"];
 
@@ -181,6 +183,50 @@ const proposalFilters: FilterConfig<ProposalWithRelations>[] = [
   },
 ];
 
+const PROPOSAL_CSV_COLUMNS: CsvColumn<ProposalWithRelations>[] = [
+  { header: "ID", get: (p) => p.id ?? "" },
+  { header: "Title", get: (p) => p.title ?? "" },
+  { header: "Deal ID", get: (p) => p.dealId ?? "" },
+  { header: "Deal Name", get: (p) => p.deal?.displayName ?? "" },
+  { header: "Deal Number", get: (p) => p.deal?.dealNumber ?? "" },
+  { header: "Status", get: (p) => p.statusName ?? String(p.status ?? "") },
+  { header: "Client ID", get: (p) => p.clientId ?? "" },
+  { header: "Client Name", get: (p) => p.client?.name ?? "" },
+  { header: "Owner ID", get: (p) => p.ownerId ?? "" },
+  {
+    header: "Owner",
+    get: (p) =>
+      p.owner ? `${p.owner.firstName ?? ""} ${p.owner.lastName ?? ""}`.trim() : "",
+  },
+  { header: "Description", get: (p) => p.description ?? "" },
+  { header: "Budget Low", get: (p) => p.budgetLow ?? "" },
+  { header: "Budget High", get: (p) => p.budgetHigh ?? "" },
+  { header: "Budget Notes", get: (p) => p.budgetNotes ?? "" },
+  {
+    header: "Locations",
+    get: (p) =>
+      (p.locations ?? []).map((loc) => loc.displayName ?? "").filter(Boolean).join("; "),
+  },
+  {
+    header: "Event Schedule",
+    get: (p) => (p.eventSchedule ? JSON.stringify(p.eventSchedule) : ""),
+  },
+  {
+    header: "Service IDs",
+    get: (p) => (p.serviceIds ?? []).join("; "),
+  },
+  { header: "Created By ID", get: (p) => p.createdById ?? "" },
+  {
+    header: "Created By",
+    get: (p) =>
+      p.createdBy
+        ? `${p.createdBy.firstName ?? ""} ${p.createdBy.lastName ?? ""}`.trim()
+        : "",
+  },
+  { header: "Created At", get: (p) => formatCsvTimestamp(p.createdAt) },
+  { header: "Updated At", get: (p) => formatCsvTimestamp(p.updatedAt) },
+];
+
 export default function Proposals() {
   usePageTitle("Proposals");
   const [, setLocation] = useProtectedLocation();
@@ -198,6 +244,12 @@ export default function Proposals() {
     statusesMap,
   };
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<ProposalWithRelations>({
+    filenamePrefix: "proposals",
+    columns: PROPOSAL_CSV_COLUMNS,
+    emptyDescription: "There are no proposals matching the current filters.",
+  });
+
   return (
     <PageLayout
       breadcrumbs={[{ label: "Proposals" }]}
@@ -210,6 +262,14 @@ export default function Proposals() {
             }
           : undefined
       }
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage
         queryKey="/api/proposals"
@@ -224,6 +284,7 @@ export default function Proposals() {
         emptyDescription="Create a proposal from a qualified deal to get started."
         context={gridContext}
         isExternalDataLoading={statusesLoading}
+        onFilteredDataChange={onFilteredDataChange}
       />
     </PageLayout>
   );

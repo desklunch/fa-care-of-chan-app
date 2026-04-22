@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import type { Client, Industry } from "@shared/schema";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { CircleFadingPlus, Building2 } from "lucide-react";
+import { CircleFadingPlus, Building2, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "industry", "website"];
 
@@ -86,6 +88,21 @@ const clientFilters: FilterConfig<Client>[] = [
   },
 ];
 
+const CSV_COLUMNS: CsvColumn<Client, ClientsGridContext>[] = [
+  { header: "ID", get: (c) => c.id ?? "" },
+  { header: "External ID", get: (c) => c.externalId ?? "" },
+  { header: "Name", get: (c) => c.name ?? "" },
+  { header: "Industry ID", get: (c) => c.industryId ?? "" },
+  {
+    header: "Industry",
+    get: (c, ctx) =>
+      c.industryId ? ctx.industriesMap.get(c.industryId)?.name ?? c.industryId : "",
+  },
+  { header: "Website", get: (c) => c.website ?? "" },
+  { header: "Created At", get: (c) => formatCsvTimestamp(c.createdAt) },
+  { header: "Updated At", get: (c) => formatCsvTimestamp(c.updatedAt) },
+];
+
 export default function Clients() {
   usePageTitle("Clients");
   const [, setLocation] = useProtectedLocation();
@@ -106,6 +123,13 @@ export default function Clients() {
     industriesMap,
   };
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<Client, ClientsGridContext>({
+    filenamePrefix: "clients",
+    columns: CSV_COLUMNS,
+    getContext: () => gridContext,
+    emptyDescription: "There are no clients matching the current filters.",
+  });
+
   return (
     <PageLayout
       breadcrumbs={[{ label: "Clients" }]}
@@ -114,6 +138,14 @@ export default function Clients() {
         href: "/clients/new",
         icon: CircleFadingPlus,
       } : undefined}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage
         queryKey="/api/clients"
@@ -128,6 +160,7 @@ export default function Clients() {
         emptyDescription="Start building your client directory by adding a client."
         context={gridContext}
         isExternalDataLoading={industriesLoading}
+        onFilteredDataChange={onFilteredDataChange}
       />
     </PageLayout>
   );

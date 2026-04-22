@@ -31,7 +31,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CircleFadingPlus, Trash2 } from "lucide-react";
+import { CircleFadingPlus, Trash2, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +47,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "description"];
+
+const INDUSTRY_CSV_COLUMNS: CsvColumn<Industry>[] = [
+  { header: "ID", get: (i) => i.id ?? "" },
+  { header: "Name", get: (i) => i.name ?? "" },
+  { header: "Description", get: (i) => i.description ?? "" },
+  { header: "Created At", get: (i) => formatCsvTimestamp(i.createdAt) },
+  { header: "Updated At", get: (i) => formatCsvTimestamp(i.updatedAt) },
+];
 
 const industryFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -307,6 +317,12 @@ export default function IndustriesPage() {
     },
   ];
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<Industry>({
+    filenamePrefix: "industries",
+    columns: INDUSTRY_CSV_COLUMNS,
+    emptyDescription: "There are no industries matching the current filters.",
+  });
+
   const dataGridProps = {
     queryKey: "/api/industries",
     columns: industryColumns,
@@ -317,6 +333,7 @@ export default function IndustriesPage() {
     getRowId: (industry: Industry) => industry.id,
     emptyMessage: "No industries yet",
     emptyDescription: "Create your first industry to get started.",
+    onFilteredDataChange,
   };
 
   if (isAuthLoading) {
@@ -346,6 +363,14 @@ export default function IndustriesPage() {
         icon: CircleFadingPlus,
         variant: "default",
       }}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage {...dataGridProps} />
 

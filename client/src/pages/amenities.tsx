@@ -32,7 +32,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CircleFadingPlus, Trash2 } from "lucide-react";
+import { CircleFadingPlus, Trash2, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +49,15 @@ import {
 import * as LucideIcons from "lucide-react";
 
 const DEFAULT_VISIBLE_COLUMNS = ["icon", "name", "description"];
+
+const AMENITY_CSV_COLUMNS: CsvColumn<Amenity>[] = [
+  { header: "ID", get: (a) => a.id ?? "" },
+  { header: "Name", get: (a) => a.name ?? "" },
+  { header: "Icon", get: (a) => a.icon ?? "" },
+  { header: "Description", get: (a) => a.description ?? "" },
+  { header: "Created At", get: (a) => formatCsvTimestamp(a.createdAt) },
+  { header: "Updated At", get: (a) => formatCsvTimestamp(a.updatedAt) },
+];
 
 const amenityFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -377,6 +388,12 @@ export default function AmenitiesPage() {
     },
   ];
 
+  const { onFilteredDataChange, handleExport } = useCsvExport<Amenity>({
+    filenamePrefix: "amenities",
+    columns: AMENITY_CSV_COLUMNS,
+    emptyDescription: "There are no amenities matching the current filters.",
+  });
+
   const dataGridProps = {
     queryKey: "/api/amenities",
     columns: amenityColumns,
@@ -387,6 +404,7 @@ export default function AmenitiesPage() {
     getRowId: (amenity: Amenity) => amenity.id,
     emptyMessage: "No amenities yet",
     emptyDescription: "Create your first amenity to get started.",
+    onFilteredDataChange,
   };
 
   if (isAuthLoading) {
@@ -416,6 +434,14 @@ export default function AmenitiesPage() {
         icon: CircleFadingPlus,
         variant: "default",
       }}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage {...dataGridProps} />
 

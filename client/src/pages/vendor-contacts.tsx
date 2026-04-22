@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import type { ContactWithVendors, Vendor, Client } from "@shared/schema";
 import type { ColumnConfig } from "@/components/data-grid/types";
 import { format } from "date-fns";
-import { Building2, CircleFadingPlus, Contact } from "lucide-react";
+import { Building2, CircleFadingPlus, Contact, Download } from "lucide-react";
+import { useCsvExport } from "@/hooks/use-csv-export";
+import { formatCsvTimestamp, type CsvColumn } from "@/lib/csv-export";
 
 const DEFAULT_VISIBLE_COLUMNS = ["name", "jobTitle", "vendors", "clients", "emailAddresses", "phoneNumbers"];
 
@@ -293,9 +295,44 @@ const contactColumns: ColumnConfig<ContactWithVendors>[] = [
   },
 ];
 
+const VENDOR_CONTACT_CSV_COLUMNS: CsvColumn<ContactWithVendors>[] = [
+  { header: "ID", get: (c) => c.id ?? "" },
+  { header: "First Name", get: (c) => c.firstName ?? "" },
+  { header: "Last Name", get: (c) => c.lastName ?? "" },
+  { header: "Job Title", get: (c) => c.jobTitle ?? "" },
+  {
+    header: "Vendors",
+    get: (c) => (c.vendors ?? []).map((v) => v.businessName ?? "").filter(Boolean).join("; "),
+  },
+  {
+    header: "Clients",
+    get: (c) => (c.clients ?? []).map((cl) => cl.name ?? "").filter(Boolean).join("; "),
+  },
+  {
+    header: "Email Addresses",
+    get: (c) => (c.emailAddresses ?? []).join("; "),
+  },
+  {
+    header: "Phone Numbers",
+    get: (c) => (c.phoneNumbers ?? []).join("; "),
+  },
+  { header: "Date of Birth", get: (c) => formatCsvTimestamp(c.dateOfBirth) },
+  { header: "Instagram", get: (c) => c.instagramUsername ?? "" },
+  { header: "LinkedIn", get: (c) => c.linkedinUsername ?? "" },
+  { header: "Home Address", get: (c) => c.homeAddress ?? "" },
+  { header: "Created At", get: (c) => formatCsvTimestamp(c.createdAt) },
+  { header: "Updated At", get: (c) => formatCsvTimestamp(c.updatedAt) },
+];
+
 export default function VendorContacts() {
   usePageTitle("Vendor Contacts");
   const [, setLocation] = useProtectedLocation();
+
+  const { onFilteredDataChange, handleExport } = useCsvExport<ContactWithVendors>({
+    filenamePrefix: "vendor-contacts",
+    columns: VENDOR_CONTACT_CSV_COLUMNS,
+    emptyDescription: "There are no vendor contacts matching the current filters.",
+  });
 
   return (
     <PageLayout
@@ -308,6 +345,14 @@ export default function VendorContacts() {
         href: "/contacts/new",
         icon: Contact,
       }}
+      additionalActions={[
+        {
+          label: "Export CSV",
+          icon: Download,
+          variant: "outline",
+          onClick: handleExport,
+        },
+      ]}
     >
       <DataGridPage
         queryKey="/api/vendors/contacts"
@@ -326,6 +371,7 @@ export default function VendorContacts() {
         getRowId={(contact) => contact.id || ""}
         emptyMessage="No vendor contacts found"
         emptyDescription="No contacts are linked to vendors yet."
+        onFilteredDataChange={onFilteredDataChange}
       />
     </PageLayout>
   );
