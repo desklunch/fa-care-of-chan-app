@@ -85,7 +85,7 @@ export default function Landing() {
           </svg>
         </div>
         <div className="rounded-md bg-primary text-background w-fit p-2 py-1 text-sm tracking-wide">
-          Chansey 1.8.0 
+          Chansey 1.9.0 
           
         </div>
 
