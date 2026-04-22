@@ -557,6 +557,7 @@ export default function DealDetail() {
                   options={dealStatusList.map((s) => ({
                     value: String(s.id),
                     label: s.name,
+                    renderLabel: <DealStatusBadge status={s.name} />,
                   }))}
                   onSave={(field, value) =>
                     handleFieldSave(field, Number(value))
