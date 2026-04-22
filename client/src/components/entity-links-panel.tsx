@@ -153,6 +153,11 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
   if (compact) {
     return (
       <div className="space-y-2">
+        {links.length === 0 && !canWrite && (
+          <p className="text-sm text-muted-foreground" data-testid="text-no-links">
+            No links attached.
+          </p>
+        )}
         {links.map((link) => (
           <div key={link.id} className="flex items-start justify-between gap-2 p-2 border rounded-md" data-testid={`link-item-${link.id}`}>
             <a

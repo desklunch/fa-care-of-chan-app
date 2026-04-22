@@ -944,6 +944,25 @@ export default function DealDetail() {
               <CardHeader className="pb-2">
                 <CardTitle
                   className="text-base"
+                  data-testid="heading-attachments"
+                >
+                  Attachments
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
+                <EntityLinksPanel
+                  entityType="deal"
+                  entityId={id!}
+                  canWrite={false}
+                  compact
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle
+                  className="text-base"
                   data-testid="heading-project-info"
                 >
                   Project Info
@@ -1398,6 +1417,7 @@ export default function DealDetail() {
                 />
               </CardContent>
             </Card>
+
           </TabsContent>
 
           <TabsContent value="intake" className="p-4 md:p-6 pt-4 max-w-6xl">
