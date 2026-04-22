@@ -2,7 +2,7 @@ import { entityLinksStorage } from "./entity-links.storage";
 import { domainEvents } from "../../lib/events";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
-import { entityLinkEntityTypes, deals, proposalTasks, entityTasks, getEntityPermissionPrefix, type EntityLinkEntityType, type EntityLink, type EntityLinkWithUser } from "@shared/schema";
+import { entityLinkEntityTypes, deals, proposalTasks, entityTasks, getEntityPermissionPrefix, updateEntityLinkSchema, type EntityLinkEntityType, type EntityLink, type EntityLinkWithUser } from "@shared/schema";
 
 // Sub-entity → permission prefix overrides. entity_task is a fallback used
 // when we don't have the row id handy; getEntityTaskPermissionPrefix below
@@ -128,6 +128,97 @@ export const entityLinksService = {
     });
 
     return link;
+  },
+
+  async updateLink(
+    linkId: string,
+    entityType: string,
+    entityId: string,
+    body: unknown,
+    actorId: string,
+    hasDeletePermission: boolean,
+  ): Promise<EntityLink> {
+    const link = await entityLinksStorage.getLinkById(linkId);
+
+    if (!link || link.entityType !== entityType || link.entityId !== entityId) {
+      throw new NotFoundError("Link not found");
+    }
+
+    if (entityType === "deal") {
+      if (link.createdById !== actorId && !hasDeletePermission) {
+        throw new ForbiddenError("You can only edit links you created");
+      }
+    }
+
+    const parsed = updateEntityLinkSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.errors[0]?.message || "Invalid input");
+    }
+    const data = parsed.data;
+
+    const updates: {
+      url?: string;
+      label?: string | null;
+      previewTitle?: string | null;
+      previewDescription?: string | null;
+      previewImage?: string | null;
+    } = {};
+
+    if (data.url !== undefined) {
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(data.url);
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+          throw new ValidationError("URL must use http or https");
+        }
+      } catch (e) {
+        if (e instanceof ValidationError) throw e;
+        throw new ValidationError("Invalid URL format");
+      }
+      updates.url = parsedUrl.href;
+
+      if (parsedUrl.href !== link.url) {
+        let previewTitle: string | null = null;
+        let previewDescription: string | null = null;
+        let previewImage: string | null = null;
+        try {
+          const { unfurlUrl } = await import("../../lib/unfurl");
+          const preview = await unfurlUrl(parsedUrl.href);
+          if (preview) {
+            previewTitle = preview.title ?? null;
+            previewDescription = preview.description ?? null;
+            previewImage = preview.image ?? null;
+          }
+        } catch (e) {
+          console.debug(`[entity-links] Unfurl failed for ${parsedUrl.href}:`, (e as Error).message);
+        }
+        updates.previewTitle = previewTitle;
+        updates.previewDescription = previewDescription;
+        updates.previewImage = previewImage;
+      }
+    }
+
+    if (data.label !== undefined) {
+      const trimmed = typeof data.label === "string" ? data.label.trim() : data.label;
+      if (entityType === "deal" && (!trimmed || trimmed.length === 0)) {
+        throw new ValidationError("label is required");
+      }
+      updates.label = trimmed || null;
+    }
+
+    const updated = await entityLinksStorage.updateLink(linkId, updates);
+
+    domainEvents.emit({
+      type: "entity_link:updated",
+      linkId,
+      entityType,
+      entityId,
+      url: updated.url,
+      actorId,
+      timestamp: new Date(),
+    });
+
+    return updated;
   },
 
   async deleteLink(

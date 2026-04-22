@@ -7,7 +7,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,44 +20,12 @@ import {
 import {
   Loader2,
   Plus,
-  Trash2,
-  ExternalLink,
-  Link as LinkIcon,
+  LinkIcon,
   Globe,
   Bookmark,
-  X,
 } from "lucide-react";
-import { format } from "date-fns";
 import type { EntityLinkWithUser } from "@shared/schema";
-
-function getUserName(user: { firstName?: string | null; lastName?: string | null } | null | undefined): string {
-  if (!user) return "Unknown";
-  return [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown";
-}
-
-function getUserInitials(user: { firstName?: string | null; lastName?: string | null } | null | undefined): string {
-  if (!user) return "?";
-  const first = user.firstName?.[0] || "";
-  const last = user.lastName?.[0] || "";
-  return (first + last).toUpperCase() || "?";
-}
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-}
-
-function getFaviconUrl(url: string): string {
-  try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
-  } catch {
-    return "";
-  }
-}
+import { LinkItem } from "@/components/link-item";
 
 interface EntityLinksPanelProps {
   entityType: string;
@@ -75,6 +42,7 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
   const [newUrl, setNewUrl] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [deleteLinkId, setDeleteLinkId] = useState<string | null>(null);
+  const [savingLinkId, setSavingLinkId] = useState<string | null>(null);
 
   const deletePermission = entityType === "deal" ? "deals.delete" : "proposals.delete";
   const canDeleteAny = can(deletePermission);
@@ -97,6 +65,19 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
     },
     onError: (error: Error) => {
       toast({ title: "Failed to add link", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ linkId, data }: { linkId: string; data: { url?: string; label?: string | null } }) => {
+      await apiRequest("PATCH", `/api/entity-links/${entityType}/${entityId}/${linkId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/entity-links", entityType, entityId] });
+      toast({ title: "Link updated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update link", description: error.message, variant: "destructive" });
     },
   });
 
@@ -125,10 +106,28 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
     });
   };
 
-  const canDeleteLink = (link: EntityLinkWithUser) => {
+  const canEditLink = (link: EntityLinkWithUser) => {
     if (!currentUser) return false;
     if (entityType === "proposal_task") return canWrite;
     return link.createdById === currentUser.id || canDeleteAny;
+  };
+
+  const handleSave = async (link: EntityLinkWithUser, data: { url: string; label: string | null }) => {
+    setSavingLinkId(link.id);
+    try {
+      await updateMutation.mutateAsync({
+        linkId: link.id,
+        data: {
+          url: data.url,
+          label: labelRequired ? (data.label ?? "") : data.label,
+        },
+      });
+    } catch {
+      // surfaced via toast in onError
+      throw new Error("save failed");
+    } finally {
+      setSavingLinkId(null);
+    }
   };
 
   if (isLoading) {
@@ -158,44 +157,21 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
             No links attached.
           </p>
         )}
-        {links.map((link) => (
-          <div key={link.id} className="flex items-start justify-between gap-2 p-2 border rounded-md" data-testid={`link-item-${link.id}`}>
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-start gap-2 min-w-0 flex-1"
-              data-testid={`link-url-${link.id}`}
-            >
-              {link.previewImage ? (
-                <img src={link.previewImage} alt="" className="h-8 w-8 rounded-md object-cover flex-shrink-0" />
-              ) : (
-                <LinkIcon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-              )}
-              <div className="min-w-0">
-                <span className="text-sm font-medium truncate block">
-                  {link.label || link.previewTitle || link.url}
-                </span>
-                {link.previewDescription && (
-                  <span className="text-xs text-muted-foreground line-clamp-1">{link.previewDescription}</span>
-                )}
-                <span className="text-xs text-muted-foreground truncate block">{link.url}</span>
-              </div>
-              <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-muted-foreground" />
-            </a>
-            {canWrite && canDeleteLink(link) && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="flex-shrink-0"
-                onClick={() => deleteMutation.mutate(link.id)}
-                data-testid={`button-remove-link-${link.id}`}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            )}
-          </div>
-        ))}
+        {links.map((link) => {
+          const editable = canWrite && canEditLink(link);
+          return (
+            <LinkItem
+              key={link.id}
+              link={link}
+              compact
+              editable={editable}
+              labelRequired={labelRequired}
+              onSave={editable ? (data) => handleSave(link, data) : undefined}
+              onDelete={editable ? () => deleteMutation.mutate(link.id) : undefined}
+              isSaving={savingLinkId === link.id}
+            />
+          );
+        })}
         {canWrite && (
           <div className="space-y-2 pt-2 border-t">
             <Input
@@ -319,131 +295,20 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
 
       {links.length > 0 && (
         <div className="space-y-3" data-testid="list-entity-links">
-          {links.map((link) => (
-            <Card
-              key={link.id}
-              className="group overflow-visible"
-              data-testid={`link-item-${link.id}`}
-            >
-              <CardContent className="py-3">
-                <div className="flex items-start gap-3">
-                  {link.previewImage ? (
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0"
-                    >
-                      <img
-                        src={link.previewImage}
-                        alt=""
-                        className="w-20 h-14 object-cover rounded-md border"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement;
-                          const favicon = getFaviconUrl(link.url);
-                          if (favicon && img.src !== favicon) {
-                            img.className = "w-10 h-10 rounded-md border p-1.5 bg-muted object-contain";
-                            img.src = favicon;
-                          } else {
-                            img.style.display = "none";
-                          }
-                        }}
-                        data-testid={`img-link-preview-${link.id}`}
-                      />
-                    </a>
-                  ) : (
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0"
-                    >
-                      <img
-                        src={getFaviconUrl(link.url)}
-                        alt=""
-                        className="w-10 h-10 rounded-md border p-1.5 bg-muted object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                          const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = "flex";
-                        }}
-                        data-testid={`img-link-favicon-${link.id}`}
-                      />
-                      <div className="w-10 h-10 rounded-md border items-center justify-center shrink-0 bg-muted hidden">
-                        <Globe className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    </a>
-                  )}
-
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm font-medium hover:underline"
-                      data-testid={`link-url-${link.id}`}
-                    >
-                      <span className="truncate">
-                        {link.label || link.previewTitle || getDomain(link.url)}
-                      </span>
-                      <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
-                    </a>
-
-                    {link.previewTitle && link.label && (
-                      <p className="text-xs text-muted-foreground truncate" data-testid={`text-link-title-${link.id}`}>
-                        {link.previewTitle}
-                      </p>
-                    )}
-
-                    {link.previewDescription && (
-                      <p
-                        className="text-xs text-muted-foreground line-clamp-2"
-                        data-testid={`text-link-desc-${link.id}`}
-                      >
-                        {link.previewDescription}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                      <span className="text-[11px] text-muted-foreground">{getDomain(link.url)}</span>
-                      <span className="text-[11px] text-muted-foreground">·</span>
-                      <span className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage
-                            src={link.createdBy?.profileImageUrl || undefined}
-                            alt={getUserName(link.createdBy)}
-                          />
-                          <AvatarFallback className="text-[7px]">
-                            {getUserInitials(link.createdBy)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-[11px] text-muted-foreground">
-                          {getUserName(link.createdBy)}
-                        </span>
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">·</span>
-                      <span className="text-[11px] text-muted-foreground" data-testid={`text-link-date-${link.id}`}>
-                        {format(new Date(link.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {canDeleteLink(link) && (
-                    <div className="invisible group-hover:visible shrink-0">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setDeleteLinkId(link.id)}
-                        data-testid={`button-delete-link-${link.id}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {links.map((link) => {
+            const editable = canWrite && canEditLink(link);
+            return (
+              <LinkItem
+                key={link.id}
+                link={link}
+                editable={editable}
+                labelRequired={labelRequired}
+                onSave={editable ? (data) => handleSave(link, data) : undefined}
+                onDelete={editable ? () => setDeleteLinkId(link.id) : undefined}
+                isSaving={savingLinkId === link.id}
+              />
+            );
+          })}
         </div>
       )}
 

@@ -79,6 +79,43 @@ export function registerEntityLinksRoutes(app: Express): void {
     },
   );
 
+  app.patch(
+    "/api/entity-links/:entityType/:entityId/:linkId",
+    isAuthenticated,
+    loadPermissions,
+    async (req: any, res) => {
+      try {
+        const { entityType, entityId, linkId } = req.params;
+        const actorId = req.user.claims.sub;
+
+        if (!entityLinksService.isValidEntityType(entityType)) {
+          return res.status(400).json({ message: "Invalid entity type" });
+        }
+
+        const prefix = entityType === "entity_task"
+          ? await entityLinksService.getEntityTaskPermissionPrefix(entityId)
+          : entityLinksService.getPermissionPrefix(entityType);
+        if (!checkPermission(req, `${prefix}.write`)) {
+          return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const hasDeletePermission = checkPermission(req, `${prefix}.delete`);
+        const updated = await entityLinksService.updateLink(
+          linkId,
+          entityType,
+          entityId,
+          req.body,
+          actorId,
+          hasDeletePermission,
+        );
+
+        res.json(updated);
+      } catch (error) {
+        handleDomainError(res, error, "Failed to update entity link");
+      }
+    },
+  );
+
   app.delete(
     "/api/entity-links/:entityType/:entityId/:linkId",
     isAuthenticated,

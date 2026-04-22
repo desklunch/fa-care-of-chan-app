@@ -1338,6 +1338,16 @@ export const insertEntityLinkSchema = createInsertSchema(entityLinks).omit({
   createdById: true,
 });
 
+export const updateEntityLinkSchema = z
+  .object({
+    url: z.string().min(1).max(2000).optional(),
+    label: z.string().max(500).nullable().optional(),
+  })
+  .refine((data) => data.url !== undefined || data.label !== undefined, {
+    message: "At least one of url or label must be provided",
+  });
+export type UpdateEntityLink = z.infer<typeof updateEntityLinkSchema>;
+
 export type EntityLinkWithUser = EntityLink & {
   createdBy?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
 };

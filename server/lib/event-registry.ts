@@ -880,6 +880,21 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       }),
     },
   },
+  "entity_link:updated": {
+    type: "entity_link:updated",
+    audit: {
+      action: "update",
+      entityType: "entity_link",
+      extractEntityId: (e) => (e as any).linkId ?? null,
+      extractChanges: (e) => ({
+        url: (e as any).url,
+      }),
+      extractMetadata: (e) => ({
+        entityType: (e as any).entityType,
+        entityId: (e as any).entityId,
+      }),
+    },
+  },
   "entity_task:created": {
     type: "entity_task:created",
     audit: {

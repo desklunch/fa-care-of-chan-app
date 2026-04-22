@@ -486,6 +486,16 @@ export interface EntityLinkDeletedEvent {
   timestamp: Date;
 }
 
+export interface EntityLinkUpdatedEvent {
+  type: "entity_link:updated";
+  linkId: string;
+  entityType: string;
+  entityId: string;
+  url: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface ProposalStakeholderAddedEvent {
   type: "proposal:stakeholder_added";
   proposalId: string;
@@ -931,6 +941,7 @@ export type DomainEvent =
   | DriveAttachmentDeletedEvent
   | EntityLinkCreatedEvent
   | EntityLinkDeletedEvent
+  | EntityLinkUpdatedEvent
   | EntityTaskCreatedEvent
   | EntityTaskUpdatedEvent
   | EntityTaskDeletedEvent
@@ -1028,6 +1039,7 @@ type EventMap = {
   "drive_attachment:deleted": DriveAttachmentDeletedEvent;
   "entity_link:created": EntityLinkCreatedEvent;
   "entity_link:deleted": EntityLinkDeletedEvent;
+  "entity_link:updated": EntityLinkUpdatedEvent;
   "entity_task:created": EntityTaskCreatedEvent;
   "entity_task:updated": EntityTaskUpdatedEvent;
   "entity_task:deleted": EntityTaskDeletedEvent;

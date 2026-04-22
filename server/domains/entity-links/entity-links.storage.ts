@@ -74,6 +74,31 @@ export const entityLinksStorage = {
     return link || null;
   },
 
+  async updateLink(
+    linkId: string,
+    data: {
+      url?: string;
+      label?: string | null;
+      previewTitle?: string | null;
+      previewDescription?: string | null;
+      previewImage?: string | null;
+    },
+  ): Promise<EntityLink> {
+    const updates: Record<string, unknown> = {};
+    if (data.url !== undefined) updates.url = data.url;
+    if (data.label !== undefined) updates.label = data.label;
+    if (data.previewTitle !== undefined) updates.previewTitle = data.previewTitle;
+    if (data.previewDescription !== undefined) updates.previewDescription = data.previewDescription;
+    if (data.previewImage !== undefined) updates.previewImage = data.previewImage;
+
+    const [link] = await db
+      .update(entityLinks)
+      .set(updates)
+      .where(eq(entityLinks.id, linkId))
+      .returning();
+    return link;
+  },
+
   async deleteLink(linkId: string): Promise<void> {
     await db.delete(entityLinks).where(eq(entityLinks.id, linkId));
   },
