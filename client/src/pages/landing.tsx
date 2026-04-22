@@ -71,7 +71,6 @@ export default function Landing() {
   return (
     <div className="mx-auto h-screen flex flex-col items-center justify-center text-center gap-6 text-primary p-6 bg-card ">
       <div className="w-full bg-background max-w-md rounded-[24px] shadow-lg  p-6 flex flex-col items-center gap-2  ">
-     
         <div className=" [&_svg]:fill-primary size-[96px] flex items-center justify-center rounded-full mb-4 ">
           <svg
             viewBox="0 0 49 44"
@@ -85,8 +84,7 @@ export default function Landing() {
           </svg>
         </div>
         <div className="rounded-md bg-primary text-background w-fit p-2 py-1 text-sm tracking-wide">
-          Chansey 1.9.0 
-          
+          Chansey 1.9.0
         </div>
 
         {/* Desktop: Show sign-in */}
@@ -94,7 +92,6 @@ export default function Landing() {
           className="flex flex-col items-center gap-6 my-4"
           data-testid="button-get-started"
         >
-
           {loginMutation.isPending ? (
             <Button size="lg" className="h-12 px-8 " disabled>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -122,8 +119,6 @@ export default function Landing() {
           ) : (
             <></>
           )}
-
-   
         </div>
 
         {isDevelopment && (
@@ -155,13 +150,33 @@ export default function Landing() {
         {/* Mobile: Show not optimized message */}
         <div className="flex items-center" data-testid="mobile-notice"></div>
 
-        <div className="flex  items-center gap-3 text-xs text-muted-foreground mt-2 font-medium" data-testid="legal-links">
+        <div
+          className="flex  items-center gap-3 text-xs text-muted-foreground mt-2 font-medium"
+          data-testid="legal-links"
+        >
           <span className="">© 2026 Care of Chan</span>
-          <Link href="/privacy" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-privacy">Privacy</Link>
-          <Link href="/terms" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-terms">Terms</Link>
-          <Link href="/overview" className="underline hover-elevate rounded px-1 py-0.5 no-underline" data-testid="link-overview">Disclosure</Link>
+          <Link
+            href="/privacy"
+            className="underline hover-elevate rounded px-1 py-0.5 no-underline"
+            data-testid="link-privacy"
+          >
+            Privacy
+          </Link>
+          <Link
+            href="/terms"
+            className="underline hover-elevate rounded px-1 py-0.5 no-underline"
+            data-testid="link-terms"
+          >
+            Terms
+          </Link>
+          <Link
+            href="/overview"
+            className="underline hover-elevate rounded px-1 py-0.5 no-underline"
+            data-testid="link-overview"
+          >
+            Disclosure
+          </Link>
           <span>·</span>
-
         </div>
       </div>
     </div>
