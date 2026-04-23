@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
@@ -20,6 +21,10 @@ import { DataGridPage } from "@/components/data-grid";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import type { AuditLog, User as UserType } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
+import {
+  humanizeFieldKey,
+  useAuditValueResolvers,
+} from "@/lib/audit-log-formatting";
 
 type AuditLogWithName = AuditLog & { performerName?: string };
 
@@ -116,32 +121,21 @@ function TimestampCellRenderer({ value }: ICellRendererParams<AuditLogWithName, 
   );
 }
 
-function formatJsonValue(value: unknown): string {
-  if (value === null || value === undefined) return "-";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (Array.isArray(value)) {
-    if (value.length === 0) return "[]";
-    return value.map(v => typeof v === "object" ? JSON.stringify(v) : String(v)).join(", ");
-  }
-  if (typeof value === "object") {
-    return JSON.stringify(value);
-  }
-  return String(value);
-}
+function ChangesCellRenderer({ value, data }: ICellRendererParams<AuditLogWithName, unknown>) {
+  const { formatValue } = useAuditValueResolvers();
 
-function ChangesCellRenderer({ value }: ICellRendererParams<AuditLogWithName, unknown>) {
   if (!value) return <span className="text-muted-foreground">-</span>;
-  
+
+  const entityType = data?.entityType;
   const changes = value as { before?: Record<string, unknown>; after?: Record<string, unknown> };
   const beforeKeys = Object.keys(changes.before || {});
   const afterKeys = Object.keys(changes.after || {});
   const allKeys = Array.from(new Set([...beforeKeys, ...afterKeys]));
-  
+
   if (allKeys.length === 0) {
     return <span className="text-muted-foreground">-</span>;
   }
-  
+
   return (
     <div className="text-xs space-y-1 py-1">
       {allKeys.slice(0, 4).map((key) => {
@@ -149,27 +143,29 @@ function ChangesCellRenderer({ value }: ICellRendererParams<AuditLogWithName, un
         const after = changes.after?.[key];
         const hasBefore = changes.before && key in changes.before;
         const hasAfter = changes.after && key in changes.after;
-        
+        const beforeText = formatValue(key, before, entityType);
+        const afterText = formatValue(key, after, entityType);
+
         return (
           <div key={key} className="flex flex-wrap gap-1">
-            <span className="font-medium text-foreground">{key}:</span>
+            <span className="font-medium text-foreground">{humanizeFieldKey(key)}:</span>
             {hasBefore && hasAfter ? (
               <>
-                <span className="text-red-500 line-through truncate max-w-[100px]" title={formatJsonValue(before)}>
-                  {formatJsonValue(before)}
+                <span className="text-red-500 line-through truncate max-w-[100px]" title={beforeText}>
+                  {beforeText}
                 </span>
                 <span className="text-muted-foreground">→</span>
-                <span className="text-green-600 dark:text-green-400 truncate max-w-[100px]" title={formatJsonValue(after)}>
-                  {formatJsonValue(after)}
+                <span className="text-green-600 dark:text-green-400 truncate max-w-[100px]" title={afterText}>
+                  {afterText}
                 </span>
               </>
             ) : hasAfter ? (
-              <span className="text-green-600 dark:text-green-400 truncate max-w-[150px]" title={formatJsonValue(after)}>
-                {formatJsonValue(after)}
+              <span className="text-green-600 dark:text-green-400 truncate max-w-[150px]" title={afterText}>
+                {afterText}
               </span>
             ) : hasBefore ? (
-              <span className="text-red-500 truncate max-w-[150px]" title={formatJsonValue(before)}>
-                {formatJsonValue(before)}
+              <span className="text-red-500 truncate max-w-[150px]" title={beforeText}>
+                {beforeText}
               </span>
             ) : null}
           </div>
@@ -179,6 +175,46 @@ function ChangesCellRenderer({ value }: ICellRendererParams<AuditLogWithName, un
         <span className="text-muted-foreground">+{allKeys.length - 4} more fields</span>
       )}
     </div>
+  );
+}
+
+function EntityIdCellRenderer({ data }: ICellRendererParams<AuditLogWithName>) {
+  const { resolveEntity } = useAuditValueResolvers();
+  if (!data?.entityId) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+  const resolved = resolveEntity(data.entityType, data.entityId);
+  const idText = (
+    <span className="font-mono text-xs text-muted-foreground" title={data.entityId}>
+      {data.entityId.length > 12 ? `${data.entityId.slice(0, 8)}…` : data.entityId}
+    </span>
+  );
+
+  if (!resolved) {
+    return (
+      <span className="font-mono text-xs text-muted-foreground" title={data.entityId}>
+        {data.entityId}
+      </span>
+    );
+  }
+
+  const nameNode = resolved.href ? (
+    <Link
+      href={resolved.href}
+      className="text-sm text-foreground hover:underline truncate max-w-[200px]"
+      data-testid={`link-entity-${data.entityId}`}
+    >
+      {resolved.name}
+    </Link>
+  ) : (
+    <span className="text-sm text-foreground truncate max-w-[200px]">{resolved.name}</span>
+  );
+
+  return (
+    <span className="flex items-center gap-2">
+      {nameNode}
+      {idText}
+    </span>
   );
 }
 
@@ -229,18 +265,14 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
   },
   {
     id: "entityId",
-    headerName: "Entity ID",
+    headerName: "Entity",
     field: "entityId",
     category: "Activity",
     toggleable: true,
     colDef: {
       flex: 1,
       width: 280,
-      cellRenderer: ({ value }: ICellRendererParams<AuditLogWithName, string>) => (
-        <span className="font-mono text-xs text-muted-foreground">
-          {value || "-"}
-        </span>
-      ),
+      cellRenderer: EntityIdCellRenderer,
     },
   },
   {

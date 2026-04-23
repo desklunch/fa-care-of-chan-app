@@ -2,6 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { Activity, Loader2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import {
+  humanizeFieldKey,
+  useAuditValueResolvers,
+} from "@/lib/audit-log-formatting";
 
 interface DealAuditLog {
   id: string;
@@ -28,19 +32,15 @@ const actionColors: Record<string, string> = {
   upload: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
 };
 
-function formatJsonValue(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "string") return value || "—";
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (Array.isArray(value)) {
-    if (value.length === 0) return "[]";
-    return value.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
-  }
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
-}
+function ChangesDisplay({
+  changes,
+  entityType,
+}: {
+  changes: unknown;
+  entityType?: string;
+}) {
+  const { formatValue } = useAuditValueResolvers();
 
-function ChangesDisplay({ changes }: { changes: unknown }) {
   if (!changes || typeof changes !== "object") return null;
 
   const c = changes as { before?: Record<string, unknown>; after?: Record<string, unknown> } & Record<string, unknown>;
@@ -61,39 +61,41 @@ function ChangesDisplay({ changes }: { changes: unknown }) {
           const after = c.after?.[key];
           const hasBefore = c.before && key in c.before;
           const hasAfter = c.after && key in c.after;
+          const beforeText = formatValue(key, before, entityType);
+          const afterText = formatValue(key, after, entityType);
 
           return (
             <div key={key} className="flex flex-wrap gap-1 items-baseline">
-              <span className="font-medium text-foreground">{key}:</span>
+              <span className="font-medium text-foreground">{humanizeFieldKey(key)}:</span>
               {hasBefore && hasAfter ? (
                 <>
                   <span
                     className="text-red-500 line-through truncate max-w-[200px]"
-                    title={formatJsonValue(before)}
+                    title={beforeText}
                   >
-                    {formatJsonValue(before)}
+                    {beforeText}
                   </span>
                   <span className="text-muted-foreground">→</span>
                   <span
                     className="text-green-600 dark:text-green-400 truncate max-w-[200px]"
-                    title={formatJsonValue(after)}
+                    title={afterText}
                   >
-                    {formatJsonValue(after)}
+                    {afterText}
                   </span>
                 </>
               ) : hasAfter ? (
                 <span
                   className="text-green-600 dark:text-green-400 truncate max-w-[300px]"
-                  title={formatJsonValue(after)}
+                  title={afterText}
                 >
-                  {formatJsonValue(after)}
+                  {afterText}
                 </span>
               ) : hasBefore ? (
                 <span
                   className="text-red-500 truncate max-w-[300px]"
-                  title={formatJsonValue(before)}
+                  title={beforeText}
                 >
-                  {formatJsonValue(before)}
+                  {beforeText}
                 </span>
               ) : null}
             </div>
@@ -108,14 +110,17 @@ function ChangesDisplay({ changes }: { changes: unknown }) {
 
   return (
     <div className="text-xs space-y-1 mt-2" data-testid="history-entry-changes">
-      {entries.map(([key, value]) => (
-        <div key={key} className="flex flex-wrap gap-1 items-baseline">
-          <span className="font-medium text-foreground">{key}:</span>
-          <span className="text-muted-foreground truncate max-w-[300px]" title={formatJsonValue(value)}>
-            {formatJsonValue(value)}
-          </span>
-        </div>
-      ))}
+      {entries.map(([key, value]) => {
+        const text = formatValue(key, value, entityType);
+        return (
+          <div key={key} className="flex flex-wrap gap-1 items-baseline">
+            <span className="font-medium text-foreground">{humanizeFieldKey(key)}:</span>
+            <span className="text-muted-foreground truncate max-w-[300px]" title={text}>
+              {text}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -152,7 +157,7 @@ function HistoryEntry({ log }: { log: DealAuditLog }) {
       >
         {relativeTimestamp} · {absoluteTimestamp}
       </div>
-      <ChangesDisplay changes={log.changes} />
+      <ChangesDisplay changes={log.changes} entityType={log.entityType} />
     </Card>
   );
 }
