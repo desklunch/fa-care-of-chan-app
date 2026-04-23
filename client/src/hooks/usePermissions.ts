@@ -8,7 +8,7 @@
 
 import { useMemo } from "react";
 import { useAuth } from "./useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useBootstrap } from "./useBootstrap";
 import type { Permission, PermissionContext } from "@shared/permissions";
 import {
   hasPermission,
@@ -46,13 +46,8 @@ export function usePermissions() {
   }, [user]);
 
   const isActualAdminUser = actualPermissionContext?.role === "admin";
-  const shouldFetchRoles = import.meta.env.DEV && isActualAdminUser && !!overrideRole;
-
-  const { data: rolesData } = useQuery<RoleWithPermissions[]>({
-    queryKey: ["/api/roles/names"],
-    enabled: shouldFetchRoles,
-    staleTime: 60000,
-  });
+  const { data: bootstrap } = useBootstrap();
+  const rolesData = bootstrap?.roles as RoleWithPermissions[] | undefined;
 
   const permissionContext = useMemo(() => {
     if (import.meta.env.DEV && overrideRole && actualPermissionContext && isActualAdminUser) {

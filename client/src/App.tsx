@@ -1,4 +1,6 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import { ChunkErrorBoundary } from "@/components/chunk-error-boundary";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -20,92 +22,92 @@ import "@/lib/debug-logger";
 import { PwaUpdateBanner } from "@/components/pwa-update-banner";
 import { OfflineOverlay } from "@/components/offline-overlay";
 
-const Landing = lazy(() => import("@/pages/landing"));
-const AuthError = lazy(() => import("@/pages/auth-error"));
-const TeamPage = lazy(() => import("@/pages/team"));
-const TeamProfile = lazy(() => import("@/pages/team-profile"));
-const TeamEdit = lazy(() => import("@/pages/team-edit"));
-const Profile = lazy(() => import("@/pages/profile"));
-const ProfileEdit = lazy(() => import("@/pages/profile-edit"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
-const AdminLogs = lazy(() => import("@/pages/admin-logs"));
-const AdminAppFeatures = lazy(() => import("@/pages/admin-app-features"));
-const AppFeatures = lazy(() => import("@/pages/app-features"));
-const AppFeatureDetail = lazy(() => import("@/pages/app-feature-detail"));
-const AppFeatureForm = lazy(() => import("@/pages/app-feature-form"));
-const Contacts = lazy(() => import("@/pages/contacts"));
-const ContactDetail = lazy(() => import("@/pages/contact-detail"));
-const ContactForm = lazy(() => import("@/pages/contact-form"));
-const Vendors = lazy(() => import("@/pages/vendors"));
-const VendorDetail = lazy(() => import("@/pages/vendor-detail"));
-const VendorForm = lazy(() => import("@/pages/vendor-form"));
-const Venues = lazy(() => import("@/pages/venues"));
-const VenueForm = lazy(() => import("@/pages/venue-form"));
-const VenueDetail = lazy(() => import("@/pages/venue-detail"));
-const VenueCollections = lazy(() => import("@/pages/venue-collections"));
-const VenueCollectionForm = lazy(() => import("@/pages/venue-collection-form"));
-const VenueCollectionDetail = lazy(
+const Landing = lazyWithRetry(() => import("@/pages/landing"));
+const AuthError = lazyWithRetry(() => import("@/pages/auth-error"));
+const TeamPage = lazyWithRetry(() => import("@/pages/team"));
+const TeamProfile = lazyWithRetry(() => import("@/pages/team-profile"));
+const TeamEdit = lazyWithRetry(() => import("@/pages/team-edit"));
+const Profile = lazyWithRetry(() => import("@/pages/profile"));
+const ProfileEdit = lazyWithRetry(() => import("@/pages/profile-edit"));
+const Dashboard = lazyWithRetry(() => import("@/pages/dashboard"));
+const AdminLogs = lazyWithRetry(() => import("@/pages/admin-logs"));
+const AdminAppFeatures = lazyWithRetry(() => import("@/pages/admin-app-features"));
+const AppFeatures = lazyWithRetry(() => import("@/pages/app-features"));
+const AppFeatureDetail = lazyWithRetry(() => import("@/pages/app-feature-detail"));
+const AppFeatureForm = lazyWithRetry(() => import("@/pages/app-feature-form"));
+const Contacts = lazyWithRetry(() => import("@/pages/contacts"));
+const ContactDetail = lazyWithRetry(() => import("@/pages/contact-detail"));
+const ContactForm = lazyWithRetry(() => import("@/pages/contact-form"));
+const Vendors = lazyWithRetry(() => import("@/pages/vendors"));
+const VendorDetail = lazyWithRetry(() => import("@/pages/vendor-detail"));
+const VendorForm = lazyWithRetry(() => import("@/pages/vendor-form"));
+const Venues = lazyWithRetry(() => import("@/pages/venues"));
+const VenueForm = lazyWithRetry(() => import("@/pages/venue-form"));
+const VenueDetail = lazyWithRetry(() => import("@/pages/venue-detail"));
+const VenueCollections = lazyWithRetry(() => import("@/pages/venue-collections"));
+const VenueCollectionForm = lazyWithRetry(() => import("@/pages/venue-collection-form"));
+const VenueCollectionDetail = lazyWithRetry(
   () => import("@/pages/venue-collection-detail"),
 );
-const Amenities = lazy(() => import("@/pages/amenities"));
-const Industries = lazy(() => import("@/pages/industries"));
-const ManageTagsPage = lazy(() => import("@/pages/manage-tags"));
-const ManageDealStatuses = lazy(() => import("@/pages/manage-deal-statuses"));
-const AdminThemeEditor = lazy(() => import("@/pages/admin-theme-editor"));
-const AdminVendorTokens = lazy(() => import("@/pages/admin-vendor-tokens"));
-const VendorUpdateForm = lazy(() => import("@/pages/vendor-update-form"));
-const AppIssues = lazy(() => import("@/pages/app-issues"));
-const AppIssueForm = lazy(() => import("@/pages/app-issue-form"));
-const AppIssueDetail = lazy(() => import("@/pages/app-issue-detail"));
-const FormTemplates = lazy(() => import("@/pages/form-templates"));
-const FormTemplateForm = lazy(() => import("@/pages/form-template-form"));
-const FormTemplateDetail = lazy(() => import("@/pages/form-template-detail"));
-const FormRequests = lazy(() => import("@/pages/form-requests"));
-const FormRequestForm = lazy(() => import("@/pages/form-request-form"));
-const FormRequestDetail = lazy(() => import("@/pages/form-request-detail"));
-const PublicForm = lazy(() => import("@/pages/public-form"));
-const FormPreview = lazy(() => import("@/pages/form-preview"));
-const CommentsPage = lazy(() => import("@/pages/comments"));
-const AdminAnalytics = lazy(() => import("@/pages/admin-analytics"));
-const AdminReleases = lazy(() => import("@/pages/admin-releases"));
-const AdminReleaseDetail = lazy(() => import("@/pages/admin-release-detail"));
-const Guide = lazy(() => import("@/pages/guide"));
-const Feedback = lazy(() => import("@/pages/feedback"));
-const PublicVenueDetail = lazy(() => import("@/pages/public-venue-detail"));
-const PublicVenueCollection = lazy(
+const Amenities = lazyWithRetry(() => import("@/pages/amenities"));
+const Industries = lazyWithRetry(() => import("@/pages/industries"));
+const ManageTagsPage = lazyWithRetry(() => import("@/pages/manage-tags"));
+const ManageDealStatuses = lazyWithRetry(() => import("@/pages/manage-deal-statuses"));
+const AdminThemeEditor = lazyWithRetry(() => import("@/pages/admin-theme-editor"));
+const AdminVendorTokens = lazyWithRetry(() => import("@/pages/admin-vendor-tokens"));
+const VendorUpdateForm = lazyWithRetry(() => import("@/pages/vendor-update-form"));
+const AppIssues = lazyWithRetry(() => import("@/pages/app-issues"));
+const AppIssueForm = lazyWithRetry(() => import("@/pages/app-issue-form"));
+const AppIssueDetail = lazyWithRetry(() => import("@/pages/app-issue-detail"));
+const FormTemplates = lazyWithRetry(() => import("@/pages/form-templates"));
+const FormTemplateForm = lazyWithRetry(() => import("@/pages/form-template-form"));
+const FormTemplateDetail = lazyWithRetry(() => import("@/pages/form-template-detail"));
+const FormRequests = lazyWithRetry(() => import("@/pages/form-requests"));
+const FormRequestForm = lazyWithRetry(() => import("@/pages/form-request-form"));
+const FormRequestDetail = lazyWithRetry(() => import("@/pages/form-request-detail"));
+const PublicForm = lazyWithRetry(() => import("@/pages/public-form"));
+const FormPreview = lazyWithRetry(() => import("@/pages/form-preview"));
+const CommentsPage = lazyWithRetry(() => import("@/pages/comments"));
+const AdminAnalytics = lazyWithRetry(() => import("@/pages/admin-analytics"));
+const AdminReleases = lazyWithRetry(() => import("@/pages/admin-releases"));
+const AdminReleaseDetail = lazyWithRetry(() => import("@/pages/admin-release-detail"));
+const Guide = lazyWithRetry(() => import("@/pages/guide"));
+const Feedback = lazyWithRetry(() => import("@/pages/feedback"));
+const PublicVenueDetail = lazyWithRetry(() => import("@/pages/public-venue-detail"));
+const PublicVenueCollection = lazyWithRetry(
   () => import("@/pages/public-venue-collection"),
 );
-const Terms = lazy(() => import("@/pages/terms"));
-const Privacy = lazy(() => import("@/pages/privacy"));
-const Overview = lazy(() => import("@/pages/overview"));
-const Deals = lazy(() => import("@/pages/deals-sandbox"));
-const MyDeals = lazy(() => import("@/pages/my-deals"));
-const DealIntakeForms = lazy(() => import("@/pages/deal-intake-forms"));
-const DealForm = lazy(() => import("@/pages/deal-form"));
-const DealDetail = lazy(() => import("@/pages/deal-detail"));
-const DealReports = lazy(() => import("@/pages/deal-reports"));
-const DealForecast = lazy(() => import("@/pages/deal-forecast"));
-const PipelineHealth = lazy(() => import("@/pages/pipeline-health"));
-const Clients = lazy(() => import("@/pages/clients"));
-const ClientForm = lazy(() => import("@/pages/client-form"));
-const ClientDetail = lazy(() => import("@/pages/client-detail"));
-const ClientContacts = lazy(() => import("@/pages/client-contacts"));
-const Brands = lazy(() => import("@/pages/brands"));
-const VendorContacts = lazy(() => import("@/pages/vendor-contacts"));
-const EventSchedulePrototype = lazy(
+const Terms = lazyWithRetry(() => import("@/pages/terms"));
+const Privacy = lazyWithRetry(() => import("@/pages/privacy"));
+const Overview = lazyWithRetry(() => import("@/pages/overview"));
+const Deals = lazyWithRetry(() => import("@/pages/deals-sandbox"));
+const MyDeals = lazyWithRetry(() => import("@/pages/my-deals"));
+const DealIntakeForms = lazyWithRetry(() => import("@/pages/deal-intake-forms"));
+const DealForm = lazyWithRetry(() => import("@/pages/deal-form"));
+const DealDetail = lazyWithRetry(() => import("@/pages/deal-detail"));
+const DealReports = lazyWithRetry(() => import("@/pages/deal-reports"));
+const DealForecast = lazyWithRetry(() => import("@/pages/deal-forecast"));
+const PipelineHealth = lazyWithRetry(() => import("@/pages/pipeline-health"));
+const Clients = lazyWithRetry(() => import("@/pages/clients"));
+const ClientForm = lazyWithRetry(() => import("@/pages/client-form"));
+const ClientDetail = lazyWithRetry(() => import("@/pages/client-detail"));
+const ClientContacts = lazyWithRetry(() => import("@/pages/client-contacts"));
+const Brands = lazyWithRetry(() => import("@/pages/brands"));
+const VendorContacts = lazyWithRetry(() => import("@/pages/vendor-contacts"));
+const EventSchedulePrototype = lazyWithRetry(
   () => import("@/pages/event-schedule-prototype"),
 );
-const AIContext = lazy(() => import("@/pages/ai-context"));
-const AdminRoles = lazy(() => import("@/pages/admin-roles"));
-const AdminDealSettings = lazy(() => import("@/pages/admin-deal-settings"));
-const NotificationPreferences = lazy(
+const AIContext = lazyWithRetry(() => import("@/pages/ai-context"));
+const AdminRoles = lazyWithRetry(() => import("@/pages/admin-roles"));
+const AdminDealSettings = lazyWithRetry(() => import("@/pages/admin-deal-settings"));
+const NotificationPreferences = lazyWithRetry(
   () => import("@/pages/notification-preferences"),
 );
-const Proposals = lazy(() => import("@/pages/proposals"));
-const ProposalDetail = lazy(() => import("@/pages/proposal-detail"));
-const ProposalForm = lazy(() => import("@/pages/proposal-form"));
-const Tasks = lazy(() => import("@/pages/tasks"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+const Proposals = lazyWithRetry(() => import("@/pages/proposals"));
+const ProposalDetail = lazyWithRetry(() => import("@/pages/proposal-detail"));
+const ProposalForm = lazyWithRetry(() => import("@/pages/proposal-form"));
+const Tasks = lazyWithRetry(() => import("@/pages/tasks"));
+const NotFound = lazyWithRetry(() => import("@/pages/not-found"));
 import { AiChatFab } from "@/components/ai-chat/ai-chat-modal";
 
 function PageLoader() {
@@ -492,6 +494,7 @@ function AuthenticatedRoutes() {
     <LayoutProvider config={layoutConfig}>
       <AppShell>
         {showAiChat && <AiChatFab />}
+        <ChunkErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Switch>
             <Route path="/" component={Venues} />
@@ -595,6 +598,7 @@ function AuthenticatedRoutes() {
             <Route component={NotFound} />
           </Switch>
         </Suspense>
+        </ChunkErrorBoundary>
       </AppShell>
     </LayoutProvider>
   );

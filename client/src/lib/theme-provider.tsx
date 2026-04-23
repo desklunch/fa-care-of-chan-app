@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useBootstrap } from "@/hooks/useBootstrap";
 import type { ThemeConfig, ThemeVariables, ThemeFonts, Theme } from "@shared/schema";
 
 type Mode = "light" | "dark" | "system";
@@ -211,17 +212,9 @@ export function ThemeProvider({
     return null;
   });
 
-  const { data: allThemes = [], isLoading: isLoadingThemes } = useQuery<Theme[]>({
-    queryKey: ["/api/themes"],
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const { data: userPref } = useQuery<{ selectedThemeId: string | null }>({
-    queryKey: ["/api/themes/user-preference"],
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-    enabled: isAuthenticated,
-  });
+  const { data: bootstrap, isLoading: isLoadingThemes } = useBootstrap();
+  const allThemes: Theme[] = bootstrap?.themes ?? [];
+  const userPref = bootstrap?.themePreference;
 
   const userPrefApplied = useRef(false);
   useEffect(() => {

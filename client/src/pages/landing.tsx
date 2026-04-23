@@ -16,6 +16,7 @@ import { useGoogleAuth } from "@/lib/google-auth";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { fetchBootstrapWithRetry } from "@/hooks/useBootstrap";
 import { useToast } from "@/hooks/use-toast";
 import { getAndClearReturnUrl } from "@/lib/return-url";
 
@@ -31,8 +32,17 @@ export default function Landing() {
       const res = await apiRequest("POST", "/api/auth/google", { credential });
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: ["/api/bootstrap"] });
+      const ok = await fetchBootstrapWithRetry(queryClient);
+      if (!ok) {
+        toast({
+          title: "Sign in succeeded but loading your workspace failed",
+          description: "Please try again in a moment.",
+          variant: "destructive",
+        });
+        return;
+      }
       const returnUrl = getAndClearReturnUrl();
       setLocation(returnUrl || "/");
     },
@@ -54,8 +64,17 @@ export default function Landing() {
       const res = await apiRequest("POST", "/api/auth/dev-login", { email });
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: ["/api/bootstrap"] });
+      const ok = await fetchBootstrapWithRetry(queryClient);
+      if (!ok) {
+        toast({
+          title: "Sign in succeeded but loading your workspace failed",
+          description: "Please try again in a moment.",
+          variant: "destructive",
+        });
+        return;
+      }
       const returnUrl = getAndClearReturnUrl();
       setLocation(returnUrl || "/");
     },

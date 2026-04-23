@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isManagerOrAdmin } from "./googleAuth";
 import { requirePermission, requireAnyPermission } from "./middleware/permissions";
+import type { Permission } from "../shared/permissions";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import OpenAI from "openai";
 import sharp from "sharp";
@@ -144,6 +145,58 @@ export async function registerRoutes(
   // NOTE: Deals routes moved to server/domains/deals/
   // NOTE: Places/Maps routes moved to server/domains/places/
   // NOTE: Venues, Collections, Floorplans routes moved to server/domains/venues/
+
+  // Bootstrap endpoint - collapses the auth fan-out for first paint
+  app.get("/api/bootstrap", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const permissions = await import("../shared/permissions");
+      const { adminStorage } = await import("./domains/admin/admin.storage");
+      const { settingsCommentsStorage } = await import("./domains/settings-comments");
+      const { notificationsStorage } = await import("./domains/notifications/notifications.storage");
+
+      const roleRecord = await adminStorage.getRoleByName(user.role);
+      const permissionContext = permissions.createPermissionContext(
+        user.role,
+        roleRecord
+          ? (roleRecord.permissions as Permission[])
+          : undefined
+      );
+
+      const canManageTeam = permissions.hasPermission(
+        permissionContext,
+        permissions.PERMISSIONS["team.manage"]
+      );
+
+      const [allThemes, unreadCount, allRoles] = await Promise.all([
+        settingsCommentsStorage.getAllThemes(),
+        notificationsStorage.getUnreadCount(userId).catch(() => 0),
+        canManageTeam ? adminStorage.getAllRoles() : Promise.resolve([]),
+      ]);
+
+      res.json({
+        user: { ...user, permissionContext },
+        themes: allThemes,
+        themePreference: { selectedThemeId: user.selectedThemeId || null },
+        notifications: { unreadCount },
+        roles: allRoles.map((r) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          permissions: r.permissions,
+        })),
+        push: { vapidPublicKey: process.env.VAPID_PUBLIC_KEY || null },
+      });
+    } catch (error) {
+      console.error("Error fetching bootstrap:", error);
+      res.status(500).json({ message: "Failed to fetch bootstrap" });
+    }
+  });
 
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {

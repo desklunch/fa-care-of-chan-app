@@ -39,15 +39,27 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
         }
       });
 
+      const schedulePushSetup = (cb: () => void) => {
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(() => cb(), { timeout: 8000 });
+        } else {
+          setTimeout(cb, 4000);
+        }
+      };
+
       if ("Notification" in window && Notification.permission === "default") {
         setTimeout(async () => {
           const permission = await Notification.requestPermission();
           if (permission === "granted") {
-            await registerPushSubscription(registration);
+            schedulePushSetup(() => {
+              registerPushSubscription(registration);
+            });
           }
-        }, 5000);
+        }, 8000);
       } else if ("Notification" in window && Notification.permission === "granted") {
-        await registerPushSubscription(registration);
+        schedulePushSetup(() => {
+          registerPushSubscription(registration);
+        });
       }
     } catch (err) {
       console.error("Service worker registration failed:", err);

@@ -1,21 +1,24 @@
 import { useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
 import { debugLog } from "@/lib/debug-logger";
 import type { User } from "@shared/schema";
+import { useBootstrap } from "./useBootstrap";
 
 export function useAuth() {
-  const { data: user, isLoading, error, isFetching, isStale, dataUpdatedAt } = useQuery<User | null>({
-    queryKey: ["/api/auth/user"],
-    queryFn: getQueryFn<User | null>({ on401: "returnNull" }),
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
+  const {
+    data: bootstrap,
+    isLoading,
+    error,
+    isFetching,
+    isStale,
+    dataUpdatedAt,
+  } = useBootstrap();
+
+  const user = (bootstrap?.user ?? null) as User | null;
+
   const prevUserRef = useRef<User | null | undefined>(undefined);
   const prevLoadingRef = useRef<boolean>(true);
   const prevErrorRef = useRef<Error | null>(null);
-  
+
   useEffect(() => {
     if (prevUserRef.current !== user) {
       if (user && !prevUserRef.current) {
@@ -34,7 +37,7 @@ export function useAuth() {
       }
       prevUserRef.current = user;
     }
-    
+
     if (prevLoadingRef.current && !isLoading) {
       debugLog("AUTH", "Auth loading complete", {
         isAuthenticated: !!user,
@@ -42,15 +45,15 @@ export function useAuth() {
       });
     }
     prevLoadingRef.current = isLoading;
-    
+
     if (error && error !== prevErrorRef.current) {
       debugLog("AUTH", "Auth error occurred", {
-        error: error.message,
+        error: (error as Error).message,
       });
     }
-    prevErrorRef.current = error;
+    prevErrorRef.current = (error as Error) ?? null;
   }, [user, isLoading, error]);
-  
+
   useEffect(() => {
     if (isFetching) {
       debugLog("AUTH", "Auth query refetching", {

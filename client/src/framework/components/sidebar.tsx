@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useBootstrap } from "@/hooks/useBootstrap";
 import { cn } from "@/lib/utils";
 import {
   PanelLeftClose,
@@ -57,12 +57,8 @@ function DevRoleSelector({
   setOverrideRole: (role: Role) => void;
   clearOverride: () => void;
 }) {
-  const { data: roles } = useQuery<
-    { id: number; name: string; description: string | null }[]
-  >({
-    queryKey: ["/api/roles/names"],
-    enabled: import.meta.env.DEV,
-  });
+  const { data: bootstrap } = useBootstrap();
+  const roles = bootstrap?.roles ?? [];
 
   return (
     <div className="w-full">

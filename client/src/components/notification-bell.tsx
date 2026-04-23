@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useBootstrap } from "@/hooks/useBootstrap";
 import { Bell, Check, CheckCheck, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -48,9 +49,13 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
   const triggerRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
 
+  const { data: bootstrap } = useBootstrap();
+  const initialUnreadCount = bootstrap?.notifications?.unreadCount ?? 0;
+
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
     refetchInterval: 30000,
+    initialData: { count: initialUnreadCount },
   });
 
   const { data: notificationsData, isLoading } = useQuery<Notification[]>({
