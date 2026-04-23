@@ -446,28 +446,24 @@ export function registerDealsRoutes(app: Express): void {
 
       const conversionMap = new Map<string, Map<string, number>>();
       for (const t of transitions) {
-        const changes = t.changes as Record<string, unknown> | null;
-        if (!changes || !changes.status) continue;
-        const statusChange = changes.status as { from?: string; to?: string };
-        if (!statusChange.from || !statusChange.to) continue;
-        if (!ACTIVE_STAGES.includes(statusChange.from) || !ACTIVE_STAGES.includes(statusChange.to)) continue;
-        const fromIdx = ACTIVE_STAGES.indexOf(statusChange.from);
-        const toIdx = ACTIVE_STAGES.indexOf(statusChange.to);
+        const fromStatus = t.fromStatus;
+        const toStatus = t.toStatus;
+        if (!fromStatus || !toStatus) continue;
+        if (!ACTIVE_STAGES.includes(fromStatus) || !ACTIVE_STAGES.includes(toStatus)) continue;
+        const fromIdx = ACTIVE_STAGES.indexOf(fromStatus);
+        const toIdx = ACTIVE_STAGES.indexOf(toStatus);
         if (toIdx !== fromIdx + 1) continue;
-        if (!conversionMap.has(statusChange.from)) {
-          conversionMap.set(statusChange.from, new Map());
+        if (!conversionMap.has(fromStatus)) {
+          conversionMap.set(fromStatus, new Map());
         }
-        const toMap = conversionMap.get(statusChange.from)!;
-        toMap.set(statusChange.to, (toMap.get(statusChange.to) || 0) + 1);
+        const toMap = conversionMap.get(fromStatus)!;
+        toMap.set(toStatus, (toMap.get(toStatus) || 0) + 1);
       }
 
       const fromCounts = new Map<string, number>();
       for (const t of transitions) {
-        const changes = t.changes as Record<string, unknown> | null;
-        if (!changes || !changes.status) continue;
-        const statusChange = changes.status as { from?: string; to?: string };
-        if (!statusChange.from || !ACTIVE_STAGES.includes(statusChange.from)) continue;
-        fromCounts.set(statusChange.from, (fromCounts.get(statusChange.from) || 0) + 1);
+        if (!t.fromStatus || !ACTIVE_STAGES.includes(t.fromStatus)) continue;
+        fromCounts.set(t.fromStatus, (fromCounts.get(t.fromStatus) || 0) + 1);
       }
 
       const conversionRates = ACTIVE_STAGES.slice(0, -1).map((fromStage, i) => {

@@ -18,6 +18,8 @@ export interface ListDealsOptions {
   status?: DealStatus[];
 }
 
+const SYSTEM_FIELDS = new Set(["updatedAt", "createdAt"]);
+
 export class DealsService extends BaseService {
   async list(options?: ListDealsOptions): Promise<DealWithRelations[]> {
     return dealsStorage.getDeals(options);
@@ -92,16 +94,30 @@ export class DealsService extends BaseService {
     }
 
     const changes = this.computeChanges(existingDeal, updatedDeal);
+    const statusChanged = existingDeal.status !== updatedDeal.status;
 
-    domainEvents.emit({
-      type: "deal:updated",
-      deal: updatedDeal,
-      changes,
-      actorId,
-      timestamp: new Date(),
-    });
+    let updatedChanges: Partial<Deal> = changes;
+    let shouldEmitUpdated = true;
+    if (statusChanged) {
+      const { status: _omittedStatus, ...rest } = changes as Record<string, unknown>;
+      updatedChanges = rest as Partial<Deal>;
+      const businessFieldKeys = Object.keys(rest).filter(
+        (k) => !SYSTEM_FIELDS.has(k),
+      );
+      shouldEmitUpdated = businessFieldKeys.length > 0;
+    }
 
-    if (existingDeal.status !== updatedDeal.status) {
+    if (shouldEmitUpdated) {
+      domainEvents.emit({
+        type: "deal:updated",
+        deal: updatedDeal,
+        changes: updatedChanges,
+        actorId,
+        timestamp: new Date(),
+      });
+    }
+
+    if (statusChanged) {
       const fromName = (existingDeal as DealWithRelations).statusName || String(existingDeal.status);
       const allStatuses = await dealsStorage.getDealStatuses();
       const toStatusRecord = allStatuses.find(s => s.id === updatedDeal.status);

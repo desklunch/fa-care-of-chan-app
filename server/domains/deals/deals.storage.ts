@@ -81,9 +81,10 @@ export interface PipelineDealRow {
 }
 
 export interface StatusTransitionRow {
-  entityId: string;
+  dealId: string;
   performedAt: Date | null;
-  changes: unknown;
+  fromStatus: string | null;
+  toStatus: string | null;
 }
 
 export const dealsStorage = {
@@ -413,6 +414,7 @@ export const dealsStorage = {
         entityId: auditLogs.entityId,
         performedAt: auditLogs.performedAt,
         changes: auditLogs.changes,
+        metadata: auditLogs.metadata,
       })
       .from(auditLogs)
       .where(
@@ -420,11 +422,129 @@ export const dealsStorage = {
           eq(auditLogs.entityType, "deal"),
           eq(auditLogs.action, "update"),
           eq(auditLogs.status, "success"),
-          sql`${auditLogs.changes}::jsonb->>'status' IS NOT NULL`
+          sql`(
+            ${auditLogs.metadata}::jsonb->>'eventType' = 'deal:stage_changed'
+            OR ${auditLogs.changes}::jsonb->'after'->>'status' IS NOT NULL
+            OR ${auditLogs.changes}::jsonb->>'status' IS NOT NULL
+          )`
         )
       )
       .orderBy(auditLogs.performedAt);
-    return results as StatusTransitionRow[];
+
+    const statusList = await db.select().from(dealStatuses);
+    const statusIdToName = new Map<string, string>();
+    for (const s of statusList) {
+      statusIdToName.set(String(s.id), s.name);
+    }
+    const knownStatusNames = new Set(statusList.map((s) => s.name));
+
+    const resolveStatus = (raw: unknown): string | null => {
+      if (raw == null) return null;
+      if (typeof raw === "string") {
+        if (knownStatusNames.has(raw)) return raw;
+        const mapped = statusIdToName.get(raw);
+        if (mapped) return mapped;
+        return raw;
+      }
+      if (typeof raw === "number") {
+        return statusIdToName.get(String(raw)) ?? null;
+      }
+      return null;
+    };
+
+    type ChangesShape = {
+      before?: { status?: unknown } | null;
+      after?: { status?: unknown } | null;
+      status?: unknown;
+    };
+
+    type RawRow = {
+      dealId: string;
+      performedAt: Date | null;
+      fromStatus: string | null;
+      toStatus: string | null;
+      isCanonical: boolean;
+    };
+    const rows: RawRow[] = [];
+
+    for (const r of results) {
+      if (!r.entityId) continue;
+      const meta = r.metadata as { eventType?: string } | null;
+      const changes = (r.changes as ChangesShape | null) ?? null;
+      const isCanonical = meta?.eventType === "deal:stage_changed";
+
+      if (isCanonical) {
+        const fromStatus = resolveStatus(changes?.before?.status);
+        const toStatus = resolveStatus(changes?.after?.status);
+        if (!toStatus) continue;
+        rows.push({
+          dealId: r.entityId,
+          performedAt: r.performedAt,
+          fromStatus,
+          toStatus,
+          isCanonical: true,
+        });
+        continue;
+      }
+
+      let toStatusRaw: unknown = changes?.after?.status;
+      let fromStatusRaw: unknown = changes?.before?.status;
+      const topStatus = changes?.status;
+      if (toStatusRaw == null && topStatus != null) {
+        if (typeof topStatus === "object" && topStatus !== null) {
+          const obj = topStatus as { from?: unknown; to?: unknown };
+          toStatusRaw = obj.to;
+          if (fromStatusRaw == null) fromStatusRaw = obj.from;
+        } else {
+          toStatusRaw = topStatus;
+        }
+      }
+
+      const toStatus = resolveStatus(toStatusRaw);
+      if (!toStatus) continue;
+      const fromStatus = resolveStatus(fromStatusRaw);
+
+      rows.push({
+        dealId: r.entityId,
+        performedAt: r.performedAt,
+        fromStatus,
+        toStatus,
+        isCanonical: false,
+      });
+    }
+
+    rows.sort((a, b) => {
+      if (a.dealId !== b.dealId) return a.dealId.localeCompare(b.dealId);
+      const ta = a.performedAt ? a.performedAt.getTime() : 0;
+      const tb = b.performedAt ? b.performedAt.getTime() : 0;
+      return ta - tb;
+    });
+
+    let lastDealId: string | null = null;
+    let lastToStatus: string | null = null;
+    for (const r of rows) {
+      if (r.dealId !== lastDealId) {
+        lastDealId = r.dealId;
+        lastToStatus = null;
+      }
+      if (r.fromStatus === null && lastToStatus !== null) {
+        r.fromStatus = lastToStatus;
+      }
+      lastToStatus = r.toStatus;
+    }
+
+    rows.sort((a, b) => {
+      const ta = a.performedAt ? a.performedAt.getTime() : 0;
+      const tb = b.performedAt ? b.performedAt.getTime() : 0;
+      return ta - tb;
+    });
+
+    return rows.map(({ dealId, performedAt, fromStatus, toStatus }) => ({
+      dealId,
+      performedAt,
+      fromStatus,
+      toStatus,
+    }));
   },
 
   async getDealStatuses(): Promise<DealStatusRecord[]> {
