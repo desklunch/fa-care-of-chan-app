@@ -178,6 +178,51 @@ function ChangesCellRenderer({ value, data }: ICellRendererParams<AuditLogWithNa
   );
 }
 
+function MetadataCellRenderer({ value }: ICellRendererParams<AuditLogWithName, unknown>) {
+  if (!value || typeof value !== "object") {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const metadata = value as Record<string, unknown>;
+  const entries = Object.entries(metadata);
+
+  if (entries.length === 0) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const fullJson = JSON.stringify(metadata, null, 2);
+
+  const formatVal = (v: unknown): string => {
+    if (v === null || v === undefined) return "-";
+    if (typeof v === "string") return v;
+    if (typeof v === "number" || typeof v === "boolean") return String(v);
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
+  };
+
+  return (
+    <div className="text-xs space-y-1 py-1" title={fullJson} data-testid="cell-metadata">
+      {entries.slice(0, 4).map(([key, val]) => {
+        const text = formatVal(val);
+        return (
+          <div key={key} className="flex flex-wrap gap-1">
+            <span className="font-medium text-foreground">{humanizeFieldKey(key)}:</span>
+            <span className="text-muted-foreground truncate max-w-[200px]" title={text}>
+              {text}
+            </span>
+          </div>
+        );
+      })}
+      {entries.length > 4 && (
+        <span className="text-muted-foreground">+{entries.length - 4} more</span>
+      )}
+    </div>
+  );
+}
+
 function EntityIdCellRenderer({ data }: ICellRendererParams<AuditLogWithName>) {
   const { resolveEntity } = useAuditValueResolvers();
   if (!data?.entityId) {
@@ -297,6 +342,19 @@ const auditLogColumns: ColumnConfig<AuditLogWithName>[] = [
       minWidth: 250,
       autoHeight: true,
       cellRenderer: ChangesCellRenderer,
+    },
+  },
+  {
+    id: "metadata",
+    headerName: "Metadata",
+    field: "metadata",
+    category: "Details",
+    toggleable: true,
+    colDef: {
+      flex: 2,
+      minWidth: 250,
+      autoHeight: true,
+      cellRenderer: MetadataCellRenderer,
     },
   },
   {
@@ -422,6 +480,11 @@ export default function AdminLogs() {
     return JSON.stringify(item.changes);
   };
 
+  const searchInMetadata = (item: AuditLogWithName): string => {
+    if (!item.metadata) return "";
+    return JSON.stringify(item.metadata);
+  };
+
   if (user?.role !== "admin") {
     return (
       <PageLayout breadcrumbs={[{ label: "Audit Logs" }]}>
@@ -450,8 +513,8 @@ export default function AdminLogs() {
         getRowId={(log: AuditLogWithName) => log.id}
         filters={filters}
         collapsibleFilters={true}
-        searchFields={["entityId", searchInChanges]}
-        searchPlaceholder="Search entity ID or changes..."
+        searchFields={["entityId", searchInChanges, searchInMetadata]}
+        searchPlaceholder="Search entity ID, changes, or metadata..."
       />
     </PageLayout>
   );
