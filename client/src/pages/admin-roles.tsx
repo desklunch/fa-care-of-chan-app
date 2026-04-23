@@ -39,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BOOTSTRAP_QUERY_KEY } from "@/hooks/useBootstrap";
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
 import {
@@ -137,6 +138,7 @@ function RoleEditor({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
       toast({ title: "Role updated", description: `"${name}" has been updated.` });
       onClose();
     },
@@ -226,6 +228,7 @@ function NewRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
       toast({ title: "Role created", description: `"${name}" has been created.` });
       onOpenChange(false);
       setName("");
@@ -329,6 +332,7 @@ function RoleCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
       toast({ title: "Role deleted", description: `"${role.name}" has been deleted.` });
     },
     onError: (error: any) => {

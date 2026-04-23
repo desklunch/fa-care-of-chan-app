@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useBootstrap } from "@/hooks/useBootstrap";
+import { useBootstrap, BOOTSTRAP_QUERY_KEY } from "@/hooks/useBootstrap";
 import { Bell, Check, CheckCheck, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -68,6 +68,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
     },
   });
 
@@ -76,6 +77,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
     },
   });
 
@@ -84,6 +86,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
     },
   });
 

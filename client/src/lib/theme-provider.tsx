@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { useBootstrap } from "@/hooks/useBootstrap";
+import { useBootstrap, BOOTSTRAP_QUERY_KEY } from "@/hooks/useBootstrap";
 import type { ThemeConfig, ThemeVariables, ThemeFonts, Theme } from "@shared/schema";
 
 type Mode = "light" | "dark" | "system";
@@ -197,6 +197,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const isAuthenticated = !!user;
+  const queryClient = useQueryClient();
 
   const [theme, setThemeState] = useState<Mode>(() => {
     if (typeof window !== "undefined") {
@@ -228,6 +229,9 @@ export function ThemeProvider({
   const savePreferenceMutation = useMutation({
     mutationFn: (themeId: string) =>
       apiRequest("PUT", "/api/themes/user-preference", { selectedThemeId: themeId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BOOTSTRAP_QUERY_KEY });
+    },
   });
 
   const { data: legacyTheme } = useQuery<ThemeConfig | null>({
