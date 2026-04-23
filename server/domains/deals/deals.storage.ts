@@ -408,6 +408,33 @@ export const dealsStorage = {
     return results as PipelineDealRow[];
   },
 
+  async getDealAuditLogs(dealId: string, limit: number = 200) {
+    const logs = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        entityType: auditLogs.entityType,
+        entityId: auditLogs.entityId,
+        performedBy: auditLogs.performedBy,
+        changes: auditLogs.changes,
+        metadata: auditLogs.metadata,
+        status: auditLogs.status,
+        performedAt: auditLogs.performedAt,
+        performerName: sql<string | null>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`.as('performerName'),
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.performedBy, users.id))
+      .where(
+        and(
+          eq(auditLogs.entityType, "deal"),
+          eq(auditLogs.entityId, dealId)
+        )
+      )
+      .orderBy(desc(auditLogs.performedAt))
+      .limit(limit);
+    return logs;
+  },
+
   async getStatusTransitions(): Promise<StatusTransitionRow[]> {
     const results = await db
       .select({

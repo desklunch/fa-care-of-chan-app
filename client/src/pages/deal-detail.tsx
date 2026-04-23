@@ -51,6 +51,7 @@ import { CommentList } from "@/components/ui/comments";
 import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import { GenerateDealDocDialog } from "@/components/generate-deal-doc-dialog";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
+import { DealHistoryTab } from "@/components/deal-history-tab";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { useDealStatuses } from "@/hooks/useDealStatuses";
@@ -83,7 +84,7 @@ export default function DealDetail() {
   const [, setLocation] = useProtectedLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { can } = usePermissions();
+  const { can, isAdmin } = usePermissions();
   const canRead = can("deals.read");
   const canWrite = can("deals.write");
   const canDelete = can("deals.delete");
@@ -484,6 +485,12 @@ export default function DealDetail() {
                   BETA
                 </Badge>
               </TabsTrigger>
+
+              {isAdmin && (
+                <TabsTrigger value="history" data-testid="tab-history">
+                  History
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -1447,6 +1454,12 @@ export default function DealDetail() {
           <TabsContent value="tasks" className="p-4 md:p-6 pt-4">
             <EntityTaskGrid entityType="deal" entityId={id!} canWrite={canWrite} allUsers={users} />
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="history" className="p-4 md:p-6 pt-4 max-w-4xl">
+              <DealHistoryTab dealId={id!} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

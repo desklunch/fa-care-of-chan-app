@@ -1,5 +1,5 @@
 import { Express } from "express";
-import { isAuthenticated } from "../../googleAuth";
+import { isAuthenticated, isAdmin } from "../../googleAuth";
 import { getDriveAccessToken } from "../../googleAuth";
 import { requirePermission, loadPermissions, checkPermission } from "../../middleware/permissions";
 import { getChangedFields } from "../../audit";
@@ -748,6 +748,15 @@ export function registerDealsRoutes(app: Express): void {
       res.status(204).send();
     } catch (error) {
       handleServiceError(res, error, "Failed to delete deal");
+    }
+  });
+
+  app.get("/api/deals/:id/history", isAdmin, async (req, res) => {
+    try {
+      const logs = await dealsStorage.getDealAuditLogs(req.params.id, 200);
+      res.json(logs);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal history");
     }
   });
 
