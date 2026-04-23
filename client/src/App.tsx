@@ -22,7 +22,11 @@ import "@/lib/debug-logger";
 import { PwaUpdateBanner } from "@/components/pwa-update-banner";
 import { OfflineOverlay } from "@/components/offline-overlay";
 
-const Landing = lazyWithRetry(() => import("@/pages/landing"));
+const landingImport = () => import("@/pages/landing");
+const Landing = lazyWithRetry(landingImport);
+// Preload the Landing chunk immediately so the auth-loading state can hand off
+// to a fully mounted Landing without flashing the in-app PageLoader.
+landingImport().catch(() => {});
 const AuthError = lazyWithRetry(() => import("@/pages/auth-error"));
 const TeamPage = lazyWithRetry(() => import("@/pages/team"));
 const TeamProfile = lazyWithRetry(() => import("@/pages/team-profile"));
@@ -604,9 +608,15 @@ function AuthenticatedRoutes() {
   );
 }
 
-function AnalyticsTracker() {
+function AnalyticsTrackerInner() {
   useAnalytics();
   return null;
+}
+
+function AnalyticsTracker() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return null;
+  return <AnalyticsTrackerInner />;
 }
 
 function RouterContent() {
@@ -614,7 +624,10 @@ function RouterContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div
+        className="min-h-screen flex items-center justify-center bg-background pointer-events-none select-none"
+        aria-busy="true"
+      >
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
           <p className="text-muted-foreground">Loading...</p>

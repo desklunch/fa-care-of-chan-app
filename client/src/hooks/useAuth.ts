@@ -1,7 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { debugLog } from "@/lib/debug-logger";
 import type { User } from "@shared/schema";
 import { useBootstrap } from "./useBootstrap";
+
+let prevUser: User | null | undefined = undefined;
+let prevLoading = true;
+let prevError: Error | null = null;
+let prevFetchingKey: string | null = null;
 
 export function useAuth() {
   const {
@@ -15,51 +20,57 @@ export function useAuth() {
 
   const user = (bootstrap?.user ?? null) as User | null;
 
-  const prevUserRef = useRef<User | null | undefined>(undefined);
-  const prevLoadingRef = useRef<boolean>(true);
-  const prevErrorRef = useRef<Error | null>(null);
-
   useEffect(() => {
-    if (prevUserRef.current !== user) {
-      if (user && !prevUserRef.current) {
+    if (prevUser !== user) {
+      if (user && !prevUser) {
         debugLog("AUTH", "User authenticated", {
           userId: user.id,
           email: user.email,
           role: user.role,
         });
-      } else if (!user && prevUserRef.current) {
+      } else if (!user && prevUser) {
         debugLog("AUTH", "User logged out or session expired");
-      } else if (user && prevUserRef.current && user.id !== prevUserRef.current.id) {
+      } else if (user && prevUser && user.id !== prevUser.id) {
         debugLog("AUTH", "User changed", {
-          fromUserId: prevUserRef.current.id,
+          fromUserId: prevUser.id,
           toUserId: user.id,
         });
       }
-      prevUserRef.current = user;
+      prevUser = user;
     }
 
-    if (prevLoadingRef.current && !isLoading) {
+    if (prevLoading && !isLoading) {
       debugLog("AUTH", "Auth loading complete", {
         isAuthenticated: !!user,
         userId: user?.id,
       });
+      prevLoading = isLoading;
+    } else if (!prevLoading && isLoading) {
+      prevLoading = isLoading;
     }
-    prevLoadingRef.current = isLoading;
 
-    if (error && error !== prevErrorRef.current) {
+    if (error && error !== prevError) {
       debugLog("AUTH", "Auth error occurred", {
         error: (error as Error).message,
       });
+      prevError = error as Error;
+    } else if (!error && prevError) {
+      prevError = null;
     }
-    prevErrorRef.current = (error as Error) ?? null;
   }, [user, isLoading, error]);
 
   useEffect(() => {
     if (isFetching) {
-      debugLog("AUTH", "Auth query refetching", {
-        isStale,
-        lastUpdated: dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null,
-      });
+      const key = `${dataUpdatedAt ?? 0}:${isStale}`;
+      if (prevFetchingKey !== key) {
+        prevFetchingKey = key;
+        debugLog("AUTH", "Auth query refetching", {
+          isStale,
+          lastUpdated: dataUpdatedAt
+            ? new Date(dataUpdatedAt).toISOString()
+            : null,
+        });
+      }
     }
   }, [isFetching, isStale, dataUpdatedAt]);
 
