@@ -1422,19 +1422,7 @@ function buildTokenMap(
     const responseData = intake.responseData;
     for (const section of intake.formSchema) {
       for (const field of section.fields) {
-        const value = responseData[field.id];
-        let stringValue = "";
-        if (value != null) {
-          if (typeof value === "string") {
-            stringValue = value;
-          } else if (Array.isArray(value)) {
-            stringValue = value.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
-          } else if (typeof value === "object") {
-            stringValue = JSON.stringify(value);
-          } else {
-            stringValue = String(value);
-          }
-        }
+        const stringValue = formatIntakeFieldValue(field, responseData[field.id]);
         const tokenKey = `intake:${field.id}`;
         map.set(tokenKey, stringValue);
         if (field.type === "richtext") {
@@ -1445,6 +1433,48 @@ function buildTokenMap(
   }
 
   return { map, richTextKeys };
+}
+
+function formatLocationItem(item: unknown): string {
+  if (item == null || typeof item !== "object") return "";
+  const obj = item as {
+    displayName?: unknown;
+    city?: unknown;
+    state?: unknown;
+    stateCode?: unknown;
+    country?: unknown;
+    countryCode?: unknown;
+  };
+  if (typeof obj.displayName === "string" && obj.displayName.trim()) {
+    return obj.displayName.trim();
+  }
+  const city = typeof obj.city === "string" ? obj.city.trim() : "";
+  const stateCode = typeof obj.stateCode === "string" ? obj.stateCode.trim() : "";
+  const state = typeof obj.state === "string" ? obj.state.trim() : "";
+  const country = typeof obj.country === "string" ? obj.country.trim() : "";
+  const parts: string[] = [];
+  if (city) parts.push(city);
+  if (stateCode) parts.push(stateCode);
+  else if (state) parts.push(state);
+  if (country && parts.length < 2) parts.push(country);
+  return parts.join(", ");
+}
+
+function formatIntakeFieldValue(field: FormField, value: unknown): string {
+  if (value == null) return "";
+  if (field.type === "location") {
+    const items = Array.isArray(value) ? value : [value];
+    return items
+      .map((item) => formatLocationItem(item))
+      .filter((s) => s.length > 0)
+      .join(", ");
+  }
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    return value.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
+  }
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 }
 
 type IntakeBlockRow =
@@ -1461,21 +1491,7 @@ function buildIntakeBlockRows(
     if (!section.fields || section.fields.length === 0) continue;
     rows.push({ kind: "section", title: section.title || "" });
     for (const field of section.fields) {
-      const value = responseData[field.id];
-      let stringValue = "";
-      if (value != null) {
-        if (typeof value === "string") {
-          stringValue = value;
-        } else if (Array.isArray(value)) {
-          stringValue = value
-            .map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v)))
-            .join(", ");
-        } else if (typeof value === "object") {
-          stringValue = JSON.stringify(value);
-        } else {
-          stringValue = String(value);
-        }
-      }
+      const stringValue = formatIntakeFieldValue(field, responseData[field.id]);
       const fieldAny = field as unknown as { label?: string; name?: string };
       rows.push({
         kind: "field",
