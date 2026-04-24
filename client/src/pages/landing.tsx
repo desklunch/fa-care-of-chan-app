@@ -171,7 +171,7 @@ export default function Landing() {
               ) : (
                 <>
                   <KeyboardMusic className="mr-2 h-4 w-4" />
-                  Dev Login
+                  Developer Login
                 </>
               )}
             </Button>
