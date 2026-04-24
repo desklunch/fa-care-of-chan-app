@@ -394,7 +394,7 @@ export function AttachmentRow({
 
   return (
     <div
-      className="flex items-start gap-3 p-2 rounded-md group hover-elevate"
+      className="flex items-start gap-3 p-2 py-4  group hover-elevate"
       data-testid={`drive-attachment-${attachment.id}`}
     >
       <div className="flex-shrink-0 mt-0.5">

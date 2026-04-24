@@ -8,7 +8,7 @@ import { useDriveAuth } from "@/lib/google-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,7 @@ import {
   X,
   Globe,
   ExternalLink,
-  Pencil,
+  SquarePen,
   Trash2,
 } from "lucide-react";
 import {
@@ -40,7 +40,10 @@ import {
   type DriveFile,
 } from "@/components/google-drive-attachments";
 import { formatTimeAgo } from "@/lib/format-time";
-import type { EntityLinkWithUser, DriveAttachmentWithUser } from "@shared/schema";
+import type {
+  EntityLinkWithUser,
+  DriveAttachmentWithUser,
+} from "@shared/schema";
 
 function getDomain(url: string): string {
   try {
@@ -61,7 +64,11 @@ function getFaviconUrl(url: string): string {
 
 function getUserName(
   user:
-    | { firstName?: string | null; lastName?: string | null; email?: string | null }
+    | {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+      }
     | null
     | undefined,
 ): string {
@@ -84,7 +91,10 @@ function LinkRow({
   link: EntityLinkWithUser;
   editable: boolean;
   labelRequired: boolean;
-  onSave?: (data: { url: string; label: string | null }) => Promise<void> | void;
+  onSave?: (data: {
+    url: string;
+    label: string | null;
+  }) => Promise<void> | void;
   onDelete?: () => void;
   isSaving?: boolean;
 }) {
@@ -120,7 +130,7 @@ function LinkRow({
 
   return (
     <div
-      className="flex items-start gap-3 p-2 rounded-md group hover-elevate"
+      className="flex items-start gap-3 p-2 py-4 group "
       data-testid={`link-item-${link.id}`}
     >
       <div className="flex-shrink-0 mt-0.5">
@@ -145,12 +155,15 @@ function LinkRow({
               onChange={(e) => setEditUrl(e.target.value)}
               placeholder="URL"
               data-testid={`input-edit-link-url-${link.id}`}
+              className="h-10"
             />
             <Input
               value={editLabel}
               onChange={(e) => setEditLabel(e.target.value)}
               placeholder={labelRequired ? "Label" : "Label (optional)"}
               data-testid={`input-edit-link-label-${link.id}`}
+              className="h-10"
+
             />
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -159,7 +172,9 @@ function LinkRow({
                 disabled={!canSave}
                 data-testid={`button-save-edit-link-${link.id}`}
               >
-                {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                {isSaving && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                )}
                 Save
               </Button>
               <Button
@@ -175,7 +190,7 @@ function LinkRow({
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <a
                 href={link.url}
                 target="_blank"
@@ -187,29 +202,25 @@ function LinkRow({
               </a>
               <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
             </div>
-            {secondary && (
-              <p
-                className="text-xs text-muted-foreground truncate"
-                data-testid={`text-link-title-${link.id}`}
-              >
-                {secondary}
-              </p>
-            )}
-            {link.previewDescription && (
-              <p
-                className="text-xs text-muted-foreground line-clamp-2"
-                data-testid={`text-link-desc-${link.id}`}
-              >
-                {link.previewDescription}
-              </p>
-            )}
             <p
-              className="text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground truncate"
+              data-testid={`text-link-title-${link.id}`}
+            >
+              {secondary && (
+                <span>
+                  {secondary} {" · "}
+                </span>
+              )}
+
+              {getDomain(link.url)}
+            </p>
+ 
+            <p
+              className="text-xs text-muted-foreground font-medium pt-2"
               data-testid={`text-link-meta-${link.id}`}
             >
               {getUserName(link.createdBy)}
-              {" · "}
-              {getDomain(link.url)}
+
               {" · "}
               {formatTimeAgo(link.createdAt as unknown as Date)}
             </p>
@@ -225,7 +236,7 @@ function LinkRow({
               onClick={() => setIsEditing(true)}
               data-testid={`button-edit-link-${link.id}`}
             >
-              <Pencil className="h-4 w-4 text-muted-foreground" />
+              <SquarePen className="h-4 w-4" />
             </Button>
           )}
           {onDelete && (
@@ -235,7 +246,7 @@ function LinkRow({
               onClick={onDelete}
               data-testid={`button-delete-link-${link.id}`}
             >
-              <Trash2 className="h-4 w-4 text-muted-foreground" />
+              <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           )}
         </div>
@@ -267,7 +278,8 @@ export function useDealAttachmentsStatus(dealId: string) {
   const attachmentsCount = attachmentsQuery.data?.length ?? 0;
   const isLoading = linksQuery.isLoading || attachmentsQuery.isLoading;
   const isError = linksQuery.isError || attachmentsQuery.isError;
-  const isEmpty = !isLoading && !isError && linksCount === 0 && attachmentsCount === 0;
+  const isEmpty =
+    !isLoading && !isError && linksCount === 0 && attachmentsCount === 0;
   return {
     isLoading,
     isError,
@@ -285,7 +297,12 @@ interface DealAttachmentsPanelProps {
 
 type CombinedItem =
   | { kind: "link"; id: string; sortAt: number; link: EntityLinkWithUser }
-  | { kind: "drive"; id: string; sortAt: number; attachment: DriveAttachmentWithUser };
+  | {
+      kind: "drive";
+      id: string;
+      sortAt: number;
+      attachment: DriveAttachmentWithUser;
+    };
 
 export function DealAttachmentsPanel({
   dealId,
@@ -313,7 +330,9 @@ export function DealAttachmentsPanel({
   const [driveUrl, setDriveUrl] = useState("");
   const [pasteLabel, setPasteLabel] = useState("");
   const [pasteDescription, setPasteDescription] = useState("");
-  const [deleteAttachmentId, setDeleteAttachmentId] = useState<string | null>(null);
+  const [deleteAttachmentId, setDeleteAttachmentId] = useState<string | null>(
+    null,
+  );
   const [showDriveAuthPrompt, setShowDriveAuthPrompt] = useState(false);
 
   const linksQuery = useQuery<EntityLinkWithUser[]>({
@@ -571,10 +590,7 @@ export function DealAttachmentsPanel({
   const renderItems = () => {
     if (items.length === 0) return null;
     return (
-      <div
-        className={compact ? "space-y-2" : "space-y-3"}
-        data-testid="list-deal-attachments"
-      >
+      <Card className="p-4  divide-y " data-testid="list-deal-attachments">
         {items.map((item) => {
           if (item.kind === "link") {
             const editable = canWrite && canEditLink(item.link);
@@ -585,9 +601,13 @@ export function DealAttachmentsPanel({
                 editable={editable}
                 labelRequired={labelRequired}
                 onSave={
-                  editable ? (data) => handleSaveLink(item.link, data) : undefined
+                  editable
+                    ? (data) => handleSaveLink(item.link, data)
+                    : undefined
                 }
-                onDelete={editable ? () => setDeleteLinkId(item.link.id) : undefined}
+                onDelete={
+                  editable ? () => setDeleteLinkId(item.link.id) : undefined
+                }
                 isSaving={savingLinkId === item.link.id}
               />
             );
@@ -603,7 +623,7 @@ export function DealAttachmentsPanel({
             />
           );
         })}
-      </div>
+      </Card>
     );
   };
 
@@ -737,43 +757,72 @@ export function DealAttachmentsPanel({
 
       {canWrite && showCreateLink && (
         <Card data-testid="form-create-link">
-          <CardContent className="py-3 space-y-3">
-            <div className="flex items-center gap-2">
-              <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-              <Input
-                placeholder="URL (e.g. http://example.com)"
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && newUrl.trim()) handleCreateLink();
-                  if (e.key === "Escape") {
-                    setShowCreateLink(false);
-                    setNewUrl("");
-                    setNewLabel("");
-                  }
-                }}
-                autoFocus
-                data-testid="input-new-link-url"
-              />
+          <CardHeader className="p-3 pb-0">
+            <CardTitle className="">Add a Link</CardTitle>
+          </CardHeader>
+          <CardContent className="!pt-0 space-y-6">
+            <div className="flex gap-4">
+              <div className="w-full space-y-2">
+                <div className="flex items-center gap-1   text-sm font-medium "
+              >
+                  <div> URL</div>
+
+                </div>
+                <Input
+                  placeholder="http://example.com"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  onKeyDown={(e) => {    
+                    if (e.key === "Enter" && newUrl.trim()) handleCreateLink();
+                    if (e.key === "Escape") {
+                      setShowCreateLink(false);
+                      setNewUrl("");
+                      setNewLabel("");
+                    }
+                  }}
+                  autoFocus
+                  data-testid="input-new-link-url"
+
+                />
+              </div>
+              <div className="w-full space-y-2">
+                      <div className="flex items-center gap-1 shrink-0  text-sm font-medium "
+                >
+                                <div> Title</div>
+
+                              </div>
+                <Input
+                  placeholder="e.g. Client Brand Guidelines"
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreateLink();
+                    if (e.key === "Escape") {
+                      setShowCreateLink(false);
+                      setNewUrl("");
+                      setNewLabel("");
+                    }
+                  }}
+                  data-testid="input-new-link-label"
+
+
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
-              <Input
-                placeholder={labelRequired ? "Title" : "Title (optional)"}
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCreateLink();
-                  if (e.key === "Escape") {
-                    setShowCreateLink(false);
-                    setNewUrl("");
-                    setNewLabel("");
-                  }
+
+            <div className="flex items-center gap-2 justify-end">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setShowCreateLink(false);
+                  setNewUrl("");
+                  setNewLabel("");
                 }}
-                data-testid="input-new-link-label"
-              />
-            </div>
-            <div className="flex items-center gap-2">
+                data-testid="button-cancel-create-link"
+              >
+                Cancel
+              </Button>
               <Button
                 size="sm"
                 onClick={handleCreateLink}
@@ -787,20 +836,9 @@ export function DealAttachmentsPanel({
                 {createLinkMutation.isPending && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                 )}
-                Add Link
+                Save
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setShowCreateLink(false);
-                  setNewUrl("");
-                  setNewLabel("");
-                }}
-                data-testid="button-cancel-create-link"
-              >
-                Cancel
-              </Button>
+
             </div>
           </CardContent>
         </Card>
@@ -825,7 +863,9 @@ export function DealAttachmentsPanel({
               />
               <Button
                 onClick={handlePasteSubmit}
-                disabled={!driveUrl.trim() || createAttachmentMutation.isPending}
+                disabled={
+                  !driveUrl.trim() || createAttachmentMutation.isPending
+                }
                 data-testid="button-submit-drive-url"
               >
                 {createAttachmentMutation.isPending ? (
