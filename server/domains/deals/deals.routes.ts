@@ -1075,7 +1075,7 @@ export function registerDealsRoutes(app: Express): void {
         }
       }
 
-      const blockRows = buildIntakeBlockRows(intake);
+      const blockRows = buildIntakeBlockRows(intake, servicesMap);
 
       const sheetRequests: unknown[] = [];
       const blocksBySheet = new Map<number, typeof blockCells>();
@@ -1422,7 +1422,7 @@ function buildTokenMap(
     const responseData = intake.responseData;
     for (const section of intake.formSchema) {
       for (const field of section.fields) {
-        const stringValue = formatIntakeFieldValue(field, responseData[field.id]);
+        const stringValue = formatIntakeFieldValue(field, responseData[field.id], servicesMap);
         const tokenKey = `intake:${field.id}`;
         map.set(tokenKey, stringValue);
         if (field.type === "richtext") {
@@ -1460,8 +1460,13 @@ function formatLocationItem(item: unknown): string {
   return parts.join(", ");
 }
 
-function formatIntakeFieldValue(field: FormField, value: unknown): string {
+function formatIntakeFieldValue(
+  field: FormField,
+  value: unknown,
+  servicesMap: Map<number, string>,
+): string {
   if (value == null) return "";
+
   if (field.type === "location") {
     const items = Array.isArray(value) ? value : [value];
     return items
@@ -1469,6 +1474,19 @@ function formatIntakeFieldValue(field: FormField, value: unknown): string {
       .filter((s) => s.length > 0)
       .join(", ");
   }
+
+  if (field.type === "services") {
+    const ids = Array.isArray(value) ? value : [value];
+    return ids
+      .map((v) => {
+        const id = typeof v === "number" ? v : Number(v);
+        if (!Number.isFinite(id)) return null;
+        return servicesMap.get(id) ?? String(v);
+      })
+      .filter((s): s is string => Boolean(s))
+      .join(", ");
+  }
+
   if (typeof value === "string") return value;
   if (Array.isArray(value)) {
     return value.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
@@ -1483,6 +1501,7 @@ type IntakeBlockRow =
 
 function buildIntakeBlockRows(
   intake: { formSchema: FormSection[]; responseData: Record<string, unknown> } | null,
+  servicesMap: Map<number, string>,
 ): IntakeBlockRow[] {
   if (!intake || !intake.formSchema) return [];
   const responseData = intake.responseData || {};
@@ -1491,7 +1510,7 @@ function buildIntakeBlockRows(
     if (!section.fields || section.fields.length === 0) continue;
     rows.push({ kind: "section", title: section.title || "" });
     for (const field of section.fields) {
-      const stringValue = formatIntakeFieldValue(field, responseData[field.id]);
+      const stringValue = formatIntakeFieldValue(field, responseData[field.id], servicesMap);
       const fieldAny = field as unknown as { label?: string; name?: string };
       rows.push({
         kind: "field",
