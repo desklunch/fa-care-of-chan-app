@@ -312,6 +312,7 @@ export async function writeRichTextCells(
     let offset = 0;
 
     for (const seg of u.segments) {
+      if (seg.text.length === 0) continue;
       const format: SheetsTextFormat = {};
       if (seg.bold) format.bold = true;
       if (seg.italic) format.italic = true;
@@ -325,10 +326,7 @@ export async function writeRichTextCells(
       if (seg.link && /^(?:https?:|mailto:)/i.test(seg.link)) {
         format.link = { uri: seg.link };
       }
-      const hasFormat = Object.keys(format).length > 0;
-      if (hasFormat) {
-        textFormatRuns.push({ startIndex: offset, format });
-      }
+      textFormatRuns.push({ startIndex: offset, format });
       offset += seg.text.length;
     }
 
