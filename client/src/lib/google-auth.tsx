@@ -42,6 +42,7 @@ function DriveAuthProvider({ children }: { children: ReactNode }) {
         queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
         queryClient.invalidateQueries({ queryKey: ["/api/auth/drive-status"] });
         queryClient.invalidateQueries({ queryKey: ["/api/drive/search"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/drive/folders"] });
       } catch (error) {
         console.error("Failed to exchange Drive auth code:", error);
       }

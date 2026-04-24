@@ -1,24 +1,206 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FieldRow } from "@/components/inline-edit";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useDriveAuth } from "@/lib/google-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Building2,
   SquarePen,
   ArrowLeft,
   BellRing,
+  HardDrive,
+  Loader2,
+  LogIn,
+  RefreshCw,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
+
+interface DriveStatus {
+  connected: boolean;
+  needsReauth: boolean;
+  accountEmail: string | null;
+}
+
+function GoogleDriveSection() {
+  const { toast } = useToast();
+  const { promptDriveAuth, isGoogleAuthAvailable } = useDriveAuth();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { data: status, isLoading } = useQuery<DriveStatus>({
+    queryKey: ["/api/auth/drive-status"],
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/drive-disconnect");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/drive-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drive/search"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drive/folders"] });
+      setConfirmOpen(false);
+      toast({ title: "Google Drive disconnected" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to disconnect Google Drive",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const connected = !!status?.connected;
+  const needsReauth = !!status?.needsReauth;
+  const accountEmail = status?.accountEmail || null;
+
+  const everConnected = connected || !!accountEmail;
+  let statusLabel = "Not connected";
+  let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "secondary";
+  if (connected && !needsReauth) {
+    statusLabel = "Connected";
+    badgeVariant = "default";
+  } else if (needsReauth && everConnected) {
+    statusLabel = "Needs re-authorization";
+    badgeVariant = "destructive";
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <HardDrive className="h-4 w-4" />
+          Google Drive
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <Skeleton className="h-5 w-40" />
+        ) : (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Badge variant={badgeVariant} data-testid="badge-drive-status">
+                {statusLabel}
+              </Badge>
+              {accountEmail && (
+                <span
+                  className="text-sm text-muted-foreground truncate"
+                  data-testid="text-drive-account-email"
+                >
+                  {accountEmail}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {connected && !needsReauth
+                ? "Used to attach Drive files and generate documents on deals."
+                : needsReauth && everConnected
+                  ? "Reconnect to restore file attachments and document generation."
+                  : "Connect your Google Drive to attach files and generate deal documents."}
+            </p>
+          </div>
+        )}
+
+        {!isGoogleAuthAvailable && (
+          <p className="text-xs text-destructive">
+            Google sign-in is not configured. Drive features are unavailable.
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {(!connected || needsReauth) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => promptDriveAuth()}
+              disabled={!isGoogleAuthAvailable}
+              data-testid="button-connect-drive"
+            >
+              {needsReauth ? (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              ) : (
+                <LogIn className="h-4 w-4 mr-1" />
+              )}
+              {needsReauth ? "Reconnect Google Drive" : "Connect Google Drive"}
+            </Button>
+          )}
+
+          {connected && (
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-testid="button-disconnect-drive"
+                >
+                  Disconnect
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Disconnect Google Drive?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You won't be able to attach files from Drive or generate
+                    deal documents until you reconnect.
+                    {accountEmail && (
+                      <>
+                        {" "}This will disconnect the account{" "}
+                        <span className="font-medium">{accountEmail}</span>.
+                      </>
+                    )}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel data-testid="button-cancel-disconnect-drive">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.preventDefault();
+                      disconnectMutation.mutate();
+                    }}
+                    disabled={disconnectMutation.isPending}
+                    data-testid="button-confirm-disconnect-drive"
+                  >
+                    {disconnectMutation.isPending && (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    )}
+                    Disconnect
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function TeamProfile() {
   const { id } = useParams<{ id: string }>();
@@ -204,6 +386,7 @@ export default function TeamProfile() {
             </div>
           </CardContent>
         </Card>
+        {isOwnProfile && <GoogleDriveSection />}
       </div>
     </PageLayout>
   );

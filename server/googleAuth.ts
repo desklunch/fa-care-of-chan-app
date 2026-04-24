@@ -238,6 +238,9 @@ export async function setupAuth(app: Express) {
         sess.driveGrantedScopes = tokens.scope;
         console.log("[GoogleAuth] Granted scopes:", tokens.scope);
       }
+      if (payload?.email) {
+        sess.driveAccountEmail = payload.email;
+      }
 
       res.json({ success: true, driveConnected: true });
     } catch (error: any) {
@@ -263,6 +266,28 @@ export async function setupAuth(app: Express) {
     res.json({
       connected: hasToken && (hasRefreshToken || !isExpired),
       needsReauth: !hasToken || (isExpired && !hasRefreshToken) || needsScopeUpgrade,
+      accountEmail: hasToken ? (sess.driveAccountEmail as string | undefined) || null : null,
+    });
+  });
+
+  app.post("/api/auth/drive-disconnect", async (req, res) => {
+    const sess = req.session as any;
+    if (!sess?.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    sess.driveAccessToken = null;
+    sess.driveRefreshToken = null;
+    sess.driveTokenExpiry = null;
+    sess.driveGrantedScopes = null;
+    sess.driveAccountEmail = null;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Drive disconnect session save error:", err);
+        return res.status(500).json({ message: "Failed to disconnect Drive" });
+      }
+      res.json({ success: true });
     });
   });
 
