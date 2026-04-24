@@ -88,7 +88,7 @@ function getMimeTypeIcon(mimeType: string | null | undefined) {
   return <File className="h-5 w-5 text-muted-foreground" />;
 }
 
-interface DriveFile {
+export interface DriveFile {
   id: string;
   name: string;
   mimeType: string;
@@ -103,7 +103,7 @@ interface DriveSearchResult {
   nextPageToken?: string;
 }
 
-function DriveAuthPrompt({ onAuthorize }: { onAuthorize: () => void }) {
+export function DriveAuthPrompt({ onAuthorize }: { onAuthorize: () => void }) {
   return (
     <Card>
       <CardContent className="p-4 flex flex-col items-center gap-3 text-center">
@@ -128,7 +128,7 @@ function DriveAuthPrompt({ onAuthorize }: { onAuthorize: () => void }) {
   );
 }
 
-function DriveFilePickerDialog({
+export function DriveFilePickerDialog({
   open,
   onOpenChange,
   onSelect,
@@ -334,7 +334,7 @@ interface GoogleDriveAttachmentsProps {
   canWrite?: boolean;
 }
 
-function AttachmentRow({
+export function AttachmentRow({
   attachment,
   entityType,
   entityId,

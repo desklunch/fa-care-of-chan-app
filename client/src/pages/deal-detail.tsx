@@ -48,7 +48,6 @@ import {
   Sheet,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
-import { GoogleDriveAttachments } from "@/components/google-drive-attachments";
 import { GenerateDealDocDialog } from "@/components/generate-deal-doc-dialog";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
 import { DealHistoryTab } from "@/components/deal-history-tab";
@@ -77,7 +76,10 @@ import {
 } from "@/components/inline-edit";
 import { PrimaryContactPicker } from "@/components/primary-contact-picker";
 import { EntityTaskGrid } from "@/components/entity-task-grid";
-import { EntityLinksPanel } from "@/components/entity-links-panel";
+import {
+  DealAttachmentsPanel,
+  useDealAttachmentsStatus,
+} from "@/components/deal-attachments-panel";
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -102,8 +104,10 @@ export default function DealDetail() {
   const [isEditingPrimaryContact, setIsEditingPrimaryContact] = useState(false);
   const [editingPrimaryContactId, setEditingPrimaryContactId] = useState<string>("");
   const [showGenerateDoc, setShowGenerateDoc] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const { statuses: dealStatusList, statusById } = useDealStatuses();
   const { isFollowing, toggle: toggleFollow, isPending: isFollowPending } = useFollowStatus("deal", id!);
+  const dealAttachmentsStatus = useDealAttachmentsStatus(id!);
 
   const { data: deal, isLoading } = useQuery<DealWithRelations>({
     queryKey: ["/api/deals", id],
@@ -431,7 +435,7 @@ export default function DealDetail() {
       ]}
     >
       <div className="">
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="sticky top-0 bg-background z-10">
             <div className="max-w-4xl p-4 md:px-6 pb-2 md:pb-2">
               <div className="flex flex-col gap-2 ">
@@ -472,10 +476,6 @@ export default function DealDetail() {
                   BETA
                 </Badge>
               </TabsTrigger>
-              {/* <TabsTrigger value="files" data-testid="tab-files" className="hidden">
-                Files
-              </TabsTrigger> */}
-
               <TabsTrigger value="tasks" data-testid="tab-tasks">
                 Tasks
                 <Badge
@@ -951,24 +951,37 @@ export default function DealDetail() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle
-                  className="text-base"
-                  data-testid="heading-attachments"
-                >
-                  Attachments
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2">
-                <EntityLinksPanel
-                  entityType="deal"
-                  entityId={id!}
-                  canWrite={false}
-                  compact
-                />
-              </CardContent>
-            </Card>
+            {!dealAttachmentsStatus.isEmpty && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                  <CardTitle
+                    className="text-base"
+                    data-testid="heading-attachments"
+                  >
+                    Links
+                  </CardTitle>
+                  {canWrite && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="gap-1 -mr-2"
+                      onClick={() => setActiveTab("links")}
+                      data-testid="button-overview-add-link"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="py-2">
+                  <DealAttachmentsPanel
+                    dealId={id!}
+                    canWrite={false}
+                    compact
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader className="pb-2">
@@ -1443,12 +1456,8 @@ export default function DealDetail() {
             />
           </TabsContent>
 
-          <TabsContent value="files" className="p-4 md:p-6 pt-4 max-w-4xl">
-            <GoogleDriveAttachments entityType="deal" entityId={id!} />
-          </TabsContent>
-
           <TabsContent value="links" className="p-4 md:p-6 pt-4 max-w-4xl">
-            <EntityLinksPanel entityType="deal" entityId={id!} canWrite={canWrite} />
+            <DealAttachmentsPanel dealId={id!} canWrite={canWrite} />
           </TabsContent>
 
           <TabsContent value="tasks" className="p-4 md:p-6 pt-4">
