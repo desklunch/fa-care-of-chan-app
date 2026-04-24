@@ -219,52 +219,6 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
 
-  app.post("/api/auth/google", async (req, res) => {
-    try {
-      const { credential } = req.body;
-      
-      if (!credential) {
-        return res.status(400).json({ message: "No credential provided" });
-      }
-
-      const payload = await verifyGoogleToken(credential);
-      
-      const email = payload.email?.toLowerCase();
-      const allowedEmails = ["omar@functionalartists.ai", "omar@omar.city"];
-      const isAllowedDomain = email?.endsWith("@careofchan.com");
-      const isAllowedException = allowedEmails.includes(email || "");
-      
-      if (!email || (!isAllowedDomain && !isAllowedException)) {
-        return res.status(403).json({ 
-          message: "Access denied",
-          reason: "domain",
-          detail: "Only @careofchan.com email addresses are allowed"
-        });
-      }
-
-      const { user, userId } = await upsertUser(payload);
-      
-      (req.session as any).userId = userId;
-      (req.session as any).email = payload.email;
-      (req.session as any).claims = {
-        sub: userId,
-        email: payload.email,
-        given_name: payload.given_name,
-        family_name: payload.family_name,
-        picture: payload.picture,
-      };
-
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err) => (err ? reject(err) : resolve()));
-      });
-
-      res.json({ success: true, user });
-    } catch (error: any) {
-      console.error("Google auth error:", error);
-      res.status(401).json({ message: "Authentication failed", error: error.message });
-    }
-  });
-
   app.post("/api/auth/google-token", async (req, res) => {
     try {
       const { accessToken } = req.body;
