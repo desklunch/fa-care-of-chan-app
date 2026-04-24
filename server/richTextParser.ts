@@ -76,6 +76,17 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
+// Strips markdown backslash escapes (e.g. `\-`, `\.`, `\\`) from plain text so
+// that escaped punctuation written by the rich text editor renders as the
+// literal character in the generated Sheet. Processes the string in a single
+// left-to-right pass so `\\` collapses to a single `\` (not zero, not double).
+function unescapeMarkdown(text: string): string {
+  return text.replace(
+    /\\([!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~])/g,
+    "$1",
+  );
+}
+
 interface InlineMatch {
   index: number;
   fullLength: number;
@@ -86,7 +97,7 @@ interface InlineMatch {
 function findEarliestInlineMatch(text: string): InlineMatch | null {
   const candidates: InlineMatch[] = [];
 
-  const boldMd = text.match(/\*\*(.+?)\*\*/);
+  const boldMd = text.match(/(?<!\\)\*\*(.+?)\*\*/);
   if (boldMd && boldMd.index !== undefined) {
     candidates.push({
       index: boldMd.index,
@@ -96,7 +107,7 @@ function findEarliestInlineMatch(text: string): InlineMatch | null {
     });
   }
 
-  const italicUnderscore = text.match(/(?<!\w)_(.+?)_(?!\w)/);
+  const italicUnderscore = text.match(/(?<![\w\\])_(.+?)_(?!\w)/);
   if (italicUnderscore && italicUnderscore.index !== undefined) {
     if (!boldMd || italicUnderscore.index !== boldMd.index) {
       candidates.push({
@@ -108,7 +119,7 @@ function findEarliestInlineMatch(text: string): InlineMatch | null {
     }
   }
 
-  const italicStar = text.match(/(?<!\*)\*([^*]+?)\*(?!\*)/);
+  const italicStar = text.match(/(?<![*\\])\*([^*]+?)\*(?!\*)/);
   if (italicStar && italicStar.index !== undefined) {
     if (!boldMd || italicStar.index !== boldMd.index) {
       candidates.push({
@@ -120,7 +131,7 @@ function findEarliestInlineMatch(text: string): InlineMatch | null {
     }
   }
 
-  const linkMd = text.match(/\[([^\]]+)\]\(([^)]+)\)/);
+  const linkMd = text.match(/(?<!\\)\[([^\]]+)\]\(([^)]+)\)/);
   if (linkMd && linkMd.index !== undefined) {
     candidates.push({
       index: linkMd.index,
@@ -192,14 +203,14 @@ function parseInline(text: string, inherited: FormatState, segments: RichTextSeg
     const match = findEarliestInlineMatch(remaining);
     if (!match) {
       if (remaining) {
-        segments.push({ text: decodeHtmlEntities(remaining), ...cleanFormat(inherited) });
+        segments.push({ text: unescapeMarkdown(decodeHtmlEntities(remaining)), ...cleanFormat(inherited) });
       }
       break;
     }
 
     if (match.index > 0) {
       const before = remaining.slice(0, match.index);
-      segments.push({ text: decodeHtmlEntities(before), ...cleanFormat(inherited) });
+      segments.push({ text: unescapeMarkdown(decodeHtmlEntities(before)), ...cleanFormat(inherited) });
     }
 
     const childFormat: FormatState = { ...inherited };
@@ -242,7 +253,10 @@ function convertBulletLines(text: string): string {
   return text
     .split("\n")
     .map((line) => {
-      const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)/);
+      // Match unescaped (`- `, `* `) and escaped (`\- `, `\* `) bullet markers
+      // at the start of a line so escaped bullets render the same as
+      // unescaped ones in the generated sheet.
+      const bulletMatch = line.match(/^(\s*)\\?[-*]\s+(.+)/);
       if (bulletMatch) {
         return bulletMatch[1] + "• " + bulletMatch[2];
       }
