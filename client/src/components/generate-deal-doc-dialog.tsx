@@ -382,6 +382,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
         </DialogHeader>
 
         <div className="space-y-4 min-w-0 overflow-hidden">
+          {/* <DealFieldPreview deal={deal} servicesMap={servicesMap} /> */}
 
           <div className="space-y-2">
             <p className="text-sm font-medium">Choose a destination folder</p>
