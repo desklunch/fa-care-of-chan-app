@@ -1249,11 +1249,9 @@ export default function DealsPage() {
   const canWrite = can("deals.write");
 
   const [newDealDialogOpen, setNewDealDialogOpen] = useState(false);
-  const [filteredDeals, setFilteredDeals] = useState<DealWithRelations[]>([]);
   const filteredDealsRef = useRef<DealWithRelations[]>([]);
   const handleFilteredDataChange = useCallback((rows: DealWithRelations[]) => {
     filteredDealsRef.current = rows;
-    setFilteredDeals(rows);
   }, []);
   const servicesMapRef = useRef<Map<number, DealService>>(new Map());
   const linkedClientsMapRef = useRef<Map<string, DealLinkedClientEntry[]>>(new Map());
@@ -1276,7 +1274,10 @@ export default function DealsPage() {
   });
 
   // Create a services lookup map
-  const servicesMap = new Map(dealServices.map((s) => [s.id, s]));
+  const servicesMap = useMemo(
+    () => new Map(dealServices.map((s) => [s.id, s])),
+    [dealServices],
+  );
   servicesMapRef.current = servicesMap;
 
   const { data: allLinkedClients = [] } = useQuery<DealLinkedClientEntry[]>({
@@ -1456,15 +1457,26 @@ export default function DealsPage() {
     [updateDealMutation],
   );
 
-  const gridContext: DealsGridContext = {
-    users,
-    services: dealServices,
-    servicesMap,
-    linkedClientsMap,
-    dealTagsMap,
-    dealStatuses: dealStatusList,
-    onUpdateDeal: handleDirectDealUpdate,
-  };
+  const gridContext = useMemo<DealsGridContext>(
+    () => ({
+      users,
+      services: dealServices,
+      servicesMap,
+      linkedClientsMap,
+      dealTagsMap,
+      dealStatuses: dealStatusList,
+      onUpdateDeal: handleDirectDealUpdate,
+    }),
+    [
+      users,
+      dealServices,
+      servicesMap,
+      linkedClientsMap,
+      dealTagsMap,
+      dealStatusList,
+      handleDirectDealUpdate,
+    ],
+  );
 
   // Handle cell value changes - persist to server
   const handleCellValueChanged = useCallback(
