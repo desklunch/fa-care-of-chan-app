@@ -21,6 +21,55 @@ const LOG_HISTORY_SIZE = 100;
 const logHistory: LogEntry[] = [];
 const appStartTime = Date.now();
 
+const DEBUG_FLAG_KEY = "__coc_debug_enabled";
+
+function computeDebugEnabled(): boolean {
+  if (import.meta.env.DEV) return true;
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const param = params.get("debug");
+    if (param === "1" || param === "true") {
+      try {
+        sessionStorage.setItem(DEBUG_FLAG_KEY, "1");
+      } catch {
+        // ignore
+      }
+      return true;
+    }
+    if (param === "0" || param === "false") {
+      try {
+        sessionStorage.removeItem(DEBUG_FLAG_KEY);
+      } catch {
+        // ignore
+      }
+      return false;
+    }
+    return sessionStorage.getItem(DEBUG_FLAG_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+let debugEnabled = computeDebugEnabled();
+
+export function isDebugEnabled(): boolean {
+  return debugEnabled;
+}
+
+export function setDebugEnabled(enabled: boolean): void {
+  debugEnabled = enabled;
+  try {
+    if (enabled) {
+      sessionStorage.setItem(DEBUG_FLAG_KEY, "1");
+    } else {
+      sessionStorage.removeItem(DEBUG_FLAG_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 function getTimestamp(): string {
   return new Date().toISOString().split("T")[1].slice(0, 12);
 }
@@ -81,9 +130,11 @@ export function debugLog(category: LogCategory, message: string, data?: unknown)
   if (logHistory.length > LOG_HISTORY_SIZE) {
     logHistory.shift();
   }
-  
+
+  if (!debugEnabled) return;
+
   const prefix = `[${timestamp}] [+${elapsed}]`;
-  
+
   if (data !== undefined) {
     console.log(
       `%c${icon} ${prefix} [${category}] ${message}`,
@@ -142,6 +193,14 @@ export function getAppState(): {
 (window as any).__dumpLogHistory = dumpLogHistory;
 (window as any).__getLogHistory = getLogHistory;
 (window as any).__getAppState = getAppState;
+(window as any).__enableDebug = () => {
+  setDebugEnabled(true);
+  console.log("[debug-logger] enabled (sticky for this tab)");
+};
+(window as any).__disableDebug = () => {
+  setDebugEnabled(false);
+  console.log("[debug-logger] disabled");
+};
 
 const RELOAD_MARKER_KEY = "__coc_last_reload_trigger";
 const RELOAD_MARKER_FRESHNESS_MS = 1500;
