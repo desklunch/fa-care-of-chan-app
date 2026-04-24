@@ -155,14 +155,12 @@ function LinkRow({
               onChange={(e) => setEditUrl(e.target.value)}
               placeholder="URL"
               data-testid={`input-edit-link-url-${link.id}`}
-              className="h-10"
             />
             <Input
               value={editLabel}
               onChange={(e) => setEditLabel(e.target.value)}
               placeholder={labelRequired ? "Label" : "Label (optional)"}
               data-testid={`input-edit-link-label-${link.id}`}
-              className="h-10"
 
             />
             <div className="flex flex-wrap items-center gap-2">
