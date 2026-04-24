@@ -53,7 +53,15 @@ import {
   Check,
   AlertCircle,
   ChevronDown,
+  MoreVertical,
+  CloudUpload,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import type {
   DealIntakeWithRelations,
@@ -65,6 +73,8 @@ import type {
 interface DealIntakeTabProps {
   dealId: string;
   canWrite: boolean;
+  onSaveToGoogleDrive?: () => void;
+  canSaveToGoogleDrive?: boolean;
 }
 
 function formatReadOnlyValue(field: FormField, value: unknown): string {
@@ -410,10 +420,14 @@ function IntakeDraftForm({
   dealId,
   intake,
   canWrite,
+  onSaveToGoogleDrive,
+  canSaveToGoogleDrive,
 }: {
   dealId: string;
   intake: DealIntakeWithRelations;
   canWrite: boolean;
+  onSaveToGoogleDrive?: () => void;
+  canSaveToGoogleDrive?: boolean;
 }) {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -618,15 +632,37 @@ function IntakeDraftForm({
                 intake={intake}
                 canWrite={canWrite}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDeleteDialog(true)}
-                data-testid="button-delete-intake"
-              >
-                <Trash2 className="h-4 w-4" />
-                Remove
-              </Button>
+              {canSaveToGoogleDrive && onSaveToGoogleDrive && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={onSaveToGoogleDrive}
+                  data-testid="button-save-intake-to-drive"
+                >
+                  <CloudUpload className="h-4 w-4" />
+                  Save to Google Drive
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    data-testid="button-intake-more"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => setShowDeleteDialog(true)}
+                    data-testid="menuitem-reset-intake"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Reset Intake
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
@@ -884,7 +920,12 @@ function SyncToDealButton({
   );
 }
 
-export function DealIntakeTab({ dealId, canWrite }: DealIntakeTabProps) {
+export function DealIntakeTab({
+  dealId,
+  canWrite,
+  onSaveToGoogleDrive,
+  canSaveToGoogleDrive,
+}: DealIntakeTabProps) {
   const { data: intake, isLoading } = useQuery<DealIntakeWithRelations | null>({
     queryKey: ["/api/deals", dealId, "intake"],
     enabled: Boolean(dealId),
@@ -904,6 +945,12 @@ export function DealIntakeTab({ dealId, canWrite }: DealIntakeTabProps) {
   }
 
   return (
-    <IntakeDraftForm dealId={dealId} intake={intake} canWrite={canWrite} />
+    <IntakeDraftForm
+      dealId={dealId}
+      intake={intake}
+      canWrite={canWrite}
+      onSaveToGoogleDrive={onSaveToGoogleDrive}
+      canSaveToGoogleDrive={canSaveToGoogleDrive}
+    />
   );
 }
