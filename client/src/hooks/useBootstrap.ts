@@ -1,6 +1,12 @@
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+  type QueryFunction,
+} from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getQueryFn } from "@/lib/queryClient";
+import { debugLog } from "@/lib/debug-logger";
 import type { User, Theme } from "@shared/schema";
 import type { PermissionContext } from "@shared/permissions";
 
@@ -20,11 +26,29 @@ export interface BootstrapData {
 
 export const BOOTSTRAP_QUERY_KEY = ["/api/bootstrap"] as const;
 
+const TRANSIENT_401_RETRY_DELAY_MS = 400;
+
+const bootstrapQueryFn: QueryFunction<BootstrapData | null> = async (ctx) => {
+  const fetcher = getQueryFn<BootstrapData | null>({ on401: "returnNull" });
+  const first = await fetcher(ctx);
+  if (first !== null) return first;
+
+  // The first /api/bootstrap response was 401 — give the session store a
+  // brief moment to settle and retry once before treating the user as
+  // logged out. This handles the post-reload race where the session row
+  // is still being committed.
+  debugLog("AUTH", "Bootstrap 401 — retrying once after short delay", {
+    delayMs: TRANSIENT_401_RETRY_DELAY_MS,
+  });
+  await new Promise((resolve) => setTimeout(resolve, TRANSIENT_401_RETRY_DELAY_MS));
+  return await fetcher(ctx);
+};
+
 export function useBootstrap() {
   const qc = useQueryClient();
   const query = useQuery<BootstrapData | null>({
     queryKey: BOOTSTRAP_QUERY_KEY,
-    queryFn: getQueryFn<BootstrapData | null>({ on401: "returnNull" }),
+    queryFn: bootstrapQueryFn,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: (failureCount, error: any) => {

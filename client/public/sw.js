@@ -37,6 +37,32 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname.startsWith("/api/")) return;
 
+  const acceptHeader = event.request.headers.get("accept") || "";
+  const isNavigation =
+    event.request.mode === "navigate" || acceptHeader.includes("text/html");
+
+  if (isNavigation) {
+    // Strict network-first for HTML navigations: only fall back to the
+    // cached shell when the network is genuinely unreachable. This
+    // prevents a stale `/index.html` from being served after a deploy.
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() =>
+          caches.match(event.request).then(
+            (cached) => cached || caches.match("/index.html") || caches.match("/")
+          )
+        )
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {

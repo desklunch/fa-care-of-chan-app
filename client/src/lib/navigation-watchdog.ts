@@ -1,4 +1,4 @@
-import { debugLog } from "@/lib/debug-logger";
+import { debugLog, recordReloadTrigger } from "@/lib/debug-logger";
 
 const SYNC_CHECK_DELAY_MS = 150;
 const MAX_RECOVERY_ATTEMPTS = 3;
@@ -46,6 +46,11 @@ function attemptRecovery(): void {
   if (recoveryAttempts >= MAX_RECOVERY_ATTEMPTS) {
     debugLog("NAVIGATION", "Max recovery attempts reached - performing hard reload");
     recoveryAttempts = 0;
+    recordReloadTrigger("nav-watchdog", {
+      reason: "max-recovery-attempts",
+      browserPathname,
+      wouterPathname,
+    });
     window.location.reload();
     return;
   }

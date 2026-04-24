@@ -143,7 +143,35 @@ export function getAppState(): {
 (window as any).__getLogHistory = getLogHistory;
 (window as any).__getAppState = getAppState;
 
+const RELOAD_MARKER_KEY = "__coc_last_reload_trigger";
+
+export function recordReloadTrigger(source: string, data?: Record<string, unknown>): void {
+  try {
+    const payload = {
+      source,
+      at: new Date().toISOString(),
+      pathname: window.location.pathname + window.location.search,
+      ...(data || {}),
+    };
+    sessionStorage.setItem(RELOAD_MARKER_KEY, JSON.stringify(payload));
+  } catch {
+    // sessionStorage unavailable — best effort only
+  }
+  debugLog("LIFECYCLE", "Reload triggered", { source, ...(data || {}) });
+}
+
 debugLog("LIFECYCLE", "Debug logger initialized", {
   startTime: new Date(appStartTime).toISOString(),
   userAgent: navigator.userAgent.slice(0, 100),
 });
+
+try {
+  const raw = sessionStorage.getItem(RELOAD_MARKER_KEY);
+  if (raw) {
+    sessionStorage.removeItem(RELOAD_MARKER_KEY);
+    const parsed = JSON.parse(raw);
+    debugLog("LIFECYCLE", "Previous page was reloaded", parsed);
+  }
+} catch {
+  // ignore
+}

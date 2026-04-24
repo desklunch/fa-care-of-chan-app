@@ -22,10 +22,13 @@ export function getSession() {
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
+    rolling: true,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       secure: true,
+      sameSite: "lax",
+      path: "/",
       maxAge: sessionTtl,
     },
   });
@@ -251,6 +254,10 @@ export async function setupAuth(app: Express) {
         picture: payload.picture,
       };
 
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => (err ? reject(err) : resolve()));
+      });
+
       res.json({ success: true, user });
     } catch (error: any) {
       console.error("Google auth error:", error);
@@ -337,6 +344,10 @@ export async function setupAuth(app: Express) {
       delete sess.driveRefreshToken;
       delete sess.driveGrantedScopes;
       delete sess.driveAccountEmail;
+
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => (err ? reject(err) : resolve()));
+      });
 
       res.json({ success: true, driveConnected: true });
     } catch (error: any) {
@@ -481,6 +492,10 @@ export async function setupAuth(app: Express) {
           family_name: user.lastName,
         };
 
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((err) => (err ? reject(err) : resolve()));
+        });
+
         res.json({ success: true, user });
       } catch (error: any) {
         console.error("Dev login error:", error);
@@ -490,10 +505,55 @@ export async function setupAuth(app: Express) {
   }
 }
 
+export async function logAuthFailure(req: any, route: string): Promise<void> {
+  try {
+    const cookieHeader = req.headers?.cookie ?? "";
+    const hasConnectSidCookie = /(?:^|;\s*)connect\.sid=/.test(cookieHeader);
+    const sid: string | undefined = req.sessionID;
+    const session = req.session as any;
+    const sessionUserId = session?.userId ?? null;
+    const sessionExpire =
+      session?.cookie?.expires instanceof Date
+        ? session.cookie.expires.toISOString()
+        : session?.cookie?._expires ?? null;
+
+    let storeFound: boolean | null = null;
+    let storeExpire: string | null = null;
+    let storeUserId: string | null = null;
+
+    if (sid && process.env.DATABASE_URL) {
+      try {
+        const { pool } = await import("./db");
+        const result = await pool.query(
+          `SELECT sess, expire FROM sessions WHERE sid = $1 LIMIT 1`,
+          [sid]
+        );
+        if (result.rows.length > 0) {
+          storeFound = true;
+          storeExpire = result.rows[0].expire?.toISOString?.() ?? String(result.rows[0].expire);
+          const sessData = result.rows[0].sess as any;
+          storeUserId = sessData?.userId ?? null;
+        } else {
+          storeFound = false;
+        }
+      } catch (lookupErr: any) {
+        storeFound = null;
+      }
+    }
+
+    console.warn(
+      `[auth-401] route=${route} cookie=${hasConnectSidCookie} sid=${sid ?? "none"} sessionUserId=${sessionUserId} sessionExpire=${sessionExpire} storeFound=${storeFound} storeUserId=${storeUserId} storeExpire=${storeExpire}`
+    );
+  } catch {
+    // diagnostics must never throw
+  }
+}
+
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const session = req.session as any;
   
   if (!session?.userId) {
+    await logAuthFailure(req, req.originalUrl || req.url || "unknown");
     return res.status(401).json({ message: "Unauthorized" });
   }
 

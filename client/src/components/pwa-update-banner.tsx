@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 
 export function PwaUpdateBanner() {
   const [show, setShow] = useState(false);
@@ -28,7 +29,10 @@ export function PwaUpdateBanner() {
         onClick={() => {
           navigator.serviceWorker.addEventListener(
             "controllerchange",
-            () => window.location.reload(),
+            () => {
+              recordReloadTrigger("pwa-banner", { event: "controllerchange" });
+              window.location.reload();
+            },
             { once: true }
           );
           navigator.serviceWorker
