@@ -62,6 +62,7 @@ import type {
   ProposalStakeholder,
   EntityTeamMemberWithUser,
   User,
+  DealService as DealServiceType,
 } from "@shared/schema";
 
 interface StakeholderWithRelations extends ProposalStakeholder {
@@ -95,6 +96,10 @@ export default function ProposalDetail() {
   const [stakeholderSearchId, setStakeholderSearchId] = useState("");
   const [teamMemberUserId, setTeamMemberUserId] = useState("");
   const [teamMemberRole, setTeamMemberRole] = useState("");
+
+  const { data: dealServices = [] } = useQuery<DealServiceType[]>({
+    queryKey: ["/api/deal-services"],
+  });
 
   const { data: proposal, isLoading } = useQuery<ProposalWithRelations>({
     queryKey: ["/api/proposals", params.id],
@@ -234,6 +239,10 @@ export default function ProposalDetail() {
   const dealBudgetLow = proposal.deal?.budgetLow ?? null;
   const dealBudgetHigh = proposal.deal?.budgetHigh ?? null;
   const dealBudgetNotes = proposal.deal?.budgetNotes ?? null;
+  const dealServiceIds = (proposal.deal?.serviceIds ?? []) as number[];
+  const dealServiceLabels = dealServiceIds
+    .map((id) => dealServices.find((s) => s.id === id)?.name)
+    .filter((name): name is string => Boolean(name));
 
   return (
     <PageLayout
@@ -439,6 +448,20 @@ export default function ProposalDetail() {
                     </div>
                   ) : (
                     <span className="text-sm text-muted-foreground">No events scheduled</span>
+                  )}
+                </FieldRow>
+
+                <FieldRow label="Services" testId="field-services">
+                  {dealServiceLabels.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5" data-testid="text-services">
+                      {dealServiceLabels.map((label, i) => (
+                        <Badge key={i} variant="secondary" data-testid={`badge-service-${i}`}>
+                          {label}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No services specified</span>
                   )}
                 </FieldRow>
 
