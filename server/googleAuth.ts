@@ -110,6 +110,18 @@ export async function refreshDriveAccessToken(refreshToken: string): Promise<{
   };
 }
 
+async function revokeGoogleToken(token: string): Promise<void> {
+  const res = await fetch("https://oauth2.googleapis.com/revoke", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ token }).toString(),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Google revoke failed: ${res.status} ${body}`);
+  }
+}
+
 // One-time, transparent migration of legacy session-only Drive tokens into the
 // DB so existing users don't get force-disconnected after this change ships.
 async function migrateSessionTokensIfNeeded(userId: string, session: any): Promise<void> {
@@ -368,6 +380,17 @@ export async function setupAuth(app: Express) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     try {
+      try {
+        const cred = await storage.getUserGoogleCredential(sess.userId);
+        const refreshToken = cred?.encryptedRefreshToken
+          ? decryptSecret(cred.encryptedRefreshToken)
+          : (sess.driveRefreshToken as string | undefined);
+        if (refreshToken) {
+          await revokeGoogleToken(refreshToken);
+        }
+      } catch (revokeErr: any) {
+        console.error("Drive disconnect revoke error:", revokeErr?.message || revokeErr);
+      }
       await storage.deleteUserGoogleCredential(sess.userId);
       delete sess.driveAccessToken;
       delete sess.driveTokenExpiry;
