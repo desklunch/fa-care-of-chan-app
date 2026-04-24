@@ -23,6 +23,7 @@ import {
   LinkIcon,
   Globe,
   Bookmark,
+  Tag,
 } from "lucide-react";
 import type { EntityLinkWithUser } from "@shared/schema";
 import { LinkItem } from "@/components/link-item";
@@ -230,9 +231,9 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
             <Card data-testid="form-create-link">
               <CardContent className="py-3 space-y-3">
                 <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
-                    placeholder="https://example.com"
+                    placeholder="URL (e.g. http://example.com)"
                     value={newUrl}
                     onChange={(e) => setNewUrl(e.target.value)}
                     onKeyDown={(e) => {
@@ -248,9 +249,9 @@ export function EntityLinksPanel({ entityType, entityId, canWrite = false, compa
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
-                    placeholder={labelRequired ? "Label" : "Label (optional)"}
+                    placeholder={labelRequired ? "Title" : "Title (optional)"}
                     value={newLabel}
                     onChange={(e) => setNewLabel(e.target.value)}
                     onKeyDown={(e) => {
