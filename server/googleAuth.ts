@@ -265,6 +265,81 @@ export async function setupAuth(app: Express) {
     }
   });
 
+  app.post("/api/auth/google-token", async (req, res) => {
+    try {
+      const { accessToken } = req.body;
+
+      if (!accessToken || typeof accessToken !== "string") {
+        return res.status(400).json({ message: "No access token provided" });
+      }
+
+      const userinfoRes = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      if (!userinfoRes.ok) {
+        return res.status(401).json({
+          message: "Failed to verify Google access token",
+          status: userinfoRes.status,
+        });
+      }
+
+      const payload = (await userinfoRes.json()) as {
+        sub?: string;
+        email?: string;
+        email_verified?: boolean;
+        given_name?: string;
+        family_name?: string;
+        picture?: string;
+      };
+
+      if (!payload.sub || !payload.email || payload.email_verified !== true) {
+        return res.status(401).json({
+          message: "Google account is missing a verified email",
+        });
+      }
+
+      const email = payload.email.toLowerCase();
+      const allowedEmails = ["omar@functionalartists.ai", "omar@omar.city"];
+      const isAllowedDomain = email.endsWith("@careofchan.com");
+      const isAllowedException = allowedEmails.includes(email);
+
+      if (!isAllowedDomain && !isAllowedException) {
+        return res.status(403).json({
+          message: "Access denied",
+          reason: "domain",
+          detail: "Only @careofchan.com email addresses are allowed",
+        });
+      }
+
+      const { user, userId } = await upsertUser(payload);
+
+      (req.session as any).userId = userId;
+      (req.session as any).email = payload.email;
+      (req.session as any).claims = {
+        sub: userId,
+        email: payload.email,
+        given_name: payload.given_name,
+        family_name: payload.family_name,
+        picture: payload.picture,
+      };
+
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => (err ? reject(err) : resolve()));
+      });
+
+      res.json({ success: true, user });
+    } catch (error: any) {
+      console.error("Google token auth error:", error);
+      res
+        .status(401)
+        .json({ message: "Authentication failed", error: error.message });
+    }
+  });
+
   app.post("/api/auth/google-code", async (req, res) => {
     try {
       const { code } = req.body;

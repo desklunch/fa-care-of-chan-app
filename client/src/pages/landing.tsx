@@ -10,8 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Building2, Users, Shield, Loader2, KeyboardMusic } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 import Logo from "@/framework/components/logo";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useGoogleAuth } from "@/lib/google-auth";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useMutation } from "@tanstack/react-query";
@@ -35,8 +36,10 @@ export default function Landing() {
   const { isGoogleAuthAvailable } = useGoogleAuth();
 
   const loginMutation = useMutation({
-    mutationFn: async (credential: string) => {
-      const res = await apiRequest("POST", "/api/auth/google", { credential });
+    mutationFn: async (accessToken: string) => {
+      const res = await apiRequest("POST", "/api/auth/google-token", {
+        accessToken,
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -52,6 +55,33 @@ export default function Landing() {
           variant: "destructive",
         });
       }
+    },
+  });
+
+  const startGoogleLogin = useGoogleLogin({
+    flow: "implicit",
+    scope: "openid email profile",
+    onSuccess: (tokenResponse) => {
+      if (tokenResponse?.access_token) {
+        loginMutation.mutate(tokenResponse.access_token);
+      } else {
+        toast({
+          title: "Sign in failed",
+          description: "Google did not return an access token",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (errorResponse) => {
+      const description =
+        (errorResponse as any)?.error_description ||
+        (errorResponse as any)?.error ||
+        "Google sign-in was cancelled or failed";
+      toast({
+        title: "Sign in failed",
+        description,
+        variant: "destructive",
+      });
     },
   });
 
@@ -102,24 +132,15 @@ export default function Landing() {
               Signing in...
             </Button>
           ) : isGoogleAuthAvailable ? (
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                if (credentialResponse.credential) {
-                  loginMutation.mutate(credentialResponse.credential);
-                }
-              }}
-              onError={() => {
-                toast({
-                  title: "Sign in failed",
-                  description: "Google sign-in was cancelled or failed",
-                  variant: "destructive",
-                });
-              }}
-              theme="filled_blue"
-              size="large"
-              text="signin_with"
-              shape="pill"
-            />
+            <Button
+              size="lg"
+              className="h-12 px-8 rounded-full"
+              onClick={() => startGoogleLogin()}
+              data-testid="button-google-login"
+            >
+              <SiGoogle className="mr-2 h-5 w-5" />
+              Sign in with Google
+            </Button>
           ) : (
             <></>
           )}
