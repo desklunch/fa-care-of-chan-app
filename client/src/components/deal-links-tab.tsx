@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Link as LinkIcon,
   Globe,
+  Tag,
   Bookmark,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -165,7 +166,7 @@ export function DealLinksTab({ dealId, canWrite }: DealLinksTabProps) {
             <Card data-testid="form-create-link">
               <CardContent className="py-3 space-y-3">
                 <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
                     placeholder="https://example.com"
                     value={newUrl}
@@ -183,7 +184,7 @@ export function DealLinksTab({ dealId, canWrite }: DealLinksTabProps) {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
                     placeholder="Label"
                     value={newLabel}
