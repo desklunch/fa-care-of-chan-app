@@ -204,13 +204,14 @@ export interface TokenCell {
   row: number;
   col: number;
   originalValue: string;
+  userEnteredFormat?: Record<string, unknown>;
 }
 
 export async function findTokenCells(
   accessToken: string,
   spreadsheetId: string,
 ): Promise<TokenCell[]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(properties(title,sheetId),data.rowData.values.formattedValue)`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(properties(title,sheetId),data.rowData.values(formattedValue,userEnteredFormat))`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -231,7 +232,14 @@ export async function findTokenCells(
           const cell = row.values[colIdx];
           const val = cell?.formattedValue;
           if (typeof val === "string" && val.includes("{{")) {
-            cells.push({ sheetTitle: title, sheetId: numericSheetId, row: rowIdx, col: colIdx, originalValue: val });
+            cells.push({
+              sheetTitle: title,
+              sheetId: numericSheetId,
+              row: rowIdx,
+              col: colIdx,
+              originalValue: val,
+              userEnteredFormat: cell?.userEnteredFormat,
+            });
           }
         }
       }

@@ -1059,10 +1059,37 @@ export function registerDealsRoutes(app: Express): void {
       const BLOCK_TOKEN_NAME = "intake_fields";
       const BLOCK_TOKEN_EXACT = /^\s*\{\{\s*intake_fields\s*\}\}\s*$/;
       const BLOCK_TOKEN_ANY = /\{\{\s*intake_fields\s*\}\}/;
+      const STYLE_TOKEN_EXACT = /^\s*\{\{\s*style:(intake-section|intake-field-label|intake-field-value)\s*\}\}\s*$/;
+
+      type IntakeStyleKind = "section" | "fieldLabel" | "fieldValue";
+      const STYLE_KIND_BY_NAME: Record<string, IntakeStyleKind> = {
+        "intake-section": "section",
+        "intake-field-label": "fieldLabel",
+        "intake-field-value": "fieldValue",
+      };
+      const styleFormatByKind = new Map<IntakeStyleKind, Record<string, unknown>>();
+      const styleSeenByKind = new Set<IntakeStyleKind>();
+      const styleTokenCells: typeof tokenCells = [];
 
       const blockCells: typeof tokenCells = [];
       const regularTokenCells: typeof tokenCells = [];
       for (const cell of tokenCells) {
+        const styleMatch = cell.originalValue.match(STYLE_TOKEN_EXACT);
+        if (styleMatch) {
+          const kind = STYLE_KIND_BY_NAME[styleMatch[1]];
+          styleTokenCells.push(cell);
+          if (styleSeenByKind.has(kind)) {
+            console.warn(
+              `Style token {{style:${styleMatch[1]}}} found more than once; using the first occurrence and ignoring cell ${cell.sheetTitle}!R${cell.row + 1}C${cell.col + 1}.`,
+            );
+          } else {
+            styleSeenByKind.add(kind);
+            if (cell.userEnteredFormat) {
+              styleFormatByKind.set(kind, cell.userEnteredFormat);
+            }
+          }
+          continue;
+        }
         if (BLOCK_TOKEN_EXACT.test(cell.originalValue)) {
           blockCells.push(cell);
         } else if (BLOCK_TOKEN_ANY.test(cell.originalValue)) {
@@ -1110,10 +1137,14 @@ export function registerDealsRoutes(app: Express): void {
               },
             });
           }
+          const sectionFormat = styleFormatByKind.get("section");
+          const labelFormat = styleFormatByKind.get("fieldLabel");
+          const valueFormat = styleFormatByKind.get("fieldValue");
+
           for (let r = 0; r < blockRows.length; r++) {
             const row = blockRows[r];
+            const absRow = effectiveRow + r;
             if (row.kind === "section") {
-              const absRow = effectiveRow + r;
               sheetRequests.push({
                 mergeCells: {
                   range: {
@@ -1126,11 +1157,57 @@ export function registerDealsRoutes(app: Express): void {
                   mergeType: "MERGE_ALL",
                 },
               });
+              if (sectionFormat) {
+                sheetRequests.push({
+                  repeatCell: {
+                    range: {
+                      sheetId,
+                      startRowIndex: absRow,
+                      endRowIndex: absRow + 1,
+                      startColumnIndex: blockCell.col,
+                      endColumnIndex: blockCell.col + 2,
+                    },
+                    cell: { userEnteredFormat: sectionFormat },
+                    fields: "userEnteredFormat",
+                  },
+                });
+              }
+            } else {
+              if (labelFormat) {
+                sheetRequests.push({
+                  repeatCell: {
+                    range: {
+                      sheetId,
+                      startRowIndex: absRow,
+                      endRowIndex: absRow + 1,
+                      startColumnIndex: blockCell.col,
+                      endColumnIndex: blockCell.col + 1,
+                    },
+                    cell: { userEnteredFormat: labelFormat },
+                    fields: "userEnteredFormat",
+                  },
+                });
+              }
+              if (valueFormat) {
+                sheetRequests.push({
+                  repeatCell: {
+                    range: {
+                      sheetId,
+                      startRowIndex: absRow,
+                      endRowIndex: absRow + 1,
+                      startColumnIndex: blockCell.col + 1,
+                      endColumnIndex: blockCell.col + 2,
+                    },
+                    cell: { userEnteredFormat: valueFormat },
+                    fields: "userEnteredFormat",
+                  },
+                });
+              }
             }
           }
           accumulated += shiftPerBlock;
         }
-        // Shift any regular token cells in this sheet that sit below a block.
+        // Shift any regular and style token cells in this sheet that sit below a block.
         for (const c of regularTokenCells) {
           if (c.sheetId !== sheetId) continue;
           let shift = 0;
@@ -1139,6 +1216,24 @@ export function registerDealsRoutes(app: Express): void {
           }
           c.row += shift;
         }
+        for (const c of styleTokenCells) {
+          if (c.sheetId !== sheetId) continue;
+          let shift = 0;
+          for (const blockCell of list) {
+            if (c.row > blockCell.row) shift += shiftPerBlock;
+          }
+          c.row += shift;
+        }
+      }
+
+      // Clear the literal {{style:...}} text in the generated copy without touching its formatting.
+      for (const cell of styleTokenCells) {
+        plainCellUpdates.push({
+          sheetTitle: cell.sheetTitle,
+          row: cell.row,
+          col: cell.col,
+          value: "",
+        });
       }
 
       for (const { cell: blockCell, effectiveRow } of blockPlans) {
