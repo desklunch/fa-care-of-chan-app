@@ -479,7 +479,7 @@ export function DealAttachmentsPanel({
       );
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (result: DriveAttachmentWithUser | undefined) => {
       queryClient.invalidateQueries({
         queryKey: ["/api/drive-attachments", ENTITY_TYPE, dealId],
       });
@@ -488,7 +488,12 @@ export function DealAttachmentsPanel({
       setPasteDescription("");
       setShowPasteInput(false);
       setShowPicker(false);
-      toast({ title: "File attached successfully" });
+      toast({
+        title:
+          result?.mimeType === "application/vnd.google-apps.folder"
+            ? "Folder attached successfully"
+            : "File attached successfully",
+      });
     },
     onError: (error: Error) => {
       if (error.message?.includes("drive_auth_required")) {

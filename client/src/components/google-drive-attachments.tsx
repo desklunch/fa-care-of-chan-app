@@ -30,6 +30,7 @@ import {
   Link2,
   X,
   Loader2,
+  Folder,
   FolderOpen,
   FileImage,
   FileArchive,
@@ -40,6 +41,7 @@ import {
   LogIn,
   SquarePen,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,7 +81,7 @@ function getMimeTypeIcon(mimeType: string | null | undefined) {
     return <FileText className="h-5 w-5 text-red-500" />;
   }
   if (mimeType === "application/vnd.google-apps.folder") {
-    return <FolderOpen className="h-5 w-5 text-muted-foreground" />;
+    return <Folder className="h-5 w-5 text-blue-500" />;
   }
   if (mimeType === "application/vnd.google-apps.form") {
     return <Sheet className="h-5 w-5 text-purple-500" />;
@@ -161,6 +163,16 @@ function extractDriveFileIdClient(url: string): string | null {
   return null;
 }
 
+function isDriveFolderUrlClient(url: string): boolean {
+  return /\/folders\/[a-zA-Z0-9_-]+/.test(url);
+}
+
+const DRIVE_FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
+
+function isFolderMimeType(mimeType: string | null | undefined): boolean {
+  return mimeType === DRIVE_FOLDER_MIME_TYPE;
+}
+
 export function DriveAuthPrompt({ onAuthorize }: { onAuthorize: () => void }) {
   return (
     <Card>
@@ -227,6 +239,7 @@ export function DriveFilePickerDialog({
   const trimmedQuery = searchQuery.trim();
   const inputIsUrl = looksLikeUrl(trimmedQuery);
   const inputIsDriveUrl = inputIsUrl && isDriveUrl(trimmedQuery);
+  const inputIsFolderUrl = inputIsDriveUrl && isDriveFolderUrlClient(trimmedQuery);
   const extractedFileId = inputIsDriveUrl
     ? extractDriveFileIdClient(trimmedQuery)
     : null;
@@ -234,9 +247,10 @@ export function DriveFilePickerDialog({
     ? !inputIsDriveUrl
       ? "That doesn't look like a Google Drive link."
       : !extractedFileId
-        ? "We couldn't find a file ID in that Drive link."
+        ? `We couldn't find a${inputIsFolderUrl ? " folder" : " file"} ID in that Drive link.`
         : null
     : null;
+  const pickedUrlIsFolder = pickedUrl ? isDriveFolderUrlClient(pickedUrl) : false;
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -299,15 +313,23 @@ export function DriveFilePickerDialog({
   }
 
   if (pickedFile || pickedUrl) {
+    const pickedIsFolder =
+      (pickedFile ? isFolderMimeType(pickedFile.mimeType) : false) ||
+      pickedUrlIsFolder;
+    const pickedNoun = pickedIsFolder ? "folder" : "file";
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add Attachment</DialogTitle>
+            <DialogTitle>
+              {pickedIsFolder ? "Attach Folder" : "Add Attachment"}
+            </DialogTitle>
             <DialogDescription>
               {pickedFile
-                ? "Optionally add a label and description for this file."
-                : "Optionally add a label and description for this link."}
+                ? `Optionally add a label and description for this ${pickedNoun}.`
+                : pickedIsFolder
+                  ? "Optionally add a label and description for this folder."
+                  : "Optionally add a label and description for this link."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -315,23 +337,35 @@ export function DriveFilePickerDialog({
               <div className="flex-shrink-0">
                 {pickedFile ? (
                   getMimeTypeIcon(pickedFile.mimeType)
+                ) : pickedUrlIsFolder ? (
+                  <Folder className="h-5 w-5 text-blue-500" />
                 ) : (
                   <Link2 className="h-5 w-5 text-muted-foreground" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p
-                  className="text-sm font-medium truncate"
-                  data-testid={
-                    pickedFile ? "text-picked-file-name" : "text-picked-url"
-                  }
-                >
-                  {pickedFile ? pickedFile.name : pickedUrl}
-                </p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p
+                    className="text-sm font-medium truncate"
+                    data-testid={
+                      pickedFile ? "text-picked-file-name" : "text-picked-url"
+                    }
+                  >
+                    {pickedFile ? pickedFile.name : pickedUrl}
+                  </p>
+                  {pickedIsFolder && (
+                    <Badge
+                      variant="secondary"
+                      data-testid="badge-picked-folder"
+                    >
+                      Folder
+                    </Badge>
+                  )}
+                </div>
                 {pickedUrl ? (
                   <p className="text-xs text-muted-foreground">
-                    We'll fetch the file details from Google Drive when you
-                    attach.
+                    We'll fetch the {pickedNoun} details from Google Drive when
+                    you attach.
                   </p>
                 ) : null}
               </div>
@@ -396,7 +430,11 @@ export function DriveFilePickerDialog({
               ) : (
                 <Check className="h-4 w-4 mr-1" />
               )}
-              {pickedFile ? "Attach File" : "Attach Link"}
+              {pickedIsFolder
+                ? "Attach Folder"
+                : pickedFile
+                  ? "Attach File"
+                  : "Attach Link"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -410,8 +448,8 @@ export function DriveFilePickerDialog({
         <DialogHeader>
           <DialogTitle>Browse Google Drive</DialogTitle>
           <DialogDescription>
-            Search for a file in your Google Drive, or paste a Drive link to
-            attach it.
+            Search for a file in your Google Drive, or paste a Drive file or
+            folder link to attach it.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -445,19 +483,35 @@ export function DriveFilePickerDialog({
             <div className="space-y-2">
               <div className="flex items-center gap-3 p-2.5 rounded-md border">
                 <div className="flex-shrink-0">
-                  <Link2 className="h-5 w-5 text-muted-foreground" />
+                  {inputIsFolderUrl ? (
+                    <Folder className="h-5 w-5 text-blue-500" />
+                  ) : (
+                    <Link2 className="h-5 w-5 text-muted-foreground" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className="text-sm font-medium truncate"
-                    data-testid="text-pasted-url"
-                  >
-                    {trimmedQuery}
-                  </p>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p
+                      className="text-sm font-medium truncate"
+                      data-testid="text-pasted-url"
+                    >
+                      {trimmedQuery}
+                    </p>
+                    {inputIsFolderUrl && (
+                      <Badge
+                        variant="secondary"
+                        data-testid="badge-pasted-folder"
+                      >
+                        Folder
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {urlError
                       ? urlError
-                      : "Looks like a Google Drive link."}
+                      : inputIsFolderUrl
+                        ? "Looks like a Google Drive folder."
+                        : "Looks like a Google Drive link."}
                   </p>
                 </div>
                 <Button
@@ -467,7 +521,7 @@ export function DriveFilePickerDialog({
                   data-testid="button-attach-pasted-url"
                 >
                   <Check className="h-4 w-4 mr-1" />
-                  Attach link
+                  {inputIsFolderUrl ? "Attach folder" : "Attach link"}
                 </Button>
               </div>
             </div>
@@ -593,6 +647,8 @@ export function AttachmentRow({
 
   const primary = attachment.label || attachment.name;
   const secondary = attachment.label ? attachment.name : null;
+  const isFolder = isFolderMimeType(attachment.mimeType);
+  const sourceLabel = isFolder ? "Google Drive folder" : "Google Drive";
 
   return (
     <div
@@ -656,7 +712,7 @@ export function AttachmentRow({
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {attachment.webViewLink ? (
                 <a
                   href={attachment.webViewLink}
@@ -678,13 +734,21 @@ export function AttachmentRow({
               {attachment.webViewLink && (
                 <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
               )}
+              {isFolder && (
+                <Badge
+                  variant="secondary"
+                  data-testid={`badge-drive-folder-${attachment.id}`}
+                >
+                  Folder
+                </Badge>
+              )}
             </div>
             <p
               className="text-xs text-muted-foreground truncate"
               data-testid={`text-drive-file-filename-${attachment.id}`}
             >
               {secondary && <span className="">{secondary}{" · "}</span>}
-             Google Drive
+              {sourceLabel}
             </p>
             {attachment.description && (
               <p
@@ -785,7 +849,7 @@ export function GoogleDriveAttachments({
       );
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (result: DriveAttachmentWithUser | undefined) => {
       queryClient.invalidateQueries({
         queryKey: ["/api/drive-attachments", entityType, entityId],
       });
@@ -794,7 +858,11 @@ export function GoogleDriveAttachments({
       setPasteDescription("");
       setShowPasteInput(false);
       setShowPicker(false);
-      toast({ title: "File attached successfully" });
+      toast({
+        title: isFolderMimeType(result?.mimeType)
+          ? "Folder attached successfully"
+          : "File attached successfully",
+      });
     },
     onError: (error: Error) => {
       if (error.message?.includes("drive_auth_required")) {
@@ -931,7 +999,7 @@ export function GoogleDriveAttachments({
         <Card>
           <CardContent className="p-3 space-y-2">
             <p className="text-sm text-muted-foreground">
-              Paste a Google Drive sharing link to attach a file.
+              Paste a Google Drive sharing link to attach a file or folder.
             </p>
             <div className="flex gap-2">
               <Input

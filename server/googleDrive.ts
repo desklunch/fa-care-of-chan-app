@@ -413,3 +413,13 @@ export function extractDriveFileId(url: string): string | null {
   }
   return null;
 }
+
+export const DRIVE_FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
+
+export function isDriveFolderUrl(url: string): boolean {
+  return /\/folders\/[a-zA-Z0-9_-]+/.test(url);
+}
+
+export function isDriveFolderMimeType(mimeType: string | null | undefined): boolean {
+  return mimeType === DRIVE_FOLDER_MIME_TYPE;
+}

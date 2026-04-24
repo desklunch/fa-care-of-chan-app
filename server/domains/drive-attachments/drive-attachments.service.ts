@@ -17,6 +17,7 @@ import { domainEvents } from "../../lib/events";
 import {
   getDriveFileMetadata,
   extractDriveFileId,
+  isDriveFolderUrl,
 } from "../../googleDrive";
 
 export class ValidationError extends Error {
@@ -94,6 +95,8 @@ export const driveAttachmentsService = {
   ): Promise<DriveAttachmentWithUser> {
     const { entityType, entityId, driveUrl } = input;
     let { driveFileId, name, mimeType, iconUrl, webViewLink } = input;
+    const looksLikeFolder = !!driveUrl && isDriveFolderUrl(driveUrl);
+    const itemNoun = looksLikeFolder ? "folder" : "file";
     const trimToNull = (v: string | null | undefined) => {
       if (v === null || v === undefined) return null;
       const t = v.trim();
@@ -108,14 +111,14 @@ export const driveAttachmentsService = {
       const extractedId = extractDriveFileId(driveUrl);
       if (!extractedId) {
         throw new ValidationError(
-          "Could not extract file ID from the provided Google Drive URL",
+          `Could not extract ${itemNoun} ID from the provided Google Drive URL`,
         );
       }
       driveFileId = extractedId;
     }
 
     if (!driveFileId) {
-      throw new ValidationError("Drive file ID is required");
+      throw new ValidationError(`Drive ${itemNoun} ID is required`);
     }
 
     try {
@@ -127,13 +130,13 @@ export const driveAttachmentsService = {
     } catch (err) {
       console.error("Failed to fetch Drive file metadata:", err);
       throw new ValidationError(
-        "Could not verify this Google Drive file. Please check the file exists and is accessible.",
+        `Could not verify this Google Drive ${itemNoun}. Please check the ${itemNoun} exists and is accessible.`,
       );
     }
 
     if (!name) {
       throw new ValidationError(
-        "Could not resolve file metadata from Google Drive",
+        `Could not resolve ${itemNoun} metadata from Google Drive`,
       );
     }
 
