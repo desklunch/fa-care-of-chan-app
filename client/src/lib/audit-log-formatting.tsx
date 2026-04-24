@@ -10,6 +10,8 @@ import type {
   Venue,
   Vendor,
   AppFeature,
+  FeatureCategory,
+  Industry,
 } from "@shared/schema";
 
 export const FIELD_LABELS: Record<string, string> = {
@@ -56,6 +58,11 @@ export const FIELD_LABELS: Record<string, string> = {
   externalId: "External ID",
   isActive: "Active",
   isDefault: "Default",
+  venueId: "Venue",
+  vendorId: "Vendor",
+  featureId: "Feature",
+  categoryId: "Category",
+  industryId: "Industry",
 };
 
 const USER_FIELDS = new Set([
@@ -69,6 +76,11 @@ const CONTACT_FIELDS = new Set(["primaryContactId", "contactId"]);
 const CLIENT_FIELDS = new Set(["clientId"]);
 const TAG_LIST_FIELDS = new Set(["tagIds"]);
 const DEAL_STATUS_FIELDS = new Set(["status", "statusId"]);
+const VENUE_FIELDS = new Set(["venueId"]);
+const VENDOR_FIELDS = new Set(["vendorId"]);
+const FEATURE_FIELDS = new Set(["featureId"]);
+const FEATURE_CATEGORY_FIELDS = new Set(["categoryId"]);
+const INDUSTRY_FIELDS = new Set(["industryId"]);
 
 export function humanizeFieldKey(key: string): string {
   if (FIELD_LABELS[key]) return FIELD_LABELS[key];
@@ -144,6 +156,21 @@ export function useAuditValueResolvers(): AuditValueResolvers {
     queryKey: ["/api/features"],
     staleTime,
   });
+  const { data: featureCategories = [] } = useQuery<FeatureCategory[]>({
+    queryKey: ["/api/categories", "includeInactive"],
+    queryFn: async () => {
+      const res = await fetch("/api/categories?includeInactive=true", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to load categories: ${res.status}`);
+      return res.json();
+    },
+    staleTime,
+  });
+  const { data: industries = [] } = useQuery<Industry[]>({
+    queryKey: ["/api/industries"],
+    staleTime,
+  });
 
   return useMemo<AuditValueResolvers>(() => {
     const userMap = new Map(users.map((u) => [u.id, userDisplay(u)]));
@@ -157,6 +184,10 @@ export function useAuditValueResolvers(): AuditValueResolvers {
     const venueMap = new Map(venues.map((v) => [v.id, v.name]));
     const vendorMap = new Map(vendors.map((v) => [v.id, v.businessName]));
     const featureMap = new Map(features.map((f) => [f.id, f.title]));
+    const featureCategoryMap = new Map(
+      featureCategories.map((c) => [c.id, c.name]),
+    );
+    const industryMap = new Map(industries.map((i) => [i.id, i.name]));
 
     function resolveValue(key: string, value: unknown, entityType?: string): unknown {
       if (value === null || value === undefined) return value;
@@ -168,6 +199,25 @@ export function useAuditValueResolvers(): AuditValueResolvers {
       }
       if (CLIENT_FIELDS.has(key) && typeof value === "string") {
         return clientMap.get(value) ?? value;
+      }
+      if (VENUE_FIELDS.has(key) && typeof value === "string") {
+        return venueMap.get(value) ?? value;
+      }
+      if (VENDOR_FIELDS.has(key) && typeof value === "string") {
+        return vendorMap.get(value) ?? value;
+      }
+      if (FEATURE_FIELDS.has(key) && typeof value === "string") {
+        return featureMap.get(value) ?? value;
+      }
+      if (
+        FEATURE_CATEGORY_FIELDS.has(key) &&
+        typeof value === "string" &&
+        (entityType === undefined || entityType === "feature" || entityType === "category")
+      ) {
+        return featureCategoryMap.get(value) ?? value;
+      }
+      if (INDUSTRY_FIELDS.has(key) && typeof value === "string") {
+        return industryMap.get(value) ?? value;
       }
       if (TAG_LIST_FIELDS.has(key) && Array.isArray(value)) {
         return value.map((id) => tagMap.get(String(id)) ?? id);
@@ -206,6 +256,16 @@ export function useAuditValueResolvers(): AuditValueResolvers {
           return { name: vendorMap.get(entityId) ?? entityId, href: `/vendors/${entityId}` };
         case "feature":
           return { name: featureMap.get(entityId) ?? entityId, href: `/app/features/${entityId}` };
+        case "category":
+        case "featureCategory":
+        case "feature_category": {
+          const name = featureCategoryMap.get(entityId);
+          return name ? { name } : null;
+        }
+        case "industry": {
+          const name = industryMap.get(entityId);
+          return name ? { name } : null;
+        }
         case "tag": {
           const name = tagMap.get(entityId);
           return name ? { name } : null;
@@ -233,5 +293,17 @@ export function useAuditValueResolvers(): AuditValueResolvers {
     }
 
     return { resolveValue, formatValue, resolveEntity };
-  }, [users, contacts, clients, tags, dealStatuses, deals, venues, vendors, features]);
+  }, [
+    users,
+    contacts,
+    clients,
+    tags,
+    dealStatuses,
+    deals,
+    venues,
+    vendors,
+    features,
+    featureCategories,
+    industries,
+  ]);
 }
