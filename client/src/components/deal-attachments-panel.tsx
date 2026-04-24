@@ -585,6 +585,18 @@ export function DealAttachmentsPanel({
     });
   };
 
+  const handlePickerSelectUrl = (
+    url: string,
+    label: string,
+    description: string,
+  ) => {
+    createAttachmentMutation.mutate({
+      driveUrl: url,
+      label: label.trim() ? label.trim() : null,
+      description: description.trim() ? description.trim() : null,
+    });
+  };
+
   const renderItems = () => {
     if (items.length === 0) return null;
     return (
@@ -897,6 +909,7 @@ export function DealAttachmentsPanel({
           open={showPicker}
           onOpenChange={setShowPicker}
           onSelect={handlePickerSelect}
+          onSelectUrl={handlePickerSelectUrl}
           isPending={createAttachmentMutation.isPending}
           onDriveAuthRequired={() => {
             promptDriveAuth();

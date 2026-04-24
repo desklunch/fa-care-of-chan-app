@@ -119,6 +119,48 @@ interface DriveSearchResult {
   nextPageToken?: string;
 }
 
+const DRIVE_URL_HOSTS = new Set([
+  "docs.google.com",
+  "drive.google.com",
+  "sheets.google.com",
+  "slides.google.com",
+  "forms.google.com",
+]);
+
+function looksLikeUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function isDriveUrl(value: string): boolean {
+  const trimmed = value.trim();
+  if (!looksLikeUrl(trimmed)) return false;
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    return (
+      DRIVE_URL_HOSTS.has(host) ||
+      host.endsWith(".docs.google.com") ||
+      host.endsWith(".drive.google.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function extractDriveFileIdClient(url: string): string | null {
+  const patterns = [
+    /\/d\/([a-zA-Z0-9_-]+)/,
+    /id=([a-zA-Z0-9_-]+)/,
+    /\/folders\/([a-zA-Z0-9_-]+)/,
+    /\/open\?id=([a-zA-Z0-9_-]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 export function DriveAuthPrompt({ onAuthorize }: { onAuthorize: () => void }) {
   return (
     <Card>
@@ -149,12 +191,14 @@ export function DriveFilePickerDialog({
   open,
   onOpenChange,
   onSelect,
+  onSelectUrl,
   isPending,
   onDriveAuthRequired,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (file: DriveFile, label: string, description: string) => void;
+  onSelectUrl: (url: string, label: string, description: string) => void;
   isPending: boolean;
   onDriveAuthRequired: () => void;
 }) {
@@ -165,22 +209,49 @@ export function DriveFilePickerDialog({
   > | null>(null);
   const [needsDriveAuth, setNeedsDriveAuth] = useState(false);
   const [pickedFile, setPickedFile] = useState<DriveFile | null>(null);
+  const [pickedUrl, setPickedUrl] = useState<string | null>(null);
   const [pickerLabel, setPickerLabel] = useState("");
   const [pickerDescription, setPickerDescription] = useState("");
 
   useEffect(() => {
     if (!open) {
       setPickedFile(null);
+      setPickedUrl(null);
       setPickerLabel("");
       setPickerDescription("");
+      setSearchQuery("");
+      setDebouncedQuery("");
     }
   }, [open]);
+
+  const trimmedQuery = searchQuery.trim();
+  const inputIsUrl = looksLikeUrl(trimmedQuery);
+  const inputIsDriveUrl = inputIsUrl && isDriveUrl(trimmedQuery);
+  const extractedFileId = inputIsDriveUrl
+    ? extractDriveFileIdClient(trimmedQuery)
+    : null;
+  const urlError = inputIsUrl
+    ? !inputIsDriveUrl
+      ? "That doesn't look like a Google Drive link."
+      : !extractedFileId
+        ? "We couldn't find a file ID in that Drive link."
+        : null
+    : null;
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     if (debounceTimer) clearTimeout(debounceTimer);
+    if (looksLikeUrl(value)) {
+      setDebouncedQuery("");
+      return;
+    }
     const timer = setTimeout(() => setDebouncedQuery(value), 400);
     setDebounceTimer(timer);
+  };
+
+  const handleConfirmUrl = () => {
+    if (!inputIsDriveUrl || !extractedFileId) return;
+    setPickedUrl(trimmedQuery);
   };
 
   const { data: searchResults, isLoading: isSearching } =
@@ -203,7 +274,7 @@ export function DriveFilePickerDialog({
         setNeedsDriveAuth(false);
         return res.json();
       },
-      enabled: open && !pickedFile,
+      enabled: open && !pickedFile && !pickedUrl && !inputIsUrl,
       retry: false,
     });
 
@@ -227,28 +298,42 @@ export function DriveFilePickerDialog({
     );
   }
 
-  if (pickedFile) {
+  if (pickedFile || pickedUrl) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Attachment</DialogTitle>
             <DialogDescription>
-              Optionally add a label and description for this file.
+              {pickedFile
+                ? "Optionally add a label and description for this file."
+                : "Optionally add a label and description for this link."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-2.5 rounded-md border">
               <div className="flex-shrink-0">
-                {getMimeTypeIcon(pickedFile.mimeType)}
+                {pickedFile ? (
+                  getMimeTypeIcon(pickedFile.mimeType)
+                ) : (
+                  <Link2 className="h-5 w-5 text-muted-foreground" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p
                   className="text-sm font-medium truncate"
-                  data-testid="text-picked-file-name"
+                  data-testid={
+                    pickedFile ? "text-picked-file-name" : "text-picked-url"
+                  }
                 >
-                  {pickedFile.name}
+                  {pickedFile ? pickedFile.name : pickedUrl}
                 </p>
+                {pickedUrl ? (
+                  <p className="text-xs text-muted-foreground">
+                    We'll fetch the file details from Google Drive when you
+                    attach.
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="space-y-1.5">
@@ -286,16 +371,23 @@ export function DriveFilePickerDialog({
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setPickedFile(null)}
+              onClick={() => {
+                setPickedFile(null);
+                setPickedUrl(null);
+              }}
               disabled={isPending}
               data-testid="button-picker-back"
             >
               Back
             </Button>
             <Button
-              onClick={() =>
-                onSelect(pickedFile, pickerLabel, pickerDescription)
-              }
+              onClick={() => {
+                if (pickedFile) {
+                  onSelect(pickedFile, pickerLabel, pickerDescription);
+                } else if (pickedUrl) {
+                  onSelectUrl(pickedUrl, pickerLabel, pickerDescription);
+                }
+              }}
               disabled={isPending}
               data-testid="button-picker-confirm"
             >
@@ -304,7 +396,7 @@ export function DriveFilePickerDialog({
               ) : (
                 <Check className="h-4 w-4 mr-1" />
               )}
-              Attach File
+              {pickedFile ? "Attach File" : "Attach Link"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -318,61 +410,111 @@ export function DriveFilePickerDialog({
         <DialogHeader>
           <DialogTitle>Browse Google Drive</DialogTitle>
           <DialogDescription>
-            Search for a file in your Google Drive and click to attach it.
+            Search for a file in your Google Drive, or paste a Drive link to
+            attach it.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {inputIsUrl ? (
+              <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            )}
             <Input
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search your Google Drive..."
+              placeholder="Search your Google Drive or paste a Drive link..."
               className="pl-9"
               data-testid="input-drive-search"
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  inputIsDriveUrl &&
+                  extractedFileId &&
+                  !isPending
+                ) {
+                  e.preventDefault();
+                  handleConfirmUrl();
+                }
+              }}
               autoFocus
             />
           </div>
-          <div className="max-h-80 overflow-y-auto space-y-0.5">
-            {isSearching ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : searchResults?.files && searchResults.files.length > 0 ? (
-              searchResults.files.map((file) => (
-                <button
-                  key={file.id}
-                  onClick={() => setPickedFile(file)}
-                  disabled={isPending}
-                  className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
-                  data-testid={`button-pick-file-${file.id}`}
+          {inputIsUrl ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 p-2.5 rounded-md border">
+                <div className="flex-shrink-0">
+                  <Link2 className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm font-medium truncate"
+                    data-testid="text-pasted-url"
+                  >
+                    {trimmedQuery}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {urlError
+                      ? urlError
+                      : "Looks like a Google Drive link."}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleConfirmUrl}
+                  disabled={!inputIsDriveUrl || !extractedFileId || isPending}
+                  data-testid="button-attach-pasted-url"
                 >
-                  <div className="flex-shrink-0">
-                    {getMimeTypeIcon(file.mimeType)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {file.modifiedTime &&
-                        `Modified ${formatTimeAgo(file.modifiedTime)}`}
-                      {file.owners?.[0]?.displayName && (
-                        <>
-                          {file.modifiedTime ? " · " : ""}
-                          {file.owners[0].displayName}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                </button>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                {debouncedQuery
-                  ? "No files found"
-                  : "Your recent files will appear here"}
-              </p>
-            )}
-          </div>
+                  <Check className="h-4 w-4 mr-1" />
+                  Attach link
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="max-h-80 overflow-y-auto space-y-0.5">
+              {isSearching ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : searchResults?.files && searchResults.files.length > 0 ? (
+                searchResults.files.map((file) => (
+                  <button
+                    key={file.id}
+                    onClick={() => setPickedFile(file)}
+                    disabled={isPending}
+                    className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
+                    data-testid={`button-pick-file-${file.id}`}
+                  >
+                    <div className="flex-shrink-0">
+                      {getMimeTypeIcon(file.mimeType)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {file.modifiedTime &&
+                          `Modified ${formatTimeAgo(file.modifiedTime)}`}
+                        {file.owners?.[0]?.displayName && (
+                          <>
+                            {file.modifiedTime ? " · " : ""}
+                            {file.owners[0].displayName}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-6 text-center">
+                  {debouncedQuery
+                    ? "No files found"
+                    : "Your recent files will appear here"}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -715,6 +857,18 @@ export function GoogleDriveAttachments({
     });
   };
 
+  const handlePickerSelectUrl = (
+    url: string,
+    label: string,
+    description: string,
+  ) => {
+    createMutation.mutate({
+      driveUrl: url,
+      label: label.trim() ? label.trim() : null,
+      description: description.trim() ? description.trim() : null,
+    });
+  };
+
   if (!user) return null;
 
   return (
@@ -765,6 +919,7 @@ export function GoogleDriveAttachments({
           open={showPicker}
           onOpenChange={setShowPicker}
           onSelect={handlePickerSelect}
+          onSelectUrl={handlePickerSelectUrl}
           isPending={createMutation.isPending}
           onDriveAuthRequired={() => {
             promptDriveAuth();
