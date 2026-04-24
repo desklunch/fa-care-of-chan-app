@@ -3491,3 +3491,24 @@ export const updateRoleSchema = insertRoleSchema.partial().omit({ isSystem: true
 
 export type CreateRole = z.infer<typeof insertRoleSchema>;
 export type UpdateRole = z.infer<typeof updateRoleSchema>;
+
+// Persisted Google OAuth credentials for Drive access (per user).
+// Refresh token is stored encrypted at rest; access token + expiry are kept
+// for opportunistic reuse but the refresh token is always the source of truth.
+export const userGoogleCredentials = pgTable(
+  "user_google_credentials",
+  {
+    userId: varchar("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    encryptedRefreshToken: text("encrypted_refresh_token"),
+    accessToken: text("access_token"),
+    accessTokenExpiry: timestamp("access_token_expiry"),
+    grantedScopes: text("granted_scopes"),
+    googleAccountEmail: varchar("google_account_email", { length: 255 }),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+);
+
+export type UserGoogleCredential = typeof userGoogleCredentials.$inferSelect;
+export type InsertUserGoogleCredential = typeof userGoogleCredentials.$inferInsert;

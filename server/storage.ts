@@ -16,6 +16,7 @@ import {
   appReleaseFeatures,
   appReleaseIssues,
   appReleaseChanges,
+  userGoogleCredentials,
   type User,
   type UpsertUser,
   type AuditLog,
@@ -59,6 +60,8 @@ import {
   type UpdateAppRelease,
   type CreateAppReleaseChange,
   type ReleaseStatus,
+  type UserGoogleCredential,
+  type InsertUserGoogleCredential,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, isNull, gt, sql, gte, lte, inArray } from "drizzle-orm";
@@ -201,6 +204,16 @@ export interface IStorage {
   
   // NOTE: Brand operations moved to server/domains/reference-data/reference-data.storage.ts
   // NOTE: Vendor-Contact link operations moved to server/domains/vendors/vendors.storage.ts
+
+  // Google Drive credential operations
+  getUserGoogleCredential(userId: string): Promise<UserGoogleCredential | undefined>;
+  upsertUserGoogleCredential(data: InsertUserGoogleCredential): Promise<UserGoogleCredential>;
+  updateUserGoogleAccessToken(
+    userId: string,
+    accessToken: string,
+    accessTokenExpiry: Date,
+  ): Promise<void>;
+  deleteUserGoogleCredential(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1603,6 +1616,60 @@ export class DatabaseStorage implements IStorage {
   // getClients, getClientById, createClient, updateClient, deleteClient → clientsStorage
   // getContactsForClient, getClientsForContact, linkClientContact, unlinkClientContact → contactsStorage
   // getBrands, getBrandById, createBrand, updateBrand, deleteBrand → referenceDataStorage
+
+  // Google Drive credentials
+  async getUserGoogleCredential(userId: string): Promise<UserGoogleCredential | undefined> {
+    const [row] = await db
+      .select()
+      .from(userGoogleCredentials)
+      .where(eq(userGoogleCredentials.userId, userId));
+    return row;
+  }
+
+  async upsertUserGoogleCredential(
+    data: InsertUserGoogleCredential,
+  ): Promise<UserGoogleCredential> {
+    const setOnConflict: Record<string, unknown> = {
+      accessToken: data.accessToken ?? null,
+      accessTokenExpiry: data.accessTokenExpiry ?? null,
+      updatedAt: new Date(),
+    };
+    if (data.encryptedRefreshToken !== undefined) {
+      setOnConflict.encryptedRefreshToken = data.encryptedRefreshToken;
+    }
+    if (data.grantedScopes !== undefined) {
+      setOnConflict.grantedScopes = data.grantedScopes;
+    }
+    if (data.googleAccountEmail !== undefined) {
+      setOnConflict.googleAccountEmail = data.googleAccountEmail;
+    }
+    const [row] = await db
+      .insert(userGoogleCredentials)
+      .values(data)
+      .onConflictDoUpdate({
+        target: userGoogleCredentials.userId,
+        set: setOnConflict,
+      })
+      .returning();
+    return row;
+  }
+
+  async updateUserGoogleAccessToken(
+    userId: string,
+    accessToken: string,
+    accessTokenExpiry: Date,
+  ): Promise<void> {
+    await db
+      .update(userGoogleCredentials)
+      .set({ accessToken, accessTokenExpiry, updatedAt: new Date() })
+      .where(eq(userGoogleCredentials.userId, userId));
+  }
+
+  async deleteUserGoogleCredential(userId: string): Promise<void> {
+    await db
+      .delete(userGoogleCredentials)
+      .where(eq(userGoogleCredentials.userId, userId));
+  }
 }
 
 export const storage = new DatabaseStorage();

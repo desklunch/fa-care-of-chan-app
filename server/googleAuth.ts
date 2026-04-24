@@ -3,6 +3,7 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { encryptSecret, decryptSecret } from "./lib/tokenCrypto";
 
 const GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -109,29 +110,92 @@ export async function refreshDriveAccessToken(refreshToken: string): Promise<{
   };
 }
 
-export async function getDriveAccessToken(session: any): Promise<string | null> {
-  if (!session?.driveAccessToken) {
-    return null;
+// One-time, transparent migration of legacy session-only Drive tokens into the
+// DB so existing users don't get force-disconnected after this change ships.
+async function migrateSessionTokensIfNeeded(userId: string, session: any): Promise<void> {
+  if (!session) return;
+  const refresh = session.driveRefreshToken as string | undefined;
+  const scopes = session.driveGrantedScopes as string | undefined;
+  // Only trigger on LEGACY persistent fields. driveAccessToken / driveTokenExpiry
+  // are intentionally retained as a per-request cache and must NEVER cause writes
+  // back to the DB (the DB row is the source of truth).
+  if (!refresh && !scopes) return;
+
+  const access = session.driveAccessToken as string | undefined;
+  const expiry = session.driveTokenExpiry as number | undefined;
+
+  try {
+    // Don't overwrite existing DB state if a row is already there.
+    const existing = await storage.getUserGoogleCredential(userId);
+    if (!existing) {
+      await storage.upsertUserGoogleCredential({
+        userId,
+        encryptedRefreshToken: refresh ? encryptSecret(refresh) : undefined,
+        accessToken: access ?? null,
+        accessTokenExpiry: expiry ? new Date(expiry) : null,
+        grantedScopes: scopes,
+      });
+    }
+  } catch (err) {
+    console.error("Failed to migrate session Drive tokens to DB:", err);
+    return;
   }
 
+  // Drop legacy persistent token fields from session; keep only the short-lived
+  // access token cache for this request lifecycle.
+  delete session.driveRefreshToken;
+  delete session.driveGrantedScopes;
+}
+
+export async function getDriveAccessToken(
+  userId: string | undefined | null,
+  session?: any,
+): Promise<string | null> {
+  if (!userId) return null;
+
+  await migrateSessionTokensIfNeeded(userId, session);
+
   const bufferMs = 5 * 60 * 1000;
-  if (session.driveTokenExpiry && Date.now() < session.driveTokenExpiry - bufferMs) {
+
+  // Per-request cache on the session purely as a perf optimization. The DB row
+  // is the source of truth.
+  if (session?.driveAccessToken && session?.driveTokenExpiry &&
+      Date.now() < session.driveTokenExpiry - bufferMs) {
     return session.driveAccessToken;
   }
 
-  if (!session.driveRefreshToken) {
+  const cred = await storage.getUserGoogleCredential(userId);
+  if (!cred) return null;
+
+  if (cred.accessToken && cred.accessTokenExpiry &&
+      Date.now() < cred.accessTokenExpiry.getTime() - bufferMs) {
+    if (session) {
+      session.driveAccessToken = cred.accessToken;
+      session.driveTokenExpiry = cred.accessTokenExpiry.getTime();
+    }
+    return cred.accessToken;
+  }
+
+  if (!cred.encryptedRefreshToken) {
     return null;
   }
 
   try {
-    const refreshed = await refreshDriveAccessToken(session.driveRefreshToken);
-    session.driveAccessToken = refreshed.access_token;
-    session.driveTokenExpiry = refreshed.expiry_date;
+    const refreshToken = decryptSecret(cred.encryptedRefreshToken);
+    const refreshed = await refreshDriveAccessToken(refreshToken);
+    const expiryDate = new Date(refreshed.expiry_date);
+    await storage.updateUserGoogleAccessToken(userId, refreshed.access_token, expiryDate);
+    if (session) {
+      session.driveAccessToken = refreshed.access_token;
+      session.driveTokenExpiry = refreshed.expiry_date;
+    }
     return refreshed.access_token;
   } catch (error) {
     console.error("Failed to refresh Drive token:", error);
-    session.driveAccessToken = null;
-    session.driveTokenExpiry = null;
+    if (session) {
+      session.driveAccessToken = null;
+      session.driveTokenExpiry = null;
+    }
     return null;
   }
 }
@@ -231,16 +295,36 @@ export async function setupAuth(app: Express) {
         }
       }
 
+      const targetUserId = sess.userId as string | undefined;
+      if (!targetUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Preserve existing refresh token from DB if Google didn't return a new one.
+      const existing = await storage.getUserGoogleCredential(targetUserId);
+      const refreshTokenToStore = tokens.refresh_token
+        ? encryptSecret(tokens.refresh_token)
+        : existing?.encryptedRefreshToken;
+
+      await storage.upsertUserGoogleCredential({
+        userId: targetUserId,
+        encryptedRefreshToken: refreshTokenToStore,
+        accessToken: tokens.access_token,
+        accessTokenExpiry: new Date(tokens.expiry_date),
+        grantedScopes: tokens.scope ?? existing?.grantedScopes ?? undefined,
+        googleAccountEmail: payload?.email ?? existing?.googleAccountEmail ?? undefined,
+      });
+
+      // Cache access token on session for current request lifecycle only.
       sess.driveAccessToken = tokens.access_token;
-      sess.driveRefreshToken = tokens.refresh_token || sess.driveRefreshToken;
       sess.driveTokenExpiry = tokens.expiry_date;
       if (tokens.scope) {
-        sess.driveGrantedScopes = tokens.scope;
         console.log("[GoogleAuth] Granted scopes:", tokens.scope);
       }
-      if (payload?.email) {
-        sess.driveAccountEmail = payload.email;
-      }
+      // Clear any legacy persistent token fields from session.
+      delete sess.driveRefreshToken;
+      delete sess.driveGrantedScopes;
+      delete sess.driveAccountEmail;
 
       res.json({ success: true, driveConnected: true });
     } catch (error: any) {
@@ -255,18 +339,26 @@ export async function setupAuth(app: Express) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const hasToken = !!sess.driveAccessToken;
-    const hasRefreshToken = !!sess.driveRefreshToken;
-    const isExpired = sess.driveTokenExpiry ? Date.now() > sess.driveTokenExpiry : true;
-    const grantedScopes = (sess.driveGrantedScopes as string) || "";
+    // Migrate any legacy session-only tokens before reading state from the DB.
+    await migrateSessionTokensIfNeeded(sess.userId, sess);
+
+    const cred = await storage.getUserGoogleCredential(sess.userId);
+    const hasRefreshToken = !!cred?.encryptedRefreshToken;
+    const hasToken = !!cred?.accessToken || hasRefreshToken;
+    const isExpired = cred?.accessTokenExpiry
+      ? Date.now() > cred.accessTokenExpiry.getTime()
+      : true;
+    const grantedScopes = cred?.grantedScopes || "";
     const hasSheetsScope = grantedScopes.includes("spreadsheets");
-    const hasDriveReadScope = grantedScopes.includes("drive.readonly") || grantedScopes.includes("auth/drive ");
+    const hasDriveReadScope =
+      grantedScopes.includes("drive.readonly") || grantedScopes.includes("auth/drive ");
     const needsScopeUpgrade = hasToken && (!hasSheetsScope || !hasDriveReadScope);
 
     res.json({
       connected: hasToken && (hasRefreshToken || !isExpired),
       needsReauth: !hasToken || (isExpired && !hasRefreshToken) || needsScopeUpgrade,
-      accountEmail: hasToken ? (sess.driveAccountEmail as string | undefined) || null : null,
+      accountEmail: hasToken ? (cred?.googleAccountEmail ?? null) : null,
+      googleAccountEmail: cred?.googleAccountEmail ?? null,
     });
   });
 
@@ -275,20 +367,24 @@ export async function setupAuth(app: Express) {
     if (!sess?.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-
-    sess.driveAccessToken = null;
-    sess.driveRefreshToken = null;
-    sess.driveTokenExpiry = null;
-    sess.driveGrantedScopes = null;
-    sess.driveAccountEmail = null;
-
-    req.session.save((err) => {
-      if (err) {
-        console.error("Drive disconnect session save error:", err);
-        return res.status(500).json({ message: "Failed to disconnect Drive" });
-      }
-      res.json({ success: true });
-    });
+    try {
+      await storage.deleteUserGoogleCredential(sess.userId);
+      delete sess.driveAccessToken;
+      delete sess.driveTokenExpiry;
+      delete sess.driveRefreshToken;
+      delete sess.driveGrantedScopes;
+      delete sess.driveAccountEmail;
+      req.session.save((err) => {
+        if (err) {
+          console.error("Drive disconnect session save error:", err);
+          return res.status(500).json({ message: "Failed to disconnect Drive" });
+        }
+        res.json({ success: true });
+      });
+    } catch (error: any) {
+      console.error("Drive disconnect error:", error);
+      res.status(500).json({ message: "Failed to disconnect Drive" });
+    }
   });
 
   app.post("/api/auth/logout", (req, res) => {
@@ -302,14 +398,19 @@ export async function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/auth/session", (req, res) => {
+  app.get("/api/auth/session", async (req, res) => {
     const session = req.session as any;
     if (session?.userId) {
+      // Migrate any legacy session-only Drive tokens on first authenticated
+      // bootstrap so users don't have to visit a Drive endpoint to get
+      // upgraded to DB-backed credentials.
+      await migrateSessionTokensIfNeeded(session.userId, session);
+      const cred = await storage.getUserGoogleCredential(session.userId);
       res.json({ 
         authenticated: true, 
         userId: session.userId,
         email: session.email,
-        driveConnected: !!session.driveAccessToken,
+        driveConnected: !!cred?.encryptedRefreshToken || !!cred?.accessToken,
       });
     } else {
       res.json({ authenticated: false });
@@ -371,6 +472,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   
   if (!session?.userId) {
     return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Migrate any legacy session-only Drive tokens into the DB on first
+  // authenticated request after deploy. The function is a no-op when no
+  // legacy persistent fields are present, so this is effectively free.
+  if (session.driveRefreshToken || session.driveGrantedScopes) {
+    await migrateSessionTokensIfNeeded(session.userId, session);
   }
 
   (req as any).user = {

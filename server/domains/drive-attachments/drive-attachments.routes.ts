@@ -66,7 +66,7 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const accessToken = await getDriveAccessToken(req.session);
+      const accessToken = await getDriveAccessToken(userId, req.session);
       if (!accessToken) {
         return res.status(403).json({
           message: "Google Drive access not authorized",
@@ -222,7 +222,7 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const accessToken = await getDriveAccessToken(req.session);
+      const accessToken = await getDriveAccessToken(req.user.claims.sub, req.session);
       if (!accessToken) {
         return res.status(403).json({
           message: "Google Drive access not authorized",
@@ -247,7 +247,7 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const accessToken = await getDriveAccessToken(req.session);
+      const accessToken = await getDriveAccessToken(req.user.claims.sub, req.session);
       if (!accessToken) {
         return res.status(403).json({
           message: "Google Drive access not authorized",

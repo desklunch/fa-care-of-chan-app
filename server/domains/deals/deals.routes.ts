@@ -975,7 +975,7 @@ export function registerDealsRoutes(app: Express): void {
       }
 
       const userId = req.user.claims.sub;
-      const accessToken = await getDriveAccessToken(req.session);
+      const accessToken = await getDriveAccessToken(userId, req.session);
       if (!accessToken) {
         return res.status(403).json({
           message: "Google Drive access not authorized",
