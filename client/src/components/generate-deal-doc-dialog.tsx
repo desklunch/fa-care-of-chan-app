@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useDriveAuth } from "@/lib/google-auth";
@@ -228,6 +228,13 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
   });
 
   const needsAuth = open && driveStatus && (!driveStatus.connected || driveStatus.needsReauth);
+  const driveConnected = !!driveStatus && driveStatus.connected && !driveStatus.needsReauth;
+
+  useEffect(() => {
+    if (driveConnected && showDriveAuth) {
+      setShowDriveAuth(false);
+    }
+  }, [driveConnected, showDriveAuth]);
 
   const generateMutation = useMutation({
     mutationFn: async (folderId: string) => {
@@ -308,7 +315,6 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
               variant="outline"
               onClick={() => {
                 promptDriveAuth();
-                handleClose();
               }}
               data-testid="button-connect-drive-for-doc"
             >
