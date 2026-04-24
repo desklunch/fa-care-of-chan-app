@@ -144,6 +144,22 @@ export function getAppState(): {
 (window as any).__getAppState = getAppState;
 
 const RELOAD_MARKER_KEY = "__coc_last_reload_trigger";
+const RELOAD_MARKER_FRESHNESS_MS = 1500;
+
+function readReloadMarkerTimestamp(): number | null {
+  try {
+    const raw = sessionStorage.getItem(RELOAD_MARKER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.at === "string") {
+      const t = Date.parse(parsed.at);
+      return Number.isFinite(t) ? t : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export function recordReloadTrigger(source: string, data?: Record<string, unknown>): void {
   try {
@@ -174,4 +190,43 @@ try {
   }
 } catch {
   // ignore
+}
+
+// Last-resort breadcrumb: if the document is unloaded without any of our
+// instrumented call sites having recorded a marker, stamp an "unknown"
+// marker so the next page-load entry always names *some* source. This
+// catches reloads driven by the browser/extensions/embedded iframes that
+// our React tree never sees.
+if (typeof window !== "undefined") {
+  const writeFallbackMarker = () => {
+    try {
+      const lastMarkerAt = readReloadMarkerTimestamp();
+      const now = Date.now();
+      if (lastMarkerAt !== null && now - lastMarkerAt < RELOAD_MARKER_FRESHNESS_MS) {
+        // A real reload-trigger marker was just recorded — leave it alone.
+        return;
+      }
+      const state = getAppState();
+      const payload = {
+        source: "unknown",
+        at: new Date(now).toISOString(),
+        pathname: window.location.pathname + window.location.search,
+        referrer: document.referrer || null,
+        documentVisibility: state.documentVisibility,
+        hasFocus: state.documentHasFocus,
+        online: state.onlineStatus,
+        lastLogEntry: state.lastLogEntry,
+        unloadAt: new Date(now).toISOString(),
+      };
+      sessionStorage.setItem(RELOAD_MARKER_KEY, JSON.stringify(payload));
+    } catch {
+      // best effort only
+    }
+  };
+
+  // pagehide is more reliable than beforeunload (esp. on mobile / bfcache),
+  // but we listen to both to maximize coverage. The fallback writer is
+  // idempotent because of the freshness check above.
+  window.addEventListener("pagehide", writeFallbackMarker, { capture: true });
+  window.addEventListener("beforeunload", writeFallbackMarker, { capture: true });
 }

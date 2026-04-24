@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 
 interface Props {
   children: ReactNode;
@@ -35,6 +36,10 @@ export class ChunkErrorBoundary extends Component<Props, State> {
   }
 
   handleReload = () => {
+    recordReloadTrigger("chunk-error-boundary", {
+      message: this.state.error?.message,
+      isChunk: isChunkLoadError(this.state.error),
+    });
     window.location.reload();
   };
 

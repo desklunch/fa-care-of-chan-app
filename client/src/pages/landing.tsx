@@ -18,12 +18,15 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAndClearReturnUrl } from "@/lib/return-url";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 
 const isDevelopment = import.meta.env.DEV;
 
 function navigateAfterLogin() {
   const returnUrl = getAndClearReturnUrl();
-  window.location.assign(returnUrl || "/");
+  const target = returnUrl || "/";
+  recordReloadTrigger("post-login-redirect", { returnUrl: target });
+  window.location.assign(target);
 }
 
 export default function Landing() {

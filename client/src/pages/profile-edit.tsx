@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 import { Loader2, Save } from "lucide-react";
 import { updateProfileSchema, type UpdateProfile } from "@shared/schema";
 import { ApiKeysCard } from "@/components/api-keys-card";
@@ -84,6 +85,9 @@ export default function ProfileEdit() {
           variant: "destructive",
         });
         setTimeout(() => {
+          recordReloadTrigger("unauth-replit-login", {
+            from: "profile-edit",
+          });
           window.location.href = "/api/login";
         }, 500);
         return;

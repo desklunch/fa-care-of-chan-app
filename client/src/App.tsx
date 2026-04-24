@@ -19,6 +19,7 @@ import { PointerEventsFix } from "@/hooks/usePointerEventsFix";
 import type { LayoutConfig } from "@/framework/types/layout";
 
 import "@/lib/debug-logger";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 import { PwaUpdateBanner } from "@/components/pwa-update-banner";
 import { OfflineOverlay } from "@/components/offline-overlay";
 
@@ -478,9 +479,14 @@ function useLayoutConfig() {
       try {
         await fetch("/api/auth/logout", { method: "POST" });
         queryClient.clear();
+        recordReloadTrigger("logout", { mode: "ok" });
         window.location.href = "/";
       } catch (error) {
         console.error("Logout error:", error);
+        recordReloadTrigger("logout", {
+          mode: "error",
+          message: (error as Error)?.message,
+        });
         window.location.href = "/";
       }
     },
@@ -659,15 +665,23 @@ function RouterContent() {
           <>
             <Route path="/venues/:id">
               {(params) => {
-                window.location.replace(`/public/venues/${params.id}`);
+                const target = `/public/venues/${params.id}`;
+                recordReloadTrigger("unauth-public-venue-redirect", {
+                  from: window.location.pathname + window.location.search,
+                  to: target,
+                });
+                window.location.replace(target);
                 return null;
               }}
             </Route>
             <Route path="/venues/collections/:id">
               {(params) => {
-                window.location.replace(
-                  `/public/venues/collections/${params.id}`,
-                );
+                const target = `/public/venues/collections/${params.id}`;
+                recordReloadTrigger("unauth-public-venue-redirect", {
+                  from: window.location.pathname + window.location.search,
+                  to: target,
+                });
+                window.location.replace(target);
                 return null;
               }}
             </Route>

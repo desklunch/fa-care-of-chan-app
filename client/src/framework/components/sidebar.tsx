@@ -3,6 +3,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "wouter";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { cn } from "@/lib/utils";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 import {
   PanelLeftClose,
   ChevronRight,
@@ -584,6 +585,9 @@ export default function Sidebar({
                 size="icon"
                 onClick={() => {
                   localStorage.clear();
+                  recordReloadTrigger("framework-sidebar", {
+                    action: "dev-clear-storage",
+                  });
                   window.location.reload();
                 }}
                 className="h-8 w-12 border-sidebar-border"

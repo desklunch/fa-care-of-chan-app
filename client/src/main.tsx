@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { recordReloadTrigger } from "./lib/debug-logger";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
@@ -35,6 +36,7 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
           showUpdatePrompt();
         }
         if (event.data?.type === "NOTIFICATION_CLICK" && event.data.url) {
+          recordReloadTrigger("notification-click", { url: event.data.url });
           window.location.href = event.data.url;
         }
       });

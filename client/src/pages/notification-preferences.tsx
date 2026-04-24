@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { recordReloadTrigger } from "@/lib/debug-logger";
 import { Loader2, Bell, Mail, Smartphone } from "lucide-react";
 import {
   NOTIFICATION_TYPE_KEYS,
@@ -69,6 +70,9 @@ export default function NotificationPreferences() {
           variant: "destructive",
         });
         setTimeout(() => {
+          recordReloadTrigger("unauth-replit-login", {
+            from: "notification-preferences",
+          });
           window.location.href = "/api/login";
         }, 500);
         return;

@@ -509,6 +509,10 @@ export async function logAuthFailure(req: any, route: string): Promise<void> {
   try {
     const cookieHeader = req.headers?.cookie ?? "";
     const hasConnectSidCookie = /(?:^|;\s*)connect\.sid=/.test(cookieHeader);
+    // Anonymous visitors (no connect.sid cookie sent) are the normal,
+    // uninteresting 401 case — don't drown the log in those. Only emit when
+    // the request actually carried a session cookie that failed to resolve.
+    if (!hasConnectSidCookie) return;
     const sid: string | undefined = req.sessionID;
     const session = req.session as any;
     const sessionUserId = session?.userId ?? null;
