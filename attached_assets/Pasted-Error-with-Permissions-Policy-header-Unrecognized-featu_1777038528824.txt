@@ -1,0 +1,839 @@
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/
+ 🔄 [13:44:41.744] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-04-24T13:44:41.744Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.'}
+ 🧭 [13:44:41.754] [+0s] [NAVIGATION] Navigation watchdog initialized
+ 📡 [13:44:41.769] [+0s] [QUERY] Fetching: /api/bootstrap
+ 🔐 [13:44:41.769] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+ 🧭 [13:44:41.769] [+0s] [NAVIGATION] Initial route: /
+ 👆 [13:44:41.769] [+0s] [INPUT] Input logger initialized
+ 📡 [13:44:41.770] [+0s] [QUERY] Fetching: /api/settings/theme
+index-BV-gZ2Lo.js:2  GET https://app.careofchan.com/api/bootstrap 401 (Unauthorized)
+(anonymous) @ /assets/index-BV-gZ2Lo.js:2
+i @ /assets/vendor-react-xvLlUkx_.js:7748
+w @ /assets/vendor-react-xvLlUkx_.js:7748
+start @ /assets/vendor-react-xvLlUkx_.js:7748
+fetch @ /assets/vendor-react-xvLlUkx_.js:7748
+Uc @ /assets/vendor-react-xvLlUkx_.js:7748
+onSubscribe @ /assets/vendor-react-xvLlUkx_.js:7748
+subscribe @ /assets/vendor-react-xvLlUkx_.js:7748
+(anonymous) @ /assets/vendor-react-xvLlUkx_.js:7748
+Oz @ /assets/vendor-react-xvLlUkx_.js:38
+MI @ /assets/vendor-react-xvLlUkx_.js:40
+$i @ /assets/vendor-react-xvLlUkx_.js:40
+QT @ /assets/vendor-react-xvLlUkx_.js:40
+hr @ /assets/vendor-react-xvLlUkx_.js:38
+TU @ /assets/vendor-react-xvLlUkx_.js:40
+vr @ /assets/vendor-react-xvLlUkx_.js:40
+vj @ /assets/vendor-react-xvLlUkx_.js:40
+S @ /assets/vendor-react-xvLlUkx_.js:25
+W @ /assets/vendor-react-xvLlUkx_.js:25
+postMessage
+K @ /assets/vendor-react-xvLlUkx_.js:25
+O @ /assets/vendor-react-xvLlUkx_.js:25
+e.unstable_scheduleCallback @ /assets/vendor-react-xvLlUkx_.js:25
+Lj @ /assets/vendor-react-xvLlUkx_.js:40
+it @ /assets/vendor-react-xvLlUkx_.js:40
+Ht @ /assets/vendor-react-xvLlUkx_.js:40
+CI @ /assets/vendor-react-xvLlUkx_.js:40
+LI.render.PR.render @ /assets/vendor-react-xvLlUkx_.js:40
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ 📡 [13:44:41.868] [+0s] [QUERY] Query returned 401 (returnNull behavior): /api/bootstrap {durationMs: 99}
+ 🔐 [13:44:41.871] [+0s] [AUTH] Auth loading complete {isAuthenticated: false, userId: undefined}
+ Fetch failed loading: GET "https://app.careofchan.com/api/bootstrap".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ 📡 [13:44:42.148] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 379}
+index-BV-gZ2Lo.js:5  GET https://app.careofchan.com/api/push/vapid-key 404 (Not Found)
+hi @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ /assets/index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+ Fetch failed loading: GET "https://app.careofchan.com/api/push/vapid-key".
+hi @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+client:381 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Gu @ accounts.google.com/gsi/client:381
+(anonymous) @ accounts.google.com/gsi/client:340
+Vf @ accounts.google.com/gsi/client:128
+b @ accounts.google.com/gsi/client:125
+client:381 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Gu @ accounts.google.com/gsi/client:381
+(anonymous) @ accounts.google.com/gsi/client:340
+Vf @ accounts.google.com/gsi/client:128
+b @ accounts.google.com/gsi/client:125
+ 🌐 [13:44:46.698] [+4s] [API] Starting request: POST /api/auth/google {hasBody: true}
+ 🌐 [13:44:46.698] [+4s] [API] Skipping CSRF for auth endpoint: /api/auth/google
+ 🌐 [13:44:47.111] [+5s] [API] Response received: POST /api/auth/google {status: 200, ok: true, durationMs: 413}
+ Fetch finished loading: POST "https://app.careofchan.com/api/auth/google".
+Rt @ index-BV-gZ2Lo.js:2
+mutationFn @ landing-z9Jm9hJS.js:1
+fn @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+execute @ vendor-react-xvLlUkx_.js:7748
+await in execute
+mutate @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ landing-z9Jm9hJS.js:1
+callback @ index-BV-gZ2Lo.js:2
+_.Eu.Pa @ client:383
+Ps.Pa @ client:394
+c.port1.onmessage @ client:381
+ [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used.
+_.G @ client:85
+Ts @ client:296
+(anonymous) @ index-BV-gZ2Lo.js:2
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+(anonymous) @ vendor-react-xvLlUkx_.js:40
+setTimeout
+a @ vendor-react-xvLlUkx_.js:7748
+c @ vendor-react-xvLlUkx_.js:7748
+batch @ vendor-react-xvLlUkx_.js:7748
+An @ vendor-react-xvLlUkx_.js:7748
+execute @ vendor-react-xvLlUkx_.js:7748
+await in execute
+mutate @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ landing-z9Jm9hJS.js:1
+callback @ index-BV-gZ2Lo.js:2
+_.Eu.Pa @ client:383
+Ps.Pa @ client:394
+c.port1.onmessage @ client:381
+Navigated to https://app.careofchan.com/
+ 🔄 [13:44:47.661] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-04-24T13:44:47.661Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.'}
+ 🧭 [13:44:47.672] [+0s] [NAVIGATION] Navigation watchdog initialized
+ 📡 [13:44:47.687] [+0s] [QUERY] Fetching: /api/bootstrap
+ 🔐 [13:44:47.688] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+ 🧭 [13:44:47.688] [+0s] [NAVIGATION] Initial route: /
+ 👆 [13:44:47.688] [+0s] [INPUT] Input logger initialized
+ 📡 [13:44:47.688] [+0s] [QUERY] Fetching: /api/settings/theme
+index-BV-gZ2Lo.js:5  GET https://app.careofchan.com/api/push/vapid-key 404 (Not Found)
+hi @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ /assets/index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ 📡 [13:44:47.894] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 206}
+ Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ Fetch failed loading: GET "https://app.careofchan.com/api/push/vapid-key".
+hi @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+ 📡 [13:44:48.159] [+0s] [QUERY] Query success: /api/bootstrap {status: 200, durationMs: 472}
+ Fetch finished loading: GET "https://app.careofchan.com/api/bootstrap".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ 🔐 [13:44:48.174] [+0s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+ 🔐 [13:44:48.175] [+0s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+ Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-BV-gZ2Lo.js:4
+setTimeout
+(anonymous) @ index-BV-gZ2Lo.js:4
+(anonymous) @ index-BV-gZ2Lo.js:4
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+(anonymous) @ vendor-react-xvLlUkx_.js:40
+setTimeout
+a @ vendor-react-xvLlUkx_.js:7748
+c @ vendor-react-xvLlUkx_.js:7748
+batch @ vendor-react-xvLlUkx_.js:7748
+dn @ vendor-react-xvLlUkx_.js:7748
+setData @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ vendor-react-xvLlUkx_.js:7748
+p @ vendor-react-xvLlUkx_.js:7748
+Promise.then
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+ei @ index-BV-gZ2Lo.js:4
+(anonymous) @ index-BV-gZ2Lo.js:4
+setTimeout
+(anonymous) @ index-BV-gZ2Lo.js:4
+(anonymous) @ index-BV-gZ2Lo.js:4
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+(anonymous) @ vendor-react-xvLlUkx_.js:40
+setTimeout
+a @ vendor-react-xvLlUkx_.js:7748
+c @ vendor-react-xvLlUkx_.js:7748
+batch @ vendor-react-xvLlUkx_.js:7748
+dn @ vendor-react-xvLlUkx_.js:7748
+setData @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ vendor-react-xvLlUkx_.js:7748
+p @ vendor-react-xvLlUkx_.js:7748
+Promise.then
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ 📡 [13:44:48.708] [+1s] [QUERY] Fetching: /api/venues
+ 📡 [13:44:48.979] [+1s] [QUERY] Query success: /api/venues {status: 200, durationMs: 271}
+ Fetch finished loading: GET "https://app.careofchan.com/api/venues".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+vendor-react-xvLlUkx_.js:40 [Violation] 'setTimeout' handler took 66ms
+[Violation] Forced reflow while executing JavaScript took 30ms
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/?c=0%2C1%2C3%2C4%2C2%2C5
+ 🔄 [13:44:54.585] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-04-24T13:44:54.585Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.'}
+ 🧭 [13:44:54.598] [+0s] [NAVIGATION] Navigation watchdog initialized
+ 📡 [13:44:54.612] [+0s] [QUERY] Fetching: /api/bootstrap
+ 🔐 [13:44:54.612] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+ 🧭 [13:44:54.612] [+0s] [NAVIGATION] Initial route: /
+ 👆 [13:44:54.613] [+0s] [INPUT] Input logger initialized
+ 📡 [13:44:54.613] [+0s] [QUERY] Fetching: /api/settings/theme
+index-BV-gZ2Lo.js:2  GET https://app.careofchan.com/api/bootstrap 401 (Unauthorized)
+(anonymous) @ /assets/index-BV-gZ2Lo.js:2
+i @ /assets/vendor-react-xvLlUkx_.js:7748
+w @ /assets/vendor-react-xvLlUkx_.js:7748
+start @ /assets/vendor-react-xvLlUkx_.js:7748
+fetch @ /assets/vendor-react-xvLlUkx_.js:7748
+Uc @ /assets/vendor-react-xvLlUkx_.js:7748
+onSubscribe @ /assets/vendor-react-xvLlUkx_.js:7748
+subscribe @ /assets/vendor-react-xvLlUkx_.js:7748
+(anonymous) @ /assets/vendor-react-xvLlUkx_.js:7748
+Oz @ /assets/vendor-react-xvLlUkx_.js:38
+MI @ /assets/vendor-react-xvLlUkx_.js:40
+$i @ /assets/vendor-react-xvLlUkx_.js:40
+QT @ /assets/vendor-react-xvLlUkx_.js:40
+hr @ /assets/vendor-react-xvLlUkx_.js:38
+TU @ /assets/vendor-react-xvLlUkx_.js:40
+vr @ /assets/vendor-react-xvLlUkx_.js:40
+vj @ /assets/vendor-react-xvLlUkx_.js:40
+S @ /assets/vendor-react-xvLlUkx_.js:25
+W @ /assets/vendor-react-xvLlUkx_.js:25
+postMessage
+K @ /assets/vendor-react-xvLlUkx_.js:25
+O @ /assets/vendor-react-xvLlUkx_.js:25
+e.unstable_scheduleCallback @ /assets/vendor-react-xvLlUkx_.js:25
+Lj @ /assets/vendor-react-xvLlUkx_.js:40
+it @ /assets/vendor-react-xvLlUkx_.js:40
+Ht @ /assets/vendor-react-xvLlUkx_.js:40
+CI @ /assets/vendor-react-xvLlUkx_.js:40
+LI.render.PR.render @ /assets/vendor-react-xvLlUkx_.js:40
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ 📡 [13:44:54.799] [+0s] [QUERY] Query returned 401 (returnNull behavior): /api/bootstrap {durationMs: 187}
+ 🔐 [13:44:54.801] [+0s] [AUTH] Auth loading complete {isAuthenticated: false, userId: undefined}
+ 📡 [13:44:54.809] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 196}
+ Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ Fetch failed loading: GET "https://app.careofchan.com/api/bootstrap".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+index-BV-gZ2Lo.js:5  GET https://app.careofchan.com/api/push/vapid-key 404 (Not Found)
+hi @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ /assets/index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ Fetch failed loading: GET "https://app.careofchan.com/api/push/vapid-key".
+hi @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+/_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225 Fetch failed loading: POST "https://play.google.com/log?format=json&hasfast=true&authuser=0".
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+Md @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:101
+Od.next @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Pd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+_.Qd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Oj.send @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+q @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+Ij.flush @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+c @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:216
+lj @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:211
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+setTimeout
+ij.start @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+Ij.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:218
+Yj.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:229
+Lm @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+Promise.then
+Rm.h @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:318
+(anonymous) @ accounts.google.com/gsi/button?type=standard&theme=filled_blue&size=large&text=signin_with&shape=pill&logo_alignment=undefined&width=undefined&locale=undefined&click_listener=undefined&is_fedcm_supported=false&client_id=30102058631-olab80h56moonvmdv6pq199deq4blims.apps.googleusercontent.com&iframe_id=gsi_294812_948906&cas=9GBI9bQKJdUxHPbUw1STUJlp%2B0O47QWoRLLFlno1IWk:324
+/_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225  POST https://play.google.com/log?format=json&hasfast=true&authuser=0 net::ERR_BLOCKED_BY_CLIENT
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+Md @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:101
+Od.next @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Pd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+_.Qd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Oj.send @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+q @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+Ij.flush @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+c @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:216
+lj @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:211
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+setTimeout
+ij.start @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+Ij.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:218
+Yj.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:229
+Lm @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+Promise.then
+Rm.h @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:318
+(anonymous) @ accounts.google.com/gsi/button?type=standard&theme=filled_blue&size=large&text=signin_with&shape=pill&logo_alignment=undefined&width=undefined&locale=undefined&click_listener=undefined&is_fedcm_supported=false&client_id=30102058631-olab80h56moonvmdv6pq199deq4blims.apps.googleusercontent.com&iframe_id=gsi_294812_948906&cas=9GBI9bQKJdUxHPbUw1STUJlp%2B0O47QWoRLLFlno1IWk:324
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Navigated to https://app.careofchan.com/?c=0%2C1%2C3%2C4%2C2%2C5
+ 🔄 [13:45:16.374] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-04-24T13:45:16.374Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.'}
+ 🧭 [13:45:16.384] [+0s] [NAVIGATION] Navigation watchdog initialized
+ 📡 [13:45:16.399] [+0s] [QUERY] Fetching: /api/bootstrap
+ 🔐 [13:45:16.399] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+ 🧭 [13:45:16.399] [+0s] [NAVIGATION] Initial route: /
+ 👆 [13:45:16.400] [+0s] [INPUT] Input logger initialized
+ 📡 [13:45:16.400] [+0s] [QUERY] Fetching: /api/settings/theme
+index-BV-gZ2Lo.js:2  GET https://app.careofchan.com/api/bootstrap 401 (Unauthorized)
+(anonymous) @ /assets/index-BV-gZ2Lo.js:2
+i @ /assets/vendor-react-xvLlUkx_.js:7748
+w @ /assets/vendor-react-xvLlUkx_.js:7748
+start @ /assets/vendor-react-xvLlUkx_.js:7748
+fetch @ /assets/vendor-react-xvLlUkx_.js:7748
+Uc @ /assets/vendor-react-xvLlUkx_.js:7748
+onSubscribe @ /assets/vendor-react-xvLlUkx_.js:7748
+subscribe @ /assets/vendor-react-xvLlUkx_.js:7748
+(anonymous) @ /assets/vendor-react-xvLlUkx_.js:7748
+Oz @ /assets/vendor-react-xvLlUkx_.js:38
+MI @ /assets/vendor-react-xvLlUkx_.js:40
+$i @ /assets/vendor-react-xvLlUkx_.js:40
+QT @ /assets/vendor-react-xvLlUkx_.js:40
+hr @ /assets/vendor-react-xvLlUkx_.js:38
+TU @ /assets/vendor-react-xvLlUkx_.js:40
+vr @ /assets/vendor-react-xvLlUkx_.js:40
+vj @ /assets/vendor-react-xvLlUkx_.js:40
+S @ /assets/vendor-react-xvLlUkx_.js:25
+W @ /assets/vendor-react-xvLlUkx_.js:25
+postMessage
+K @ /assets/vendor-react-xvLlUkx_.js:25
+O @ /assets/vendor-react-xvLlUkx_.js:25
+e.unstable_scheduleCallback @ /assets/vendor-react-xvLlUkx_.js:25
+Lj @ /assets/vendor-react-xvLlUkx_.js:40
+it @ /assets/vendor-react-xvLlUkx_.js:40
+Ht @ /assets/vendor-react-xvLlUkx_.js:40
+CI @ /assets/vendor-react-xvLlUkx_.js:40
+LI.render.PR.render @ /assets/vendor-react-xvLlUkx_.js:40
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ 📡 [13:45:16.654] [+0s] [QUERY] Query returned 401 (returnNull behavior): /api/bootstrap {durationMs: 256}
+ 🔐 [13:45:16.659] [+0s] [AUTH] Auth loading complete {isAuthenticated: false, userId: undefined}
+ 📡 [13:45:16.660] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 260}
+ Fetch finished loading: GET "https://app.careofchan.com/api/settings/theme".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+ Fetch failed loading: GET "https://app.careofchan.com/api/bootstrap".
+(anonymous) @ index-BV-gZ2Lo.js:2
+i @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+index-BV-gZ2Lo.js:5  GET https://app.careofchan.com/api/push/vapid-key 404 (Not Found)
+hi @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ /assets/index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ /assets/index-BV-gZ2Lo.js:5
+(anonymous) @ /assets/index-BV-gZ2Lo.js:5
+ Fetch failed loading: GET "https://app.careofchan.com/api/push/vapid-key".
+hi @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+/_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225  POST https://play.google.com/log?format=json&hasfast=true&authuser=0 net::ERR_BLOCKED_BY_CLIENT
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+Md @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:101
+Od.next @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Pd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+_.Qd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Oj.send @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+q @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+Ij.flush @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+c @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:216
+lj @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:211
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+setTimeout
+ij.start @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+Ij.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:218
+Yj.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:229
+Lm @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+Promise.then
+Rm.h @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:318
+(anonymous) @ accounts.google.com/gsi/button?type=standard&theme=filled_blue&size=large&text=signin_with&shape=pill&logo_alignment=undefined&width=undefined&locale=undefined&click_listener=undefined&is_fedcm_supported=false&client_id=30102058631-olab80h56moonvmdv6pq199deq4blims.apps.googleusercontent.com&iframe_id=gsi_316670_58611&cas=8iPpAg9VOSE%2FcGNob9aPVKCnQlY6S2HZK55R2TELsmU:324
+/_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225 Fetch failed loading: POST "https://play.google.com/log?format=json&hasfast=true&authuser=0".
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+Md @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:101
+Od.next @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Pd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+_.Qd @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:102
+Oj.send @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:225
+q @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+Ij.flush @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:222
+c @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:216
+lj @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:211
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+setTimeout
+ij.start @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:210
+Ij.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:218
+Yj.log @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:229
+Lm @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+Promise.then
+Rm.h @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:312
+(anonymous) @ /_/gsi/_/js/k=gsi.gsi.en.On4FrpQ9lKg.O/am=AAAAJAhiCwg/d=1/rs=AF0KOtVK_q3fe3LA6-OQuiOvnFz-T3mkpw/m=credential_button_library:318
+(anonymous) @ accounts.google.com/gsi/button?type=standard&theme=filled_blue&size=large&text=signin_with&shape=pill&logo_alignment=undefined&width=undefined&locale=undefined&click_listener=undefined&is_fedcm_supported=false&client_id=30102058631-olab80h56moonvmdv6pq199deq4blims.apps.googleusercontent.com&iframe_id=gsi_316670_58611&cas=8iPpAg9VOSE%2FcGNob9aPVKCnQlY6S2HZK55R2TELsmU:324
+client:381 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Gu @ accounts.google.com/gsi/client:381
+(anonymous) @ accounts.google.com/gsi/client:340
+Vf @ accounts.google.com/gsi/client:128
+b @ accounts.google.com/gsi/client:125
+client:381 Cross-Origin-Opener-Policy policy would block the window.postMessage call.
+Gu @ accounts.google.com/gsi/client:381
+(anonymous) @ accounts.google.com/gsi/client:340
+Vf @ accounts.google.com/gsi/client:128
+b @ accounts.google.com/gsi/client:125
+ 🌐 [13:46:26.591] [+1m10s] [API] Starting request: POST /api/auth/google {hasBody: true}
+ 🌐 [13:46:26.591] [+1m10s] [API] Skipping CSRF for auth endpoint: /api/auth/google
+ 🌐 [13:46:27.270] [+1m10s] [API] Response received: POST /api/auth/google {status: 200, ok: true, durationMs: 680}
+ Fetch finished loading: POST "https://app.careofchan.com/api/auth/google".
+Rt @ index-BV-gZ2Lo.js:2
+mutationFn @ landing-z9Jm9hJS.js:1
+fn @ vendor-react-xvLlUkx_.js:7748
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+execute @ vendor-react-xvLlUkx_.js:7748
+await in execute
+mutate @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ landing-z9Jm9hJS.js:1
+callback @ index-BV-gZ2Lo.js:2
+_.Eu.Pa @ client:383
+Ps.Pa @ client:394
+Gu.c.port1.onmessage @ client:381
+ [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used.
+_.G @ client:85
+Ts @ client:296
+(anonymous) @ index-BV-gZ2Lo.js:2
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+(anonymous) @ vendor-react-xvLlUkx_.js:40
+setTimeout
+a @ vendor-react-xvLlUkx_.js:7748
+c @ vendor-react-xvLlUkx_.js:7748
+batch @ vendor-react-xvLlUkx_.js:7748
+An @ vendor-react-xvLlUkx_.js:7748
+execute @ vendor-react-xvLlUkx_.js:7748
+await in execute
+mutate @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ landing-z9Jm9hJS.js:1
+callback @ index-BV-gZ2Lo.js:2
+_.Eu.Pa @ client:383
+Ps.Pa @ client:394
+Gu.c.port1.onmessage @ client:381
+Navigated to https://app.careofchan.com/
+index-BV-gZ2Lo.js:2 🔄 [13:46:27.890] [+0s] [LIFECYCLE] Debug logger initialized {startTime: '2026-04-24T13:46:27.890Z', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.'}
+index-BV-gZ2Lo.js:2 🧭 [13:46:27.901] [+0s] [NAVIGATION] Navigation watchdog initialized
+index-BV-gZ2Lo.js:2 📡 [13:46:27.915] [+0s] [QUERY] Fetching: /api/bootstrap
+index-BV-gZ2Lo.js:2 🔐 [13:46:27.916] [+0s] [AUTH] Auth query refetching {isStale: true, lastUpdated: null}
+index-BV-gZ2Lo.js:2 🧭 [13:46:27.916] [+0s] [NAVIGATION] Initial route: /
+index-BV-gZ2Lo.js:2 👆 [13:46:27.916] [+0s] [INPUT] Input logger initialized
+index-BV-gZ2Lo.js:2 📡 [13:46:27.916] [+0s] [QUERY] Fetching: /api/settings/theme
+index-BV-gZ2Lo.js:5  GET https://app.careofchan.com/api/push/vapid-key 404 (Not Found)
+hi @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+index-BV-gZ2Lo.js:2 📡 [13:46:28.127] [+0s] [QUERY] Query success: /api/settings/theme {status: 200, durationMs: 211}
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+index-BV-gZ2Lo.js:5 Fetch failed loading: GET "https://app.careofchan.com/api/push/vapid-key".
+hi @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+window.requestIdleCallback.window.requestIdleCallback.timeout @ index-BV-gZ2Lo.js:5
+requestIdleCallback
+r @ index-BV-gZ2Lo.js:5
+(anonymous) @ index-BV-gZ2Lo.js:5
+index-BV-gZ2Lo.js:2 📡 [13:46:28.365] [+0s] [QUERY] Query success: /api/bootstrap {status: 200, durationMs: 449}
+index-BV-gZ2Lo.js:2 🔐 [13:46:28.381] [+0s] [AUTH] User authenticated {userId: '6025178', email: 'omar@functionalartists.ai', role: 'admin'}
+index-BV-gZ2Lo.js:2 🔐 [13:46:28.381] [+0s] [AUTH] Auth loading complete {isAuthenticated: true, userId: '6025178'}
+index-BV-gZ2Lo.js:4 Fetch finished loading: POST "https://app.careofchan.com/api/activity/pageview".
+(anonymous) @ index-BV-gZ2Lo.js:4
+setTimeout
+(anonymous) @ index-BV-gZ2Lo.js:4
+(anonymous) @ index-BV-gZ2Lo.js:4
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+(anonymous) @ vendor-react-xvLlUkx_.js:40
+setTimeout
+a @ vendor-react-xvLlUkx_.js:7748
+c @ vendor-react-xvLlUkx_.js:7748
+batch @ vendor-react-xvLlUkx_.js:7748
+dn @ vendor-react-xvLlUkx_.js:7748
+setData @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ vendor-react-xvLlUkx_.js:7748
+p @ vendor-react-xvLlUkx_.js:7748
+Promise.then
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+postMessage
+K @ vendor-react-xvLlUkx_.js:25
+O @ vendor-react-xvLlUkx_.js:25
+e.unstable_scheduleCallback @ vendor-react-xvLlUkx_.js:25
+Lj @ vendor-react-xvLlUkx_.js:40
+it @ vendor-react-xvLlUkx_.js:40
+Ht @ vendor-react-xvLlUkx_.js:40
+CI @ vendor-react-xvLlUkx_.js:40
+LI.render.PR.render @ vendor-react-xvLlUkx_.js:40
+(anonymous) @ index-BV-gZ2Lo.js:5
+index-BV-gZ2Lo.js:4 Fetch finished loading: POST "https://app.careofchan.com/api/activity/session".
+ei @ index-BV-gZ2Lo.js:4
+(anonymous) @ index-BV-gZ2Lo.js:4
+setTimeout
+(anonymous) @ index-BV-gZ2Lo.js:4
+(anonymous) @ index-BV-gZ2Lo.js:4
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+(anonymous) @ vendor-react-xvLlUkx_.js:40
+setTimeout
+a @ vendor-react-xvLlUkx_.js:7748
+c @ vendor-react-xvLlUkx_.js:7748
+batch @ vendor-react-xvLlUkx_.js:7748
+dn @ vendor-react-xvLlUkx_.js:7748
+setData @ vendor-react-xvLlUkx_.js:7748
+onSuccess @ vendor-react-xvLlUkx_.js:7748
+p @ vendor-react-xvLlUkx_.js:7748
+Promise.then
+w @ vendor-react-xvLlUkx_.js:7748
+start @ vendor-react-xvLlUkx_.js:7748
+fetch @ vendor-react-xvLlUkx_.js:7748
+Uc @ vendor-react-xvLlUkx_.js:7748
+onSubscribe @ vendor-react-xvLlUkx_.js:7748
+subscribe @ vendor-react-xvLlUkx_.js:7748
+(anonymous) @ vendor-react-xvLlUkx_.js:7748
+Oz @ vendor-react-xvLlUkx_.js:38
+MI @ vendor-react-xvLlUkx_.js:40
+$i @ vendor-react-xvLlUkx_.js:40
+QT @ vendor-react-xvLlUkx_.js:40
+hr @ vendor-react-xvLlUkx_.js:38
+TU @ vendor-react-xvLlUkx_.js:40
+vr @ vendor-react-xvLlUkx_.js:40
+vj @ vendor-react-xvLlUkx_.js:40
+S @ vendor-react-xvLlUkx_.js:25
+W @ vendor-react-xvLlUkx_.js:25
+postMessage
+K @ vendor-react-xvLlUkx_.js:25
+O @ vendor-react-xvLlUkx_.js:25
+e.unstable_scheduleCallback @ vendor-react-xvLlUkx_.js:25
+Lj @ vendor-react-xvLlUkx_.js:40
+it @ vendor-react-xvLlUkx_.js:40
+Ht @ vendor-react-xvLlUkx_.js:40
+CI @ vendor-react-xvLlUkx_.js:40
+LI.render.PR.render @ vendor-react-xvLlUkx_.js:40
+(anonymous) @ index-BV-gZ2Lo.js:5
+index-BV-gZ2Lo.js:2 📡 [13:46:28.862] [+0s] [QUERY] Fetching: /api/venues
+index-BV-gZ2Lo.js:2 📡 [13:46:29.149] [+1s] [QUERY] Query success: /api/venues {status: 200, durationMs: 288}
+vendor-react-xvLlUkx_.js:40 [Violation] 'setTimeout' handler took 81ms
+[Violation] Forced reflow while executing JavaScript took 30ms
+index-BV-gZ2Lo.js:2 📡 [13:46:58.865] [+30s] [QUERY] Fetching: /api/notifications/unread-count
+index-BV-gZ2Lo.js:2 📡 [13:46:59.348] [+31s] [QUERY] Query success: /api/notifications/unread-count {status: 200, durationMs: 483}
+index-BV-gZ2Lo.js:2 📡 [13:47:29.352] [+1m1s] [QUERY] Fetching: /api/notifications/unread-count
+index-BV-gZ2Lo.js:2 📡 [13:47:29.992] [+1m2s] [QUERY] Query success: /api/notifications/unread-count {status: 200, durationMs: 641}
+index-BV-gZ2Lo.js:2 📡 [13:47:59.994] [+1m32s] [QUERY] Fetching: /api/notifications/unread-count
+index-BV-gZ2Lo.js:2 📡 [13:48:00.619] [+1m32s] [QUERY] Query success: /api/notifications/unread-count {status: 200, durationMs: 624}
