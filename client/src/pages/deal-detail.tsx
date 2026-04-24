@@ -953,7 +953,7 @@ export default function DealDetail() {
 
             {!dealAttachmentsStatus.isEmpty && (
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-0">
                   <CardTitle
                     className="text-base"
                     data-testid="heading-attachments"
@@ -963,17 +963,17 @@ export default function DealDetail() {
                   {canWrite && (
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="gap-1 -mr-2"
+                      variant="secondary"
+                      className="gap-1 "
                       onClick={() => setActiveTab("links")}
                       data-testid="button-overview-add-link"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      Add
+                      Add a Link
                     </Button>
                   )}
                 </CardHeader>
-                <CardContent className="py-2">
+                <CardContent className="!pt-0">
                   <DealAttachmentsPanel
                     dealId={id!}
                     canWrite={false}

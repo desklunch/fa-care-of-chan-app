@@ -588,7 +588,7 @@ export function DealAttachmentsPanel({
   const renderItems = () => {
     if (items.length === 0) return null;
     return (
-      <Card className="p-4  divide-y " data-testid="list-deal-attachments">
+      <Card className={compact ? "p-0 border-none divide-y" : "p-4 divide-y"} data-testid="list-deal-attachments">
         {items.map((item) => {
           if (item.kind === "link") {
             const editable = canWrite && canEditLink(item.link);
@@ -700,14 +700,7 @@ export function DealAttachmentsPanel({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3
-          className="text-sm font-medium"
-          data-testid="heading-deal-attachments"
-        >
-          Share links and attach Google Drive files for this deal.
-        </h3>
-      </div>
+     
 
       {canWrite && (
         <div className="flex flex-wrap items-center gap-2">
@@ -719,7 +712,7 @@ export function DealAttachmentsPanel({
             data-testid="button-add-link"
           >
             <Bookmark className="h-3.5 w-3.5" />
-            Add Link
+            Add a Link
           </Button>
           <Button
             variant="secondary"
@@ -729,10 +722,10 @@ export function DealAttachmentsPanel({
             data-testid="button-add-from-drive"
           >
             <FolderOpen className="h-3.5 w-3.5" />
-            Add from Google Drive
+            Add Google Drive File
           </Button>
-          <Button
-            variant="ghost"
+          {/* <Button
+            variant="secondary"
             size="sm"
             className="gap-2"
             onClick={() => setShowPasteInput((v) => !v)}
@@ -749,7 +742,7 @@ export function DealAttachmentsPanel({
                 Paste Drive URL
               </>
             )}
-          </Button>
+          </Button> */}
         </div>
       )}
 
