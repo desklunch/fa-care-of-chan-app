@@ -757,7 +757,7 @@ export function DealAttachmentsPanel({
 
       {canWrite && showCreateLink && (
         <Card data-testid="form-create-link">
-          <CardHeader className="bg-popover">
+          <CardHeader className="">
             <CardTitle className="text-lg">Add a Link</CardTitle>
           </CardHeader>
           <CardContent className="!pt-0 space-y-6">
