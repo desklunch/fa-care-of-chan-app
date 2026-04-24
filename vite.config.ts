@@ -34,22 +34,19 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return undefined;
-          if (id.includes("lucide-react")) return "vendor-icons";
-          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul")) {
-            return "vendor-ui";
-          }
           if (id.includes("ag-grid")) return "vendor-aggrid";
           if (
-            id.includes("@tanstack/react-query") ||
-            id.includes("wouter") ||
-            id.includes("zustand")
-          ) {
-            return "vendor-data";
-          }
-          if (
+            id.includes("/react/") ||
             id.includes("react-dom") ||
             id.includes("scheduler") ||
-            id.includes("/react/")
+            id.includes("react-is") ||
+            id.includes("@tanstack/react-query") ||
+            id.includes("wouter") ||
+            id.includes("zustand") ||
+            id.includes("@radix-ui") ||
+            id.includes("cmdk") ||
+            id.includes("vaul") ||
+            id.includes("lucide-react")
           ) {
             return "vendor-react";
           }
