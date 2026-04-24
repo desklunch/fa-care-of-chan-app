@@ -170,9 +170,9 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
     audit: {
       action: "create",
       entityType: "deal" as AuditEntityType,
-      extractEntityId: (e) => (e as any).intakeId ?? null,
+      extractEntityId: (e) => (e as any).dealId ?? null,
       extractChanges: (e) => ({
-        dealId: (e as any).dealId,
+        intakeId: (e as any).intakeId,
         templateId: (e as any).templateId,
         templateName: (e as any).templateName,
       }),
@@ -183,9 +183,9 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
     audit: {
       action: "update",
       entityType: "deal" as AuditEntityType,
-      extractEntityId: (e) => (e as any).intakeId ?? null,
+      extractEntityId: (e) => (e as any).dealId ?? null,
       extractChanges: (e) => ({
-        dealId: (e as any).dealId,
+        intakeId: (e as any).intakeId,
       }),
     },
   },
@@ -194,9 +194,9 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
     audit: {
       action: "delete",
       entityType: "deal" as AuditEntityType,
-      extractEntityId: (e) => (e as any).intakeId ?? null,
+      extractEntityId: (e) => (e as any).dealId ?? null,
       extractChanges: (e) => ({
-        dealId: (e as any).dealId,
+        intakeId: (e as any).intakeId,
       }),
     },
   },
