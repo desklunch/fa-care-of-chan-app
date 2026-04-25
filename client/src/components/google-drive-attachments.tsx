@@ -42,6 +42,8 @@ import {
   SquarePen,
   ChevronRight,
   ArrowLeft,
+  HardDrive,
+  Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -116,12 +118,36 @@ export interface DriveFile {
   webViewLink?: string;
   modifiedTime?: string;
   owners?: { displayName: string }[];
+  driveId?: string;
 }
 
 interface DriveSearchResult {
   files: DriveFile[];
   nextPageToken?: string;
 }
+
+interface SharedDrive {
+  id: string;
+  name: string;
+}
+
+interface SharedDriveListResult {
+  drives: SharedDrive[];
+  nextPageToken?: string;
+}
+
+type DriveLocationKind = "myDrive" | "sharedWithMe" | "sharedDrive" | "folder";
+
+interface DriveLocation {
+  id: string;
+  name: string;
+  kind: DriveLocationKind;
+  /** When set, all queries within this location are scoped to a Shared Drive. */
+  driveId?: string;
+}
+
+const SHARED_WITH_ME_ID = "__shared_with_me__";
+const MY_DRIVE_ID = "__my_drive__";
 
 const DRIVE_URL_HOSTS = new Set([
   "docs.google.com",
@@ -226,12 +252,14 @@ export function DriveFilePickerDialog({
   const [pickedUrl, setPickedUrl] = useState<string | null>(null);
   const [pickerLabel, setPickerLabel] = useState("");
   const [pickerDescription, setPickerDescription] = useState("");
-  const [folderStack, setFolderStack] = useState<
-    { id: string; name: string }[]
-  >([]);
-  const currentFolder =
+  const [folderStack, setFolderStack] = useState<DriveLocation[]>([]);
+  const currentLocation: DriveLocation | null =
     folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
-  const currentFolderId = currentFolder?.id ?? "";
+  const sectionRoot: DriveLocation | null =
+    folderStack.length > 0 ? folderStack[0] : null;
+  const sharedDriveContextId =
+    folderStack.find((entry) => entry.kind === "sharedDrive")?.id ??
+    folderStack.find((entry) => entry.driveId)?.driveId;
 
   useEffect(() => {
     if (!open) {
@@ -245,25 +273,34 @@ export function DriveFilePickerDialog({
     }
   }, [open]);
 
-  const openFolder = (folder: { id: string; name: string }) => {
-    setFolderStack((stack) => [...stack, folder]);
+  const pushLocation = (location: DriveLocation) => {
+    setFolderStack((stack) => [...stack, location]);
     setSearchQuery("");
     setDebouncedQuery("");
   };
 
-  const goUpOneFolder = () => {
+  const openFolder = (file: DriveFile) => {
+    pushLocation({
+      id: file.id,
+      name: file.name,
+      kind: "folder",
+      driveId: file.driveId ?? sharedDriveContextId,
+    });
+  };
+
+  const goUpOneLocation = () => {
     setFolderStack((stack) => stack.slice(0, -1));
     setSearchQuery("");
     setDebouncedQuery("");
   };
 
-  const goToFolderAtIndex = (index: number) => {
+  const goToLocationAtIndex = (index: number) => {
     setFolderStack((stack) => stack.slice(0, index + 1));
     setSearchQuery("");
     setDebouncedQuery("");
   };
 
-  const goToRoot = () => {
+  const goToPickerRoot = () => {
     setFolderStack([]);
     setSearchQuery("");
     setDebouncedQuery("");
@@ -303,15 +340,64 @@ export function DriveFilePickerDialog({
 
   const trimmedDebouncedQuery = debouncedQuery.trim();
   const isBrowseMode = !trimmedDebouncedQuery;
-  const effectiveParentId = isBrowseMode ? currentFolderId || "root" : "";
+  const isAtPickerRoot = !sectionRoot;
+  // The picker root is a section chooser (My Drive, Shared with me, Shared
+  // Drives) rather than a file listing — only show file/folder rows when the
+  // user is inside a section, or whenever they're searching.
+  const showSectionChooser = isAtPickerRoot && isBrowseMode;
+
+  // Build query parameters reflecting the current location.
+  const browseQueryParams = (() => {
+    if (isAtPickerRoot) return null;
+    if (sectionRoot?.kind === "myDrive") {
+      const parentId =
+        currentLocation?.kind === "folder" ? currentLocation.id : "root";
+      return { parentId } as {
+        parentId?: string;
+        driveId?: string;
+        sharedWithMe?: boolean;
+      };
+    }
+    if (sectionRoot?.kind === "sharedWithMe") {
+      if (currentLocation?.kind === "sharedWithMe") {
+        return { sharedWithMe: true };
+      }
+      // Drilling into a folder we discovered via Shared with me.
+      return {
+        parentId: currentLocation!.id,
+        driveId: sharedDriveContextId,
+      };
+    }
+    if (sectionRoot?.kind === "sharedDrive") {
+      const driveId = sectionRoot.id;
+      if (currentLocation?.kind === "sharedDrive") {
+        return { driveId };
+      }
+      return { parentId: currentLocation!.id, driveId };
+    }
+    return null;
+  })();
+
+  const searchEnabled =
+    open && !pickedFile && !pickedUrl && !inputIsUrl && !showSectionChooser;
 
   const { data: searchResults, isLoading: isSearching } =
     useQuery<DriveSearchResult>({
-      queryKey: ["/api/drive/search", debouncedQuery, effectiveParentId],
+      queryKey: [
+        "/api/drive/search",
+        debouncedQuery,
+        browseQueryParams?.parentId ?? "",
+        browseQueryParams?.driveId ?? "",
+        browseQueryParams?.sharedWithMe ? "swm" : "",
+      ],
       queryFn: async () => {
         const params = new URLSearchParams();
         if (debouncedQuery) params.set("q", debouncedQuery);
-        if (effectiveParentId) params.set("parentId", effectiveParentId);
+        if (browseQueryParams?.parentId)
+          params.set("parentId", browseQueryParams.parentId);
+        if (browseQueryParams?.driveId)
+          params.set("driveId", browseQueryParams.driveId);
+        if (browseQueryParams?.sharedWithMe) params.set("sharedWithMe", "true");
         const res = await fetch(`/api/drive/search?${params.toString()}`, {
           credentials: "include",
         });
@@ -326,21 +412,40 @@ export function DriveFilePickerDialog({
         setNeedsDriveAuth(false);
         return res.json();
       },
-      enabled: open && !pickedFile && !pickedUrl && !inputIsUrl,
+      enabled: searchEnabled,
       retry: false,
     });
 
-  // In browse mode, also fetch the folder list separately so folders are
-  // guaranteed to appear at the top of the listing regardless of how the
-  // mixed search results paginate.
+  // In browse mode (inside a section), also fetch the folder list separately
+  // so folders are guaranteed to appear at the top of the listing regardless
+  // of how the mixed search results paginate.
+  const folderListEnabled =
+    open &&
+    !pickedFile &&
+    !pickedUrl &&
+    !inputIsUrl &&
+    isBrowseMode &&
+    !!browseQueryParams;
+
   const { data: folderResults, isLoading: isLoadingFolders } =
     useQuery<DriveSearchResult>({
-      queryKey: ["/api/drive/folders", effectiveParentId],
+      queryKey: [
+        "/api/drive/folders",
+        browseQueryParams?.parentId ?? "",
+        browseQueryParams?.driveId ?? "",
+        browseQueryParams?.sharedWithMe ? "swm" : "",
+      ],
       queryFn: async () => {
         const params = new URLSearchParams();
-        if (effectiveParentId && effectiveParentId !== "root") {
-          params.set("parentId", effectiveParentId);
+        if (
+          browseQueryParams?.parentId &&
+          browseQueryParams.parentId !== "root"
+        ) {
+          params.set("parentId", browseQueryParams.parentId);
         }
+        if (browseQueryParams?.driveId)
+          params.set("driveId", browseQueryParams.driveId);
+        if (browseQueryParams?.sharedWithMe) params.set("sharedWithMe", "true");
         const res = await fetch(`/api/drive/folders?${params.toString()}`, {
           credentials: "include",
         });
@@ -355,8 +460,33 @@ export function DriveFilePickerDialog({
         setNeedsDriveAuth(false);
         return res.json();
       },
-      enabled:
-        open && !pickedFile && !pickedUrl && !inputIsUrl && isBrowseMode,
+      enabled: folderListEnabled,
+      retry: false,
+    });
+
+  // List the user's accessible Shared Drives — only needed at the picker root.
+  const sharedDrivesEnabled =
+    open && !pickedFile && !pickedUrl && !inputIsUrl && showSectionChooser;
+
+  const { data: sharedDrivesResult, isLoading: isLoadingSharedDrives } =
+    useQuery<SharedDriveListResult>({
+      queryKey: ["/api/drive/shared-drives"],
+      queryFn: async () => {
+        const res = await fetch(`/api/drive/shared-drives`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          if (body.code === "drive_auth_required") {
+            setNeedsDriveAuth(true);
+            throw new Error("drive_auth_required");
+          }
+          throw new Error("Failed to list Shared Drives");
+        }
+        setNeedsDriveAuth(false);
+        return res.json();
+      },
+      enabled: sharedDrivesEnabled,
       retry: false,
     });
 
@@ -370,9 +500,12 @@ export function DriveFilePickerDialog({
         )),
       ]
     : searchResults?.files ?? [];
-  const isListLoading = isBrowseMode
-    ? isSearching || isLoadingFolders
-    : isSearching;
+  const isListLoading = showSectionChooser
+    ? isLoadingSharedDrives
+    : isBrowseMode
+      ? isSearching || isLoadingFolders
+      : isSearching;
+  const sharedDrives = sharedDrivesResult?.drives ?? [];
 
   if (needsDriveAuth) {
     return (
@@ -617,7 +750,7 @@ export function DriveFilePickerDialog({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={goUpOneFolder}
+                    onClick={goUpOneLocation}
                     disabled={folderStack.length === 0}
                     data-testid="button-drive-folder-up"
                     aria-label="Go up one folder"
@@ -626,26 +759,27 @@ export function DriveFilePickerDialog({
                   </Button>
                   <button
                     type="button"
-                    onClick={goToRoot}
-                    className="px-1.5 py-1 rounded-md hover-elevate active-elevate-2 font-medium text-foreground"
+                    onClick={goToPickerRoot}
+                    disabled={isAtPickerRoot}
+                    className="px-1.5 py-1 rounded-md hover-elevate active-elevate-2 disabled:opacity-100 disabled:cursor-default disabled:hover:bg-transparent font-medium text-foreground"
                     data-testid="button-drive-breadcrumb-root"
                   >
-                    My Drive
+                    Drive
                   </button>
-                  {folderStack.map((folder, index) => (
+                  {folderStack.map((entry, index) => (
                     <span
-                      key={folder.id}
+                      key={`${entry.kind}-${entry.id}`}
                       className="flex items-center gap-1 min-w-0"
                     >
                       <ChevronRight className="h-3 w-3 flex-shrink-0" />
                       <button
                         type="button"
-                        onClick={() => goToFolderAtIndex(index)}
+                        onClick={() => goToLocationAtIndex(index)}
                         disabled={index === folderStack.length - 1}
                         className="px-1.5 py-1 rounded-md truncate max-w-[180px] hover-elevate active-elevate-2 disabled:opacity-100 disabled:cursor-default disabled:hover:bg-transparent text-foreground"
-                        data-testid={`button-drive-breadcrumb-${folder.id}`}
+                        data-testid={`button-drive-breadcrumb-${entry.id}`}
                       >
-                        {folder.name}
+                        {entry.name}
                       </button>
                     </span>
                   ))}
@@ -656,6 +790,95 @@ export function DriveFilePickerDialog({
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
+                ) : showSectionChooser ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        pushLocation({
+                          id: MY_DRIVE_ID,
+                          name: "My Drive",
+                          kind: "myDrive",
+                        })
+                      }
+                      disabled={isPending}
+                      className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
+                      data-testid="button-drive-section-my-drive"
+                    >
+                      <div className="flex-shrink-0">
+                        <HardDrive className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">My Drive</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          Files in your personal Google Drive
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        pushLocation({
+                          id: SHARED_WITH_ME_ID,
+                          name: "Shared with me",
+                          kind: "sharedWithMe",
+                        })
+                      }
+                      disabled={isPending}
+                      className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
+                      data-testid="button-drive-section-shared-with-me"
+                    >
+                      <div className="flex-shrink-0">
+                        <Users className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          Shared with me
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          Files others have shared directly with you
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                    {sharedDrives.length > 0 ? (
+                      sharedDrives.map((drive) => (
+                        <button
+                          key={drive.id}
+                          type="button"
+                          onClick={() =>
+                            pushLocation({
+                              id: drive.id,
+                              name: drive.name,
+                              kind: "sharedDrive",
+                              driveId: drive.id,
+                            })
+                          }
+                          disabled={isPending}
+                          className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
+                          data-testid={`button-drive-section-shared-drive-${drive.id}`}
+                        >
+                          <div className="flex-shrink-0">
+                            <Folder className="h-5 w-5 text-blue-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {drive.name}
+                              </p>
+                              <Badge variant="secondary">Shared drive</Badge>
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground px-2 pt-3">
+                        No Shared Drives available.
+                      </p>
+                    )}
+                  </>
                 ) : browseRows.length > 0 ? (
                   browseRows.map((file) => {
                     const isFolder = isFolderMimeType(file.mimeType);
@@ -681,9 +904,7 @@ export function DriveFilePickerDialog({
                         >
                           <button
                             type="button"
-                            onClick={() =>
-                              openFolder({ id: file.id, name: file.name })
-                            }
+                            onClick={() => openFolder(file)}
                             disabled={isPending}
                             className="flex items-center gap-3 p-2.5 flex-1 min-w-0 text-left rounded-md hover-elevate"
                             data-testid={`button-open-folder-${file.id}`}
@@ -737,9 +958,13 @@ export function DriveFilePickerDialog({
                   <p className="text-sm text-muted-foreground py-6 text-center">
                     {!isBrowseMode
                       ? "No files found"
-                      : currentFolder
-                        ? "This folder is empty"
-                        : "Your Drive is empty"}
+                      : currentLocation?.kind === "sharedWithMe"
+                        ? "Nothing has been shared with you yet"
+                        : currentLocation?.kind === "sharedDrive"
+                          ? "This Shared Drive is empty"
+                          : currentLocation?.kind === "folder"
+                            ? "This folder is empty"
+                            : "Your Drive is empty"}
                   </p>
                 )}
               </div>

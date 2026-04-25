@@ -15,7 +15,11 @@ import {
   getEntityPermissionPrefix,
   type DriveAttachmentEntityType,
 } from "@shared/schema";
-import { searchDriveFiles, listDriveFolders } from "../../googleDrive";
+import {
+  searchDriveFiles,
+  listDriveFolders,
+  listSharedDrives,
+} from "../../googleDrive";
 import type { Permission } from "../../../shared/permissions";
 
 const MINIMUM_DRIVE_ACCESS_PERMISSIONS: Permission[] = [
@@ -230,15 +234,21 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         });
       }
 
-      const query = req.query.q as string || "";
-      const pageToken = req.query.pageToken as string || "";
-      const parentId = req.query.parentId as string || "";
+      const query = (req.query.q as string) || "";
+      const pageToken = (req.query.pageToken as string) || "";
+      const parentId = (req.query.parentId as string) || "";
+      const driveId = (req.query.driveId as string) || "";
+      const sharedWithMe = req.query.sharedWithMe === "true";
 
       const data = await searchDriveFiles(
         accessToken,
         query,
         pageToken || undefined,
         parentId || undefined,
+        {
+          driveId: driveId || undefined,
+          sharedWithMe: sharedWithMe || undefined,
+        },
       );
       res.json(data);
     } catch (error) {
@@ -261,12 +271,40 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
         });
       }
 
-      const parentId = req.query.parentId as string | undefined;
-      const data = await listDriveFolders(accessToken, parentId || undefined);
+      const parentId = (req.query.parentId as string) || "";
+      const driveId = (req.query.driveId as string) || "";
+      const sharedWithMe = req.query.sharedWithMe === "true";
+
+      const data = await listDriveFolders(accessToken, parentId || undefined, {
+        driveId: driveId || undefined,
+        sharedWithMe: sharedWithMe || undefined,
+      });
       res.json(data);
     } catch (error) {
       console.error("Error listing Drive folders:", error);
       res.status(500).json({ message: "Failed to list Drive folders" });
+    }
+  });
+
+  app.get("/api/drive/shared-drives", isAuthenticated, loadPermissions, async (req: any, res) => {
+    try {
+      if (!checkAnyPermission(req, MINIMUM_DRIVE_ACCESS_PERMISSIONS)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const accessToken = await getDriveAccessToken(req.user.claims.sub, req.session);
+      if (!accessToken) {
+        return res.status(403).json({
+          message: "Google Drive access not authorized",
+          code: "drive_auth_required",
+        });
+      }
+
+      const data = await listSharedDrives(accessToken);
+      res.json(data);
+    } catch (error) {
+      console.error("Error listing Shared Drives:", error);
+      res.status(500).json({ message: "Failed to list Shared Drives" });
     }
   });
 }

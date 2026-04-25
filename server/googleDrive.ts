@@ -1,7 +1,7 @@
 import { type RichTextSegment, parseCssColor } from "./richTextParser";
 
 export async function getDriveFileMetadata(fileId: string, accessToken: string) {
-  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,mimeType,iconLink,webViewLink`;
+  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?supportsAllDrives=true&fields=id,name,mimeType,iconLink,webViewLink,driveId`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -15,18 +15,31 @@ export async function getDriveFileMetadata(fileId: string, accessToken: string) 
   return response.json();
 }
 
+export interface DriveScopeOptions {
+  driveId?: string;
+  sharedWithMe?: boolean;
+}
+
 export async function searchDriveFiles(
   accessToken: string,
   query: string,
   pageToken?: string,
   parentId?: string,
+  options?: DriveScopeOptions,
 ) {
+  const driveId = options?.driveId;
+  const sharedWithMe = options?.sharedWithMe;
+
   const params = new URLSearchParams({
-    fields: "files(id,name,mimeType,iconLink,webViewLink,modifiedTime,owners),nextPageToken",
-    pageSize: parentId ? "100" : "20",
-    orderBy: parentId
-      ? "folder,name"
-      : "modifiedByMeTime desc,viewedByMeTime desc",
+    fields:
+      "files(id,name,mimeType,iconLink,webViewLink,modifiedTime,owners,driveId),nextPageToken",
+    pageSize: parentId || driveId || sharedWithMe ? "100" : "20",
+    orderBy:
+      parentId || driveId
+        ? "folder,name"
+        : "modifiedByMeTime desc,viewedByMeTime desc",
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
   });
 
   const clauses: string[] = ["trashed=false"];
@@ -37,10 +50,27 @@ export async function searchDriveFiles(
       clauses.push(`name contains '${escaped}'`);
     }
   }
-  if (parentId) {
+
+  if (sharedWithMe) {
+    clauses.push("sharedWithMe=true");
+    params.set("corpora", "user");
+  } else if (driveId && !parentId) {
+    const escapedDriveId = driveId.replace(/'/g, "\\'");
+    clauses.push(`'${escapedDriveId}' in parents`);
+    params.set("corpora", "drive");
+    params.set("driveId", driveId);
+  } else if (parentId) {
     const escapedParent = parentId.replace(/'/g, "\\'");
     clauses.push(`'${escapedParent}' in parents`);
+    if (driveId) {
+      params.set("corpora", "drive");
+      params.set("driveId", driveId);
+    }
+  } else if (query) {
+    // Search across the user's personal Drive + all shared drives.
+    params.set("corpora", "allDrives");
   }
+
   params.set("q", clauses.join(" and "));
 
   if (pageToken) {
@@ -66,16 +96,35 @@ export async function searchDriveFiles(
 export async function listDriveFolders(
   accessToken: string,
   parentFolderId?: string,
+  options?: DriveScopeOptions,
 ) {
+  const driveId = options?.driveId;
+  const sharedWithMe = options?.sharedWithMe;
+
   const params = new URLSearchParams({
-    fields: "files(id,name,mimeType,modifiedTime),nextPageToken",
-    pageSize: "50",
+    fields: "files(id,name,mimeType,modifiedTime,driveId),nextPageToken",
+    pageSize: "100",
     orderBy: "name",
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
   });
 
   let q = "mimeType = 'application/vnd.google-apps.folder' and trashed=false";
-  if (parentFolderId) {
-    q += ` and '${parentFolderId}' in parents`;
+  if (sharedWithMe) {
+    q += " and sharedWithMe=true";
+    params.set("corpora", "user");
+  } else if (driveId && !parentFolderId) {
+    const escapedDriveId = driveId.replace(/'/g, "\\'");
+    q += ` and '${escapedDriveId}' in parents`;
+    params.set("corpora", "drive");
+    params.set("driveId", driveId);
+  } else if (parentFolderId) {
+    const escapedParent = parentFolderId.replace(/'/g, "\\'");
+    q += ` and '${escapedParent}' in parents`;
+    if (driveId) {
+      params.set("corpora", "drive");
+      params.set("driveId", driveId);
+    }
   } else {
     q += " and 'root' in parents";
   }
@@ -95,6 +144,33 @@ export async function listDriveFolders(
   }
 
   return response.json();
+}
+
+export interface SharedDrive {
+  id: string;
+  name: string;
+}
+
+export async function listSharedDrives(
+  accessToken: string,
+): Promise<{ drives: SharedDrive[]; nextPageToken?: string }> {
+  const params = new URLSearchParams({
+    fields: "drives(id,name),nextPageToken",
+    pageSize: "100",
+  });
+  const url = `https://www.googleapis.com/drive/v3/drives?${params.toString()}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to list shared drives: ${response.status} ${text}`);
+  }
+  const body = await response.json();
+  return { drives: body.drives ?? [], nextPageToken: body.nextPageToken };
 }
 
 export async function createGoogleDoc(
