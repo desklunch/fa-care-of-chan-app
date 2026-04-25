@@ -4,6 +4,33 @@ When a deal summary is generated from a Google Sheets template, the template
 can contain `{{token}}` placeholders that are replaced with deal data in the
 generated copy. The original template is never modified.
 
+## Intake field tokens
+
+Reference the value of an individual intake response by combining the
+template's `namespace` with the field's `id`:
+
+```
+{{intake:<namespace>:<field-id>}}
+```
+
+For example, the `Event Concept` field of a template with namespace
+`event-intake` is referenced as `{{intake:event-intake:field-event-concept}}`.
+
+Notes:
+
+- Each form template owns a unique, immutable `namespace` (slug). Sections
+  copied into a deal's intake snapshot remember the namespace they came from,
+  so tokens keep resolving even if the source template is later renamed or
+  edited.
+- When multiple templates have been merged into the same intake, every field
+  is addressed through its template's namespace, so identical field ids in
+  different templates never collide.
+- Sections that pre-date namespaces (or that were authored ad-hoc on a deal)
+  fall back to the reserved namespace `custom`, e.g.
+  `{{intake:custom:field-notes}}`.
+- A copy-token button is shown next to every field in the form builder and on
+  a deal's intake — use it to grab the exact token without typing.
+
 ## Block tokens
 
 ### `{{intake_fields}}`

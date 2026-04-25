@@ -34,6 +34,7 @@ class FormsStorage {
       .select({
         id: formTemplates.id,
         name: formTemplates.name,
+        namespace: formTemplates.namespace,
         description: formTemplates.description,
         category: formTemplates.category,
         formSchema: formTemplates.formSchema,
@@ -50,6 +51,7 @@ class FormsStorage {
     return templates.map((t) => ({
       id: t.id,
       name: t.name,
+      namespace: t.namespace,
       description: t.description,
       category: t.category,
       formSchema: t.formSchema as FormSection[],
@@ -71,6 +73,7 @@ class FormsStorage {
       .select({
         id: formTemplates.id,
         name: formTemplates.name,
+        namespace: formTemplates.namespace,
         description: formTemplates.description,
         category: formTemplates.category,
         formSchema: formTemplates.formSchema,
@@ -90,6 +93,7 @@ class FormsStorage {
     return {
       id: t.id,
       name: t.name,
+      namespace: t.namespace,
       description: t.description,
       category: t.category,
       formSchema: t.formSchema as FormSection[],
@@ -104,6 +108,14 @@ class FormsStorage {
           }
         : null,
     };
+  }
+
+  async getFormTemplateByNamespace(namespace: string): Promise<FormTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(formTemplates)
+      .where(eq(formTemplates.namespace, namespace));
+    return template;
   }
 
   async createFormTemplate(data: CreateFormTemplate, createdById: string): Promise<FormTemplate> {

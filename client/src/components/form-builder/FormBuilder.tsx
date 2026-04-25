@@ -65,9 +65,11 @@ import {
   Briefcase,
   Tag,
   Unlink,
+  Braces,
 } from "lucide-react";
 import type { FormSection, FormField, FormFieldType, EntityMapping } from "@shared/schema";
 import { mappableEntities } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 const textCompatibleTypes: FormFieldType[] = ["text", "textarea", "richtext", "email", "phone", "url"];
 
@@ -122,6 +124,7 @@ const fieldTypeLabels: Record<FormFieldType, string> = {
 interface FormBuilderProps {
   value: FormSection[];
   onChange: (sections: FormSection[]) => void;
+  templateNamespace?: string;
 }
 
 function generateId(): string {
@@ -131,12 +134,14 @@ function generateId(): string {
 interface SortableFieldProps {
   field: FormField;
   sectionId: string;
+  templateNamespace?: string;
   onEdit: (field: FormField) => void;
   onDelete: () => void;
   onDuplicate: () => void;
 }
 
-function SortableField({ field, onEdit, onDelete, onDuplicate }: SortableFieldProps) {
+function SortableField({ field, templateNamespace, onEdit, onDelete, onDuplicate }: SortableFieldProps) {
+  const { toast } = useToast();
   const {
     attributes,
     listeners,
@@ -145,6 +150,23 @@ function SortableField({ field, onEdit, onDelete, onDuplicate }: SortableFieldPr
     transition,
     isDragging,
   } = useSortable({ id: field.id });
+
+  const tokenString = `{{intake:${templateNamespace ?? "custom"}:${field.id}}}`;
+  const handleCopyToken = async () => {
+    try {
+      await navigator.clipboard.writeText(tokenString);
+      toast({
+        title: "Token copied",
+        description: tokenString,
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Copy failed",
+        description: "Could not copy token to clipboard.",
+      });
+    }
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -185,6 +207,15 @@ function SortableField({ field, onEdit, onDelete, onDuplicate }: SortableFieldPr
         <Button
           variant="ghost"
           size="icon"
+          onClick={handleCopyToken}
+          data-testid={`copy-token-field-${field.id}`}
+          title={`Copy ${tokenString}`}
+        >
+          <Braces className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => onEdit(field)}
           data-testid={`edit-field-${field.id}`}
         >
@@ -213,6 +244,7 @@ function SortableField({ field, onEdit, onDelete, onDuplicate }: SortableFieldPr
 
 interface SortableSectionProps {
   section: FormSection;
+  templateNamespace?: string;
   onUpdate: (section: FormSection) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -225,6 +257,7 @@ interface SortableSectionProps {
 
 function SortableSection({
   section,
+  templateNamespace,
   onUpdate,
   onDelete,
   onDuplicate,
@@ -357,6 +390,7 @@ function SortableSection({
                     key={field.id}
                     field={field}
                     sectionId={section.id}
+                    templateNamespace={templateNamespace}
                     onEdit={onEditField}
                     onDelete={() => onDeleteField(field.id)}
                     onDuplicate={() => onDuplicateField(field)}
@@ -718,7 +752,7 @@ function AddFieldDialog({ open, onOpenChange, onAdd }: AddFieldDialogProps) {
   );
 }
 
-export function FormBuilder({ value, onChange }: FormBuilderProps) {
+export function FormBuilder({ value, onChange, templateNamespace }: FormBuilderProps) {
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const [isFieldEditorOpen, setIsFieldEditorOpen] = useState(false);
   const [addFieldSectionId, setAddFieldSectionId] = useState<string | null>(null);
@@ -869,6 +903,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
               <SortableSection
                 key={section.id}
                 section={section}
+                templateNamespace={templateNamespace}
                 onUpdate={(s) => updateSection(section.id, s)}
                 onDelete={() => deleteSection(section.id)}
                 onDuplicate={() => duplicateSection(section)}

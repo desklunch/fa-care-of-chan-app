@@ -74,6 +74,7 @@ import { proposalsStorage } from "./domains/proposals/proposals.storage";
 import { registerEntityLinksRoutes } from "./domains/entity-links";
 import { registerEntityTasksRoutes } from "./domains/entity-tasks";
 import { migrateEntityTasks } from "./migrations/migrate-entity-tasks";
+import { migrateFormTemplateNamespaces } from "./migrations/migrate-form-template-namespaces";
 import { registerTypeformWebhookRoutes } from "./domains/typeform-webhook";
 import { initializeAuditBridge } from "./lib/audit-bridge";
 import { ensureReplitAgentUser } from "./mcp/index";
@@ -125,6 +126,9 @@ export async function registerRoutes(
   registerPlacesRoutes(app);
   registerVenuesRoutes(app);
   registerFormsRoutes(app);
+  await migrateFormTemplateNamespaces();
+  // Intake template seeding intentionally disabled — templates are now
+  // created/managed only by users via the Form Templates UI.
   await seedDealStatuses();
   await seedRoles();
   await seedBuiltInThemes();

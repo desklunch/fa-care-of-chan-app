@@ -1,6 +1,7 @@
 import { dealsStorage } from "./deals.storage";
 import { DealsService } from "./deals.service";
 import {
+  buildIntakeFieldKey,
   type FormSection,
   type FormField,
   mappableEntities,
@@ -52,11 +53,14 @@ export async function computeIntakeSync(
   const formSchema = intake.formSchema as FormSection[];
   const responseData = intake.responseData as Record<string, unknown>;
 
-  const mappedFields: FormField[] = [];
+  const mappedFields: { field: FormField; key: string }[] = [];
   for (const section of formSchema) {
     for (const field of section.fields) {
       if (field.entityMapping?.entityType === "deal" && field.entityMapping?.propertyKey) {
-        mappedFields.push(field);
+        mappedFields.push({
+          field,
+          key: buildIntakeFieldKey(section.templateNamespace, field.id),
+        });
       }
     }
   }
@@ -65,9 +69,9 @@ export async function computeIntakeSync(
   const dealUpdates: Record<string, unknown> = {};
   let tagIds: string[] | null = null;
 
-  for (const field of mappedFields) {
+  for (const { field, key } of mappedFields) {
     const propKey = field.entityMapping!.propertyKey;
-    const responseValue = responseData[field.id];
+    const responseValue = responseData[key];
 
     if (responseValue === undefined || responseValue === null || responseValue === "") continue;
     if (Array.isArray(responseValue) && responseValue.length === 0) continue;

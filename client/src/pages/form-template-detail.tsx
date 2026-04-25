@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DuplicateTemplateDialog } from "@/components/form-builder/DuplicateTemplateDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +46,6 @@ import {
 } from "@/components/form-builder/FormFieldRenderer";
 import type {
   FormTemplate,
-  InsertFormTemplate,
   FormSection,
 } from "@shared/schema";
 
@@ -87,37 +87,7 @@ export default function FormTemplateDetailPage() {
 
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const duplicateMutation = useMutation({
-    mutationFn: async (data: InsertFormTemplate) => {
-      const res = await apiRequest("POST", "/api/form-templates", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      toast({
-        title: "Template duplicated",
-        description: "Form template has been duplicated successfully.",
-      });
-      navigate(backPath);
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          variant: "destructive",
-          title: "Session expired",
-          description: "Please log in again.",
-        });
-        navigate("/");
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to duplicate template.",
-        });
-      }
-    },
-  });
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async (templateId: string) => {
@@ -235,14 +205,7 @@ export default function FormTemplateDetailPage() {
         {
           label: "Duplicate",
           icon: Copy,
-          onClick: () => {
-            duplicateMutation.mutate({
-              name: `${template.name} (Copy)`,
-              description: template.description,
-              category: template.category,
-              formSchema: template.formSchema,
-            } as InsertFormTemplate);
-          },
+          onClick: () => setShowDuplicateDialog(true),
         },
         {
           label: "Delete",
@@ -266,6 +229,12 @@ export default function FormTemplateDetailPage() {
                 <Label className="text-muted-foreground">Name</Label>
                 <p className="font-medium" data-testid="text-template-name">
                   {template.name}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Namespace</Label>
+                <p className="font-mono text-sm" data-testid="text-template-namespace">
+                  {template.namespace}
                 </p>
               </div>
               <div>
@@ -308,6 +277,13 @@ export default function FormTemplateDetailPage() {
           <InteractiveFormPreview schema={formSchema} />
         </div>
       </div>
+
+      <DuplicateTemplateDialog
+        template={template}
+        open={showDuplicateDialog}
+        onOpenChange={setShowDuplicateDialog}
+        onDuplicated={() => navigate(backPath)}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

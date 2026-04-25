@@ -1,2 +1,7 @@
 export { FormBuilder } from "./FormBuilder";
-export { FormFieldRenderer, buildValidationRules, buildDefaultValues } from "./FormFieldRenderer";
+export {
+  FormFieldRenderer,
+  buildValidationRules,
+  buildDefaultValues,
+  buildIntakeDefaultValues,
+} from "./FormFieldRenderer";

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { PageLayout } from "@/framework";
@@ -7,9 +7,11 @@ import { DataGridPage } from "@/components/data-grid";
 import { DateCellRenderer } from "@/components/data-grid/cell-renderers";
 import type { ColumnConfig, FilterConfig } from "@/components/data-grid/types";
 import { Badge } from "@/components/ui/badge";
-import { CircleFadingPlus, Tag, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CircleFadingPlus, Copy, Tag, User } from "lucide-react";
 import type { FormTemplate, FormTemplateWithRelations } from "@shared/schema";
 import type { ICellRendererParams } from "ag-grid-community";
+import { DuplicateTemplateDialog } from "@/components/form-builder/DuplicateTemplateDialog";
 
 function NameCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
   if (!data) return null;
@@ -17,6 +19,42 @@ function NameCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
     <span className="font-medium" data-testid={`text-template-name-${data.id}`}>
       {data.name}
     </span>
+  );
+}
+
+function NamespaceCellRenderer({ data }: ICellRendererParams<FormTemplate>) {
+  if (!data) return null;
+  return (
+    <span className="font-mono text-xs" data-testid={`text-template-namespace-${data.id}`}>
+      {data.namespace}
+    </span>
+  );
+}
+
+interface TemplateGridContext {
+  onDuplicate: (template: FormTemplate) => void;
+}
+
+function ActionsCellRenderer(
+  params: ICellRendererParams<FormTemplate, unknown, TemplateGridContext>,
+) {
+  const { data, context } = params;
+  if (!data || !context) return null;
+  return (
+    <div className="flex items-center justify-end pr-1">
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={(e) => {
+          e.stopPropagation();
+          context.onDuplicate(data);
+        }}
+        data-testid={`button-duplicate-template-${data.id}`}
+        title="Duplicate"
+      >
+        <Copy className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }
 
@@ -61,6 +99,17 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
       flex: 2,
       minWidth: 200,
       cellRenderer: NameCellRenderer,
+    },
+  },
+  {
+    id: "namespace",
+    headerName: "Namespace",
+    field: "namespace",
+    category: "Info",
+    colDef: {
+      flex: 1,
+      minWidth: 160,
+      cellRenderer: NamespaceCellRenderer,
     },
   },
   {
@@ -113,6 +162,20 @@ const templateColumns: ColumnConfig<FormTemplate>[] = [
       cellRenderer: DateCellRenderer,
     },
   },
+  {
+    id: "actions",
+    headerName: "",
+    category: "Info",
+    colDef: {
+      width: 64,
+      minWidth: 64,
+      maxWidth: 64,
+      cellRenderer: ActionsCellRenderer,
+      sortable: false,
+      filter: false,
+      resizable: false,
+    },
+  },
 ];
 
 const templateFilters: FilterConfig<FormTemplate>[] = [
@@ -134,10 +197,12 @@ const templateFilters: FilterConfig<FormTemplate>[] = [
 
 const defaultVisibleColumns = [
   "name",
+  "namespace",
   "category",
   "description",
   "createdBy",
   "createdAt",
+  "actions",
 ];
 
 export default function AdminFormTemplatesPage() {
@@ -145,11 +210,18 @@ export default function AdminFormTemplatesPage() {
   const [, navigate] = useProtectedLocation();
   const { isLoading: isAuthLoading, isAuthenticated, user } = useAuth();
 
+  const [duplicateTarget, setDuplicateTarget] = useState<FormTemplate | null>(null);
+
   const handleRowClick = useCallback(
     (template: FormTemplate) => {
       navigate(`/forms/${template.id}`);
     },
     [navigate],
+  );
+
+  const gridContext = useMemo<TemplateGridContext>(
+    () => ({ onDuplicate: (template) => setDuplicateTarget(template) }),
+    [],
   );
 
   if (isAuthLoading) {
@@ -192,6 +264,14 @@ export default function AdminFormTemplatesPage() {
         getRowId={(template: FormTemplate) => template.id}
         emptyMessage="No form templates yet"
         emptyDescription="Create a template to get started with custom forms."
+        context={gridContext}
+      />
+      <DuplicateTemplateDialog
+        template={duplicateTarget}
+        open={!!duplicateTarget}
+        onOpenChange={(open) => {
+          if (!open) setDuplicateTarget(null);
+        }}
       />
     </PageLayout>
   );

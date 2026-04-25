@@ -1,4 +1,5 @@
 import { Express } from "express";
+import { randomUUID } from "crypto";
 import { isAuthenticated, isAdmin } from "../../googleAuth";
 import { getDriveAccessToken } from "../../googleAuth";
 import { requirePermission, loadPermissions, checkPermission } from "../../middleware/permissions";
@@ -7,7 +8,7 @@ import { handleServiceError } from "../../lib/route-helpers";
 import { domainEvents } from "../../lib/events";
 import { storage } from "../../storage";
 import { DealsService } from "./deals.service";
-import { type DealStatus, type DealStatusRecord, type FormSection, type FormField, type DealWithRelations, type DealEvent, type DealLocation, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
+import { buildIntakeFieldKey, type DealStatus, type DealStatusRecord, type FormSection, type FormField, type DealWithRelations, type DealEvent, type DealLocation, insertDealIntakeSchema, updateDealIntakeSchema, insertDealStatusSchema, mappableEntities } from "@shared/schema";
 import { dealsStorage } from "./deals.storage";
 import { referenceDataStorage } from "../reference-data/reference-data.storage";
 import { formsStorage } from "../forms/forms.storage";
@@ -843,11 +844,15 @@ export function registerDealsRoutes(app: Express): void {
       }
 
       const actorId = req.user.claims.sub;
+      const stampedFormSchema = (template.formSchema || []).map((section) => ({
+        ...section,
+        templateNamespace: template.namespace,
+      }));
       const intakeData = {
         dealId: req.params.dealId,
         templateId: template.id,
         templateName: template.name,
-        formSchema: template.formSchema,
+        formSchema: stampedFormSchema,
         responseData: {},
         status: "draft" as const,
       };
@@ -872,6 +877,76 @@ export function registerDealsRoutes(app: Express): void {
       res.status(201).json(intake);
     } catch (error) {
       handleServiceError(res, error, "Failed to create deal intake");
+    }
+  });
+
+  app.post("/api/deals/:dealId/intake/merge", isAuthenticated, async (req: any, res) => {
+    try {
+      const { templateId } = req.body;
+      if (!templateId) {
+        return res.status(400).json({ message: "templateId is required" });
+      }
+
+      const existing = await dealsStorage.getDealIntake(req.params.dealId);
+      if (!existing) {
+        return res.status(404).json({ message: "No intake exists for this deal yet. Create one first." });
+      }
+      if (existing.status !== "draft") {
+        return res.status(400).json({ message: "Templates can only be merged into a draft intake." });
+      }
+
+      const template = await formsStorage.getFormTemplateById(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      const categoryLower = (template.category ?? "").toLowerCase();
+      const isIntakeTemplate =
+        categoryLower.includes("intake") || categoryLower.includes("questionnaire");
+      if (!isIntakeTemplate) {
+        return res.status(400).json({
+          message:
+            "Only client intake templates can be merged into a deal intake.",
+        });
+      }
+
+      const currentSections = (existing.formSchema as FormSection[]) || [];
+      const alreadyMerged = currentSections.some(
+        (section) => section.templateNamespace === template.namespace,
+      );
+      if (alreadyMerged) {
+        return res.status(409).json({
+          message: `Template "${template.name}" is already merged into this intake.`,
+        });
+      }
+
+      // Regenerate section IDs at merge time so two templates that happen
+      // to ship overlapping section IDs (common across seeded templates)
+      // do not collide inside one intake. Field IDs are kept stable —
+      // they are already namespace-scoped via buildIntakeFieldKey.
+      const newSections = (template.formSchema || []).map((section) => ({
+        ...section,
+        id: `section-${template.namespace}-${randomUUID().slice(0, 8)}`,
+        templateNamespace: template.namespace,
+      }));
+      const mergedSchema = [...currentSections, ...newSections];
+
+      const intake = await dealsStorage.updateDealIntake(req.params.dealId, {
+        formSchema: mergedSchema,
+      });
+
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:intake_updated",
+        intakeId: existing.id,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
+      });
+
+      res.json(intake);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to merge template into deal intake");
     }
   });
 
@@ -1516,9 +1591,15 @@ function buildTokenMap(
   if (intake && intake.formSchema && intake.responseData) {
     const responseData = intake.responseData;
     for (const section of intake.formSchema) {
+      const ns = section.templateNamespace ?? "custom";
       for (const field of section.fields) {
-        const stringValue = formatIntakeFieldValue(field, responseData[field.id], servicesMap);
-        const tokenKey = `intake:${field.id}`;
+        const responseKey = buildIntakeFieldKey(ns, field.id);
+        const stringValue = formatIntakeFieldValue(
+          field,
+          responseData[responseKey],
+          servicesMap,
+        );
+        const tokenKey = `intake:${ns}:${field.id}`;
         map.set(tokenKey, stringValue);
         if (field.type === "richtext") {
           richTextKeys.add(tokenKey);
@@ -1604,8 +1685,14 @@ function buildIntakeBlockRows(
   for (const section of intake.formSchema) {
     if (!section.fields || section.fields.length === 0) continue;
     rows.push({ kind: "section", title: section.title || "" });
+    const ns = section.templateNamespace ?? "custom";
     for (const field of section.fields) {
-      const stringValue = formatIntakeFieldValue(field, responseData[field.id], servicesMap);
+      const responseKey = buildIntakeFieldKey(ns, field.id);
+      const stringValue = formatIntakeFieldValue(
+        field,
+        responseData[responseKey],
+        servicesMap,
+      );
       const fieldAny = field as unknown as { label?: string; name?: string };
       rows.push({
         kind: "field",

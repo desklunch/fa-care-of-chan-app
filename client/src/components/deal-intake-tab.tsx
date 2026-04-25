@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -41,7 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   FormFieldRenderer,
-  buildDefaultValues,
+  buildIntakeDefaultValues,
 } from "@/components/form-builder";
 import {
   FileText,
@@ -62,12 +64,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { format } from "date-fns";
-import type {
-  DealIntakeWithRelations,
-  FormTemplate,
-  FormSection,
-  FormField,
+import {
+  buildIntakeFieldKey,
+  type DealIntakeWithRelations,
+  type FormTemplate,
+  type FormSection,
+  type FormField,
 } from "@shared/schema";
 
 interface DealIntakeTabProps {
@@ -151,7 +168,11 @@ function ReadOnlySectionCard({
         <CollapsibleContent>
           <div className="space-y-4 pt-6">
             {section.fields.map((field) => {
-              const value = responseData[field.id];
+              const key = buildIntakeFieldKey(
+                section.templateNamespace,
+                field.id,
+              );
+              const value = responseData[key];
               const displayValue = formatReadOnlyValue(field, value);
 
               return (
@@ -215,6 +236,32 @@ function isIntakeCategory(category: string | null | undefined): boolean {
   if (!category) return false;
   const lower = category.toLowerCase();
   return lower.includes("intake") || lower.includes("questionnaire");
+}
+
+/**
+ * Errors thrown by `apiRequest` are formatted as `"<status>: <body>"` where
+ * `<body>` is typically a JSON payload like `{"message":"…"}`. Surface the
+ * server-provided `message` when present so toasts read cleanly instead of
+ * showing raw status + JSON.
+ */
+function extractApiErrorMessage(error: Error): string {
+  const raw = error.message ?? "";
+  const colonIdx = raw.indexOf(":");
+  if (colonIdx > -1) {
+    const body = raw.slice(colonIdx + 1).trim();
+    if (body.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(body) as { message?: unknown };
+        if (typeof parsed.message === "string" && parsed.message.length > 0) {
+          return parsed.message;
+        }
+      } catch {
+        // fall through to raw message
+      }
+    }
+    if (body.length > 0) return body;
+  }
+  return raw || "An unexpected error occurred.";
 }
 
 function IntakeEmptyState({
@@ -431,6 +478,10 @@ function IntakeDraftForm({
 }) {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [selectedMergeIds, setSelectedMergeIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
@@ -439,10 +490,110 @@ function IntakeDraftForm({
     intake.formSchema as FormSection[],
   );
 
+  const isDraft = intake.status === "draft";
+  const canMerge = canWrite && isDraft;
+
+  const { data: allMergeTemplates = [] } = useQuery<FormTemplate[]>({
+    queryKey: ["/api/form-templates"],
+    enabled: canMerge,
+  });
+
+  const usedNamespaces = new Set(
+    localFormSchema
+      .map((s) => s.templateNamespace)
+      .filter((n): n is string => !!n),
+  );
+  const intakeMergeTemplates = allMergeTemplates.filter((t) =>
+    isIntakeCategory(t.category),
+  );
+  const mergeTemplateOptions = intakeMergeTemplates.map((t) => ({
+    template: t,
+    alreadyMerged: usedNamespaces.has(t.namespace),
+  }));
+
+  const mergeMutation = useMutation({
+    mutationFn: async (templateIds: string[]) => {
+      // Flush any pending autosave so the server has the user's latest
+      // edits before we merge — otherwise the merge response (which echoes
+      // persisted responseData) could overwrite them on the local reset.
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+        const pendingValues = form.getValues();
+        setSaveStatus("saving");
+        await autosaveMutation.mutateAsync({ responseData: pendingValues });
+      }
+
+      const mergedNames: string[] = [];
+      let latestIntake: DealIntakeWithRelations | null = null;
+      for (const templateId of templateIds) {
+        const res = await apiRequest(
+          "POST",
+          `/api/deals/${dealId}/intake/merge`,
+          { templateId },
+        );
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error(
+            "Server returned an unexpected response. Please try again.",
+          );
+        }
+        const updated = (await res.json()) as DealIntakeWithRelations;
+        latestIntake = updated;
+        const tmpl = allMergeTemplates.find((t) => t.id === templateId);
+        if (tmpl) mergedNames.push(tmpl.name);
+      }
+      return { latestIntake, mergedNames };
+    },
+    onSuccess: ({ latestIntake, mergedNames }) => {
+      // Apply the latest server-returned schema/data immediately so the
+      // appended sections and fields appear without waiting for refetch.
+      if (latestIntake) {
+        const newSchema = latestIntake.formSchema as FormSection[];
+        const newResponseData = latestIntake.responseData as Record<
+          string,
+          unknown
+        >;
+        setLocalFormSchema(newSchema);
+        const merged = {
+          ...buildIntakeDefaultValues(newSchema),
+          ...newResponseData,
+        };
+        form.reset(merged);
+        isInitialMount.current = true;
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["/api/deals", dealId, "intake"],
+      });
+      const description =
+        mergedNames.length === 1
+          ? `Sections from "${mergedNames[0]}" were appended to this intake.`
+          : `Sections from ${mergedNames.length} templates (${mergedNames
+              .map((n) => `"${n}"`)
+              .join(", ")}) were appended to this intake.`;
+      toast({
+        title:
+          mergedNames.length === 1
+            ? "Template merged"
+            : `${mergedNames.length} templates merged`,
+        description,
+      });
+      setShowMergeDialog(false);
+      setSelectedMergeIds(new Set());
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to merge template",
+        description: extractApiErrorMessage(error),
+      });
+    },
+  });
+
   const existingData = intake.responseData as Record<string, unknown>;
 
   const defaultValues = {
-    ...buildDefaultValues(localFormSchema),
+    ...buildIntakeDefaultValues(localFormSchema),
     ...existingData,
   };
 
@@ -454,7 +605,7 @@ function IntakeDraftForm({
     const schema = intake.formSchema as FormSection[];
     setLocalFormSchema(schema);
     const merged = {
-      ...buildDefaultValues(schema),
+      ...buildIntakeDefaultValues(schema),
       ...existingData,
     };
     form.reset(merged);
@@ -553,6 +704,10 @@ function IntakeDraftForm({
 
   const handleDeleteField = useCallback(
     (sectionId: string, fieldId: string) => {
+      const targetSection = localFormSchema.find((s) => s.id === sectionId);
+      const ns = targetSection?.templateNamespace;
+      const fieldKey = buildIntakeFieldKey(ns, fieldId);
+
       const updatedSchema = localFormSchema.map((section) => {
         if (section.id === sectionId) {
           return {
@@ -564,11 +719,11 @@ function IntakeDraftForm({
       });
 
       setLocalFormSchema(updatedSchema);
-      form.unregister(fieldId);
+      form.unregister(fieldKey);
 
       setSaveStatus("saving");
       const currentValues = form.getValues();
-      const { [fieldId]: _removed, ...cleanedValues } = currentValues;
+      const { [fieldKey]: _removed, ...cleanedValues } = currentValues;
       autosaveMutation.mutate({
         formSchema: updatedSchema,
         responseData: cleanedValues,
@@ -587,6 +742,10 @@ function IntakeDraftForm({
         placeholder: "",
       };
 
+      const targetSection = localFormSchema.find((s) => s.id === sectionId);
+      const ns = targetSection?.templateNamespace;
+      const fieldKey = buildIntakeFieldKey(ns, newFieldId);
+
       const updatedSchema = localFormSchema.map((section) => {
         if (section.id === sectionId) {
           return { ...section, fields: [...section.fields, newField] };
@@ -595,13 +754,13 @@ function IntakeDraftForm({
       });
 
       setLocalFormSchema(updatedSchema);
-      form.setValue(newFieldId, "");
+      form.setValue(fieldKey, "");
 
       setSaveStatus("saving");
       const currentValues = form.getValues();
       autosaveMutation.mutate({
         formSchema: updatedSchema,
-        responseData: { ...currentValues, [newFieldId]: "" },
+        responseData: { ...currentValues, [fieldKey]: "" },
       });
     },
     [localFormSchema, form, autosaveMutation],
@@ -675,7 +834,6 @@ function IntakeDraftForm({
     (sectionId: string) => {
       const target = localFormSchema.find((s) => s.id === sectionId);
       if (!target) return;
-      if (target.fields.length > 0) return;
 
       const updatedSchema = localFormSchema.filter(
         (section) => section.id !== sectionId,
@@ -683,8 +841,16 @@ function IntakeDraftForm({
 
       setLocalFormSchema(updatedSchema);
 
+      const currentValues = { ...form.getValues() };
+      for (const field of target.fields) {
+        const key = buildIntakeFieldKey(target.templateNamespace, field.id);
+        if (key in currentValues) {
+          delete currentValues[key];
+          form.unregister(key);
+        }
+      }
+
       setSaveStatus("saving");
-      const currentValues = form.getValues();
       autosaveMutation.mutate({
         formSchema: updatedSchema,
         responseData: currentValues,
@@ -818,6 +984,7 @@ function IntakeDraftForm({
           <FormFieldRenderer
             schema={localFormSchema}
             form={form as never}
+            showCopyToken
             onAddField={
               canWrite && intake.status === "draft" ? handleAddField : undefined
             }
@@ -851,9 +1018,142 @@ function IntakeDraftForm({
                 ? handleMoveField
                 : undefined
             }
+            onMergeTemplate={canMerge ? () => setShowMergeDialog(true) : undefined}
           />
         </div>
       </Form>
+
+      <Dialog
+        open={showMergeDialog}
+        onOpenChange={(open) => {
+          setShowMergeDialog(open);
+          if (!open) setSelectedMergeIds(new Set());
+        }}
+      >
+        <DialogContent data-testid="dialog-merge-template">
+          <DialogHeader>
+            <DialogTitle>Add from template</DialogTitle>
+            <DialogDescription>
+              Pick one or more client intake templates to append their sections
+              to this draft intake. Templates whose namespace is already
+              present cannot be added again.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {mergeTemplateOptions.length === 0 ? (
+              <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+                No client intake templates available.
+              </div>
+            ) : (
+              <ScrollArea className="h-72 rounded-md border">
+                <TooltipProvider delayDuration={200}>
+                  <div className="p-1">
+                    {mergeTemplateOptions.map(
+                      ({ template: t, alreadyMerged }) => {
+                        const checked = selectedMergeIds.has(t.id);
+                        const row = (
+                          <label
+                            key={t.id}
+                            htmlFor={`merge-template-${t.id}`}
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-md p-3",
+                              alreadyMerged
+                                ? "cursor-not-allowed opacity-60"
+                                : "hover-elevate",
+                            )}
+                            data-testid={`option-merge-template-${t.id}`}
+                            data-already-merged={
+                              alreadyMerged ? "true" : "false"
+                            }
+                          >
+                            <Checkbox
+                              id={`merge-template-${t.id}`}
+                              checked={checked}
+                              disabled={alreadyMerged}
+                              onCheckedChange={(value) => {
+                                setSelectedMergeIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (value === true) {
+                                    next.add(t.id);
+                                  } else {
+                                    next.delete(t.id);
+                                  }
+                                  return next;
+                                });
+                              }}
+                              data-testid={`checkbox-merge-template-${t.id}`}
+                            />
+                            <div className="flex min-w-0 flex-1 flex-col">
+                              <span className="flex items-center gap-2 text-sm font-medium">
+                                <span className="truncate">{t.name}</span>
+                                <span className="text-xs font-normal text-muted-foreground">
+                                  ({t.namespace})
+                                </span>
+                              </span>
+                              {t.description && (
+                                <span className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                                  {t.description}
+                                </span>
+                              )}
+                            </div>
+                          </label>
+                        );
+                        if (!alreadyMerged) return row;
+                        return (
+                          <Tooltip key={t.id}>
+                            <TooltipTrigger asChild>
+                              <div>{row}</div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              Already merged into this intake
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      },
+                    )}
+                  </div>
+                </TooltipProvider>
+              </ScrollArea>
+            )}
+            {selectedMergeIds.size > 0 && (
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="text-merge-template-count"
+              >
+                {selectedMergeIds.size} template
+                {selectedMergeIds.size === 1 ? "" : "s"} selected
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setShowMergeDialog(false)}
+              data-testid="button-cancel-merge-template"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedMergeIds.size === 0) return;
+                mergeMutation.mutate(Array.from(selectedMergeIds));
+              }}
+              disabled={
+                selectedMergeIds.size === 0 || mergeMutation.isPending
+              }
+              data-testid="button-confirm-merge-template"
+            >
+              {mergeMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
+              Add{" "}
+              {selectedMergeIds.size > 1
+                ? `${selectedMergeIds.size} templates`
+                : "template"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
@@ -896,7 +1196,8 @@ function hasMappedFieldsWithData(
         field.entityMapping?.entityType === "deal" &&
         field.entityMapping?.propertyKey
       ) {
-        const value = responseData[field.id];
+        const value =
+          responseData[buildIntakeFieldKey(section.templateNamespace, field.id)];
         if (value !== undefined && value !== null && value !== "") {
           if (Array.isArray(value) && value.length === 0) continue;
           if (

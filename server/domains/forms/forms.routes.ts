@@ -2,7 +2,17 @@ import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
 import { formsStorage } from "./forms.storage";
 import { logAuditEvent } from "../../audit";
-import { insertFormTemplateSchema, updateFormTemplateSchema, insertFormRequestSchema, updateFormRequestSchema, insertFormResponseSchema, RecipientType } from "@shared/schema";
+import {
+  insertFormTemplateSchema,
+  updateFormTemplateSchema,
+  insertFormRequestSchema,
+  updateFormRequestSchema,
+  insertFormResponseSchema,
+  RecipientType,
+  FORM_TEMPLATE_NAMESPACE_REGEX,
+  RESERVED_FORM_TEMPLATE_NAMESPACE,
+  type FormSection,
+} from "@shared/schema";
 import { sendFormRequestEmail } from "../../email";
 import { domainEvents } from "../../lib/events";
 
@@ -41,6 +51,14 @@ export function registerFormsRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }
 
+      // Enforce namespace uniqueness up-front for a friendly error
+      const existing = await formsStorage.getFormTemplateByNamespace(result.data.namespace);
+      if (existing) {
+        return res.status(409).json({
+          message: `Namespace "${result.data.namespace}" is already in use by another template.`,
+        });
+      }
+
       const userId = req.user.claims.sub;
       const template = await formsStorage.createFormTemplate(result.data, userId);
 
@@ -49,7 +67,7 @@ export function registerFormsRoutes(app: Express): void {
         entityType: "form_template",
         entityId: template.id,
         status: "success",
-        metadata: { name: template.name },
+        metadata: { name: template.name, namespace: template.namespace },
       });
 
       res.status(201).json(template);
@@ -65,9 +83,85 @@ export function registerFormsRoutes(app: Express): void {
     }
   });
 
+  app.post("/api/form-templates/:id/duplicate", isAuthenticated, async (req: any, res) => {
+    try {
+      const source = await formsStorage.getFormTemplateById(req.params.id);
+      if (!source) {
+        return res.status(404).json({ message: "Form template not found" });
+      }
+
+      const { name, namespace } = req.body ?? {};
+      if (typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      if (typeof namespace !== "string" || namespace.trim().length === 0) {
+        return res.status(400).json({ message: "Namespace is required" });
+      }
+      if (!FORM_TEMPLATE_NAMESPACE_REGEX.test(namespace)) {
+        return res.status(400).json({
+          message: "Namespace must use lowercase letters, numbers, and hyphens (e.g. event-production)",
+        });
+      }
+      if (namespace === RESERVED_FORM_TEMPLATE_NAMESPACE) {
+        return res.status(400).json({
+          message: `"${RESERVED_FORM_TEMPLATE_NAMESPACE}" is reserved and cannot be used as a namespace`,
+        });
+      }
+
+      const conflict = await formsStorage.getFormTemplateByNamespace(namespace);
+      if (conflict) {
+        return res.status(409).json({
+          message: `Namespace "${namespace}" is already in use by another template.`,
+        });
+      }
+
+      const sourceSections = Array.isArray(source.formSchema)
+        ? (source.formSchema as FormSection[])
+        : [];
+      const duplicatedSchema: FormSection[] = sourceSections.map((section) => ({
+        ...section,
+        templateNamespace: namespace,
+        fields: Array.isArray(section.fields)
+          ? section.fields.map((field) => ({ ...field }))
+          : [],
+      }));
+
+      const userId = req.user.claims.sub;
+      const template = await formsStorage.createFormTemplate(
+        {
+          name: name.trim(),
+          namespace,
+          description: source.description ?? null,
+          category: source.category ?? null,
+          formSchema: duplicatedSchema,
+        },
+        userId,
+      );
+
+      await logAuditEvent(req, {
+        action: "create",
+        entityType: "form_template",
+        entityId: template.id,
+        status: "success",
+        metadata: {
+          name: template.name,
+          namespace: template.namespace,
+          duplicatedFrom: source.id,
+        },
+      });
+
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error duplicating form template:", error);
+      res.status(500).json({ message: "Failed to duplicate form template" });
+    }
+  });
+
   app.patch("/api/form-templates/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const result = updateFormTemplateSchema.safeParse(req.body);
+      // Strip namespace defensively; it is immutable after creation.
+      const { namespace: _ignoredNamespace, ...sanitized } = (req.body ?? {}) as Record<string, unknown>;
+      const result = updateFormTemplateSchema.safeParse(sanitized);
       if (!result.success) {
         return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
       }

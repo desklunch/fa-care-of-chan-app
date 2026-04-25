@@ -24,12 +24,6 @@ import {
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
 import { TagAssignment } from "@/components/ui/tag-assignment";
@@ -45,7 +39,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, CircleFadingPlus, ClipboardCopy, FilePlus, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +57,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { FormSection, FormField as FormFieldType, DealLocation, DealEvent, DealService } from "@shared/schema";
+import {
+  buildIntakeFieldKey,
+  type FormSection,
+  type FormField as FormFieldType,
+  type DealLocation,
+  type DealEvent,
+  type DealService,
+} from "@shared/schema";
 
 interface FormFieldRendererProps {
   schema: FormSection[];
@@ -78,6 +80,13 @@ interface FormFieldRendererProps {
     fieldId: string,
     direction: "up" | "down",
   ) => void;
+  showCopyToken?: boolean;
+  /**
+   * Optional callback to open a "merge from template" flow. When provided,
+   * an "Add from template" button is rendered next to "Create new section"
+   * at the bottom of the form.
+   */
+  onMergeTemplate?: () => void;
 }
 
 interface SingleFieldRendererProps {
@@ -87,6 +96,7 @@ interface SingleFieldRendererProps {
   onMoveField?: (fieldId: string, direction: "up" | "down") => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  intakeNamespace?: string;
 }
 
 function renderFieldInput(
@@ -344,14 +354,34 @@ function SingleFieldRenderer({
   onMoveField,
   canMoveUp,
   canMoveDown,
+  intakeNamespace,
 }: SingleFieldRendererProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { toast } = useToast();
+  const tokenString = `{{intake:${intakeNamespace ?? "custom"}:${field.id}}}`;
+  const formFieldName =
+    intakeNamespace !== undefined
+      ? buildIntakeFieldKey(intakeNamespace, field.id)
+      : field.id;
+  const handleCopyToken = async () => {
+    try {
+      await navigator.clipboard.writeText(tokenString);
+      toast({ title: "Token copied", description: tokenString });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Copy failed",
+        description: "Could not copy token to clipboard.",
+      });
+    }
+  };
+  const showActions = !!(onMoveField || onDeleteField || intakeNamespace !== undefined);
 
   return (
     <>
       <FormField
         control={form.control}
-        name={field.id}
+        name={formFieldName}
         render={({ field: formField }) => (
           <FormItem
             className="group/field grid grid-cols-3 gap-4 items-start"
@@ -369,7 +399,7 @@ function SingleFieldRenderer({
                 >
                   {field.name}
                 </FormLabel>
-                {(onMoveField || onDeleteField) && (
+                {showActions && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -415,6 +445,18 @@ function SingleFieldRenderer({
                             Move Down
                           </DropdownMenuItem>
                         </>
+                      )}
+                      {intakeNamespace !== undefined && (
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            handleCopyToken();
+                          }}
+                          data-testid={`button-copy-token-${field.id}`}
+                        >
+                          <ClipboardCopy className="h-4 w-4 mr-2" />
+                          Copy merge token
+                        </DropdownMenuItem>
                       )}
                       {onDeleteField && (
                         <DropdownMenuItem
@@ -489,6 +531,7 @@ interface SectionRendererProps {
   ) => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  showCopyToken?: boolean;
 }
 
 function SectionRenderer({
@@ -503,6 +546,7 @@ function SectionRenderer({
   onMoveField,
   canMoveUp,
   canMoveDown,
+  showCopyToken,
 }: SectionRendererProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -535,8 +579,6 @@ function SectionRenderer({
     setNewFieldTitle("");
     setShowAddDialog(false);
   };
-
-  const canDeleteSection = section.fields.length === 0;
 
   return (
     <Card className="p-4" data-testid={`section-${section.id}`}>
@@ -627,34 +669,14 @@ function SectionRenderer({
                   </DropdownMenuItem>
                 )}
                 {onDeleteSection && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <DropdownMenuItem
-                            disabled={!canDeleteSection}
-                            onSelect={(e) => {
-                              if (!canDeleteSection) {
-                                e.preventDefault();
-                                return;
-                              }
-                              setShowDeleteSectionConfirm(true);
-                            }}
-                            className="text-destructive focus:text-destructive"
-                            data-testid={`button-delete-section-${section.id}`}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete section
-                          </DropdownMenuItem>
-                        </div>
-                      </TooltipTrigger>
-                      {!canDeleteSection && (
-                        <TooltipContent side="left">
-                          Remove all fields before deleting this section
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
+                  <DropdownMenuItem
+                    onSelect={() => setShowDeleteSectionConfirm(true)}
+                    className="text-destructive focus:text-destructive"
+                    data-testid={`button-delete-section-${section.id}`}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete section
+                  </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -676,6 +698,9 @@ function SectionRenderer({
                 }
                 canMoveUp={fieldIndex > 0}
                 canMoveDown={fieldIndex < section.fields.length - 1}
+                intakeNamespace={
+                  showCopyToken ? section.templateNamespace ?? "custom" : undefined
+                }
               />
             ))}
             {onAddField && (
@@ -820,7 +845,9 @@ function SectionRenderer({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Section</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{section.title}"? This section is empty and will be removed from the intake.
+              {section.fields.length === 0
+                ? `Are you sure you want to delete "${section.title}"? This section is empty and will be removed from the intake.`
+                : `Are you sure you want to delete "${section.title}"? This section contains ${section.fields.length} ${section.fields.length === 1 ? "field" : "fields"} and any responses to ${section.fields.length === 1 ? "it" : "them"} will also be removed. This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -852,6 +879,8 @@ export function FormFieldRenderer({
   onEditSection,
   onMoveSection,
   onMoveField,
+  showCopyToken,
+  onMergeTemplate,
 }: FormFieldRendererProps) {
   const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
@@ -886,6 +915,7 @@ export function FormFieldRenderer({
             onMoveField={onMoveField}
             canMoveUp={index > 0}
             canMoveDown={index < schema.length - 1}
+            showCopyToken={showCopyToken}
           />
         ))
       ) : (
@@ -894,18 +924,32 @@ export function FormFieldRenderer({
         </Card>
       )}
 
-      {onAddSection && (
-        <div className="flex justify-end pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAddSectionDialog(true)}
-            data-testid="button-add-section"
-          >
-            <Plus className="h-4 w-4" />
-            Add section
-          </Button>
+      {(onAddSection || onMergeTemplate) && (
+        <div className="flex flex-wrap justify-end gap-2 pt-2">
+          {onMergeTemplate && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onMergeTemplate}
+              data-testid="button-merge-template"
+            >
+              <FilePlus className="h-4 w-4" />
+              Add from template
+            </Button>
+          )}
+          {onAddSection && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddSectionDialog(true)}
+              data-testid="button-add-section"
+            >
+              <CircleFadingPlus className="h-4 w-4" />
+              Create new section
+            </Button>
+          )}
         </div>
       )}
 
@@ -1027,6 +1071,53 @@ export function buildDefaultValues(
           break;
         default:
           defaults[field.id] = "";
+      }
+    });
+  });
+
+  return defaults;
+}
+
+/**
+ * Like buildDefaultValues, but keys each field by `${namespace}:${fieldId}` so
+ * that intake forms can safely merge multiple templates without colliding on
+ * shared field IDs. Sections without a `templateNamespace` fall back to
+ * "custom".
+ */
+export function buildIntakeDefaultValues(
+  schema: FormSection[],
+): Record<string, unknown> {
+  const defaults: Record<string, unknown> = {};
+
+  schema.forEach((section) => {
+    const ns = section.templateNamespace ?? "custom";
+    section.fields.forEach((field) => {
+      const key = buildIntakeFieldKey(ns, field.id);
+      switch (field.type) {
+        case "checkbox":
+        case "toggle":
+          defaults[key] = false;
+          break;
+        case "number":
+          defaults[key] = "";
+          break;
+        case "location":
+          defaults[key] = [];
+          break;
+        case "eventSchedule":
+          defaults[key] = [];
+          break;
+        case "services":
+          defaults[key] = [];
+          break;
+        case "tags":
+          defaults[key] = [];
+          break;
+        case "richtext":
+          defaults[key] = field.defaultValue || "";
+          break;
+        default:
+          defaults[key] = "";
       }
     });
   });

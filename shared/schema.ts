@@ -2566,6 +2566,24 @@ export interface FormSection {
   title: string;
   description?: string;
   fields: FormField[];
+  templateNamespace?: string;
+}
+
+// Validation regex for form template namespaces (used in intake field tokens)
+export const FORM_TEMPLATE_NAMESPACE_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const RESERVED_FORM_TEMPLATE_NAMESPACE = "custom";
+
+/**
+ * Build a namespaced response-data key for an intake field so that fields with
+ * the same `field.id` from different merged templates do not collide. When the
+ * section has no template namespace (e.g. user-added custom sections), falls
+ * back to the reserved "custom" namespace.
+ */
+export function buildIntakeFieldKey(
+  namespace: string | null | undefined,
+  fieldId: string,
+): string {
+  return `${namespace ?? RESERVED_FORM_TEMPLATE_NAMESPACE}:${fieldId}`;
 }
 
 // Form templates - reusable form definitions
@@ -2574,6 +2592,7 @@ export const formTemplates = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     name: varchar("name", { length: 255 }).notNull(),
+    namespace: varchar("namespace", { length: 100 }).notNull().unique(),
     description: text("description"),
     category: varchar("category", { length: 255 }),
     formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
@@ -2585,6 +2604,7 @@ export const formTemplates = pgTable(
     index("idx_form_templates_name").on(table.name),
     index("idx_form_templates_created_by").on(table.createdById),
     index("idx_form_templates_category").on(table.category),
+    index("idx_form_templates_namespace").on(table.namespace),
   ],
 );
 
@@ -2757,6 +2777,7 @@ export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
     id: z.string(),
     title: z.string(),
     description: z.string().optional(),
+    templateNamespace: z.string().optional(),
     fields: z.array(z.object({
       id: z.string(),
       name: z.string(),
@@ -2782,6 +2803,7 @@ export const updateDealIntakeSchema = z.object({
     id: z.string(),
     title: z.string(),
     description: z.string().optional(),
+    templateNamespace: z.string().optional(),
     fields: z.array(z.object({
       id: z.string(),
       name: z.string(),
@@ -2858,11 +2880,23 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
   updatedAt: true,
 }).extend({
   name: z.string().min(1, "Name is required").max(255),
+  namespace: z
+    .string()
+    .min(1, "Namespace is required")
+    .max(100)
+    .regex(
+      FORM_TEMPLATE_NAMESPACE_REGEX,
+      "Namespace must use lowercase letters, numbers, and hyphens (e.g. event-production)",
+    )
+    .refine((v) => v !== RESERVED_FORM_TEMPLATE_NAMESPACE, {
+      message: `"${RESERVED_FORM_TEMPLATE_NAMESPACE}" is reserved and cannot be used as a namespace`,
+    }),
   category: z.string().max(255).optional().nullable(),
   formSchema: z.array(z.object({
     id: z.string(),
     title: z.string(),
     description: z.string().optional(),
+    templateNamespace: z.string().optional(),
     fields: z.array(z.object({
       id: z.string(),
       name: z.string(),
@@ -2880,7 +2914,8 @@ export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
   })).default([]),
 });
 
-export const updateFormTemplateSchema = insertFormTemplateSchema.partial();
+// Namespace is immutable after creation
+export const updateFormTemplateSchema = insertFormTemplateSchema.omit({ namespace: true }).partial();
 
 export type CreateFormTemplate = z.infer<typeof insertFormTemplateSchema>;
 export type UpdateFormTemplate = z.infer<typeof updateFormTemplateSchema>;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
@@ -45,6 +45,14 @@ import type {
   InsertFormTemplate,
   FormSection,
 } from "@shared/schema";
+import { FORM_TEMPLATE_NAMESPACE_REGEX, RESERVED_FORM_TEMPLATE_NAMESPACE } from "@shared/schema";
+
+function slugifyNamespace(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export default function AdminFormTemplateFormPage() {
   const [location, navigate] = useProtectedLocation();
@@ -58,6 +66,8 @@ export default function AdminFormTemplateFormPage() {
   const isEditing = !!id;
 
   const [name, setName] = useState("");
+  const [namespace, setNamespace] = useState("");
+  const [namespaceTouched, setNamespaceTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(
     isDealsContext && !isEditing ? "client_intake" : "",
@@ -70,16 +80,45 @@ export default function AdminFormTemplateFormPage() {
       enabled: isAuthenticated && isEditing,
     });
 
+  const { data: allTemplates = [] } = useQuery<FormTemplate[]>({
+    queryKey: ["/api/form-templates"],
+    enabled: isAuthenticated && !isEditing,
+  });
+
   usePageTitle(isEditing ? "Edit Form Template" : "New Form Template");
 
   useEffect(() => {
     if (template) {
       setName(template.name);
+      setNamespace(template.namespace);
+      setNamespaceTouched(true);
       setDescription(template.description || "");
       setCategory(template.category || "");
       setFormSchema((template.formSchema as FormSection[]) || []);
     }
   }, [template]);
+
+  useEffect(() => {
+    if (!isEditing && !namespaceTouched) {
+      setNamespace(slugifyNamespace(name));
+    }
+  }, [name, isEditing, namespaceTouched]);
+
+  const trimmedNamespace = namespace.trim();
+  const namespaceError = useMemo(() => {
+    if (isEditing) return null;
+    if (!trimmedNamespace) return null;
+    if (!FORM_TEMPLATE_NAMESPACE_REGEX.test(trimmedNamespace)) {
+      return "Use lowercase letters, numbers, and hyphens (e.g. event-production).";
+    }
+    if (trimmedNamespace === RESERVED_FORM_TEMPLATE_NAMESPACE) {
+      return `"${RESERVED_FORM_TEMPLATE_NAMESPACE}" is reserved and cannot be used.`;
+    }
+    if (allTemplates.some((t) => t.namespace === trimmedNamespace)) {
+      return `Namespace "${trimmedNamespace}" is already in use by another template.`;
+    }
+    return null;
+  }, [isEditing, trimmedNamespace, allTemplates]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertFormTemplate) => {
@@ -203,18 +242,60 @@ export default function AdminFormTemplateFormPage() {
       });
       return;
     }
-
-    const data = {
-      name: name.trim(),
-      description: description.trim(),
-      category: category || null,
-      formSchema,
-    };
+    if (!isEditing) {
+      const ns = namespace.trim();
+      if (!ns) {
+        toast({
+          variant: "destructive",
+          title: "Validation error",
+          description: "Namespace is required.",
+        });
+        return;
+      }
+      if (!FORM_TEMPLATE_NAMESPACE_REGEX.test(ns)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid namespace",
+          description: "Use lowercase letters, numbers, and hyphens (e.g. event-production).",
+        });
+        return;
+      }
+      if (ns === RESERVED_FORM_TEMPLATE_NAMESPACE) {
+        toast({
+          variant: "destructive",
+          title: "Reserved namespace",
+          description: `"${RESERVED_FORM_TEMPLATE_NAMESPACE}" is reserved and cannot be used.`,
+        });
+        return;
+      }
+      if (namespaceError) {
+        toast({
+          variant: "destructive",
+          title: "Validation error",
+          description: namespaceError,
+        });
+        return;
+      }
+    }
 
     if (isEditing && id) {
-      updateMutation.mutate({ id, data });
+      updateMutation.mutate({
+        id,
+        data: {
+          name: name.trim(),
+          description: description.trim(),
+          category: category || null,
+          formSchema,
+        },
+      });
     } else {
-      createMutation.mutate(data as InsertFormTemplate);
+      createMutation.mutate({
+        name: name.trim(),
+        namespace: namespace.trim(),
+        description: description.trim(),
+        category: category || null,
+        formSchema,
+      } as InsertFormTemplate);
     }
   };
 
@@ -336,6 +417,37 @@ export default function AdminFormTemplateFormPage() {
               )}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="template-namespace">Namespace *</Label>
+              <Input
+                id="template-namespace"
+                value={namespace}
+                onChange={(e) => {
+                  setNamespaceTouched(true);
+                  setNamespace(e.target.value);
+                }}
+                placeholder="e.g. event-production"
+                disabled={isEditing}
+                aria-invalid={!!namespaceError}
+                data-testid="input-template-namespace"
+              />
+              {namespaceError ? (
+                <p
+                  className="text-xs text-destructive"
+                  data-testid="text-template-namespace-error"
+                >
+                  {namespaceError}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {isEditing
+                    ? "Namespace is locked after creation to keep merge tokens stable."
+                    : "Used in merge tokens like {{intake:" +
+                      (namespace || "your-namespace") +
+                      ":field-id}}. Lowercase letters, numbers, and hyphens only."}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="template-description">Description</Label>
               <Textarea
                 id="template-description"
@@ -358,7 +470,11 @@ export default function AdminFormTemplateFormPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <FormBuilder value={formSchema} onChange={setFormSchema} />
+            <FormBuilder
+              value={formSchema}
+              onChange={setFormSchema}
+              templateNamespace={namespace}
+            />
           </CardContent>
         </Card>
 

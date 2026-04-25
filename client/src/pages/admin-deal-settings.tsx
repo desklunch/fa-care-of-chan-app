@@ -84,7 +84,7 @@ export default function AdminDealSettings() {
             <CardDescription>
               Set the Google Sheet template used when generating deal summary sheets. The template
               should contain placeholder tokens like {"{{client_name}}"}, {"{{budget_low}}"}, or
-              {"{{intake:field-event-name}}"} in any cell. When a sheet is generated, these tokens
+              {"{{intake:event-intake:field-event-name}}"} in any cell. When a sheet is generated, these tokens
               are replaced with the deal's data.
             </CardDescription>
           </CardHeader>
@@ -224,21 +224,25 @@ export default function AdminDealSettings() {
               <div>
                 <p className="text-sm font-medium mb-2">Intake Fields</p>
                 <p className="text-xs text-muted-foreground mb-1">
-                  Use the pattern <code className="bg-muted px-1 rounded text-[11px] font-mono">{"{{intake:field-id}}"}</code> where
-                  field-id matches the intake form's field IDs.
+                  Use the pattern <code className="bg-muted px-1 rounded text-[11px] font-mono">{"{{intake:<namespace>:<field-id>}}"}</code> where
+                  <span className="font-mono">&nbsp;namespace</span> is the form template's slug and
+                  <span className="font-mono">&nbsp;field-id</span> matches the intake form's field IDs. Use the
+                  copy-token button next to each field in the form builder or on a deal's intake to grab the exact token.
                 </p>
                 <div className="grid grid-cols-1 gap-1 text-xs">
                   {[
-                    "{{intake:field-event-name}}",
-                    "{{intake:field-context-concept}}",
-                    "{{intake:field-food-beverage}}",
-                    "{{intake:field-venue-type}}",
+                    "{{intake:event-intake:field-event-name}}",
+                    "{{intake:event-intake:field-context-concept}}",
+                    "{{intake:event-intake:field-food-beverage}}",
+                    "{{intake:event-intake:field-venue-type}}",
                   ].map((token) => (
                     <div key={token} className="py-0.5">
                       <code className="bg-muted px-1 rounded text-[11px] font-mono">{token}</code>
                     </div>
                   ))}
-                  <p className="text-muted-foreground mt-1">...and any other field ID from the intake form schema.</p>
+                  <p className="text-muted-foreground mt-1">
+                    Sections that pre-date namespaces fall back to <code className="bg-muted px-1 rounded text-[11px] font-mono">custom</code>, e.g. <code className="bg-muted px-1 rounded text-[11px] font-mono">{"{{intake:custom:field-notes}}"}</code>.
+                  </p>
                 </div>
               </div>
             </div>
