@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { ChevronDown, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,12 +72,21 @@ interface FormFieldRendererProps {
   onAddSection?: (title: string, description?: string) => void;
   onDeleteSection?: (sectionId: string) => void;
   onEditSection?: (sectionId: string, title: string, description?: string) => void;
+  onMoveSection?: (sectionId: string, direction: "up" | "down") => void;
+  onMoveField?: (
+    sectionId: string,
+    fieldId: string,
+    direction: "up" | "down",
+  ) => void;
 }
 
 interface SingleFieldRendererProps {
   field: FormFieldType;
   form: UseFormReturn<Record<string, unknown>>;
   onDeleteField?: (fieldId: string) => void;
+  onMoveField?: (fieldId: string, direction: "up" | "down") => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
 function renderFieldInput(
@@ -328,7 +337,14 @@ function ServicesFieldRenderer({
   );
 }
 
-function SingleFieldRenderer({ field, form, onDeleteField }: SingleFieldRendererProps) {
+function SingleFieldRenderer({
+  field,
+  form,
+  onDeleteField,
+  onMoveField,
+  canMoveUp,
+  canMoveDown,
+}: SingleFieldRendererProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
@@ -353,17 +369,65 @@ function SingleFieldRenderer({ field, form, onDeleteField }: SingleFieldRenderer
                 >
                   {field.name}
                 </FormLabel>
-                {onDeleteField && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 shrink-0 text-destructive invisible group-hover/field:visible"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    data-testid={`button-delete-field-${field.id}`}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                {(onMoveField || onDeleteField) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 shrink-0 opacity-0 group-hover/field:opacity-100 group-focus-within/field:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                        aria-label={`More actions for ${field.name}`}
+                        data-testid={`button-field-more-${field.id}`}
+                      >
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {onMoveField && (
+                        <>
+                          <DropdownMenuItem
+                            disabled={!canMoveUp}
+                            onSelect={(e) => {
+                              if (!canMoveUp) {
+                                e.preventDefault();
+                                return;
+                              }
+                              onMoveField(field.id, "up");
+                            }}
+                            data-testid={`button-move-field-up-${field.id}`}
+                          >
+                            <ChevronUp className="h-4 w-4 mr-2" />
+                            Move Up
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!canMoveDown}
+                            onSelect={(e) => {
+                              if (!canMoveDown) {
+                                e.preventDefault();
+                                return;
+                              }
+                              onMoveField(field.id, "down");
+                            }}
+                            data-testid={`button-move-field-down-${field.id}`}
+                          >
+                            <ChevronDown className="h-4 w-4 mr-2" />
+                            Move Down
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {onDeleteField && (
+                        <DropdownMenuItem
+                          onSelect={() => setShowDeleteConfirm(true)}
+                          className="text-destructive focus:text-destructive"
+                          data-testid={`button-delete-field-${field.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete field
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
               {field.description && (
@@ -417,9 +481,29 @@ interface SectionRendererProps {
   onDeleteField?: (sectionId: string, fieldId: string) => void;
   onDeleteSection?: (sectionId: string) => void;
   onEditSection?: (sectionId: string, title: string, description?: string) => void;
+  onMoveSection?: (sectionId: string, direction: "up" | "down") => void;
+  onMoveField?: (
+    sectionId: string,
+    fieldId: string,
+    direction: "up" | "down",
+  ) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
-function SectionRenderer({ section, form, defaultExpanded = true, onAddField, onDeleteField, onDeleteSection, onEditSection }: SectionRendererProps) {
+function SectionRenderer({
+  section,
+  form,
+  defaultExpanded = true,
+  onAddField,
+  onDeleteField,
+  onDeleteSection,
+  onEditSection,
+  onMoveSection,
+  onMoveField,
+  canMoveUp,
+  canMoveDown,
+}: SectionRendererProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newFieldTitle, setNewFieldTitle] = useState("");
@@ -487,7 +571,7 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
               </div>
             </button>
           </CollapsibleTrigger>
-          {(onEditSection || onDeleteSection) && (
+          {(onMoveSection || onEditSection || onDeleteSection) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -501,6 +585,38 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {onMoveSection && (
+                  <>
+                    <DropdownMenuItem
+                      disabled={!canMoveUp}
+                      onSelect={(e) => {
+                        if (!canMoveUp) {
+                          e.preventDefault();
+                          return;
+                        }
+                        onMoveSection(section.id, "up");
+                      }}
+                      data-testid={`button-move-section-up-${section.id}`}
+                    >
+                      <ChevronUp className="h-4 w-4 mr-2" />
+                      Move Up
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={!canMoveDown}
+                      onSelect={(e) => {
+                        if (!canMoveDown) {
+                          e.preventDefault();
+                          return;
+                        }
+                        onMoveSection(section.id, "down");
+                      }}
+                      data-testid={`button-move-section-down-${section.id}`}
+                    >
+                      <ChevronDown className="h-4 w-4 mr-2" />
+                      Move Down
+                    </DropdownMenuItem>
+                  </>
+                )}
                 {onEditSection && (
                   <DropdownMenuItem
                     onSelect={openEditSectionDialog}
@@ -546,12 +662,20 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
         </div>
         <CollapsibleContent>
           <div className="space-y-4 pt-6">
-            {section.fields.map((field) => (
+            {section.fields.map((field, fieldIndex) => (
               <SingleFieldRenderer
                 key={field.id}
                 field={field}
                 form={form}
                 onDeleteField={onDeleteField ? (fieldId) => onDeleteField(section.id, fieldId) : undefined}
+                onMoveField={
+                  onMoveField
+                    ? (fieldId, direction) =>
+                        onMoveField(section.id, fieldId, direction)
+                    : undefined
+                }
+                canMoveUp={fieldIndex > 0}
+                canMoveDown={fieldIndex < section.fields.length - 1}
               />
             ))}
             {onAddField && (
@@ -726,6 +850,8 @@ export function FormFieldRenderer({
   onAddSection,
   onDeleteSection,
   onEditSection,
+  onMoveSection,
+  onMoveField,
 }: FormFieldRendererProps) {
   const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
@@ -756,6 +882,10 @@ export function FormFieldRenderer({
             onDeleteField={onDeleteField}
             onDeleteSection={onDeleteSection}
             onEditSection={onEditSection}
+            onMoveSection={onMoveSection}
+            onMoveField={onMoveField}
+            canMoveUp={index > 0}
+            canMoveDown={index < schema.length - 1}
           />
         ))
       ) : (

@@ -693,6 +693,65 @@ function IntakeDraftForm({
     [localFormSchema, form, autosaveMutation],
   );
 
+  const handleMoveSection = useCallback(
+    (sectionId: string, direction: "up" | "down") => {
+      const index = localFormSchema.findIndex((s) => s.id === sectionId);
+      if (index === -1) return;
+      const swapWith = direction === "up" ? index - 1 : index + 1;
+      if (swapWith < 0 || swapWith >= localFormSchema.length) return;
+
+      const updatedSchema = [...localFormSchema];
+      [updatedSchema[index], updatedSchema[swapWith]] = [
+        updatedSchema[swapWith],
+        updatedSchema[index],
+      ];
+
+      setLocalFormSchema(updatedSchema);
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: currentValues,
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
+  const handleMoveField = useCallback(
+    (sectionId: string, fieldId: string, direction: "up" | "down") => {
+      const sectionIndex = localFormSchema.findIndex(
+        (s) => s.id === sectionId,
+      );
+      if (sectionIndex === -1) return;
+      const section = localFormSchema[sectionIndex];
+      const fieldIndex = section.fields.findIndex((f) => f.id === fieldId);
+      if (fieldIndex === -1) return;
+      const swapWith = direction === "up" ? fieldIndex - 1 : fieldIndex + 1;
+      if (swapWith < 0 || swapWith >= section.fields.length) return;
+
+      const updatedFields = [...section.fields];
+      [updatedFields[fieldIndex], updatedFields[swapWith]] = [
+        updatedFields[swapWith],
+        updatedFields[fieldIndex],
+      ];
+
+      const updatedSchema = localFormSchema.map((s, i) =>
+        i === sectionIndex ? { ...s, fields: updatedFields } : s,
+      );
+
+      setLocalFormSchema(updatedSchema);
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: currentValues,
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
   return (
     <div className="space-y-4 " data-testid="intake-draft-form">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -780,6 +839,16 @@ function IntakeDraftForm({
             onEditSection={
               canWrite && intake.status === "draft"
                 ? handleEditSection
+                : undefined
+            }
+            onMoveSection={
+              canWrite && intake.status === "draft"
+                ? handleMoveSection
+                : undefined
+            }
+            onMoveField={
+              canWrite && intake.status === "draft"
+                ? handleMoveField
                 : undefined
             }
           />
