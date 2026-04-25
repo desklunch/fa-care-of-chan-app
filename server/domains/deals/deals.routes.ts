@@ -1091,6 +1091,19 @@ export function registerDealsRoutes(app: Express): void {
         sheetResult = await copyDriveFile(accessToken, templateSheetId, sheetTitle, folderId);
       } catch (driveError: any) {
         const msg = driveError?.message || "";
+        const isFolderWriteDenied =
+          msg.includes("insufficientFilePermissions") ||
+          msg.includes("teamDriveFileLimitExceeded") ||
+          msg.includes("cannotAddParent") ||
+          msg.includes("teamDrivesFolderSharingNotSupported") ||
+          msg.includes("storageQuotaExceeded");
+        if (isFolderWriteDenied) {
+          return res.status(403).json({
+            message:
+              "You don't have permission to save files in the selected Shared Drive folder. Pick a folder where you have edit access, or ask the Shared Drive owner for access.",
+            code: "drive_folder_write_denied",
+          });
+        }
         if (msg.includes("403") || msg.includes("insufficient") || msg.includes("Insufficient Permission")) {
           return res.status(403).json({
             message: "Insufficient Google Drive permissions. Please reconnect your Google Drive with updated permissions.",

@@ -220,9 +220,9 @@ export async function copyDriveFile(
   fileId: string,
   name: string,
   folderId: string,
-): Promise<{ id: string; name: string; webViewLink: string; mimeType: string }> {
+): Promise<{ id: string; name: string; webViewLink: string; mimeType: string; driveId?: string }> {
   const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}/copy?fields=id,name,webViewLink,mimeType`,
+    `https://www.googleapis.com/drive/v3/files/${fileId}/copy?supportsAllDrives=true&fields=id,name,webViewLink,mimeType,driveId`,
     {
       method: "POST",
       headers: {

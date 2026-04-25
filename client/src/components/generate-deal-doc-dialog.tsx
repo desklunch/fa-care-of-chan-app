@@ -4,6 +4,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useDriveAuth } from "@/lib/google-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import {
   Loader2,
-  FolderOpen,
+  Folder,
   ChevronRight,
   ArrowLeft,
   Sheet,
   ExternalLink,
   LogIn,
   Check,
+  HardDrive,
 } from "lucide-react";
 import type { DealWithRelations, DealEvent, DealLocation, DealService } from "@shared/schema";
 
@@ -29,6 +31,7 @@ interface DriveFolder {
   name: string;
   mimeType: string;
   modifiedTime?: string;
+  driveId?: string;
 }
 
 interface DriveFolderResult {
@@ -36,106 +39,384 @@ interface DriveFolderResult {
   nextPageToken?: string;
 }
 
-function FolderBrowser({
+interface SharedDrive {
+  id: string;
+  name: string;
+}
+
+interface SharedDriveListResult {
+  drives: SharedDrive[];
+  nextPageToken?: string;
+}
+
+type DestinationKind =
+  | "myDrive"
+  | "sharedDrivesIndex"
+  | "sharedDrive"
+  | "folder";
+
+interface DestinationLocation {
+  id: string;
+  name: string;
+  kind: DestinationKind;
+  /** When set, queries within this location are scoped to a Shared Drive. */
+  driveId?: string;
+}
+
+const MY_DRIVE_ID = "__my_drive__";
+const SHARED_DRIVES_INDEX_ID = "__shared_drives__";
+
+export interface DestinationFolder {
+  id: string;
+  name: string;
+  driveId?: string;
+}
+
+// TODO: Consider extracting the section-chooser/breadcrumbs/folder-row pieces
+// from `client/src/components/google-drive-attachments.tsx` into shared
+// components so the attachments picker and this destination picker stay in
+// sync visually. Keeping a focused folder-only browser here for now to avoid
+// a risky refactor of the attachments picker, which also handles file
+// selection, search, and pasted Drive URLs.
+function DestinationFolderBrowser({
   onSelect,
   selectedFolderId,
   onNeedsDriveAuth,
 }: {
-  onSelect: (folder: { id: string; name: string } | null) => void;
+  onSelect: (folder: DestinationFolder | null) => void;
   selectedFolderId: string | null;
   onNeedsDriveAuth: () => void;
 }) {
-  const [folderStack, setFolderStack] = useState<{ id: string; name: string }[]>([]);
+  const [folderStack, setFolderStack] = useState<DestinationLocation[]>([]);
   const [needsDriveAuth, setNeedsDriveAuth] = useState(false);
-  const currentParentId = folderStack.length > 0 ? folderStack[folderStack.length - 1].id : undefined;
 
-  const { data: folderResult, isLoading } = useQuery<DriveFolderResult>({
-    queryKey: ["/api/drive/folders", currentParentId || "root"],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (currentParentId) params.set("parentId", currentParentId);
-      const res = await fetch(`/api/drive/folders?${params.toString()}`, { credentials: "include" });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        if (body.code === "drive_auth_required") {
-          setNeedsDriveAuth(true);
-          onNeedsDriveAuth();
-          throw new Error("drive_auth_required");
-        }
-        throw new Error("Failed to load folders");
+  const currentLocation: DestinationLocation | null =
+    folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
+  const sectionRoot: DestinationLocation | null =
+    folderStack.length > 0 ? folderStack[0] : null;
+  const sharedDriveContextId =
+    folderStack.find((entry) => entry.kind === "sharedDrive")?.id ??
+    folderStack.find((entry) => entry.driveId)?.driveId;
+  const isAtPickerRoot = !sectionRoot;
+  const showSectionChooser = isAtPickerRoot;
+
+  const selectionForLocation = (location: DestinationLocation | null): DestinationFolder | null => {
+    if (!location) return null;
+    if (location.kind === "myDrive") return { id: "root", name: "My Drive" };
+    if (location.kind === "folder") {
+      return { id: location.id, name: location.name, driveId: location.driveId };
+    }
+    if (location.kind === "sharedDrive") {
+      // Saving directly into a Shared Drive root is allowed: use the drive
+      // ID as the parent folder ID for the Drive copy call.
+      return {
+        id: location.driveId ?? location.id,
+        name: location.name,
+        driveId: location.driveId ?? location.id,
+      };
+    }
+    // The Shared Drives index page is just a chooser, not a writable target.
+    return null;
+  };
+
+  const enterSection = (location: DestinationLocation) => {
+    setFolderStack([location]);
+    onSelect(selectionForLocation(location));
+  };
+
+  const navigateIntoFolder = (folder: DriveFolder) => {
+    const driveId = folder.driveId ?? sharedDriveContextId;
+    const next: DestinationLocation = {
+      id: folder.id,
+      name: folder.name,
+      kind: "folder",
+      driveId,
+    };
+    setFolderStack((stack) => [...stack, next]);
+    onSelect({ id: folder.id, name: folder.name, driveId });
+  };
+
+  const goUpOneLocation = () => {
+    const next = folderStack.slice(0, -1);
+    setFolderStack(next);
+    onSelect(selectionForLocation(next.length > 0 ? next[next.length - 1] : null));
+  };
+
+  const goToPickerRoot = () => {
+    setFolderStack([]);
+    onSelect(null);
+  };
+
+  const goToLocationAtIndex = (index: number) => {
+    const next = folderStack.slice(0, index + 1);
+    setFolderStack(next);
+    onSelect(selectionForLocation(next[next.length - 1] ?? null));
+  };
+
+  // Build query parameters for the folder listing based on current location.
+  const browseQueryParams = (() => {
+    if (isAtPickerRoot) return null;
+    if (currentLocation?.kind === "sharedDrivesIndex") return null;
+    if (sectionRoot?.kind === "myDrive") {
+      const parentId = currentLocation?.kind === "folder" ? currentLocation.id : "root";
+      return { parentId } as { parentId?: string; driveId?: string };
+    }
+    // Inside a Shared Drive (the sectionRoot may be the sharedDrivesIndex
+    // chooser, so look up the actual drive from the stack).
+    const driveId =
+      folderStack.find((entry) => entry.kind === "sharedDrive")?.driveId ??
+      folderStack.find((entry) => entry.kind === "sharedDrive")?.id;
+    if (driveId) {
+      if (currentLocation?.kind === "sharedDrive") {
+        return { driveId };
       }
-      setNeedsDriveAuth(false);
-      return res.json();
-    },
-    retry: false,
-  });
+      if (currentLocation?.kind === "folder") {
+        return { parentId: currentLocation.id, driveId };
+      }
+    }
+    return null;
+  })();
+
+  const folderListEnabled = !!browseQueryParams;
+
+  const { data: folderResult, isLoading: isLoadingFolders } =
+    useQuery<DriveFolderResult>({
+      queryKey: [
+        "/api/drive/folders",
+        browseQueryParams?.parentId ?? "",
+        browseQueryParams?.driveId ?? "",
+      ],
+      queryFn: async () => {
+        const params = new URLSearchParams();
+        if (browseQueryParams?.parentId && browseQueryParams.parentId !== "root") {
+          params.set("parentId", browseQueryParams.parentId);
+        }
+        if (browseQueryParams?.driveId) {
+          params.set("driveId", browseQueryParams.driveId);
+        }
+        const res = await fetch(`/api/drive/folders?${params.toString()}`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          if (body.code === "drive_auth_required") {
+            setNeedsDriveAuth(true);
+            onNeedsDriveAuth();
+            throw new Error("drive_auth_required");
+          }
+          throw new Error("Failed to list folders");
+        }
+        setNeedsDriveAuth(false);
+        return res.json();
+      },
+      enabled: folderListEnabled,
+      retry: false,
+    });
+
+  const isAtSharedDrivesIndex = currentLocation?.kind === "sharedDrivesIndex";
+  const sharedDrivesEnabled = isAtSharedDrivesIndex;
+  const { data: sharedDrivesResult, isLoading: isLoadingSharedDrives } =
+    useQuery<SharedDriveListResult>({
+      queryKey: ["/api/drive/shared-drives"],
+      queryFn: async () => {
+        const res = await fetch(`/api/drive/shared-drives`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          if (body.code === "drive_auth_required") {
+            setNeedsDriveAuth(true);
+            onNeedsDriveAuth();
+            throw new Error("drive_auth_required");
+          }
+          throw new Error("Failed to list Shared Drives");
+        }
+        setNeedsDriveAuth(false);
+        return res.json();
+      },
+      enabled: sharedDrivesEnabled,
+      retry: false,
+    });
 
   if (needsDriveAuth) {
     return null;
   }
 
-  const navigateInto = (folder: DriveFolder) => {
-    setFolderStack([...folderStack, { id: folder.id, name: folder.name }]);
-    onSelect({ id: folder.id, name: folder.name });
-  };
+  const sharedDrives = sharedDrivesResult?.drives ?? [];
+  const folders = folderResult?.files ?? [];
+  const isListLoading = showSectionChooser
+    ? false
+    : isAtSharedDrivesIndex
+      ? isLoadingSharedDrives
+      : isLoadingFolders;
 
-  const navigateUp = () => {
-    const newStack = folderStack.slice(0, -1);
-    setFolderStack(newStack);
-    if (newStack.length > 0) {
-      onSelect(newStack[newStack.length - 1]);
-    } else {
-      onSelect(null);
-    }
-  };
-
-  const currentFolderName = folderStack.length > 0 ? folderStack[folderStack.length - 1].name : "My Drive";
-  const currentFolderId = folderStack.length > 0 ? folderStack[folderStack.length - 1].id : "root";
+  // "Select this folder" is enabled for any writable destination: My Drive
+  // root, a Shared Drive root, or any folder. The intermediate Shared Drives
+  // index page is a chooser, not a destination.
+  const currentSelection = selectionForLocation(currentLocation);
+  const canSelectCurrent = currentSelection !== null;
+  const isCurrentSelected =
+    canSelectCurrent &&
+    !!selectedFolderId &&
+    selectedFolderId === currentSelection!.id;
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        {folderStack.length > 0 && (
+      {!showSectionChooser && (
+        <div
+          className="flex items-center gap-1 flex-wrap text-xs text-muted-foreground"
+          data-testid="destination-picker-breadcrumb"
+        >
           <Button
             variant="ghost"
-            size="icon"
-            onClick={navigateUp}
-            data-testid="button-folder-back"
+            size="sm"
+            onClick={goUpOneLocation}
+            disabled={folderStack.length === 0}
+            data-testid="button-destination-folder-up"
+            aria-label="Go up one folder"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-        )}
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <span className="text-sm font-medium truncate">{currentFolderName}</span>
+          <button
+            type="button"
+            onClick={goToPickerRoot}
+            disabled={isAtPickerRoot}
+            className="px-1.5 py-1 rounded-md hover-elevate active-elevate-2 disabled:opacity-100 disabled:cursor-default disabled:hover:bg-transparent font-medium text-foreground"
+            data-testid="button-destination-breadcrumb-root"
+          >
+            Drive
+          </button>
+          {folderStack.map((entry, index) => (
+            <span
+              key={`${entry.kind}-${entry.id}`}
+              className="flex items-center gap-1 min-w-0"
+            >
+              <ChevronRight className="h-3 w-3 flex-shrink-0" />
+              <button
+                type="button"
+                onClick={() => goToLocationAtIndex(index)}
+                disabled={index === folderStack.length - 1}
+                className="px-1.5 py-1 rounded-md truncate max-w-[180px] hover-elevate active-elevate-2 disabled:opacity-100 disabled:cursor-default disabled:hover:bg-transparent text-foreground"
+                data-testid={`button-destination-breadcrumb-${entry.id}`}
+              >
+                {entry.name}
+              </button>
+            </span>
+          ))}
+          {canSelectCurrent && (
+            <div className="ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSelect(currentSelection)}
+                className={isCurrentSelected ? "border-primary" : ""}
+                data-testid="button-select-current-folder"
+              >
+                <Check className="h-3.5 w-3.5 mr-1" />
+                Select this folder
+              </Button>
+            </div>
+          )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onSelect({ id: currentFolderId, name: currentFolderName })}
-          className={selectedFolderId === currentFolderId ? "border-primary" : ""}
-          data-testid="button-select-current-folder"
-        >
-          <Check className="h-3.5 w-3.5 mr-1" />
-          Select this folder
-        </Button>
-      </div>
+      )}
 
-      <div className="max-h-60 overflow-y-auto border rounded-md">
-        {isLoading ? (
+      <div className="max-h-72 overflow-y-auto border rounded-md">
+        {isListLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : folderResult?.files && folderResult.files.length > 0 ? (
+        ) : showSectionChooser ? (
           <div className="divide-y">
-            {folderResult.files.map((folder) => (
+            <button
+              type="button"
+              onClick={() =>
+                enterSection({
+                  id: MY_DRIVE_ID,
+                  name: "My Drive",
+                  kind: "myDrive",
+                })
+              }
+              className="flex items-center gap-3 p-2.5 w-full text-left hover-elevate"
+              data-testid="button-destination-section-my-drive"
+            >
+              <HardDrive className="h-5 w-5 text-blue-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">My Drive</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  Your personal Google Drive
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                enterSection({
+                  id: SHARED_DRIVES_INDEX_ID,
+                  name: "Shared Drives",
+                  kind: "sharedDrivesIndex",
+                })
+              }
+              className="flex items-center gap-3 p-2.5 w-full text-left hover-elevate"
+              data-testid="button-destination-section-shared-drives"
+            >
+              <Folder className="h-5 w-5 text-blue-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">Shared Drives</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  Workspace drives you have access to
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </button>
+          </div>
+        ) : isAtSharedDrivesIndex ? (
+          sharedDrives.length > 0 ? (
+            <div className="divide-y">
+              {sharedDrives.map((drive) => (
+                <button
+                  key={drive.id}
+                  type="button"
+                  onClick={() => {
+                    const next: DestinationLocation = {
+                      id: drive.id,
+                      name: drive.name,
+                      kind: "sharedDrive",
+                      driveId: drive.id,
+                    };
+                    setFolderStack((stack) => [...stack, next]);
+                    onSelect(selectionForLocation(next));
+                  }}
+                  className="flex items-center gap-3 p-2.5 w-full text-left hover-elevate"
+                  data-testid={`button-destination-shared-drive-${drive.id}`}
+                >
+                  <Folder className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="text-sm font-medium truncate">{drive.name}</p>
+                      <Badge variant="secondary">Shared drive</Badge>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              You don't have access to any Shared Drives.
+            </p>
+          )
+        ) : folders.length > 0 ? (
+          <div className="divide-y">
+            {folders.map((folder) => (
               <button
                 key={folder.id}
-                onClick={() => navigateInto(folder)}
+                type="button"
+                onClick={() => navigateIntoFolder(folder)}
                 className="flex items-center gap-3 p-2.5 w-full text-left hover-elevate"
-                data-testid={`button-folder-${folder.id}`}
+                data-testid={`button-destination-folder-${folder.id}`}
               >
-                <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <Folder className="h-5 w-5 text-blue-500 flex-shrink-0" />
                 <span className="text-sm truncate flex-1">{folder.name}</span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               </button>
@@ -143,7 +424,9 @@ function FolderBrowser({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground py-6 text-center">
-            No subfolders found
+            {currentLocation?.kind === "sharedDrive"
+              ? "This Shared Drive has no folders yet"
+              : "No subfolders here"}
           </p>
         )}
       </div>
@@ -218,7 +501,7 @@ interface GenerateDealDocDialogProps {
 export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }: GenerateDealDocDialogProps) {
   const { toast } = useToast();
   const { promptDriveAuth } = useDriveAuth();
-  const [selectedFolder, setSelectedFolder] = useState<{ id: string; name: string } | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<DestinationFolder | null>(null);
   const [createdDoc, setCreatedDoc] = useState<{ id: string; webViewLink: string; name: string } | null>(null);
   const [showDriveAuth, setShowDriveAuth] = useState(false);
 
@@ -262,6 +545,15 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
       });
     },
     onError: (error: Error) => {
+      if (error.message?.includes("drive_folder_write_denied")) {
+        toast({
+          title: "Can't save to that folder",
+          description:
+            "You don't have permission to save files in the selected Shared Drive folder. Pick a folder where you have edit access, or ask the Shared Drive owner for access.",
+          variant: "destructive",
+        });
+        return;
+      }
       if (error.message?.includes("drive_auth_required")) {
         setShowDriveAuth(true);
         return;
@@ -386,7 +678,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
 
           <div className="space-y-2">
             <p className="text-sm font-medium">Choose a destination folder</p>
-            <FolderBrowser
+            <DestinationFolderBrowser
               onSelect={setSelectedFolder}
               selectedFolderId={selectedFolder?.id || null}
               onNeedsDriveAuth={() => setShowDriveAuth(true)}
