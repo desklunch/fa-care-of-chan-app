@@ -629,6 +629,48 @@ function IntakeDraftForm({
     [localFormSchema, form, autosaveMutation],
   );
 
+  const handleEditSection = useCallback(
+    (sectionId: string, title: string, description?: string) => {
+      const target = localFormSchema.find((s) => s.id === sectionId);
+      if (!target) return;
+
+      const trimmedTitle = title.trim();
+      if (!trimmedTitle) return;
+      const trimmedDescription = description?.trim();
+
+      if (
+        target.title === trimmedTitle &&
+        (target.description ?? "") === (trimmedDescription ?? "")
+      ) {
+        return;
+      }
+
+      const updatedSchema = localFormSchema.map((section) => {
+        if (section.id !== sectionId) return section;
+        const next: FormSection = {
+          ...section,
+          title: trimmedTitle,
+        };
+        if (trimmedDescription) {
+          next.description = trimmedDescription;
+        } else {
+          delete next.description;
+        }
+        return next;
+      });
+
+      setLocalFormSchema(updatedSchema);
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: currentValues,
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
   const handleDeleteSection = useCallback(
     (sectionId: string) => {
       const target = localFormSchema.find((s) => s.id === sectionId);
@@ -733,6 +775,11 @@ function IntakeDraftForm({
             onDeleteSection={
               canWrite && intake.status === "draft"
                 ? handleDeleteSection
+                : undefined
+            }
+            onEditSection={
+              canWrite && intake.status === "draft"
+                ? handleEditSection
                 : undefined
             }
           />

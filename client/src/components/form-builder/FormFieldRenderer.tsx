@@ -45,7 +45,13 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,6 +71,7 @@ interface FormFieldRendererProps {
   onDeleteField?: (sectionId: string, fieldId: string) => void;
   onAddSection?: (title: string, description?: string) => void;
   onDeleteSection?: (sectionId: string) => void;
+  onEditSection?: (sectionId: string, title: string, description?: string) => void;
 }
 
 interface SingleFieldRendererProps {
@@ -409,13 +416,33 @@ interface SectionRendererProps {
   onAddField?: (sectionId: string, fieldTitle: string) => void;
   onDeleteField?: (sectionId: string, fieldId: string) => void;
   onDeleteSection?: (sectionId: string) => void;
+  onEditSection?: (sectionId: string, title: string, description?: string) => void;
 }
 
-function SectionRenderer({ section, form, defaultExpanded = true, onAddField, onDeleteField, onDeleteSection }: SectionRendererProps) {
+function SectionRenderer({ section, form, defaultExpanded = true, onAddField, onDeleteField, onDeleteSection, onEditSection }: SectionRendererProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newFieldTitle, setNewFieldTitle] = useState("");
   const [showDeleteSectionConfirm, setShowDeleteSectionConfirm] = useState(false);
+  const [showEditSectionDialog, setShowEditSectionDialog] = useState(false);
+  const [editSectionTitle, setEditSectionTitle] = useState(section.title);
+  const [editSectionDescription, setEditSectionDescription] = useState(
+    section.description ?? "",
+  );
+
+  const openEditSectionDialog = () => {
+    setEditSectionTitle(section.title);
+    setEditSectionDescription(section.description ?? "");
+    setShowEditSectionDialog(true);
+  };
+
+  const handleEditSectionSubmit = () => {
+    const trimmedTitle = editSectionTitle.trim();
+    if (!trimmedTitle || !onEditSection) return;
+    const trimmedDescription = editSectionDescription.trim();
+    onEditSection(section.id, trimmedTitle, trimmedDescription || undefined);
+    setShowEditSectionDialog(false);
+  };
 
   const handleAddField = () => {
     const trimmed = newFieldTitle.trim();
@@ -460,31 +487,61 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
               </div>
             </button>
           </CollapsibleTrigger>
-          {onDeleteSection && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span tabIndex={canDeleteSection ? -1 : 0}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0 text-destructive"
-                      disabled={!canDeleteSection}
-                      onClick={() => setShowDeleteSectionConfirm(true)}
-                      data-testid={`button-delete-section-${section.id}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {canDeleteSection
-                    ? "Delete section"
-                    : "Remove all fields before deleting this section"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          {(onEditSection || onDeleteSection) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  data-testid={`button-section-more-${section.id}`}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onEditSection && (
+                  <DropdownMenuItem
+                    onSelect={openEditSectionDialog}
+                    data-testid={`button-edit-section-${section.id}`}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit section
+                  </DropdownMenuItem>
+                )}
+                {onDeleteSection && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <DropdownMenuItem
+                            disabled={!canDeleteSection}
+                            onSelect={(e) => {
+                              if (!canDeleteSection) {
+                                e.preventDefault();
+                                return;
+                              }
+                              setShowDeleteSectionConfirm(true);
+                            }}
+                            className="text-destructive focus:text-destructive"
+                            data-testid={`button-delete-section-${section.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete section
+                          </DropdownMenuItem>
+                        </div>
+                      </TooltipTrigger>
+                      {!canDeleteSection && (
+                        <TooltipContent side="left">
+                          Remove all fields before deleting this section
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
         <CollapsibleContent>
@@ -564,6 +621,76 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showEditSectionDialog} onOpenChange={setShowEditSectionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Section</DialogTitle>
+            <DialogDescription>
+              Update the title or description for this section.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label
+                className="text-sm font-medium"
+                htmlFor={`edit-section-title-${section.id}`}
+              >
+                Section Title
+              </label>
+              <Input
+                id={`edit-section-title-${section.id}`}
+                value={editSectionTitle}
+                onChange={(e) => setEditSectionTitle(e.target.value)}
+                placeholder="Enter section title"
+                className="mt-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleEditSectionSubmit();
+                  }
+                }}
+                data-testid={`input-edit-section-title-${section.id}`}
+              />
+            </div>
+            <div>
+              <label
+                className="text-sm font-medium"
+                htmlFor={`edit-section-description-${section.id}`}
+              >
+                Description{" "}
+                <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <Textarea
+                id={`edit-section-description-${section.id}`}
+                value={editSectionDescription}
+                onChange={(e) => setEditSectionDescription(e.target.value)}
+                placeholder="Enter section description"
+                className="mt-2"
+                data-testid={`input-edit-section-description-${section.id}`}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowEditSectionDialog(false)}
+              data-testid={`button-cancel-edit-section-${section.id}`}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleEditSectionSubmit}
+              disabled={!editSectionTitle.trim()}
+              data-testid={`button-confirm-edit-section-${section.id}`}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={showDeleteSectionConfirm} onOpenChange={setShowDeleteSectionConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -598,6 +725,7 @@ export function FormFieldRenderer({
   onDeleteField,
   onAddSection,
   onDeleteSection,
+  onEditSection,
 }: FormFieldRendererProps) {
   const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
@@ -627,6 +755,7 @@ export function FormFieldRenderer({
             onAddField={onAddField}
             onDeleteField={onDeleteField}
             onDeleteSection={onDeleteSection}
+            onEditSection={onEditSection}
           />
         ))
       ) : (
