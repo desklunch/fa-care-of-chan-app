@@ -19,23 +19,29 @@ export async function searchDriveFiles(
   accessToken: string,
   query: string,
   pageToken?: string,
+  parentId?: string,
 ) {
   const params = new URLSearchParams({
     fields: "files(id,name,mimeType,iconLink,webViewLink,modifiedTime,owners),nextPageToken",
-    pageSize: "20",
-    orderBy: "modifiedByMeTime desc,viewedByMeTime desc",
+    pageSize: parentId ? "100" : "20",
+    orderBy: parentId
+      ? "folder,name"
+      : "modifiedByMeTime desc,viewedByMeTime desc",
   });
 
+  const clauses: string[] = ["trashed=false"];
   if (query) {
     const words = query.trim().split(/\s+/).filter(Boolean);
-    const clauses = words.map((word) => {
+    for (const word of words) {
       const escaped = word.replace(/'/g, "\\'");
-      return `name contains '${escaped}'`;
-    });
-    params.set("q", `${clauses.join(" and ")} and trashed=false`);
-  } else {
-    params.set("q", "trashed=false");
+      clauses.push(`name contains '${escaped}'`);
+    }
   }
+  if (parentId) {
+    const escapedParent = parentId.replace(/'/g, "\\'");
+    clauses.push(`'${escapedParent}' in parents`);
+  }
+  params.set("q", clauses.join(" and "));
 
   if (pageToken) {
     params.set("pageToken", pageToken);

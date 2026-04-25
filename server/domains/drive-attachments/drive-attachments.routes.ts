@@ -232,8 +232,14 @@ export function registerDriveAttachmentsRoutes(app: Express): void {
 
       const query = req.query.q as string || "";
       const pageToken = req.query.pageToken as string || "";
+      const parentId = req.query.parentId as string || "";
 
-      const data = await searchDriveFiles(accessToken, query, pageToken || undefined);
+      const data = await searchDriveFiles(
+        accessToken,
+        query,
+        pageToken || undefined,
+        parentId || undefined,
+      );
       res.json(data);
     } catch (error) {
       console.error("Error searching Drive files:", error);

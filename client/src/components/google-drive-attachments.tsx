@@ -40,6 +40,8 @@ import {
   Check,
   LogIn,
   SquarePen,
+  ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -224,6 +226,12 @@ export function DriveFilePickerDialog({
   const [pickedUrl, setPickedUrl] = useState<string | null>(null);
   const [pickerLabel, setPickerLabel] = useState("");
   const [pickerDescription, setPickerDescription] = useState("");
+  const [folderStack, setFolderStack] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const currentFolder =
+    folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
+  const currentFolderId = currentFolder?.id ?? "";
 
   useEffect(() => {
     if (!open) {
@@ -233,8 +241,33 @@ export function DriveFilePickerDialog({
       setPickerDescription("");
       setSearchQuery("");
       setDebouncedQuery("");
+      setFolderStack([]);
     }
   }, [open]);
+
+  const openFolder = (folder: { id: string; name: string }) => {
+    setFolderStack((stack) => [...stack, folder]);
+    setSearchQuery("");
+    setDebouncedQuery("");
+  };
+
+  const goUpOneFolder = () => {
+    setFolderStack((stack) => stack.slice(0, -1));
+    setSearchQuery("");
+    setDebouncedQuery("");
+  };
+
+  const goToFolderAtIndex = (index: number) => {
+    setFolderStack((stack) => stack.slice(0, index + 1));
+    setSearchQuery("");
+    setDebouncedQuery("");
+  };
+
+  const goToRoot = () => {
+    setFolderStack([]);
+    setSearchQuery("");
+    setDebouncedQuery("");
+  };
 
   const trimmedQuery = searchQuery.trim();
   const inputIsUrl = looksLikeUrl(trimmedQuery);
@@ -268,12 +301,17 @@ export function DriveFilePickerDialog({
     setPickedUrl(trimmedQuery);
   };
 
+  const trimmedDebouncedQuery = debouncedQuery.trim();
+  const isBrowseMode = !trimmedDebouncedQuery;
+  const effectiveParentId = isBrowseMode ? currentFolderId || "root" : "";
+
   const { data: searchResults, isLoading: isSearching } =
     useQuery<DriveSearchResult>({
-      queryKey: ["/api/drive/search", debouncedQuery],
+      queryKey: ["/api/drive/search", debouncedQuery, effectiveParentId],
       queryFn: async () => {
         const params = new URLSearchParams();
         if (debouncedQuery) params.set("q", debouncedQuery);
+        if (effectiveParentId) params.set("parentId", effectiveParentId);
         const res = await fetch(`/api/drive/search?${params.toString()}`, {
           credentials: "include",
         });
@@ -291,6 +329,50 @@ export function DriveFilePickerDialog({
       enabled: open && !pickedFile && !pickedUrl && !inputIsUrl,
       retry: false,
     });
+
+  // In browse mode, also fetch the folder list separately so folders are
+  // guaranteed to appear at the top of the listing regardless of how the
+  // mixed search results paginate.
+  const { data: folderResults, isLoading: isLoadingFolders } =
+    useQuery<DriveSearchResult>({
+      queryKey: ["/api/drive/folders", effectiveParentId],
+      queryFn: async () => {
+        const params = new URLSearchParams();
+        if (effectiveParentId && effectiveParentId !== "root") {
+          params.set("parentId", effectiveParentId);
+        }
+        const res = await fetch(`/api/drive/folders?${params.toString()}`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          if (body.code === "drive_auth_required") {
+            setNeedsDriveAuth(true);
+            throw new Error("drive_auth_required");
+          }
+          throw new Error("Failed to list Drive folders");
+        }
+        setNeedsDriveAuth(false);
+        return res.json();
+      },
+      enabled:
+        open && !pickedFile && !pickedUrl && !inputIsUrl && isBrowseMode,
+      retry: false,
+    });
+
+  const browseFolders = isBrowseMode ? folderResults?.files ?? [] : [];
+  const browseFolderIds = new Set(browseFolders.map((f) => f.id));
+  const browseRows: DriveFile[] = isBrowseMode
+    ? [
+        ...browseFolders,
+        ...((searchResults?.files ?? []).filter(
+          (f) => !isFolderMimeType(f.mimeType) || !browseFolderIds.has(f.id),
+        )),
+      ]
+    : searchResults?.files ?? [];
+  const isListLoading = isBrowseMode
+    ? isSearching || isLoadingFolders
+    : isSearching;
 
   if (needsDriveAuth) {
     return (
@@ -445,14 +527,14 @@ export function DriveFilePickerDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+        <DialogHeader className="min-w-0">
           <DialogTitle>Browse Google Drive</DialogTitle>
           <DialogDescription>
-            Search for a file in your Google Drive, or paste a Drive file or
-            folder link to attach it.
+            Browse your Google Drive folders, search for a file, or paste a
+            Drive file or folder link to attach it.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0">
           <div className="relative">
             {inputIsUrl ? (
               <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -526,28 +608,59 @@ export function DriveFilePickerDialog({
               </div>
             </div>
           ) : (
-            <div className="max-h-80 overflow-y-auto space-y-0.5">
-              {isSearching ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : searchResults?.files && searchResults.files.length > 0 ? (
-                searchResults.files.map((file) => (
-                  <button
-                    key={file.id}
-                    onClick={() => setPickedFile(file)}
-                    disabled={isPending}
-                    className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
-                    data-testid={`button-pick-file-${file.id}`}
+            <>
+              {isBrowseMode && (
+                <div
+                  className="flex items-center gap-1 flex-wrap text-xs text-muted-foreground"
+                  data-testid="drive-picker-breadcrumb"
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goUpOneFolder}
+                    disabled={folderStack.length === 0}
+                    data-testid="button-drive-folder-up"
+                    aria-label="Go up one folder"
                   >
-                    <div className="flex-shrink-0">
-                      {getMimeTypeIcon(file.mimeType)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {file.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={goToRoot}
+                    className="px-1.5 py-1 rounded-md hover-elevate active-elevate-2 font-medium text-foreground"
+                    data-testid="button-drive-breadcrumb-root"
+                  >
+                    My Drive
+                  </button>
+                  {folderStack.map((folder, index) => (
+                    <span
+                      key={folder.id}
+                      className="flex items-center gap-1 min-w-0"
+                    >
+                      <ChevronRight className="h-3 w-3 flex-shrink-0" />
+                      <button
+                        type="button"
+                        onClick={() => goToFolderAtIndex(index)}
+                        disabled={index === folderStack.length - 1}
+                        className="px-1.5 py-1 rounded-md truncate max-w-[180px] hover-elevate active-elevate-2 disabled:opacity-100 disabled:cursor-default disabled:hover:bg-transparent text-foreground"
+                        data-testid={`button-drive-breadcrumb-${folder.id}`}
+                      >
+                        {folder.name}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="max-h-80 overflow-y-auto space-y-0.5">
+                {isListLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : browseRows.length > 0 ? (
+                  browseRows.map((file) => {
+                    const isFolder = isFolderMimeType(file.mimeType);
+                    const meta = (
+                      <p className="text-xs text-muted-foreground truncate">
                         {file.modifiedTime &&
                           `Modified ${formatTimeAgo(file.modifiedTime)}`}
                         {file.owners?.[0]?.displayName && (
@@ -557,17 +670,80 @@ export function DriveFilePickerDialog({
                           </>
                         )}
                       </p>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground py-6 text-center">
-                  {debouncedQuery
-                    ? "No files found"
-                    : "Your recent files will appear here"}
-                </p>
-              )}
-            </div>
+                    );
+
+                    if (isFolder) {
+                      return (
+                        <div
+                          key={file.id}
+                          className="flex items-center gap-1"
+                          data-testid={`row-drive-folder-${file.id}`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openFolder({ id: file.id, name: file.name })
+                            }
+                            disabled={isPending}
+                            className="flex items-center gap-3 p-2.5 flex-1 min-w-0 text-left rounded-md hover-elevate"
+                            data-testid={`button-open-folder-${file.id}`}
+                          >
+                            <div className="flex-shrink-0">
+                              {getMimeTypeIcon(file.mimeType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {file.name}
+                              </p>
+                              {meta}
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          </button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPickedFile(file)}
+                            disabled={isPending}
+                            className="flex-shrink-0"
+                            data-testid={`button-attach-folder-${file.id}`}
+                          >
+                            Attach
+                          </Button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={file.id}
+                        onClick={() => setPickedFile(file)}
+                        disabled={isPending}
+                        className="flex items-center gap-3 p-2.5 rounded-md w-full text-left hover-elevate"
+                        data-testid={`button-pick-file-${file.id}`}
+                      >
+                        <div className="flex-shrink-0">
+                          {getMimeTypeIcon(file.mimeType)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {file.name}
+                          </p>
+                          {meta}
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-muted-foreground py-6 text-center">
+                    {!isBrowseMode
+                      ? "No files found"
+                      : currentFolder
+                        ? "This folder is empty"
+                        : "Your Drive is empty"}
+                  </p>
+                )}
+              </div>
+            </>
           )}
         </div>
       </DialogContent>
