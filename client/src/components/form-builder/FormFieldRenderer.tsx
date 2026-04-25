@@ -24,6 +24,12 @@ import {
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { LocationSearch } from "@/components/location-search";
 import { EventScheduleEditor } from "@/components/event-schedule";
 import { TagAssignment } from "@/components/ui/tag-assignment";
@@ -57,6 +63,8 @@ interface FormFieldRendererProps {
   form: UseFormReturn<Record<string, unknown>>;
   onAddField?: (sectionId: string, fieldTitle: string) => void;
   onDeleteField?: (sectionId: string, fieldId: string) => void;
+  onAddSection?: (title: string, description?: string) => void;
+  onDeleteSection?: (sectionId: string) => void;
 }
 
 interface SingleFieldRendererProps {
@@ -400,12 +408,14 @@ interface SectionRendererProps {
   defaultExpanded?: boolean;
   onAddField?: (sectionId: string, fieldTitle: string) => void;
   onDeleteField?: (sectionId: string, fieldId: string) => void;
+  onDeleteSection?: (sectionId: string) => void;
 }
 
-function SectionRenderer({ section, form, defaultExpanded = true, onAddField, onDeleteField }: SectionRendererProps) {
+function SectionRenderer({ section, form, defaultExpanded = true, onAddField, onDeleteField, onDeleteSection }: SectionRendererProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newFieldTitle, setNewFieldTitle] = useState("");
+  const [showDeleteSectionConfirm, setShowDeleteSectionConfirm] = useState(false);
 
   const handleAddField = () => {
     const trimmed = newFieldTitle.trim();
@@ -415,39 +425,68 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
     setShowAddDialog(false);
   };
 
+  const canDeleteSection = section.fields.length === 0;
+
   return (
     <Card className="p-4" data-testid={`section-${section.id}`}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex items-center gap-2 w-full text-left cursor-pointer"
-            data-testid={`section-toggle-${section.id}`}
-          >
-  
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">{section.title}</h3>
-                  <ChevronDown
-                    className={cn(
-                      "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
-                      isOpen && "rotate-0"
-                    )}
-                  />
+        <div className="flex items-start gap-2">
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer"
+              data-testid={`section-toggle-${section.id}`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">{section.title}</h3>
+                    <ChevronDown
+                      className={cn(
+                        "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 -rotate-90",
+                        isOpen && "rotate-0"
+                      )}
+                    />
+                  </div>
+                  <span className="text-sm text-muted-foreground shrink-0" data-testid={`section-field-count-${section.id}`}>
+                    {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}
+                  </span>
                 </div>
-                <span className="text-sm text-muted-foreground shrink-0" data-testid={`section-field-count-${section.id}`}>
-                  {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}
-                </span>
+                {section.description && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {section.description}
+                  </p>
+                )}
               </div>
-              {section.description && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {section.description}
-                </p>
-              )}
-            </div>
-          </button>
-        </CollapsibleTrigger>
+            </button>
+          </CollapsibleTrigger>
+          {onDeleteSection && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={canDeleteSection ? -1 : 0}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-destructive"
+                      disabled={!canDeleteSection}
+                      onClick={() => setShowDeleteSectionConfirm(true)}
+                      data-testid={`button-delete-section-${section.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {canDeleteSection
+                    ? "Delete section"
+                    : "Remove all fields before deleting this section"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         <CollapsibleContent>
           <div className="space-y-4 pt-6">
             {section.fields.map((field) => (
@@ -524,31 +563,159 @@ function SectionRenderer({ section, form, defaultExpanded = true, onAddField, on
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteSectionConfirm} onOpenChange={setShowDeleteSectionConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Section</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{section.title}"? This section is empty and will be removed from the intake.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid={`button-cancel-delete-section-${section.id}`}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDeleteSection?.(section.id);
+                setShowDeleteSectionConfirm(false);
+              }}
+              className="bg-destructive text-destructive-foreground"
+              data-testid={`button-confirm-delete-section-${section.id}`}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
 
-export function FormFieldRenderer({ schema, form, onAddField, onDeleteField }: FormFieldRendererProps) {
-  if (!schema || schema.length === 0) {
-    return (
-      <Card className="p-8 text-center">
-        <p className="text-muted-foreground">No form fields to display.</p>
-      </Card>
-    );
-  }
+export function FormFieldRenderer({
+  schema,
+  form,
+  onAddField,
+  onDeleteField,
+  onAddSection,
+  onDeleteSection,
+}: FormFieldRendererProps) {
+  const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [newSectionDescription, setNewSectionDescription] = useState("");
+
+  const handleAddSection = () => {
+    const trimmedTitle = newSectionTitle.trim();
+    if (!trimmedTitle || !onAddSection) return;
+    const trimmedDescription = newSectionDescription.trim();
+    onAddSection(trimmedTitle, trimmedDescription || undefined);
+    setNewSectionTitle("");
+    setNewSectionDescription("");
+    setShowAddSectionDialog(false);
+  };
+
+  const hasSections = !!schema && schema.length > 0;
 
   return (
     <div className="space-y-4" data-testid="form-renderer">
-      {schema.map((section, index) => (
-        <SectionRenderer
-          key={section.id}
-          section={section}
-          form={form}
-          defaultExpanded={index === 0}
-          onAddField={onAddField}
-          onDeleteField={onDeleteField}
-        />
-      ))}
+      {hasSections ? (
+        schema.map((section, index) => (
+          <SectionRenderer
+            key={section.id}
+            section={section}
+            form={form}
+            defaultExpanded={index === 0}
+            onAddField={onAddField}
+            onDeleteField={onDeleteField}
+            onDeleteSection={onDeleteSection}
+          />
+        ))
+      ) : (
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">No form fields to display.</p>
+        </Card>
+      )}
+
+      {onAddSection && (
+        <div className="flex justify-end pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAddSectionDialog(true)}
+            data-testid="button-add-section"
+          >
+            <Plus className="h-4 w-4" />
+            Add section
+          </Button>
+        </div>
+      )}
+
+      <Dialog open={showAddSectionDialog} onOpenChange={setShowAddSectionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Section</DialogTitle>
+            <DialogDescription>
+              Create a new section to group related fields. You can add fields after the section is created.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium" htmlFor="add-section-title">
+                Section Title
+              </label>
+              <Input
+                id="add-section-title"
+                value={newSectionTitle}
+                onChange={(e) => setNewSectionTitle(e.target.value)}
+                placeholder="Enter section title"
+                className="mt-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddSection();
+                  }
+                }}
+                data-testid="input-add-section-title"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="add-section-description">
+                Description <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <Textarea
+                id="add-section-description"
+                value={newSectionDescription}
+                onChange={(e) => setNewSectionDescription(e.target.value)}
+                placeholder="Enter section description"
+                className="mt-2"
+                data-testid="input-add-section-description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setNewSectionTitle("");
+                setNewSectionDescription("");
+                setShowAddSectionDialog(false);
+              }}
+              data-testid="button-cancel-add-section"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddSection}
+              disabled={!newSectionTitle.trim()}
+              data-testid="button-confirm-add-section"
+            >
+              Add Section
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

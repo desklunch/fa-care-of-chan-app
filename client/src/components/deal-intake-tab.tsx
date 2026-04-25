@@ -607,6 +607,50 @@ function IntakeDraftForm({
     [localFormSchema, form, autosaveMutation],
   );
 
+  const handleAddSection = useCallback(
+    (title: string, description?: string) => {
+      const newSection: FormSection = {
+        id: `custom_section_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        title,
+        ...(description ? { description } : {}),
+        fields: [],
+      };
+
+      const updatedSchema = [...localFormSchema, newSection];
+      setLocalFormSchema(updatedSchema);
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: currentValues,
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
+  const handleDeleteSection = useCallback(
+    (sectionId: string) => {
+      const target = localFormSchema.find((s) => s.id === sectionId);
+      if (!target) return;
+      if (target.fields.length > 0) return;
+
+      const updatedSchema = localFormSchema.filter(
+        (section) => section.id !== sectionId,
+      );
+
+      setLocalFormSchema(updatedSchema);
+
+      setSaveStatus("saving");
+      const currentValues = form.getValues();
+      autosaveMutation.mutate({
+        formSchema: updatedSchema,
+        responseData: currentValues,
+      });
+    },
+    [localFormSchema, form, autosaveMutation],
+  );
+
   return (
     <div className="space-y-4 " data-testid="intake-draft-form">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -679,6 +723,16 @@ function IntakeDraftForm({
             onDeleteField={
               canWrite && intake.status === "draft"
                 ? handleDeleteField
+                : undefined
+            }
+            onAddSection={
+              canWrite && intake.status === "draft"
+                ? handleAddSection
+                : undefined
+            }
+            onDeleteSection={
+              canWrite && intake.status === "draft"
+                ? handleDeleteSection
                 : undefined
             }
           />
