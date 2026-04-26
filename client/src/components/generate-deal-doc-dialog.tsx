@@ -263,6 +263,7 @@ function DestinationFolderBrowser({
   return (
     <div className="space-y-2">
       {!showSectionChooser && (
+      <div>
         <div
           className="flex items-center gap-1 flex-wrap text-xs text-muted-foreground"
           data-testid="destination-picker-breadcrumb"
@@ -303,6 +304,7 @@ function DestinationFolderBrowser({
               </button>
             </span>
           ))}
+          </div>
           {canSelectCurrent && (
             <div className="ml-auto">
               <Button
