@@ -45,7 +45,6 @@ import {
   Copy,
   Bell,
   BellOff,
-  Sheet,
 } from "lucide-react";
 import { CommentList } from "@/components/ui/comments";
 import { GenerateDealDocDialog } from "@/components/generate-deal-doc-dialog";
@@ -423,15 +422,6 @@ export default function DealDetail() {
                 },
               ]
             : []),
-        ...(user?.role === "admin"
-          ? [
-              {
-                label: "Generate Sheet",
-                onClick: () => setShowGenerateDoc(true),
-                icon: Sheet,
-              },
-            ]
-          : []),
       ]}
     >
       <div className="">
