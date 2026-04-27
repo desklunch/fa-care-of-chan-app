@@ -94,7 +94,10 @@ export default function FormTemplateDetailPage() {
       await apiRequest("DELETE", `/api/form-templates/${templateId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/form-templates"],
+        refetchType: "all",
+      });
       toast({
         title: "Template deleted",
         description: "Form template has been deleted.",

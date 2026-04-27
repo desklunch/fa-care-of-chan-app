@@ -126,7 +126,10 @@ export default function AdminFormTemplateFormPage() {
       return res.json();
     },
     onSuccess: (created: { id: string }) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/form-templates"],
+        refetchType: "all",
+      });
       toast({
         title: "Template created",
         description: "Form template has been created successfully.",
@@ -166,8 +169,14 @@ export default function AdminFormTemplateFormPage() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates", id] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/form-templates"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/form-templates", id],
+        refetchType: "all",
+      });
       toast({
         title: "Template updated",
         description: "Form template has been updated successfully.",
@@ -200,7 +209,10 @@ export default function AdminFormTemplateFormPage() {
       await apiRequest("DELETE", `/api/form-templates/${templateId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/form-templates"],
+        refetchType: "all",
+      });
       toast({
         title: "Template deleted",
         description: "Form template has been deleted successfully.",

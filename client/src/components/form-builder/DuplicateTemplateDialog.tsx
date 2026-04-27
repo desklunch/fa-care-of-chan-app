@@ -89,7 +89,10 @@ export function DuplicateTemplateDialog({
       return (await res.json()) as FormTemplate;
     },
     onSuccess: (created) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/form-templates"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/form-templates"],
+        refetchType: "all",
+      });
       toast({
         title: "Template duplicated",
         description: `Created "${created.name}".`,
