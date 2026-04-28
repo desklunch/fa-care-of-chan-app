@@ -55,6 +55,7 @@ export function PrimaryContactPicker({
   const [newContactFirstName, setNewContactFirstName] = useState("");
   const [newContactLastName, setNewContactLastName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
+  const [newContactJobTitle, setNewContactJobTitle] = useState("");
   const [newContactErrors, setNewContactErrors] = useState<
     Record<string, string>
   >({});
@@ -64,6 +65,7 @@ export function PrimaryContactPicker({
     setNewContactFirstName("");
     setNewContactLastName("");
     setNewContactEmail("");
+    setNewContactJobTitle("");
   };
 
   const createContactMutation = useMutation({
@@ -88,6 +90,7 @@ export function PrimaryContactPicker({
         firstName: newContactFirstName.trim(),
         lastName: newContactLastName.trim(),
         emailAddresses: [newContactEmail.trim()],
+        jobTitle: newContactJobTitle.trim() || null,
       });
       const contact = await contactRes.json();
 
@@ -257,6 +260,16 @@ export function PrimaryContactPicker({
                   {newContactErrors.email}
                 </p>
               )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="new-contact-job-title">Job Title</Label>
+              <Input
+                id="new-contact-job-title"
+                data-testid="input-new-contact-job-title"
+                value={newContactJobTitle}
+                onChange={(e) => setNewContactJobTitle(e.target.value)}
+                placeholder="Job title (optional)"
+              />
             </div>
           </div>
           <DialogFooter>
