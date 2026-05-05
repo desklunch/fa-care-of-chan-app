@@ -176,9 +176,24 @@ export const notificationsStorage = {
     const missing = NOTIFICATION_TYPE_KEYS.filter((k) => !existingTypes.has(k));
 
     if (missing.length > 0) {
+      const PERMISSION_SCOPED_DEFAULTS_ON = new Set([
+        "app_feature:created",
+        "app_issue:created",
+      ]);
       await db
         .insert(notificationTypePreferences)
-        .values(missing.map((notificationType) => ({ userId, notificationType })))
+        .values(
+          missing.map((notificationType) => {
+            const on = PERMISSION_SCOPED_DEFAULTS_ON.has(notificationType);
+            return {
+              userId,
+              notificationType,
+              inAppEnabled: on,
+              emailEnabled: on,
+              pushEnabled: on,
+            };
+          }),
+        )
         .onConflictDoNothing();
     }
 

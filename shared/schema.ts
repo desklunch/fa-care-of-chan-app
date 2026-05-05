@@ -3449,6 +3449,8 @@ export const NOTIFICATION_TYPE_KEYS = [
   "comment:reply_created",
   "feature_comment:created",
   "form:submission_received",
+  "app_feature:created",
+  "app_issue:created",
 ] as const;
 
 export type NotificationTypeKey = (typeof NOTIFICATION_TYPE_KEYS)[number];
@@ -3476,6 +3478,14 @@ export const NOTIFICATION_TYPE_REGISTRY: Record<
   "form:submission_received": {
     label: "Form Submission",
     description: "When a new response is submitted to a form request",
+  },
+  "app_feature:created": {
+    label: "New Feature Request",
+    description: "When a teammate submits a new app feature request",
+  },
+  "app_issue:created": {
+    label: "New App Issue",
+    description: "When a teammate reports a new app issue",
   },
 };
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useBootstrap, BOOTSTRAP_QUERY_KEY } from "@/hooks/useBootstrap";
-import { Bell, Check, CheckCheck, X, Send } from "lucide-react";
+import { Bell, Check, CheckCheck, X, Send, Lightbulb, Bug, MessageSquare, Briefcase, FileText, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -17,11 +17,30 @@ function getEntityRoute(entityType?: string | null, entityId?: string | null): s
     vendor: `/vendors/${entityId}`,
     contact: `/contacts/${entityId}`,
     client: `/clients/${entityId}`,
-    app_feature: `/features/${entityId}`,
-    app_issue: `/issues/${entityId}`,
+    app_feature: `/app/features/${entityId}`,
+    app_issue: `/app/issues/${entityId}`,
     form_request: `/form-requests/${entityId}`,
   };
   return routeMap[entityType] || null;
+}
+
+function getNotificationIcon(type?: string | null) {
+  switch (type) {
+    case "app_feature:created":
+      return Lightbulb;
+    case "app_issue:created":
+      return Bug;
+    case "comment:created":
+    case "comment:reply_created":
+    case "feature_comment:created":
+      return MessageSquare;
+    case "deal:owner_assigned":
+      return Briefcase;
+    case "form:submission_received":
+      return FileText;
+    default:
+      return Mail;
+  }
 }
 
 function timeAgo(date: Date | string): string {
@@ -198,7 +217,9 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
               </div>
             ) : (
               <div>
-                {notifications.map((notification) => (
+                {notifications.map((notification) => {
+                  const Icon = getNotificationIcon(notification.type);
+                  return (
                   <div
                     key={notification.id}
                     className={`p-3 cursor-pointer hover-elevate border-b border-border last:border-b-0 ${
@@ -208,6 +229,7 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
                     data-testid={`notification-item-${notification.id}`}
                   >
                     <div className="flex items-start gap-2">
+                      <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <p className={`text-sm truncate ${!notification.read ? "font-semibold" : ""}`}>
@@ -242,7 +264,8 @@ export function NotificationBell({ variant = "default" }: NotificationBellProps)
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>

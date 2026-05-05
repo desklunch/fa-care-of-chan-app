@@ -160,7 +160,7 @@ export default function NotificationPreferences() {
                         </TooltipTrigger>
                         <TooltipContent>
                           Email Notifications
-                          {!isAdmin && " (admin only)"}
+                          {!isAdmin && " (admin only, except feature & issue alerts)"}
                         </TooltipContent>
                       </Tooltip>
                     </th>
@@ -219,16 +219,23 @@ export default function NotificationPreferences() {
                                     onCheckedChange={(checked) =>
                                       handleToggle(typeKey, "emailEnabled", checked)
                                     }
-                                    disabled={updateMutation.isPending || !isAdmin}
+                                    disabled={
+                                      updateMutation.isPending ||
+                                      (!isAdmin &&
+                                        typeKey !== "app_feature:created" &&
+                                        typeKey !== "app_issue:created")
+                                    }
                                     data-testid={`switch-email-${typeKey}`}
                                   />
                                 </div>
                               </TooltipTrigger>
-                              {!isAdmin && (
-                                <TooltipContent>
-                                  Email notifications are currently limited to admin users
-                                </TooltipContent>
-                              )}
+                              {!isAdmin &&
+                                typeKey !== "app_feature:created" &&
+                                typeKey !== "app_issue:created" && (
+                                  <TooltipContent>
+                                    Email notifications are currently limited to admin users
+                                  </TooltipContent>
+                                )}
                             </Tooltip>
                           </div>
                         </td>
@@ -252,7 +259,8 @@ export default function NotificationPreferences() {
             </div>
             {!isAdmin && (
               <p className="text-xs text-muted-foreground mt-4" data-testid="text-email-admin-note">
-                Email notifications are currently limited to admin users.
+                Email notifications are currently limited to admin users, except
+                for new feature requests and new app issues.
               </p>
             )}
           </CardContent>

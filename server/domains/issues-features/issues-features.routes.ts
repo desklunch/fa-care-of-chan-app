@@ -81,6 +81,18 @@ export function registerIssuesFeaturesRoutes(app: Express): void {
 
       void notificationsStorage.createFollow(userId, "app_feature", feature.id).catch(() => {});
 
+      domainEvents.emit({
+        type: "app_feature:created",
+        featureId: feature.id,
+        title: feature.title,
+        description: feature.description ?? null,
+        categoryId: feature.categoryId,
+        priority: feature.priority ?? null,
+        submitterId: userId,
+        actorId: userId,
+        timestamp: new Date(),
+      });
+
       res.status(201).json(feature);
     } catch (error) {
       console.error("Error creating feature:", error);
@@ -400,6 +412,17 @@ export function registerIssuesFeaturesRoutes(app: Express): void {
       });
 
       void notificationsStorage.createFollow(userId, "app_issue", issue.id).catch(() => {});
+
+      domainEvents.emit({
+        type: "app_issue:created",
+        issueId: issue.id,
+        title: issue.title,
+        description: issue.description ?? null,
+        severity: issue.severity ?? null,
+        submitterId: userId,
+        actorId: userId,
+        timestamp: new Date(),
+      });
 
       res.status(201).json(issue);
     } catch (error) {

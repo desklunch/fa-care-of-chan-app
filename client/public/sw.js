@@ -119,8 +119,8 @@ self.addEventListener("notificationclick", (event) => {
       vendor: "/vendors/",
       contact: "/contacts/",
       client: "/clients/",
-      app_feature: "/features/",
-      app_issue: "/issues/",
+      app_feature: "/app/features/",
+      app_issue: "/app/issues/",
       form_request: "/form-requests/",
     };
     const prefix = routeMap[data.entityType];

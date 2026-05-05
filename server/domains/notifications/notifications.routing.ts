@@ -5,8 +5,11 @@ import type {
   CommentReplyCreatedEvent,
   FeatureCommentCreatedEvent,
   FormSubmissionReceivedEvent,
+  AppFeatureCreatedEvent,
+  AppIssueCreatedEvent,
 } from "../../lib/events";
 import { notificationsStorage } from "./notifications.storage";
+import { getUserIdsWithPermission } from "../../lib/users-by-permission";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
 import {
@@ -192,6 +195,69 @@ export const NOTIFICATION_RULES: NotificationRule[] = [
         entityType: "app_feature",
         entityId: e.featureId,
         metadata: { commentId: e.commentId, featureTitle: e.featureTitle, commentBody: e.body },
+      };
+    },
+  },
+  {
+    eventType: "app_feature:created",
+    resolveRecipients: async (event) => {
+      const e = event as AppFeatureCreatedEvent;
+      const recipients = await getUserIdsWithPermission("app_features.notify");
+      return { recipientIds: recipients.filter((id) => id !== e.submitterId) };
+    },
+    buildPayload: async (event) => {
+      const e = event as AppFeatureCreatedEvent;
+      const submitterName = await notificationsStorage.getUserName(e.submitterId);
+      const preview =
+        e.description && e.description.length > 140
+          ? e.description.substring(0, 140) + "..."
+          : e.description || "";
+      const priorityTag = e.priority ? ` [${e.priority}]` : "";
+      const priorityPrefix = e.priority ? `Priority: ${e.priority}. ` : "";
+      return {
+        type: "app_feature:created",
+        title: `New feature request${priorityTag}: ${e.title}`,
+        body: preview
+          ? `${submitterName} requested "${e.title}" — ${priorityPrefix}${preview}`
+          : `${submitterName} requested "${e.title}"${e.priority ? ` (${e.priority} priority)` : ""}`,
+        entityType: "app_feature",
+        entityId: e.featureId,
+        metadata: {
+          submitterId: e.submitterId,
+          submitterName,
+          priority: e.priority,
+        },
+      };
+    },
+  },
+  {
+    eventType: "app_issue:created",
+    resolveRecipients: async (event) => {
+      const e = event as AppIssueCreatedEvent;
+      const recipients = await getUserIdsWithPermission("app_issues.notify");
+      return { recipientIds: recipients.filter((id) => id !== e.submitterId) };
+    },
+    buildPayload: async (event) => {
+      const e = event as AppIssueCreatedEvent;
+      const submitterName = await notificationsStorage.getUserName(e.submitterId);
+      const preview =
+        e.description && e.description.length > 140
+          ? e.description.substring(0, 140) + "..."
+          : e.description || "";
+      const severityLabel = e.severity ? ` [${e.severity}]` : "";
+      return {
+        type: "app_issue:created",
+        title: `New app issue${severityLabel}: ${e.title}`,
+        body: preview
+          ? `${submitterName} reported "${e.title}" — ${preview}`
+          : `${submitterName} reported "${e.title}"`,
+        entityType: "app_issue",
+        entityId: e.issueId,
+        metadata: {
+          submitterId: e.submitterId,
+          submitterName,
+          severity: e.severity,
+        },
       };
     },
   },

@@ -63,8 +63,16 @@ export class NotificationService {
   ): Promise<void> {
     const typePref = await notificationsStorage.getTypePref(recipientId, payload.type);
 
+    // Email is gated to admins for legacy notification types. New types whose
+    // recipients are already scoped by permission may opt out of that gate.
+    const PERMISSION_SCOPED_EMAIL_TYPES = new Set([
+      "app_feature:created",
+      "app_issue:created",
+    ]);
+    const requiresAdminForEmail = !PERMISSION_SCOPED_EMAIL_TYPES.has(payload.type);
+
     let isAdmin = false;
-    if (this.channels.some((c) => c.name === "email")) {
+    if (requiresAdminForEmail && this.channels.some((c) => c.name === "email")) {
       const role = await notificationsStorage.getUserRole(recipientId);
       isAdmin = role === "admin";
     }
@@ -87,7 +95,7 @@ export class NotificationService {
     for (const channel of this.channels) {
       const isEnabled =
         (channel.name === "in_app" && inAppEnabled) ||
-        (channel.name === "email" && emailEnabled && isAdmin) ||
+        (channel.name === "email" && emailEnabled && (!requiresAdminForEmail || isAdmin)) ||
         (channel.name === "push" && pushEnabled);
 
       if (!isEnabled) continue;

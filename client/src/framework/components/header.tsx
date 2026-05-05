@@ -1,6 +1,5 @@
 import { ChevronRight, MoreVertical, Menu, Bug, Lightbulb } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
-import { usePermissions } from "@/hooks/usePermissions";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,7 +91,6 @@ export default function Header({
   additionalActions,
 }: HeaderProps) {
   const { openIssueDialog, openFeatureDialog } = useQuickCreate();
-  const { role } = usePermissions();
   const hasPageActions =
     primaryAction || (additionalActions && additionalActions.length > 0);
   const allDropdownActions = [
@@ -200,7 +198,7 @@ export default function Header({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {role === "admin" && <NotificationBell variant="default" />}
+        <NotificationBell variant="default" />
       </div>
     </header>
   );

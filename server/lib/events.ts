@@ -851,7 +851,32 @@ export interface VendorBulkEmailSentEvent {
   timestamp: Date;
 }
 
+export interface AppFeatureCreatedEvent {
+  type: "app_feature:created";
+  featureId: string;
+  title: string;
+  description: string | null;
+  categoryId: string;
+  priority: string | null;
+  submitterId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface AppIssueCreatedEvent {
+  type: "app_issue:created";
+  issueId: string;
+  title: string;
+  description: string | null;
+  severity: string | null;
+  submitterId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
 export type DomainEvent =
+  | AppFeatureCreatedEvent
+  | AppIssueCreatedEvent
   | DealCreatedEvent
   | DealUpdatedEvent
   | DealDeletedEvent
@@ -1046,6 +1071,8 @@ type EventMap = {
   "entity_task:completed": EntityTaskCompletedEvent;
   "entity_task:collaborator_added": EntityTaskCollaboratorAddedEvent;
   "entity_task:collaborator_removed": EntityTaskCollaboratorRemovedEvent;
+  "app_feature:created": AppFeatureCreatedEvent;
+  "app_issue:created": AppIssueCreatedEvent;
   "*": DomainEvent;
 };
 

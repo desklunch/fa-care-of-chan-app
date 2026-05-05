@@ -57,6 +57,22 @@ export async function seedRoles(): Promise<void> {
         description: roleDef.description,
       });
       console.log(`Seeded role: ${roleDef.name}`);
+      continue;
+    }
+
+    // For system roles, ensure newly added catalog permissions are merged in
+    // so upgrades automatically pick up new tier-default permissions.
+    if (existing.isSystem) {
+      const current = new Set(existing.permissions ?? []);
+      const missing = roleDef.permissions.filter((p) => !current.has(p));
+      if (missing.length > 0) {
+        const merged = [...current, ...missing];
+        await adminStorage.updateRole(existing.id, { permissions: merged });
+        await adminStorage.invalidatePermissionCacheForRole(existing.name);
+        console.log(
+          `Updated system role '${existing.name}' with new permissions: ${missing.join(", ")}`,
+        );
+      }
     }
   }
 }

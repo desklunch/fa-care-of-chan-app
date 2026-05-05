@@ -11,6 +11,7 @@ import { GoogleAuthProviderWrapper } from "@/lib/google-auth";
 import { TierOverrideProvider } from "@/contexts/tier-override-context";
 import { LayoutProvider, AppShell } from "@/framework";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { NavigationWatchdog } from "@/hooks/useNavigationWatchdog";
 import { NavigationLogger } from "@/hooks/useNavigationLogger";
@@ -499,6 +500,7 @@ function AuthenticatedRoutes() {
   const layoutConfig = useLayoutConfig();
   const { user } = useAuth();
   const showAiChat = user?.role === "admin" || user?.role === "manager";
+  useNotificationToasts();
 
   return (
     <LayoutProvider config={layoutConfig}>

@@ -86,6 +86,8 @@ export const PERMISSIONS = {
   "app_features.read": "app_features.read",
   "app_features.vote": "app_features.vote",
   "app_features.manage": "app_features.manage",
+  "app_features.notify": "app_features.notify",
+  "app_issues.notify": "app_issues.notify",
 
   // Releases - admins only
   "releases.read": "releases.read",
@@ -165,6 +167,8 @@ export const TIER_3_PERMISSIONS: Permission[] = [
   "team.manage",
   "audit.read",
   "audit.export",
+  "app_features.notify",
+  "app_issues.notify",
   "releases.read",
   "releases.manage",
   "admin.settings",
