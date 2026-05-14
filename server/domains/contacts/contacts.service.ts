@@ -4,6 +4,27 @@ import { contactsStorage } from "./contacts.storage";
 import { getChangedFields } from "../../audit";
 import type { Contact, CreateContact, UpdateContact } from "@shared/schema";
 import { insertContactSchema, updateContactSchema } from "@shared/schema";
+import type { ContactLocation } from "@shared/schema";
+import { validateAndEnrichLocation } from "../places/places.service";
+
+async function enrichLocationOrThrow(
+  location: ContactLocation | null | undefined,
+): Promise<ContactLocation | null | undefined> {
+  if (location === undefined) return undefined;
+  if (location === null) return null;
+  if (!location.placeId) {
+    throw ServiceError.validation(
+      "Contact location must be selected from the city picker (placeId required)",
+    );
+  }
+  try {
+    return await validateAndEnrichLocation(location);
+  } catch (err: any) {
+    throw ServiceError.validation(
+      err?.message || "Invalid contact location",
+    );
+  }
+}
 
 export class ContactsService extends BaseService {
   async create(data: CreateContact, actorId: string): Promise<Contact> {
@@ -14,7 +35,15 @@ export class ContactsService extends BaseService {
       });
     }
 
-    const contact = await contactsStorage.createContact(parsed.data);
+    const enrichedLocation = await enrichLocationOrThrow(
+      parsed.data.location as ContactLocation | null | undefined,
+    );
+    const toCreate =
+      enrichedLocation !== undefined
+        ? { ...parsed.data, location: enrichedLocation }
+        : parsed.data;
+
+    const contact = await contactsStorage.createContact(toCreate);
 
     domainEvents.emit({
       type: "contact:created",
@@ -38,7 +67,15 @@ export class ContactsService extends BaseService {
     const existing = await contactsStorage.getContactById(id);
     this.ensureExists(existing, "Contact", id);
 
-    const contact = await contactsStorage.updateContact(id, parsed.data);
+    const enrichedLocation = await enrichLocationOrThrow(
+      parsed.data.location as ContactLocation | null | undefined,
+    );
+    const toUpdate =
+      enrichedLocation !== undefined
+        ? { ...parsed.data, location: enrichedLocation }
+        : parsed.data;
+
+    const contact = await contactsStorage.updateContact(id, toUpdate);
     if (!contact) {
       throw ServiceError.notFound("Contact", id);
     }

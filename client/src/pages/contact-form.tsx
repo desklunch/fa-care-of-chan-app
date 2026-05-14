@@ -13,12 +13,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Save, Plus, X, Loader2 } from "lucide-react";
-import type { Contact } from "@shared/schema";
+import { Save, Plus, X, Loader2, MapPin } from "lucide-react";
+import type { Contact, ContactLocation } from "@shared/schema";
 import { insertContactSchema } from "@shared/schema";
 import { z } from "zod";
 import { PermissionGate } from "@/components/permission-gate";
 import { NoPermissionMessage } from "@/components/no-permission-message";
+import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
+import { Badge } from "@/components/ui/badge";
+import { resolveContactLocationTimezone } from "@/lib/contact-location";
 
 const formSchema = insertContactSchema.extend({
   phoneNumbers: z.array(z.string()).optional().nullable(),
@@ -38,6 +41,8 @@ export default function ContactForm() {
 
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([""]);
   const [emailAddresses, setEmailAddresses] = useState<string[]>([""]);
+  const [location, setLocationValue] = useState<ContactLocation | null>(null);
+  const [resolvingTimezone, setResolvingTimezone] = useState(false);
 
   const { data: existingContact, isLoading: contactLoading } = useQuery<Contact>({
     queryKey: ["/api/contacts", contactId],
@@ -74,6 +79,7 @@ export default function ContactForm() {
       });
       setPhoneNumbers(existingContact.phoneNumbers?.length ? existingContact.phoneNumbers : [""]);
       setEmailAddresses(existingContact.emailAddresses?.length ? existingContact.emailAddresses : [""]);
+      setLocationValue((existingContact.location as ContactLocation | null) ?? null);
     }
   }, [isEditMode, existingContact, form]);
 
@@ -123,6 +129,7 @@ export default function ContactForm() {
       ...data,
       phoneNumbers: filteredPhones.length > 0 ? filteredPhones : null,
       emailAddresses: filteredEmails.length > 0 ? filteredEmails : null,
+      location: location ?? null,
     };
     
     if (isEditMode) {
@@ -164,7 +171,7 @@ export default function ContactForm() {
     setEmailAddresses(updated);
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || resolvingTimezone;
   const isLoading = isEditMode && contactLoading;
 
   if (isLoading) {
@@ -403,6 +410,34 @@ export default function ContactForm() {
                     </FormItem>
                   )}
                 />
+
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <PlaceAutocomplete
+                      value={location}
+                      onSelect={async (place) => {
+                        if (!place) {
+                          setLocationValue(null);
+                          return;
+                        }
+                        setResolvingTimezone(true);
+                        try {
+                          const enriched = await resolveContactLocationTimezone(place);
+                          setLocationValue(enriched);
+                        } finally {
+                          setResolvingTimezone(false);
+                        }
+                      }}
+                      placeholder="Search for a city..."
+                      data-testid="input-location"
+                    />
+                  </FormControl>
+
+                  <FormDescription>
+                    City, state, or country.
+                  </FormDescription>
+                </FormItem>
               </CardContent>
             </Card>
 

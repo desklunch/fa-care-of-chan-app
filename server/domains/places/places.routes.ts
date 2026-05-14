@@ -1,5 +1,6 @@
 import { Express } from "express";
 import { isAuthenticated } from "../../googleAuth";
+import { getTimezoneForPlace } from "./places.service";
 
 export function registerPlacesRoutes(app: Express): void {
   // Google Places Autocomplete - cities only
@@ -665,6 +666,27 @@ export function registerPlacesRoutes(app: Express): void {
     } catch (error) {
       console.error("Error refreshing place details:", error);
       res.status(500).json({ message: "Failed to refresh place details" });
+    }
+  });
+
+  // Google Time Zone API - Resolve IANA timezone for a placeId
+  app.get("/api/places/:placeId/timezone", isAuthenticated, async (req, res) => {
+    try {
+      const { placeId } = req.params;
+      if (!placeId) {
+        return res.status(400).json({ message: "Place ID is required" });
+      }
+
+      try {
+        const tz = await getTimezoneForPlace(placeId);
+        res.json(tz);
+      } catch (err: any) {
+        console.error("Error resolving timezone:", err);
+        res.status(502).json({ message: err?.message || "Failed to resolve timezone" });
+      }
+    } catch (error) {
+      console.error("Error resolving timezone:", error);
+      res.status(500).json({ message: "Failed to resolve timezone" });
     }
   });
 

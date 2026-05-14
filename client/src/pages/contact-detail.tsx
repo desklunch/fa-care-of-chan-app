@@ -15,7 +15,17 @@ import {
   Trash2,
   Handshake,
   SquarePen,
+  MapPin,
+  Check,
+  X,
+  Pencil,
 } from "lucide-react";
+import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
+import {
+  resolveContactLocationTimezone,
+  formatLocationDisplay,
+  getViewerOffsetLabel,
+} from "@/lib/contact-location";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
-import type { Contact, Client, Vendor, DealWithRelations, DealStatus } from "@shared/schema";
+import type { Contact, Client, Vendor, DealWithRelations, DealStatus, ContactLocation } from "@shared/schema";
 
 interface ContactWithFullRelations extends Contact {
   linkedClients: Client[];
@@ -140,6 +150,9 @@ export default function ContactDetail() {
     saveField(field, value);
   };
 
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [pendingLocation, setPendingLocation] = useState<ContactLocation | null>(null);
+  const [resolvingLocationTz, setResolvingLocationTz] = useState(false);
   const handleLinkClient = (client: Client) => {
     setLocalLinkedClients((prev) => [...prev, client]);
     setShowClientSearch(false);
@@ -333,7 +346,7 @@ export default function ContactDetail() {
               </FieldRow>
             )) : (
               <FieldRow label="Client" testId="field-linked-client-empty">
-                <span className="text-muted-foreground">Not set</span>
+                <span className="text-muted-foreground">+ Add</span>
               </FieldRow>
             )}
 
@@ -420,7 +433,7 @@ export default function ContactDetail() {
               </FieldRow>
             )) : (
               <FieldRow label="Vendor" testId="field-linked-vendor-empty">
-                <span className="text-muted-foreground">Not set</span>
+                <span className="text-muted-foreground">+ Add</span>
               </FieldRow>
             )}
 
@@ -547,6 +560,112 @@ export default function ContactDetail() {
               isLoading={isFieldLoading("homeAddress")}
               error={getFieldError("homeAddress")}
             />
+
+            <FieldRow label="Location" testId="field-contact-location">
+              {editingLocation ? (
+                <div className="flex flex-col gap-2">
+                  <PlaceAutocomplete
+                    value={pendingLocation}
+                    onSelect={async (place) => {
+                      if (!place) {
+                        setPendingLocation(null);
+                        return;
+                      }
+                      setResolvingLocationTz(true);
+                      try {
+                        const enriched = await resolveContactLocationTimezone(place);
+                        setPendingLocation(enriched);
+                      } finally {
+                        setResolvingLocationTz(false);
+                      }
+                    }}
+                    placeholder="Search for a city..."
+                    data-testid="input-contact-location"
+                  />
+             
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        handleFieldSave("location", pendingLocation);
+                        setEditingLocation(false);
+                      }}
+                      disabled={resolvingLocationTz || isFieldLoading("location")}
+                      data-testid="button-save-location"
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingLocation(false);
+                        setPendingLocation(null);
+                      }}
+                      data-testid="button-cancel-location"
+                    >
+                      Cancel
+                    </Button>
+            
+                  </div>
+                  {getFieldError("location") && (
+                    <p className="text-sm text-destructive">{getFieldError("location")}</p>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className="group flex items-start gap-2"
+                  onDoubleClick={() => {
+                    if (!canEdit) return;
+                    setPendingLocation((contact.location as ContactLocation | null) ?? null);
+                    setEditingLocation(true);
+                  }}
+                  data-testid="field-location-display"
+                >
+                  <div className="flex-1 min-w-0">
+                    {contact.location ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span data-testid="text-contact-location">
+                          {formatLocationDisplay(contact.location as ContactLocation)}
+                        </span>
+                        {(() => {
+                          const offset = getViewerOffsetLabel(
+                            contact.location as ContactLocation,
+                          );
+                          return offset ? (
+                            <Badge
+                              variant="secondary"
+                              data-testid="badge-contact-tz-offset"
+                            >
+                              {offset}
+                            </Badge>
+                          ) : null;
+                        })()}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {canEdit ? "+ Add" : "—"}
+                      </span>
+                    )}
+                  </div>
+                  {canEdit && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      onClick={() => {
+                        setPendingLocation((contact.location as ContactLocation | null) ?? null);
+                        setEditingLocation(true);
+                      }}
+                      data-testid="button-edit-location"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </FieldRow>
 
             <EditableField
               label="Date of Birth"

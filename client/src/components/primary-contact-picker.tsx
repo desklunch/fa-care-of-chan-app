@@ -17,11 +17,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, MapPin, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import type { Contact } from "@shared/schema";
+import type { Contact, ContactLocation } from "@shared/schema";
+import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
+import { Badge } from "@/components/ui/badge";
+import { resolveContactLocationTimezone } from "@/lib/contact-location";
 
 export interface PrimaryContactPickerProps {
   clientId: string | null | undefined;
@@ -56,6 +59,9 @@ export function PrimaryContactPicker({
   const [newContactLastName, setNewContactLastName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
   const [newContactJobTitle, setNewContactJobTitle] = useState("");
+  const [newContactLocation, setNewContactLocation] =
+    useState<ContactLocation | null>(null);
+  const [resolvingTimezone, setResolvingTimezone] = useState(false);
   const [newContactErrors, setNewContactErrors] = useState<
     Record<string, string>
   >({});
@@ -66,6 +72,7 @@ export function PrimaryContactPicker({
     setNewContactLastName("");
     setNewContactEmail("");
     setNewContactJobTitle("");
+    setNewContactLocation(null);
   };
 
   const createContactMutation = useMutation({
@@ -91,6 +98,7 @@ export function PrimaryContactPicker({
         lastName: newContactLastName.trim(),
         emailAddresses: [newContactEmail.trim()],
         jobTitle: newContactJobTitle.trim() || null,
+        location: newContactLocation,
       });
       const contact = await contactRes.json();
 
@@ -105,6 +113,7 @@ export function PrimaryContactPicker({
       queryClient.invalidateQueries({
         queryKey: ["/api/clients", clientId, "contacts"],
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       if (onContactCreated) {
         onContactCreated(contact.id);
       } else {
@@ -271,6 +280,28 @@ export function PrimaryContactPicker({
                 placeholder="Job title (optional)"
               />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Location</Label>
+              <PlaceAutocomplete
+                value={null}
+                onSelect={async (place) => {
+                  if (!place) {
+                    setNewContactLocation(null);
+                    return;
+                  }
+                  setResolvingTimezone(true);
+                  try {
+                    const enriched = await resolveContactLocationTimezone(place);
+                    setNewContactLocation(enriched);
+                  } finally {
+                    setResolvingTimezone(false);
+                  }
+                }}
+                placeholder="Search for a city (optional)..."
+                data-testid="input-new-contact-location"
+              />
+ 
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -282,7 +313,7 @@ export function PrimaryContactPicker({
             </Button>
             <Button
               onClick={() => createContactMutation.mutate()}
-              disabled={createContactMutation.isPending}
+              disabled={createContactMutation.isPending || resolvingTimezone}
               data-testid="button-submit-create-contact"
             >
               {createContactMutation.isPending && (

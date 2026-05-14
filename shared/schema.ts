@@ -207,6 +207,17 @@ export const contacts = pgTable(
     instagramUsername: varchar("instagram_username", { length: 100 }),
     linkedinUsername: varchar("linkedin_username", { length: 100 }),
     homeAddress: text("home_address"),
+    location: jsonb("location").$type<{
+      city: string;
+      region: string;
+      country: string;
+      placeId?: string;
+      regionCode?: string;
+      countryCode?: string;
+      displayName?: string;
+      timeZoneId?: string;
+      timeZoneName?: string;
+    }>(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -1829,6 +1840,21 @@ export const updateVendorServiceSchema = createInsertSchema(vendorServices).pick
 export type CreateVendorService = z.infer<typeof insertVendorServiceSchema>;
 export type UpdateVendorService = z.infer<typeof updateVendorServiceSchema>;
 
+// Contact location schema (city / region / country with timezone)
+export const contactLocationSchema = z.object({
+  city: z.string(),
+  region: z.string(),
+  country: z.string(),
+  placeId: z.string().optional(),
+  regionCode: z.string().optional(),
+  countryCode: z.string().optional(),
+  displayName: z.string().optional(),
+  timeZoneId: z.string().optional(),
+  timeZoneName: z.string().optional(),
+});
+
+export type ContactLocation = z.infer<typeof contactLocationSchema>;
+
 // Contact schemas
 export const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
@@ -1844,6 +1870,7 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   instagramUsername: z.string().max(100).optional().nullable(),
   linkedinUsername: z.string().max(100).optional().nullable(),
   homeAddress: z.string().optional().nullable(),
+  location: contactLocationSchema.optional().nullable(),
   externalId: z.string().optional().nullable(),
 });
 

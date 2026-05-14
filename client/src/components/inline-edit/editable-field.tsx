@@ -41,7 +41,7 @@ export function EditableField({
   booleanValue = false,
   onSave,
   displayValue,
-  placeholder = "Not set",
+  placeholder = "+ Add",
   disabled = false,
   valueClassName,
   isLoading = false,

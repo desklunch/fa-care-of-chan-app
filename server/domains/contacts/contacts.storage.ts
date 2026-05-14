@@ -58,6 +58,7 @@ export class ContactsStorage {
       instagramUsername: row.instagram_username,
       linkedinUsername: row.linkedin_username,
       homeAddress: row.home_address,
+      location: row.location,
       dateOfBirth: row.date_of_birth,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
