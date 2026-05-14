@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useParams, Link } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -233,9 +233,46 @@ export default function ContactDetail() {
       ] : []}
     >
       <div className="max-w-4xl space-y-6 p-4 md:p-6">
-        <h1 className="text-3xl font-bold" data-testid="text-contact-name">
-          {fullName}
-        </h1>
+        <div className="space-y-1">
+          {(contact.linkedClients.length > 0 || contact.linkedVendors.length > 0) && (
+            <div className="text-sm text-muted-foreground" data-testid="text-contact-affiliations">
+              {[
+                ...contact.linkedClients.map((c) => (
+                  <Link
+                    key={`client-${c.id}`}
+                    href={`/clients/${c.id}`}
+                    className="hover:underline hover:text-foreground"
+                    data-testid={`link-header-client-${c.id}`}
+                  >
+                    {c.name}
+                  </Link>
+                )),
+                ...contact.linkedVendors.map((v) => (
+                  <Link
+                    key={`vendor-${v.id}`}
+                    href={`/vendors/${v.id}`}
+                    className="hover:underline hover:text-foreground"
+                    data-testid={`link-header-vendor-${v.id}`}
+                  >
+                    {v.businessName}
+                  </Link>
+                )),
+              ].reduce<ReactNode[]>((acc, node, i) => {
+                if (i > 0) acc.push(<span key={`sep-${i}`}>, </span>);
+                acc.push(node);
+                return acc;
+              }, [])}
+            </div>
+          )}
+          <h1 className="text-3xl font-bold" data-testid="text-contact-name">
+            {fullName}
+          </h1>
+          {contact.jobTitle && (
+            <div className="text-sm text-muted-foreground" data-testid="text-contact-job-title">
+              {contact.jobTitle}
+            </div>
+          )}
+        </div>
 
         <Card>
           <CardContent className="py-2">
