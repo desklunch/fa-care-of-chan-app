@@ -205,11 +205,35 @@ export async function getDriveAccessToken(
       session.driveTokenExpiry = refreshed.expiry_date;
     }
     return refreshed.access_token;
-  } catch (error) {
-    console.error("Failed to refresh Drive token:", error);
+  } catch (error: any) {
     if (session) {
       session.driveAccessToken = null;
       session.driveTokenExpiry = null;
+    }
+    const oauthError =
+      error?.response?.data?.error ??
+      error?.data?.error ??
+      (typeof error?.message === "string" && /invalid_grant|invalid_client|unauthorized_client/.test(error.message)
+        ? error.message.match(/invalid_grant|invalid_client|unauthorized_client/)?.[0]
+        : undefined);
+    const unrecoverable =
+      oauthError === "invalid_grant" ||
+      oauthError === "invalid_client" ||
+      oauthError === "unauthorized_client";
+    if (unrecoverable) {
+      console.warn(
+        `Drive refresh token is no longer valid for user ${userId} (${oauthError}); clearing stored credential.`,
+      );
+      try {
+        await storage.deleteUserGoogleCredential(userId);
+      } catch (clearErr) {
+        console.error("Failed to clear invalid Drive credential:", clearErr);
+      }
+    } else {
+      console.error(
+        `Failed to refresh Drive token for user ${userId} (transient, credential preserved):`,
+        error,
+      );
     }
     return null;
   }
