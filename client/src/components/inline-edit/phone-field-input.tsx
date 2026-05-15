@@ -35,8 +35,8 @@ export function PhoneFieldInput({
   return (
     <div
       className={cn(
-        "phone-field-input flex items-center gap-2 rounded-md border border-input bg-background pl-3 pr-1 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0",
-        hasError && "border-destructive",
+        "phone-field-input flex items-center gap-2 rounded-md border border-input bg-background pl-3 pr-1 focus-within:outline-none focus-within:ring-1 focus-within:ring-ring focus-within:ring-ring ",
+        hasError && "border-destructive ",
         disabled && "opacity-50",
         className,
       )}

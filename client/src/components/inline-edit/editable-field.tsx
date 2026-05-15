@@ -55,7 +55,9 @@ function validateEmail(val: string): string | null {
 function validateUrl(val: string): string | null {
   const trimmed = val.trim();
   if (!trimmed) return null;
-  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const candidate = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
   try {
     const u = new URL(candidate);
     if (!u.hostname.includes(".")) return "Enter a valid URL";
@@ -102,8 +104,15 @@ function TypedValueLink({
       const parsed = parsePhoneNumber(v);
       if (parsed) {
         formatted = formatPhoneNumberIntl(v) || v;
-        if (parsed.country && (flags as Record<string, React.ComponentType<{ title?: string }>>)[parsed.country]) {
-          Flag = (flags as Record<string, React.ComponentType<{ title?: string }>>)[parsed.country];
+        if (
+          parsed.country &&
+          (flags as Record<string, React.ComponentType<{ title?: string }>>)[
+            parsed.country
+          ]
+        ) {
+          Flag = (
+            flags as Record<string, React.ComponentType<{ title?: string }>>
+          )[parsed.country];
         }
       }
     } catch {
@@ -155,7 +164,9 @@ function TypedValueLink({
   return <span className={className}>{v}</span>;
 }
 
-function inputModeForType(type: EditableFieldType): React.HTMLAttributes<HTMLInputElement>["inputMode"] {
+function inputModeForType(
+  type: EditableFieldType,
+): React.HTMLAttributes<HTMLInputElement>["inputMode"] {
   switch (type) {
     case "phone":
       return "tel";
@@ -263,7 +274,11 @@ function SegmentedDateInput({
   ) => {
     const digits = raw.replace(/\D/g, "").slice(0, maxLen);
     setter(digits);
-    if (digits.length === maxLen && next.current && next.current !== monthRef.current) {
+    if (
+      digits.length === maxLen &&
+      next.current &&
+      next.current !== monthRef.current
+    ) {
       next.current.focus();
       next.current.select();
     }
@@ -392,8 +407,8 @@ export function EditableField({
   const [editArray, setEditArray] = useState<string[]>(arrayValue);
   const [editBoolean, setEditBoolean] = useState(booleanValue);
   const [dateOpen, setDateOpen] = useState(false);
-  const [segDateStatus, setSegDateStatus] = useState<SegmentedDateStatus>(
-    () => (value ? "valid" : "empty"),
+  const [segDateStatus, setSegDateStatus] = useState<SegmentedDateStatus>(() =>
+    value ? "valid" : "empty",
   );
   const [localError, setLocalError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
@@ -540,7 +555,11 @@ export function EditableField({
 
   const singleTypeError = (() => {
     if (isMultiple) return null;
-    if (effectiveType === "phone" || effectiveType === "email" || effectiveType === "url") {
+    if (
+      effectiveType === "phone" ||
+      effectiveType === "email" ||
+      effectiveType === "url"
+    ) {
       return validateByType(effectiveType, editValue || "");
     }
     if (effectiveType === "date-segmented") {
@@ -660,8 +679,8 @@ export function EditableField({
     isMultiple && hasRowErrors ? "Fix invalid entries" : null;
 
   const actionButtons = (
-    <div className="flex items-center gap-3 justify-between">
-      <div className="min-w-0 flex-1">
+    <div className="flex items-center gap-3 justify-end">
+      {/* <div className="min-w-0 flex-1">
         {multiSummaryError && (
           <p
             className="text-sm text-destructive"
@@ -670,7 +689,7 @@ export function EditableField({
             {multiSummaryError}
           </p>
         )}
-      </div>
+      </div> */}
       <div className="flex gap-3 shrink-0">
         <Button
           variant="ghost"
@@ -687,11 +706,7 @@ export function EditableField({
           disabled={saveDisabled}
           data-testid={`button-save-${field}`}
         >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "Save"
-          )}
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
         </Button>
       </div>
     </div>
@@ -715,11 +730,11 @@ export function EditableField({
               if (e.key === "Escape") handleCancel();
             };
             const rowClassName = cn(
-              "flex-1 h-10",
-              rowError && "border-destructive",
+              "!h-12 bord",
+              rowError && "border-destructive ",
             );
             return (
-              <div key={index} className="flex gap-2 items-start">
+              <div key={index} className="flex gap-2 items-center">
                 <div className="flex-1 flex flex-col gap-1">
                   {isPhone ? (
                     <PhoneFieldInput
@@ -778,7 +793,7 @@ export function EditableField({
             data-testid={`button-add-${field}`}
             className="w-fit"
           >
-            Add
+            + Add
           </Button>
         </div>
         {errorDisplay}
@@ -816,7 +831,7 @@ export function EditableField({
             }}
             onKeyDown={handleKeyDown}
             className={cn(
-              "w-full text-sm",
+              "w-full text-sm !h-12",
               isMobile && "input-prevent-scroll-on-focus",
               (displayError || showTypeError) && "border-destructive",
             )}
@@ -955,7 +970,11 @@ export function EditableField({
                 setLocalError(null);
               }}
               disabled={isLoading}
-              hasError={!!displayError || segDateStatus === "invalid" || segDateStatus === "incomplete"}
+              hasError={
+                !!displayError ||
+                segDateStatus === "invalid" ||
+                segDateStatus === "incomplete"
+              }
               field={field}
               onEnter={handleSave}
               onEscape={handleCancel}
@@ -1162,7 +1181,7 @@ export function EditableField({
 
   const typedDisplay = renderTypedDisplay();
   const hasValueForDisplay = isMultiple
-    ? (arrayValue && arrayValue.length > 0)
+    ? arrayValue && arrayValue.length > 0
     : !!value;
 
   return (
