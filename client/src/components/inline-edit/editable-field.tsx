@@ -349,7 +349,7 @@ function SegmentedDateInput({
   };
 
   const inputCls = cn(
-    "h-12 text-center text-sm rounded-md border border-input bg-background px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    "text-center px-2",
     hasError && "border-destructive",
   );
 
@@ -386,7 +386,7 @@ function SegmentedDateInput({
           })}
         </SelectContent>
       </Select>
-      <input
+      <Input
         ref={dayRef}
         type="text"
         inputMode="numeric"
@@ -410,7 +410,7 @@ function SegmentedDateInput({
         data-testid={`input-${field}-day`}
         aria-label="Day"
       />
-      <input
+      <Input
         ref={yearRef}
         type="text"
         inputMode="numeric"
