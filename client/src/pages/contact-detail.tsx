@@ -279,30 +279,6 @@ export default function ContactDetail() {
 
         <Card>
           <CardContent className="py-2">
-            <EditableField
-              label="First Name"
-              value={contact.firstName}
-              field="firstName"
-              testId="field-contact-first-name"
-              onSave={handleFieldSave}
-              disabled={!canEdit}
-              isLoading={isFieldLoading("firstName")}
-              error={getFieldError("firstName")}
-              placeholder="Enter first name"
-              validation={{ required: true }}
-            />
-            <EditableField
-              label="Last Name"
-              value={contact.lastName}
-              field="lastName"
-              testId="field-contact-last-name"
-              onSave={handleFieldSave}
-              disabled={!canEdit}
-              isLoading={isFieldLoading("lastName")}
-              error={getFieldError("lastName")}
-              placeholder="Enter last name"
-              validation={{ required: true }}
-            />
             <FieldRow label="Company" testId="field-linked-company">
               <div className="space-y-1">
                 {localLinkedClients.map((client) => (
@@ -449,116 +425,28 @@ export default function ContactDetail() {
             />
 
             <EditableField
-              label="Email"
-              value={null}
-              field="emailAddresses"
-              testId="field-contact-email"
-              type="array"
-              arrayValue={contact.emailAddresses || []}
+              label="First Name"
+              value={contact.firstName}
+              field="firstName"
+              testId="field-contact-first-name"
               onSave={handleFieldSave}
               disabled={!canEdit}
-              isLoading={isFieldLoading("emailAddresses")}
-              error={getFieldError("emailAddresses")}
-              displayValue={
-                contact.emailAddresses && contact.emailAddresses.length > 0 ? (
-                  <div className="space-y-1">
-                    {contact.emailAddresses.map((email, index) => (
-                      <span key={index}>{email}</span>
-                    ))}
-                  </div>
-                ) : undefined
-              }
+              isLoading={isFieldLoading("firstName")}
+              error={getFieldError("firstName")}
+              placeholder="Enter first name"
+              validation={{ required: true }}
             />
-
             <EditableField
-              label="Phone"
-              value={null}
-              field="phoneNumbers"
-              testId="field-contact-phone"
-              type="array"
-              arrayValue={contact.phoneNumbers || []}
+              label="Last Name"
+              value={contact.lastName}
+              field="lastName"
+              testId="field-contact-last-name"
               onSave={handleFieldSave}
               disabled={!canEdit}
-              isLoading={isFieldLoading("phoneNumbers")}
-              error={getFieldError("phoneNumbers")}
-              displayValue={
-                contact.phoneNumbers && contact.phoneNumbers.length > 0 ? (
-                  <div className="space-y-1">
-                    {contact.phoneNumbers.map((phone, index) => (
-                      <a
-                        key={index}
-                        href={`tel:${phone}`}
-                        className="flex items-center gap-2 text-primary hover:underline"
-                        data-testid={`link-phone-${index}`}
-                      >
-                        <span>{phone}</span>
-                      </a>
-                    ))}
-                  </div>
-                ) : undefined
-              }
-            />
-
-            <EditableField
-              label="Instagram"
-              value={contact.instagramUsername}
-              field="instagramUsername"
-              testId="field-contact-instagram"
-              onSave={handleFieldSave}
-              disabled={!canEdit}
-              isLoading={isFieldLoading("instagramUsername")}
-              error={getFieldError("instagramUsername")}
-              displayValue={
-                contact.instagramUsername ? (
-                  <a
-                    href={`https://instagram.com/${contact.instagramUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                    data-testid="link-instagram"
-                  >
-                    <SiInstagram className="h-4 w-4 text-muted-foreground" />
-                    <span>@{contact.instagramUsername}</span>
-                  </a>
-                ) : undefined
-              }
-            />
-
-            <EditableField
-              label="LinkedIn"
-              value={contact.linkedinUsername}
-              field="linkedinUsername"
-              testId="field-contact-linkedin"
-              onSave={handleFieldSave}
-              disabled={!canEdit}
-              isLoading={isFieldLoading("linkedinUsername")}
-              error={getFieldError("linkedinUsername")}
-              displayValue={
-                contact.linkedinUsername ? (
-                  <a
-                    href={`https://linkedin.com/in/${contact.linkedinUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                    data-testid="link-linkedin"
-                  >
-                    <SiLinkedin className="h-4 w-4 text-muted-foreground" />
-                    <span>{contact.linkedinUsername}</span>
-                  </a>
-                ) : undefined
-              }
-            />
-
-            <EditableField
-              label="Address"
-              value={contact.homeAddress}
-              field="homeAddress"
-              testId="field-contact-address"
-              type="textarea"
-              onSave={handleFieldSave}
-              disabled={!canEdit}
-              isLoading={isFieldLoading("homeAddress")}
-              error={getFieldError("homeAddress")}
+              isLoading={isFieldLoading("lastName")}
+              error={getFieldError("lastName")}
+              placeholder="Enter last name"
+              validation={{ required: true }}
             />
 
             <FieldRow label="Location" testId="field-contact-location">
@@ -666,7 +554,92 @@ export default function ContactDetail() {
                 </div>
               )}
             </FieldRow>
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
+                Contact Info
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="py-2">
+            <EditableField
+              label="Email"
+              value={null}
+              field="emailAddresses"
+              testId="field-contact-email"
+              type="array"
+              arrayValue={contact.emailAddresses || []}
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("emailAddresses")}
+              error={getFieldError("emailAddresses")}
+              displayValue={
+                contact.emailAddresses && contact.emailAddresses.length > 0 ? (
+                  <div className="space-y-1">
+                    {contact.emailAddresses.map((email, index) => (
+                      <span key={index}>{email}</span>
+                    ))}
+                  </div>
+                ) : undefined
+              }
+            />
+
+            <EditableField
+              label="Phone Number"
+              value={null}
+              field="phoneNumbers"
+              testId="field-contact-phone"
+              type="array"
+              arrayValue={contact.phoneNumbers || []}
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("phoneNumbers")}
+              error={getFieldError("phoneNumbers")}
+              displayValue={
+                contact.phoneNumbers && contact.phoneNumbers.length > 0 ? (
+                  <div className="space-y-1">
+                    {contact.phoneNumbers.map((phone, index) => (
+                      <a
+                        key={index}
+                        href={`tel:${phone}`}
+                        className="flex items-center gap-2 text-primary hover:underline"
+                        data-testid={`link-phone-${index}`}
+                      >
+                        <span>{phone}</span>
+                      </a>
+                    ))}
+                  </div>
+                ) : undefined
+              }
+            />
+
+            <EditableField
+              label="Address"
+              value={contact.homeAddress}
+              field="homeAddress"
+              testId="field-contact-address"
+              type="textarea"
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("homeAddress")}
+              error={getFieldError("homeAddress")}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
+                Personal Info
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="py-2">
             <EditableField
               label="Date of Birth"
               value={contact.dateOfBirth ? format(new Date(contact.dateOfBirth), "yyyy-MM-dd") : null}
@@ -685,6 +658,56 @@ export default function ContactDetail() {
                       {format(new Date(contact.dateOfBirth), "MMMM d, yyyy")}
                     </span>
                   </div>
+                ) : undefined
+              }
+            />
+
+            <EditableField
+              label="Instagram"
+              value={contact.instagramUsername}
+              field="instagramUsername"
+              testId="field-contact-instagram"
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("instagramUsername")}
+              error={getFieldError("instagramUsername")}
+              displayValue={
+                contact.instagramUsername ? (
+                  <a
+                    href={`https://instagram.com/${contact.instagramUsername}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-primary hover:underline"
+                    data-testid="link-instagram"
+                  >
+                    <SiInstagram className="h-4 w-4 text-muted-foreground" />
+                    <span>@{contact.instagramUsername}</span>
+                  </a>
+                ) : undefined
+              }
+            />
+
+            <EditableField
+              label="LinkedIn"
+              value={contact.linkedinUsername}
+              field="linkedinUsername"
+              testId="field-contact-linkedin"
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("linkedinUsername")}
+              error={getFieldError("linkedinUsername")}
+              displayValue={
+                contact.linkedinUsername ? (
+                  <a
+                    href={`https://linkedin.com/in/${contact.linkedinUsername}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-primary hover:underline"
+                    data-testid="link-linkedin"
+                  >
+                    <SiLinkedin className="h-4 w-4 text-muted-foreground" />
+                    <span>{contact.linkedinUsername}</span>
+                  </a>
                 ) : undefined
               }
             />
