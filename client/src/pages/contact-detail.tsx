@@ -733,7 +733,7 @@ export default function ContactDetail() {
                 <div className="text-center py-4 text-muted-foreground">
 
                   <p className="text-sm">
-                    {fullName} is not assigned as the primary contact on any deals.
+                    {fullName} is not linked to any deals.
                   </p>
                 </div>
               ) : (
@@ -749,7 +749,10 @@ export default function ContactDetail() {
                             {deal.displayName}
                           </span>
                         </div>
-                        <DealStatusBadge status={deal.statusName || "Unknown"} />
+                        <div className=" border flex w-full items-center justify-end gap-3">
+                          <DealStatusBadge status={deal.statusName || "Unknown"} className="justify-end"/>
+
+                        </div>
                       </div>
                     </Link>
                   ))}
