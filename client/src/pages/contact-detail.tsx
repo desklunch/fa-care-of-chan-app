@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Calendar as CalendarIcon,
   Loader2,
-  UserPlus,
+  Building2,
   Trash2,
   Handshake,
   SquarePen,
@@ -62,8 +62,9 @@ export default function ContactDetail() {
   const { can } = usePermissions();
   const canEdit = can('contacts.write');
   const canDelete = can('contacts.delete');
-  const [showClientSearch, setShowClientSearch] = useState(false);
-  const [showVendorSearch, setShowVendorSearch] = useState(false);
+  const [addCompanyMode, setAddCompanyMode] = useState<
+    null | "choose" | "client" | "vendor"
+  >(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
@@ -155,7 +156,8 @@ export default function ContactDetail() {
   const [resolvingLocationTz, setResolvingLocationTz] = useState(false);
   const handleLinkClient = (client: Client) => {
     setLocalLinkedClients((prev) => [...prev, client]);
-    setShowClientSearch(false);
+    setAddCompanyMode(null);
+    queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
   };
 
   const handleUnlinkClient = (clientId: string) => {
@@ -165,7 +167,8 @@ export default function ContactDetail() {
 
   const handleLinkVendor = (vendor: Vendor) => {
     setLocalLinkedVendors((prev) => [...prev, vendor]);
-    setShowVendorSearch(false);
+    setAddCompanyMode(null);
+    queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
   };
 
   const handleUnlinkVendor = (vendorId: string) => {
@@ -300,179 +303,139 @@ export default function ContactDetail() {
               placeholder="Enter last name"
               validation={{ required: true }}
             />
-            {localLinkedClients.length > 0 ? (
-              <>
-                {localLinkedClients.map((client, index) => (
-                  <FieldRow
-                    key={client.id}
-                    label={index === 0 ? "Client" : ""}
-                    testId={`field-linked-client-${client.id}`}
+            <FieldRow label="Company" testId="field-linked-company">
+              <div className="space-y-1">
+                {localLinkedClients.map((client) => (
+                  <div
+                    key={`client-${client.id}`}
+                    className="group/company-row flex items-center justify-between gap-2"
+                    data-testid={`field-linked-client-${client.id}`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <Link
-                        href={`/clients/${client.id}`}
-                        className="text-primary font-medium hover:underline"
-                        data-testid={`link-client-${client.id}`}
-                      >
-                        {client.name}
-                      </Link>
-                      {canEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUnlinkClient(client.id)}
-                          data-testid={`button-unlink-client-${client.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </FieldRow>
-                ))}
-                {canEdit && (showClientSearch ? (
-                  <FieldRow label="" testId="field-client-search">
-                    <ClientLinkSearch
-                      contactId={id!}
-                      linkedClients={localLinkedClients}
-                      onLink={handleLinkClient}
-                      onUnlink={handleUnlinkClient}
-                      showLinkedClients={false}
-                      autoFocus
-                      onClose={() => setShowClientSearch(false)}
-                    />
-                  </FieldRow>
-                ) : (
-                  <FieldRow label="" testId="field-add-another-client">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowClientSearch(true)}
-                      className="h-auto px-2 text-muted-foreground hover:text-primary"
-                      data-testid="button-add-another-client"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                      Add another client
-                    </Button>
-                  </FieldRow>
-                ))}
-              </>
-            ) : canEdit ? (showClientSearch ? (
-              <FieldRow label="Client" testId="field-client-search">
-                <ClientLinkSearch
-                  contactId={id!}
-                  linkedClients={localLinkedClients}
-                  onLink={handleLinkClient}
-                  onUnlink={handleUnlinkClient}
-                  showLinkedClients={false}
-                  autoFocus
-                  onClose={() => setShowClientSearch(false)}
-                />
-              </FieldRow>
-            ) : (
-              <FieldRow label="Client" testId="field-linked-client-empty">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowClientSearch(true)}
-                  className="h-auto px-2 text-muted-foreground hover:text-primary"
-                  data-testid="button-link-client-inline"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Add Client Company
-                </Button>
-              </FieldRow>
-            )) : (
-              <FieldRow label="Client" testId="field-linked-client-empty">
-                <span className="text-muted-foreground">+ Add</span>
-              </FieldRow>
-            )}
+                    <Link
+                      href={`/clients/${client.id}`}
+                      className="text-primary font-medium hover:underline flex items-center gap-2"
+                      data-testid={`link-client-${client.id}`}
+                    >                      <Building2 className="h-4 w-4" />
 
-            {localLinkedVendors.length > 0 ? (
-              <>
-                {localLinkedVendors.map((vendor, index) => (
-                  <FieldRow
-                    key={vendor.id}
-                    label={index === 0 ? "Vendor" : ""}
-                    testId={`field-linked-vendor-${vendor.id}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <Link
-                        href={`/vendors/${vendor.id}`}
-                        className="text-primary font-medium hover:underline"
-                        data-testid={`link-vendor-${vendor.id}`}
+                      {client.name}
+                    </Link>
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleUnlinkClient(client.id)}
+                        className="invisible group-hover/company-row:visible focus-visible:visible"
+                        data-testid={`button-unlink-client-${client.id}`}
                       >
-                        {vendor.businessName}
-                      </Link>
-                      {canEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUnlinkVendor(vendor.id)}
-                          data-testid={`button-unlink-vendor-${vendor.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </FieldRow>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 ))}
-                {canEdit && (showVendorSearch ? (
-                  <FieldRow label="" testId="field-vendor-search">
-                    <VendorLinkSearch
-                      contactId={id!}
-                      linkedVendors={localLinkedVendors}
-                      onLink={handleLinkVendor}
-                      onUnlink={handleUnlinkVendor}
-                      showLinkedVendors={false}
-                      autoFocus
-                      onClose={() => setShowVendorSearch(false)}
-                    />
-                  </FieldRow>
-                ) : (
-                  <FieldRow label="" testId="field-add-another-vendor">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowVendorSearch(true)}
-                      className="h-auto px-2 text-muted-foreground hover:text-primary"
-                      data-testid="button-add-another-vendor"
+                {localLinkedVendors.map((vendor) => (
+                  <div
+                    key={`vendor-${vendor.id}`}
+                    className="group/company-row flex items-center justify-between gap-2"
+                    data-testid={`field-linked-vendor-${vendor.id}`}
+                  >
+                    <Link
+                      href={`/vendors/${vendor.id}`}
+                      className="text-primary font-medium hover:underline flex items-center gap-2"
+                      data-testid={`link-vendor-${vendor.id}`}
                     >
                       <Handshake className="h-4 w-4" />
-                      Add another vendor
-                    </Button>
-                  </FieldRow>
+
+                      {vendor.businessName}
+                    </Link>
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleUnlinkVendor(vendor.id)}
+                        className="invisible group-hover/company-row:visible focus-visible:visible"
+                        data-testid={`button-unlink-vendor-${vendor.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 ))}
-              </>
-            ) : canEdit ? (showVendorSearch ? (
-              <FieldRow label="Vendor" testId="field-vendor-search">
-                <VendorLinkSearch
-                  contactId={id!}
-                  linkedVendors={localLinkedVendors}
-                  onLink={handleLinkVendor}
-                  onUnlink={handleUnlinkVendor}
-                  showLinkedVendors={false}
-                  autoFocus
-                  onClose={() => setShowVendorSearch(false)}
-                />
-              </FieldRow>
-            ) : (
-              <FieldRow label="Vendor" testId="field-linked-vendor-empty">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowVendorSearch(true)}
-                  className="h-auto px-2 text-muted-foreground hover:text-primary"
-                  data-testid="button-link-vendor-inline"
-                >
-                  <Handshake className="h-4 w-4" />
-                  Add Vendor
-                </Button>
-              </FieldRow>
-            )) : (
-              <FieldRow label="Vendor" testId="field-linked-vendor-empty">
-                <span className="text-muted-foreground">+ Add</span>
-              </FieldRow>
-            )}
+                {canEdit && addCompanyMode === "client" && (
+                  <ClientLinkSearch
+                    contactId={id!}
+                    linkedClients={localLinkedClients}
+                    onLink={handleLinkClient}
+                    onUnlink={handleUnlinkClient}
+                    showLinkedClients={false}
+                    autoFocus
+                    onClose={() => setAddCompanyMode(null)}
+                  />
+                )}
+                {canEdit && addCompanyMode === "vendor" && (
+                  <VendorLinkSearch
+                    contactId={id!}
+                    linkedVendors={localLinkedVendors}
+                    onLink={handleLinkVendor}
+                    onUnlink={handleUnlinkVendor}
+                    showLinkedVendors={false}
+                    autoFocus
+                    onClose={() => setAddCompanyMode(null)}
+                  />
+                )}
+                {canEdit && addCompanyMode === "choose" && (
+                  <div
+                    className="flex flex-wrap items-center gap-2 pt-2"
+                    data-testid="company-add-chooser"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAddCompanyMode("client")}
+                      data-testid="button-add-company-client"
+                    >
+                      <Building2 className="h-4 w-4" />
+                      Client
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAddCompanyMode("vendor")}
+                      data-testid="button-add-company-vendor"
+                    >
+                      <Handshake className="h-4 w-4" />
+                      Vendor
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAddCompanyMode(null)}
+                      data-testid="button-add-company-cancel"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+                {canEdit && addCompanyMode === null && (
+                  <Button
+                    variant="ghost"
+                    
+                    onClick={() => setAddCompanyMode("choose")}
+                    className="h-auto px-0 text-muted-foreground font-normal hover:text-primary"
+                    data-testid="button-add-company"
+                  >
+                    {localLinkedClients.length === 0 &&
+                    localLinkedVendors.length === 0
+                      ? "+ Add"
+                      : "+ Add"}
+                  </Button>
+                )}
+                {!canEdit &&
+                  localLinkedClients.length === 0 &&
+                  localLinkedVendors.length === 0 && (
+                    <span className="text-muted-foreground">+ Add</span>
+                  )}
+              </div>
+            </FieldRow>
 
             <EditableField
               label="Job Title"
