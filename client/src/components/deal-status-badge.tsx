@@ -83,12 +83,15 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
   }
 
   return (
-    <div className="@container/status w-full flex flex-0 items-center  ">
+    <div className={cn(
+        className,
+        "@container/status w-full flex flex-0 items-center  ",
+        )}>
+      {/* */}
 
     <span
       className={cn(
         statusClass,
-        className,
         "inline-flex items-center justify-center font-medium whitespace-nowrap",
         "size-3 p-0 rounded-full text-[0px] mt-1 !border-[2px]",
         "@[100px]/status:px-1.5 @[100px]/status:py-0.5 @[100px]/status:text-xs @[100px]/status:rounded-[5px] @[100px]/status:mt-0 @[100px]/status:size-auto @[100px]/status:!border-[1.25px] ",

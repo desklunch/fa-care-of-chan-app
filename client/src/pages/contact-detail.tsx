@@ -235,16 +235,16 @@ export default function ContactDetail() {
         },
       ] : []}
     >
-      <div className="max-w-4xl space-y-6 p-4 md:p-6">
-        <div className="space-y-1">
+      <div className="max-w-4xl space-y-4 p-4 md:p-6">
+        <div className="space-y-0 px-2">
           {(contact.linkedClients.length > 0 || contact.linkedVendors.length > 0) && (
-            <div className="text-sm text-muted-foreground" data-testid="text-contact-affiliations">
+            <div className="text-sm font-semibold" data-testid="text-contact-affiliations">
               {[
                 ...contact.linkedClients.map((c) => (
                   <Link
                     key={`client-${c.id}`}
                     href={`/clients/${c.id}`}
-                    className="hover:underline hover:text-foreground"
+                    className="text-primary hover:underline hover:text-foreground"
                     data-testid={`link-header-client-${c.id}`}
                   >
                     {c.name}
@@ -254,7 +254,7 @@ export default function ContactDetail() {
                   <Link
                     key={`vendor-${v.id}`}
                     href={`/vendors/${v.id}`}
-                    className="hover:underline hover:text-foreground"
+                    className="text-primary hover:underline hover:text-foreground"
                     data-testid={`link-header-vendor-${v.id}`}
                   >
                     {v.businessName}
@@ -271,14 +271,21 @@ export default function ContactDetail() {
             {fullName}
           </h1>
           {contact.jobTitle && (
-            <div className="text-sm text-muted-foreground" data-testid="text-contact-job-title">
+            <div className="text-sm font-medium text-muted-foreground" data-testid="text-contact-job-title">
               {contact.jobTitle}
             </div>
           )}
         </div>
 
         <Card>
-          <CardContent className="py-2">
+          <CardHeader>
+            
+              <CardTitle>
+                Basic Info
+              </CardTitle>
+            
+          </CardHeader>
+          <CardContent className="">
             <FieldRow label="Company" testId="field-linked-company">
               <div className="space-y-1">
                 {localLinkedClients.map((client) => (
@@ -558,14 +565,14 @@ export default function ContactDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
+          <CardHeader>
+            
+              <CardTitle >
                 Contact Info
               </CardTitle>
-            </div>
+            
           </CardHeader>
-          <CardContent className="py-2">
+          <CardContent className="">
             <EditableField
               label="Email"
               value={null}
@@ -632,14 +639,14 @@ export default function ContactDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
+          <CardHeader>
+            
+              <CardTitle >
                 Personal Info
               </CardTitle>
-            </div>
+            
           </CardHeader>
-          <CardContent className="py-2">
+          <CardContent className="">
             <EditableField
               label="Date of Birth"
               value={contact.dateOfBirth ? format(new Date(contact.dateOfBirth), "yyyy-MM-dd") : null}
@@ -724,7 +731,7 @@ export default function ContactDetail() {
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pb-4">
               {isLoadingDeals ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -749,7 +756,7 @@ export default function ContactDetail() {
                             {deal.displayName}
                           </span>
                         </div>
-                        <div className=" border flex w-full items-center justify-end gap-3">
+                        <div className="  flex w-full items-center justify-end gap-3">
                           <DealStatusBadge status={deal.statusName || "Unknown"} className="justify-end"/>
 
                         </div>

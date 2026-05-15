@@ -460,17 +460,17 @@ export default function ClientDetail() {
                   {deals.map((deal) => (
                     <Link href={`/deals/${deal.id}`} key={deal.id}>
                       <div
-                        className="grid grid-cols-[1fr_auto] gap-2 p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
+                        className="flex gap-2 p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
                         data-testid={`link-deal-${deal.id}`}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center gap-2">
                           <span className="text-sm font-medium">
                             {deal.displayName}
                           </span>
-                          <Badge variant="outline" className="text-xs no-default-hover-elevate no-default-active-elevate">Primary</Badge>
                         </div>
-                        <div>
-                          <DealStatusBadge status={deal.statusName || "Unknown"} />
+                     <div className="  flex w-full items-center justify-end gap-3">
+                          <DealStatusBadge status={deal.statusName || "Unknown"} className="justify-end"/>
+
                         </div>
                       </div>
                     </Link>
@@ -478,10 +478,10 @@ export default function ClientDetail() {
                   {linkedDeals.map((deal) => (
                     <Link href={`/deals/${deal.id}`} key={`linked-${deal.id}`}>
                       <div
-                        className="grid grid-cols-[1fr_auto] gap-2 p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
+                        className="flex gap-2 p-3 rounded-md hover-elevate cursor-pointer bg-background/50 dark:bg-foreground/[4%]"
                         data-testid={`link-linked-deal-${deal.id}`}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center gap-2">
                           <span className="text-sm font-medium">
                             {deal.displayName}
                           </span>
@@ -489,8 +489,9 @@ export default function ClientDetail() {
                             <Badge variant="secondary" className="text-xs no-default-hover-elevate no-default-active-elevate">{deal.linkLabel}</Badge>
                           )}
                         </div>
-                        <div>
-                          <DealStatusBadge status={deal.statusName || "Unknown"} />
+                     <div className="  flex w-full items-center justify-end gap-3">
+                          <DealStatusBadge status={deal.statusName || "Unknown"} className="justify-end"/>
+
                         </div>
                       </div>
                     </Link>

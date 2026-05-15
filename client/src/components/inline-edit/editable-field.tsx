@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2, Pencil, Check, X, CalendarIcon } from "lucide-react";
+import { Loader2, Pencil, Check, X, CalendarIcon, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { parseDateOnly } from "@/lib/date";
 import { cn } from "@/lib/utils";
@@ -421,7 +421,7 @@ export function EditableField({
       case "array":
         return (
           <>
-            <div className="flex flex-col gap-2 flex-1 overflow-auto">
+            <div className="flex flex-col gap-4 flex-1 ">
               {editArray.map((item, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
@@ -435,7 +435,7 @@ export function EditableField({
                     onKeyDown={(e) => {
                       if (e.key === "Escape") handleCancel();
                     }}
-                    className="flex-1"
+                    className="flex-1 h-10"
                     disabled={isLoading}
                     data-testid={`input-${field}-${index}`}
                     autoFocus={index === 0}
@@ -449,16 +449,17 @@ export function EditableField({
                     disabled={isLoading}
                     data-testid={`button-remove-${field}-${index}`}
                   >
-                    <X className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setEditArray([...editArray, ""])}
                 disabled={isLoading}
                 data-testid={`button-add-${field}`}
+                className="w-fit"
               >
                 Add
               </Button>
