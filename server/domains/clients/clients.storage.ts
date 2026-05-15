@@ -7,6 +7,7 @@ import {
   clientContacts,
   dealClients,
   deals,
+  dealStatuses,
   users,
   type Client,
   type Contact,
@@ -119,6 +120,7 @@ export class ClientsStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
@@ -168,6 +170,7 @@ export class ClientsStorage {
         },
       })
       .from(deals)
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
@@ -182,6 +185,7 @@ export class ClientsStorage {
         dealNumber: deals.dealNumber,
         displayName: deals.displayName,
         status: deals.status,
+        statusName: dealStatuses.name,
         clientId: deals.clientId,
         primaryContactId: deals.primaryContactId,
         budgetHigh: deals.budgetHigh,
@@ -233,6 +237,7 @@ export class ClientsStorage {
       })
       .from(dealClients)
       .innerJoin(deals, eq(dealClients.dealId, deals.id))
+      .leftJoin(dealStatuses, eq(deals.status, dealStatuses.id))
       .leftJoin(users, eq(deals.createdById, users.id))
       .leftJoin(clients, eq(deals.clientId, clients.id))
       .leftJoin(ownerUsers2, eq(deals.ownerId, ownerUsers2.id))
