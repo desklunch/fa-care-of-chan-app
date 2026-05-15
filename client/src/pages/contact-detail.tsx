@@ -629,7 +629,7 @@ export default function ContactDetail() {
               value={contact.dateOfBirth ? format(new Date(contact.dateOfBirth), "yyyy-MM-dd") : null}
               field="dateOfBirth"
               testId="field-contact-dob"
-              type="date"
+              type="date-segmented"
               onSave={handleFieldSave}
               disabled={!canEdit}
               isLoading={isFieldLoading("dateOfBirth")}
@@ -651,6 +651,8 @@ export default function ContactDetail() {
               value={contact.instagramUsername}
               field="instagramUsername"
               testId="field-contact-instagram"
+              type="url"
+              validationStrictness="lenient"
               onSave={handleFieldSave}
               disabled={!canEdit}
               isLoading={isFieldLoading("instagramUsername")}
@@ -676,6 +678,8 @@ export default function ContactDetail() {
               value={contact.linkedinUsername}
               field="linkedinUsername"
               testId="field-contact-linkedin"
+              type="url"
+              validationStrictness="lenient"
               onSave={handleFieldSave}
               disabled={!canEdit}
               isLoading={isFieldLoading("linkedinUsername")}
