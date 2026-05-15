@@ -87,8 +87,6 @@ export function DealStatusBadge({ status, className }: DealStatusBadgeProps) {
         className,
         "@container/status w-full flex flex-0 items-center  ",
         )}>
-      {/* */}
-
     <span
       className={cn(
         statusClass,

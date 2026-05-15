@@ -1,15 +1,23 @@
 import type { z } from "zod";
 
-export type EditableFieldType = 
-  | "text" 
-  | "textarea" 
-  | "select" 
-  | "date" 
-  | "multiselect" 
-  | "array" 
+export type EditableFieldType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "date"
+  | "date-segmented"
+  | "multiselect"
+  | "array"
   | "switch"
   | "number"
-  | "richtext";
+  | "richtext"
+  | "phone"
+  | "email"
+  | "url";
+
+export type EditableFieldMode = "single" | "multiple";
+
+export type ValidationStrictness = "strict" | "lenient";
 
 export interface FieldOption {
   value: string;
@@ -43,6 +51,8 @@ export interface EditableFieldProps {
   field: string;
   testId?: string;
   type?: EditableFieldType;
+  mode?: EditableFieldMode;
+  validationStrictness?: ValidationStrictness;
   options?: FieldOption[];
   multiSelectValues?: string[];
   arrayValue?: string[];

@@ -587,3 +587,24 @@ mark.md-highlight u {
   max-height: none;
   overflow: visible;
 }
+/* react-phone-number-input overrides for inline-edit phone fields */
+.phone-field-input .PhoneInput {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  --PhoneInput-color--focus: hsl(var(--ring));
+}
+.phone-field-input .PhoneInputCountry {
+  margin-right: 0.5rem;
+}
+.phone-field-input .PhoneInputCountrySelect {
+  cursor: pointer;
+}
+.phone-field-input .PhoneInputCountryIcon--border {
+  box-shadow: none;
+  background: transparent;
+}
+.phone-field-input .PhoneInputCountrySelectArrow {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+}

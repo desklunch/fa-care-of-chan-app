@@ -578,21 +578,13 @@ export default function ContactDetail() {
               value={null}
               field="emailAddresses"
               testId="field-contact-email"
-              type="array"
+              type="email"
+              mode="multiple"
               arrayValue={contact.emailAddresses || []}
               onSave={handleFieldSave}
               disabled={!canEdit}
               isLoading={isFieldLoading("emailAddresses")}
               error={getFieldError("emailAddresses")}
-              displayValue={
-                contact.emailAddresses && contact.emailAddresses.length > 0 ? (
-                  <div className="space-y-1">
-                    {contact.emailAddresses.map((email, index) => (
-                      <span key={index}>{email}</span>
-                    ))}
-                  </div>
-                ) : undefined
-              }
             />
 
             <EditableField
@@ -600,28 +592,13 @@ export default function ContactDetail() {
               value={null}
               field="phoneNumbers"
               testId="field-contact-phone"
-              type="array"
+              type="phone"
+              mode="multiple"
               arrayValue={contact.phoneNumbers || []}
               onSave={handleFieldSave}
               disabled={!canEdit}
               isLoading={isFieldLoading("phoneNumbers")}
               error={getFieldError("phoneNumbers")}
-              displayValue={
-                contact.phoneNumbers && contact.phoneNumbers.length > 0 ? (
-                  <div className="space-y-1">
-                    {contact.phoneNumbers.map((phone, index) => (
-                      <a
-                        key={index}
-                        href={`tel:${phone}`}
-                        className="flex items-center gap-2 text-primary hover:underline"
-                        data-testid={`link-phone-${index}`}
-                      >
-                        <span>{phone}</span>
-                      </a>
-                    ))}
-                  </div>
-                ) : undefined
-              }
             />
 
             <EditableField

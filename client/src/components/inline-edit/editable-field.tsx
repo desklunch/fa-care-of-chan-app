@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
@@ -25,9 +25,338 @@ import { cn } from "@/lib/utils";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { MarkdownDisplay } from "@/components/markdown-display";
 import { normalizeToMarkdown } from "@/lib/markdown-utils";
-import type { EditableFieldProps } from "./types";
+import type { EditableFieldProps, EditableFieldType } from "./types";
+import {
+  isPossiblePhoneNumber,
+  parsePhoneNumber,
+  formatPhoneNumberIntl,
+} from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import { PhoneFieldInput } from "./phone-field-input";
 
 const MOBILE_BREAKPOINT = 768;
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validatePhone(val: string): string | null {
+  const trimmed = (val || "").trim();
+  if (!trimmed) return null;
+  if (!isPossiblePhoneNumber(trimmed)) return "Enter a valid phone number";
+  return null;
+}
+
+function validateEmail(val: string): string | null {
+  const trimmed = val.trim();
+  if (!trimmed) return null;
+  if (!EMAIL_REGEX.test(trimmed)) return "Enter a valid email address";
+  return null;
+}
+
+function validateUrl(val: string): string | null {
+  const trimmed = val.trim();
+  if (!trimmed) return null;
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const u = new URL(candidate);
+    if (!u.hostname.includes(".")) return "Enter a valid URL";
+    return null;
+  } catch {
+    return "Enter a valid URL";
+  }
+}
+
+function validateByType(type: EditableFieldType, val: string): string | null {
+  switch (type) {
+    case "phone":
+      return validatePhone(val);
+    case "email":
+      return validateEmail(val);
+    case "url":
+      return validateUrl(val);
+    default:
+      return null;
+  }
+}
+
+function coerceUrl(val: string): string {
+  return /^https?:\/\//i.test(val) ? val : `https://${val}`;
+}
+
+function TypedValueLink({
+  type,
+  value,
+  className,
+  testId,
+}: {
+  type: EditableFieldType;
+  value: string;
+  className?: string;
+  testId?: string;
+}) {
+  const v = value.trim();
+  if (!v) return null;
+  if (type === "phone") {
+    let formatted = v;
+    let Flag: React.ComponentType<{ title?: string }> | null = null;
+    try {
+      const parsed = parsePhoneNumber(v);
+      if (parsed) {
+        formatted = formatPhoneNumberIntl(v) || v;
+        if (parsed.country && (flags as Record<string, React.ComponentType<{ title?: string }>>)[parsed.country]) {
+          Flag = (flags as Record<string, React.ComponentType<{ title?: string }>>)[parsed.country];
+        }
+      }
+    } catch {
+      // fall back to raw value
+    }
+    return (
+      <a
+        href={`tel:${v.replace(/\s+/g, "")}`}
+        className={cn(
+          "inline-flex items-center gap-2 text-primary hover:underline",
+          className,
+        )}
+        data-testid={testId}
+      >
+        {Flag && (
+          <span className="inline-flex w-5 h-[14px] overflow-hidden rounded-[2px] shrink-0">
+            <Flag />
+          </span>
+        )}
+        <span>{formatted}</span>
+      </a>
+    );
+  }
+  if (type === "email") {
+    return (
+      <a
+        href={`mailto:${v}`}
+        className={cn("text-primary hover:underline", className)}
+        data-testid={testId}
+      >
+        {v}
+      </a>
+    );
+  }
+  if (type === "url") {
+    return (
+      <a
+        href={coerceUrl(v)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn("text-primary hover:underline break-all", className)}
+        data-testid={testId}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {v}
+      </a>
+    );
+  }
+  return <span className={className}>{v}</span>;
+}
+
+function inputModeForType(type: EditableFieldType): React.HTMLAttributes<HTMLInputElement>["inputMode"] {
+  switch (type) {
+    case "phone":
+      return "tel";
+    case "email":
+      return "email";
+    case "url":
+      return "url";
+    default:
+      return undefined;
+  }
+}
+
+function htmlTypeForType(type: EditableFieldType): string {
+  switch (type) {
+    case "phone":
+      return "tel";
+    case "email":
+      return "email";
+    case "url":
+      return "url";
+    default:
+      return "text";
+  }
+}
+
+export type SegmentedDateStatus = "empty" | "incomplete" | "invalid" | "valid";
+
+interface SegmentedDateInputProps {
+  initialValue: string;
+  onChange: (iso: string | null, status: SegmentedDateStatus) => void;
+  disabled?: boolean;
+  hasError?: boolean;
+  field: string;
+  onEnter?: () => void;
+  onEscape?: () => void;
+}
+
+function computeSegmentedStatus(
+  m: string,
+  d: string,
+  y: string,
+): { iso: string | null; status: SegmentedDateStatus } {
+  if (!m && !d && !y) return { iso: null, status: "empty" };
+  if (m.length < 2 || d.length < 2 || y.length < 4) {
+    return { iso: null, status: "incomplete" };
+  }
+  const mNum = parseInt(m, 10);
+  const dNum = parseInt(d, 10);
+  const yNum = parseInt(y, 10);
+  const dt = new Date(yNum, mNum - 1, dNum);
+  if (
+    !Number.isNaN(dt.getTime()) &&
+    dt.getFullYear() === yNum &&
+    dt.getMonth() === mNum - 1 &&
+    dt.getDate() === dNum &&
+    yNum >= 1 &&
+    yNum <= 9999
+  ) {
+    return { iso: `${y}-${m}-${d}`, status: "valid" };
+  }
+  return { iso: null, status: "invalid" };
+}
+
+function SegmentedDateInput({
+  initialValue,
+  onChange,
+  disabled,
+  hasError,
+  field,
+  onEnter,
+  onEscape,
+}: SegmentedDateInputProps) {
+  const initialParts = useMemo(() => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(initialValue || "");
+    if (m) return { year: m[1], month: m[2], day: m[3] };
+    return { year: "", month: "", day: "" };
+  }, [initialValue]);
+
+  const [month, setMonth] = useState(initialParts.month);
+  const [day, setDay] = useState(initialParts.day);
+  const [year, setYear] = useState(initialParts.year);
+
+  const monthRef = useRef<HTMLInputElement>(null);
+  const dayRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    monthRef.current?.focus();
+    monthRef.current?.select();
+  }, []);
+
+  const emit = (m: string, d: string, y: string) => {
+    const { iso, status } = computeSegmentedStatus(m, d, y);
+    onChange(iso, status);
+  };
+
+  const handleChange = (
+    raw: string,
+    maxLen: number,
+    setter: (v: string) => void,
+    next: React.RefObject<HTMLInputElement>,
+    other1: string,
+    other2: string,
+    position: "month" | "day" | "year",
+  ) => {
+    const digits = raw.replace(/\D/g, "").slice(0, maxLen);
+    setter(digits);
+    if (digits.length === maxLen && next.current && next.current !== monthRef.current) {
+      next.current.focus();
+      next.current.select();
+    }
+    if (position === "month") emit(digits, other1, other2);
+    if (position === "day") emit(other1, digits, other2);
+    if (position === "year") emit(other1, other2, digits);
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    current: string,
+    prev: React.RefObject<HTMLInputElement> | null,
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onEnter?.();
+    } else if (e.key === "Escape") {
+      onEscape?.();
+    } else if (e.key === "Backspace" && current === "" && prev?.current) {
+      prev.current.focus();
+    } else if (e.key === "/" || e.key === "-") {
+      e.preventDefault();
+      const target = e.currentTarget;
+      if (target === monthRef.current && month.length > 0) {
+        dayRef.current?.focus();
+        dayRef.current?.select();
+      } else if (target === dayRef.current && day.length > 0) {
+        yearRef.current?.focus();
+        yearRef.current?.select();
+      }
+    }
+  };
+
+  const inputCls = cn(
+    "w-12 text-center text-sm rounded-md border border-input bg-background px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    hasError && "border-destructive",
+  );
+
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        ref={monthRef}
+        type="text"
+        inputMode="numeric"
+        value={month}
+        placeholder="MM"
+        maxLength={2}
+        disabled={disabled}
+        onChange={(e) =>
+          handleChange(e.target.value, 2, setMonth, dayRef, day, year, "month")
+        }
+        onKeyDown={(e) => handleKeyDown(e, month, null)}
+        className={inputCls}
+        data-testid={`input-${field}-month`}
+        aria-label="Month"
+      />
+      <span className="text-muted-foreground">/</span>
+      <input
+        ref={dayRef}
+        type="text"
+        inputMode="numeric"
+        value={day}
+        placeholder="DD"
+        maxLength={2}
+        disabled={disabled}
+        onChange={(e) =>
+          handleChange(e.target.value, 2, setDay, yearRef, month, year, "day")
+        }
+        onKeyDown={(e) => handleKeyDown(e, day, monthRef)}
+        className={inputCls}
+        data-testid={`input-${field}-day`}
+        aria-label="Day"
+      />
+      <span className="text-muted-foreground">/</span>
+      <input
+        ref={yearRef}
+        type="text"
+        inputMode="numeric"
+        value={year}
+        placeholder="YYYY"
+        maxLength={4}
+        disabled={disabled}
+        onChange={(e) =>
+          handleChange(e.target.value, 4, setYear, yearRef, month, day, "year")
+        }
+        onKeyDown={(e) => handleKeyDown(e, year, dayRef)}
+        className={cn(inputCls, "w-16")}
+        data-testid={`input-${field}-year`}
+        aria-label="Year"
+      />
+    </div>
+  );
+}
 
 export function EditableField({
   label,
@@ -35,6 +364,8 @@ export function EditableField({
   field,
   testId,
   type = "text",
+  mode = "single",
+  validationStrictness = "strict",
   options = [],
   multiSelectValues = [],
   arrayValue = [],
@@ -48,6 +379,12 @@ export function EditableField({
   error,
   validation,
 }: EditableFieldProps) {
+  // Treat legacy type="array" as text + multiple
+  const effectiveType: EditableFieldType = type === "array" ? "text" : type;
+  const effectiveMode: "single" | "multiple" =
+    type === "array" ? "multiple" : mode;
+  const isMultiple = effectiveMode === "multiple";
+
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
   const [selectedMulti, setSelectedMulti] =
@@ -55,6 +392,9 @@ export function EditableField({
   const [editArray, setEditArray] = useState<string[]>(arrayValue);
   const [editBoolean, setEditBoolean] = useState(booleanValue);
   const [dateOpen, setDateOpen] = useState(false);
+  const [segDateStatus, setSegDateStatus] = useState<SegmentedDateStatus>(
+    () => (value ? "valid" : "empty"),
+  );
   const [localError, setLocalError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const prevMultiRef = useRef<string>(JSON.stringify(multiSelectValues));
@@ -187,33 +527,70 @@ export function EditableField({
     [validation],
   );
 
+  // Per-row typed errors for multiple mode
+  const rowErrors = useMemo(() => {
+    if (!isMultiple) return [] as (string | null)[];
+    return editArray.map((row) => {
+      if (!row.trim()) return null;
+      return validateByType(effectiveType, row);
+    });
+  }, [isMultiple, editArray, effectiveType]);
+
+  const hasRowErrors = rowErrors.some((e) => e !== null);
+
+  const singleTypeError = (() => {
+    if (isMultiple) return null;
+    if (effectiveType === "phone" || effectiveType === "email" || effectiveType === "url") {
+      return validateByType(effectiveType, editValue || "");
+    }
+    if (effectiveType === "date-segmented") {
+      if (segDateStatus === "incomplete") return "Please complete the date";
+      if (segDateStatus === "invalid") return "Invalid date";
+    }
+    return null;
+  })();
+
   const handleSave = () => {
     let saveValue: unknown;
 
-    switch (type) {
-      case "multiselect":
-        saveValue = selectedMulti;
-        break;
-      case "array":
-        saveValue = editArray.filter((v) => v.trim() !== "");
-        break;
-      case "switch":
-        saveValue = editBoolean;
-        break;
-      case "number":
-        saveValue = editValue !== "" ? Number(editValue) : null;
-        break;
-      case "date":
-        saveValue = editValue || null;
-        break;
-      default:
-        saveValue = editValue || null;
+    if (isMultiple) {
+      const cleaned = editArray.filter((v) => v.trim() !== "");
+      saveValue = cleaned;
+    } else {
+      switch (effectiveType) {
+        case "multiselect":
+          saveValue = selectedMulti;
+          break;
+        case "switch":
+          saveValue = editBoolean;
+          break;
+        case "number":
+          saveValue = editValue !== "" ? Number(editValue) : null;
+          break;
+        case "date":
+        case "date-segmented":
+          saveValue = editValue || null;
+          break;
+        default:
+          saveValue = editValue || null;
+      }
     }
 
     const validationError = validateLocally(saveValue);
     if (validationError) {
       setLocalError(validationError);
       return;
+    }
+
+    if (validationStrictness === "strict") {
+      if (isMultiple && hasRowErrors) {
+        setLocalError("Please fix invalid entries");
+        return;
+      }
+      if (!isMultiple && singleTypeError) {
+        setLocalError(singleTypeError);
+        return;
+      }
     }
 
     setLocalError(null);
@@ -226,6 +603,7 @@ export function EditableField({
     setSelectedMulti(multiSelectValues);
     setEditArray(arrayValue);
     setEditBoolean(booleanValue);
+    setSegDateStatus(value ? "valid" : "empty");
     setIsEditing(false);
     setDateOpen(false);
     setLocalError(null);
@@ -234,9 +612,9 @@ export function EditableField({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (
       e.key === "Enter" &&
-      type !== "textarea" &&
-      type !== "array" &&
-      type !== "richtext"
+      effectiveType !== "textarea" &&
+      effectiveType !== "richtext" &&
+      !isMultiple
     ) {
       e.preventDefault();
       handleSave();
@@ -245,10 +623,17 @@ export function EditableField({
     }
   };
 
+  const startEditing = () => {
+    if (isMultiple && editArray.length === 0) {
+      setEditArray([""]);
+    }
+    setIsEditing(true);
+    setLocalError(null);
+  };
+
   const handleDoubleClick = () => {
     if (!disabled && !isLoading) {
-      setIsEditing(true);
-      setLocalError(null);
+      startEditing();
     }
   };
 
@@ -266,32 +651,198 @@ export function EditableField({
     </p>
   );
 
+  const saveDisabled =
+    isLoading ||
+    (validationStrictness === "strict" &&
+      ((isMultiple && hasRowErrors) || (!isMultiple && !!singleTypeError)));
+
+  const multiSummaryError =
+    isMultiple && hasRowErrors ? "Fix invalid entries" : null;
+
   const actionButtons = (
-    <div className="flex gap-3 justify-end">
-      <Button
-        variant="outline"
-        onClick={handleCancel}
-        disabled={isLoading}
-        data-testid={`button-cancel-${field}`}
-      >
-        <X className="h-4 w-4" />
-      </Button>
-      <Button
-        onClick={handleSave}
-        disabled={isLoading}
-        data-testid={`button-save-${field}`}
-      >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Check className="h-4 w-4" />
+    <div className="flex items-center gap-3 justify-between">
+      <div className="min-w-0 flex-1">
+        {multiSummaryError && (
+          <p
+            className="text-sm text-destructive"
+            data-testid={`row-summary-error-${field}`}
+          >
+            {multiSummaryError}
+          </p>
         )}
-      </Button>
+      </div>
+      <div className="flex gap-3 shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleCancel}
+          disabled={isLoading}
+          data-testid={`button-cancel-${field}`}
+        >
+          Cancel
+        </Button>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={saveDisabled}
+          data-testid={`button-save-${field}`}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "Save"
+          )}
+        </Button>
+      </div>
     </div>
   );
 
+  const renderMultiRowEditor = () => {
+    return (
+      <>
+        <div className="flex flex-col gap-3 flex-1">
+          {editArray.map((item, index) => {
+            const rowError = rowErrors[index];
+            const isNumber = effectiveType === "number";
+            const isPhone = effectiveType === "phone";
+            const handleRowChange = (newVal: string) => {
+              const newArray = [...editArray];
+              newArray[index] = newVal;
+              setEditArray(newArray);
+              setLocalError(null);
+            };
+            const handleRowKeyDown = (e: React.KeyboardEvent) => {
+              if (e.key === "Escape") handleCancel();
+            };
+            const rowClassName = cn(
+              "flex-1 h-10",
+              rowError && "border-destructive",
+            );
+            return (
+              <div key={index} className="flex gap-2 items-start">
+                <div className="flex-1 flex flex-col gap-1">
+                  {isPhone ? (
+                    <PhoneFieldInput
+                      value={item}
+                      onChange={handleRowChange}
+                      onKeyDown={handleRowKeyDown}
+                      disabled={isLoading}
+                      hasError={!!rowError}
+                      testId={`input-${field}-${index}`}
+                      autoFocus={index === 0}
+                      className="flex-1"
+                    />
+                  ) : isNumber ? (
+                    <NumericInput
+                      value={item}
+                      onChange={(e) => handleRowChange(e.target.value)}
+                      onKeyDown={handleRowKeyDown}
+                      className={rowClassName}
+                      disabled={isLoading}
+                      data-testid={`input-${field}-${index}`}
+                      autoFocus={index === 0}
+                    />
+                  ) : (
+                    <Input
+                      type={htmlTypeForType(effectiveType)}
+                      inputMode={inputModeForType(effectiveType)}
+                      value={item}
+                      onChange={(e) => handleRowChange(e.target.value)}
+                      onKeyDown={handleRowKeyDown}
+                      className={rowClassName}
+                      disabled={isLoading}
+                      data-testid={`input-${field}-${index}`}
+                      autoFocus={index === 0}
+                    />
+                  )}
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditArray(editArray.filter((_, i) => i !== index));
+                  }}
+                  disabled={isLoading}
+                  data-testid={`button-remove-${field}-${index}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setEditArray([...editArray, ""])}
+            disabled={isLoading}
+            data-testid={`button-add-${field}`}
+            className="w-fit"
+          >
+            Add
+          </Button>
+        </div>
+        {errorDisplay}
+      </>
+    );
+  };
+
+  const renderTypedSingleInput = () => {
+    const showTypeError =
+      !!singleTypeError && (validationStrictness === "lenient" || !!editValue);
+    return (
+      <>
+        {effectiveType === "phone" ? (
+          <PhoneFieldInput
+            value={editValue}
+            onChange={(v) => {
+              setEditValue(v);
+              setLocalError(null);
+            }}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading}
+            hasError={!!displayError || showTypeError}
+            testId={`input-${field}`}
+            autoFocus
+          />
+        ) : (
+          <Input
+            ref={inputRef as React.RefObject<HTMLInputElement>}
+            type={htmlTypeForType(effectiveType)}
+            inputMode={inputModeForType(effectiveType)}
+            value={editValue}
+            onChange={(e) => {
+              setEditValue(e.target.value);
+              setLocalError(null);
+            }}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "w-full text-sm",
+              isMobile && "input-prevent-scroll-on-focus",
+              (displayError || showTypeError) && "border-destructive",
+            )}
+            disabled={isLoading}
+            data-testid={`input-${field}`}
+          />
+        )}
+        {showTypeError && !displayError && (
+          <p
+            className="text-sm text-destructive"
+            data-testid={`error-${field}`}
+          >
+            {singleTypeError}
+          </p>
+        )}
+        {errorDisplay}
+      </>
+    );
+  };
+
   const renderEditorContent = () => {
-    switch (type) {
+    if (isMultiple) {
+      return renderMultiRowEditor();
+    }
+
+    switch (effectiveType) {
       case "textarea":
         return (
           <>
@@ -393,6 +944,34 @@ export function EditableField({
           </>
         );
 
+      case "date-segmented":
+        return (
+          <>
+            <SegmentedDateInput
+              initialValue={editValue}
+              onChange={(iso, status) => {
+                setEditValue(iso ?? "");
+                setSegDateStatus(status);
+                setLocalError(null);
+              }}
+              disabled={isLoading}
+              hasError={!!displayError || segDateStatus === "invalid" || segDateStatus === "incomplete"}
+              field={field}
+              onEnter={handleSave}
+              onEscape={handleCancel}
+            />
+            {errorDisplay ||
+              (singleTypeError && (
+                <p
+                  className="text-sm text-destructive"
+                  data-testid={`error-${field}`}
+                >
+                  {singleTypeError}
+                </p>
+              ))}
+          </>
+        );
+
       case "multiselect":
         return (
           <>
@@ -413,56 +992,6 @@ export function EditableField({
                   {opt.label}
                 </Badge>
               ))}
-            </div>
-            {errorDisplay}
-          </>
-        );
-
-      case "array":
-        return (
-          <>
-            <div className="flex flex-col gap-4 flex-1 ">
-              {editArray.map((item, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={item}
-                    onChange={(e) => {
-                      const newArray = [...editArray];
-                      newArray[index] = e.target.value;
-                      setEditArray(newArray);
-                      setLocalError(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") handleCancel();
-                    }}
-                    className="flex-1 h-10"
-                    disabled={isLoading}
-                    data-testid={`input-${field}-${index}`}
-                    autoFocus={index === 0}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditArray(editArray.filter((_, i) => i !== index));
-                    }}
-                    disabled={isLoading}
-                    data-testid={`button-remove-${field}-${index}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setEditArray([...editArray, ""])}
-                disabled={isLoading}
-                data-testid={`button-add-${field}`}
-                className="w-fit"
-              >
-                Add
-              </Button>
             </div>
             {errorDisplay}
           </>
@@ -526,6 +1055,11 @@ export function EditableField({
           </>
         );
 
+      case "phone":
+      case "email":
+      case "url":
+        return renderTypedSingleInput();
+
       default:
         return (
           <>
@@ -576,6 +1110,61 @@ export function EditableField({
     );
   };
 
+  // Default display rendering for typed values (single + multiple)
+  const renderTypedDisplay = () => {
+    if (isMultiple) {
+      if (!arrayValue || arrayValue.length === 0) return null;
+      const isLinkType =
+        effectiveType === "phone" ||
+        effectiveType === "email" ||
+        effectiveType === "url";
+      if (!isLinkType) {
+        return (
+          <div className="flex flex-col gap-1">
+            {arrayValue.map((v, i) => (
+              <span key={i} className={cn(valueClassName)}>
+                {v}
+              </span>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          {arrayValue.map((v, i) => (
+            <TypedValueLink
+              key={i}
+              type={effectiveType}
+              value={v}
+              testId={`link-${field}-${i}`}
+            />
+          ))}
+        </div>
+      );
+    }
+    if (
+      (effectiveType === "phone" ||
+        effectiveType === "email" ||
+        effectiveType === "url") &&
+      value
+    ) {
+      return (
+        <TypedValueLink
+          type={effectiveType}
+          value={value}
+          className={valueClassName}
+          testId={`link-${field}`}
+        />
+      );
+    }
+    return null;
+  };
+
+  const typedDisplay = renderTypedDisplay();
+  const hasValueForDisplay = isMultiple
+    ? (arrayValue && arrayValue.length > 0)
+    : !!value;
+
   return (
     <div
       className="group flex py-4 border-b border-border/50 last:border-b-0"
@@ -596,8 +1185,10 @@ export function EditableField({
                 </div>
               ) : displayValue !== undefined ? (
                 displayValue
+              ) : typedDisplay && hasValueForDisplay ? (
+                typedDisplay
               ) : value ? (
-                type === "richtext" ? (
+                effectiveType === "richtext" ? (
                   <MarkdownDisplay
                     className={cn(
                       "prose dark:prose-invert max-w-none text-sm [&>*]:my-[0.625em] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 break-words ",
@@ -611,6 +1202,15 @@ export function EditableField({
                     {value}
                   </span>
                 )
+              ) : !disabled ? (
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  className="text-muted-foreground hover:text-foreground text-left cursor-pointer"
+                  data-testid={`placeholder-${field}`}
+                >
+                  {placeholder}
+                </button>
               ) : (
                 <span className="text-muted-foreground">{placeholder}</span>
               )}
@@ -620,10 +1220,7 @@ export function EditableField({
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                onClick={() => {
-                  setIsEditing(true);
-                  setLocalError(null);
-                }}
+                onClick={startEditing}
                 data-testid={`button-edit-${field}`}
               >
                 <Pencil className="h-3 w-3" />
