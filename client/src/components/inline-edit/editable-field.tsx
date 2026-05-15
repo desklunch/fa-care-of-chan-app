@@ -204,13 +204,36 @@ interface SegmentedDateInputProps {
   onEscape?: () => void;
 }
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function pad2(v: string): string {
+  return v.length === 1 ? `0${v}` : v;
+}
+
+function pad4Year(v: string): string {
+  return v.padStart(4, "0");
+}
+
 function computeSegmentedStatus(
   m: string,
   d: string,
   y: string,
 ): { iso: string | null; status: SegmentedDateStatus } {
   if (!m && !d && !y) return { iso: null, status: "empty" };
-  if (m.length < 2 || d.length < 2 || y.length < 4) {
+  if (m.length < 1 || d.length < 1 || y.length < 1) {
     return { iso: null, status: "incomplete" };
   }
   const mNum = parseInt(m, 10);
@@ -225,7 +248,10 @@ function computeSegmentedStatus(
     yNum >= 1 &&
     yNum <= 9999
   ) {
-    return { iso: `${y}-${m}-${d}`, status: "valid" };
+    return {
+      iso: `${pad4Year(y)}-${pad2(m)}-${pad2(d)}`,
+      status: "valid",
+    };
   }
   return { iso: null, status: "invalid" };
 }
@@ -248,14 +274,14 @@ function SegmentedDateInput({
   const [month, setMonth] = useState(initialParts.month);
   const [day, setDay] = useState(initialParts.day);
   const [year, setYear] = useState(initialParts.year);
+  const [monthOpen, setMonthOpen] = useState(false);
 
-  const monthRef = useRef<HTMLInputElement>(null);
+  const monthTriggerRef = useRef<HTMLButtonElement>(null);
   const dayRef = useRef<HTMLInputElement>(null);
   const yearRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    monthRef.current?.focus();
-    monthRef.current?.select();
+    monthTriggerRef.current?.focus();
   }, []);
 
   const emit = (m: string, d: string, y: string) => {
@@ -263,26 +289,41 @@ function SegmentedDateInput({
     onChange(iso, status);
   };
 
-  const handleChange = (
+  const handleMonthChange = (value: string) => {
+    setMonth(value);
+    emit(value, day, year);
+    dayRef.current?.focus();
+    dayRef.current?.select();
+  };
+
+  const handleMonthTriggerKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (monthOpen) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onEnter?.();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onEscape?.();
+    }
+  };
+
+  const handleDigitChange = (
     raw: string,
     maxLen: number,
     setter: (v: string) => void,
-    next: React.RefObject<HTMLInputElement>,
+    autoAdvanceTo: React.RefObject<HTMLInputElement> | null,
     other1: string,
     other2: string,
-    position: "month" | "day" | "year",
+    position: "day" | "year",
   ) => {
     const digits = raw.replace(/\D/g, "").slice(0, maxLen);
     setter(digits);
-    if (
-      digits.length === maxLen &&
-      next.current &&
-      next.current !== monthRef.current
-    ) {
-      next.current.focus();
-      next.current.select();
+    if (digits.length === maxLen && autoAdvanceTo?.current) {
+      autoAdvanceTo.current.focus();
+      autoAdvanceTo.current.select();
     }
-    if (position === "month") emit(digits, other1, other2);
     if (position === "day") emit(other1, digits, other2);
     if (position === "year") emit(other1, other2, digits);
   };
@@ -290,82 +331,106 @@ function SegmentedDateInput({
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     current: string,
-    prev: React.RefObject<HTMLInputElement> | null,
+    prevInput: React.RefObject<HTMLInputElement> | null,
+    prevButton: React.RefObject<HTMLButtonElement> | null,
   ) => {
     if (e.key === "Enter") {
       e.preventDefault();
       onEnter?.();
     } else if (e.key === "Escape") {
       onEscape?.();
-    } else if (e.key === "Backspace" && current === "" && prev?.current) {
-      prev.current.focus();
-    } else if (e.key === "/" || e.key === "-") {
-      e.preventDefault();
-      const target = e.currentTarget;
-      if (target === monthRef.current && month.length > 0) {
-        dayRef.current?.focus();
-        dayRef.current?.select();
-      } else if (target === dayRef.current && day.length > 0) {
-        yearRef.current?.focus();
-        yearRef.current?.select();
+    } else if (e.key === "Backspace" && current === "") {
+      if (prevInput?.current) {
+        prevInput.current.focus();
+      } else if (prevButton?.current) {
+        prevButton.current.focus();
       }
     }
   };
 
   const inputCls = cn(
-    "w-12 text-center text-sm rounded-md border border-input bg-background px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    "h-12 text-center text-sm rounded-md border border-input bg-background px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     hasError && "border-destructive",
   );
 
   return (
-    <div className="flex items-center gap-1">
-      <input
-        ref={monthRef}
-        type="text"
-        inputMode="numeric"
-        value={month}
-        placeholder="MM"
-        maxLength={2}
+    <div className="flex items-center gap-2">
+      <Select
+        value={month || undefined}
+        onValueChange={handleMonthChange}
         disabled={disabled}
-        onChange={(e) =>
-          handleChange(e.target.value, 2, setMonth, dayRef, day, year, "month")
-        }
-        onKeyDown={(e) => handleKeyDown(e, month, null)}
-        className={inputCls}
-        data-testid={`input-${field}-month`}
-        aria-label="Month"
-      />
-      <span className="text-muted-foreground">/</span>
+        open={monthOpen}
+        onOpenChange={setMonthOpen}
+      >
+        <SelectTrigger
+          ref={monthTriggerRef}
+          className={cn("w-[170px]", hasError && "border-destructive")}
+          data-testid={`input-${field}-month`}
+          aria-label="Month"
+          onKeyDown={handleMonthTriggerKeyDown}
+        >
+          <SelectValue placeholder="Month" />
+        </SelectTrigger>
+        <SelectContent>
+          {MONTH_NAMES.map((name, idx) => {
+            const value = String(idx + 1).padStart(2, "0");
+            return (
+              <SelectItem
+                key={value}
+                value={value}
+                data-testid={`option-${field}-month-${value}`}
+              >
+                {value} - {name}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
       <input
         ref={dayRef}
         type="text"
         inputMode="numeric"
         value={day}
-        placeholder="DD"
+        placeholder="Day"
         maxLength={2}
         disabled={disabled}
         onChange={(e) =>
-          handleChange(e.target.value, 2, setDay, yearRef, month, year, "day")
+          handleDigitChange(
+            e.target.value,
+            2,
+            setDay,
+            yearRef,
+            month,
+            year,
+            "day",
+          )
         }
-        onKeyDown={(e) => handleKeyDown(e, day, monthRef)}
-        className={inputCls}
+        onKeyDown={(e) => handleKeyDown(e, day, null, monthTriggerRef)}
+        className={cn(inputCls, "w-16")}
         data-testid={`input-${field}-day`}
         aria-label="Day"
       />
-      <span className="text-muted-foreground">/</span>
       <input
         ref={yearRef}
         type="text"
         inputMode="numeric"
         value={year}
-        placeholder="YYYY"
+        placeholder="Year"
         maxLength={4}
         disabled={disabled}
         onChange={(e) =>
-          handleChange(e.target.value, 4, setYear, yearRef, month, day, "year")
+          handleDigitChange(
+            e.target.value,
+            4,
+            setYear,
+            null,
+            month,
+            day,
+            "year",
+          )
         }
-        onKeyDown={(e) => handleKeyDown(e, year, dayRef)}
-        className={cn(inputCls, "w-16")}
+        onKeyDown={(e) => handleKeyDown(e, year, dayRef, null)}
+        className={cn(inputCls, "w-20")}
         data-testid={`input-${field}-year`}
         aria-label="Year"
       />
