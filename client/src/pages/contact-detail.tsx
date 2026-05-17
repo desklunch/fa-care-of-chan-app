@@ -55,6 +55,10 @@ import {
   FieldRow,
   useFieldMutation,
 } from "@/components/inline-edit";
+import {
+  AddressField,
+  type StructuredAddress,
+} from "@/components/address-field";
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -149,6 +153,45 @@ export default function ContactDetail() {
 
   const handleFieldSave = (field: string, value: unknown) => {
     saveField(field, value);
+  };
+
+  const addressMutation = useMutation({
+    mutationFn: async (payload: Record<string, string | null>) => {
+      await apiRequest("PATCH", `/api/contacts/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({ title: "Contact updated" });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Failed to save address",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddressSave = async (next: StructuredAddress) => {
+    const allEmpty =
+      !next.street1 &&
+      !next.street2 &&
+      !next.city &&
+      !next.state &&
+      !next.postalCode &&
+      !next.country &&
+      !next.formatted;
+    await addressMutation.mutateAsync({
+      homeAddress: allEmpty ? null : next.formatted || null,
+      addressStreet1: next.street1 || null,
+      addressStreet2: next.street2 || null,
+      addressCity: next.city || null,
+      addressState: next.state || null,
+      addressPostalCode: next.postalCode || null,
+      addressCountry: next.country || null,
+      addressPlaceId: next.placeId || null,
+    });
   };
 
   const [editingLocation, setEditingLocation] = useState(false);
@@ -601,17 +644,26 @@ export default function ContactDetail() {
               error={getFieldError("phoneNumbers")}
             />
 
-            <EditableField
-              label="Address"
-              value={contact.homeAddress}
-              field="homeAddress"
-              testId="field-contact-address"
-              type="textarea"
-              onSave={handleFieldSave}
-              disabled={!canEdit}
-              isLoading={isFieldLoading("homeAddress")}
-              error={getFieldError("homeAddress")}
-            />
+            <FieldRow label="Address" testId="fieldrow-contact-address">
+              <AddressField
+                value={{
+                  street1: contact.addressStreet1 || "",
+                  street2: contact.addressStreet2 || "",
+                  city: contact.addressCity || "",
+                  state: contact.addressState || "",
+                  postalCode: contact.addressPostalCode || "",
+                  country: contact.addressCountry || "",
+                  placeId: contact.addressPlaceId || "",
+                  formatted: contact.homeAddress || "",
+                }}
+                legacyValue={contact.homeAddress}
+                onSave={handleAddressSave}
+                disabled={!canEdit}
+                isLoading={addressMutation.isPending}
+                error={addressMutation.error?.message ?? null}
+                testId="field-contact-address"
+              />
+            </FieldRow>
           </CardContent>
         </Card>
 

@@ -207,6 +207,13 @@ export const contacts = pgTable(
     instagramUsername: varchar("instagram_username", { length: 100 }),
     linkedinUsername: varchar("linkedin_username", { length: 100 }),
     homeAddress: text("home_address"),
+    addressStreet1: text("address_street1"),
+    addressStreet2: text("address_street2"),
+    addressCity: text("address_city"),
+    addressState: text("address_state"),
+    addressPostalCode: text("address_postal_code"),
+    addressCountry: text("address_country"),
+    addressPlaceId: text("address_place_id"),
     location: jsonb("location").$type<{
       city: string;
       region: string;
@@ -1870,6 +1877,13 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   instagramUsername: z.string().max(100).optional().nullable(),
   linkedinUsername: z.string().max(100).optional().nullable(),
   homeAddress: z.string().optional().nullable(),
+  addressStreet1: z.string().optional().nullable(),
+  addressStreet2: z.string().optional().nullable(),
+  addressCity: z.string().optional().nullable(),
+  addressState: z.string().optional().nullable(),
+  addressPostalCode: z.string().optional().nullable(),
+  addressCountry: z.string().optional().nullable(),
+  addressPlaceId: z.string().optional().nullable(),
   location: contactLocationSchema.optional().nullable(),
   externalId: z.string().optional().nullable(),
 });
