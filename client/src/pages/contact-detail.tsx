@@ -652,7 +652,7 @@ export default function ContactDetail() {
               field="instagramUsername"
               testId="field-contact-instagram"
               type="url"
-              validationStrictness="lenient"
+              validationStrictness="strict"
               onSave={handleFieldSave}
               disabled={!canEdit}
               isLoading={isFieldLoading("instagramUsername")}

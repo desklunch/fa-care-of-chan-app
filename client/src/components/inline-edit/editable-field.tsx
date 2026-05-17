@@ -349,12 +349,12 @@ function SegmentedDateInput({
   };
 
   const inputCls = cn(
-    "text-center px-2",
+    "text-left px-3",
     hasError && "border-destructive",
   );
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-start gap-2">
       <Select
         value={month || undefined}
         onValueChange={handleMonthChange}
@@ -744,7 +744,7 @@ export function EditableField({
     isMultiple && hasRowErrors ? "Fix invalid entries" : null;
 
   const actionButtons = (
-    <div className="flex items-center gap-3 justify-end">
+    <div className="flex items-center gap-3 justify-start">
       {/* <div className="min-w-0 flex-1">
         {multiSummaryError && (
           <p
@@ -755,7 +755,16 @@ export function EditableField({
           </p>
         )}
       </div> */}
-      <div className="flex gap-3 shrink-0">
+      <div className="flex gap-3 shrink-0 pt-4">
+
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={saveDisabled}
+          data-testid={`button-save-${field}`}
+        >
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+        </Button>
         <Button
           variant="ghost"
           size="sm"
@@ -764,14 +773,6 @@ export function EditableField({
           data-testid={`button-cancel-${field}`}
         >
           Cancel
-        </Button>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={saveDisabled}
-          data-testid={`button-save-${field}`}
-        >
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
         </Button>
       </div>
     </div>
