@@ -236,7 +236,7 @@ function useLayoutConfig() {
             requiredPermission: "deals.read",
           },
           {
-            name: "Views",
+            name: "Snapshot",
             href: "/deals/reports",
             icon: ScanEye,
             requiredPermission: "deals.read",

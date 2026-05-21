@@ -84,7 +84,7 @@ function coerceUrl(val: string): string {
   return /^https?:\/\//i.test(val) ? val : `https://${val}`;
 }
 
-function htTypedValueLink({
+function TypedValueLink({
   type,
   value,
   className,
