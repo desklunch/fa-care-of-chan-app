@@ -134,6 +134,9 @@ export default function DealDetail() {
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [isEditingPrimaryContact, setIsEditingPrimaryContact] = useState(false);
   const [editingPrimaryContactId, setEditingPrimaryContactId] = useState<string>("");
+  const [pendingClientChange, setPendingClientChange] = useState<{
+    newClientId: string | null;
+  } | null>(null);
   const [showGenerateDoc, setShowGenerateDoc] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const { statuses: dealStatusList, statusById } = useDealStatuses();
@@ -362,7 +365,10 @@ export default function DealDetail() {
     entityType: "deals",
     entityId: id || "",
     queryKey: ["/api/deals", id],
-    additionalQueryKeys: [["/api/deals"]],
+    additionalQueryKeys: [
+      ["/api/deals"],
+      ["/api/deals", id, "linked-clients"],
+    ],
     onSuccess: () => {
       toast({ title: "Deal updated" });
     },
@@ -378,7 +384,28 @@ export default function DealDetail() {
     ) {
       processedValue = null;
     }
+
+    if (field === "clientId") {
+      const newClientId = processedValue as string | null;
+      const currentClientId = deal?.clientId ?? null;
+      if (newClientId === currentClientId) {
+        return;
+      }
+      const hasContactsToLose =
+        Boolean(deal?.primaryContactId) || (deal?.additionalContacts?.length ?? 0) > 0;
+      if (hasContactsToLose) {
+        setPendingClientChange({ newClientId });
+        return;
+      }
+    }
+
     saveField(field, processedValue);
+  };
+
+  const confirmClientChange = () => {
+    if (!pendingClientChange) return;
+    saveField("clientId", pendingClientChange.newClientId);
+    setPendingClientChange(null);
   };
 
   const handleServicesSave = (field: string, value: unknown) => {
@@ -1837,6 +1864,35 @@ export default function DealDetail() {
         open={showGenerateDoc}
         onOpenChange={setShowGenerateDoc}
       />
+
+      <AlertDialog
+        open={pendingClientChange !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingClientChange(null);
+        }}
+      >
+        <AlertDialogContent data-testid="dialog-client-change-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Primary Client?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Changing the primary client will remove the primary contact and
+              any additional contacts linked to this deal, since they belong
+              to the previous client.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-client-change">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClientChange}
+              data-testid="button-confirm-client-change"
+            >
+              Change Client
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

@@ -88,7 +88,23 @@ export class DealsService extends BaseService {
       });
     }
 
-    const updatedDeal = await dealsStorage.updateDeal(id, parsed.data);
+    const clientIdChanging =
+      "clientId" in parsed.data &&
+      (parsed.data.clientId ?? null) !== (existingDeal.clientId ?? null);
+
+    let contactsToClearOnClientChange: string[] = [];
+    let updateData: typeof parsed.data = parsed.data;
+
+    if (clientIdChanging) {
+      const additionalContacts =
+        await dealsStorage.getAdditionalContactsByDealId(id);
+      contactsToClearOnClientChange = additionalContacts.map((c) => c.id);
+      if (existingDeal.primaryContactId) {
+        updateData = { ...parsed.data, primaryContactId: null };
+      }
+    }
+
+    const updatedDeal = await dealsStorage.updateDeal(id, updateData);
     if (!updatedDeal) {
       throw ServiceError.notFound("Deal", id);
     }
@@ -110,6 +126,24 @@ export class DealsService extends BaseService {
           actorId,
           timestamp: new Date(),
         });
+      }
+    }
+
+    if (clientIdChanging && contactsToClearOnClientChange.length > 0) {
+      for (const contactId of contactsToClearOnClientChange) {
+        const removed = await dealsStorage.removeAdditionalContactFromDeal(
+          id,
+          contactId,
+        );
+        if (removed) {
+          domainEvents.emit({
+            type: "deal:contact_unlinked",
+            dealId: id,
+            contactId,
+            actorId,
+            timestamp: new Date(),
+          });
+        }
       }
     }
 
