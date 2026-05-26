@@ -725,8 +725,7 @@ export default function DealDetail() {
                     isFieldLoading("primaryContactId");
                   const primaryContactError =
                     getFieldError("primaryContactId");
-                  const hasClient = Boolean(deal.clientId);
-                  const canEditPrimaryContact = canWrite && hasClient;
+                  const canEditPrimaryContact = canWrite;
 
                   const savePrimaryContact = (contactId: string) => {
                     handleFieldSave("primaryContactId", contactId || "");
@@ -809,10 +808,6 @@ export default function DealDetail() {
                                     {deal.primaryContact.lastName}
                                   </p>
                                 </Link>
-                              ) : !hasClient ? (
-                                <span className="text-muted-foreground">
-                                  Select a client first
-                                </span>
                               ) : (
                                 <span className="text-muted-foreground">
                                   No primary contact

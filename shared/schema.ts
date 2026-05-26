@@ -2435,7 +2435,10 @@ export const updateDealSchema = createInsertSchema(deals).pick({
   proposalSentOn: true,
   serviceIds: true,
   projectDate: true,
-}).partial();
+}).partial().extend({
+  // deals.client_id is NOT NULL in the database; reject explicit null/empty here.
+  clientId: z.string().min(1, "Client is required").optional(),
+});
 
 export type CreateDeal = z.infer<typeof insertDealSchema>;
 export type UpdateDeal = z.infer<typeof updateDealSchema>;
