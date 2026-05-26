@@ -79,6 +79,7 @@ import {
   DealAttachmentsPanel,
   useDealAttachmentsStatus,
 } from "@/components/deal-attachments-panel";
+import { LinkedClientCard } from "@/components/linked-client-card";
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -488,6 +489,16 @@ export default function DealDetail() {
             value="overview"
             className="max-w-4xl space-y-4 p-4 md:p-6 pt-4"
           >
+            <LinkedClientCard
+              dealId={id!}
+              clientId={deal.clientId}
+              allClients={clients}
+              canEditDeal={canWrite}
+              onPrimaryClientSave={handleFieldSave}
+              isPrimaryClientLoading={isFieldLoading("clientId")}
+              primaryClientError={getFieldError("clientId")}
+            />
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle
@@ -569,36 +580,6 @@ export default function DealDetail() {
                     <DealStatusBadge status={deal.statusName || "Unknown"} />
                   }
                   placeholder="Select status"
-                />
-
-                <EditableField
-                  label="Primary Client"
-                  value={deal.clientId || ""}
-                  field="clientId"
-                  testId="field-client"
-                  type="select"
-                  disabled={!canWrite}
-                  options={clients.map((c) => ({ value: c.id, label: c.name }))}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("clientId")}
-                  error={getFieldError("clientId")}
-                  displayValue={
-                    deal.client ? (
-                      <Link href={`/clients/${deal.client.id}`}>
-                        <span
-                          className="text-primary hover:underline cursor-pointer"
-                          data-testid="link-deal-client"
-                        >
-                          {deal.client.name}
-                        </span>
-                      </Link>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        No client assigned
-                      </span>
-                    )
-                  }
-                  placeholder="Select client"
                 />
 
                 <FieldRow label="Client Partners" testId="field-linked-clients">
