@@ -991,7 +991,7 @@ export default function DealDetail() {
               <CardHeader className="pb-2">
                 <CardTitle
                   className="text-base"
-                  data-testid="heading-deal-overview"
+                  data-testid="heading-key-info"
                 >
                   Deal Overview
                 </CardTitle>
@@ -1070,6 +1070,105 @@ export default function DealDetail() {
                   placeholder="Select status"
                 />
 
+                <EditableField
+                  label="Deal Start Date"
+                  value={deal.startedOn || ""}
+                  field="startedOn"
+                  testId="field-started-on"
+                  type="date"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("startedOn")}
+                  error={getFieldError("startedOn")}
+                  displayValue={
+                    deal.startedOn && parseDateOnly(deal.startedOn) ? (
+                      <span className="font-medium">
+                        {format(parseDateOnly(deal.startedOn)!, "MMM d, yyyy")}
+                      </span>
+                    ) : undefined
+                  }
+                  placeholder="Select date "
+                />
+
+                <EditableField
+                  label="Last Client Contact"
+                  value={deal.lastContactOn || ""}
+                  field="lastContactOn"
+                  testId="field-last-contact"
+                  type="date"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("lastContactOn")}
+                  error={getFieldError("lastContactOn")}
+                  displayValue={
+                    deal.lastContactOn && parseDateOnly(deal.lastContactOn) ? (
+                      <span className="font-medium">
+                        {format(
+                          parseDateOnly(deal.lastContactOn)!,
+                          "MMM d, yyyy",
+                        )}
+                      </span>
+                    ) : undefined
+                  }
+                  placeholder="Select date"
+                />
+
+                <EditableField
+                  label="Proposal Sent On"
+                  value={deal.proposalSentOn || ""}
+                  field="proposalSentOn"
+                  testId="field-proposal-sent-on"
+                  type="date"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("proposalSentOn")}
+                  error={getFieldError("proposalSentOn")}
+                  displayValue={
+                    deal.proposalSentOn &&
+                    parseDateOnly(deal.proposalSentOn) ? (
+                      <span className="font-medium">
+                        {format(
+                          parseDateOnly(deal.proposalSentOn)!,
+                          "MMM d, yyyy",
+                        )}
+                      </span>
+                    ) : undefined
+                  }
+                  placeholder="Select date"
+                />
+
+                <EditableField
+                  label="Deal Won On"
+                  value={deal.wonOn || ""}
+                  field="wonOn"
+                  testId="field-won-on"
+                  type="date"
+                  disabled={!canWrite}
+                  onSave={handleFieldSave}
+                  isLoading={isFieldLoading("wonOn")}
+                  error={getFieldError("wonOn")}
+                  displayValue={
+                    deal.wonOn && parseDateOnly(deal.wonOn) ? (
+                      <span className="font-medium">
+                        {format(parseDateOnly(deal.wonOn)!, "MMM d, yyyy")}
+                      </span>
+                    ) : undefined
+                  }
+                  placeholder="Select date"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle
+                  className="text-base"
+                  data-testid="heading-deal-overview"
+                >
+                  Deal Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
                 <FieldRow label="Client Partners" testId="field-linked-clients">
                   <div className="flex flex-col gap-2">
                     {linkedClients.length > 0 && (
@@ -1694,92 +1793,6 @@ export default function DealDetail() {
                     </div>
                   )}
                 </FieldRow>
-                <EditableField
-                  label="Deal Start Date"
-                  value={deal.startedOn || ""}
-                  field="startedOn"
-                  testId="field-started-on"
-                  type="date"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("startedOn")}
-                  error={getFieldError("startedOn")}
-                  displayValue={
-                    deal.startedOn && parseDateOnly(deal.startedOn) ? (
-                      <span className="font-medium">
-                        {format(parseDateOnly(deal.startedOn)!, "MMM d, yyyy")}
-                      </span>
-                    ) : undefined
-                  }
-                  placeholder="Select date "
-                />
-
-                <EditableField
-                  label="Last Client Contact"
-                  value={deal.lastContactOn || ""}
-                  field="lastContactOn"
-                  testId="field-last-contact"
-                  type="date"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("lastContactOn")}
-                  error={getFieldError("lastContactOn")}
-                  displayValue={
-                    deal.lastContactOn && parseDateOnly(deal.lastContactOn) ? (
-                      <span className="font-medium">
-                        {format(
-                          parseDateOnly(deal.lastContactOn)!,
-                          "MMM d, yyyy",
-                        )}
-                      </span>
-                    ) : undefined
-                  }
-                  placeholder="Select date"
-                />
-
-                <EditableField
-                  label="Deal Won On"
-                  value={deal.wonOn || ""}
-                  field="wonOn"
-                  testId="field-won-on"
-                  type="date"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("wonOn")}
-                  error={getFieldError("wonOn")}
-                  displayValue={
-                    deal.wonOn && parseDateOnly(deal.wonOn) ? (
-                      <span className="font-medium">
-                        {format(parseDateOnly(deal.wonOn)!, "MMM d, yyyy")}
-                      </span>
-                    ) : undefined
-                  }
-                  placeholder="Select date"
-                />
-
-                <EditableField
-                  label="Proposal Sent On"
-                  value={deal.proposalSentOn || ""}
-                  field="proposalSentOn"
-                  testId="field-proposal-sent-on"
-                  type="date"
-                  disabled={!canWrite}
-                  onSave={handleFieldSave}
-                  isLoading={isFieldLoading("proposalSentOn")}
-                  error={getFieldError("proposalSentOn")}
-                  displayValue={
-                    deal.proposalSentOn &&
-                    parseDateOnly(deal.proposalSentOn) ? (
-                      <span className="font-medium">
-                        {format(
-                          parseDateOnly(deal.proposalSentOn)!,
-                          "MMM d, yyyy",
-                        )}
-                      </span>
-                    ) : undefined
-                  }
-                  placeholder="Select date"
-                />
               </CardContent>
             </Card>
 
