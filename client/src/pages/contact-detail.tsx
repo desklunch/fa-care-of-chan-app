@@ -37,7 +37,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
-import type { Contact, Client, Vendor, DealWithRelations, DealStatus, ContactLocation } from "@shared/schema";
+import type {
+  Contact,
+  Client,
+  Vendor,
+  DealWithRelations,
+  DealStatus,
+  ContactLocation,
+} from "@shared/schema";
 
 interface ContactWithFullRelations extends Contact {
   linkedClients: Client[];
@@ -46,7 +53,10 @@ interface ContactWithFullRelations extends Contact {
 }
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { ClientLinkSearch, VendorLinkSearch } from "@/components/client-link-search";
+import {
+  ClientLinkSearch,
+  VendorLinkSearch,
+} from "@/components/client-link-search";
 import { PermissionGate } from "@/components/permission-gate";
 import { usePermissions } from "@/hooks/usePermissions";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -64,8 +74,8 @@ export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useProtectedLocation();
   const { can } = usePermissions();
-  const canEdit = can('contacts.write');
-  const canDelete = can('contacts.delete');
+  const canEdit = can("contacts.write");
+  const canDelete = can("contacts.delete");
   const [addCompanyMode, setAddCompanyMode] = useState<
     null | "choose" | "client" | "vendor"
   >(null);
@@ -98,11 +108,7 @@ export default function ContactDetail() {
     setLocalLinkedVendors(linkedVendors);
   }, [linkedVendors]);
 
-  const {
-    saveField,
-    isFieldLoading,
-    getFieldError,
-  } = useFieldMutation({
+  const { saveField, isFieldLoading, getFieldError } = useFieldMutation({
     entityType: "contacts",
     entityId: id || "",
     queryKey: ["/api/contacts", id, "full"],
@@ -117,7 +123,9 @@ export default function ContactDetail() {
       await apiRequest("DELETE", `/api/contacts/${id}/clients/${clientId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/contacts", id, "full"],
+      });
     },
   });
 
@@ -126,7 +134,9 @@ export default function ContactDetail() {
       await apiRequest("DELETE", `/api/contacts/${id}/vendors/${vendorId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/contacts", id, "full"],
+      });
     },
   });
 
@@ -160,7 +170,9 @@ export default function ContactDetail() {
       await apiRequest("PATCH", `/api/contacts/${id}`, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts", id, "full"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/contacts", id, "full"],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       toast({ title: "Contact updated" });
     },
@@ -195,7 +207,8 @@ export default function ContactDetail() {
   };
 
   const [editingLocation, setEditingLocation] = useState(false);
-  const [pendingLocation, setPendingLocation] = useState<ContactLocation | null>(null);
+  const [pendingLocation, setPendingLocation] =
+    useState<ContactLocation | null>(null);
   const [resolvingLocationTz, setResolvingLocationTz] = useState(false);
   const handleLinkClient = (client: Client) => {
     setLocalLinkedClients((prev) => [...prev, client]);
@@ -264,24 +277,36 @@ export default function ContactDetail() {
         { label: "Contacts", href: "/contacts" },
         { label: fullName },
       ]}
-      primaryAction={canEdit ? {
-        label: "Edit Contact",
-        href: `/contacts/${id}/edit`,
-        icon: SquarePen,
-      } : undefined}
-      additionalActions={canDelete ? [
-        {
-          label: "Delete Contact",
-          onClick: () => setShowDeleteDialog(true),
-          icon: Trash2,
-          variant: "destructive",
-        },
-      ] : []}
+      primaryAction={
+        canEdit
+          ? {
+              label: "Edit Contact",
+              href: `/contacts/${id}/edit`,
+              icon: SquarePen,
+            }
+          : undefined
+      }
+      additionalActions={
+        canDelete
+          ? [
+              {
+                label: "Delete Contact",
+                onClick: () => setShowDeleteDialog(true),
+                icon: Trash2,
+                variant: "destructive",
+              },
+            ]
+          : []
+      }
     >
       <div className="max-w-4xl space-y-4 p-4 md:p-6">
         <div className="space-y-0 px-2">
-          {(contact.linkedClients.length > 0 || contact.linkedVendors.length > 0) && (
-            <div className="text-sm font-semibold" data-testid="text-contact-affiliations">
+          {(contact.linkedClients.length > 0 ||
+            contact.linkedVendors.length > 0) && (
+            <div
+              className="text-sm font-semibold"
+              data-testid="text-contact-affiliations"
+            >
               {[
                 ...contact.linkedClients.map((c) => (
                   <Link
@@ -314,7 +339,10 @@ export default function ContactDetail() {
             {fullName}
           </h1>
           {contact.jobTitle && (
-            <div className="text-sm font-medium text-muted-foreground" data-testid="text-contact-job-title">
+            <div
+              className="text-sm font-medium text-muted-foreground"
+              data-testid="text-contact-job-title"
+            >
               {contact.jobTitle}
             </div>
           )}
@@ -322,11 +350,7 @@ export default function ContactDetail() {
 
         <Card>
           <CardHeader>
-            
-              <CardTitle>
-                Basic Info
-              </CardTitle>
-            
+            <CardTitle>Basic Info</CardTitle>
           </CardHeader>
           <CardContent className="">
             <FieldRow label="Company" testId="field-linked-company">
@@ -341,8 +365,9 @@ export default function ContactDetail() {
                       href={`/clients/${client.id}`}
                       className="text-primary font-medium hover:underline flex items-center gap-2"
                       data-testid={`link-client-${client.id}`}
-                    >                      <Building2 className="h-4 w-4" />
-
+                    >
+                      {" "}
+                      <Building2 className="h-4 w-4" />
                       {client.name}
                     </Link>
                     {canEdit && (
@@ -444,7 +469,6 @@ export default function ContactDetail() {
                 {canEdit && addCompanyMode === null && (
                   <Button
                     variant="ghost"
-                    
                     onClick={() => setAddCompanyMode("choose")}
                     className="h-auto px-0 text-muted-foreground font-normal hover:text-primary"
                     data-testid="button-add-company"
@@ -511,7 +535,8 @@ export default function ContactDetail() {
                       }
                       setResolvingLocationTz(true);
                       try {
-                        const enriched = await resolveContactLocationTimezone(place);
+                        const enriched =
+                          await resolveContactLocationTimezone(place);
                         setPendingLocation(enriched);
                       } finally {
                         setResolvingLocationTz(false);
@@ -520,7 +545,7 @@ export default function ContactDetail() {
                     placeholder="Search for a city..."
                     data-testid="input-contact-location"
                   />
-             
+
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
@@ -528,7 +553,9 @@ export default function ContactDetail() {
                         handleFieldSave("location", pendingLocation);
                         setEditingLocation(false);
                       }}
-                      disabled={resolvingLocationTz || isFieldLoading("location")}
+                      disabled={
+                        resolvingLocationTz || isFieldLoading("location")
+                      }
                       data-testid="button-save-location"
                     >
                       Save
@@ -544,10 +571,11 @@ export default function ContactDetail() {
                     >
                       Cancel
                     </Button>
-            
                   </div>
                   {getFieldError("location") && (
-                    <p className="text-sm text-destructive">{getFieldError("location")}</p>
+                    <p className="text-sm text-destructive">
+                      {getFieldError("location")}
+                    </p>
                   )}
                 </div>
               ) : (
@@ -555,7 +583,9 @@ export default function ContactDetail() {
                   className="group flex items-start gap-2"
                   onDoubleClick={() => {
                     if (!canEdit) return;
-                    setPendingLocation((contact.location as ContactLocation | null) ?? null);
+                    setPendingLocation(
+                      (contact.location as ContactLocation | null) ?? null,
+                    );
                     setEditingLocation(true);
                   }}
                   data-testid="field-location-display"
@@ -565,7 +595,9 @@ export default function ContactDetail() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                         <span data-testid="text-contact-location">
-                          {formatLocationDisplay(contact.location as ContactLocation)}
+                          {formatLocationDisplay(
+                            contact.location as ContactLocation,
+                          )}
                         </span>
                         {(() => {
                           const offset = getViewerOffsetLabel(
@@ -593,7 +625,9 @@ export default function ContactDetail() {
                       variant="ghost"
                       className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                       onClick={() => {
-                        setPendingLocation((contact.location as ContactLocation | null) ?? null);
+                        setPendingLocation(
+                          (contact.location as ContactLocation | null) ?? null,
+                        );
                         setEditingLocation(true);
                       }}
                       data-testid="button-edit-location"
@@ -609,11 +643,7 @@ export default function ContactDetail() {
 
         <Card>
           <CardHeader>
-            
-              <CardTitle >
-                Contact Info
-              </CardTitle>
-            
+            <CardTitle>Contact Details</CardTitle>
           </CardHeader>
           <CardContent className="">
             <EditableField
@@ -669,16 +699,16 @@ export default function ContactDetail() {
 
         <Card>
           <CardHeader>
-            
-              <CardTitle >
-                Personal Info
-              </CardTitle>
-            
+            <CardTitle>Social</CardTitle>
           </CardHeader>
           <CardContent className="">
             <EditableField
               label="Date of Birth"
-              value={contact.dateOfBirth ? format(new Date(contact.dateOfBirth), "yyyy-MM-dd") : null}
+              value={
+                contact.dateOfBirth
+                  ? format(new Date(contact.dateOfBirth), "yyyy-MM-dd")
+                  : null
+              }
               field="dateOfBirth"
               testId="field-contact-dob"
               type="date-segmented"
@@ -760,7 +790,9 @@ export default function ContactDetail() {
               <div>
                 <CardTitle className="flex items-center gap-2 text-base font-bold">
                   Deals
-                  <span className="text-muted-foreground text-sm font-medium">{deals.length}</span>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {deals.length}
+                  </span>
                 </CardTitle>
               </div>
             </CardHeader>
@@ -771,7 +803,6 @@ export default function ContactDetail() {
                 </div>
               ) : deals.length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground">
-
                   <p className="text-sm">
                     {fullName} is not linked to any deals.
                   </p>
@@ -790,8 +821,10 @@ export default function ContactDetail() {
                           </span>
                         </div>
                         <div className="  flex w-full items-center justify-end gap-3">
-                          <DealStatusBadge status={deal.statusName || "Unknown"} className="justify-end"/>
-
+                          <DealStatusBadge
+                            status={deal.statusName || "Unknown"}
+                            className="justify-end"
+                          />
                         </div>
                       </div>
                     </Link>
@@ -801,7 +834,6 @@ export default function ContactDetail() {
             </CardContent>
           </Card>
         </PermissionGate>
-
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -809,7 +841,8 @@ export default function ContactDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete contact?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{fullName}"? This action cannot be undone.
+              Are you sure you want to delete "{fullName}"? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
