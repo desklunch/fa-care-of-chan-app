@@ -73,6 +73,7 @@ function CreatedByCellRenderer({
 const categoryLabels: Record<string, string> = {
   client_intake: "Client Intake",
   vendor_inquiry: "Vendor Inquiry",
+  deal_discovery: "Deal Discovery",
   testing: "Testing",
 };
 

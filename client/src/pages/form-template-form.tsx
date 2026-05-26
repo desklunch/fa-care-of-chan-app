@@ -423,6 +423,12 @@ export default function AdminFormTemplateFormPage() {
                       >
                         Vendor Inquiry
                       </SelectItem>
+                      <SelectItem
+                        value="deal_discovery"
+                        data-testid="option-category-deal-discovery"
+                      >
+                        Deal Discovery
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
