@@ -1,7 +1,7 @@
 import { BaseService, ServiceError } from "../../services/base.service";
 import { domainEvents } from "../../lib/events";
 import { notificationsStorage } from "../notifications/notifications.storage";
-import { dealsStorage, type DealLinkedClient } from "./deals.storage";
+import { dealsStorage, type DealLinkedClient, type DealAdditionalContact } from "./deals.storage";
 import type {
   Deal,
   DealWithRelations,
@@ -91,6 +91,26 @@ export class DealsService extends BaseService {
     const updatedDeal = await dealsStorage.updateDeal(id, parsed.data);
     if (!updatedDeal) {
       throw ServiceError.notFound("Deal", id);
+    }
+
+    if (
+      "primaryContactId" in parsed.data &&
+      updatedDeal.primaryContactId &&
+      updatedDeal.primaryContactId !== existingDeal.primaryContactId
+    ) {
+      const removed = await dealsStorage.removeAdditionalContactFromDeal(
+        id,
+        updatedDeal.primaryContactId,
+      );
+      if (removed) {
+        domainEvents.emit({
+          type: "deal:contact_unlinked",
+          dealId: id,
+          contactId: updatedDeal.primaryContactId,
+          actorId,
+          timestamp: new Date(),
+        });
+      }
     }
 
     const changes = this.computeChanges(existingDeal, updatedDeal);
@@ -421,6 +441,129 @@ export class DealsService extends BaseService {
       actorId,
       timestamp: new Date(),
     });
+  }
+
+  async getAdditionalContacts(dealId: string): Promise<DealAdditionalContact[]> {
+    this.ensureExists(await dealsStorage.getDealById(dealId), "Deal", dealId);
+    return dealsStorage.getAdditionalContactsByDealId(dealId);
+  }
+
+  async addAdditionalContact(
+    dealId: string,
+    contactId: string,
+    actorId: string,
+    label?: string | null,
+  ): Promise<DealAdditionalContact[]> {
+    const deal = this.ensureExists(await dealsStorage.getDealById(dealId), "Deal", dealId);
+
+    if (!contactId) {
+      throw ServiceError.validation("contactId is required");
+    }
+
+    if (deal.primaryContactId === contactId) {
+      throw ServiceError.validation("Contact is already the primary contact for this deal");
+    }
+
+    const allowedClientIds = await dealsStorage.getDealClientIds(dealId);
+    const isMember = await dealsStorage.isContactInClients(contactId, allowedClientIds);
+    if (!isMember) {
+      throw ServiceError.validation(
+        "Contact must belong to the deal's primary or linked clients",
+      );
+    }
+
+    const inserted = await dealsStorage.addAdditionalContactToDeal(dealId, contactId, label);
+
+    if (inserted) {
+      domainEvents.emit({
+        type: "deal:contact_linked",
+        dealId,
+        contactId,
+        label,
+        actorId,
+        timestamp: new Date(),
+      });
+    }
+
+    return dealsStorage.getAdditionalContactsByDealId(dealId);
+  }
+
+  async removeAdditionalContact(dealId: string, contactId: string, actorId: string): Promise<void> {
+    this.ensureExists(await dealsStorage.getDealById(dealId), "Deal", dealId);
+
+    const removed = await dealsStorage.removeAdditionalContactFromDeal(dealId, contactId);
+
+    if (removed) {
+      domainEvents.emit({
+        type: "deal:contact_unlinked",
+        dealId,
+        contactId,
+        actorId,
+        timestamp: new Date(),
+      });
+    }
+  }
+
+  async reorderAdditionalContacts(
+    dealId: string,
+    contactIds: string[],
+    _actorId: string,
+  ): Promise<DealAdditionalContact[]> {
+    this.ensureExists(await dealsStorage.getDealById(dealId), "Deal", dealId);
+
+    if (!Array.isArray(contactIds)) {
+      throw ServiceError.validation("contactIds must be an array");
+    }
+
+    await dealsStorage.reorderAdditionalContactsOnDeal(dealId, contactIds);
+    return dealsStorage.getAdditionalContactsByDealId(dealId);
+  }
+
+  async promoteAdditionalContact(
+    dealId: string,
+    contactId: string,
+    actorId: string,
+  ): Promise<Deal> {
+    const deal = this.ensureExists(await dealsStorage.getDealById(dealId), "Deal", dealId);
+
+    if (!contactId) {
+      throw ServiceError.validation("contactId is required");
+    }
+
+    if (deal.primaryContactId === contactId) {
+      return deal;
+    }
+
+    const isLinked = await dealsStorage.isAdditionalContactOnDeal(dealId, contactId);
+    if (!isLinked) {
+      throw ServiceError.validation(
+        "Contact must be an additional contact on this deal to be promoted",
+      );
+    }
+
+    const previousPrimaryContactId = deal.primaryContactId;
+
+    await dealsStorage.removeAdditionalContactFromDeal(dealId, contactId);
+
+    if (previousPrimaryContactId) {
+      await dealsStorage.addAdditionalContactToDeal(dealId, previousPrimaryContactId, null);
+    }
+
+    const updatedDeal = await dealsStorage.updateDeal(dealId, { primaryContactId: contactId });
+    if (!updatedDeal) {
+      throw ServiceError.notFound("Deal", dealId);
+    }
+
+    domainEvents.emit({
+      type: "deal:contact_promoted",
+      dealId,
+      contactId,
+      previousPrimaryContactId,
+      actorId,
+      timestamp: new Date(),
+    });
+
+    return updatedDeal;
   }
 
   async getLinkedClients(dealId: string): Promise<DealLinkedClient[]> {

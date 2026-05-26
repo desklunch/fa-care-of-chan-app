@@ -130,6 +130,41 @@ export const EVENT_REGISTRY: Record<string, EventDefinition> = {
       }),
     },
   },
+  "deal:contact_linked": {
+    type: "deal:contact_linked",
+    audit: {
+      action: "link",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        contactId: (e as any).contactId,
+        label: (e as any).label,
+      }),
+    },
+  },
+  "deal:contact_unlinked": {
+    type: "deal:contact_unlinked",
+    audit: {
+      action: "unlink",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        contactId: (e as any).contactId,
+      }),
+    },
+  },
+  "deal:contact_promoted": {
+    type: "deal:contact_promoted",
+    audit: {
+      action: "update",
+      entityType: "deal",
+      extractEntityId: (e) => (e as any).dealId ?? null,
+      extractChanges: (e) => ({
+        before: { primaryContactId: (e as any).previousPrimaryContactId },
+        after: { primaryContactId: (e as any).contactId },
+      }),
+    },
+  },
   "deal:tags_updated": {
     type: "deal:tags_updated",
     audit: {

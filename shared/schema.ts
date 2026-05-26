@@ -1310,6 +1310,25 @@ export const dealClients = pgTable(
 export type DealClient = typeof dealClients.$inferSelect;
 export type InsertDealClient = typeof dealClients.$inferInsert;
 
+export const dealContacts = pgTable(
+  "deal_contacts",
+  {
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+    contactId: varchar("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
+    label: text("label"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.dealId, table.contactId] }),
+    index("idx_deal_contacts_deal").on(table.dealId),
+    index("idx_deal_contacts_contact").on(table.contactId),
+  ],
+);
+
+export type DealContact = typeof dealContacts.$inferSelect;
+export type InsertDealContact = typeof dealContacts.$inferInsert;
+
 // Entity types that can have web links
 // Entity links can attach to top-level entities from the shared registry as
 // well as a small set of internal sub-entities (task rows that themselves
@@ -2380,6 +2399,7 @@ export type DealWithRelations = Deal & {
   client?: (Pick<Client, "id" | "name" | "industryId"> & { industryName?: string | null }) | null;
   owner?: Pick<User, "id" | "firstName" | "lastName" | "profileImageUrl"> | null;
   primaryContact?: Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers" | "jobTitle"> | null;
+  additionalContacts?: Array<Pick<Contact, "id" | "firstName" | "lastName" | "emailAddresses" | "phoneNumbers" | "jobTitle"> & { label: string | null; sortOrder: number }>;
 };
 
 // Deal location validation schema

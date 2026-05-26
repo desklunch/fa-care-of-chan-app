@@ -3,7 +3,9 @@ import { eq, and, desc, asc, sql, gte, lte, lt, isNotNull, not, inArray } from "
 import { alias } from "drizzle-orm/pg-core";
 import {
   auditLogs,
+  clientContacts,
   dealClients,
+  dealContacts,
   dealTags,
   dealIntakes,
   dealServices,
@@ -58,6 +60,17 @@ export interface DealLinkedClient {
   clientName: string;
   label: string | null;
   createdAt: Date | null;
+}
+
+export interface DealAdditionalContact {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  emailAddresses: unknown;
+  phoneNumbers: unknown;
+  jobTitle: string | null;
+  label: string | null;
+  sortOrder: number;
 }
 
 export interface LinkedDealForClient extends DealWithRelations {
@@ -118,6 +131,102 @@ export const dealsStorage = {
       .where(eq(dealClients.dealId, dealId))
       .orderBy(dealClients.createdAt);
     return results;
+  },
+
+  async getAdditionalContactsByDealId(dealId: string): Promise<DealAdditionalContact[]> {
+    const results = await db
+      .select({
+        id: contacts.id,
+        firstName: contacts.firstName,
+        lastName: contacts.lastName,
+        emailAddresses: contacts.emailAddresses,
+        phoneNumbers: contacts.phoneNumbers,
+        jobTitle: contacts.jobTitle,
+        label: dealContacts.label,
+        sortOrder: dealContacts.sortOrder,
+      })
+      .from(dealContacts)
+      .innerJoin(contacts, eq(dealContacts.contactId, contacts.id))
+      .where(eq(dealContacts.dealId, dealId))
+      .orderBy(asc(dealContacts.sortOrder), asc(dealContacts.createdAt));
+    return results as DealAdditionalContact[];
+  },
+
+  async addAdditionalContactToDeal(dealId: string, contactId: string, label?: string | null): Promise<boolean> {
+    const [{ maxOrder }] = await db
+      .select({ maxOrder: sql<number>`COALESCE(MAX(${dealContacts.sortOrder}), -1)`.as("maxOrder") })
+      .from(dealContacts)
+      .where(eq(dealContacts.dealId, dealId));
+    const inserted = await db
+      .insert(dealContacts)
+      .values({ dealId, contactId, label: label || null, sortOrder: (maxOrder ?? -1) + 1 })
+      .onConflictDoNothing()
+      .returning({ contactId: dealContacts.contactId });
+    return inserted.length > 0;
+  },
+
+  async removeAdditionalContactFromDeal(dealId: string, contactId: string): Promise<boolean> {
+    const deleted = await db.delete(dealContacts).where(
+      and(
+        eq(dealContacts.dealId, dealId),
+        eq(dealContacts.contactId, contactId),
+      ),
+    ).returning({ contactId: dealContacts.contactId });
+    return deleted.length > 0;
+  },
+
+  async isAdditionalContactOnDeal(dealId: string, contactId: string): Promise<boolean> {
+    const rows = await db
+      .select({ contactId: dealContacts.contactId })
+      .from(dealContacts)
+      .where(and(eq(dealContacts.dealId, dealId), eq(dealContacts.contactId, contactId)))
+      .limit(1);
+    return rows.length > 0;
+  },
+
+  async isContactInClients(contactId: string, clientIds: string[]): Promise<boolean> {
+    if (clientIds.length === 0) return false;
+    const rows = await db
+      .select({ clientId: clientContacts.clientId })
+      .from(clientContacts)
+      .where(
+        and(
+          eq(clientContacts.contactId, contactId),
+          inArray(clientContacts.clientId, clientIds),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  },
+
+  async getDealClientIds(dealId: string): Promise<string[]> {
+    const deal = await db
+      .select({ clientId: deals.clientId })
+      .from(deals)
+      .where(eq(deals.id, dealId))
+      .limit(1);
+    const linked = await db
+      .select({ clientId: dealClients.clientId })
+      .from(dealClients)
+      .where(eq(dealClients.dealId, dealId));
+    const ids = new Set<string>();
+    if (deal[0]?.clientId) ids.add(deal[0].clientId);
+    for (const r of linked) if (r.clientId) ids.add(r.clientId);
+    return Array.from(ids);
+  },
+
+  async reorderAdditionalContactsOnDeal(dealId: string, contactIds: string[]): Promise<void> {
+    for (let i = 0; i < contactIds.length; i++) {
+      await db
+        .update(dealContacts)
+        .set({ sortOrder: i })
+        .where(
+          and(
+            eq(dealContacts.dealId, dealId),
+            eq(dealContacts.contactId, contactIds[i]),
+          ),
+        );
+    }
   },
 
   async getLinkedDealsByClientId(clientId: string): Promise<LinkedDealForClient[]> {
@@ -736,7 +845,9 @@ export const dealsStorage = {
       .leftJoin(ownerUsers, eq(deals.ownerId, ownerUsers.id))
       .leftJoin(contacts, eq(deals.primaryContactId, contacts.id))
       .where(eq(deals.id, id));
-    return result as DealWithRelations | undefined;
+    if (!result) return undefined;
+    const additionalContacts = await this.getAdditionalContactsByDealId(id);
+    return { ...(result as DealWithRelations), additionalContacts };
   },
 
   async getDealsByClientId(clientId: string): Promise<DealWithRelations[]> {

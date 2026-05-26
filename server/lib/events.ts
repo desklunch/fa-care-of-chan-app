@@ -99,6 +99,32 @@ export interface DealClientUnlinkedEvent {
   timestamp: Date;
 }
 
+export interface DealContactLinkedEvent {
+  type: "deal:contact_linked";
+  dealId: string;
+  contactId: string;
+  label?: string | null;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealContactUnlinkedEvent {
+  type: "deal:contact_unlinked";
+  dealId: string;
+  contactId: string;
+  actorId: string;
+  timestamp: Date;
+}
+
+export interface DealContactPromotedEvent {
+  type: "deal:contact_promoted";
+  dealId: string;
+  contactId: string;
+  previousPrimaryContactId: string | null;
+  actorId: string;
+  timestamp: Date;
+}
+
 export interface DealTagsUpdatedEvent {
   type: "deal:tags_updated";
   dealId: string;
@@ -987,6 +1013,9 @@ type EventMap = {
   "deal_status:updated": DealStatusUpdatedEvent;
   "deal:client_linked": DealClientLinkedEvent;
   "deal:client_unlinked": DealClientUnlinkedEvent;
+  "deal:contact_linked": DealContactLinkedEvent;
+  "deal:contact_unlinked": DealContactUnlinkedEvent;
+  "deal:contact_promoted": DealContactPromotedEvent;
   "deal:tags_updated": DealTagsUpdatedEvent;
   "deal:link_created": DealLinkCreatedEvent;
   "deal:link_deleted": DealLinkDeletedEvent;

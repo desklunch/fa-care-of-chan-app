@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useProtectedLocation } from "@/hooks/useProtectedLocation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import { PageLayout } from "@/framework";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,31 @@ import {
   Copy,
   Bell,
   BellOff,
+  Star,
+  User as UserIcon,
+  MoreVertical,
+  ChevronsUpDown,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CommentList } from "@/components/ui/comments";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { GenerateDealDocDialog } from "@/components/generate-deal-doc-dialog";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
 import { DealHistoryTab } from "@/components/deal-history-tab";
@@ -60,6 +83,7 @@ import type {
   DealEvent,
   User,
   Client,
+  Contact,
 } from "@shared/schema";
 import type { DealService as DealServiceType } from "@shared/schema";
 import {
@@ -94,6 +118,13 @@ export default function DealDetail() {
   const [showLinkClient, setShowLinkClient] = useState(false);
   const [linkClientSearch, setLinkClientSearch] = useState("");
   const [linkClientLabel, setLinkClientLabel] = useState("");
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [addContactSearch, setAddContactSearch] = useState("");
+  const [addContactLabel, setAddContactLabel] = useState("");
+  const [addContactPendingId, setAddContactPendingId] = useState<string | null>(
+    null,
+  );
+  const [addContactPickerOpen, setAddContactPickerOpen] = useState(false);
   const [isEditingEventSchedule, setIsEditingEventSchedule] = useState(false);
   const [editingEventSchedule, setEditingEventSchedule] = useState<DealEvent[]>(
     [],
@@ -213,6 +244,92 @@ export default function DealDetail() {
         queryKey: ["/api/deals/all-linked-clients"],
       });
       toast({ title: "Client unlinked from deal" });
+    },
+  });
+
+  const additionalContacts = deal?.additionalContacts ?? [];
+
+  const candidateClientIds = Array.from(
+    new Set(
+      [
+        ...(deal?.clientId ? [deal.clientId] : []),
+        ...linkedClients.map((lc) => lc.clientId),
+      ].filter(Boolean),
+    ),
+  );
+
+  const candidateContactQueries = useQueries({
+    queries: candidateClientIds.map((clientId) => ({
+      queryKey: ["/api/clients", clientId, "contacts"],
+      enabled: Boolean(clientId),
+    })),
+  });
+
+  const availableContacts: Contact[] = (() => {
+    const map = new Map<string, Contact>();
+    for (const q of candidateContactQueries) {
+      const list = (q.data as Contact[] | undefined) ?? [];
+      for (const c of list) map.set(c.id, c);
+    }
+    return Array.from(map.values());
+  })();
+
+  const addContactMutation = useMutation({
+    mutationFn: async ({
+      contactId,
+      label,
+    }: {
+      contactId: string;
+      label?: string;
+    }) => {
+      await apiRequest("POST", `/api/deals/${id}/contacts/${contactId}`, {
+        label,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id] });
+      setShowAddContact(false);
+      setAddContactSearch("");
+      setAddContactLabel("");
+      setAddContactPendingId(null);
+      toast({ title: "Contact added to deal" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add contact",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeContactMutation = useMutation({
+    mutationFn: async (contactId: string) => {
+      await apiRequest("DELETE", `/api/deals/${id}/contacts/${contactId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id] });
+      toast({ title: "Contact removed from deal" });
+    },
+  });
+
+  const promoteContactMutation = useMutation({
+    mutationFn: async (contactId: string) => {
+      await apiRequest(
+        "POST",
+        `/api/deals/${id}/contacts/${contactId}/promote`,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals", id] });
+      toast({ title: "Primary contact updated" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to promote contact",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -503,6 +620,377 @@ export default function DealDetail() {
               <CardHeader className="pb-2">
                 <CardTitle
                   className="text-base"
+                  data-testid="heading-client-contacts"
+                >
+                  Client Contacts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
+                {(() => {
+                  const primaryContactLoading =
+                    isFieldLoading("primaryContactId");
+                  const primaryContactError =
+                    getFieldError("primaryContactId");
+                  const canEditPrimaryContact = canWrite;
+
+                  const savePrimaryContact = (contactId: string) => {
+                    handleFieldSave("primaryContactId", contactId || "");
+                    setIsEditingPrimaryContact(false);
+                    setEditingPrimaryContactId("");
+                  };
+
+                  const startEditing = () => {
+                    if (!canEditPrimaryContact || primaryContactLoading) return;
+                    setEditingPrimaryContactId(deal.primaryContactId || "");
+                    setIsEditingPrimaryContact(true);
+                  };
+
+                  return (
+                    <div
+                      className="group flex py-4 border-b border-border/50 last:border-b-0"
+                      data-testid="field-primary-contact"
+                      onDoubleClick={startEditing}
+                    >
+                      <div className="w-2/5 text-sm font-semibold shrink-0">
+                        Primary Contact
+                      </div>
+                      <div className="w-3/5 flex-1 text-sm min-w-0">
+                        {isEditingPrimaryContact ? (
+                          <div className="flex flex-col gap-2 w-full">
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1 min-w-0">
+                                <PrimaryContactPicker
+                                  clientId={deal.clientId}
+                                  value={editingPrimaryContactId}
+                                  onChange={(val) => savePrimaryContact(val)}
+                                  onContactCreated={(contactId) =>
+                                    savePrimaryContact(contactId)
+                                  }
+                                  autoFocus
+                                />
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="shrink-0"
+                                onClick={() => {
+                                  setIsEditingPrimaryContact(false);
+                                  setEditingPrimaryContactId("");
+                                }}
+                                disabled={primaryContactLoading}
+                                data-testid="button-cancel-primaryContactId"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {primaryContactError && (
+                              <p
+                                className="text-sm text-destructive"
+                                data-testid="error-primaryContactId"
+                              >
+                                {primaryContactError}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2 group">
+                            <div className="flex-1 min-w-0">
+                              {primaryContactLoading ? (
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                  <span className="text-muted-foreground">
+                                    Saving...
+                                  </span>
+                                </div>
+                              ) : deal.primaryContact ? (
+                                <div className="flex items-baseline gap-2 flex-wrap">
+                                  <Link
+                                    href={`/contacts/${deal.primaryContact.id}`}
+                                  >
+                                    <p
+                                      className="text-primary hover:underline cursor-pointer"
+                                      data-testid="link-deal-primary-contact"
+                                    >
+                                      {deal.primaryContact.firstName}{" "}
+                                      {deal.primaryContact.lastName}
+                                    </p>
+                                  </Link>
+                                  {deal.primaryContact.jobTitle && (
+                                    <span
+                                      className="text-xs text-muted-foreground"
+                                      data-testid="text-primary-contact-job-title"
+                                    >
+                                      — {deal.primaryContact.jobTitle}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  No primary contact
+                                </span>
+                              )}
+                            </div>
+                            {canEditPrimaryContact &&
+                              !primaryContactLoading && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                  onClick={startEditing}
+                                  data-testid="button-edit-primaryContactId"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <FieldRow
+                  label="Additional Contacts"
+                  testId="field-additional-contacts"
+                >
+                  <div className="flex flex-col gap-2">
+                    {additionalContacts.length > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                        {additionalContacts.map((c) => (
+                          <div
+                            key={c.id}
+                            className="flex items-center gap-2"
+                            data-testid={`row-additional-contact-${c.id}`}
+                          >
+                            <div className="flex-1 min-w-0 flex items-baseline gap-2 flex-wrap">
+                              <Link href={`/contacts/${c.id}`}>
+                                <p
+                                  className="text-primary hover:underline cursor-pointer"
+                                  data-testid={`link-additional-contact-${c.id}`}
+                                >
+                                  {c.firstName} {c.lastName}
+                                </p>
+                              </Link>
+                              {c.jobTitle && (
+                                <span
+                                  className="text-xs text-muted-foreground"
+                                  data-testid={`text-additional-contact-job-title-${c.id}`}
+                                >
+                                  — {c.jobTitle}
+                                </span>
+                              )}
+                              {c.label && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({c.label})
+                                </span>
+                              )}
+                            </div>
+                            {canWrite && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 shrink-0"
+                                    data-testid={`button-additional-contact-menu-${c.id}`}
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      promoteContactMutation.mutate(c.id)
+                                    }
+                                    disabled={promoteContactMutation.isPending}
+                                    data-testid={`button-promote-contact-${c.id}`}
+                                  >
+                                    <Star className="h-4 w-4 mr-2" />
+                                    Make primary
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      removeContactMutation.mutate(c.id)
+                                    }
+                                    disabled={removeContactMutation.isPending}
+                                    data-testid={`button-remove-additional-contact-${c.id}`}
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Remove
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {canWrite && !showAddContact && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-fit gap-1 text-muted-foreground"
+                        onClick={() => setShowAddContact(true)}
+                        data-testid="button-add-additional-contact"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add
+                      </Button>
+                    )}
+
+                    {canWrite && showAddContact && (() => {
+                      const excludedIds = new Set<string>([
+                        ...(deal?.primaryContactId
+                          ? [deal.primaryContactId]
+                          : []),
+                        ...additionalContacts.map((c) => c.id),
+                      ]);
+                      const selectableContacts = availableContacts.filter(
+                        (c) => !excludedIds.has(c.id),
+                      );
+                      const noClients = candidateClientIds.length === 0;
+                      const pendingContact = addContactPendingId
+                        ? availableContacts.find(
+                            (c) => c.id === addContactPendingId,
+                          )
+                        : null;
+                      const pendingContactName = pendingContact
+                        ? `${pendingContact.firstName ?? ""} ${pendingContact.lastName ?? ""}`.trim()
+                        : "";
+                      const cancelAdd = () => {
+                        setShowAddContact(false);
+                        setAddContactSearch("");
+                        setAddContactLabel("");
+                        setAddContactPendingId(null);
+                        setAddContactPickerOpen(false);
+                      };
+                      return (
+                        <div
+                          className="flex flex-col gap-2 p-2 border rounded-md"
+                          data-testid="form-add-additional-contact"
+                        >
+                          <Popover
+                            open={addContactPickerOpen}
+                            onOpenChange={setAddContactPickerOpen}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={addContactPickerOpen}
+                                className="bg-background border-input w-full h-12 font-normal items-center justify-between px-3"
+                                disabled={noClients}
+                                data-testid="button-open-contact-picker"
+                              >
+                                <span
+                                  className={
+                                    pendingContact
+                                      ? "truncate"
+                                      : "truncate text-muted-foreground"
+                                  }
+                                >
+                                  {pendingContact
+                                    ? pendingContactName
+                                    : noClients
+                                      ? "Link a client first to add contacts"
+                                      : "Select a contact..."}
+                                </span>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+                              align="start"
+                            >
+                              <Command>
+                                <CommandInput
+                                  placeholder="Search contacts..."
+                                  value={addContactSearch}
+                                  onValueChange={setAddContactSearch}
+                                  data-testid="input-add-contact-search"
+                                />
+                                <CommandList>
+                                  <CommandEmpty>
+                                    No matching contacts
+                                  </CommandEmpty>
+                                  <CommandGroup>
+                                    {selectableContacts.map((c) => {
+                                      const fullName = `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim();
+                                      return (
+                                        <CommandItem
+                                          key={c.id}
+                                          value={`${fullName} ${c.jobTitle ?? ""}`}
+                                          onSelect={() => {
+                                            setAddContactPendingId(c.id);
+                                            setAddContactPickerOpen(false);
+                                          }}
+                                          data-testid={`option-add-contact-${c.id}`}
+                                        >
+                                          <UserIcon className="h-3.5 w-3.5 text-muted-foreground mr-2" />
+                                          <span>{fullName}</span>
+                                          {c.jobTitle && (
+                                            <span className="text-xs text-muted-foreground ml-2">
+                                              — {c.jobTitle}
+                                            </span>
+                                          )}
+                                        </CommandItem>
+                                      );
+                                    })}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <Input
+                            placeholder="Label (optional, e.g. Assistant)"
+                            value={addContactLabel}
+                            onChange={(e) => setAddContactLabel(e.target.value)}
+                            data-testid="input-add-contact-label"
+                          />
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={cancelAdd}
+                              data-testid="button-cancel-add-contact"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              disabled={
+                                !addContactPendingId ||
+                                addContactMutation.isPending
+                              }
+                              onClick={() => {
+                                if (!addContactPendingId) return;
+                                addContactMutation.mutate({
+                                  contactId: addContactPendingId,
+                                  label: addContactLabel || undefined,
+                                });
+                              }}
+                              data-testid="button-save-add-contact"
+                            >
+                              {addContactMutation.isPending && (
+                                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                              )}
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </FieldRow>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle
+                  className="text-base"
                   data-testid="heading-deal-overview"
                 >
                   Deal Overview
@@ -719,119 +1207,6 @@ export default function DealDetail() {
                     )}
                   </div>
                 </FieldRow>
-
-                {(() => {
-                  const primaryContactLoading =
-                    isFieldLoading("primaryContactId");
-                  const primaryContactError =
-                    getFieldError("primaryContactId");
-                  const canEditPrimaryContact = canWrite;
-
-                  const savePrimaryContact = (contactId: string) => {
-                    handleFieldSave("primaryContactId", contactId || "");
-                    setIsEditingPrimaryContact(false);
-                    setEditingPrimaryContactId("");
-                  };
-
-                  const startEditing = () => {
-                    if (!canEditPrimaryContact || primaryContactLoading) return;
-                    setEditingPrimaryContactId(deal.primaryContactId || "");
-                    setIsEditingPrimaryContact(true);
-                  };
-
-                  return (
-                    <div
-                      className="group flex py-4 border-b border-border/50 last:border-b-0"
-                      data-testid="field-primary-contact"
-                      onDoubleClick={startEditing}
-                    >
-                      <div className="w-2/5 text-sm font-semibold shrink-0">
-                        Primary Contact
-                      </div>
-                      <div className="w-3/5 flex-1 text-sm min-w-0">
-                        {isEditingPrimaryContact ? (
-                          <div className="flex flex-col gap-2 w-full">
-                            <div className="flex items-start gap-2">
-                              <div className="flex-1 min-w-0">
-                                <PrimaryContactPicker
-                                  clientId={deal.clientId}
-                                  value={editingPrimaryContactId}
-                                  onChange={(val) => savePrimaryContact(val)}
-                                  onContactCreated={(contactId) =>
-                                    savePrimaryContact(contactId)
-                                  }
-                                  autoFocus
-                                />
-                              </div>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="shrink-0"
-                                onClick={() => {
-                                  setIsEditingPrimaryContact(false);
-                                  setEditingPrimaryContactId("");
-                                }}
-                                disabled={primaryContactLoading}
-                                data-testid="button-cancel-primaryContactId"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            {primaryContactError && (
-                              <p
-                                className="text-sm text-destructive"
-                                data-testid="error-primaryContactId"
-                              >
-                                {primaryContactError}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-start gap-2 group">
-                            <div className="flex-1 min-w-0">
-                              {primaryContactLoading ? (
-                                <div className="flex items-center gap-2">
-                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                  <span className="text-muted-foreground">
-                                    Saving...
-                                  </span>
-                                </div>
-                              ) : deal.primaryContact ? (
-                                <Link
-                                  href={`/contacts/${deal.primaryContact.id}`}
-                                >
-                                  <p
-                                    className="text-primary hover:underline cursor-pointer"
-                                    data-testid="link-deal-primary-contact"
-                                  >
-                                    {deal.primaryContact.firstName}{" "}
-                                    {deal.primaryContact.lastName}
-                                  </p>
-                                </Link>
-                              ) : (
-                                <span className="text-muted-foreground">
-                                  No primary contact
-                                </span>
-                              )}
-                            </div>
-                            {canEditPrimaryContact &&
-                              !primaryContactLoading && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                  onClick={startEditing}
-                                  data-testid="button-edit-primaryContactId"
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                              )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
 
                 <EditableField
                   label="Services"

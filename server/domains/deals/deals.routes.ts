@@ -791,6 +791,70 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/deals/:id/contacts", isAuthenticated, async (req, res) => {
+    try {
+      const additionalContacts = await dealsService.getAdditionalContacts(req.params.id);
+      res.json(additionalContacts);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal contacts");
+    }
+  });
+
+  app.post("/api/deals/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { label } = req.body ?? {};
+      const actorId = req.user.claims.sub;
+      const additionalContacts = await dealsService.addAdditionalContact(
+        req.params.id,
+        req.params.contactId,
+        actorId,
+        label,
+      );
+      res.status(201).json(additionalContacts);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to add contact to deal");
+    }
+  });
+
+  app.delete("/api/deals/:id/contacts/:contactId", isAuthenticated, async (req: any, res) => {
+    try {
+      const actorId = req.user.claims.sub;
+      await dealsService.removeAdditionalContact(req.params.id, req.params.contactId, actorId);
+      res.status(204).send();
+    } catch (error) {
+      handleServiceError(res, error, "Failed to remove contact from deal");
+    }
+  });
+
+  app.patch("/api/deals/:id/contacts/reorder", isAuthenticated, async (req: any, res) => {
+    try {
+      const { contactIds } = req.body;
+      const actorId = req.user.claims.sub;
+      const additionalContacts = await dealsService.reorderAdditionalContacts(
+        req.params.id,
+        contactIds,
+        actorId,
+      );
+      res.json(additionalContacts);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to reorder deal contacts");
+    }
+  });
+
+  app.post("/api/deals/:id/contacts/:contactId/promote", isAuthenticated, async (req: any, res) => {
+    try {
+      const actorId = req.user.claims.sub;
+      const deal = await dealsService.promoteAdditionalContact(
+        req.params.id,
+        req.params.contactId,
+        actorId,
+      );
+      res.json(deal);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to promote contact to primary");
+    }
+  });
+
   app.get("/api/deals/:id/tags", isAuthenticated, async (req, res) => {
     try {
       const tagIds = await dealsService.getDealTagIds(req.params.id);
