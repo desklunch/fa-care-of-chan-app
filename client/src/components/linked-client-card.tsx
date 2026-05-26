@@ -131,7 +131,7 @@ export function LinkedClientCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base" data-testid="heading-deal-client">
+        <CardTitle data-testid="heading-deal-client">
           Client
         </CardTitle>
       </CardHeader>

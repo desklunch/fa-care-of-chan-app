@@ -646,7 +646,6 @@ export default function DealDetail() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle
-                  className="text-base"
                   data-testid="heading-client-contacts"
                 >
                   Client Contacts
@@ -780,7 +779,7 @@ export default function DealDetail() {
                   label="Additional Contacts"
                   testId="field-additional-contacts"
                 >
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-3">
                     {additionalContacts.length > 0 && (
                       <div className="flex flex-col gap-1.5">
                         {additionalContacts.map((c) => (
@@ -833,7 +832,7 @@ export default function DealDetail() {
                                     data-testid={`button-promote-contact-${c.id}`}
                                   >
                                     <Star className="h-4 w-4 mr-2" />
-                                    Make primary
+                                    Make Primary
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() =>
@@ -1017,8 +1016,7 @@ export default function DealDetail() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle
-                  className="text-base"
-                  data-testid="heading-key-info"
+                  data-testid="heading-deal-overview"
                 >
                   Deal Overview
                 </CardTitle>
@@ -1189,10 +1187,9 @@ export default function DealDetail() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle
-                  className="text-base"
-                  data-testid="heading-deal-overview"
+                  data-testid="heading-project-info"
                 >
-                  Deal Overview
+                  Project Info
                 </CardTitle>
               </CardHeader>
               <CardContent className="py-2">
@@ -1415,51 +1412,6 @@ export default function DealDetail() {
                   placeholder="Add notes about this deal"
                   valueClassName="text-base whitespace-pre-wrap"
                 />
-              </CardContent>
-            </Card>
-
-            {!dealAttachmentsStatus.isEmpty && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-0">
-                  <CardTitle
-                    className="text-base"
-                    data-testid="heading-attachments"
-                  >
-                    Links
-                  </CardTitle>
-                  {canWrite && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="gap-1 "
-                      onClick={() => setActiveTab("links")}
-                      data-testid="button-overview-add-link"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Add a Link
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent className="!pt-0">
-                  <DealAttachmentsPanel
-                    dealId={id!}
-                    canWrite={false}
-                    compact
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle
-                  className="text-base"
-                  data-testid="heading-project-info"
-                >
-                  Project Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2">
                 <FieldRow label="Locations" testId="field-locations-json">
                   {isEditingLocations ? (
                     <div className="space-y-3">
@@ -1743,19 +1695,6 @@ export default function DealDetail() {
                   error={getFieldError("budgetNotes")}
                   placeholder="Enter budget notes"
                 />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle
-                  className="text-base"
-                  data-testid="heading-deal-details"
-                >
-                  Deal Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2">
                 <FieldRow label="Tags" testId="field-tags">
                   {isEditingTags ? (
                     <div className="space-y-2">
@@ -1822,6 +1761,39 @@ export default function DealDetail() {
                 </FieldRow>
               </CardContent>
             </Card>
+
+            {!dealAttachmentsStatus.isEmpty && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-0">
+                  <CardTitle
+                    className="text-base"
+                    data-testid="heading-attachments"
+                  >
+                    Links
+                  </CardTitle>
+                  {canWrite && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="gap-1 "
+                      onClick={() => setActiveTab("links")}
+                      data-testid="button-overview-add-link"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add a Link
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="!pt-0">
+                  <DealAttachmentsPanel
+                    dealId={id!}
+                    canWrite={false}
+                    compact
+                  />
+                </CardContent>
+              </Card>
+            )}
+
 
           </TabsContent>
 
