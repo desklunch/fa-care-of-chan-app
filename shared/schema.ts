@@ -1260,6 +1260,8 @@ export const clients = pgTable(
     externalId: varchar("external_id", { length: 50 }),
     name: varchar("name", { length: 255 }).notNull(),
     website: varchar("website", { length: 255 }),
+    instagram: varchar("instagram", { length: 255 }),
+    linkedin: varchar("linkedin", { length: 255 }),
     industryId: varchar("industry_id").references(() => industries.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -2478,12 +2480,16 @@ export const insertClientSchema = createInsertSchema(clients).omit({
 }).extend({
   name: z.string().min(1, "Client name is required").max(255),
   website: z.string().max(255).optional().nullable(),
+  instagram: z.string().max(255).optional().nullable(),
+  linkedin: z.string().max(255).optional().nullable(),
   industryId: z.string().optional().nullable(),
 });
 
 export const updateClientSchema = createInsertSchema(clients).pick({
   name: true,
   website: true,
+  instagram: true,
+  linkedin: true,
   industryId: true,
 }).partial();
 

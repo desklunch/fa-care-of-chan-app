@@ -61,11 +61,15 @@ export default function ClientForm() {
     defaultValues: {
       name: "",
       website: "",
+      instagram: "",
+      linkedin: "",
       industryId: null,
     },
     values: client ? {
       name: client.name,
       website: client.website || "",
+      instagram: client.instagram || "",
+      linkedin: client.linkedin || "",
       industryId: client.industryId || null,
     } : undefined,
   });
@@ -268,6 +272,42 @@ export default function ClientForm() {
                       <FormDescription>
                         The client's website URL.
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="instagram"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Instagram profile URL or handle"
+                          data-testid="input-client-instagram"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="linkedin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="LinkedIn profile URL"
+                          data-testid="input-client-linkedin"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

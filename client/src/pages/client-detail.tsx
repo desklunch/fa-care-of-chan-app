@@ -331,6 +331,70 @@ export default function ClientDetail() {
               }
               placeholder="Enter website URL"
             />
+            <EditableField
+              label="Instagram"
+              value={client.instagram || ""}
+              field="instagram"
+              testId="field-client-instagram"
+              type="text"
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("instagram")}
+              error={getFieldError("instagram")}
+              displayValue={
+                client.instagram ? (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={
+                        client.instagram.startsWith("http")
+                          ? client.instagram
+                          : `https://${client.instagram}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                      data-testid="link-client-instagram"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {client.instagram}
+                    </a>
+                  </div>
+                ) : undefined
+              }
+              placeholder="Enter Instagram profile"
+            />
+            <EditableField
+              label="LinkedIn"
+              value={client.linkedin || ""}
+              field="linkedin"
+              testId="field-client-linkedin"
+              type="text"
+              onSave={handleFieldSave}
+              disabled={!canEdit}
+              isLoading={isFieldLoading("linkedin")}
+              error={getFieldError("linkedin")}
+              displayValue={
+                client.linkedin ? (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={
+                        client.linkedin.startsWith("http")
+                          ? client.linkedin
+                          : `https://${client.linkedin}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                      data-testid="link-client-linkedin"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {client.linkedin}
+                    </a>
+                  </div>
+                ) : undefined
+              }
+              placeholder="Enter LinkedIn profile"
+            />
           </CardContent>
         </Card>
 
