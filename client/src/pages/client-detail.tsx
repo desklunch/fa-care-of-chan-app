@@ -447,7 +447,11 @@ export default function ClientDetail() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {localLinkedContacts.map((contact) => (
+                    {[...localLinkedContacts]
+                      .sort((a, b) =>
+                        (a.firstName ?? "").localeCompare(b.firstName ?? "", undefined, { sensitivity: "base" })
+                      )
+                      .map((contact) => (
                       <div
                         key={contact.id}
                         className="group flex items-center justify-between border-b pb-4 "
