@@ -597,11 +597,11 @@ export default function DealDetail() {
               <TabsTrigger value="overview" data-testid="tab-overview">
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="intake" data-testid="tab-intake">
-                Intake
-              </TabsTrigger>
               <TabsTrigger value="discovery" data-testid="tab-discovery">
                 Deal Discovery
+              </TabsTrigger>
+              <TabsTrigger value="intake" data-testid="tab-intake">
+                Intake
               </TabsTrigger>
               <TabsTrigger value="links" data-testid="tab-links">
                 Links
