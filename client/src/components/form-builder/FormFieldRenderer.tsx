@@ -906,7 +906,7 @@ export function FormFieldRenderer({
             key={section.id}
             section={section}
             form={form}
-            defaultExpanded={index === 0}
+            defaultExpanded={false}
             onAddField={onAddField}
             onDeleteField={onDeleteField}
             onDeleteSection={onDeleteSection}

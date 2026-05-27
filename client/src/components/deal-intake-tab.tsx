@@ -308,7 +308,7 @@ function ReadOnlyFieldRenderer({
           key={section.id}
           section={section}
           responseData={responseData}
-          defaultExpanded={index === 0}
+          defaultExpanded={false}
         />
       ))}
     </div>
