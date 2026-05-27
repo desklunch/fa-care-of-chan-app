@@ -404,7 +404,7 @@ export default function ClientDetail() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 pt-4 pb-4">
             <div>
-              <CardTitle className="flex items-center gap-2 text-base font-bold pt-2">
+              <CardTitle className="flex items-center gap-2 pt-2">
                 Contacts{" "}
                 <span className="text-muted-foreground text-sm font-medium">
                   {localLinkedContacts.length}
