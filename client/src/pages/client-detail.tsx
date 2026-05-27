@@ -50,8 +50,10 @@ import {
   Handshake,
   Users,
   UserPlus,
+  Plus,
 } from "lucide-react";
 import { ContactLinkSearch } from "@/components/contact-link-search";
+import { CreateContactDialog } from "@/components/create-contact-dialog";
 import { PermissionGate } from "@/components/permission-gate";
 import { DealStatusBadge } from "@/components/deal-status-badge";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -73,6 +75,7 @@ export default function ClientDetail() {
   const canDelete = can('clients.delete');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showContactSearch, setShowContactSearch] = useState(false);
+  const [showCreateContact, setShowCreateContact] = useState(false);
 
   const { data: clientData, isLoading } = useQuery<ClientWithFullRelations>({
     queryKey: ["/api/clients", params.id, "full"],
@@ -409,16 +412,27 @@ export default function ClientDetail() {
               </CardTitle>
             </div>
             {canEdit && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowContactSearch(true)}
-                disabled={showContactSearch}
-                data-testid="button-link-contact"
-              >
-                <UserPlus className="h-4 w-4" />
-                Add
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowContactSearch(true)}
+                  disabled={showContactSearch}
+                  data-testid="button-link-contact"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Link Contact
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowCreateContact(true)}
+                  data-testid="button-new-contact"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Contact
+                </Button>
+              </div>
             )}
           </CardHeader>
           <CardContent>
@@ -581,6 +595,23 @@ export default function ClientDetail() {
         </TabsContent>
 
       </Tabs>
+
+      {canEdit && params.id && (
+        <CreateContactDialog
+          open={showCreateContact}
+          onOpenChange={setShowCreateContact}
+          clientId={params.id}
+          onCreated={(contact) => {
+            setLocalLinkedContacts((prev) =>
+              prev.some((c) => c.id === contact.id) ? prev : [...prev, contact],
+            );
+            queryClient.invalidateQueries({
+              queryKey: ["/api/clients", params.id, "full"],
+            });
+          }}
+          testIdPrefix="client-detail"
+        />
+      )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

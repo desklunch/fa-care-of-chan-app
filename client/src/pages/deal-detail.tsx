@@ -99,6 +99,7 @@ import {
   useFieldMutation,
 } from "@/components/inline-edit";
 import { PrimaryContactPicker } from "@/components/primary-contact-picker";
+import { CreateContactDialog } from "@/components/create-contact-dialog";
 import { EntityTaskGrid } from "@/components/entity-task-grid";
 import {
   DealAttachmentsPanel,
@@ -126,6 +127,7 @@ export default function DealDetail() {
     null,
   );
   const [addContactPickerOpen, setAddContactPickerOpen] = useState(false);
+  const [showCreateContactDialog, setShowCreateContactDialog] = useState(false);
   const [isEditingEventSchedule, setIsEditingEventSchedule] = useState(false);
   const [editingEventSchedule, setEditingEventSchedule] = useState<DealEvent[]>(
     [],
@@ -261,6 +263,13 @@ export default function DealDetail() {
       ].filter(Boolean),
     ),
   );
+
+  const candidateClientOptions = candidateClientIds.map((cid) => {
+    const linked = linkedClients.find((lc) => lc.clientId === cid);
+    const fromAll = clients.find((c) => c.id === cid);
+    const name = linked?.clientName || fromAll?.name || "Client";
+    return { id: cid, name };
+  });
 
   const candidateContactQueries = useQueries({
     queries: candidateClientIds.map((clientId) => ({
@@ -978,36 +987,48 @@ export default function DealDetail() {
                             onChange={(e) => setAddContactLabel(e.target.value)}
                             data-testid="input-add-contact-label"
                           />
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-between gap-2">
                             <Button
                               size="sm"
-                              variant="ghost"
-                              onClick={cancelAdd}
-                              data-testid="button-cancel-add-contact"
+                              variant="secondary"
+                              disabled={noClients}
+                              onClick={() => setShowCreateContactDialog(true)}
+                              data-testid="button-new-additional-contact"
                             >
-                              Cancel
+                              <Plus className="h-3.5 w-3.5 mr-1" />
+                              New Contact
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="default"
-                              disabled={
-                                !addContactPendingId ||
-                                addContactMutation.isPending
-                              }
-                              onClick={() => {
-                                if (!addContactPendingId) return;
-                                addContactMutation.mutate({
-                                  contactId: addContactPendingId,
-                                  label: addContactLabel || undefined,
-                                });
-                              }}
-                              data-testid="button-save-add-contact"
-                            >
-                              {addContactMutation.isPending && (
-                                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                              )}
-                              Save
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={cancelAdd}
+                                data-testid="button-cancel-add-contact"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                disabled={
+                                  !addContactPendingId ||
+                                  addContactMutation.isPending
+                                }
+                                onClick={() => {
+                                  if (!addContactPendingId) return;
+                                  addContactMutation.mutate({
+                                    contactId: addContactPendingId,
+                                    label: addContactLabel || undefined,
+                                  });
+                                }}
+                                data-testid="button-save-add-contact"
+                              >
+                                {addContactMutation.isPending && (
+                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                )}
+                                Save
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -1878,6 +1899,22 @@ export default function DealDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {canWrite && candidateClientOptions.length > 0 && (
+        <CreateContactDialog
+          open={showCreateContactDialog}
+          onOpenChange={setShowCreateContactDialog}
+          clientOptions={candidateClientOptions}
+          defaultClientId={deal?.clientId ?? candidateClientOptions[0]?.id ?? null}
+          onCreated={(contact) => {
+            addContactMutation.mutate({
+              contactId: contact.id,
+              label: addContactLabel || undefined,
+            });
+          }}
+          testIdPrefix="deal-detail"
+        />
+      )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
