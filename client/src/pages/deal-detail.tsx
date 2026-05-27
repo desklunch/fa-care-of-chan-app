@@ -601,7 +601,7 @@ export default function DealDetail() {
                 Deal Discovery
               </TabsTrigger>
               <TabsTrigger value="intake" data-testid="tab-intake">
-                Intake
+                Project Intake
               </TabsTrigger>
               <TabsTrigger value="links" data-testid="tab-links">
                 Links
