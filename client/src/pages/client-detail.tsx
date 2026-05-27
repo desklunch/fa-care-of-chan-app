@@ -50,7 +50,7 @@ import {
   Handshake,
   Users,
   UserPlus,
-  Plus,
+  CircleFadingPlus,
 } from "lucide-react";
 import { ContactLinkSearch } from "@/components/contact-link-search";
 import { CreateContactDialog } from "@/components/create-contact-dialog";
@@ -407,40 +407,18 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pt-4 pb-4">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 ">
             <div>
-              <CardTitle className="flex items-center gap-2 pt-2">
+              <CardTitle className="flex items-center gap-2">
                 Contacts{" "}
                 <span className="text-muted-foreground text-sm font-medium">
                   {localLinkedContacts.length}
                 </span>
               </CardTitle>
             </div>
-            {canEdit && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowContactSearch(true)}
-                  disabled={showContactSearch}
-                  data-testid="button-link-contact"
-                >
-                  <UserPlus className="size-3.5" />
-                  Link
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowCreateContact(true)}
-                  data-testid="button-new-contact"
-                >
-                  <Plus className="size-3.5" />
-                  New
-                </Button>
-              </div>
-            )}
+
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             {isLoadingContacts ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -468,11 +446,11 @@ export default function ClientDetail() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="s">
                     {localLinkedContacts.map((contact) => (
                       <div
                         key={contact.id}
-                        className="flex items-center justify-between p-3 pl-4 rounded-lg bg-background/50 dark:bg-foreground/[4%]"
+                        className="flex items-center justify-between border-b last:border-b-0 pb-4 "
                         data-testid={`contact-item-${contact.id}`}
                       >
                         <div>
@@ -507,6 +485,29 @@ export default function ClientDetail() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+            {canEdit && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowContactSearch(true)}
+                  disabled={showContactSearch}
+                  data-testid="button-link-contact"
+                >
+                  <UserPlus className="size-3.5" />
+                  Link
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowCreateContact(true)}
+                  data-testid="button-new-contact"
+                >
+                  <CircleFadingPlus className="size-3.5" />
+                  New
+                </Button>
               </div>
             )}
           </CardContent>
