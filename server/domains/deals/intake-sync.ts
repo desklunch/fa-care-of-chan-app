@@ -4,6 +4,7 @@ import {
   buildIntakeFieldKey,
   type FormSection,
   type FormField,
+  type DealIntakeKind,
   mappableEntities,
 } from "@shared/schema";
 import { domainEvents } from "../../lib/events";
@@ -45,8 +46,9 @@ function deepEqual(a: unknown, b: unknown): boolean {
 export async function computeIntakeSync(
   dealsService: DealsService,
   dealId: string,
+  kind: DealIntakeKind = "intake",
 ): Promise<{ changes: IntakeSyncChange[]; dealUpdates: Record<string, unknown>; tagIds: string[] | null } | null> {
-  const intake = await dealsStorage.getDealIntake(dealId);
+  const intake = await dealsStorage.getDealIntake(dealId, kind);
   if (!intake) return null;
 
   const deal = await dealsService.getById(dealId);
@@ -123,8 +125,9 @@ export async function applyIntakeSync(
   dealsService: DealsService,
   dealId: string,
   actorId: string,
+  kind: DealIntakeKind = "intake",
 ): Promise<IntakeSyncResult> {
-  const computed = await computeIntakeSync(dealsService, dealId);
+  const computed = await computeIntakeSync(dealsService, dealId, kind);
   if (!computed) {
     return { changes: [], applied: false, message: "No intake found for this deal" };
   }

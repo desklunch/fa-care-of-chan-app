@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/command";
 import { GenerateDealDocDialog } from "@/components/generate-deal-doc-dialog";
 import { DealIntakeTab } from "@/components/deal-intake-tab";
+import { DealDiscoveryTab } from "@/components/deal-discovery-tab";
 import { DealHistoryTab } from "@/components/deal-history-tab";
 import { parseDateOnly } from "@/lib/date";
 import { DealStatusBadge } from "@/components/deal-status-badge";
@@ -598,6 +599,9 @@ export default function DealDetail() {
               </TabsTrigger>
               <TabsTrigger value="intake" data-testid="tab-intake">
                 Intake
+              </TabsTrigger>
+              <TabsTrigger value="discovery" data-testid="tab-discovery">
+                Deal Discovery
               </TabsTrigger>
               <TabsTrigger value="links" data-testid="tab-links">
                 Links
@@ -1799,6 +1803,15 @@ export default function DealDetail() {
 
           <TabsContent value="intake" className="p-4 md:p-6 pt-4 max-w-6xl">
             <DealIntakeTab
+              dealId={id!}
+              canWrite={canWrite}
+              onSaveToGoogleDrive={() => setShowGenerateDoc(true)}
+              canSaveToGoogleDrive={Boolean(deal)}
+            />
+          </TabsContent>
+
+          <TabsContent value="discovery" className="p-4 md:p-6 pt-4 max-w-6xl">
+            <DealDiscoveryTab
               dealId={id!}
               canWrite={canWrite}
               onSaveToGoogleDrive={() => setShowGenerateDoc(true)}

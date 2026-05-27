@@ -34,6 +34,7 @@ import {
   type DealIntakeWithRelations,
   type CreateDealIntake,
   type UpdateDealIntake,
+  type DealIntakeKind,
   type FormSection,
   type DealLocation,
   type DealEvent,
@@ -326,11 +327,15 @@ export const dealsStorage = {
     return results;
   },
 
-  async getDealIntake(dealId: string): Promise<DealIntakeWithRelations | null> {
+  async getDealIntake(
+    dealId: string,
+    kind: DealIntakeKind = "intake",
+  ): Promise<DealIntakeWithRelations | null> {
     const results = await db
       .select({
         id: dealIntakes.id,
         dealId: dealIntakes.dealId,
+        kind: dealIntakes.kind,
         templateId: dealIntakes.templateId,
         templateName: dealIntakes.templateName,
         formSchema: dealIntakes.formSchema,
@@ -345,7 +350,7 @@ export const dealsStorage = {
       })
       .from(dealIntakes)
       .leftJoin(users, eq(dealIntakes.createdById, users.id))
-      .where(eq(dealIntakes.dealId, dealId));
+      .where(and(eq(dealIntakes.dealId, dealId), eq(dealIntakes.kind, kind)));
 
     if (results.length === 0) return null;
 
@@ -353,6 +358,7 @@ export const dealsStorage = {
     return {
       id: r.id,
       dealId: r.dealId,
+      kind: r.kind as DealIntakeKind,
       templateId: r.templateId,
       templateName: r.templateName,
       formSchema: r.formSchema as FormSection[],
@@ -377,6 +383,7 @@ export const dealsStorage = {
       .select({
         id: dealIntakes.id,
         dealId: dealIntakes.dealId,
+        kind: dealIntakes.kind,
         templateId: dealIntakes.templateId,
         templateName: dealIntakes.templateName,
         formSchema: dealIntakes.formSchema,
@@ -399,6 +406,7 @@ export const dealsStorage = {
     return {
       id: r.id,
       dealId: r.dealId,
+      kind: r.kind as DealIntakeKind,
       templateId: r.templateId,
       templateName: r.templateName,
       formSchema: r.formSchema as FormSection[],
@@ -429,7 +437,11 @@ export const dealsStorage = {
     return intake;
   },
 
-  async updateDealIntake(dealId: string, data: UpdateDealIntake): Promise<DealIntake | null> {
+  async updateDealIntake(
+    dealId: string,
+    data: UpdateDealIntake,
+    kind: DealIntakeKind = "intake",
+  ): Promise<DealIntake | null> {
     const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
       status: "draft",
@@ -441,13 +453,18 @@ export const dealsStorage = {
     const [intake] = await db
       .update(dealIntakes)
       .set(updateData)
-      .where(eq(dealIntakes.dealId, dealId))
+      .where(and(eq(dealIntakes.dealId, dealId), eq(dealIntakes.kind, kind)))
       .returning();
     return intake || null;
   },
 
-  async deleteDealIntake(dealId: string): Promise<void> {
-    await db.delete(dealIntakes).where(eq(dealIntakes.dealId, dealId));
+  async deleteDealIntake(
+    dealId: string,
+    kind: DealIntakeKind = "intake",
+  ): Promise<void> {
+    await db
+      .delete(dealIntakes)
+      .where(and(eq(dealIntakes.dealId, dealId), eq(dealIntakes.kind, kind)));
   },
 
   async getDealsForForecast(startDate: string, endDate: string): Promise<ForecastDealRow[]> {

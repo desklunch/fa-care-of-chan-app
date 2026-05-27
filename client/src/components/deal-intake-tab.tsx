@@ -87,11 +87,93 @@ import {
   type FormField,
 } from "@shared/schema";
 
+export type IntakeKind = "intake" | "discovery";
+
+interface IntakeKindConfig {
+  kind: IntakeKind;
+  endpoint: "intake" | "discovery";
+  title: string;
+  startedTitle: string;
+  startedDescription: string;
+  emptyHeading: string;
+  emptyDescriptionWritable: string;
+  emptyDescriptionReadOnly: string;
+  startButtonLabel: string;
+  startFailedTitle: string;
+  resetMenuLabel: string;
+  removeDialogTitle: string;
+  removeDialogDescription: string;
+  removedToastTitle: string;
+  removedToastDescription: string;
+  removeFailedTitle: string;
+  mergeDialogDescription: string;
+  noMergeTemplatesMessage: string;
+  templateCategoryFilter: (cat: string | null | undefined) => boolean;
+  testIdPrefix: string; // "intake" or "discovery" — applied to top-level data-testids
+}
+
+const INTAKE_CONFIG: IntakeKindConfig = {
+  kind: "intake",
+  endpoint: "intake",
+  title: "Intake Questionnaire",
+  startedTitle: "Intake started",
+  startedDescription: "Questionnaire has been created from the selected template.",
+  emptyHeading: "No Intake Questionnaire",
+  emptyDescriptionWritable:
+    "Start an intake questionnaire by selecting a template. The form will be snapshotted so later template changes won't affect this intake.",
+  emptyDescriptionReadOnly: "No intake questionnaire has been created for this deal yet.",
+  startButtonLabel: "Start Intake",
+  startFailedTitle: "Failed to start intake",
+  resetMenuLabel: "Reset Intake",
+  removeDialogTitle: "Remove Intake Questionnaire",
+  removeDialogDescription:
+    "Are you sure you want to remove this intake questionnaire? All responses will be lost. This action cannot be undone.",
+  removedToastTitle: "Intake removed",
+  removedToastDescription: "The intake questionnaire has been removed.",
+  removeFailedTitle: "Failed to remove",
+  mergeDialogDescription:
+    "Pick one or more client intake templates to append their sections to this draft intake. Templates whose namespace is already present cannot be added again.",
+  noMergeTemplatesMessage: "No client intake templates available.",
+  templateCategoryFilter: isIntakeCategory,
+  testIdPrefix: "intake",
+};
+
+const DISCOVERY_CONFIG: IntakeKindConfig = {
+  kind: "discovery",
+  endpoint: "discovery",
+  title: "Deal Discovery",
+  startedTitle: "Deal Discovery started",
+  startedDescription: "Discovery has been created from the selected template.",
+  emptyHeading: "No Deal Discovery",
+  emptyDescriptionWritable:
+    "Start a deal discovery by selecting a template. The form will be snapshotted so later template changes won't affect this discovery.",
+  emptyDescriptionReadOnly: "No deal discovery has been created for this deal yet.",
+  startButtonLabel: "Start Discovery",
+  startFailedTitle: "Failed to start discovery",
+  resetMenuLabel: "Reset Discovery",
+  removeDialogTitle: "Remove Deal Discovery",
+  removeDialogDescription:
+    "Are you sure you want to remove this deal discovery? All responses will be lost. This action cannot be undone.",
+  removedToastTitle: "Discovery removed",
+  removedToastDescription: "The deal discovery has been removed.",
+  removeFailedTitle: "Failed to remove",
+  mergeDialogDescription:
+    "Pick one or more deal discovery templates to append their sections to this draft discovery. Templates whose namespace is already present cannot be added again.",
+  noMergeTemplatesMessage: "No deal discovery templates available.",
+  templateCategoryFilter: (cat) => (cat ?? "").toLowerCase() === "deal_discovery",
+  testIdPrefix: "discovery",
+};
+
+export function getIntakeKindConfig(kind: IntakeKind): IntakeKindConfig {
+  return kind === "discovery" ? DISCOVERY_CONFIG : INTAKE_CONFIG;
+}
+
 interface DealIntakeTabProps {
   dealId: string;
   canWrite: boolean;
   onSaveToGoogleDrive?: () => void;
   canSaveToGoogleDrive?: boolean;
+  kind?: IntakeKind;
 }
 
 function formatReadOnlyValue(field: FormField, value: unknown): string {
@@ -267,13 +349,14 @@ function extractApiErrorMessage(error: Error): string {
 function IntakeEmptyState({
   dealId,
   canWrite,
+  config,
 }: {
   dealId: string;
   canWrite: boolean;
+  config: IntakeKindConfig;
 }) {
   const { toast } = useToast();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [showAllTemplates, setShowAllTemplates] = useState(false);
 
   const { data: allTemplates = [], isLoading: isLoadingTemplates } = useQuery<
     FormTemplate[]
@@ -281,23 +364,17 @@ function IntakeEmptyState({
     queryKey: ["/api/form-templates"],
   });
 
-  const intakeTemplates = allTemplates.filter((t) =>
-    isIntakeCategory(t.category),
+  const displayTemplates = allTemplates.filter((t) =>
+    config.templateCategoryFilter(t.category),
   );
-  const otherTemplates = allTemplates.filter(
-    (t) => !isIntakeCategory(t.category),
-  );
-  const displayTemplates = showAllTemplates
-    ? allTemplates
-    : intakeTemplates.length > 0
-      ? intakeTemplates
-      : allTemplates;
 
   const createMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      const res = await apiRequest("POST", `/api/deals/${dealId}/intake`, {
-        templateId,
-      });
+      const res = await apiRequest(
+        "POST",
+        `/api/deals/${dealId}/${config.endpoint}`,
+        { templateId },
+      );
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         throw new Error(
@@ -308,19 +385,18 @@ function IntakeEmptyState({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/deals", dealId, "intake"],
+        queryKey: ["/api/deals", dealId, config.endpoint],
       });
       toast({
-        title: "Intake started",
-        description:
-          "Questionnaire has been created from the selected template.",
+        title: config.startedTitle,
+        description: config.startedDescription,
       });
       setSelectedTemplateId("");
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "Failed to start intake",
+        title: config.startFailedTitle,
         description: error.message,
       });
     },
@@ -330,12 +406,12 @@ function IntakeEmptyState({
     return (
       <div
         className="flex flex-col items-center justify-center py-12 text-center"
-        data-testid="intake-empty-readonly"
+        data-testid={`${config.testIdPrefix}-empty-readonly`}
       >
         <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Intake Questionnaire</h3>
+        <h3 className="text-lg font-semibold mb-2">{config.emptyHeading}</h3>
         <p className="text-muted-foreground max-w-sm">
-          No intake questionnaire has been created for this deal yet.
+          {config.emptyDescriptionReadOnly}
         </p>
       </div>
     );
@@ -344,21 +420,21 @@ function IntakeEmptyState({
   return (
     <div
       className="flex flex-col items-center justify-center py-12 text-center"
-      data-testid="intake-empty"
+      data-testid={`${config.testIdPrefix}-empty`}
     >
       <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-semibold mb-2">No Intake Questionnaire</h3>
+      <h3 className="text-lg font-semibold mb-2">{config.emptyHeading}</h3>
       <p className="text-muted-foreground max-w-sm mb-6">
-        Start an intake questionnaire by selecting a template. The form will be
-        snapshotted so later template changes won't affect this intake.
+        {config.emptyDescriptionWritable}
       </p>
 
       {isLoadingTemplates ? (
         <Skeleton className="h-10 w-64" />
-      ) : allTemplates.length === 0 ? (
+      ) : displayTemplates.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No form templates available. Create one first under Forms &gt;
-          Templates.
+          {config.kind === "discovery"
+            ? "No deal discovery templates available. Create one first under Forms > Templates with category 'deal_discovery'."
+            : "No form templates available. Create one first under Forms > Templates."}
         </p>
       ) : (
         <div className="flex flex-col items-center gap-3 w-full max-w-md">
@@ -369,7 +445,7 @@ function IntakeEmptyState({
             >
               <SelectTrigger
                 className="flex-1"
-                data-testid="select-intake-template"
+                data-testid={`select-${config.testIdPrefix}-template`}
               >
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
@@ -402,29 +478,16 @@ function IntakeEmptyState({
                 selectedTemplateId && createMutation.mutate(selectedTemplateId)
               }
               disabled={!selectedTemplateId || createMutation.isPending}
-              data-testid="button-start-intake"
+              data-testid={`button-start-${config.testIdPrefix}`}
             >
               {createMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <FileText className="h-4 w-4" />
               )}
-              Start Intake
+              {config.startButtonLabel}
             </Button>
           </div>
-          {intakeTemplates.length > 0 && otherTemplates.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAllTemplates(!showAllTemplates)}
-              className="text-muted-foreground"
-              data-testid="button-toggle-all-templates"
-            >
-              {showAllTemplates
-                ? `Show intake templates only (${intakeTemplates.length})`
-                : `Show all templates (${allTemplates.length})`}
-            </Button>
-          )}
         </div>
       )}
     </div>
@@ -469,12 +532,14 @@ function IntakeDraftForm({
   canWrite,
   onSaveToGoogleDrive,
   canSaveToGoogleDrive,
+  config,
 }: {
   dealId: string;
   intake: DealIntakeWithRelations;
   canWrite: boolean;
   onSaveToGoogleDrive?: () => void;
   canSaveToGoogleDrive?: boolean;
+  config: IntakeKindConfig;
 }) {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -504,7 +569,7 @@ function IntakeDraftForm({
       .filter((n): n is string => !!n),
   );
   const intakeMergeTemplates = allMergeTemplates.filter((t) =>
-    isIntakeCategory(t.category),
+    config.templateCategoryFilter(t.category),
   );
   const mergeTemplateOptions = intakeMergeTemplates.map((t) => ({
     template: t,
@@ -529,7 +594,7 @@ function IntakeDraftForm({
       for (const templateId of templateIds) {
         const res = await apiRequest(
           "POST",
-          `/api/deals/${dealId}/intake/merge`,
+          `/api/deals/${dealId}/${config.endpoint}/merge`,
           { templateId },
         );
         const contentType = res.headers.get("content-type") || "";
@@ -563,14 +628,15 @@ function IntakeDraftForm({
         isInitialMount.current = true;
       }
       queryClient.invalidateQueries({
-        queryKey: ["/api/deals", dealId, "intake"],
+        queryKey: ["/api/deals", dealId, config.endpoint],
       });
+      const itemLabel = config.kind === "discovery" ? "discovery" : "intake";
       const description =
         mergedNames.length === 1
-          ? `Sections from "${mergedNames[0]}" were appended to this intake.`
+          ? `Sections from "${mergedNames[0]}" were appended to this ${itemLabel}.`
           : `Sections from ${mergedNames.length} templates (${mergedNames
               .map((n) => `"${n}"`)
-              .join(", ")}) were appended to this intake.`;
+              .join(", ")}) were appended to this ${itemLabel}.`;
       toast({
         title:
           mergedNames.length === 1
@@ -620,7 +686,7 @@ function IntakeDraftForm({
     }) => {
       const res = await apiRequest(
         "PATCH",
-        `/api/deals/${dealId}/intake`,
+        `/api/deals/${dealId}/${config.endpoint}`,
         payload,
       );
       const contentType = res.headers.get("content-type") || "";
@@ -634,7 +700,7 @@ function IntakeDraftForm({
     onSuccess: () => {
       setSaveStatus("saved");
       queryClient.invalidateQueries({
-        queryKey: ["/api/deals", dealId, "intake"],
+        queryKey: ["/api/deals", dealId, config.endpoint],
       });
     },
     onError: (error: Error) => {
@@ -681,22 +747,22 @@ function IntakeDraftForm({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", `/api/deals/${dealId}/intake`);
+      await apiRequest("DELETE", `/api/deals/${dealId}/${config.endpoint}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/deals", dealId, "intake"],
+        queryKey: ["/api/deals", dealId, config.endpoint],
       });
       setShowDeleteDialog(false);
       toast({
-        title: "Intake removed",
-        description: "The intake questionnaire has been removed.",
+        title: config.removedToastTitle,
+        description: config.removedToastDescription,
       });
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "Failed to remove",
+        title: config.removeFailedTitle,
         description: error.message,
       });
     },
@@ -942,6 +1008,7 @@ function IntakeDraftForm({
                 dealId={dealId}
                 intake={intake}
                 canWrite={canWrite}
+                config={config}
               />
               {canSaveToGoogleDrive && onSaveToGoogleDrive && (
                 <Button
@@ -970,7 +1037,7 @@ function IntakeDraftForm({
                     data-testid="menuitem-reset-intake"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Reset Intake
+                    {config.resetMenuLabel}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1034,15 +1101,13 @@ function IntakeDraftForm({
           <DialogHeader>
             <DialogTitle>Add from template</DialogTitle>
             <DialogDescription>
-              Pick one or more client intake templates to append their sections
-              to this draft intake. Templates whose namespace is already
-              present cannot be added again.
+              {config.mergeDialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             {mergeTemplateOptions.length === 0 ? (
               <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
-                No client intake templates available.
+                {config.noMergeTemplatesMessage}
               </div>
             ) : (
               <ScrollArea className="h-72 rounded-md border">
@@ -1105,7 +1170,7 @@ function IntakeDraftForm({
                               <div>{row}</div>
                             </TooltipTrigger>
                             <TooltipContent side="right">
-                              Already merged into this intake
+                              {`Already merged into this ${config.kind === "discovery" ? "discovery" : "intake"}`}
                             </TooltipContent>
                           </Tooltip>
                         );
@@ -1158,10 +1223,9 @@ function IntakeDraftForm({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Intake Questionnaire</AlertDialogTitle>
+            <AlertDialogTitle>{config.removeDialogTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove this intake questionnaire? All
-              responses will be lost. This action cannot be undone.
+              {config.removeDialogDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1248,10 +1312,12 @@ function SyncToDealButton({
   dealId,
   intake,
   canWrite,
+  config,
 }: {
   dealId: string;
   intake: DealIntakeWithRelations;
   canWrite: boolean;
+  config: IntakeKindConfig;
 }) {
   const { toast } = useToast();
   const [showSyncDialog, setShowSyncDialog] = useState(false);
@@ -1265,7 +1331,7 @@ function SyncToDealButton({
   const handlePreview = async () => {
     setIsPreviewLoading(true);
     try {
-      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, {
+      const res = await apiRequest("POST", `/api/deals/${dealId}/${config.endpoint}/sync`, {
         dryRun: true,
       });
       const data = await res.json();
@@ -1284,7 +1350,7 @@ function SyncToDealButton({
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/deals/${dealId}/intake/sync`, {
+      const res = await apiRequest("POST", `/api/deals/${dealId}/${config.endpoint}/sync`, {
         dryRun: false,
       });
       return res.json();
@@ -1297,7 +1363,7 @@ function SyncToDealButton({
       setShowSyncDialog(false);
       toast({
         title: "Deal synced",
-        description: "Deal properties have been updated from intake data.",
+        description: `Deal properties have been updated from ${config.kind === "discovery" ? "discovery" : "intake"} data.`,
       });
     },
     onError: (error: Error) => {
@@ -1331,10 +1397,13 @@ function SyncToDealButton({
       <AlertDialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
         <AlertDialogContent className="max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Sync Intake to Deal</AlertDialogTitle>
+            <AlertDialogTitle>
+              {config.kind === "discovery" ? "Sync Discovery to Deal" : "Sync Intake to Deal"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              The following deal properties will be updated from the intake
-              responses. Existing values will be overwritten.
+              {`The following deal properties will be updated from the ${
+                config.kind === "discovery" ? "discovery" : "intake"
+              } responses. Existing values will be overwritten.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -1396,9 +1465,11 @@ export function DealIntakeTab({
   canWrite,
   onSaveToGoogleDrive,
   canSaveToGoogleDrive,
+  kind = "intake",
 }: DealIntakeTabProps) {
+  const config = getIntakeKindConfig(kind);
   const { data: intake, isLoading } = useQuery<DealIntakeWithRelations | null>({
-    queryKey: ["/api/deals", dealId, "intake"],
+    queryKey: ["/api/deals", dealId, config.endpoint],
     enabled: Boolean(dealId),
   });
 
@@ -1412,7 +1483,7 @@ export function DealIntakeTab({
   }
 
   if (!intake) {
-    return <IntakeEmptyState dealId={dealId} canWrite={canWrite} />;
+    return <IntakeEmptyState dealId={dealId} canWrite={canWrite} config={config} />;
   }
 
   return (
@@ -1422,6 +1493,7 @@ export function DealIntakeTab({
       canWrite={canWrite}
       onSaveToGoogleDrive={onSaveToGoogleDrive}
       canSaveToGoogleDrive={canSaveToGoogleDrive}
+      config={config}
     />
   );
 }

@@ -2789,11 +2789,15 @@ export const commentsRelations = relations(comments, ({ one }) => ({
 export const dealIntakeStatuses = ["draft", "completed"] as const;
 export type DealIntakeStatus = (typeof dealIntakeStatuses)[number];
 
+export const dealIntakeKinds = ["intake", "discovery"] as const;
+export type DealIntakeKind = (typeof dealIntakeKinds)[number];
+
 export const dealIntakes = pgTable(
   "deal_intakes",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }).unique(),
+    dealId: varchar("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+    kind: varchar("kind", { length: 20 }).default("intake").notNull(),
     templateId: varchar("template_id").references(() => formTemplates.id, { onDelete: "set null" }),
     templateName: varchar("template_name", { length: 255 }).notNull(),
     formSchema: jsonb("form_schema").$type<FormSection[]>().notNull().default([]),
@@ -2808,6 +2812,8 @@ export const dealIntakes = pgTable(
     index("idx_deal_intakes_deal").on(table.dealId),
     index("idx_deal_intakes_template").on(table.templateId),
     index("idx_deal_intakes_status").on(table.status),
+    index("idx_deal_intakes_kind").on(table.kind),
+    unique("uniq_deal_intakes_deal_kind").on(table.dealId, table.kind),
   ],
 );
 
@@ -2865,6 +2871,7 @@ export const insertDealIntakeSchema = createInsertSchema(dealIntakes).omit({
   })).default([]),
   responseData: z.record(z.unknown()).default({}),
   status: z.enum(dealIntakeStatuses).default("draft"),
+  kind: z.enum(dealIntakeKinds).default("intake"),
 });
 
 export const updateDealIntakeSchema = z.object({

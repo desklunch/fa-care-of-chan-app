@@ -1100,6 +1100,230 @@ export function registerDealsRoutes(app: Express): void {
     }
   });
 
+  // ==========================================
+  // DEAL DISCOVERY ROUTES (mirror of intake, restricted to deal_discovery templates)
+  // ==========================================
+
+  app.get("/api/deals/:dealId/discovery", isAuthenticated, async (req, res) => {
+    try {
+      const discovery = await dealsStorage.getDealIntake(req.params.dealId, "discovery");
+      res.json(discovery);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to fetch deal discovery");
+    }
+  });
+
+  app.post("/api/deals/:dealId/discovery", isAuthenticated, async (req: any, res) => {
+    try {
+      const { templateId } = req.body;
+      if (!templateId) {
+        return res.status(400).json({ message: "templateId is required" });
+      }
+
+      const template = await formsStorage.getFormTemplateById(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      if ((template.category ?? "").toLowerCase() !== "deal_discovery") {
+        return res.status(400).json({
+          message: "Only templates with category 'deal_discovery' can be used to start a Deal Discovery.",
+        });
+      }
+
+      const existing = await dealsStorage.getDealIntake(req.params.dealId, "discovery");
+      if (existing) {
+        await dealsStorage.deleteDealIntake(req.params.dealId, "discovery");
+      }
+
+      const actorId = req.user.claims.sub;
+      const stampedFormSchema = (template.formSchema || []).map((section) => ({
+        ...section,
+        templateNamespace: template.namespace,
+      }));
+      const discoveryData = {
+        dealId: req.params.dealId,
+        kind: "discovery" as const,
+        templateId: template.id,
+        templateName: template.name,
+        formSchema: stampedFormSchema,
+        responseData: {},
+        status: "draft" as const,
+      };
+
+      const result = insertDealIntakeSchema.safeParse(discoveryData);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const discovery = await dealsStorage.createDealIntake(result.data, actorId);
+
+      domainEvents.emit({
+        type: "deal:intake_created",
+        intakeId: discovery.id,
+        dealId: req.params.dealId,
+        templateId,
+        templateName: template.name,
+        actorId,
+        timestamp: new Date(),
+      });
+
+      res.status(201).json(discovery);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to create deal discovery");
+    }
+  });
+
+  app.post("/api/deals/:dealId/discovery/merge", isAuthenticated, async (req: any, res) => {
+    try {
+      const { templateId } = req.body;
+      if (!templateId) {
+        return res.status(400).json({ message: "templateId is required" });
+      }
+
+      const existing = await dealsStorage.getDealIntake(req.params.dealId, "discovery");
+      if (!existing) {
+        return res.status(404).json({ message: "No discovery exists for this deal yet. Create one first." });
+      }
+      if (existing.status !== "draft") {
+        return res.status(400).json({ message: "Templates can only be merged into a draft discovery." });
+      }
+
+      const template = await formsStorage.getFormTemplateById(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      if ((template.category ?? "").toLowerCase() !== "deal_discovery") {
+        return res.status(400).json({
+          message: "Only templates with category 'deal_discovery' can be merged into a deal discovery.",
+        });
+      }
+
+      const currentSections = (existing.formSchema as FormSection[]) || [];
+      const alreadyMerged = currentSections.some(
+        (section) => section.templateNamespace === template.namespace,
+      );
+      if (alreadyMerged) {
+        return res.status(409).json({
+          message: `Template "${template.name}" is already merged into this discovery.`,
+        });
+      }
+
+      const newSections = (template.formSchema || []).map((section) => ({
+        ...section,
+        id: `section-${template.namespace}-${randomUUID().slice(0, 8)}`,
+        templateNamespace: template.namespace,
+      }));
+      const mergedSchema = [...currentSections, ...newSections];
+
+      const discovery = await dealsStorage.updateDealIntake(
+        req.params.dealId,
+        { formSchema: mergedSchema },
+        "discovery",
+      );
+
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:intake_updated",
+        intakeId: existing.id,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
+      });
+
+      res.json(discovery);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to merge template into deal discovery");
+    }
+  });
+
+  app.patch("/api/deals/:dealId/discovery", isAuthenticated, async (req: any, res) => {
+    try {
+      const existing = await dealsStorage.getDealIntake(req.params.dealId, "discovery");
+      if (!existing) {
+        return res.status(404).json({ message: "No discovery found for this deal" });
+      }
+
+      const result = updateDealIntakeSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid data", errors: result.error.flatten() });
+      }
+
+      const { status: _status, ...safeData } = result.data;
+      const discovery = await dealsStorage.updateDealIntake(req.params.dealId, safeData, "discovery");
+
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:intake_updated",
+        intakeId: existing.id,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
+      });
+
+      res.json(discovery);
+    } catch (error) {
+      handleServiceError(res, error, "Failed to update deal discovery");
+    }
+  });
+
+  app.delete("/api/deals/:dealId/discovery", isAuthenticated, async (req: any, res) => {
+    try {
+      const existing = await dealsStorage.getDealIntake(req.params.dealId, "discovery");
+      if (!existing) {
+        return res.status(404).json({ message: "No discovery found for this deal" });
+      }
+
+      await dealsStorage.deleteDealIntake(req.params.dealId, "discovery");
+
+      const actorId = req.user.claims.sub;
+      domainEvents.emit({
+        type: "deal:intake_deleted",
+        intakeId: existing.id,
+        dealId: req.params.dealId,
+        actorId,
+        timestamp: new Date(),
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      handleServiceError(res, error, "Failed to delete deal discovery");
+    }
+  });
+
+  app.post("/api/deals/:dealId/discovery/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      const { dryRun } = req.body;
+      const dealId = req.params.dealId;
+      const actorId = req.user.claims.sub;
+
+      const discovery = await dealsStorage.getDealIntake(dealId, "discovery");
+      if (!discovery) {
+        return res.status(404).json({ message: "No discovery found for this deal" });
+      }
+
+      if (dryRun) {
+        const computed = await computeIntakeSync(dealsService, dealId, "discovery");
+        if (!computed) {
+          return res.status(404).json({ message: "No discovery found for this deal" });
+        }
+        if (computed.changes.length === 0) {
+          return res.json({ changes: [], message: "No data to sync" });
+        }
+        return res.json({ changes: computed.changes, dryRun: true });
+      }
+
+      const result = await applyIntakeSync(dealsService, dealId, actorId, "discovery");
+      if (!result.applied) {
+        return res.json({ changes: [], message: result.message });
+      }
+      res.json({ changes: result.changes, applied: true });
+    } catch (error) {
+      handleServiceError(res, error, "Failed to sync discovery to deal");
+    }
+  });
+
   app.post("/api/deals/:id/generate-doc", isAuthenticated, loadPermissions, async (req: any, res) => {
     try {
       if (!checkPermission(req, "deals.read")) {
