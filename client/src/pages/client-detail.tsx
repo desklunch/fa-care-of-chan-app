@@ -277,6 +277,11 @@ export default function ClientDetail() {
           <div className="max-w-4xl space-y-6">
  
         <Card>
+          <CardHeader>
+            <CardTitle>
+              Info
+            </CardTitle>
+          </CardHeader>
           <CardContent className="py-4">
             <EditableField
               label="Industry"
@@ -420,8 +425,8 @@ export default function ClientDetail() {
                   disabled={showContactSearch}
                   data-testid="button-link-contact"
                 >
-                  <UserPlus className="h-4 w-4" />
-                  Link Contact
+                  <UserPlus className="size-3.5" />
+                  Link
                 </Button>
                 <Button
                   variant="secondary"
@@ -429,8 +434,8 @@ export default function ClientDetail() {
                   onClick={() => setShowCreateContact(true)}
                   data-testid="button-new-contact"
                 >
-                  <Plus className="h-4 w-4" />
-                  New Contact
+                  <Plus className="size-3.5" />
+                  New
                 </Button>
               </div>
             )}
