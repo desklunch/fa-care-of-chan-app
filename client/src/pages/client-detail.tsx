@@ -446,15 +446,15 @@ export default function ClientDetail() {
                     </p>
                   </div>
                 ) : (
-                  <div className="s">
+                  <div className="space-y-4">
                     {localLinkedContacts.map((contact) => (
                       <div
                         key={contact.id}
-                        className="flex items-center justify-between border-b last:border-b-0 pb-4 "
+                        className="group flex items-center justify-between border-b pb-4 "
                         data-testid={`contact-item-${contact.id}`}
                       >
                         <div>
-                          <div className="flex flex-col  ">
+                          <div className="flex gap-2 items-center">
                             <Link href={`/contacts/${contact.id}`}>
                               <span className="font-medium text-primary hover:underline cursor-pointer">
                                 {[contact.firstName, contact.lastName]
@@ -477,6 +477,7 @@ export default function ClientDetail() {
                             size="icon"
                             onClick={() => handleUnlinkContact(contact.id)}
                             data-testid={`button-unlink-contact-${contact.id}`}
+                            className="invisible group-hover:visible"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
