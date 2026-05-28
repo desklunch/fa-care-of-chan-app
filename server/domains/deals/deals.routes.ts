@@ -1331,11 +1331,18 @@ export function registerDealsRoutes(app: Express): void {
       }
 
       const dealId = req.params.id;
-      const { folderId } = req.body;
+      const { folderId, kind: rawKind } = req.body;
 
       if (!folderId) {
         return res.status(400).json({ message: "folderId is required" });
       }
+
+      const kind: "intake" | "discovery" = rawKind === "discovery" ? "discovery" : "intake";
+      const isDiscovery = kind === "discovery";
+      const templateSettingKey = isDiscovery
+        ? "deal_discovery_template_sheet_id"
+        : "deal_summary_template_sheet_id";
+      const templateLabel = isDiscovery ? "Deal Discovery" : "Deal Summary";
 
       const userId = req.user.claims.sub;
       const accessToken = await getDriveAccessToken(userId, req.session);
@@ -1346,10 +1353,10 @@ export function registerDealsRoutes(app: Express): void {
         });
       }
 
-      const templateSheetId = await settingsCommentsStorage.getAppSetting("deal_summary_template_sheet_id");
+      const templateSheetId = await settingsCommentsStorage.getAppSetting(templateSettingKey);
       if (!templateSheetId) {
         return res.status(400).json({
-          message: "No deal summary template configured. Please set a template Sheet ID in admin settings.",
+          message: `No ${templateLabel} template configured. Please set a template Sheet ID in admin settings.`,
         });
       }
 
@@ -1363,7 +1370,7 @@ export function registerDealsRoutes(app: Express): void {
         dealsStorage.getLinkedClientsByDealId(dealId),
         dealsStorage.getDealTagIds(dealId),
         referenceDataStorage.getTags("Deals"),
-        dealsStorage.getDealIntake(dealId),
+        dealsStorage.getDealIntake(dealId, kind),
       ]);
 
       const servicesMap = new Map(allServices.map((s) => [s.id, s.name]));
@@ -1372,7 +1379,7 @@ export function registerDealsRoutes(app: Express): void {
 
       const { map: tokenMap, richTextKeys } = buildTokenMap(deal, servicesMap, linkedClients, tagNames, intake);
 
-      const sheetTitle = `${deal.displayName} - Deal Summary`;
+      const sheetTitle = `${deal.displayName} - ${templateLabel}`;
 
       let sheetResult;
       try {

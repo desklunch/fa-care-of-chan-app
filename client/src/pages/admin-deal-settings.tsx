@@ -14,10 +14,15 @@ export default function AdminDealSettings() {
   usePageTitle("Deal Settings");
   const { toast } = useToast();
   const [templateSheetId, setTemplateSheetId] = useState("");
+  const [discoveryTemplateSheetId, setDiscoveryTemplateSheetId] = useState("");
   const [shareDomain, setShareDomain] = useState("");
 
   const { data, isLoading } = useQuery<{ templateSheetId: string }>({
     queryKey: ["/api/settings/deal-summary-template"],
+  });
+
+  const { data: discoveryData, isLoading: isDiscoveryLoading } = useQuery<{ templateSheetId: string }>({
+    queryKey: ["/api/settings/deal-discovery-template"],
   });
 
   const { data: shareDomainData, isLoading: isShareDomainLoading } = useQuery<{ shareDomain: string }>({
@@ -29,6 +34,12 @@ export default function AdminDealSettings() {
       setTemplateSheetId(data.templateSheetId || "");
     }
   }, [data]);
+
+  useEffect(() => {
+    if (discoveryData) {
+      setDiscoveryTemplateSheetId(discoveryData.templateSheetId || "");
+    }
+  }, [discoveryData]);
 
   useEffect(() => {
     if (shareDomainData) {
@@ -43,6 +54,19 @@ export default function AdminDealSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings/deal-summary-template"] });
       toast({ title: "Template setting saved" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const saveDiscoveryMutation = useMutation({
+    mutationFn: async (value: string) => {
+      await apiRequest("PATCH", "/api/settings/deal-discovery-template", { templateSheetId: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/deal-discovery-template"] });
+      toast({ title: "Discovery template setting saved" });
     },
     onError: (error: Error) => {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
@@ -64,6 +88,10 @@ export default function AdminDealSettings() {
 
   const handleSave = () => {
     saveMutation.mutate(templateSheetId);
+  };
+
+  const handleSaveDiscovery = () => {
+    saveDiscoveryMutation.mutate(discoveryTemplateSheetId);
   };
 
   const handleSaveShareDomain = () => {
@@ -116,6 +144,58 @@ export default function AdminDealSettings() {
               data-testid="button-save-template-setting"
             >
               {saveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              Save
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Sheet className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-base" data-testid="heading-deal-discovery-template">
+                Deal Discovery Template
+              </CardTitle>
+            </div>
+            <CardDescription>
+              Set the Google Sheet template used when generating sheets from the Deal Discovery tab.
+              The template can use the same tokens as the Deal Summary template; intake tokens like
+              {" "}{"{{intake:<namespace>:<field-id>}}"} will resolve against the deal's discovery
+              responses instead of the client intake.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="discovery-template-sheet-id">Template Google Sheet ID</Label>
+              {isDiscoveryLoading ? (
+                <div className="flex items-center gap-2 h-9">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Loading...</span>
+                </div>
+              ) : (
+                <Input
+                  id="discovery-template-sheet-id"
+                  value={discoveryTemplateSheetId}
+                  onChange={(e) => setDiscoveryTemplateSheetId(e.target.value)}
+                  placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+                  data-testid="input-discovery-template-sheet-id"
+                />
+              )}
+              <p className="text-xs text-muted-foreground">
+                The Sheet ID is the long string in the Google Sheets URL between /d/ and /edit.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleSaveDiscovery}
+              disabled={saveDiscoveryMutation.isPending}
+              data-testid="button-save-discovery-template-setting"
+            >
+              {saveDiscoveryMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               ) : (
                 <Save className="h-4 w-4 mr-1" />
@@ -181,7 +261,10 @@ export default function AdminDealSettings() {
             <CardTitle className="text-base" data-testid="heading-available-tokens">Available Tokens</CardTitle>
             <CardDescription>
               Place these tokens in any cell of your Google Sheet template. They will be replaced
-              with the deal's actual values when generating a summary.
+              with the deal's actual values when generating a sheet. The same tokens work for both
+              the Deal Summary and Deal Discovery templates — intake tokens resolve against
+              whichever form kind ({" "}<span className="font-mono">intake</span> or
+              {" "}<span className="font-mono">discovery</span>) the export was launched from.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -115,6 +115,42 @@ export function registerSettingsCommentsRoutes(app: Express): void {
     }
   });
 
+  // ===== DEAL DISCOVERY TEMPLATE SETTING =====
+
+  app.get("/api/settings/deal-discovery-template", isAuthenticated, requirePermission("admin.settings"), async (_req, res) => {
+    try {
+      const value = await settingsCommentsStorage.getAppSetting("deal_discovery_template_sheet_id");
+      res.json({ templateSheetId: value || "" });
+    } catch (error) {
+      console.error("Error fetching deal discovery template setting:", error);
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+
+  app.patch("/api/settings/deal-discovery-template", isAuthenticated, requirePermission("admin.settings"), async (req: any, res) => {
+    try {
+      const { templateSheetId } = req.body;
+      if (typeof templateSheetId !== "string") {
+        return res.status(400).json({ message: "templateSheetId must be a string" });
+      }
+      const userId = req.user.claims.sub;
+      await settingsCommentsStorage.setAppSetting("deal_discovery_template_sheet_id", templateSheetId, userId);
+
+      await logAuditEvent(req, {
+        action: "update",
+        entityType: "app_setting",
+        entityId: "deal_discovery_template_sheet_id",
+        status: "success",
+        metadata: { key: "deal_discovery_template_sheet_id" },
+      });
+
+      res.json({ templateSheetId });
+    } catch (error) {
+      console.error("Error updating deal discovery template setting:", error);
+      res.status(500).json({ message: "Failed to update setting" });
+    }
+  });
+
   // ===== DEAL SUMMARY SHARE DOMAIN SETTING =====
 
   app.get("/api/settings/deal-summary-share-domain", isAuthenticated, requirePermission("admin.settings"), async (_req, res) => {

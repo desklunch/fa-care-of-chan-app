@@ -141,6 +141,7 @@ export default function DealDetail() {
     newClientId: string | null;
   } | null>(null);
   const [showGenerateDoc, setShowGenerateDoc] = useState(false);
+  const [generateDocKind, setGenerateDocKind] = useState<"intake" | "discovery">("intake");
   const [activeTab, setActiveTab] = useState("overview");
   const { statuses: dealStatusList, statusById } = useDealStatuses();
   const { isFollowing, toggle: toggleFollow, isPending: isFollowPending } = useFollowStatus("deal", id!);
@@ -1826,7 +1827,10 @@ export default function DealDetail() {
             <DealIntakeTab
               dealId={id!}
               canWrite={canWrite}
-              onSaveToGoogleDrive={() => setShowGenerateDoc(true)}
+              onSaveToGoogleDrive={() => {
+                setGenerateDocKind("intake");
+                setShowGenerateDoc(true);
+              }}
               canSaveToGoogleDrive={Boolean(deal)}
             />
           </TabsContent>
@@ -1835,7 +1839,10 @@ export default function DealDetail() {
             <DealDiscoveryTab
               dealId={id!}
               canWrite={canWrite}
-              onSaveToGoogleDrive={() => setShowGenerateDoc(true)}
+              onSaveToGoogleDrive={() => {
+                setGenerateDocKind("discovery");
+                setShowGenerateDoc(true);
+              }}
               canSaveToGoogleDrive={Boolean(deal)}
             />
           </TabsContent>
@@ -1869,6 +1876,7 @@ export default function DealDetail() {
         servicesMap={servicesMap}
         open={showGenerateDoc}
         onOpenChange={setShowGenerateDoc}
+        kind={generateDocKind}
       />
 
       <AlertDialog

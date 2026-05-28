@@ -498,9 +498,12 @@ interface GenerateDealDocDialogProps {
   servicesMap: Map<number, DealService>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  kind?: "intake" | "discovery";
 }
 
-export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }: GenerateDealDocDialogProps) {
+export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange, kind = "intake" }: GenerateDealDocDialogProps) {
+  const isDiscovery = kind === "discovery";
+  const kindLabel = isDiscovery ? "Deal Discovery" : "Deal Summary";
   const { toast } = useToast();
   const { promptDriveAuth } = useDriveAuth();
   const [selectedFolder, setSelectedFolder] = useState<DestinationFolder | null>(null);
@@ -523,7 +526,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
 
   const generateMutation = useMutation({
     mutationFn: async (folderId: string) => {
-      const res = await apiRequest("POST", `/api/deals/${deal.id}/generate-doc`, { folderId });
+      const res = await apiRequest("POST", `/api/deals/${deal.id}/generate-doc`, { folderId, kind });
       return res.json();
     },
     onSuccess: (data) => {
@@ -533,7 +536,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
         title: "Sheet created",
         description: (
           <span>
-            Deal summary sheet saved to Google Drive.{" "}
+            {kindLabel} sheet saved to Google Drive.{" "}
             <a
               href={data.doc.webViewLink}
               target="_blank"
@@ -628,7 +631,7 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
           <DialogHeader>
             <DialogTitle>Sheet Created</DialogTitle>
             <DialogDescription>
-              Your deal summary sheet has been created in Google Drive and attached to this deal's files.
+              Your {kindLabel.toLowerCase()} sheet has been created in Google Drive and attached to this deal's files.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
@@ -669,9 +672,9 @@ export function GenerateDealDocDialog({ deal, servicesMap, open, onOpenChange }:
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Generate Deal Summary</DialogTitle>
+          <DialogTitle>Generate {kindLabel}</DialogTitle>
           <DialogDescription>
-            Create a Google Sheet from the template with this deal's information filled in.
+            Create a Google Sheet from the {kindLabel} template with this deal's information filled in.
           </DialogDescription>
         </DialogHeader>
 
