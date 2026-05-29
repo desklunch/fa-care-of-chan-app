@@ -1,3 +1,5 @@
+export const HIGHLIGHT_COLOR = "hsl(0, 84%, 60%)";
+
 export interface RichTextSegment {
   text: string;
   bold?: boolean;
@@ -129,6 +131,20 @@ function findEarliestInlineMatch(text: string): InlineMatch | null {
         formatDelta: { italic: true },
       });
     }
+  }
+
+  const highlightMd = text.match(/==([\s\S]+?)==/);
+  if (
+    highlightMd &&
+    highlightMd.index !== undefined &&
+    !highlightMd[1].includes("\n\n")
+  ) {
+    candidates.push({
+      index: highlightMd.index,
+      fullLength: highlightMd[0].length,
+      innerContent: highlightMd[1],
+      formatDelta: { color: HIGHLIGHT_COLOR },
+    });
   }
 
   const linkMd = text.match(/(?<!\\)\[([^\]]+)\]\(([^)]+)\)/);
