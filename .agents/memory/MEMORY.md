@@ -1,0 +1,1 @@
+- [AG Grid 34 empty-cell edit commit](aggrid-empty-cell-commit.md) — custom popup editors silently fail to save when a cell starts null/empty; fix with `node.setDataValue` after `stopEditing`.

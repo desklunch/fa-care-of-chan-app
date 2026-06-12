@@ -20,8 +20,6 @@ const RichTextCellEditor = forwardRef<RichTextCellEditorRef, RichTextCellEditorP
     const containerRef = useRef<HTMLDivElement>(null);
     const valueRef = useRef<string>(props.value || "");
 
-    const fieldName = props.column.getColDef().field;
-
     useImperativeHandle(ref, () => ({
       getValue: () => valueRef.current,
       isPopup: () => true,
@@ -61,10 +59,11 @@ const RichTextCellEditor = forwardRef<RichTextCellEditorRef, RichTextCellEditorP
 
     const handleSave = () => {
       valueRef.current = editValue;
+      props.api?.stopEditing();
+      const fieldName = props.colDef?.field;
       if (props.node && fieldName) {
         props.node.setDataValue(fieldName, editValue);
       }
-      props.api?.stopEditing();
     };
 
     const handleCancel = () => {
